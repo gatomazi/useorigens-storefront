@@ -1,0 +1,360 @@
+@import "tailwindcss";
+
+/*
+ * Use Origens design tokens.
+ *
+ * The page ground is #e5e5e5 on purpose: it is the exact flat grey behind every INK product
+ * photo, so a black tee sits on the page with no visible box. Never put a photo on another surface.
+ *
+ * Regional accents come from the three regional logos (gold Sul, blue Norte, orange Centro-Oeste).
+ * `--region-fill` is for large fills, `--region-ink` is for text on the ground (AA on #e5e5e5).
+ */
+:root {
+  --ground: #e5e5e5;
+  --paper: #f2f2f0;
+  --ink: #000000;
+  --ink-soft: #33332f;
+  --ink-mute: #56564f;
+  --line: rgb(0 0 0 / 0.22);
+  --line-on-ink: rgb(255 255 255 / 0.28);
+
+  --region-fill: #d8c078;
+  --region-ink: #7a5c12;
+
+  --font-display-stack: var(--font-display), "Arial Narrow", Impact, sans-serif;
+  --font-body-stack: var(--font-body), system-ui, sans-serif;
+  --font-serif-stack: var(--font-serif), Georgia, serif;
+
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --content-max: 90rem;
+  --header-h: 4rem;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-region="norte"] {
+  --region-fill: #48a8d8;
+  --region-ink: #1b6a91;
+}
+
+[data-region="centro-oeste"] {
+  --region-fill: #ff9048;
+  --region-ink: #a9460f;
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-mute: var(--ink-mute);
+  --color-line: var(--line);
+  --color-region: var(--region-fill);
+  --color-region-ink: var(--region-ink);
+  --font-display: var(--font-display-stack);
+  --font-sans: var(--font-body-stack);
+  --font-serif: var(--font-serif-stack);
+}
+
+html {
+  color-scheme: light;
+  background: var(--ground);
+  color: var(--ink);
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--header-h) + 1rem);
+}
+
+a,
+button,
+summary,
+[role="option"] {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgb(0 0 0 / 0.08);
+}
+
+body {
+  font-family: var(--font-body-stack);
+  font-size: 1rem;
+  line-height: 1.5;
+  background: var(--ground);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-width: 320px;
+}
+
+/* Type scale: display, h1, h2, h3, body, small, caption, label (spec §16.4). */
+.t-display {
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  font-family: var(--font-display-stack);
+  /* 800, not 900: at 900 the N and V counters close up and the word loses legibility. */
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(3.4rem, 14vw, 7rem);
+  /* Accents (Ê, É, Ó) and the tail of Q are tall in this face; leave room so they never touch the next line. */
+  line-height: 0.98;
+  letter-spacing: 0.004em;
+}
+/* City name: the one place besides the home hero where the display face is used at scale. */
+.t-city {
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  font-family: var(--font-display-stack);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(3rem, 15vw, 6.5rem);
+  line-height: 0.98;
+  letter-spacing: 0.004em;
+}
+.t-h1 {
+  text-wrap: balance;
+  overflow-wrap: break-word;
+  font-family: var(--font-display-stack);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(3rem, 8vw, 7.5rem);
+  line-height: 1;
+}
+.t-h2 {
+  font-family: var(--font-body-stack);
+  font-weight: 800;
+  text-wrap: balance;
+  font-size: clamp(1.75rem, 4.4vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.028em;
+}
+.t-h3 {
+  font-family: var(--font-body-stack);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.t-place {
+  font-family: var(--font-serif-stack);
+  font-weight: 500;
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+.t-body {
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
+.t-small {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+}
+.t-caption {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ink-mute);
+}
+.t-label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.wrap {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+.on-ink {
+  background: var(--ink);
+  color: #fff;
+}
+.on-ink .t-caption {
+  color: rgb(255 255 255 / 0.68);
+}
+
+/* Buttons: rectangular, like a label sewn on a garment. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  min-height: 3.25rem;
+  padding: 0 1.75rem;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 2px solid var(--ink);
+  transition: background-color 200ms var(--ease-out), color 200ms var(--ease-out);
+}
+.btn:hover {
+  background: transparent;
+  color: var(--ink);
+}
+.btn[aria-disabled="true"] {
+  background: transparent;
+  color: var(--ink-mute);
+  border-color: var(--line);
+  pointer-events: none;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+}
+.btn-ghost:hover {
+  background: var(--ink);
+  color: #fff;
+}
+.btn-light {
+  background: #fff;
+  color: var(--ink);
+  border-color: #fff;
+}
+.btn-light:hover {
+  background: transparent;
+  color: #fff;
+}
+
+.link-line {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 220ms var(--ease-out);
+}
+.link-line:hover,
+.link-line:focus-visible,
+a:hover .link-line,
+a:focus-visible .link-line {
+  background-size: 100% 1px;
+}
+.link-static {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+.link-static:hover {
+  text-decoration-color: currentColor;
+}
+
+/* Product photos: same ground as the page so tees appear cut out. */
+.photo {
+  position: relative;
+  display: block;
+  aspect-ratio: 800 / 820;
+  background: var(--ground);
+  overflow: hidden;
+}
+.photo img {
+  object-fit: cover;
+  transition: transform 500ms var(--ease-out);
+}
+a:hover > .photo img,
+.photo-hover:hover .photo img {
+  transform: scale(1.035);
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 100;
+  background: var(--ink);
+  color: #fff;
+  padding: 0.75rem 1rem;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* One orchestrated entrance: the three hero tees settle in. Nothing else animates on load. */
+@keyframes settle {
+  from {
+    opacity: 0;
+    transform: translateY(2.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.settle {
+  animation: settle 900ms var(--ease-out) both;
+}
+.settle-1 {
+  animation-delay: 120ms;
+}
+.settle-2 {
+  animation-delay: 260ms;
+}
+.settle-3 {
+  animation-delay: 400ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Header: quiet at the top, solid and shorter after scrolling. */
+.site-header {
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background-color 280ms var(--ease-out), border-color 280ms var(--ease-out);
+}
+.site-header-row {
+  height: 3.5rem;
+  transition: height 280ms var(--ease-out);
+}
+.site-header[data-scrolled="true"] {
+  background: var(--ground);
+  border-bottom-color: var(--line);
+}
+.site-header[data-scrolled="true"] .site-header-row {
+  height: 3.25rem;
+}
+@media (min-width: 768px) {
+  .site-header-row {
+    height: 4.75rem;
+  }
+  .site-header[data-scrolled="true"] .site-header-row {
+    height: 3.75rem;
+  }
+}
+
+.paper {
+  background: var(--paper);
+}
+.search-input:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 8px;
+}
+.photo-poster {
+  aspect-ratio: 4 / 5;
+}
+
+dialog {
+  overscroll-behavior: contain;
+}
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
