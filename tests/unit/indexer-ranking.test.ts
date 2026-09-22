@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { buildStoreIndex } from "@/lib/catalog/indexer";
-import { rankBindings } from "@/lib/catalog/ranking";
+import { compareIds, rankBindings } from "@/lib/catalog/ranking";
 import { cityBySlug } from "@/lib/geo/cities";
 import { product } from "./fixtures";
 
@@ -93,5 +93,27 @@ describe("rankBindings", () => {
     const other = { ...sul, commerceStoreKey: "use-origens" as const, inkProductId: "6" };
     const winner = rankBindings([sul, other], ["use-origens", "use-sul"]).find((b) => b.isPrimary)!;
     expect(winner.commerceStoreKey).toBe("use-origens");
+  });
+
+  // Regression (bootstrap review §5, found by scripts/verify-bootstrap.mts): a non-numeric inkProductId used
+  // to crash BigInt() inside compareIds, taking down the sort for the WHOLE catalog build (one bad id
+  // anywhere poisoned every city, not just its own product) — not a fixture-only concern, since a real INK
+  // response could in principle carry a malformed id too.
+  test("given a non-numeric INK id, when ranked, then it never throws and still produces a deterministic order", () => {
+    expect(() =>
+      rank([product("Torres | Coordenadas RS", { id: "not-a-number" }), product("Torres | Coordenadas RS", { id: "300" })]),
+    ).not.toThrow();
+  });
+});
+
+describe("compareIds", () => {
+  test("given two numeric ids, when compared, then it orders numerically, including past Number.MAX_SAFE_INTEGER", () => {
+    expect(compareIds("2", "10")).toBeLessThan(0); // numeric, not lexicographic ("10" < "2" as strings)
+    expect(compareIds("99999999999999999999", "100000000000000000000")).toBeLessThan(0);
+  });
+
+  test("given a non-numeric id on either side, when compared, then it falls back to string comparison instead of throwing", () => {
+    expect(() => compareIds("abc", "123")).not.toThrow();
+    expect(compareIds("abc", "abc")).toBe(0);
   });
 });
