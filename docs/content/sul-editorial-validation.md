@@ -89,19 +89,21 @@ Registro sem alteração. A revisão é visual e será feita depois.
 
 ### 3.1 Hero (`/sul`)
 
+Copy atualizada em `CLAUDE_HERO_SUL_PRODUCT_CARDS_REFINEMENT.md` (a anterior falava de DDD e "jeito de falar").
+
 ```text
 H1:        De qual Sul / você é?          (duas linhas)
-Apoio:     Cidades, DDDs e o jeito de falar de cada canto, em camiseta.
+Apoio:     Encontre sua cidade e vista o lugar que faz parte de você.
 Campo:     Busque sua cidade…             (botão que abre a busca; no desktop também mostra “Buscar”)
-Legenda:   1.191 cidades em 3 estados. Ou comece pelo estado.   (“Ou comece pelo estado.” leva a #estados)
+Legenda:   1.191 cidades do Sul em camiseta. Ou explore por estado.   (“Ou explore por estado.” leva a #estados)
 ```
 
-Três camisetas de DDD, cada uma com código, região e UF, levando a `#geografia`:
+Três cards de produto (Ponto de Origem, Feito em, Coordenadas), cada um com nome da família, cidade · UF e preço, levando à página da família:
 
 ```text
-054  Serra Gaúcha           RS
-048  Grande Florianópolis   SC
-041  Grande Curitiba        PR
+Ponto de Origem   Porto Alegre · RS   R$ 109,90
+Feito em          Curitiba · PR       R$ 109,90
+Coordenadas       Joinville · SC      R$ 109,90
 ```
 
 Barra de aviso no topo: mobile “1.191 cidades do Sul em camiseta.”; desktop acrescenta “Você escolhe aqui e finaliza a compra na loja Use Sul.”

@@ -41,7 +41,7 @@ Sem os banners, nada quebra: cada slot vazio mostra a composição tipográfica/
 ### Por que não são 60+
 
 - **Estados: 1 arquivo, não 2.** O slot `state` é 4:5 no mobile e 4:5 no desktop. Um único master de 1200×1500 serve aos dois.
-- **Portas regionais da raiz reutilizam o hero de cada região** (mesmo arquivo mobile 4:5 e desktop 3:2). O texto ("Explorar o Sul") é HTML sobreposto, não vai na imagem. Isso também cria a continuidade que se quer: a mesma imagem que a pessoa vê na raiz aparece ao entrar na região. Se o layout final da raiz pedir um recorte próprio (por exemplo 21:9 em painel largo), promover a "porta" a IMPORTANTE: +3 conceitos, +6 arquivos. Não foi contado.
+- **Portas regionais da raiz reutilizam o hero de cada região** (mesmo arquivo mobile 4:5 e desktop 8:3). O texto ("Explorar o Sul") é HTML sobreposto, não vai na imagem. Isso também cria a continuidade que se quer: a mesma imagem que a pessoa vê na raiz aparece ao entrar na região. Se o layout final da raiz pedir um recorte próprio (por exemplo 21:9 em painel largo), promover a "porta" a IMPORTANTE: +3 conceitos, +6 arquivos. Não foi contado.
 - **Banner de cidade é um template por região**, aplicado a todas as cidades (o slot aceita override por cidade no futuro, mas não é necessário para lançar).
 - **Coleções**: "Fala daqui" (IMPORTANTE) e DDD (FUTURO). O DDD já é bem servido pelas fotos reais de produto.
 
@@ -85,13 +85,48 @@ Campos de cada banner suportados hoje: asset mobile, asset desktop, `alt`, `head
 
 | Slot | Mobile | Desktop |
 |---|---|---|
-| Hero | 4:5, mín. 1440×1800 | 3:2, mín. 2880×1920 |
+| Hero (fundo, ver 4.1) | 4:5, mín. 1440×1800 | 8:3, mín. 2880×1080 |
 | Campanha | 4:5, mín. 1440×1800 | 16:9, mín. 2880×1620 |
 | Estado | 4:5, mín. 1080×1350 | 4:5, mín. 1200×1500 (um master de 1200×1500 serve aos dois) |
 | Coleção | 1:1, mín. 1440×1440 | 21:9, mín. 2880×1234 |
 | Cidade | 4:3, mín. 1440×1080 | 21:9, mín. 2880×1234 |
 
-Exportar em JPEG qualidade alta ou WebP; o Next reotimiza. Não gravar texto na imagem: headline, corpo e CTA são HTML (idioma, acessibilidade e troca sem reprodução).
+### 4.1 Hero regional: é um fundo, não um quadro
+
+O hero é feito **em código** (título, busca, legenda e as três camisetas de família). A imagem regional fica **atrás**, sob um véu leve em CSS. Ela não leva texto, produto nem pessoa em primeiro plano: o trio de camisetas já vem por cima.
+
+Como a imagem cobre a caixa do hero (`object-cover`), o que vale é o tamanho **real** da caixa. Medido no site em produção:
+
+| Largura da tela | Caixa do hero (largura×altura) | Proporção | Arquivo usado |
+|---|---|---|---|
+| 360 | 360×576 | 0,63 | mobile |
+| 390 | 390×587 | 0,66 | mobile |
+| 430 | 430×611 | 0,70 | mobile |
+| 600 | 600×711 | 0,84 | mobile |
+| 768 | 768×818 | 0,94 | mobile |
+| 1023 | 1023×907 | 1,13 | mobile |
+| 1024 | 1024×632 | 1,62 | desktop |
+| 1280 | 1280×522 | 2,45 | desktop |
+| 1440 | 1440×522 | 2,76 | desktop |
+| 1920 | 1920×522 | 3,68 | desktop |
+| 2560 | 2560×522 | 4,90 | desktop |
+
+**Tamanhos recomendados**
+
+| Arquivo | Tamanho recomendado | Mínimo aceitável | Proporção | Vale para |
+|---|---|---|---|---|
+| Mobile | **1440×1800** | 1122×1402 (só celular, fica mole em tablet) | 4:5 retrato | telas abaixo de 1024 px |
+| Desktop | **2880×1080** | 2400×900 | 8:3 panorama | telas de 1024 px para cima |
+
+**Zona segura** (o que precisa sobreviver ao corte):
+
+- **Mobile 4:5:** em celular estreito (0,63) perdem-se ~10% de cada lado; em tablet (1,13) perdem-se ~14% em cima e embaixo. Mantenha o que importa na **faixa central, ~78% da largura e ~70% da altura**.
+- **Desktop 8:3:** em 1440 px quase não corta. Em 1024 px aparece só ~61% da largura (o centro). Em 1920 aparecem ~72% da altura e em 2560 só ~54%. Mantenha o que importa na **faixa central, ~55% da altura e ~60% da largura**.
+- **Composição:** paisagem com textura e profundidade, sem rosto nem objeto que precise ser lido. O texto ocupa a metade esquerda do desktop e o topo do mobile; as camisetas, a metade direita do desktop e a parte de baixo do mobile.
+- **Ponto focal** (`focal` na config) escolhe o que fica no corte; um só valor vale para os dois arquivos. Hoje: `30% 35%`.
+- **Peso:** WebP ou JPEG de alta qualidade, cerca de 150 a 400 KB cada. PNG funciona, mas fotografia em PNG passa fácil de 2 MB.
+
+Formatos aceitos no código (`BANNER_IMAGE_EXTENSIONS`): **`.webp`, `.png`, `.jpg`, `.jpeg`**. Qualquer outro (por exemplo `.gif`) é recusado: o slot mostra a composição padrão e registra o erro no servidor. O Next reotimiza para AVIF/WebP, então PNG funciona, mas fotografia em PNG pesa muito no repositório (2 a 3 MB por arquivo); prefira WebP ou JPEG de alta qualidade quando possível. Não gravar texto na imagem: headline, corpo e CTA são HTML (idioma, acessibilidade e troca sem reprodução).
 
 ---
 
@@ -146,7 +181,7 @@ Estados: PR, SC, RS. Baseline do sistema.
 
 | # | Banner | Prioridade | Mobile | Desktop | Arquivos |
 |---|---|---|---|---|---:|
-| S1 | Hero regional | ESSENCIAL | 4:5 1440×1800 | 3:2 2880×1920 | 2 |
+| S1 | Hero regional (fundo) | ESSENCIAL | 4:5 1440×1800 | 8:3 2880×1080 | 2 |
 | S2 | Campanha ("Nome, número e jeito de falar") | ESSENCIAL | 4:5 1440×1800 | 16:9 2880×1620 | 2 |
 | S3 | Banner de cidade (template) | IMPORTANTE | 4:3 1440×1080 | 21:9 2880×1234 | 2 |
 | S4 | Coleção "Fala daqui" | IMPORTANTE | 1:1 1440×1440 | 21:9 2880×1234 | 2 |
@@ -174,7 +209,7 @@ Estados: AC, AM, AP, PA, RO, RR, TO. Ainda não implementado no código; os slot
 
 | # | Banner | Prioridade | Mobile | Desktop | Arquivos |
 |---|---|---|---|---|---:|
-| N1 | Hero regional | ESSENCIAL | 4:5 1440×1800 | 3:2 2880×1920 | 2 |
+| N1 | Hero regional (fundo) | ESSENCIAL | 4:5 1440×1800 | 8:3 2880×1080 | 2 |
 | N2 | Campanha | ESSENCIAL | 4:5 1440×1800 | 16:9 2880×1620 | 2 |
 | N3 | Banner de cidade (template) | IMPORTANTE | 4:3 1440×1080 | 21:9 2880×1234 | 2 |
 | N4 | Coleção "Fala daqui" | IMPORTANTE | 1:1 1440×1440 | 21:9 2880×1234 | 2 |
@@ -193,7 +228,7 @@ Estados: DF, GO, MS, MT. Ainda não implementado no código.
 
 | # | Banner | Prioridade | Mobile | Desktop | Arquivos |
 |---|---|---|---|---|---:|
-| C1 | Hero regional | ESSENCIAL | 4:5 1440×1800 | 3:2 2880×1920 | 2 |
+| C1 | Hero regional (fundo) | ESSENCIAL | 4:5 1440×1800 | 8:3 2880×1080 | 2 |
 | C2 | Campanha | ESSENCIAL | 4:5 1440×1800 | 16:9 2880×1620 | 2 |
 | C3 | Banner de cidade (template) | IMPORTANTE | 4:3 1440×1080 | 21:9 2880×1234 | 2 |
 | C4 | Coleção "Fala daqui" | IMPORTANTE | 1:1 1440×1440 | 21:9 2880×1234 | 2 |

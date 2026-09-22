@@ -18,6 +18,10 @@ Os IMPORTANTES e FUTUROS reaproveitam este formato: o briefing de cada um está 
 
 ---
 
+> **Atenção, hero regional (S1, N1, C1):** o hero passou a ser um **fundo** sob o texto e as três camisetas, que são desenhados em código. Os prompts de hero abaixo foram escritos para uma cena com pessoa e camiseta; para o fundo, gere só a **paisagem/ambiente, sem pessoa, sem camiseta e sem texto**, respeitando a zona segura e os tamanhos da seção 4.1 do plano (mobile 1440×1800, desktop 2880×1080). Os prompts de campanha (S2, N2, C2) e o do hero master da raiz (R1) não mudam.
+
+---
+
 ## BLOCO BASE (colar antes de qualquer prompt)
 
 ```text
@@ -101,12 +105,12 @@ Luz: difusa, levemente fria, céu encoberto.
 Evitar: chimarrão, cuia, bandeira, roupa típica, chapéu, neve, serra fotogênica, monumento.
 ```
 
-### S1 — Hero · DESKTOP (3:2, 2880×1920)
+### S1 — Hero · DESKTOP (8:3, 2880×1080)
 
 ```text
 [BLOCO BASE]
 
-A mesma pessoa e a mesma rua da imagem mobile, agora em paisagem 3:2, 2880×1920 pixels.
+A mesma pessoa e a mesma rua da imagem mobile, agora em paisagem panorâmica 8:3, 2880×1080 pixels.
 
 A pessoa no terço direito. A rua e as fachadas se abrem para a esquerda, com espaço negativo amplo
 na metade esquerda para título e busca. Mesma luz difusa e fria. Ponto focal em 65% na horizontal e
@@ -171,12 +175,12 @@ Evitar: cocar, indígena como adereço, boto, Boi-Bumbá, foto aérea de rio, fl
 fundo genérico, barco turístico.
 ```
 
-### N1 — Hero · DESKTOP (3:2, 2880×1920)
+### N1 — Hero · DESKTOP (8:3, 2880×1080)
 
 ```text
 [BLOCO BASE]
 
-A mesma pessoa e o mesmo lugar da imagem mobile, agora em paisagem 3:2, 2880×1920 pixels.
+A mesma pessoa e o mesmo lugar da imagem mobile, agora em paisagem panorâmica 8:3, 2880×1080 pixels.
 
 A pessoa no terço esquerdo. A margem, a água e as casas se abrem para a direita, com espaço
 negativo amplo na metade direita para título e busca. Mesma luz úmida e difusa. Ponto focal em
@@ -240,12 +244,12 @@ Evitar: chapéu de peão, boi, bota, trator, plantação, Congresso Nacional com
 fantasia.
 ```
 
-### C1 — Hero · DESKTOP (3:2, 2880×1920)
+### C1 — Hero · DESKTOP (8:3, 2880×1080)
 
 ```text
 [BLOCO BASE]
 
-A mesma pessoa e o mesmo lugar da imagem mobile, agora em paisagem 3:2, 2880×1920 pixels.
+A mesma pessoa e o mesmo lugar da imagem mobile, agora em paisagem panorâmica 8:3, 2880×1080 pixels.
 
 A pessoa no terço direito. A avenida e o horizonte se abrem para a esquerda, com céu e espaço
 negativo amplo na metade esquerda para título e busca. Mesma luz forte e clara. Ponto focal em
@@ -286,7 +290,7 @@ Câmera na altura dos olhos. Mesma luz.
 
 ## Depois de gerar
 
-1. Salvar em `public/banners/<região>/<slot>-<mobile|desktop>.jpg` (ou `.webp`).
+1. Salvar em `public/banners/<região>/<slot>-<mobile|desktop>.jpg` (ou `.webp` ou `.png`).
 2. Preencher o slot em `src/lib/editorial/banners.ts` (`REGION_BANNERS`), com `alt`, `focal` e `overlay` definidos olhando o resultado.
 3. Rodar `npx playwright test` e conferir a primeira dobra a 360×780 e 1440×900.
 4. Validar **[validar]** com alguém do lugar.
