@@ -4,7 +4,7 @@ import { StateOutline } from "@/components/brand/StateOutline";
 import { BannerBackground } from "@/components/banners/BannerBackground";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import type { StateCard } from "@/lib/home";
-import { numberPt } from "@/lib/format";
+import { pluralCidades } from "@/lib/format";
 import type { RegionSlug } from "@/lib/geo/regions";
 
 function StateLine({ line }: { line: NonNullable<StateCard["line"]> }) {
@@ -23,7 +23,7 @@ function StateLine({ line }: { line: NonNullable<StateCard["line"]> }) {
   );
 }
 
-function RegionChips({ region, uf, shown, more }: { region: RegionSlug; uf: string; shown: { name: string; slug: string }[]; more: number }) {
+function RegionChips({ region, uf, shown, more }: { region: RegionSlug; uf: string; shown: { name: string; slug: string; count: number }[]; more: number }) {
   if (shown.length === 0) return null;
   return (
     <div className="mt-5">
@@ -33,6 +33,7 @@ function RegionChips({ region, uf, shown, more }: { region: RegionSlug; uf: stri
           <li key={g.slug}>
             <Link href={`/${region}/${uf.toLowerCase()}#${g.slug}`} className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.875rem] font-medium transition-colors hover:border-region-primary hover:bg-region-primary hover:text-white focus-visible:border-region-primary">
               {g.name}
+              <span className="t-caption ml-2">{g.count}</span>
             </Link>
           </li>
         ))}
@@ -49,7 +50,7 @@ function RegionChips({ region, uf, shown, more }: { region: RegionSlug; uf: stri
 }
 
 /**
- * States (E1 + E3): each state carries its own clean product and its IBGE intermediate regions as shortcuts.
+ * States (E1 + E3): each state carries its own clean product and its editorial mesoregions as shortcuts (ADR 0004).
  * When a real photo exists it becomes the cover (never a separate banner slice); the gold accent rule sits right
  * at the seam between photo and text, olive on hover. Without a photo the card/row is plain text.
  *
@@ -82,7 +83,7 @@ export function StateCards({ region, states }: { region: RegionSlug; states: Sta
                   <Link href={`/${region}/${state.uf.toLowerCase()}`} className="group flex items-end justify-between gap-4">
                     <div>
                       <h3 className="link-line inline text-[1.75rem] font-extrabold leading-tight tracking-tight transition-colors group-hover:text-region-primary">{state.name}</h3>
-                      <p className="t-place mt-1 text-[1rem] text-ink-mute">{numberPt.format(state.cityCount)} cidades</p>
+                      <p className="t-place mt-1 text-[1rem] text-ink-mute">{pluralCidades(state.cityCount)}</p>
                     </div>
                     <StateOutline uf={state.uf} className="h-20 w-24 shrink-0 text-ink" strokeWidth={1.75} />
                   </Link>
@@ -106,7 +107,7 @@ export function StateCards({ region, states }: { region: RegionSlug; states: Sta
               <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 [&::-webkit-details-marker]:hidden">
                 <span>
                   <span className="block text-[1.1875rem] font-extrabold leading-tight tracking-tight transition-colors group-open:text-region-primary">{state.name}</span>
-                  <span className="t-place mt-0.5 block text-[0.9375rem] text-ink-mute">{numberPt.format(state.cityCount)} cidades</span>
+                  <span className="t-place mt-0.5 block text-[0.9375rem] text-ink-mute">{pluralCidades(state.cityCount)}</span>
                 </span>
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m6 9 6 6 6-6" />

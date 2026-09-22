@@ -4,7 +4,7 @@ import { dizeresWithContext } from "@/lib/editorial/dizeres";
 import { buildLore } from "@/lib/editorial/lore";
 import { stateLineProduct } from "@/lib/editorial/state-lines";
 import { isSupportedBannerImage } from "@/lib/editorial/banners";
-import { cityBySlug, areaGroupsOfState, citiesOfSameArea } from "@/lib/geo/cities";
+import { cityBySlug, areaGroupsOfState, citiesOfSameArea, mesoGroupsOfState, citiesOfSameMeso, citiesOfRegion } from "@/lib/geo/cities";
 import { REGIONS } from "@/lib/geo/regions";
 
 const SUL = REGIONS.sul.ufs;
@@ -119,6 +119,61 @@ describe("official geography", () => {
     const same = citiesOfSameArea(floripa);
     expect(same.length).toBe(16);
     expect(same.every((c) => c.areaSlug === floripa.areaSlug && c.id !== floripa.id)).toBe(true);
+  });
+});
+
+// Editorial navigation grouping (ADR 0004): the discontinued IBGE mesoregion, used for the storefront's own
+// navigation and copy. Deliberately separate from "official geography" above (the current IBGE division,
+// still a true fact, just not what the storefront navigates by right now).
+describe("editorial geography (mesoregion)", () => {
+  test("given Torres and Tijucas, when read, then each carries its real mesoregion, not the current intermediate region", () => {
+    expect(cityBySlug("RS", "torres")?.meso).toBe("Metropolitana de Porto Alegre");
+    expect(cityBySlug("SC", "tijucas")?.meso).toBe("Grande Florianópolis");
+    // The two facts can genuinely differ for the same city — that is the whole point of keeping them apart.
+    expect(cityBySlug("SC", "tijucas")?.area).toBe("Região de Blumenau");
+  });
+
+  test("given every municipality of the Sul, when read, then every single one has an editorial mesoregion (full coverage, nothing inferred)", () => {
+    const all = SUL.flatMap((uf) => citiesOfRegion("sul").filter((c) => c.uf === uf));
+    expect(all.length).toBe(1191);
+    const withoutMeso = all.filter((c) => !c.meso);
+    expect(withoutMeso, JSON.stringify(withoutMeso.map((c) => c.name))).toHaveLength(0);
+  });
+
+  test("given the whole Sul, when grouped by mesoregion, then there are 23 groups and the count per state matches the real IBGE breakdown", () => {
+    const byState: Record<string, number> = { PR: 10, SC: 6, RS: 7 };
+    let total = 0;
+    for (const [uf, expectedGroups] of Object.entries(byState)) {
+      const groups = mesoGroupsOfState(uf);
+      expect(groups, uf).toHaveLength(expectedGroups);
+      // The sum of every group's cities must equal every municipality of that state (consistency, command #12).
+      const sum = groups.reduce((s, g) => s + g.cities.length, 0);
+      const expectedCities = citiesOfRegion("sul").filter((c) => c.uf === uf).length;
+      expect(sum, `${uf} group sum vs total cities`).toBe(expectedCities);
+      total += groups.length;
+      // Never the "Região de X" phrasing, and never claiming to be the current/official division.
+      for (const g of groups) expect(g.name).not.toMatch(/^Região de /);
+    }
+    expect(total).toBe(23);
+  });
+
+  test("given known mesoregions, when read, then their real names and city counts are exactly the IBGE ones", () => {
+    const sc = new Map(mesoGroupsOfState("SC").map((g) => [g.name, g.cities.length]));
+    expect(sc.get("Oeste Catarinense")).toBe(118);
+    expect(sc.get("Vale do Itajaí")).toBe(54);
+    expect(sc.get("Grande Florianópolis")).toBe(21);
+    const rs = new Map(mesoGroupsOfState("RS").map((g) => [g.name, g.cities.length]));
+    expect(rs.get("Metropolitana de Porto Alegre")).toBe(98);
+    expect(rs.get("Noroeste Rio-grandense")).toBe(216);
+    const pr = new Map(mesoGroupsOfState("PR").map((g) => [g.name, g.cities.length]));
+    expect(pr.get("Metropolitana de Curitiba")).toBe(37);
+  });
+
+  test("given a city, when asking for its mesoregion neighbours, then they share the mesoregion and exclude itself", () => {
+    const floripa = cityBySlug("SC", "florianopolis")!;
+    const same = citiesOfSameMeso(floripa);
+    expect(same.length).toBe(20);
+    expect(same.every((c) => c.mesoSlug === floripa.mesoSlug && c.id !== floripa.id)).toBe(true);
   });
 });
 

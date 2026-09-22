@@ -8,7 +8,7 @@ import { CitySearch } from "@/components/search/CitySearch";
 import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { numberPt } from "@/lib/format";
-import { citiesOfRegion, areaGroupsOfState } from "@/lib/geo/cities";
+import { citiesOfRegion, mesoGroupsOfState } from "@/lib/geo/cities";
 import { REGIONS, STATE_NAMES, UF_TO_REGION, isRegionSlug } from "@/lib/geo/regions";
 import { normalizeText, slugify } from "@/lib/geo/text";
 import { ENABLED_REGIONS } from "@/lib/site";
@@ -46,8 +46,9 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   const cities = citiesOfRegion(region).filter((c) => c.uf === uf && covered.has(c.id));
   const toBrowser = (list: { name: string; slug: string }[]) => list.map((c) => ({ n: c.name, s: c.slug }));
 
-  // IBGE intermediate regions (2017). Cities without one still appear in A–Z.
-  const groups: BrowserGroup[] = areaGroupsOfState(uf, new Set(cities.map((c) => c.id))).map((g) => ({
+  // Editorial mesoregion grouping (ADR 0004), navigation only — not the current IBGE division. Cities
+  // without one still appear in A–Z.
+  const groups: BrowserGroup[] = mesoGroupsOfState(uf, new Set(cities.map((c) => c.id))).map((g) => ({
     name: g.name,
     slug: g.slug,
     cities: toBrowser(g.cities.sort((a, b) => normalizeText(a.name).localeCompare(normalizeText(b.name)))),

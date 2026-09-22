@@ -27,14 +27,14 @@ test.describe("/sul critical flows", () => {
     await expect(page).toHaveURL(/\/sul\/sc\/florianopolis$/);
   });
 
-  test("given an accent-free query, when searched, then the accented city leads with factual microcontext", async ({ page }) => {
+  test("given an accent-free query, when searched, then the accented city leads with editorial microcontext", async ({ page }) => {
     await page.goto("/sul");
     const dialog = await openHeroSearch(page);
     await dialog.getByRole("combobox").fill("florianopolis");
     const first = dialog.getByRole("option").first();
     await expect(first).toContainText("Florianópolis");
-    // The subtitle is the IBGE intermediate region (2017 division), never invented.
-    await expect(first).toContainText("Santa Catarina · Região de Florianópolis");
+    // The subtitle is the editorial mesoregion (ADR 0004), never invented.
+    await expect(first).toContainText("Santa Catarina · Grande Florianópolis");
   });
 
   test("given a city that does not exist, when searched, then the empty state offers the states", async ({ page }) => {
@@ -287,22 +287,22 @@ test.describe("V2 regressions and regional rules", () => {
     await expect(page.getByRole("heading", { name: /Fala de/ })).toHaveCount(0);
   });
 
-  test("given the city page, when read, then it shows the IBGE region and no repeated 'Escolha como vestir' heading", async ({ page }) => {
+  test("given the city page, when read, then it shows the editorial mesoregion and no repeated 'Escolha como vestir' heading", async ({ page }) => {
     await page.goto("/sul/rs/torres");
-    await expect(page.getByText("Rio Grande do Sul · Região de Porto Alegre")).toBeVisible();
+    await expect(page.getByText("Rio Grande do Sul · Metropolitana de Porto Alegre")).toBeVisible();
     await expect(page.getByText(/Escolha como vestir Torres/i)).toHaveCount(0);
-    await expect(page.getByRole("heading", { name: /Mais da Região de Porto Alegre/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Mais de Metropolitana de Porto Alegre/ })).toBeVisible();
   });
 
-  test("given a state page on a phone, when loaded, then it is short, grouped by IBGE regions and a chip opens a group", async ({ page }) => {
+  test("given a state page on a phone, when loaded, then it is short, grouped by mesoregions and a chip opens a group", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto("/sul/sc");
     const height = await page.evaluate(() => document.documentElement.scrollHeight);
     expect(height).toBeLessThan(2600);
-    await expect(page.locator("main details")).toHaveCount(7);
-    await page.getByRole("link", { name: /^Região de Florianópolis/ }).first().click();
-    await expect(page.locator("details#regiao-de-florianopolis")).toHaveAttribute("open", "");
-    await expect(page.locator("details#regiao-de-florianopolis").getByRole("link", { name: "Florianópolis" })).toBeVisible();
+    await expect(page.locator("main details")).toHaveCount(6);
+    await page.getByRole("link", { name: /^Grande Florianópolis/ }).first().click();
+    await expect(page.locator("details#grande-florianopolis")).toHaveAttribute("open", "");
+    await expect(page.locator("details#grande-florianopolis").getByRole("link", { name: "Florianópolis" })).toBeVisible();
   });
 
   test("given a city page, when loaded, then the city name is set in the display face at scale", async ({ page }) => {
@@ -332,11 +332,13 @@ test.describe("V2 regressions and regional rules", () => {
     expect(box!.y + box!.height).toBeLessThanOrEqual(780);
   });
 
-  test("given the state cards on the home, when read, then each state has IBGE region shortcuts and its own clean product", async ({ page }) => {
+  test("given the state cards on the home, when read, then each state has mesoregion shortcuts with counts and its own clean product", async ({ page }) => {
     await page.goto("/sul");
     const sc = page.locator("#estados article", { hasText: "Santa Catarina" });
-    // The capital's IBGE region always comes first.
-    await expect(sc.getByRole("link", { name: "Região de Florianópolis" })).toBeVisible();
+    // The capital's mesoregion always comes first.
+    const floripaChip = sc.getByRole("link", { name: /^Grande Florianópolis/ });
+    await expect(floripaChip).toBeVisible();
+    await expect(floripaChip).toContainText("21");
     await expect(sc.getByRole("link", { name: /Santa Catarina \| Clean/ })).toHaveAttribute("href", /usesul\.com\.br/);
   });
 

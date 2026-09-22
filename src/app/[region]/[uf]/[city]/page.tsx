@@ -10,7 +10,7 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { resolveCity } from "@/lib/catalog/resolver";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { formatPrice } from "@/lib/format";
-import { citiesOfSameArea } from "@/lib/geo/cities";
+import { citiesOfSameMeso } from "@/lib/geo/cities";
 import { ENABLED_REGIONS } from "@/lib/site";
 
 export const revalidate = 3600;
@@ -50,14 +50,14 @@ export default async function CityPage({ params }: { params: Params }) {
     return href ? [{ ...item, href }] : [];
   });
 
-  // Same IBGE intermediate region, alphabetical neighbours of this city.
+  // Same editorial mesoregion (ADR 0004), alphabetical neighbours of this city.
   const covered = catalog.coveredCityIds(city.regionSlug);
-  const sameArea = citiesOfSameArea(city)
+  const sameMeso = citiesOfSameMeso(city)
     .filter((c) => covered.has(c.id))
     .sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
-  const at = sameArea.findIndex((c) => c.name.localeCompare(city.name, "pt-BR") > 0);
-  const start = Math.max(0, (at === -1 ? sameArea.length : at) - 5);
-  const neighbours = sameArea.slice(start, start + 10);
+  const at = sameMeso.findIndex((c) => c.name.localeCompare(city.name, "pt-BR") > 0);
+  const start = Math.max(0, (at === -1 ? sameMeso.length : at) - 5);
+  const neighbours = sameMeso.slice(start, start + 10);
 
   // A real city photo (never one that names the city — the H1 already does that) ambients the header itself,
   // instead of sitting as its own banner slice between the header and "Estilos" (docs/decisions/0003).
@@ -85,7 +85,7 @@ export default async function CityPage({ params }: { params: Params }) {
               <h1 className="t-city">{city.name}</h1>
               <p className="t-place mt-4 text-[1.125rem] sm:text-[1.5rem]">
                 {stateName}
-                {city.area ? ` · ${city.area}` : ""}
+                {city.meso ? ` · ${city.meso}` : ""}
               </p>
             </div>
             <StateOutline uf={city.uf} className="hidden h-44 w-56 shrink-0 text-ink lg:block" strokeWidth={2} />
@@ -156,7 +156,7 @@ export default async function CityPage({ params }: { params: Params }) {
         <section aria-labelledby="more-title" className="wrap pb-16 pt-4 lg:pb-24">
           <div className="border-t border-line pt-8">
             <h2 id="more-title" className="text-[1.25rem] font-extrabold tracking-tight">
-              Mais da {city.area}
+              Mais de {city.meso}
             </h2>
             <ul className="mt-4 flex flex-wrap gap-2">
               {neighbours.map((c) => (
@@ -167,7 +167,7 @@ export default async function CityPage({ params }: { params: Params }) {
                 </li>
               ))}
               <li>
-                <Link href={`/${region}/${uf}#${city.areaSlug}`} className="link-static inline-flex min-h-11 items-center px-2 text-[0.9375rem] font-semibold">
+                <Link href={`/${region}/${uf}#${city.mesoSlug}`} className="link-static inline-flex min-h-11 items-center px-2 text-[0.9375rem] font-semibold">
                   Ver toda a região
                 </Link>
               </li>

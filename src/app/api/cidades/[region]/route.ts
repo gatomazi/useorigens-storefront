@@ -29,7 +29,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ reg
       u: city.uf,
       s: city.slug,
       ...(city.aliases.length ? { a: [...city.aliases] } : {}),
-      ...(city.area ? { m: city.area } : {}),
+      ...(city.meso ? { m: city.meso } : {}),
     }));
 
   return Response.json(index, {

@@ -11,7 +11,7 @@ export type SearchCity = {
   s: string;
   /** Curated aliases (already lowercase/accent-free is NOT required; normalized on load). */
   a?: string[];
-  /** IBGE intermediate region ("Região de Chapecó"), used as factual microcontext in results. Omitted when IBGE has none. */
+  /** Editorial mesoregion ("Grande Florianópolis"), used as microcontext in results (ADR 0004). Omitted when IBGE has none. */
   m?: string;
 };
 

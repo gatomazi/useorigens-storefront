@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { pluralCidades } from "@/lib/format";
 
 export type BrowserCity = { n: string; s: string };
 export type BrowserGroup = { name: string; slug: string; cities: BrowserCity[] };
 
 /**
- * Cities of a state, by IBGE intermediate region (default) or A–Z. Groups are collapsed <details> so a state
- * with 500 cities is a short page on a phone; the chips jump to (and open) a group, and a `#region-slug`
- * link from the home opens it too.
+ * Cities of a state, by the editorial mesoregion grouping (default, ADR 0004 — navigation only, never presented
+ * as the current IBGE division) or A–Z. Groups are collapsed <details> so a state with 500 cities is a short
+ * page on a phone; the chips jump to (and open) a group, and a `#group-slug` link from the home opens it too.
  */
 export function StateCityBrowser({ region, uf, groups, letters }: { region: string; uf: string; groups: BrowserGroup[]; letters: BrowserGroup[] }) {
   const [mode, setMode] = useState<"regiao" | "az">("regiao");
@@ -51,7 +52,7 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
             </button>
           ))}
         </div>
-        <p className="t-caption">{mode === "regiao" ? "Divisão do IBGE (2017)" : "Ordem alfabética"}</p>
+        <p className="t-caption">{mode === "regiao" ? "Agrupamento regional usado para facilitar a navegação" : "Ordem alfabética"}</p>
       </div>
 
       <ul className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-label={mode === "regiao" ? "Ir para a região" : "Ir para a letra"}>
@@ -71,7 +72,7 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
             <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 [&::-webkit-details-marker]:hidden">
               <span className="text-[1.125rem] font-extrabold tracking-tight transition-colors group-open:text-region-primary sm:text-[1.25rem]">{g.name}</span>
               <span className="flex items-center gap-3">
-                <span className="t-place text-[0.95rem] text-ink-mute">{g.cities.length} cidades</span>
+                <span className="t-place text-[0.95rem] text-ink-mute">{pluralCidades(g.cities.length)}</span>
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m6 9 6 6 6-6" />
                 </svg>

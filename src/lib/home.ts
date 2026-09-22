@@ -12,7 +12,7 @@ import { terraProducts } from "./editorial/terra";
 import { HERO_FAMILIES, STATE_ORDER } from "./editorial/sul";
 import { formatPrice } from "./format";
 import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, type RegionSlug } from "./geo/regions";
-import { citiesOfRegion, areaGroupsOfState } from "./geo/cities";
+import { citiesOfRegion, mesoGroupsOfState } from "./geo/cities";
 import { SHOWCASE } from "./site";
 
 /** One hero shirt: a real product of a commercial family, linking to its storefront page. */
@@ -22,7 +22,7 @@ export type StateCard = {
   uf: string;
   name: string;
   cityCount: number;
-  /** IBGE intermediate regions as shortcuts, largest first (E3). */
+  /** Editorial mesoregions as shortcuts, largest first (E3) — navigation grouping, not the current IBGE division (ADR 0004). */
   regions: { name: string; slug: string; count: number }[];
   /** The state's own clean line (Clean, Minimal, Escritas, Atlas), or null when the state has none (E1). */
   line: { label: string; name: string; imageUrl: string; price: string | null; href: string | null } | null;
@@ -104,13 +104,13 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const states: StateCard[] = ufs
     .map((uf) => {
       const stateCities = cities.filter((c) => c.uf === uf && covered.has(c.id));
-      const groups = areaGroupsOfState(uf, new Set(stateCities.map((c) => c.id)));
+      const groups = mesoGroupsOfState(uf, new Set(stateCities.map((c) => c.id)));
       const found = stateLineProduct(merch, uf);
       return {
         uf,
         name: STATE_NAMES[uf],
         cityCount: stateCities.length,
-        // The capital's region first (IBGE fact), then the largest ones.
+        // The capital's mesoregion first (editorial choice, ADR 0004), then the largest ones.
         regions: [...groups]
           .sort((a, b) => Number(b.cities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])) - Number(a.cities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])))
           .map((g) => ({ name: g.name, slug: g.slug, count: g.cities.length })),
