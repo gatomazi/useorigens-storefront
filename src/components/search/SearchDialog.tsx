@@ -66,7 +66,8 @@ export function SearchDialog({ region, variant = "header" }: { region: RegionSlu
       >
         <div className="px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:px-10 sm:pb-12 sm:pt-6">
           <div className="mb-6 flex items-center justify-between sm:mb-10">
-            <p className="t-label">De qual Sul você é?</p>
+            {/* Same headline copy as the hero (RegionHero.tsx) — this label was missed when the hero's own H1 was updated. */}
+            <p className="t-label">O seu lugar, do seu jeito.</p>
             <button type="button" onClick={close} className="inline-flex min-h-11 items-center gap-2 font-semibold" aria-label="Fechar busca">
               Fechar
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">

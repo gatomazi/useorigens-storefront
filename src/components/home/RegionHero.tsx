@@ -8,7 +8,7 @@ import type { HeroFamilyCard } from "@/lib/home";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 
 /**
- * Hero ("De qual Sul você é?"): headline, search and the three commercial families (Ponto de Origem, Feito em,
+ * Hero ("O seu lugar, do seu jeito."): headline, search and the three commercial families (Ponto de Origem, Feito em,
  * Coordenadas), one real product each. Everything is drawn in code.
  *
  * Left: headline, subtext, search, supporting line. Right: three product cards (name, city/UF, price). On phones the

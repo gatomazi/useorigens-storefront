@@ -5,8 +5,9 @@ import { usableBannerAsset, type BannerConfig } from "@/lib/editorial/banners";
 import type { RegionSlug } from "@/lib/geo/regions";
 
 /**
- * Editorial campaign block: one sentence, one action. It is the home's own closing module (hero → styles → DDD →
- * Fala daqui → estados → cidades → campaign → footer), never a banner slice standing in front of it. A real campaign
+ * Editorial campaign block: one sentence, one action. It is the home's own closing module — the last section
+ * before the footer (see the order comment on `src/app/[region]/page.tsx`) — never a banner slice standing in
+ * front of it. A real campaign
  * photo becomes this section's background, under a near-black wash (regional-wash-dark); the headline, body and CTA
  * are always drawn in code on top of it. Without a photo, macro crops of real shirts carry the same message instead.
  * It stays the only near-black block of the home.
