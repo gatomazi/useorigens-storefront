@@ -3,6 +3,7 @@ import { dddProducts, pickDdd, ufOfAreaCode } from "@/lib/editorial/ddd";
 import { dizeresWithContext } from "@/lib/editorial/dizeres";
 import { buildLore } from "@/lib/editorial/lore";
 import { stateLineProduct } from "@/lib/editorial/state-lines";
+import { isSupportedBannerImage } from "@/lib/editorial/banners";
 import { cityBySlug, areaGroupsOfState, citiesOfSameArea } from "@/lib/geo/cities";
 import { REGIONS } from "@/lib/geo/regions";
 
@@ -118,5 +119,19 @@ describe("official geography", () => {
     const same = citiesOfSameArea(floripa);
     expect(same.length).toBe(16);
     expect(same.every((c) => c.areaSlug === floripa.areaSlug && c.id !== floripa.id)).toBe(true);
+  });
+});
+
+describe("banner image formats", () => {
+  test("given webp, png, jpg and jpeg paths, when checked, then all are accepted regardless of case or query string", () => {
+    for (const src of ["/banners/sul/hero-mobile.webp", "/banners/sul/hero-mobile.png", "/banners/sul/hero.jpg", "/banners/sul/hero.jpeg", "/banners/sul/HERO.PNG", "/banners/sul/hero.png?v=2"]) {
+      expect(isSupportedBannerImage(src), src).toBe(true);
+    }
+  });
+
+  test("given other formats or no extension, when checked, then they are rejected", () => {
+    for (const src of ["/banners/sul/hero.gif", "/banners/sul/hero.svg", "/banners/sul/hero.png.txt", "/banners/sul/hero"]) {
+      expect(isSupportedBannerImage(src), src).toBe(false);
+    }
   });
 });

@@ -51,3 +51,8 @@ next-env.d.ts
 # intermediate visual-QA passes (kept locally, documented in docs/design/nightly-visual-pass.md)
 /docs/design/screenshots/sul-pass-1/
 /docs/design/screenshots/sul-pass-2/
+/docs/design/screenshots/banner-placement-fix/
+/docs/design/screenshots/hero-cards/
+/docs/design/screenshots/home-final-order/
+/docs/design/screenshots/lenda-order-viewall/
+/docs/design/screenshots/sul-color/

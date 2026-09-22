@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { FamilyCard } from "@/components/catalog/FamilyCard";
+import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { VariantPicker, type VariantOption } from "@/components/catalog/VariantPicker";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import { resolveCity, resolveCityProduct } from "@/lib/catalog/resolver";
@@ -88,16 +88,10 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
       {others.length > 0 && (
         <section aria-labelledby="other-title" className="border-t border-line">
           <div className="wrap py-14 lg:py-20">
-            <h2 id="other-title" className="mb-6 text-[1.5rem] font-extrabold tracking-tight lg:text-[1.875rem]">
+            <h2 id="other-title" className="mb-6 text-[1.5rem] font-extrabold tracking-tight lg:mb-10 lg:text-[1.875rem]">
               Outros estilos de {city.name}
             </h2>
-            <ul className="grid grid-cols-2 gap-x-4 gap-y-8 lg:grid-cols-4 lg:gap-x-6">
-              {others.map((entry) => (
-                <li key={entry.family.id}>
-                  <FamilyCard entry={entry} href={`${base}/${entry.family.id}`} cityName={city.name} sizes="(min-width: 1024px) 22vw, 46vw" />
-                </li>
-              ))}
-            </ul>
+            <FamilyGrid entries={others} hrefBase={base} cityName={city.name} />
           </div>
         </section>
       )}

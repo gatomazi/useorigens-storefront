@@ -35,7 +35,7 @@ export function SearchDialog({ region, variant = "header" }: { region: RegionSlu
           type="button"
           onClick={open}
           aria-haspopup="dialog"
-          className="group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left transition-colors hover:bg-paper sm:min-h-[4.5rem] sm:px-5"
+          className="group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper sm:min-h-[4.5rem] sm:px-5"
         >
           <SearchIcon className="h-6 w-6 shrink-0" />
           <span className="flex-1 text-[1.0625rem] font-medium text-ink-mute sm:text-[1.1875rem]">Busque sua cidade…</span>

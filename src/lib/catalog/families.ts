@@ -18,16 +18,20 @@ export type DesignFamily = {
   inkLabel: string | null;
 };
 
-/** The eight conceptual city design families, in storefront order. */
+/**
+ * The eight conceptual city design families, in storefront order. Order is commercial, not artificial size:
+ * Ponto de Origem, Feito em and Coordenadas lead because they sell best; the rest follow at the same card size
+ * (CLAUDE_STYLE_MODELS_LAYOUT_REFINEMENT.md — priority is communicated by order, never by a bigger card).
+ */
 export const DESIGN_FAMILIES: readonly DesignFamily[] = [
-  { id: "legado", name: "Legado", description: "Silhueta do estado, nome da cidade e nome do estado.", sortOrder: 1, inkLabel: "legado" },
-  { id: "ponto-de-origem", name: "Ponto de Origem", description: "Mapa do estado dividido em municípios, com a cidade marcada.", sortOrder: 2, inkLabel: "origem" },
-  { id: "coordenadas", name: "Coordenadas", description: "Rosa dos ventos com o nome e as coordenadas da cidade.", sortOrder: 3, inkLabel: "coordenadas" },
-  { id: "tipografia", name: "Tipografia", description: "Só tipografia: o nome da cidade.", sortOrder: 4, inkLabel: "tipografia" },
-  { id: "traco", name: "Traço", description: "Contorno do estado em uma linha, com o nome da cidade.", sortOrder: 5, inkLabel: "traco" },
-  { id: "territorio", name: "Território", description: "Mapa do estado com as divisas em tom discreto e a cidade marcada.", sortOrder: 6, inkLabel: "territorio" },
-  { id: "feito-em", name: "Feito em", description: "“Feito em” com o nome da cidade e do estado.", sortOrder: 7, inkLabel: null },
-  { id: "gentilico", name: "Gentílico", description: "O gentílico da cidade, em texto simples.", sortOrder: 8, inkLabel: "gentilico" },
+  { id: "ponto-de-origem", name: "Ponto de Origem", description: "Sua cidade marcada no mapa do estado.", sortOrder: 1, inkLabel: "origem" },
+  { id: "feito-em", name: "Feito em", description: "Cidade e estado em composição tipográfica.", sortOrder: 2, inkLabel: null },
+  { id: "coordenadas", name: "Coordenadas", description: "Nome e coordenadas da cidade.", sortOrder: 3, inkLabel: "coordenadas" },
+  { id: "legado", name: "Legado", description: "Silhueta do estado com cidade e origem.", sortOrder: 4, inkLabel: "legado" },
+  { id: "territorio", name: "Território", description: "Mapa do estado com a cidade em destaque.", sortOrder: 5, inkLabel: "territorio" },
+  { id: "tipografia", name: "Tipografia", description: "O nome da cidade como protagonista.", sortOrder: 6, inkLabel: "tipografia" },
+  { id: "traco", name: "Traço", description: "Contorno do estado em linha minimalista.", sortOrder: 7, inkLabel: "traco" },
+  { id: "gentilico", name: "Gentílico", description: "O jeito de chamar quem é dali.", sortOrder: 8, inkLabel: "gentilico" },
 ];
 
 const byId = new Map(DESIGN_FAMILIES.map((f) => [f.id, f]));

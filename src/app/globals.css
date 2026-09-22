@@ -6,8 +6,10 @@
  * The page ground is #e5e5e5 on purpose: it is the exact flat grey behind every INK product
  * photo, so a black tee sits on the page with no visible box. Never put a photo on another surface.
  *
- * Regional accents come from the three regional logos (gold Sul, blue Norte, orange Centro-Oeste).
- * `--region-fill` is for large fills, `--region-ink` is for text on the ground (AA on #e5e5e5).
+ * Regional colour is NOT defined here. It comes from src/lib/theme/region-theme.ts, applied as inline variables on the
+ * region wrapper (--region-primary, --region-secondary, --region-accent, --region-surface, --region-wash). The values
+ * below are neutral fallbacks for anything outside a region (the root page, 404): the root never borrows a region's
+ * palette. Colour identifies the region; structure identifies the brand.
  */
 :root {
   --ground: #e5e5e5;
@@ -18,8 +20,14 @@
   --line: rgb(0 0 0 / 0.22);
   --line-on-ink: rgb(255 255 255 / 0.28);
 
-  --region-fill: #d8c078;
-  --region-ink: #7a5c12;
+  --region-primary: var(--ink);
+  --region-primary-rgb: 0 0 0;
+  --region-secondary: var(--ink);
+  --region-accent: var(--line);
+  --region-surface: var(--paper);
+  --region-wash: 229 229 229;
+  --region-fill: var(--region-accent);
+  --region-ink: var(--region-primary);
 
   --font-display-stack: var(--font-display), "Arial Narrow", Impact, sans-serif;
   --font-body-stack: var(--font-body), system-ui, sans-serif;
@@ -31,16 +39,6 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-[data-region="norte"] {
-  --region-fill: #48a8d8;
-  --region-ink: #1b6a91;
-}
-
-[data-region="centro-oeste"] {
-  --region-fill: #ff9048;
-  --region-ink: #a9460f;
-}
-
 @theme inline {
   --color-ground: var(--ground);
   --color-paper: var(--paper);
@@ -50,6 +48,10 @@
   --color-line: var(--line);
   --color-region: var(--region-fill);
   --color-region-ink: var(--region-ink);
+  --color-region-primary: var(--region-primary);
+  --color-region-secondary: var(--region-secondary);
+  --color-region-accent: var(--region-accent);
+  --color-region-surface: var(--region-surface);
   --font-display: var(--font-display-stack);
   --font-sans: var(--font-body-stack);
   --font-serif: var(--font-serif-stack);
@@ -207,7 +209,8 @@ body {
   color: var(--ink);
 }
 .btn-ghost:hover {
-  background: var(--ink);
+  background: var(--region-primary);
+  border-color: var(--region-primary);
   color: #fff;
 }
 .btn-light {
@@ -260,6 +263,34 @@ a:hover > .photo img,
   transform: scale(1.035);
 }
 
+/*
+ * Code-drawn overlays for a regional photo used as a SECTION BACKGROUND (never as a standalone banner slice —
+ * see docs/decisions/0003-banners-as-section-backgrounds.md). Nothing is ever baked into the image.
+ *
+ * .regional-wash          light, warm tint (the region's --region-wash), calm and even, fading into the page ground
+ *                         at the bottom edge so the section sits close to the page. Text stays black on it.
+ *                         Used by the hero and by the state/city page header sections.
+ * .regional-wash-primary  the region's own primary colour as a tint, for a section that already reads as "the
+ *                         regional block" (Fala daqui). White text.
+ * .regional-wash-dark     a near-black tint, for the one closing editorial/campaign block. White text.
+ * .regional-caption       forces full black for small/muted text on a light wash: the usual muted grey measured
+ *                         2.3–3.0:1 there, under AA (docs/design/regional-color-system-sul.md).
+ */
+.regional-wash {
+  background:
+    linear-gradient(180deg, rgb(var(--region-wash) / 0) 84%, var(--ground) 100%),
+    rgb(var(--region-wash) / 0.6);
+}
+.regional-wash-primary {
+  background: linear-gradient(180deg, rgb(var(--region-primary-rgb) / 0.72), rgb(var(--region-primary-rgb) / 0.9));
+}
+.regional-wash-dark {
+  background: linear-gradient(180deg, rgb(10 12 10 / 0.66), rgb(10 12 10 / 0.82));
+}
+.regional-caption {
+  color: var(--ink);
+}
+
 .skip-link {
   position: absolute;
   left: 1rem;
@@ -302,25 +333,27 @@ a:hover > .photo img,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /* The stagger delays must go too: with fill-mode both they would hold the cards hidden and offset. */
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
 }
 
-/* Header: quiet at the top, solid and shorter after scrolling. */
+/* Header: always the region's primary colour (bg-region-primary, set in HeaderShell.tsx); a touch shorter and
+   with a hairline once the page scrolls, quiet (no rule) at the top. */
 .site-header {
-  background: transparent;
   border-bottom: 1px solid transparent;
-  transition: background-color 280ms var(--ease-out), border-color 280ms var(--ease-out);
+  transition: border-color 280ms var(--ease-out), box-shadow 280ms var(--ease-out);
 }
 .site-header-row {
   height: 3.5rem;
   transition: height 280ms var(--ease-out);
 }
 .site-header[data-scrolled="true"] {
-  background: var(--ground);
-  border-bottom-color: var(--line);
+  border-bottom-color: rgb(255 255 255 / 0.16);
+  box-shadow: 0 1px 0 rgb(0 0 0 / 0.08);
 }
 .site-header[data-scrolled="true"] .site-header-row {
   height: 3.25rem;

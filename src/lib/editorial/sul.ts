@@ -5,11 +5,19 @@ import { normalizeText } from "../geo/text";
  * is derived from real catalog data. Each block says whether it has been validated with the brand.
  */
 
-/** Hero trio: one DDD product per state. Real products; captions always show number + region + state. */
-export const HERO_DDD = [
-  { code: "054", regionName: "Serra Gaúcha" },
-  { code: "048", regionName: "Grande Florianópolis" },
-  { code: "041", regionName: "Grande Curitiba" },
+/**
+ * Hero trio: the three commercially strongest city families, one real product each, in this order.
+ * Cities are spread over RS, PR and SC, chosen for how well each design reads at phone size:
+ * the Ponto de Origem map is the most expressive in miniature (Porto Alegre's primary is also the navy shirt,
+ * which adds colour to the row); Feito em and Coordenadas are typographic. City names are short on purpose: the
+ * three captions share a ~106px column on a 375px phone ("Florianópolis" in the serif does not fit). Each entry is resolved from the
+ * catalog at render time and dropped when it does not exist; nothing is invented.
+ * DDD is no longer in the hero: it lives in the "O número de cada região" section.
+ */
+export const HERO_FAMILIES = [
+  { family: "ponto-de-origem", uf: "rs", slug: "porto-alegre" },
+  { family: "feito-em", uf: "pr", slug: "curitiba" },
+  { family: "coordenadas", uf: "sc", slug: "joinville" },
 ] as const;
 
 /**
@@ -24,18 +32,6 @@ export const DIZERES_CONTEXT: Readonly<Record<string, { uf: string; place?: stri
   [normalizeText("Ô piá")]: { uf: "PR" },
   [normalizeText("Talvez esteja em Jaraguá")]: { uf: "SC", place: "Jaraguá do Sul" },
 };
-
-/**
- * Cities with real local-voice products, in the order they are featured. A city is only shown when the
- * catalog really has such a product for it (checked at render time), never from this list alone.
- * PENDING VALIDATION: the choice and order of featured cities.
- */
-export const FEATURED_LORE_CITIES: readonly [uf: string, slug: string][] = [
-  ["sc", "florianopolis"],
-  ["sc", "blumenau"],
-  ["pr", "curitiba"],
-  ["pr", "foz-do-iguacu"],
-];
 
 /** Order in which the three states are listed everywhere they alternate (RS, SC, PR). */
 export const STATE_ORDER = ["RS", "SC", "PR"] as const;

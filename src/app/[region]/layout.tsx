@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { AnnouncementBar, Footer, Header } from "@/components/layout/SiteChrome";
 import { getCatalog } from "@/lib/catalog/repository";
 import { isRegionSlug } from "@/lib/geo/regions";
+import { regionThemeStyle } from "@/lib/theme/region-theme";
 import { ENABLED_REGIONS } from "@/lib/site";
 
 export function generateStaticParams() {
@@ -14,7 +15,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
 
   const catalog = getCatalog();
   return (
-    <div data-region={region} className="relative">
+    <div data-region={region} style={regionThemeStyle(region)} className="relative">
       <AnnouncementBar region={region} cityCount={catalog.coveredCityIds(region).size} />
       <Header region={region} />
       <main id="conteudo">{children}</main>

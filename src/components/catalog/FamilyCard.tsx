@@ -3,32 +3,34 @@ import { formatPrice } from "@/lib/format";
 import type { CityFamilyEntry } from "@/lib/catalog/repository";
 import { ProductPhoto } from "./ProductPhoto";
 
-/** One design family for one city: the primary real INK product represents it. */
+/**
+ * One design family for one city: the primary real INK product represents it. Every card is the same size —
+ * commercial priority comes from order (see families.ts), never from a bigger card (CLAUDE_STYLE_MODELS_LAYOUT_REFINEMENT.md).
+ * The card exists through alignment and spacing, not a heavy border or shadow.
+ */
 export function FamilyCard({
   entry,
   href,
   cityName,
   sizes,
   priority = false,
-  featured = false,
 }: {
   entry: CityFamilyEntry;
   href: string;
   cityName: string;
   sizes: string;
   priority?: boolean;
-  /** The one large card of the editorial grid: bigger name, description always visible. */
-  featured?: boolean;
 }) {
   const price = formatPrice(entry.primary.price);
   return (
     <Link href={href} className="group block">
       <ProductPhoto src={entry.primary.imageUrl} alt={`Camiseta ${entry.family.name} de ${cityName}`} sizes={sizes} priority={priority} />
-      <div className={featured ? "mt-4" : "mt-3"}>
-        <h3 className={`link-line inline ${featured ? "text-[1.5rem] font-extrabold leading-tight tracking-tight sm:text-[1.875rem]" : "t-h3"}`}>{entry.family.name}</h3>
-        {price && <p className={`t-small mt-0.5 font-semibold ${featured ? "sm:text-[1.0625rem]" : ""}`}>{price}</p>}
+      <span aria-hidden="true" className="mt-3 block h-[3px] w-6 bg-region-accent transition-colors group-hover:bg-region-primary" />
+      <div className="mt-2">
+        <h3 className="link-line inline text-[1.0625rem] font-bold leading-tight tracking-tight transition-colors group-hover:text-region-primary sm:text-[1.125rem]">{entry.family.name}</h3>
+        {price && <p className="t-small mt-0.5 font-semibold">{price}</p>}
       </div>
-      <p className={`t-caption mt-1 ${featured ? "hidden max-w-[44ch] text-[0.9375rem] sm:block" : "hidden max-w-[30ch] sm:block"}`}>{entry.family.description}</p>
+      <p className="t-caption mt-1 hidden max-w-[30ch] sm:block">{entry.family.description}</p>
       {entry.variants.length > 0 && (
         <p className="t-caption mt-1 font-semibold text-ink">{entry.variants.length === 1 ? "Mais 1 versão" : `Mais ${entry.variants.length} versões`}</p>
       )}

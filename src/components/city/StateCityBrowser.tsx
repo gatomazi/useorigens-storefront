@@ -45,7 +45,7 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
               type="button"
               aria-pressed={mode === key}
               onClick={() => setMode(key)}
-              className="min-h-11 border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors first:border-r-0 aria-pressed:bg-ink aria-pressed:text-white"
+              className="min-h-11 border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors first:border-r-0 aria-pressed:border-region-primary aria-pressed:bg-region-primary aria-pressed:text-white"
             >
               {label}
             </button>
@@ -57,7 +57,7 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
       <ul className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-label={mode === "regiao" ? "Ir para a região" : "Ir para a letra"}>
         {list.map((g) => (
           <li key={g.slug} className="shrink-0">
-            <a href={`#${g.slug}`} className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.875rem] font-medium transition-colors hover:border-ink hover:bg-ink hover:text-white">
+            <a href={`#${g.slug}`} className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.875rem] font-medium transition-colors hover:border-region-primary hover:bg-region-primary hover:text-white focus-visible:border-region-primary">
               {g.name}
               <span className="t-caption ml-2">{g.cities.length}</span>
             </a>
@@ -69,7 +69,7 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
         {list.map((g) => (
           <details key={`${mode}-${g.slug}`} id={g.slug} className="group border-t border-line py-1 last:border-b">
             <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 [&::-webkit-details-marker]:hidden">
-              <span className="text-[1.125rem] font-extrabold tracking-tight sm:text-[1.25rem]">{g.name}</span>
+              <span className="text-[1.125rem] font-extrabold tracking-tight transition-colors group-open:text-region-primary sm:text-[1.25rem]">{g.name}</span>
               <span className="flex items-center gap-3">
                 <span className="t-place text-[0.95rem] text-ink-mute">{g.cities.length} cidades</span>
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">

@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StateOutline } from "@/components/brand/StateOutline";
-import { RegionalBanner } from "@/components/banners/RegionalBanner";
+import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
 import { StateCityBrowser, type BrowserGroup } from "@/components/city/StateCityBrowser";
 import { CitySearch } from "@/components/search/CitySearch";
 import { getCatalog } from "@/lib/catalog/repository";
-import { bannerFor } from "@/lib/editorial/banners";
+import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { numberPt } from "@/lib/format";
 import { citiesOfRegion, areaGroupsOfState } from "@/lib/geo/cities";
 import { REGIONS, STATE_NAMES, UF_TO_REGION, isRegionSlug } from "@/lib/geo/regions";
@@ -60,36 +60,44 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   }
   const letters: BrowserGroup[] = [...byLetter.entries()].map(([letter, list]) => ({ name: letter, slug: `letra-${slugify(letter)}`, cities: toBrowser(list) }));
 
+  // A real state photo ambients the identity header (name, count, map) — never the search below it: an open
+  // results list needs a plain ground to stay legible, so it lives in its own quiet strip (docs/decisions/0003).
+  const statePhoto = usableBannerAsset("state", bannerFor(region, "state", uf));
+
   return (
     <>
-      <section className="wrap pb-8 pt-5 lg:pb-12 lg:pt-6">
-        <nav aria-label="Você está em" className="t-caption">
-          <Link href={`/${region}`} className="link-static">
-            {REGIONS[region].name}
-          </Link>
-          <span aria-hidden="true"> / </span>
-          <span aria-current="page">{STATE_NAMES[uf]}</span>
-        </nav>
-        <div className="mt-6 grid items-center gap-6 md:grid-cols-12 md:gap-10">
-          <div className="md:col-span-8">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h1 className="t-h1">{STATE_NAMES[uf]}</h1>
-                <p className="t-place mt-3 text-[1.125rem]">
-                  {numberPt.format(cities.length)} cidades · {groups.length} regiões
-                </p>
+      <section className="relative isolate">
+        {statePhoto && <RegionalPhotoSection asset={statePhoto} priority />}
+        <div className={`wrap pb-6 pt-5 lg:pb-8 lg:pt-6 ${statePhoto ? "pb-12 lg:pb-16" : ""}`}>
+          <nav aria-label="Você está em" className="t-caption regional-caption">
+            <Link href={`/${region}`} className="link-static">
+              {REGIONS[region].name}
+            </Link>
+            <span aria-hidden="true"> / </span>
+            <span aria-current="page">{STATE_NAMES[uf]}</span>
+          </nav>
+          <div className="mt-6 grid items-center gap-6 md:grid-cols-12 md:gap-10">
+            <div className="md:col-span-8">
+              <div className="flex items-end justify-between gap-4">
+                <div>
+                  <h1 className="t-h1">{STATE_NAMES[uf]}</h1>
+                  <p className="t-place mt-3 text-[1.125rem]">
+                    {numberPt.format(cities.length)} cidades · {groups.length} regiões
+                  </p>
+                </div>
+                <StateOutline uf={uf} className="h-20 w-24 shrink-0 text-ink md:hidden" strokeWidth={2} />
               </div>
-              <StateOutline uf={uf} className="h-20 w-24 shrink-0 text-ink md:hidden" strokeWidth={2} />
             </div>
-            <div className="mt-6 max-w-2xl">
-              <CitySearch region={region} />
-            </div>
+            <StateOutline uf={uf} className="hidden h-64 w-full max-w-sm justify-self-end text-ink md:col-span-4 md:block" strokeWidth={2} />
           </div>
-          <StateOutline uf={uf} className="hidden h-64 w-full max-w-sm justify-self-end text-ink md:col-span-4 md:block" strokeWidth={2} />
         </div>
       </section>
 
-      <RegionalBanner slot="state" config={bannerFor(region, "state", uf)} fallback={null} className="mb-8" />
+      <section className="wrap pb-8 pt-6 lg:pb-12">
+        <div className="max-w-2xl">
+          <CitySearch region={region} />
+        </div>
+      </section>
 
       <StateCityBrowser region={region} uf={uf.toLowerCase()} groups={groups} letters={letters} />
     </>

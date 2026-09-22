@@ -61,7 +61,8 @@ export function Header({ region }: { region: RegionSlug }) {
                 <path d="m6 9 6 6 6-6" />
               </svg>
             </summary>
-            <ul className="absolute right-0 top-full z-50 mt-1 min-w-52 border-2 border-ink bg-white py-1">
+            {/* Its own white surface: reset text colour explicitly, the header above it is on a coloured background. */}
+            <ul className="absolute right-0 top-full z-50 mt-1 min-w-52 border-2 border-ink bg-white py-1 text-ink">
               {others.map((r) => (
                 <li key={r.slug}>
                   <a href={LEGACY_STORE_URLS[r.slug]} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">

@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Sticky header that is quiet at the top of the page (no rule, taller) and becomes a solid,
- * slightly shorter bar once the page scrolls. A sentinel + IntersectionObserver avoids scroll listeners.
+ * Sticky header, always on the region's primary colour (white text/icons throughout, by inheritance): tall and
+ * quiet at the top of the page, a touch shorter with a hairline once the page scrolls. A sentinel +
+ * IntersectionObserver avoids scroll listeners.
  */
 export function HeaderShell({ children }: { children: React.ReactNode }) {
   const sentinel = useRef<HTMLDivElement>(null);
@@ -21,7 +22,7 @@ export function HeaderShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <div ref={sentinel} aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-20" />
-      <header data-scrolled={scrolled} className="site-header sticky top-0 z-40">
+      <header data-scrolled={scrolled} className="site-header sticky top-0 z-40 bg-region-primary text-white">
         {children}
       </header>
     </>

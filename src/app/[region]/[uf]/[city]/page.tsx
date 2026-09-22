@@ -4,11 +4,11 @@ import { notFound } from "next/navigation";
 import { StateOutline } from "@/components/brand/StateOutline";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
-import { RegionalBanner } from "@/components/banners/RegionalBanner";
+import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import { getCatalog } from "@/lib/catalog/repository";
 import { resolveCity } from "@/lib/catalog/resolver";
-import { bannerFor } from "@/lib/editorial/banners";
+import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { formatPrice } from "@/lib/format";
 import { citiesOfSameArea } from "@/lib/geo/cities";
 import { ENABLED_REGIONS } from "@/lib/site";
@@ -59,39 +59,39 @@ export default async function CityPage({ params }: { params: Params }) {
   const start = Math.max(0, (at === -1 ? sameArea.length : at) - 5);
   const neighbours = sameArea.slice(start, start + 10);
 
+  // A real city photo (never one that names the city — the H1 already does that) ambients the header itself,
+  // instead of sitting as its own banner slice between the header and "Estilos" (docs/decisions/0003).
+  const cityPhoto = usableBannerAsset("city", bannerFor(city.regionSlug, "city"));
+
   return (
     <>
-      <section className="wrap pb-8 pt-5 lg:pb-12 lg:pt-6">
-        <nav aria-label="Você está em" className="t-caption">
-          <Link href={`/${region}`} className="link-static">
-            {resolved.region.name}
-          </Link>
-          <span aria-hidden="true"> / </span>
-          <Link href={`/${region}/${uf}`} className="link-static">
-            {stateName}
-          </Link>
-          <span aria-hidden="true"> / </span>
-          <span aria-current="page">{city.name}</span>
-        </nav>
-
-        <div className="mt-6 flex items-end justify-between gap-6">
-          <div className="min-w-0">
-            <h1 className="t-city">{city.name}</h1>
-            <p className="t-place mt-4 text-[1.125rem] sm:text-[1.5rem]">
+      <section className="relative isolate">
+        {cityPhoto && <RegionalPhotoSection asset={cityPhoto} priority />}
+        <div className={`wrap pb-8 pt-5 lg:pb-12 lg:pt-6 ${cityPhoto ? "pb-14 lg:pb-20" : ""}`}>
+          <nav aria-label="Você está em" className="t-caption regional-caption">
+            <Link href={`/${region}`} className="link-static">
+              {resolved.region.name}
+            </Link>
+            <span aria-hidden="true"> / </span>
+            <Link href={`/${region}/${uf}`} className="link-static">
               {stateName}
-              {city.area ? ` · ${city.area}` : ""}
-            </p>
+            </Link>
+            <span aria-hidden="true"> / </span>
+            <span aria-current="page">{city.name}</span>
+          </nav>
+
+          <div className="mt-6 flex items-end justify-between gap-6">
+            <div className="min-w-0">
+              <h1 className="t-city">{city.name}</h1>
+              <p className="t-place mt-4 text-[1.125rem] sm:text-[1.5rem]">
+                {stateName}
+                {city.area ? ` · ${city.area}` : ""}
+              </p>
+            </div>
+            <StateOutline uf={city.uf} className="hidden h-44 w-56 shrink-0 text-ink lg:block" strokeWidth={2} />
           </div>
-          <StateOutline uf={city.uf} className="hidden h-44 w-56 shrink-0 text-ink lg:block" strokeWidth={2} />
         </div>
       </section>
-
-      <RegionalBanner
-        slot="city"
-        config={bannerFor(city.regionSlug, "city")}
-        fallback={null}
-        className="mb-10"
-      />
 
       <section aria-labelledby="styles-title" className="wrap pb-14 lg:pb-20">
         <h2 id="styles-title" className="mb-6 text-[1.5rem] font-extrabold tracking-tight lg:mb-10 lg:text-[1.875rem]">

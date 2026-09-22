@@ -153,7 +153,7 @@ export function CitySearch({
               }}
               onMouseEnter={() => setActive(i)}
               className={`search-row flex min-h-14 cursor-pointer flex-col justify-center gap-0.5 border-b border-line px-3 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6 ${
-                isActive ? "bg-ink text-white" : ""
+                isActive ? "bg-region-primary text-white" : ""
               }`}
             >
               <span className="text-[clamp(1.375rem,3.4vw,2.25rem)] font-extrabold leading-tight tracking-tight">{title}</span>

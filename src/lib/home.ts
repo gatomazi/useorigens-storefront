@@ -1,18 +1,22 @@
 import "server-only";
 import { purchaseUrl } from "./catalog/commerce";
 import { getCatalog } from "./catalog/repository";
-import { resolveCity, type ResolvedCity } from "./catalog/resolver";
+import { resolveCity, resolveCityProduct, type ResolvedCity } from "./catalog/resolver";
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
-import { dddProducts, pickDdd, type DddProduct } from "./editorial/ddd";
+import { dddProducts } from "./editorial/ddd";
 import { dizeresWithContext } from "./editorial/dizeres";
+import { lendaProducts } from "./editorial/lenda";
+import { recreationProducts } from "./editorial/recreations";
 import { stateLineProduct } from "./editorial/state-lines";
-import { FEATURED_LORE_CITIES, HERO_DDD, STATE_ORDER } from "./editorial/sul";
+import { terraProducts } from "./editorial/terra";
+import { HERO_FAMILIES, STATE_ORDER } from "./editorial/sul";
 import { formatPrice } from "./format";
 import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, type RegionSlug } from "./geo/regions";
-import { cityBySlug, citiesOfRegion, areaGroupsOfState } from "./geo/cities";
+import { citiesOfRegion, areaGroupsOfState } from "./geo/cities";
 import { SHOWCASE } from "./site";
 
-export type DddCard = { code: string; regionName: string; uf: string; stateName: string; imageUrl: string; price: string | null; href: string | null };
+/** One hero shirt: a real product of a commercial family, linking to its storefront page. */
+export type HeroFamilyCard = { familyId: string; familyName: string; cityName: string; uf: string; imageUrl: string; price: string | null; href: string };
 
 export type StateCard = {
   uf: string;
@@ -24,41 +28,25 @@ export type StateCard = {
   line: { label: string; name: string; imageUrl: string; price: string | null; href: string | null } | null;
 };
 
-export type LoreCityCard = {
-  uf: string;
-  slug: string;
-  name: string;
-  area: string;
-  /** Each real expression/patron product of the city. The first one gives the card its image. */
-  items: { text: string; imageUrl: string; href: string | null }[];
-};
-
 export type RegionHome = {
   cityCount: number;
   syncedAt: string | null;
   /** City used for the family showcase (real INK photos). */
   showcase: ResolvedCity | null;
-  /** One real DDD product per state for the hero (empty entries are dropped, never invented). */
-  heroDdd: DddCard[];
+  /** The three protagonist shirts of the hero (empty entries are dropped, never invented). */
+  heroFamilies: HeroFamilyCard[];
   ddd: CarouselItem[];
   fala: CarouselItem[];
   states: StateCard[];
-  loreCities: LoreCityCard[];
+  /** "Da Nossa Terra": real regional-identity products, balanced across the three states. */
+  terra: CarouselItem[];
+  /** Redesigns/recreations: an editorial trail parallel to the eight city families, never mixed with them. */
+  recreations: CarouselItem[];
+  /** "Feito Para Você": the real "Lenda" line — who wears it, never a city/map personalization. */
+  feitoParaVoce: CarouselItem[];
   /** Crops for the campaign block. */
   campaignCrops: { imageUrl: string; family: string }[];
 };
-
-function toDddCard(d: DddProduct): DddCard {
-  return {
-    code: d.code,
-    regionName: d.regionName,
-    uf: d.uf,
-    stateName: STATE_NAMES[d.uf],
-    imageUrl: d.product.imageUrl,
-    price: formatPrice(d.product.price),
-    href: purchaseUrl(d.product),
-  };
-}
 
 /** Round-robin by state so no single state (or "bah") dominates the row. */
 function interleaveByState<T extends { uf: string }>(items: T[], order: readonly string[]): T[] {
@@ -79,7 +67,11 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const showcase = resolveCity(region, heroUf, heroSlug);
 
   const allDdd = dddProducts(merch);
-  const heroDdd = pickDdd(allDdd, HERO_DDD).map(toDddCard);
+  const heroFamilies: HeroFamilyCard[] = HERO_FAMILIES.flatMap(({ family, uf, slug }) => {
+    const hit = resolveCityProduct(region, uf, slug, family);
+    if (!hit) return [];
+    return [{ familyId: hit.family.id, familyName: hit.family.name, cityName: hit.city.name, uf: hit.city.uf, imageUrl: hit.primary.imageUrl, price: formatPrice(hit.primary.price), href: `/${region}/${uf}/${slug}/${family}` }];
+  });
   const ddd: CarouselItem[] = allDdd.flatMap((d) => {
     const href = purchaseUrl(d.product);
     return href
@@ -129,18 +121,25 @@ export function getRegionHome(region: RegionSlug): RegionHome {
     })
     .sort((a, b) => b.cityCount - a.cityCount);
 
-  const loreCities: LoreCityCard[] = FEATURED_LORE_CITIES.flatMap(([uf, slug]) => {
-    const city = cityBySlug(uf, slug);
-    if (!city || !covered.has(city.id)) return [];
-    const items = (lore.byCity.get(city.id) ?? []).filter((l) => l.kind === "expressao");
-    if (items.length === 0) return [];
-    return [{ uf, slug, name: city.name, area: city.area, items: items.map((l) => ({ text: l.text, imageUrl: l.product.imageUrl, href: purchaseUrl(l.product) })) }];
-  });
-
   const campaignCrops = (showcase?.families ?? [])
     .filter((f) => f.family.id === "territorio" || f.family.id === "feito-em")
     .slice(0, 2)
     .map((f) => ({ imageUrl: f.primary.imageUrl, family: f.family.id }));
 
-  return { cityCount: covered.size, syncedAt: catalog.syncedAt, showcase, heroDdd, ddd, fala, states, loreCities, campaignCrops };
+  const recreations: CarouselItem[] = recreationProducts(merch).flatMap(({ product, theme }) => {
+    const href = purchaseUrl(product);
+    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), context: theme, price: formatPrice(product.price), imageUrl: product.imageUrl, href }] : [];
+  });
+
+  const terra: CarouselItem[] = terraProducts(merch, ufs).flatMap(({ product, label }) => {
+    const href = purchaseUrl(product);
+    return href ? [{ id: product.inkProductId, name: label, price: formatPrice(product.price), imageUrl: product.imageUrl, href }] : [];
+  });
+
+  const feitoParaVoce: CarouselItem[] = lendaProducts(merch).flatMap((product) => {
+    const href = purchaseUrl(product);
+    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").replace(/\s*\|\s*Lenda$/i, "").trim(), context: "Lenda", price: formatPrice(product.price), imageUrl: product.imageUrl, href }] : [];
+  });
+
+  return { cityCount: covered.size, syncedAt: catalog.syncedAt, showcase, heroFamilies, ddd, fala, states, terra, recreations, feitoParaVoce, campaignCrops };
 }
