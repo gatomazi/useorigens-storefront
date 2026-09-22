@@ -1,9 +1,10 @@
+import { siteUrl } from "./config/env";
 import type { RegionSlug } from "./geo/regions";
 
 /** Regions with a finished storefront. Others 404 until their editorial experience exists. */
 export const ENABLED_REGIONS: readonly RegionSlug[] = ["sul"];
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.useorigens.com.br";
+export const SITE_URL = siteUrl();
 
 /** Where the Norte and Centro-Oeste storefronts live until they are built here. */
 export const LEGACY_STORE_URLS = {

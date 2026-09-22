@@ -1,4 +1,5 @@
 import "server-only";
+import { commerceStorePriorityOverride } from "../config/env";
 import { allCities, cityById, type City } from "../geo/cities";
 import { REGIONS, REGION_SLUGS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { buildLore, type Lore } from "../editorial/lore";
@@ -33,10 +34,8 @@ export type Catalog = {
  * A comma list (e.g. `use-origens,use-sul`) overrides it globally once stores are consolidated.
  */
 function storeOrderFor(region: RegionSlug): CommerceStoreKey[] {
-  const configured = process.env.COMMERCE_STORE_PRIORITY?.trim();
-  if (configured && configured !== "regional") {
-    return configured.split(",").map((s) => s.trim() as CommerceStoreKey);
-  }
+  const override = commerceStorePriorityOverride();
+  if (override) return override;
   const own = REGIONS[region].storeKey;
   const others = (Object.values(REGIONS).map((r) => r.storeKey) as CommerceStoreKey[]).filter((k) => k !== own);
   return [own, ...others];

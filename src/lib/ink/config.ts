@@ -1,4 +1,5 @@
 import "server-only";
+import { ConfigError } from "../config/env";
 import type { CommerceStoreKey } from "../geo/regions";
 
 /**
@@ -13,7 +14,18 @@ export const INK_STORES: Readonly<
   "use-centro": { tokenEnv: "INK_TOKEN_CENTRO", expectedStoreSlug: "usecentro" },
 };
 
-export const INK_API_BASE_URL = process.env.INK_API_BASE_URL ?? "https://api.reserva.ink";
+function validatedInkApiBaseUrl(): string {
+  const raw = process.env.INK_API_BASE_URL;
+  if (!raw) return "https://api.reserva.ink";
+  try {
+    new URL(raw);
+    return raw;
+  } catch {
+    throw new ConfigError("INK_API_BASE_URL", "must be a valid absolute URL, e.g. https://api.reserva.ink");
+  }
+}
+
+export const INK_API_BASE_URL = validatedInkApiBaseUrl();
 
 /** Hosts a purchase link may point to. Anything else is treated as a broken destination. */
 export const ALLOWED_COMMERCE_HOSTS: ReadonlySet<string> = new Set([
