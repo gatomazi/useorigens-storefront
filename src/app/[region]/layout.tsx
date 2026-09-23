@@ -10,8 +10,12 @@ import { isRegionSlug } from "@/lib/geo/regions";
 import { regionThemeStyle } from "@/lib/theme/region-theme";
 import { ENABLED_REGIONS } from "@/lib/site";
 
+// No region page is prebuilt: this layout reads the catalog snapshot (header count, footer sync date), and the
+// snapshot lives on the runtime Volume, which does not exist at `next build` time. Prebuilding `/sul` baked an
+// empty catalog ("0 cidades", no hero products) into the cached HTML until the next revalidation. Rendering on
+// first request (then ISR-cached) is the same pattern the state, city and PDP routes already use.
 export function generateStaticParams() {
-  return ENABLED_REGIONS.map((region) => ({ region }));
+  return [];
 }
 
 export default async function RegionLayout({ children, params }: { children: React.ReactNode; params: Promise<{ region: string }> }) {
