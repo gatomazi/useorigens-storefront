@@ -98,6 +98,18 @@ function gaMethodCalls(calls: unknown[][], method: string) {
   return calls.filter((c) => c[0] === method);
 }
 
+/** Pre-seeds an "accepted" decision (current CONSENT_VERSION) before any page script runs — every event helper is
+ * consent-gated, so tests about *what* an event carries must start from a visitor who already said yes. Tests
+ * about the consent flow itself click the real banner instead. */
+async function grantConsent(page: Page) {
+  await page.addInitScript(() => {
+    window.localStorage.setItem(
+      "useorigens:consent:marketing",
+      JSON.stringify({ choice: "accepted", version: 2, decidedAt: "2026-09-23T00:00:00.000Z" }),
+    );
+  });
+}
+
 test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked, no real Pixel/network)", () => {
   test("given no consent decision, when the site is used normally, then zero requests ever go to Meta", async ({ page }) => {
     const metaRequests: string[] = [];
@@ -204,6 +216,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
   });
 
   test("given a search resolved by selecting a suggestion, when chosen, then exactly one Search and one SelectCity fire, same gesture", async ({ page }) => {
+    await grantConsent(page);
     const calls = await withFbqMock(page);
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
     const dialog = await page.getByRole("button", { name: /Busque sua cidade/ }).first().click().then(() => page.getByRole("dialog", { name: "Buscar cidade" }));
@@ -219,6 +232,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
   });
 
   test("given a city clicked in the state page's mesoregion listing, when clicked, then exactly one SelectCity fires and zero Search", async ({ page }) => {
+    await grantConsent(page);
     const calls = await withFbqMock(page);
     await page.goto("/sul/sc", { waitUntil: "domcontentloaded" });
     await page.getByRole("link", { name: /^Grande Florianópolis/ }).first().click();
@@ -236,6 +250,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
   });
 
   test("given a city style card with no variants, when clicked, then exactly one GoToInk fires with a real product_id, and navigation still reaches INK", async ({ page }) => {
+    await grantConsent(page);
     const calls = await withFbqMock(page);
     await blockInkNavigation(page);
     // Not `waitUntil: "domcontentloaded"`: this test clicks almost immediately after navigating, and giving
@@ -253,6 +268,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
   });
 
   test("given the PDP's own buy button, when clicked, then exactly one GoToInk fires (source_section: pdp)", async ({ page }) => {
+    await grantConsent(page);
     const calls = await withFbqMock(page);
     await blockInkNavigation(page);
     await page.goto("/sul/pr/pato-branco/ponto-de-origem");
@@ -264,6 +280,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
   });
 
   test("given a home carousel product (shared ProductCarousel click point), when clicked, then exactly one GoToInk fires, never ViewContent/Purchase", async ({ page }) => {
+    await grantConsent(page);
     const calls = await withFbqMock(page);
     await blockInkNavigation(page);
     await page.goto("/sul", { waitUntil: "networkidle" });
@@ -381,6 +398,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
   });
 
   test("given a search resolved by selecting a suggestion, when chosen, then exactly one view_search_results and one select_city fire, same gesture", async ({ page }) => {
+    await grantConsent(page);
     const calls = await withGtagMock(page);
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
     const dialog = await page.getByRole("button", { name: /Busque sua cidade/ }).first().click().then(() => page.getByRole("dialog", { name: "Buscar cidade" }));
@@ -396,6 +414,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
   });
 
   test("given a city clicked in the state page's mesoregion listing, when clicked, then exactly one select_city fires (source: state_mesoregion) and zero view_search_results", async ({ page }) => {
+    await grantConsent(page);
     const calls = await withGtagMock(page);
     await page.goto("/sul/sc", { waitUntil: "domcontentloaded" });
     await page.getByRole("link", { name: /^Grande Florianópolis/ }).first().click();
@@ -415,6 +434,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
   });
 
   test("given a state clicked in the header Regiões dropdown, when clicked, then exactly one select_state fires (source: state_selector)", async ({ page }) => {
+    await grantConsent(page);
     await page.setViewportSize({ width: 1440, height: 900 });
     const calls = await withGtagMock(page);
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
@@ -435,6 +455,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
   });
 
   test("given a city style card with no variants, when clicked, then select_item fires before go_to_ink, and both Meta's GoToInk and GA4's events share the same click", async ({ page }) => {
+    await grantConsent(page);
     const meta = await withFbqMock(page);
     const ga = await withGtagMock(page);
     await blockInkNavigation(page);
@@ -454,6 +475,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
   });
 
   test("given the PDP's own buy button, when clicked, then exactly one select_item and one go_to_ink fire (source_section: pdp)", async ({ page }) => {
+    await grantConsent(page);
     const calls = await withGtagMock(page);
     await blockInkNavigation(page);
     await page.goto("/sul/pr/pato-branco/ponto-de-origem");
@@ -557,5 +579,110 @@ test.describe("State page: 'Destaques' showcase", () => {
     await page.goto("/sul/sc", { waitUntil: "domcontentloaded" });
     const firstLink = page.locator("section:has(#showcase-title) a.group").first();
     await expect(firstLink).toHaveAttribute("href", /^https:\/\/www\.usesul\.com\.br\//);
+  });
+});
+
+test.describe("Shared consent (Meta + GA4): vendor-neutral banner, revocation stops both, privacy page is publishable", () => {
+  test("given the banner, when it is shown, then the copy is vendor-neutral and both choices are visible and equally sized", async ({ page }) => {
+    await page.goto("/sul", { waitUntil: "domcontentloaded" });
+    const banner = page.getByRole("region", { name: "Preferências de cookies" });
+    await expect(banner).toBeVisible();
+    await expect(banner).toContainText("Usamos cookies para melhorar sua experiência e entender como o site é utilizado");
+    await expect(banner).not.toContainText(/Meta|Pixel|Google|Analytics/i);
+    await expect(banner.getByRole("link", { name: "Política de Privacidade" })).toBeVisible();
+    const reject = await banner.getByRole("button", { name: "Rejeitar" }).boundingBox();
+    const accept = await banner.getByRole("button", { name: "Aceitar cookies" }).boundingBox();
+    expect(reject && accept).toBeTruthy();
+    expect(Math.abs(reject!.height - accept!.height)).toBeLessThanOrEqual(1);
+  });
+
+  test("given a phone viewport, when the banner is shown, then it stays compact instead of covering the page", async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto("/sul", { waitUntil: "domcontentloaded" });
+    const banner = page.getByRole("region", { name: "Preferências de cookies" });
+    await expect(banner).toBeVisible();
+    const box = await banner.boundingBox();
+    expect(box!.height).toBeLessThan(812 * 0.25);
+  });
+
+  test("given both providers loaded after Aceitar cookies, when consent is revoked, then neither receives any further event, even from client-side navigation and search", async ({ page }) => {
+    await page.route("https://www.googletagmanager.com/**", (route) => route.abort());
+    await page.route("https://connect.facebook.net/**", (route) => route.abort());
+    const fbq = await withFbqMock(page);
+    const gtag = await withGtagMock(page);
+    await page.goto("/sul");
+    await page.getByRole("region", { name: "Preferências de cookies" }).getByRole("button", { name: "Aceitar cookies" }).click();
+    await page.waitForTimeout(300);
+    expect(fbqCalls(fbq, "PageView")).toHaveLength(1);
+    expect(gaCalls(gtag, "page_view")).toHaveLength(1);
+
+    await page.getByRole("button", { name: "Preferências de privacidade" }).first().click();
+    await page.waitForTimeout(200);
+    expect(fbqMethodCalls(fbq, "consent").some((c) => c[1] === "revoke")).toBe(true);
+    expect(gaMethodCalls(gtag, "consent").some((c) => (c[2] as Record<string, unknown> | undefined)?.analytics_storage === "denied")).toBe(true);
+    const fbqAfterRevoke = fbq.length;
+    const gtagAfterRevoke = gtag.length;
+
+    // A conclusive search + city selection, the events most likely to slip through if only the loaders were gated.
+    const openDialog = async () => {
+      await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
+      const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+      await expect(dialog).toBeVisible();
+      return dialog;
+    };
+    await fillAndAwaitSuggestion(page, openDialog, "floripa");
+    await page.keyboard.press("Enter");
+    await page.waitForURL(/\/sul\/sc\/florianopolis$/);
+    await page.getByRole("link", { name: "Política de privacidade" }).first().click();
+    await page.waitForURL(/\/sul\/privacidade$/);
+    await page.waitForTimeout(300);
+
+    expect(fbq.length).toBe(fbqAfterRevoke);
+    expect(gtag.length).toBe(gtagAfterRevoke);
+  });
+
+  test("given consent revoked and accepted again in the same session, when accepted, then both are granted again with one fresh page view and no replay", async ({ page }) => {
+    await page.route("https://www.googletagmanager.com/**", (route) => route.abort());
+    await page.route("https://connect.facebook.net/**", (route) => route.abort());
+    const fbq = await withFbqMock(page);
+    const gtag = await withGtagMock(page);
+    await page.goto("/sul");
+    const banner = page.getByRole("region", { name: "Preferências de cookies" });
+    await banner.getByRole("button", { name: "Aceitar cookies" }).click();
+    await page.waitForTimeout(300);
+    await page.getByRole("button", { name: "Preferências de privacidade" }).first().click();
+    await expect(banner).toBeVisible();
+    await banner.getByRole("button", { name: "Aceitar cookies" }).click();
+    await page.waitForTimeout(300);
+
+    expect(fbqMethodCalls(fbq, "consent").map((c) => c[1])).toEqual(["grant", "revoke", "grant"]);
+    expect(fbqCalls(fbq, "PageView")).toHaveLength(2); // one per accepted session of the same page, never a replay of older events
+    expect(gaMethodCalls(gtag, "consent").map((c) => (c[2] as Record<string, unknown>).analytics_storage)).toEqual(["denied", "granted"]);
+    expect(gaCalls(gtag, "page_view")).toHaveLength(2);
+  });
+
+  test("given the privacy page, when opened, then it has no draft/placeholder text and names both tools generically-first", async ({ page }) => {
+    await page.goto("/sul/privacidade");
+    const body = page.locator("main");
+    await expect(body.getByRole("heading", { name: "Política de privacidade e cookies" })).toBeVisible();
+    await expect(body).not.toContainText(/rascunho|pendente|\[data a definir|\[pendente|revisão jurídica/i);
+    await expect(body).toContainText(/ferramentas de análise e marketing/i);
+    await expect(body).toContainText("Meta Pixel");
+    await expect(body).toContainText("Google Analytics");
+    await expect(body.getByRole("button", { name: "Preferências de privacidade" })).toBeVisible();
+  });
+
+  test("given a rejected decision, when a real INK link is clicked, then navigation still proceeds and nothing is sent", async ({ page }) => {
+    const fbq = await withFbqMock(page);
+    const gtag = await withGtagMock(page);
+    await blockInkNavigation(page);
+    await page.goto("/sul/sc/tijucas");
+    await page.getByRole("region", { name: "Preferências de cookies" }).getByRole("button", { name: "Rejeitar" }).click();
+    const inkLink = page.locator('a[href^="https://www.usesul.com.br"]').first();
+    await expect(inkLink).toBeVisible();
+    await inkLink.click(); // blockInkNavigation only stops the real page unload; the click handler still ran
+    await page.waitForTimeout(200);
+    expect(fbq).toEqual([]);
+    expect(gtag).toEqual([]);
   });
 });

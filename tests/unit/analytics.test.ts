@@ -1,9 +1,16 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { trackGoToInk, trackPageView, trackSearch, trackSelectCity, trackSelectState } from "@/lib/analytics/track";
 
+// track.ts asks the consent store whether an "accepted" decision is live; these tests drive that answer directly.
+const consent = vi.hoisted(() => ({ granted: true }));
+vi.mock("@/lib/consent/store", () => ({ hasAnalyticsConsent: () => consent.granted }));
+
 // No jsdom/happy-dom in this project (kept out on purpose — CLAUDE_USE_ORIGENS_META_PIXEL_INK_ESTADOS.md §1
 // asks to avoid new dependencies without need). `typeof window === "undefined"` under plain Node is enough to
 // test the "Pixel absent" no-op path for free; a minimal `vi.stubGlobal` stands in for `window.fbq` itself.
+beforeEach(() => {
+  consent.granted = true;
+});
 afterEach(() => {
   vi.unstubAllGlobals();
 });
@@ -167,5 +174,42 @@ describe("track.ts — gtag loaded (fbq absent)", () => {
     expect(calls).toEqual([
       ["event", "page_view", { page_location: "https://www.useorigens.com.br/sul/sc/tijucas", page_path: "/sul/sc/tijucas", page_title: "Tijucas", region: "sul" }],
     ]);
+  });
+});
+
+describe("track.ts — consent revoked or never given while both SDKs are still on window", () => {
+  test("given fbq/gtag exist but consent is not granted, when every track function runs, then nothing is sent to either", () => {
+    const fbqCalls: unknown[][] = [];
+    const gtagCalls: unknown[][] = [];
+    vi.stubGlobal("window", { fbq: (...a: unknown[]) => fbqCalls.push(a), gtag: (...a: unknown[]) => gtagCalls.push(a) });
+    consent.granted = false;
+    trackSearch("Tijucas");
+    trackSelectCity({ city: "Tijucas", state: "SC", region: "sul" });
+    trackSelectState({ state: "SC", region: "sul" });
+    trackGoToInk({ productId: "1", sourceSection: "city_styles" });
+    trackPageView({ pageLocation: "https://example.com/sul", pagePath: "/sul" });
+    expect(fbqCalls).toEqual([]);
+    expect(gtagCalls).toEqual([]);
+  });
+
+  test("given consent is granted then revoked mid-session, when an event follows, then only the pre-revoke one was sent", () => {
+    const gtagCalls: unknown[][] = [];
+    vi.stubGlobal("window", { gtag: (...a: unknown[]) => gtagCalls.push(a) });
+    trackSelectState({ state: "SC", region: "sul" });
+    consent.granted = false;
+    trackSelectState({ state: "RS", region: "sul" });
+    expect(gtagCalls).toHaveLength(1);
+  });
+
+  test("given an SDK that throws (blocked/broken), when GoToInk runs, then it does not throw and the other provider still gets its events", () => {
+    const gtagCalls: unknown[][] = [];
+    vi.stubGlobal("window", {
+      fbq: () => {
+        throw new Error("blocked");
+      },
+      gtag: (...a: unknown[]) => gtagCalls.push(a),
+    });
+    expect(() => trackGoToInk({ productId: "1", sourceSection: "city_styles" })).not.toThrow();
+    expect(gtagCalls.map((c) => c[1])).toEqual(["select_item", "go_to_ink"]);
   });
 });

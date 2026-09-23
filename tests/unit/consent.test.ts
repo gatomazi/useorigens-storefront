@@ -43,7 +43,7 @@ describe("consent store", () => {
     writeConsent("accepted");
     const record = getConsentSnapshot();
     expect(record?.choice).toBe("accepted");
-    expect(record?.version).toBe(1);
+    expect(record?.version).toBe(2);
     expect(typeof record?.decidedAt).toBe("string");
   });
 
@@ -59,6 +59,27 @@ describe("consent store", () => {
     data.set("useorigens:consent:marketing", JSON.stringify({ choice: "accepted", version: 999, decidedAt: "2026-01-01T00:00:00.000Z" }));
     const { getConsentSnapshot } = await import("@/lib/consent/store");
     expect(getConsentSnapshot()).toBeNull();
+  });
+
+  test("given a v1 decision (Meta-only scope), when read, then it is treated as no decision so the wider scope is asked again", async () => {
+    const { data } = stubWindow();
+    data.set("useorigens:consent:marketing", JSON.stringify({ choice: "accepted", version: 1, decidedAt: "2026-01-01T00:00:00.000Z" }));
+    const { getConsentSnapshot, hasAnalyticsConsent } = await import("@/lib/consent/store");
+    expect(getConsentSnapshot()).toBeNull();
+    expect(hasAnalyticsConsent()).toBe(false);
+  });
+
+  test("given accept then reject, when hasAnalyticsConsent is asked, then only the accepted state answers true", async () => {
+    stubWindow();
+    const { writeConsent, clearConsent, hasAnalyticsConsent } = await import("@/lib/consent/store");
+    expect(hasAnalyticsConsent()).toBe(false);
+    writeConsent("accepted");
+    expect(hasAnalyticsConsent()).toBe(true);
+    writeConsent("rejected");
+    expect(hasAnalyticsConsent()).toBe(false);
+    writeConsent("accepted");
+    clearConsent();
+    expect(hasAnalyticsConsent()).toBe(false);
   });
 
   test("given corrupted JSON in storage, when read, then it is treated as no decision, never a crash", async () => {

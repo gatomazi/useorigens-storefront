@@ -14,7 +14,7 @@ declare global {
 }
 
 /**
- * GA4, gated on the same marketing consent as `MetaPixel.tsx` (CLAUDE_GA4_STOREFRONT_TRACKING.md §3): while
+ * GA4, gated on the same analytics/marketing consent as `MetaPixel.tsx` (CLAUDE_GA4_STOREFRONT_TRACKING.md §3): while
  * `record` isn't `"accepted"`, this component renders nothing at all — no <Script>, no gtag.js request, no
  * dataLayer. Not "loaded but silent": genuinely absent from the DOM, mirroring `MetaPixel.tsx`'s own
  * architecture exactly, so the same consent guarantee applies to both providers identically.
@@ -38,12 +38,30 @@ export function GoogleAnalytics() {
   const searchParams = useSearchParams();
   const lastTracked = useRef<string | null>(null);
   const wasAccepted = useRef(false);
+  const revokedThisSession = useRef(false);
 
   const currentPath = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
   // `window` doesn't exist during SSR — the component always renders null there anyway (consent is never
   // "accepted" on the server, see ConsentProvider's `getServerConsentSnapshot`), but this computation itself
   // runs on every render including that first server pass, so it needs its own guard.
   const currentUrl = typeof window !== "undefined" ? window.location.origin + currentPath : currentPath;
+
+  // Revocation while already loaded this session: Google's own Consent Mode API (not an improvised send), and
+  // forget the path we last tracked so nothing resumes silently if consent is granted again later without a
+  // reload — same shape as MetaPixel.tsx's `fbq('consent','revoke')` handling. Accepting again in the same
+  // session flips Consent Mode back to granted (the bootstrap won't re-run for the same script id); nothing
+  // earlier is replayed.
+  useEffect(() => {
+    if (wasAccepted.current && !accepted && typeof window.gtag === "function") {
+      window.gtag("consent", "update", { analytics_storage: "denied" });
+      lastTracked.current = null;
+      revokedThisSession.current = true;
+    } else if (!wasAccepted.current && accepted && revokedThisSession.current && typeof window.gtag === "function") {
+      window.gtag("consent", "update", { analytics_storage: "granted" });
+      revokedThisSession.current = false;
+    }
+    wasAccepted.current = accepted;
+  }, [accepted]);
 
   useEffect(() => {
     if (!accepted || !measurementId) return;
@@ -52,17 +70,6 @@ export function GoogleAnalytics() {
     lastTracked.current = currentPath;
     trackPageView({ pageLocation: currentUrl, pagePath: currentPath, pageTitle: document.title });
   }, [accepted, measurementId, currentPath, currentUrl]);
-
-  // Revocation while already loaded this session: Google's own Consent Mode API (not an improvised send), and
-  // forget the path we last tracked so nothing resumes silently if consent is granted again later without a
-  // reload — same shape as MetaPixel.tsx's `fbq('consent', 'revoke')` handling.
-  useEffect(() => {
-    if (wasAccepted.current && !accepted && typeof window.gtag === "function") {
-      window.gtag("consent", "update", { analytics_storage: "denied" });
-      lastTracked.current = null;
-    }
-    wasAccepted.current = accepted;
-  }, [accepted]);
 
   if (!measurementId || !accepted) return null;
 

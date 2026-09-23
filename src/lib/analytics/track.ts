@@ -15,6 +15,8 @@
  * `GoogleAnalytics.tsx`, which calls `trackPageView` below rather than touching `window.gtag` directly.
  */
 
+import { hasAnalyticsConsent } from "@/lib/consent/store";
+
 declare global {
   interface Window {
     fbq?: ((...args: unknown[]) => void) & { queue?: unknown[] };
@@ -22,11 +24,28 @@ declare global {
   }
 }
 
+// Every helper also requires a live "accepted" decision: after "Preferências de privacidade" → Rejeitar the SDK
+// globals stay on `window` for the rest of the session, so their mere presence is not consent. Tracking is
+// best-effort — a provider that throws must never break the click/navigation that triggered it.
 function fbqReady(): boolean {
-  return typeof window !== "undefined" && typeof window.fbq === "function";
+  return typeof window !== "undefined" && typeof window.fbq === "function" && hasAnalyticsConsent();
 }
 function gtagReady(): boolean {
-  return typeof window !== "undefined" && typeof window.gtag === "function";
+  return typeof window !== "undefined" && typeof window.gtag === "function" && hasAnalyticsConsent();
+}
+function sendFbq(...args: unknown[]): void {
+  try {
+    window.fbq!(...args);
+  } catch {
+    // Blocked/broken SDK (ad blocker, extension): tracking is best-effort, navigation must go on.
+  }
+}
+function sendGtag(...args: unknown[]): void {
+  try {
+    window.gtag!(...args);
+  } catch {
+    // Same as sendFbq.
+  }
 }
 
 /** Search (Meta standard event) + `view_search_results` (GA4 recommended event) — the single conclusive
@@ -35,10 +54,10 @@ function gtagReady(): boolean {
  * unchanged by their presence. */
 export function trackSearch(searchTerm: string, extra?: { region?: string; resultsCount?: number }): void {
   if (fbqReady()) {
-    window.fbq!("track", "Search", { search_string: searchTerm });
+    sendFbq("track", "Search", { search_string: searchTerm });
   }
   if (gtagReady()) {
-    window.gtag!("event", "view_search_results", {
+    sendGtag("event", "view_search_results", {
       search_term: searchTerm,
       ...(extra?.region ? { region: extra.region } : {}),
       ...(extra?.resultsCount !== undefined ? { results_count: extra.resultsCount } : {}),
@@ -62,7 +81,7 @@ export type SelectCityParams = {
  * for arriving at a city route directly (URL, reload, back/forward, SSR). */
 export function trackSelectCity(params: SelectCityParams): void {
   if (fbqReady()) {
-    window.fbq!("trackCustom", "SelectCity", {
+    sendFbq("trackCustom", "SelectCity", {
       city: params.city,
       state: params.state,
       region: params.region,
@@ -70,7 +89,7 @@ export function trackSelectCity(params: SelectCityParams): void {
     });
   }
   if (gtagReady()) {
-    window.gtag!("event", "select_city", {
+    sendGtag("event", "select_city", {
       city: params.city,
       state: params.state,
       region: params.region,
@@ -92,7 +111,7 @@ export type SelectStateParams = {
  * (CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md) has no state-selection event and this round doesn't add one. */
 export function trackSelectState(params: SelectStateParams): void {
   if (!gtagReady()) return;
-  window.gtag!("event", "select_state", {
+  sendGtag("event", "select_state", {
     state: params.state,
     region: params.region,
     ...(params.source ? { source: params.source } : {}),
@@ -124,7 +143,7 @@ export type GoToInkParams = {
  * two separate handlers for the same business action (§10). */
 export function trackGoToInk(params: GoToInkParams): void {
   if (fbqReady()) {
-    window.fbq!("trackCustom", "GoToInk", {
+    sendFbq("trackCustom", "GoToInk", {
       product_id: params.productId,
       source_section: params.sourceSection,
       currency: "BRL",
@@ -135,7 +154,7 @@ export function trackGoToInk(params: GoToInkParams): void {
     });
   }
   if (gtagReady()) {
-    window.gtag!("event", "select_item", {
+    sendGtag("event", "select_item", {
       item_list_name: params.sourceSection,
       items: [
         {
@@ -146,7 +165,7 @@ export function trackGoToInk(params: GoToInkParams): void {
         },
       ],
     });
-    window.gtag!("event", "go_to_ink", {
+    sendGtag("event", "go_to_ink", {
       product_id: params.productId,
       source_section: params.sourceSection,
       ...(params.productName ? { product_name: params.productName } : {}),
@@ -171,7 +190,7 @@ export type PageViewParams = {
  * call site. Not sent to Meta: its `PageView` lifecycle lives entirely in `MetaPixel.tsx`. */
 export function trackPageView(params: PageViewParams): void {
   if (!gtagReady()) return;
-  window.gtag!("event", "page_view", {
+  sendGtag("event", "page_view", {
     page_location: params.pageLocation,
     page_path: params.pagePath,
     ...(params.pageTitle ? { page_title: params.pageTitle } : {}),

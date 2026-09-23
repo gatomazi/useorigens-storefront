@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PrivacyPreferencesLink } from "@/components/consent/PrivacyPreferencesLink";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { ENABLED_REGIONS } from "@/lib/site";
 
@@ -16,12 +17,14 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
 }
 
 /**
- * DRAFT for human/legal review (command CLAUDE_CONSENTIMENTO_META_PIXEL.md: "criar a página e um texto-base
- * para revisão humana... Não inventar responsável, e-mail, prazo de retenção nem afirmar que uma redação
- * provisória já garante conformidade jurídica"). Nothing below is a real registered controller identity,
- * contact address or retention period — those fields are explicitly marked as pending real information. This
- * page must not be treated as a finished, compliant policy until a person fills in and reviews it.
+ * Public cookies/privacy notice. Deliberately states only what the site verifiably does today (which optional
+ * tools load, only after acceptance, and what the storefront does and does not send). It carries NO controller
+ * identity, contact channel, DPO or retention period: none of those are confirmed, so they are omitted rather
+ * than shown as placeholders or invented. When they are confirmed, add "Responsável e contato" / "Prazo de
+ * retenção" sections here (see docs/deploy/ for the open items).
  */
+const LAST_UPDATED = "23 de setembro de 2026";
+
 export default async function PrivacyPolicyPage({ params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
   if (!isRegionSlug(region) || !ENABLED_REGIONS.includes(region)) notFound();
@@ -29,81 +32,74 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
 
   return (
     <div className="wrap py-14 lg:py-20">
-      <div className="on-ink mb-10 max-w-3xl border-2 border-ink p-5">
-        <p className="t-label mb-1">Rascunho — pendente de revisão jurídica</p>
-        <p className="t-small text-white/85">
-          Este texto foi gerado como ponto de partida e não deve ser tratado como uma política finalizada ou
-          juridicamente validada. Campos como responsável pelo tratamento, e-mail de contato e prazos de retenção
-          ainda precisam ser preenchidos e revisados por uma pessoa responsável antes da publicação.
-        </p>
-      </div>
-
       <h1 className="t-h1 max-w-2xl">Política de privacidade e cookies</h1>
-      <p className="t-body mt-4 max-w-2xl text-ink-soft">Use Origens {r.name} — última atualização: [data a definir na revisão].</p>
+      <p className="t-body mt-4 max-w-2xl text-ink-soft">Use Origens {r.name} — última atualização em {LAST_UPDATED}.</p>
 
       <div className="mt-10 max-w-2xl space-y-8">
         <section>
           <h2 className="t-h3">O que este site faz com cookies</h2>
           <p className="t-body mt-2 text-ink-soft">
-            Usamos cookies essenciais para o funcionamento do site (por exemplo, para lembrar a sua escolha sobre este
-            banner) e, apenas com a sua aceitação, cookies de marketing para entender como as pessoas encontram a
-            camiseta da própria cidade.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="t-h3">Cookies de marketing: Meta Pixel</h2>
-          <p className="t-body mt-2 text-ink-soft">
-            Quando você aceita, carregamos o Meta Pixel (Meta Platforms, Inc.), que registra visitas às páginas
-            (evento &quot;PageView&quot;) e buscas de cidade concluídas (evento &quot;Search&quot;, apenas com o nome
-            da cidade/estado buscado — nunca nome, e-mail, telefone ou outro dado pessoal digitado). Essa informação
-            ajuda a entender quais cidades e regiões têm mais interesse. Saiba mais sobre como a Meta trata esses
-            dados na{" "}
-            <a href="https://www.facebook.com/privacy/policy/" className="link-line font-semibold" rel="noopener noreferrer" target="_blank">
-              política de privacidade da Meta
-            </a>
-            .
+            Usamos cookies essenciais para o funcionamento do site — por exemplo, para lembrar a sua escolha sobre
+            cookies — e, apenas com a sua aceitação, cookies opcionais de análise e marketing, que nos ajudam a
+            entender como as pessoas encontram a camiseta da própria cidade e a melhorar a experiência.
           </p>
         </section>
 
         <section>
           <h2 className="t-h3">Categorias de cookies</h2>
           <ul className="t-body mt-2 list-disc space-y-1 pl-5 text-ink-soft">
-            <li><strong>Essenciais</strong>: guardam sua escolha de cookies (aceitar/rejeitar) e preferências básicas de navegação. Não podem ser desativados porque o site depende deles para funcionar.</li>
-            <li><strong>Marketing (Meta Pixel)</strong>: só ativados após aceitação explícita, conforme descrito acima.</li>
+            <li>
+              <strong>Essenciais</strong>: guardam a sua escolha (aceitar ou rejeitar) e preferências básicas de
+              navegação. O site depende deles para funcionar, por isso não podem ser desativados.
+            </li>
+            <li>
+              <strong>Análise e marketing (opcionais)</strong>: ferramentas de medição que só são ativadas depois que
+              você aceita. Sem o seu aceite, elas não são carregadas e nenhuma informação é enviada a elas.
+            </li>
           </ul>
+        </section>
+
+        <section>
+          <h2 className="t-h3">Ferramentas de análise e marketing</h2>
+          <p className="t-body mt-2 text-ink-soft">
+            Hoje, quando você aceita, usamos o Meta Pixel (Meta Platforms, Inc.) e o Google Analytics (Google LLC).
+            Eles registram, de forma agregada, ações como visitar páginas, concluir uma busca de cidade, escolher uma
+            cidade ou um estado e seguir para a loja. Nunca enviamos nome, e-mail, telefone ou outro dado pessoal
+            digitado por você. Podemos incluir outras ferramentas de medição no futuro; se isso acontecer, esta página
+            será atualizada.
+          </p>
+          <p className="t-body mt-2 text-ink-soft">
+            Saiba como cada empresa trata esses dados na{" "}
+            <a href="https://www.facebook.com/privacy/policy/" className="link-line font-semibold" rel="noopener noreferrer" target="_blank">
+              política de privacidade da Meta
+            </a>{" "}
+            e na{" "}
+            <a href="https://policies.google.com/privacy" className="link-line font-semibold" rel="noopener noreferrer" target="_blank">
+              política de privacidade do Google
+            </a>
+            .
+          </p>
         </section>
 
         <section>
           <h2 className="t-h3">Como rejeitar ou mudar de ideia</h2>
           <p className="t-body mt-2 text-ink-soft">
-            Você pode rejeitar os cookies de marketing no banner que aparece na primeira visita, ou mudar sua escolha
-            a qualquer momento em &quot;Preferências de privacidade&quot;, no rodapé do site. Rejeitar não limita o
-            uso da busca, a navegação pelas cidades ou a compra — que sempre acontece na loja Use {r.name}.
+            Você pode rejeitar os cookies opcionais no aviso que aparece na primeira visita e mudar a sua escolha a
+            qualquer momento, aqui ou em &quot;Preferências de privacidade&quot;, no rodapé do site. Se você retirar o
+            aceite, deixamos de enviar novos eventos para essas ferramentas. Rejeitar não limita o uso da busca, a
+            navegação pelas cidades ou a compra.
           </p>
+          <div className="mt-3">
+            <PrivacyPreferencesLink />
+          </div>
         </section>
 
         <section>
           <h2 className="t-h3">Compra e dados na loja</h2>
           <p className="t-body mt-2 text-ink-soft">
-            A compra em si (tamanho, cor, frete, pagamento, endereço) acontece na loja Use {r.name}, fora deste site
-            — o tratamento de dados nesse momento segue a política de privacidade própria da loja, não esta página.
-          </p>
-        </section>
-
-        <section>
-          <h2 className="t-h3">Responsável e contato</h2>
-          <p className="t-body mt-2 text-ink-soft">
-            [Pendente — nome do responsável pelo tratamento, CNPJ e e-mail/canal de contato para dúvidas ou pedidos
-            de dados devem ser preenchidos aqui antes da publicação.]
-          </p>
-        </section>
-
-        <section>
-          <h2 className="t-h3">Prazo de retenção</h2>
-          <p className="t-body mt-2 text-ink-soft">
-            [Pendente — por quanto tempo a escolha de cookies e os dados enviados à Meta ficam retidos ainda precisa
-            ser definido e descrito aqui.]
+            Você escolhe a cidade e o estilo aqui e conclui a compra na loja Use {r.name}, onde ficam tamanho, cor,
+            frete, pagamento e endereço. A loja tem a sua própria política de privacidade e os seus próprios cookies, e
+            é ela que vale para tudo o que acontece lá.
           </p>
         </section>
       </div>
