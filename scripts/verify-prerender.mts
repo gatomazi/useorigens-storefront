@@ -122,6 +122,11 @@ async function main() {
     check("/sul hero renders a real product card (Porto Alegre, ponto-de-origem)", home.includes("/sul/rs/porto-alegre/ponto-de-origem"));
     check("/sul hero card shows a real price", /R\$\s?109,90/.test(home.replaceAll("<!-- -->", "")));
 
+    const indexRes = await fetch(`${BASE}/api/cidades/sul`);
+    const index = (await indexRes.json()) as { n: string }[];
+    check(`/api/cidades/sul (search index) has all ${expected} covered cities, not a baked-in []`, indexRes.status === 200 && index.length === runtimeCities, { status: indexRes.status, length: index.length });
+    check("search index contains Tijucas", index.some((c) => c.n === "Tijucas"));
+
     const privacy = await (await fetch(`${BASE}/sul/privacidade`)).text();
     const privacyCounts = cityCounts(privacy);
     check("/sul/privacidade header shows the real count", privacyCounts.length > 0 && privacyCounts.every((c) => c === expected), privacyCounts);
@@ -153,6 +158,8 @@ async function main() {
     check(`/sul now shows "${expected} cidades"`, home.length > 0 && home.every((c) => c === expected), home);
     const privacy = cityCounts(await (await fetch(`${BASE}/sul/privacidade`)).text());
     check(`/sul/privacidade now shows "${expected} cidades"`, privacy.length > 0 && privacy.every((c) => c === expected), privacy);
+    const index = (await (await fetch(`${BASE}/api/cidades/sul`)).json()) as unknown[];
+    check(`/api/cidades/sul now has ${full} cities (resync invalidated the index too)`, index.length === full, index.length);
   }
 
   console.log(`\n${failures === 0 ? "ALL CHECKS PASSED" : `${failures} CHECK(S) FAILED`}`);

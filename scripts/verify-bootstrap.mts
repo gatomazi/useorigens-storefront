@@ -134,6 +134,9 @@ async function main() {
     check("GET /api/ready -> 503", ready.status === 503, readyBody);
     check("reason mentions never synced", String(readyBody.reason).includes("never synced"), readyBody.reason);
 
+    const index = await fetch(`${BASE}/api/cidades/sul`);
+    check("GET /api/cidades/sul -> 503 no-store (never an empty index cached as if valid)", index.status === 503 && index.headers.get("cache-control") === "no-store", { status: index.status, cc: index.headers.get("cache-control") });
+
     const page = await fetch(`${BASE}/sul/sc/tijucas`, { redirect: "manual" });
     check("GET /sul/sc/tijucas -> 503 (maintenance gate, not a normal empty page)", page.status === 503, page.status);
     check("maintenance response has X-Robots-Tag: noindex", page.headers.get("x-robots-tag") === "noindex");
