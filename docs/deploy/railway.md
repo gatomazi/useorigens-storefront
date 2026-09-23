@@ -328,6 +328,23 @@ trava de concorrência (duas sincronizações ao mesmo tempo → uma 202 e uma 4
 `npm run build` antes. Resultado da última execução: **todas as verificações passaram** — ver
 `docs/deploy/infra-audit-review.md` para o log completo.
 
+## Build sem catálogo (`npm run verify:prerender`)
+
+No build do Railway o Volume ainda não está montado, então não existe snapshot. Qualquer rota prerenderizada
+que leia o catálogo (o layout `[region]` lê contagem de cidades e data do sync) congela um catálogo **vazio** no
+HTML ("0 cidades", hero sem produtos) até a próxima revalidação do ISR. Foi o que aconteceu com `/sul` e
+`/sul/privacidade` em 2026-09-23; a correção é `generateStaticParams()` retornar `[]` em
+`src/app/[region]/layout.tsx` (renderiza no primeiro acesso e depois cacheia via ISR, igual às rotas de
+estado, cidade e PDP). `verify:bootstrap` não pega isso, porque roda contra um build local que já tinha
+`data/generated/` em disco.
+
+`scripts/verify-prerender.mts` reproduz o Railway: faz `next build` com `CATALOG_SNAPSHOT_DIR` apontando para
+um diretório vazio, sobe `next start` contra outro diretório com um snapshot de fixture e confirma que o
+**primeiro** acesso a `/sul`, `/sul/privacidade`, uma página de estado e uma de cidade já mostra a contagem real
+e os produtos do hero, sem resync. Depois promove um segundo snapshot e confirma que `/sul` e
+`/sul/privacidade` passam a mostrar a nova contagem (o resync continua invalidando o ISR). Roda seu próprio
+build, então substitui o `.next` atual. Com o `generateStaticParams` antigo o script falha (contagem `0`).
+
 ## Rollback
 
 Sem banco de dados, um rollback de código no Railway (voltar para o deploy anterior) não perde nem precisa

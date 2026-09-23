@@ -25,10 +25,11 @@
 //      one more real sync to confirm the instance is fully usable again after the simulated crash.
 //   7. Cleans up: kills the (possibly restarted) server, removes the temp directory.
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdtemp, readFile as readFileAsync, rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { fixtureCityIds, fixtureSnapshot, SUL_CITY_COUNT } from "./fixture-snapshot.mjs";
 
 const PORT = 3211;
 const BASE = `http://localhost:${PORT}`;
@@ -45,46 +46,7 @@ function check(label: string, condition: boolean, detail?: unknown) {
   }
 }
 
-const TIJUCAS_ID = "4218004"; // Tijucas, SC — a real municipality already in the build-time geo dataset
-
-// Real Sul municipality ids (data/geo/municipios.json, already versioned — no fabricated data), enough of
-// them to legitimately cross the 50% readiness bar (src/lib/catalog/readiness.ts): a 1-city fixture would
-// correctly be rejected as "not ready" by that same guard, so proving the bootstrap/revalidation flow end to
-// end needs a fixture that would plausibly pass it, same as a real (if modest) sync would.
-const geoRows = JSON.parse(await readFileAsync(path.join(process.cwd(), "data", "geo", "municipios.json"), "utf8")) as [number, string, string, string, string][];
-const sulCityIds = geoRows.filter((r) => r[2] === "PR" || r[2] === "SC" || r[2] === "RS").map((r) => String(r[0]));
-const FIXTURE_CITY_IDS = Array.from(new Set([TIJUCAS_ID, ...sulCityIds])).slice(0, Math.ceil(sulCityIds.length * 0.6));
-console.log(`Fixture covers ${FIXTURE_CITY_IDS.length}/${sulCityIds.length} Sul municipalities (>50% readiness bar).`);
-
-function fixtureSnapshot(priceForTijucas: number) {
-  const bindings = FIXTURE_CITY_IDS.map((cityId, i) => ({
-    cityId,
-    designFamily: "ponto-de-origem",
-    designVariant: "base",
-    isPrimary: true,
-    priority: 0,
-    commerceStoreKey: "use-sul",
-    inkProductId: String(9_000_000_000 + i), // realistic (numeric, like real INK ids) — see ranking.ts compareIds
-    slug: `fixture-${i}`,
-    storeProductUrl: "https://www.usesul.com.br/usesul/product/fixture",
-    imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/fixture.jpg",
-    price: cityId === TIJUCAS_ID ? priceForTijucas : 109.9,
-    syncedAt: new Date().toISOString(),
-  }));
-  return {
-    version: 1,
-    stores: {
-      "use-sul": {
-        commerceStoreKey: "use-sul",
-        syncedAt: new Date().toISOString(),
-        productCount: bindings.length,
-        bindings,
-        merch: [],
-        excluded: [],
-      },
-    },
-  };
-}
+console.log(`Fixture covers ${fixtureCityIds().length}/${SUL_CITY_COUNT} Sul municipalities (>50% readiness bar).`);
 
 async function waitForHealth(timeoutMs: number) {
   const start = Date.now();

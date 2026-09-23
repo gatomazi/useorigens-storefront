@@ -10,6 +10,7 @@
     "geo:build": "tsx scripts/build-geo.mts",
     "catalog:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-catalog.mts",
     "verify:bootstrap": "tsx scripts/verify-bootstrap.mts",
+    "verify:prerender": "tsx scripts/verify-prerender.mts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
