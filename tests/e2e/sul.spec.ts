@@ -120,6 +120,25 @@ test.describe("/sul critical flows", () => {
     expect(overflow).toBe(0);
   });
 
+  test("given a stale empty city index served first, when search opens, then it refetches instead of memoizing the empty list and still finds cities", async ({ page }) => {
+    let requests = 0;
+    await page.route("**/api/cidades/sul", async (route) => {
+      requests++;
+      if (requests === 1) {
+        await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
+        return;
+      }
+      await route.continue();
+    });
+    await page.goto("/sul");
+    await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
+    const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+    await expect(dialog).toBeVisible();
+    await dialog.getByRole("combobox").fill("bag");
+    await expect(dialog.getByRole("option", { name: /Bagé/ })).toBeVisible({ timeout: 30_000 });
+    expect(requests).toBe(2);
+  });
+
   test("given the header search, when opened and closed with Escape, then focus returns to the trigger", async ({ page }) => {
     await page.goto("/sul/rs/torres");
     const trigger = page.getByRole("button", { name: "Buscar cidade" });

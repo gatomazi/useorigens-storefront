@@ -20,15 +20,24 @@ type Props = {
 
 const indexCache = new Map<RegionSlug, Promise<PreparedCity[]>>();
 
+async function fetchIndex(region: RegionSlug, cache: RequestCache): Promise<SearchCity[]> {
+  const res = await fetch(`/api/cidades/${region}`, { cache });
+  if (!res.ok) throw new Error(`search index ${res.status}`);
+  return (await res.json()) as SearchCity[];
+}
+
 function loadIndex(region: RegionSlug): Promise<PreparedCity[]> {
   let promise = indexCache.get(region);
   if (!promise) {
-    promise = fetch(`/api/cidades/${region}`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`search index ${res.status}`);
-        return res.json() as Promise<SearchCity[]>;
-      })
-      .then(prepareCities);
+    promise = fetchIndex(region, "default")
+      // A region always has cities. An empty index is a stale copy (e.g. an old empty response still fresh in
+      // the browser's HTTP cache): bypass the cache once, and if it is still empty treat it as a failed load
+      // rather than memoizing "no cities" for the life of the tab.
+      .then((cities) => (cities.length > 0 ? cities : fetchIndex(region, "reload")))
+      .then((cities) => {
+        if (cities.length === 0) throw new Error("search index empty");
+        return prepareCities(cities);
+      });
     // A failed load must be retryable on the next focus.
     promise.catch(() => indexCache.delete(region));
     indexCache.set(region, promise);
