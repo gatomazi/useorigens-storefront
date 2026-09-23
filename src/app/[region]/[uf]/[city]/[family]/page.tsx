@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { VariantPicker, type VariantOption } from "@/components/catalog/VariantPicker";
+import { SOURCES } from "@/lib/analytics/sources";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import { resolveCity, resolveCityProduct } from "@/lib/catalog/resolver";
 import { formatPrice } from "@/lib/format";
@@ -45,6 +46,7 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
     label: binding.designVariant === "base" ? "Principal" : binding.variantLabel ?? binding.designVariant,
     imageUrl: binding.imageUrl,
     price: formatPrice(binding.price),
+    rawPrice: binding.price,
     href: purchaseUrl(binding),
   }));
 
@@ -72,6 +74,11 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
           options={options}
           alt={`Camiseta ${family.name} de ${city.name}`}
           storeName={`Use ${resolved.region.name}`}
+          city={city.name}
+          stateUf={city.uf}
+          familyId={family.id}
+          productName={family.name}
+          sourceSection={SOURCES.pdp}
           intro={
             <>
               <h1 className="text-[2.25rem] font-extrabold leading-[1.02] tracking-tight [text-wrap:balance] sm:text-[3.25rem] lg:text-[4rem]">{family.name}</h1>
@@ -92,7 +99,7 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
             <h2 id="other-title" className="mb-6 text-[1.5rem] font-extrabold tracking-tight lg:mb-10 lg:text-[1.875rem]">
               Outros estilos de {city.name}
             </h2>
-            <FamilyGrid entries={others} hrefBase={base} cityName={city.name} />
+            <FamilyGrid entries={others} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.pdpOtherStyles} directToInk />
           </div>
         </section>
       )}

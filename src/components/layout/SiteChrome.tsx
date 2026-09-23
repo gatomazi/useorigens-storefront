@@ -3,6 +3,10 @@ import Link from "next/link";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { INSTAGRAM_URL, LEGACY_STORE_URLS } from "@/lib/site";
 import { numberPt } from "@/lib/format";
+import { SOURCES } from "@/lib/analytics/sources";
+import { PrivacyPreferencesLink } from "../consent/PrivacyPreferencesLink";
+import { TrackedStateLink } from "../analytics/TrackedStateLink";
+import { HeaderDropdown } from "./HeaderDropdown";
 import { HeaderShell } from "./HeaderShell";
 import { MobileMenu, type NavItem } from "./MobileMenu";
 import { SearchDialog } from "../search/SearchDialog";
@@ -20,7 +24,6 @@ export function AnnouncementBar({ region, cityCount }: { region: RegionSlug; cit
 function navItems(region: RegionSlug): NavItem[] {
   return [
     { label: "Estilos", href: `/${region}#estilos` },
-    { label: "Regiões", href: `/${region}#geografia` },
     { label: "Fala daqui", href: `/${region}#fala` },
     { label: "Estados", href: `/${region}#estados` },
   ];
@@ -28,9 +31,19 @@ function navItems(region: RegionSlug): NavItem[] {
 
 export function Header({ region }: { region: RegionSlug }) {
   const items = navItems(region);
+  const ufs = REGIONS[region].ufs;
   const others = (Object.values(REGIONS) as (typeof REGIONS)[RegionSlug][]).filter((r) => r.slug !== region);
+  // "Regiões" used to point at a product category (#geografia, the DDD carousel) — semantically wrong: it
+  // reads as geographic navigation, so it must actually be one. Real navigation, not a category shortcut: a
+  // direct link per state plus "Ver estados" (the home's own chooser). Mobile gets the same three state links
+  // inlined in its flat list (see mobileItems below) since MobileMenu has no nested-dropdown affordance —
+  // never a second, conflicting "Regiões" control.
+  const stateLinks = ufs.map((uf) => ({ label: STATE_NAMES[uf], href: `/${region}/${uf.toLowerCase()}`, uf }));
   const mobileItems: NavItem[] = [
-    ...items,
+    { label: "Estilos", href: `/${region}#estilos` },
+    ...stateLinks.map(({ label, href, uf }) => ({ label, href, trackState: { state: uf, region } })),
+    { label: "Fala daqui", href: `/${region}#fala` },
+    { label: "Estados", href: `/${region}#estados` },
     ...others.map((r) => ({ label: r.name, href: LEGACY_STORE_URLS[r.slug], external: true })),
   ];
 
@@ -46,6 +59,28 @@ export function Header({ region }: { region: RegionSlug }) {
         </div>
 
         <nav aria-label="Principal" className="hidden items-center gap-8 lg:flex">
+          <HeaderDropdown className="relative">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 py-1 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden">
+              Regiões
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </summary>
+            <ul className="absolute left-0 top-full z-50 mt-1 min-w-52 border-2 border-ink bg-white py-1 text-ink">
+              {stateLinks.map((s) => (
+                <li key={s.href}>
+                  <TrackedStateLink href={s.href} params={{ state: s.uf, region, source: SOURCES.stateSelector }} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
+                    {s.label}
+                  </TrackedStateLink>
+                </li>
+              ))}
+              <li className="border-t border-line">
+                <Link href={`/${region}#estados`} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
+                  Ver estados
+                </Link>
+              </li>
+            </ul>
+          </HeaderDropdown>
           {items.map((item) => (
             <Link key={item.href} href={item.href} className="link-line py-1 text-[0.9375rem] font-semibold">
               {item.label}
@@ -54,7 +89,7 @@ export function Header({ region }: { region: RegionSlug }) {
         </nav>
 
         <div className="flex items-center gap-1 sm:gap-3">
-          <details className="relative hidden lg:block">
+          <HeaderDropdown className="relative hidden lg:block">
             <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-2 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden">
               {REGIONS[region].name}
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -71,7 +106,7 @@ export function Header({ region }: { region: RegionSlug }) {
                 </li>
               ))}
             </ul>
-          </details>
+          </HeaderDropdown>
           <SearchDialog region={region} />
         </div>
       </div>
@@ -97,9 +132,9 @@ export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: str
           <ul className="space-y-0">
             {r.ufs.map((uf) => (
               <li key={uf}>
-                <Link href={`/${region}/${uf.toLowerCase()}`} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]">
+                <TrackedStateLink href={`/${region}/${uf.toLowerCase()}`} params={{ state: uf, region, source: SOURCES.stateSelector }} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]">
                   {STATE_NAMES[uf]}
-                </Link>
+                </TrackedStateLink>
               </li>
             ))}
           </ul>
@@ -130,6 +165,14 @@ export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: str
               <a href={INSTAGRAM_URL} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]" rel="noopener">
                 Instagram
               </a>
+            </li>
+            <li>
+              <Link href={`/${region}/privacidade`} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]">
+                Política de privacidade
+              </Link>
+            </li>
+            <li>
+              <PrivacyPreferencesLink />
             </li>
           </ul>
         </nav>

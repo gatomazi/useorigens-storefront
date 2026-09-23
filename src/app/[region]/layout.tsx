@@ -1,4 +1,9 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
+import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { ConsentBanner } from "@/components/consent/ConsentBanner";
+import { ConsentProvider } from "@/lib/consent/ConsentProvider";
 import { AnnouncementBar, Footer, Header } from "@/components/layout/SiteChrome";
 import { getCatalog } from "@/lib/catalog/repository";
 import { isRegionSlug } from "@/lib/geo/regions";
@@ -15,11 +20,19 @@ export default async function RegionLayout({ children, params }: { children: Rea
 
   const catalog = getCatalog();
   return (
-    <div data-region={region} style={regionThemeStyle(region)} className="relative">
-      <AnnouncementBar region={region} cityCount={catalog.coveredCityIds(region).size} />
-      <Header region={region} />
-      <main id="conteudo">{children}</main>
-      <Footer region={region} syncedAt={catalog.syncedAt} />
-    </div>
+    <ConsentProvider>
+      <div data-region={region} style={regionThemeStyle(region)} className="relative">
+        <AnnouncementBar region={region} cityCount={catalog.coveredCityIds(region).size} />
+        <Header region={region} />
+        <main id="conteudo">{children}</main>
+        <Footer region={region} syncedAt={catalog.syncedAt} />
+      </div>
+      {/* useSearchParams inside MetaPixel/GoogleAnalytics needs a Suspense boundary so the rest of the tree can still prerender. */}
+      <Suspense fallback={null}>
+        <MetaPixel />
+        <GoogleAnalytics />
+      </Suspense>
+      <ConsentBanner region={region} />
+    </ConsentProvider>
   );
 }

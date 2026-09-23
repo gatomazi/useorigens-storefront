@@ -213,6 +213,13 @@ body {
   border-color: var(--region-primary);
   color: #fff;
 }
+/* `.btn-ghost`'s own `color` above otherwise beats a `text-white` utility class regardless of className order
+ * (equal specificity, and this stylesheet's own rule comes after Tailwind's `@import` at the top) — needed for
+ * the consent banner's "Rejeitar" button, a ghost button on the dark banner surface (nightly QA round,
+ * CLAUDE_RODADA_NOTURNA_STOREFRONT.md: found the button text rendering invisible, black-on-black). */
+.btn-ghost.text-white {
+  color: #fff;
+}
 .btn-light {
   background: #fff;
   color: var(--ink);

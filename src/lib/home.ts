@@ -75,7 +75,7 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const ddd: CarouselItem[] = allDdd.flatMap((d) => {
     const href = purchaseUrl(d.product);
     return href
-      ? [{ id: d.product.inkProductId, name: d.regionName, eyebrow: d.code, context: STATE_NAMES[d.uf], price: formatPrice(d.product.price), imageUrl: d.product.imageUrl, href }]
+      ? [{ id: d.product.inkProductId, name: d.regionName, eyebrow: d.code, context: STATE_NAMES[d.uf], price: formatPrice(d.product.price), rawPrice: d.product.price, state: d.uf, imageUrl: d.product.imageUrl, href }]
       : [];
   });
 
@@ -85,17 +85,17 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const falaAll: Fala[] = [];
   for (const d of dizeresWithContext(merch)) {
     const href = purchaseUrl(d.product);
-    if (href) falaAll.push({ id: d.product.inkProductId, uf: d.uf, name: d.text, context: d.context, price: formatPrice(d.product.price), imageUrl: d.product.imageUrl, href });
+    if (href) falaAll.push({ id: d.product.inkProductId, uf: d.uf, state: d.uf, name: d.text, context: d.context, price: formatPrice(d.product.price), rawPrice: d.product.price, imageUrl: d.product.imageUrl, href });
   }
   for (const s of lore.byState) {
     const href = purchaseUrl(s.product);
-    if (href) falaAll.push({ id: s.product.inkProductId, uf: s.uf, name: s.text, context: STATE_NAMES[s.uf], price: formatPrice(s.product.price), imageUrl: s.product.imageUrl, href });
+    if (href) falaAll.push({ id: s.product.inkProductId, uf: s.uf, state: s.uf, name: s.text, context: STATE_NAMES[s.uf], price: formatPrice(s.product.price), rawPrice: s.product.price, imageUrl: s.product.imageUrl, href });
   }
   for (const [cityId, items] of lore.byCity) {
     for (const item of items) {
       if (item.kind !== "expressao") continue;
       const href = purchaseUrl(item.product);
-      if (href) falaAll.push({ id: item.product.inkProductId, uf: item.city.uf, name: item.text, context: `${item.city.name} · ${item.city.uf}`, price: formatPrice(item.product.price), imageUrl: item.product.imageUrl, href });
+      if (href) falaAll.push({ id: item.product.inkProductId, uf: item.city.uf, state: item.city.uf, name: item.text, context: `${item.city.name} · ${item.city.uf}`, price: formatPrice(item.product.price), rawPrice: item.product.price, imageUrl: item.product.imageUrl, href });
     }
     void cityId;
   }
@@ -128,17 +128,20 @@ export function getRegionHome(region: RegionSlug): RegionHome {
 
   const recreations: CarouselItem[] = recreationProducts(merch).flatMap(({ product, theme }) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), context: theme, price: formatPrice(product.price), imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), context: theme, price: formatPrice(product.price), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
+  // terraProducts already balances across the three states (see its own doc comment), but which UF a given
+  // pick belongs to isn't threaded back out of it here — `state` stays unset rather than guessed from the
+  // label text.
   const terra: CarouselItem[] = terraProducts(merch, ufs).flatMap(({ product, label }) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: label, price: formatPrice(product.price), imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ id: product.inkProductId, name: label, price: formatPrice(product.price), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
   const feitoParaVoce: CarouselItem[] = lendaProducts(merch).flatMap((product) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").replace(/\s*\|\s*Lenda$/i, "").trim(), context: "Lenda", price: formatPrice(product.price), imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").replace(/\s*\|\s*Lenda$/i, "").trim(), context: "Lenda", price: formatPrice(product.price), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
   return { cityCount: covered.size, syncedAt: catalog.syncedAt, showcase, heroFamilies, ddd, fala, states, terra, recreations, feitoParaVoce, campaignCrops };

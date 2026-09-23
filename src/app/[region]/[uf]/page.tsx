@@ -3,13 +3,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StateOutline } from "@/components/brand/StateOutline";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
+import { ProductCarousel } from "@/components/catalog/ProductCarousel";
 import { StateCityBrowser, type BrowserGroup } from "@/components/city/StateCityBrowser";
 import { CitySearch } from "@/components/search/CitySearch";
 import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
+import { stateShowcase } from "@/lib/editorial/state-showcase";
+import { SOURCES } from "@/lib/analytics/sources";
 import { numberPt } from "@/lib/format";
 import { citiesOfRegion, mesoGroupsOfState } from "@/lib/geo/cities";
-import { REGIONS, STATE_NAMES, UF_TO_REGION, isRegionSlug } from "@/lib/geo/regions";
+import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, UF_TO_REGION, isRegionSlug } from "@/lib/geo/regions";
 import { normalizeText, slugify } from "@/lib/geo/text";
 import { ENABLED_REGIONS } from "@/lib/site";
 
@@ -42,9 +45,14 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   const uf = resolveState(region, ufParam);
   if (!uf || !isRegionSlug(region)) notFound();
 
-  const covered = getCatalog().coveredCityIds(region);
+  const catalog = getCatalog();
+  const covered = catalog.coveredCityIds(region);
   const cities = citiesOfRegion(region).filter((c) => c.uf === uf && covered.has(c.id));
   const toBrowser = (list: { name: string; slug: string }[]) => list.map((c) => ({ n: c.name, s: c.slug }));
+
+  // "Destaques de {estado}": real products only, never "Mais vendidas" (no verified period on INK's sales
+  // count — see state-showcase.ts). Hidden entirely when there's nothing real to show, never a placeholder.
+  const showcase = stateShowcase({ uf, cities, catalog, merch: catalog.merch(region), capitalSlug: STATE_CAPITAL_SLUG[uf] });
 
   // Editorial mesoregion grouping (ADR 0004), navigation only — not the current IBGE division. Cities
   // without one still appear in A–Z.
@@ -96,9 +104,24 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
 
       <section className="wrap pb-8 pt-6 lg:pb-12">
         <div className="max-w-2xl">
-          <CitySearch region={region} />
+          <CitySearch region={region} source={SOURCES.stateSearch} />
         </div>
       </section>
+
+      {/* Compact, real showcase — never "Mais vendidas" without a verified period (state-showcase.ts).
+          Lives between the search (still the first thing anyone lands on) and the mesoregion browser below,
+          so neither the search task nor "find my city" gets buried under a tall product strip. */}
+      {showcase.length > 0 && (
+        <section className="wrap pb-10 lg:pb-14" aria-labelledby="showcase-title">
+          <ProductCarousel
+            items={showcase}
+            labelledBy="showcase-title"
+            title={`Destaques de ${STATE_NAMES[uf]}`}
+            intro="Camisetas reais de cidades e da identidade do estado — a compra sempre continua na loja."
+            sourceSection={SOURCES.stateShowcase}
+          />
+        </section>
+      )}
 
       <StateCityBrowser region={region} uf={uf.toLowerCase()} groups={groups} letters={letters} />
     </>

@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { StateOutline } from "@/components/brand/StateOutline";
 import { BannerBackground } from "@/components/banners/BannerBackground";
+import { TrackedStateLink } from "@/components/analytics/TrackedStateLink";
+import { SOURCES } from "@/lib/analytics/sources";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import type { StateCard } from "@/lib/home";
 import { pluralCidades } from "@/lib/format";
@@ -80,13 +82,13 @@ export function StateCards({ region, states }: { region: RegionSlug; states: Sta
                   </div>
                 )}
                 <div className={`flex flex-1 flex-col border-t-[3px] border-region-accent pt-5 transition-colors hover:border-region-primary ${cover ? "-mt-[3px]" : ""}`}>
-                  <Link href={`/${region}/${state.uf.toLowerCase()}`} className="group flex items-end justify-between gap-4">
+                  <TrackedStateLink href={`/${region}/${state.uf.toLowerCase()}`} params={{ state: state.uf, region, source: SOURCES.stateSelector }} className="group flex items-end justify-between gap-4">
                     <div>
                       <h3 className="link-line inline text-[1.75rem] font-extrabold leading-tight tracking-tight transition-colors group-hover:text-region-primary">{state.name}</h3>
                       <p className="t-place mt-1 text-[1rem] text-ink-mute">{pluralCidades(state.cityCount)}</p>
                     </div>
                     <StateOutline uf={state.uf} className="h-20 w-24 shrink-0 text-ink" strokeWidth={1.75} />
-                  </Link>
+                  </TrackedStateLink>
                   <RegionChips region={region} uf={state.uf} shown={shown} more={more} />
                   {state.line && <StateLine line={state.line} />}
                 </div>
@@ -121,9 +123,9 @@ export function StateCards({ region, states }: { region: RegionSlug; states: Sta
                 )}
                 <RegionChips region={region} uf={state.uf} shown={shown} more={more} />
                 {state.line && <StateLine line={state.line} />}
-                <Link href={`/${region}/${state.uf.toLowerCase()}`} className="mt-5 inline-flex min-h-11 items-center text-[0.9375rem] font-semibold link-static">
+                <TrackedStateLink href={`/${region}/${state.uf.toLowerCase()}`} params={{ state: state.uf, region, source: SOURCES.stateSelector }} className="mt-5 inline-flex min-h-11 items-center text-[0.9375rem] font-semibold link-static">
                   Ver todas as cidades de {state.name}
-                </Link>
+                </TrackedStateLink>
               </div>
             </details>
           );

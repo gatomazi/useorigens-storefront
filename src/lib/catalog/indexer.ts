@@ -82,6 +82,7 @@ export function buildStoreIndex(
       imageUrl: product.imageUrl,
       price: product.price,
       syncedAt,
+      totalSalesCount: product.totalSalesCount,
     });
   }
 

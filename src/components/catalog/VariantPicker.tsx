@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { trackGoToInk } from "@/lib/analytics/track";
 import { ProductPhoto } from "./ProductPhoto";
 
 export type VariantOption = {
@@ -10,6 +11,8 @@ export type VariantOption = {
   detail?: string;
   imageUrl: string;
   price: string | null;
+  /** Exactly what INK returned for this variant — the GoToInk `value` param; never invented when absent. */
+  rawPrice?: number | null;
   /** Verified INK purchase URL, or null when the destination is unusable. */
   href: string | null;
 };
@@ -26,12 +29,24 @@ export function VariantPicker({
   alt,
   storeName,
   intro,
+  city,
+  stateUf,
+  familyId,
+  productName,
+  sourceSection = "pdp",
 }: {
   options: VariantOption[];
   alt: string;
   storeName: string;
   /** Title block: on desktop it sits at the top of the right column, on phones above the photo. */
   intro: React.ReactNode;
+  /** GoToInk context — constant across every variant option, only the selected product id changes. */
+  city?: string;
+  stateUf?: string;
+  familyId?: string;
+  /** GA4-only: the family's real display name (e.g. "Ponto de Origem") — go_to_ink/select_item's product name. */
+  productName?: string;
+  sourceSection?: string;
 }) {
   const [selectedId, setSelectedId] = useState(options[0].id);
   const selected = options.find((o) => o.id === selectedId) ?? options[0];
@@ -79,7 +94,11 @@ export function VariantPicker({
         </div>
 
         {selected.href ? (
-          <a href={selected.href} className="btn mt-4 w-full sm:w-auto sm:min-w-72">
+          <a
+            href={selected.href}
+            onClick={() => trackGoToInk({ productId: selected.id, sourceSection, city, state: stateUf, family: familyId, value: selected.rawPrice ?? undefined, productName, destinationUrl: selected.href ?? undefined })}
+            className="btn mt-4 w-full sm:w-auto sm:min-w-72"
+          >
             Escolher tamanho na loja
           </a>
         ) : (

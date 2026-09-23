@@ -47,6 +47,35 @@ export function siteUrl(): string {
   return raw;
 }
 
+/**
+ * Server-side sanity check for NEXT_PUBLIC_META_PIXEL_ID (build-time — see docs/deploy/railway.md). The
+ * actual client-side read is `src/lib/config/public-env.ts` (this file is `server-only` and cannot be
+ * imported from the client component that loads the Pixel); this function exists so the shape of the value
+ * is validated somewhere at all, and so a build/CI step could call it to fail loudly on an obviously-wrong
+ * value (Meta Pixel IDs are numeric). Optional: unset means no Pixel, not an error.
+ */
+export function validateMetaPixelId(): void {
+  const raw = process.env.NEXT_PUBLIC_META_PIXEL_ID;
+  if (!raw) return;
+  if (!/^\d{10,20}$/.test(raw)) {
+    throw new ConfigError("NEXT_PUBLIC_META_PIXEL_ID", "must be a numeric Meta Pixel ID (digits only)");
+  }
+}
+
+/**
+ * Same pattern as `validateMetaPixelId()` above, for NEXT_PUBLIC_GA_MEASUREMENT_ID
+ * (CLAUDE_GA4_STOREFRONT_TRACKING.md). GA4 Measurement IDs always carry the `G-` prefix (confirmed against the
+ * command's own example, `G-8GYTEJ1F77`, built from the raw tag `8GYTEJ1F77` it supplied) — optional: unset
+ * means no GA4, not an error.
+ */
+export function validateGaMeasurementId(): void {
+  const raw = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+  if (!raw) return;
+  if (!/^G-[A-Z0-9]{4,20}$/.test(raw)) {
+    throw new ConfigError("NEXT_PUBLIC_GA_MEASUREMENT_ID", "must be a GA4 Measurement ID in the form G-XXXXXXXXXX");
+  }
+}
+
 const INK_TOKEN_ENV_BY_STORE: Partial<Record<CommerceStoreKey, string>> = {
   "use-sul": "INK_TOKEN_SUL",
   "use-norte": "INK_TOKEN_NORTE",

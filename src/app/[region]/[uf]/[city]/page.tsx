@@ -5,6 +5,9 @@ import { StateOutline } from "@/components/brand/StateOutline";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
+import { TrackedCityLink } from "@/components/analytics/TrackedCityLink";
+import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
+import { SOURCES } from "@/lib/analytics/sources";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import { getCatalog } from "@/lib/catalog/repository";
 import { resolveCity } from "@/lib/catalog/resolver";
@@ -98,7 +101,7 @@ export default async function CityPage({ params }: { params: Params }) {
           Estilos
         </h2>
         {families.length > 0 ? (
-          <FamilyGrid entries={families} hrefBase={base} cityName={city.name} />
+          <FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk />
         ) : (
           <p className="t-body max-w-xl">Ainda não temos camisetas de {city.name} na loja. Volte em breve ou escolha outra cidade da região.</p>
         )}
@@ -113,12 +116,24 @@ export default async function CityPage({ params }: { params: Params }) {
             <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 lg:gap-x-6">
               {lore.map((item) => (
                 <li key={item.product.inkProductId}>
-                  <a href={item.href} className="group block">
+                  <TrackedInkLink
+                    href={item.href}
+                    params={{
+                      productId: item.product.inkProductId,
+                      sourceSection: SOURCES.cityFala,
+                      city: city.name,
+                      state: city.uf,
+                      value: item.product.price ?? undefined,
+                      productName: item.text,
+                      destinationUrl: item.href,
+                    }}
+                    className="group block"
+                  >
                     <ProductPhoto src={item.product.imageUrl} alt={`${item.text}, ${city.name}`} sizes="(min-width: 768px) 22vw, 46vw" />
                     <p className="t-h3 link-line mt-3 inline">{item.text}</p>
                     <p className="t-place mt-0.5 text-[0.95rem] text-ink-mute">{item.kind === "padroeiro" ? "Padroeiro" : "Expressão"} · {city.name}</p>
                     {formatPrice(item.product.price) && <p className="t-small mt-0.5 font-semibold">{formatPrice(item.product.price)}</p>}
-                  </a>
+                  </TrackedInkLink>
                 </li>
               ))}
             </ul>
@@ -146,7 +161,29 @@ export default async function CityPage({ params }: { params: Params }) {
                   </span>
                 </>
               );
-              return <li key={item.inkProductId}>{href ? <a href={href} className="group flex items-center gap-4">{content}</a> : <div className="flex items-center gap-4">{content}</div>}</li>;
+              return (
+                <li key={item.inkProductId}>
+                  {href ? (
+                    <TrackedInkLink
+                      href={href}
+                      params={{
+                        productId: item.inkProductId,
+                        sourceSection: SOURCES.cityLocalities,
+                        city: city.name,
+                        state: city.uf,
+                        value: item.price ?? undefined,
+                        productName: item.localityLabel,
+                        destinationUrl: href,
+                      }}
+                      className="group flex items-center gap-4"
+                    >
+                      {content}
+                    </TrackedInkLink>
+                  ) : (
+                    <div className="flex items-center gap-4">{content}</div>
+                  )}
+                </li>
+              );
             })}
           </ul>
         </section>
@@ -161,9 +198,13 @@ export default async function CityPage({ params }: { params: Params }) {
             <ul className="mt-4 flex flex-wrap gap-2">
               {neighbours.map((c) => (
                 <li key={c.id}>
-                  <Link href={`/${region}/${uf}/${c.slug}`} className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.9375rem] font-medium transition-colors hover:border-ink hover:bg-ink hover:text-white">
+                  <TrackedCityLink
+                    href={`/${region}/${uf}/${c.slug}`}
+                    params={{ city: c.name, state: c.uf, region, source: SOURCES.cityNeighbours }}
+                    className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.9375rem] font-medium transition-colors hover:border-ink hover:bg-ink hover:text-white"
+                  >
                     {c.name}
-                  </Link>
+                  </TrackedCityLink>
                 </li>
               ))}
               <li>

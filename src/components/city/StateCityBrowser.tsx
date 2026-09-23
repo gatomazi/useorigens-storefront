@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { pluralCidades } from "@/lib/format";
+import { trackSelectCity } from "@/lib/analytics/track";
+import { SOURCES } from "@/lib/analytics/sources";
 
 export type BrowserCity = { n: string; s: string };
 export type BrowserGroup = { name: string; slug: string; cities: BrowserCity[] };
@@ -81,7 +83,11 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
             <ul className="grid grid-cols-2 gap-x-4 pb-5 pt-1 sm:grid-cols-3 lg:grid-cols-4">
               {g.cities.map((c) => (
                 <li key={c.s}>
-                  <Link href={`/${region}/${uf}/${c.s}`} className="link-line flex min-h-11 items-center text-[0.9375rem]">
+                  <Link
+                    href={`/${region}/${uf}/${c.s}`}
+                    onClick={() => trackSelectCity({ city: c.n, state: uf, region, source: mode === "regiao" ? SOURCES.stateMesoregion : SOURCES.stateAZ })}
+                    className="link-line flex min-h-11 items-center text-[0.9375rem]"
+                  >
                     {c.n}
                   </Link>
                 </li>

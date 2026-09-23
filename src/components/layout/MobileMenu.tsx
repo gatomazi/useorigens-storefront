@@ -2,8 +2,18 @@
 
 import Link from "next/link";
 import { useRef } from "react";
+import { trackSelectState } from "@/lib/analytics/track";
+import { SOURCES } from "@/lib/analytics/sources";
 
-export type NavItem = { label: string; href: string; external?: boolean };
+export type NavItem = {
+  label: string;
+  href: string;
+  external?: boolean;
+  /** Present only for the three state entries inlined into this flat mobile list (SiteChrome.tsx) — plain,
+   * serializable data (not a function: this component is rendered from a Server Component, which can't pass
+   * callbacks as props) so `select_state` can still fire from here, same as the desktop Regiões dropdown. */
+  trackState?: { state: string; region: string };
+};
 
 /** Full-screen menu for small screens, built on a native modal <dialog>. */
 export function MobileMenu({ items }: { items: NavItem[] }) {
@@ -35,7 +45,15 @@ export function MobileMenu({ items }: { items: NavItem[] }) {
                   {item.label}
                 </a>
               ) : (
-                <Link key={item.href} href={item.href} onClick={() => ref.current?.close()} className="min-h-11 py-2 text-[2rem] font-extrabold leading-tight tracking-tight text-white">
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => {
+                    if (item.trackState) trackSelectState({ ...item.trackState, source: SOURCES.stateSelector });
+                    ref.current?.close();
+                  }}
+                  className="min-h-11 py-2 text-[2rem] font-extrabold leading-tight tracking-tight text-white"
+                >
                   {item.label}
                 </Link>
               ),

@@ -77,6 +77,19 @@ aqui foi executado — é o roteiro para o usuário aplicar no dashboard do Rail
 | `ADMIN_SYNC_TOKEN` | Token Bearer que autoriza `POST`/`GET /api/admin/catalog-sync` | Sim, para poder sincronizar em produção (sem ela a rota fica desabilitada, 503) | Runtime | web | *(segredo — gerar com `openssl rand -hex 32`)* |
 | `CATALOG_SNAPSHOT_DIR` | Diretório do snapshot (onde o Volume deve ser montado) | Não (default `data/generated` no working directory) | Runtime | web | *(caminho absoluto, ex. `/app/data/generated` — só definir se o default não bater com o mount real)* |
 | `COMMERCE_STORE_PRIORITY` | Override da prioridade de loja entre regiões | Não (default `regional` já é o comportamento certo hoje) | Runtime | web | `regional` |
+| `NEXT_PUBLIC_META_PIXEL_ID` | Meta Pixel ID do storefront `/sul` (`CLAUDE_USE_ORIGENS_META_PIXEL_INK_ESTADOS.md`) | Não (sem ela, `MetaPixel` não renderiza nada — sem `<Script>`, sem request — independente do consentimento; a loja continua 100% funcional) | **Build** (prefixo `NEXT_PUBLIC_` é embutido no bundle do cliente — definir onde o BUILD roda, não só onde o container inicia) | web | `1558923262073052` |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 Measurement ID do storefront `/sul` (`CLAUDE_GA4_STOREFRONT_TRACKING.md`) | Não (sem ela, `GoogleAnalytics` não renderiza nada — mesma regra do Pixel acima; a loja continua 100% funcional) | **Build** (prefixo `NEXT_PUBLIC_` é embutido no bundle do cliente — definir onde o BUILD roda, não só onde o container inicia) | web | `G-8GYTEJ1F77` |
+
+Mesmo com `NEXT_PUBLIC_META_PIXEL_ID`/`NEXT_PUBLIC_GA_MEASUREMENT_ID` definidas, o Pixel e o GA4 só carregam
+depois que a pessoa aceita o banner de consentimento (`src/lib/consent`) — nenhuma das duas variáveis sozinha
+dispara rastreamento. Nenhuma delas é um segredo (são embutidas no HTML/bundle do cliente de qualquer forma),
+mas seguem documentadas aqui como as demais variáveis de build.
+
+No endereço temporário do Railway (`*.up.railway.app`), o GA4 pode ficar configurado para validação técnica,
+mas evite poluir a propriedade real com eventos de um domínio de staging se não for estritamente necessário —
+prefira validar localmente com o Pixel Helper/DebugView e mock de rede sempre que possível. Se for preciso
+testar eventos reais no Railway, deixe registrado que são eventos de teste (ex. um segmento/anotação no GA4),
+e não crie um novo stream/filtro sem autorização.
 
 **Nunca definir `ALLOW_FIXTURE_SYNC` em produção.** Existe só para o script de verificação local
 (`npm run verify:bootstrap`) provar que a sincronização e a invalidação de cache funcionam sem chamar a INK

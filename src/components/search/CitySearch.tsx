@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { prepareCities, searchCities, type PreparedCity, type SearchCity, type SearchResult } from "@/lib/search/rank";
+import { trackSearch, trackSelectCity } from "@/lib/analytics/track";
 
 type Props = {
   region: RegionSlug;
@@ -13,6 +14,8 @@ type Props = {
   onNavigate?: () => void;
   label?: string;
   placeholder?: string;
+  /** GA4 `source` for select_city (src/lib/analytics/sources.ts) — which trigger opened this search. */
+  source?: string;
 };
 
 const indexCache = new Map<RegionSlug, Promise<PreparedCity[]>>();
@@ -39,6 +42,13 @@ function hrefFor(region: RegionSlug, result: SearchResult): string {
     : `/${region}/${result.city.u.toLowerCase()}/${result.city.s}`;
 }
 
+/** The public label for the Meta Search event — never the raw keystrokes, always what was actually chosen
+ * (city + UF to disambiguate same-named cities across states; a state result just needs its own name). No
+ * user-identifying data, only the place name the person searched for. */
+function searchLabelFor(result: SearchResult): string {
+  return result.type === "state" ? result.name : `${result.city.n} - ${result.city.u}`;
+}
+
 /**
  * The store's signature feature. The input reads like type printed on the shirt and the results are a
  * departure board: city large, state and region small. Results live in the page flow (no floating
@@ -50,6 +60,7 @@ export function CitySearch({
   onNavigate,
   label = "Busque sua cidade",
   placeholder = "Busque sua cidade…",
+  source,
 }: Props) {
   const router = useRouter();
   const uid = useId();
@@ -79,8 +90,16 @@ export function CitySearch({
   const hasList = results.length > 0;
   const activeIndex = Math.min(active, Math.max(results.length - 1, 0));
 
+  // The single conclusive-search gesture, reached by both Enter and clicking/tapping a suggestion — so Search
+  // fires from exactly one place, once, regardless of which path got here. A city result also fires
+  // SelectCity here — the same gesture legitimately means both "a search happened" and "a city was chosen"
+  // (CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md §2); a state result is never a city selection.
   const choose = (result: SearchResult | undefined) => {
     if (!result) return;
+    trackSearch(searchLabelFor(result), { region, resultsCount: results.length });
+    if (result.type === "city") {
+      trackSelectCity({ city: result.city.n, state: result.city.u, region, source });
+    }
     router.push(hrefFor(region, result));
     onNavigate?.();
   };

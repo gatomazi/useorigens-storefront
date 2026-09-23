@@ -6,6 +6,7 @@ import { ProductCarousel } from "@/components/catalog/ProductCarousel";
 import { Campaign } from "@/components/home/Campaign";
 import { RegionHero } from "@/components/home/RegionHero";
 import { StateCards } from "@/components/home/StateCards";
+import { SOURCES } from "@/lib/analytics/sources";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { REAL_COLLECTIONS } from "@/lib/editorial/collections";
 import { getRegionHome } from "@/lib/home";
@@ -70,6 +71,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
               title="Da Nossa Terra"
               intro="O estado inteiro numa camiseta, não só uma cidade."
               viewAllHref={REAL_COLLECTIONS.terra}
+              sourceSection={SOURCES.homeTerra}
             />
           </div>
         </section>
@@ -93,6 +95,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
               title="Redesenhos do Sul"
               intro="Obras, referências e ícones reinterpretados com sotaque local."
               viewAllHref={REAL_COLLECTIONS.redesenhos}
+              sourceSection={SOURCES.homeRedesenhos}
             />
           </div>
         </section>
@@ -107,6 +110,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
             title="Feito Para Você"
             intro="Escolha a combinação que mais parece com quem vai vestir."
             viewAllHref={REAL_COLLECTIONS.feitoParaVoce}
+            sourceSection={SOURCES.homeFeitoParaVoce}
           />
         </section>
       )}
@@ -124,6 +128,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
               title="Fala daqui"
               intro="Expressões dos três estados, sempre com o lugar de onde vêm."
               viewAllHref={REAL_COLLECTIONS.fala}
+              sourceSection={SOURCES.homeFala}
             />
           </div>
         </section>
@@ -144,6 +149,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
             labelledBy="ddd-title"
             title="O número de cada região"
             intro="O DDD e o nome da região, do Paraná ao Rio Grande do Sul."
+            sourceSection={SOURCES.homeDdd}
           />
         </section>
       )}

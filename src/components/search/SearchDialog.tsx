@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { RegionSlug } from "@/lib/geo/regions";
+import { SOURCES } from "@/lib/analytics/sources";
 import { CitySearch } from "./CitySearch";
 
 function SearchIcon({ className }: { className: string }) {
@@ -75,7 +76,7 @@ export function SearchDialog({ region, variant = "header" }: { region: RegionSlu
               </svg>
             </button>
           </div>
-          {isOpen && <CitySearch region={region} autoFocus onNavigate={close} />}
+          {isOpen && <CitySearch region={region} autoFocus onNavigate={close} source={variant === "hero" ? SOURCES.heroSearch : SOURCES.searchDialog} />}
         </div>
       </dialog>
     </>

@@ -2,6 +2,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useSyncExternalStore } from "react";
+import { trackGoToInk } from "@/lib/analytics/track";
 import { ProductPhoto } from "./ProductPhoto";
 
 export type CarouselItem = {
@@ -12,6 +13,11 @@ export type CarouselItem = {
   /** Where it comes from: "Curitiba · PR". Always shown for regional voice items. */
   context?: string;
   price: string | null;
+  /** Exactly what INK returned — the GoToInk `value` param. Omitted (not guessed) when not cleanly known for
+   * this item (e.g. a state-wide editorial pick with no single city). */
+  rawPrice?: number | null;
+  /** UF, when this item is genuinely tied to one state — the GoToInk `state` param. Never guessed. */
+  state?: string;
   imageUrl: string;
   /** Verified INK purchase URL. */
   href: string;
@@ -49,6 +55,7 @@ export function ProductCarousel({
   poster = false,
   tone = "light",
   viewAllHref,
+  sourceSection,
 }: {
   items: CarouselItem[];
   labelledBy: string;
@@ -59,6 +66,10 @@ export function ProductCarousel({
   tone?: "light" | "dark";
   /** Real store collection URL for "Ver todos". Omit when there is no single real destination. */
   viewAllHref?: string;
+  /** GoToInk `source_section` — one value for the whole carousel instance, e.g. "home_terra". This is the one
+   * shared click point behind five of the home's sections (Da Nossa Terra, Redesenhos, Feito Para Você, Fala
+   * daqui, DDD) — CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md §2. */
+  sourceSection: string;
 }) {
   const dark = tone === "dark";
   const [viewport, embla] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", dragFree: true });
@@ -108,7 +119,12 @@ export function ProductCarousel({
         <ul className="-ml-3 flex touch-pan-y sm:-ml-4 lg:-ml-6">
           {items.map((item, i) => (
             <li key={item.id} className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
-              <a href={item.href} className="group block" draggable={false}>
+              <a
+                href={item.href}
+                className="group block"
+                draggable={false}
+                onClick={() => trackGoToInk({ productId: item.id, sourceSection, state: item.state, value: item.rawPrice ?? undefined, productName: item.name, destinationUrl: item.href })}
+              >
                 <ProductPhoto
                   poster={poster}
                   src={item.imageUrl}

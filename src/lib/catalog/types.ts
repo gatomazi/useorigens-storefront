@@ -43,6 +43,16 @@ export type CityDesignBinding = {
   price: number | null;
 
   syncedAt: string;
+
+  /**
+   * INK's own cumulative sales count for this exact product (`total_sales_count`), same field already used
+   * to rank merch. Optional because a snapshot written before this field existed on bindings won't have it —
+   * every reader must treat a missing value as 0, never as "unknown ranked higher/lower". No period or "as of"
+   * date is known for this count (it is a running total), so it is never presented publicly as "Mais
+   * vendidas" — only used internally to prefer a real product over another when curating (see
+   * src/lib/editorial/state-showcase.ts).
+   */
+  totalSalesCount?: number;
 };
 
 /** What the indexer stores per store. Ranking across stores happens at read time (ranking.ts). */

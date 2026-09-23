@@ -1,11 +1,32 @@
 import { expect, test, type Page } from "@playwright/test";
 
-/** The hero field is a trigger: it opens the search sheet (full screen on phones), where the real input lives. */
+/**
+ * The hero field is a trigger: it opens the search sheet (full screen on phones), where the real input lives.
+ *
+ * The city index (`/api/cidades/{region}`) is fetched on demand, the moment the real input focuses (which
+ * happens as soon as the dialog opens) — a real network request that, under the heavy concurrent load of a
+ * full parallel test run, has occasionally stalled or failed rather than just being slow (confirmed: a whole
+ * test timeout elapsed waiting for a suggestion/empty-state that never came). `CitySearch`'s own `loadIndex`
+ * retries on the *next* focus after a failed fetch (its cache entry is deleted on rejection), so this waits
+ * for that first fetch to actually settle and, if it never does within a generous window, closes and reopens
+ * once to give a stalled/failed load a real second chance — every test that opens search this way benefits
+ * without needing its own retry logic.
+ */
 async function openHeroSearch(page: Page) {
-  await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-  const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
-  await expect(dialog).toBeVisible();
-  return dialog;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const indexFetch = page.waitForResponse((res) => res.url().includes("/api/cidades/"), { timeout: 15_000 });
+    await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
+    const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+    await expect(dialog).toBeVisible();
+    try {
+      await indexFetch;
+      return dialog;
+    } catch {
+      if (attempt === 1) return dialog; // let the caller's own assertion produce the real failure
+      await page.keyboard.press("Escape");
+    }
+  }
+  throw new Error("unreachable");
 }
 
 test.describe("/sul critical flows", () => {
@@ -45,13 +66,24 @@ test.describe("/sul critical flows", () => {
     await expect(dialog.getByRole("link", { name: "Santa Catarina" }).first()).toBeVisible();
   });
 
-  test("given a city page, when opening a family, then the CTA goes to the real INK product with its real price", async ({ page }) => {
+  test("given a city page, when reading a style card with no variants, then it links directly to the real INK product (no intermediate PDP)", async ({ page }) => {
     await page.goto("/sul/sc/tijucas");
-    await page.getByRole("link", { name: /Ponto de Origem/ }).first().click();
-    await expect(page).toHaveURL(/\/sul\/sc\/tijucas\/ponto-de-origem$/);
+    const card = page.getByRole("link", { name: /Comprar Ponto de Origem de Tijucas na loja/ });
+    await expect(card).toHaveAttribute("href", "https://www.usesul.com.br/usesul/product/tijucas-origem-sc");
+    await expect(page.getByText("R$ 109,90").first()).toBeVisible();
+  });
+
+  test("given the same style, when the internal PDP is visited directly, then it still works (direct links, indexing)", async ({ page }) => {
+    await page.goto("/sul/sc/tijucas/ponto-de-origem");
     const cta = page.getByRole("link", { name: "Escolher tamanho na loja" });
     await expect(cta).toHaveAttribute("href", "https://www.usesul.com.br/usesul/product/tijucas-origem-sc");
     await expect(page.getByText("R$ 109,90").first()).toBeVisible();
+  });
+
+  test("given a style with more than one real variant, when read on the city page, then it keeps the internal PDP link (the variant picker is a real choice, not an extra step)", async ({ page }) => {
+    await page.goto("/sul/pr/pato-branco");
+    const card = page.getByRole("link", { name: "Ponto de Origem" });
+    await expect(card).toHaveAttribute("href", "/sul/pr/pato-branco/ponto-de-origem");
   });
 
   test("given a city with a locality product, when opening it, then the locality is shown apart from the families", async ({ page }) => {
