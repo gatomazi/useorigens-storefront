@@ -20,6 +20,7 @@
 // regardless of readiness.
 import { NextResponse, type NextRequest } from "next/server";
 import { catalogReadiness } from "@/lib/catalog/readiness";
+import { devAdminEnabled } from "@/lib/admin/dev-guard";
 import { siteUrl } from "@/lib/config/env";
 import { ENABLED_REGIONS } from "@/lib/site";
 
@@ -32,6 +33,19 @@ function isCanonicalHost(request: NextRequest): boolean {
 }
 
 export function proxy(request: NextRequest) {
+  // The local CMS (docs/admin/cms-local-usage.md) exists only on a developer's own machine: in any other process (build, start,
+  // Railway) every admin path is a plain 404 before anything renders, whatever the query string. On a dev machine it bypasses the
+  // catalog gate below (the admin must work while the catalog is missing) and is never indexable or cached. Each admin page, action and
+  // route handler re-checks the request itself (src/lib/admin/require-dev-admin.ts).
+  const { pathname } = request.nextUrl;
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    if (!devAdminEnabled()) return new Response(null, { status: 404 });
+    const response = NextResponse.next();
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    response.headers.set("Cache-Control", "no-store");
+    return response;
+  }
+
   const { ready } = catalogReadiness(ENABLED_REGIONS);
 
   if (!ready) {

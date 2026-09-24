@@ -56,3 +56,6 @@ next-env.d.ts
 /docs/design/screenshots/home-final-order/
 /docs/design/screenshots/lenda-order-viewall/
 /docs/design/screenshots/sul-color/
+
+# local CMS sandbox: drafts, sandbox publications, uploads (docs/admin/cms-local-usage.md)
+/data/admin-dev/

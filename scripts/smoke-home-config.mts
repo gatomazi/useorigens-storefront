@@ -1,18 +1,21 @@
 // Deterministic smoke of the configurable home (docs/admin/cms-v1-round3.md §4). It needs no INK, no product-image CDN and no
-// dev server: it starts TWO production servers from the current `.next` build (run `npm run build` first) on a temporary Volume that
+// dev server: it starts TWO production servers from the current `.next` build (run `NEXT_PUBLIC_META_PIXEL_ID=… NEXT_PUBLIC_GA_MEASUREMENT_ID=… npm run build`
+// first: the two public IDs are inlined at BUILD time, and the tracking checks below need them) on a temporary Volume that
 // holds a FIXTURE catalog — one with SITE_CONFIG_HOME off (the published home) and one with it on — and checks both, side by side.
 //
 //   npx tsx scripts/smoke-home-config.mts
 //
 // Covers: readiness, current routes, section structure and order, tracking with the env fallback (consent-gated; the vendor hosts are
 // ABORTED at the network layer, so nothing real is ever sent), ISR caching, the collections file being optional/corrupt, and the
-// flag being inert. What it cannot cover yet is printed as SKIP with the reason (upload and preview are not implemented).
+// flag being inert, the published.json reader (a published section from a collection shows up with real cards; corrupt / incompatible files fall
+// back to the seed), the preview being tracker-free, and the local admin answering 404 on a production build. What it cannot cover yet is printed as SKIP with the reason (upload and preview are not implemented).
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { chromium } from "@playwright/test";
 import { fixtureSnapshot } from "./fixture-snapshot.mjs";
+import { buildSeedBundle } from "../src/lib/site-config/seed";
 
 const nextBin = path.join(process.cwd(), "node_modules", ".bin", "next");
 const META = "1558923262073052"; // the public production IDs, used only as env fallback values; every vendor request is aborted
@@ -43,13 +46,43 @@ async function waitHealthy(port: number) {
   throw new Error(`server on ${port} did not become healthy`);
 }
 
+const SYNC_TOKEN = "smoke-home-config-token";
+const MERCH_IDS = ["7000001", "7000002", "7000003", "7000004"];
+function catalogWithMerch() {
+  const snap = fixtureSnapshot(100, 0.6) as { stores: Record<string, { merch: unknown[] }> };
+  snap.stores["use-sul"].merch = MERCH_IDS.map((id, i) => ({
+    inkProductId: id, commerceStoreKey: "use-sul", regionSlug: "sul", name: `Camiseta de teste ${i + 1}`, slug: `teste-${id}`,
+    storeProductUrl: `https://www.usesul.com.br/usesul/product/teste-${id}`,
+    imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/fixture.jpg", price: 99.9, totalSalesCount: 0, syncedAt: new Date().toISOString(),
+  }));
+  return snap;
+}
+const collectionsFixture = () => ({
+  version: 1,
+  stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 1, collections: [{ id: 152188, name: "Da Nossa Terra", slug: "da-nossa-terra", position: 3, isAvailable: true, reportedProductCount: 133, merchProductIds: MERCH_IDS, bindingProductCount: 0 }] } },
+});
+const publishedWith = (releaseId: string, mutate?: (b: ReturnType<typeof buildSeedBundle>) => void) => {
+  const bundle = buildSeedBundle({ metaPixelId: META, ga4MeasurementId: GA });
+  bundle.releaseId = releaseId;
+  const sections = bundle.docs.sul.home!.sections;
+  sections.splice(sections.length - 2, 0, {
+    id: "custom-smoke", anchor: "colecao-smoke", headingId: "colecao-smoke-title", template: "product-carousel", active: true, title: "Coleção do smoke",
+    layout: { variant: "standard", tone: "dark", surface: "plain" }, source: { kind: "ink-category", store: "use-sul", collectionId: 152188, order: "category", limit: 6 },
+    analyticsSource: "homeCollection", cta: { label: "Ver todos", dest: { kind: "ink-collection", store: "use-sul", collectionId: 152188 } },
+    appearance: { fill: { kind: "solid", color: "token:region-primary" }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } },
+  });
+  mutate?.(bundle);
+  return bundle;
+};
+
 async function start(s: (typeof servers)[number]) {
   s.volume = await mkdtemp(path.join(tmpdir(), "smoke-home-"));
   tmpDirs.push(s.volume);
-  await writeFile(path.join(s.volume, "catalog-snapshot.json"), JSON.stringify(fixtureSnapshot(100, 0.6)));
+  await writeFile(path.join(s.volume, "catalog-snapshot.json"), JSON.stringify(catalogWithMerch()));
+  await writeFile(path.join(s.volume, "collections-snapshot.json"), JSON.stringify(collectionsFixture()));
   s.child = spawn(nextBin, ["start", "-p", String(s.port)], {
     cwd: process.cwd(),
-    env: { ...process.env, CATALOG_SNAPSHOT_DIR: s.volume, NEXT_PUBLIC_META_PIXEL_ID: META, NEXT_PUBLIC_GA_MEASUREMENT_ID: GA, ...s.env },
+    env: { ...process.env, CATALOG_SNAPSHOT_DIR: s.volume, SITE_CONFIG_DIR: path.join(s.volume, "site-config"), NODE_ENV: "production", ADMIN_SYNC_TOKEN: SYNC_TOKEN, ALLOW_FIXTURE_SYNC: "true", NEXT_PUBLIC_META_PIXEL_ID: META, NEXT_PUBLIC_GA_MEASUREMENT_ID: GA, ...s.env },
     stdio: "ignore",
     detached: true,
   });
@@ -139,11 +172,67 @@ async function main() {
     check(`${label}: /sul -> 200 and same sections`, r.status === 200 && JSON.stringify(sectionIds(h)) === JSON.stringify(sectionIds(off)), r.status);
   }
 
+  await writeFile(file, JSON.stringify(collectionsFixture())); // back to the fixture the published-section checks rely on
+
+  console.log("\n=== published.json reader (flag ON, reading a temp site-config dir) ===");
+  const cfgDir = path.join(on2.volume!, "site-config");
+  await mkdir(cfgDir, { recursive: true });
+  const cfg = path.join(cfgDir, "published.json");
+  // Pages are ISR-cached (revalidate = 3600): like the real publisher, a change to published.json is followed by an on-demand revalidation. The
+  // fixture-sync route performs exactly that `revalidatePath("/[region]", "layout")`, so it stands in for the publisher's cache step here.
+  const revalidate = async () => {
+    const post = await fetch(`${base}/api/admin/catalog-sync`, { method: "POST", headers: { Authorization: `Bearer ${SYNC_TOKEN}`, "Content-Type": "application/json" }, body: JSON.stringify({ fixtureSnapshot: catalogWithMerch() }) });
+    for (let i = 0; i < 100 && post.status === 202; i++) {
+      const job = (await (await fetch(`${base}/api/admin/catalog-sync`, { headers: { Authorization: `Bearer ${SYNC_TOKEN}` } })).json()) as { status: string };
+      if (job.status === "succeeded" || job.status === "failed") return;
+      await new Promise((r) => setTimeout(r, 150));
+    }
+  };
+  const write = async (body: string) => {
+    await writeFile(cfg, body);
+    await revalidate();
+  };
+  const home = async () => (await fetch(`${base}/sul`)).text();
+  check("no published.json: the home is the seed (no extra section)", !(await home()).includes('id="colecao-smoke"'));
+  await write(JSON.stringify(publishedWith("smoke-1")));
+  const withSection = await home();
+  check("published section from a collection renders with real cards from the local snapshot", withSection.includes('id="colecao-smoke"') && (withSection.match(/href="https:\/\/www\.usesul\.com\.br\/usesul\/product\/teste-70000/g) ?? []).length >= 3);
+  check("its 'Ver todos' points to the real store collection URL", withSection.includes("https://www.usesul.com.br/usesul/collections/da-nossa-terra"));
+  // (The fixture catalog has no products matching the curated name rules, so the curated carousels are legitimately hidden here; the structural
+  // sections around the new one must all be present, in order.)
+  check("the structural sections around it are unchanged and in order", sectionIds(withSection).join(">") === "estilos>estados>colecao-smoke>origem", sectionIds(withSection));
+  await write(JSON.stringify(publishedWith("smoke-2", (b) => { (b.docs.sul.home!.sections.find((x) => x.id === "custom-smoke") as { cta?: unknown }).cta = { label: "x", dest: { kind: "external", url: "https://evil.example/" } }; })));
+  const dropped = await home();
+  check("an invalid optional section is dropped, the rest of the home stays", !dropped.includes('id="colecao-smoke"') && dropped.includes('id="hero-title"') && dropped.includes('id="origem"'));
+  // A collection that is gone (or hidden) must not leave an empty carousel behind: the section is simply not rendered.
+  await write(JSON.stringify(publishedWith("smoke-gone", (b) => { (b.docs.sul.home!.sections.find((x) => x.id === "custom-smoke") as { source: { collectionId: number } }).source.collectionId = 999999; })));
+  const gone = await home();
+  check("a section whose collection no longer exists is omitted (no empty carousel), the home stays whole", !gone.includes('id="colecao-smoke"') && gone.includes('id="hero-title"') && gone.includes('id="origem"'));
+  for (const [label, body] of [["corrupt file", "{oops"], ["incompatible version", JSON.stringify({ ...publishedWith("v9"), schemaVersion: 9 })], ["empty object", "{}"]] as const) {
+    await write(body);
+    const h = await home();
+    check(`${label}: falls back to the seed and the home is whole`, h.includes('id="hero-title"') && h.includes('id="origem"') && !h.includes('id="colecao-smoke"'));
+  }
+  await write(JSON.stringify(publishedWith("smoke-3")));
+  const offHome = await (await fetch(`http://localhost:${servers[0].port}/sul`)).text();
+  check("flag OFF ignores published.json entirely", !offHome.includes('id="colecao-smoke"'));
+
+  console.log("\n=== local admin on a production build ===");
+  for (const s of servers) {
+    for (const p of ["/admin", "/admin/home", "/admin/publicar", "/admin/midia", "/admin/preview", "/admin/preview?ADMIN_DEV_MODE=true&source=published", "/admin/media/aaaaaaaaaaaaaaaaaaaaaaaa.webp"]) {
+      const r = await fetch(`http://localhost:${s.port}${p}`, { headers: { "X-Admin-Dev-Mode": "true" }, redirect: "manual" });
+      check(`${s.name.trim()}: ${p} -> 404`, r.status === 404, r.status);
+    }
+    const post = await fetch(`http://localhost:${s.port}/admin/home`, { method: "POST", headers: { "Next-Action": "abc", "Content-Type": "text/plain" }, body: "[]" });
+    check(`${s.name.trim()}: a server-action POST to /admin -> 404`, post.status === 404, post.status);
+  }
+  const previewLess = await (await fetch(`${base}/sul`)).text();
+  check("the storefront never links to or loads anything from /admin", !previewLess.includes("/admin"));
+
   console.log("\n=== not testable yet ===");
-  skip("media upload", "not implemented (needs R2, auth and Postgres — not provisioned)");
-  skip("draft preview", "not implemented (admin surface does not exist)");
-  skip("published.json reader", "not implemented; the flag renders the immutable seed");
-  console.log("(build without Volume, bootstrap and sync-driven ISR invalidation: `npm run verify:prerender` and `npm run verify:bootstrap`)");
+  skip("media upload", "dev-only upload is covered by `npm run test:admin`; production storage (R2) is not provisioned");
+  skip("draft preview in a browser", "covered by `npm run test:admin` (needs a development server: the admin does not exist on a production build)");
+    console.log("(build without Volume, bootstrap and sync-driven ISR invalidation: `npm run verify:prerender` and `npm run verify:bootstrap`)");
 
   console.log(failures === 0 ? "\nSMOKE PASSED" : `\nSMOKE FAILED (${failures})`);
 }
