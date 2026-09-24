@@ -11,6 +11,7 @@
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
+  void reconcilePublishedAtBoot();
   const { snapshotStatus } = await import("./lib/catalog/snapshot-file");
   const status = snapshotStatus();
   if (!status.present) {
@@ -25,4 +26,30 @@ export async function register() {
     `[boot] catalog snapshot: present at ${status.path}, ${ageMin}min old, ${status.totalProducts} products across ${status.stores.length} store(s): ` +
       status.stores.map((s) => `${s.storeKey}=${s.productCount}`).join(", "),
   );
+}
+
+/**
+ * Production CMS only (complete admin configuration): after a start, bring published.json back in line with the database's live release
+ * (a redeploy with an empty or restored Volume, or a publish interrupted by a restart). Fire-and-forget with a delay so it never
+ * competes with the boot, never throws, and does nothing at all when the admin is not configured — the storefront itself never depends
+ * on it (it reads the file, or falls back to the seed).
+ */
+async function reconcilePublishedAtBoot(): Promise<void> {
+  try {
+    const { adminConfig } = await import("./lib/admin/config");
+    if (adminConfig().mode !== "prod") return;
+    setTimeout(() => {
+      void (async () => {
+        try {
+          const { reconcileBootPublished } = await import("./lib/admin/boot-reconcile");
+          const done = await reconcileBootPublished();
+          if (done.length > 0) console.log(`[boot] cms: reconciled published config (${done.join(", ")})`);
+        } catch (error) {
+          console.warn(`[boot] cms: reconcile skipped (${error instanceof Error ? error.message.replace(/postgres(ql)?:\/\/\S+/g, "postgres://***") : "error"})`);
+        }
+      })();
+    }, 15_000).unref();
+  } catch {
+    /* never block startup */
+  }
 }

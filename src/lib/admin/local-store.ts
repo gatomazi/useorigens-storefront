@@ -2,11 +2,11 @@ import "server-only";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { catalogSnapshotDir } from "../config/env";
-import type { Scope, ScopeDoc } from "../site-config/schema";
+import type { Scope } from "../site-config/schema";
 
 /**
  * Local (development) persistence for the CMS: plain JSON files under `data/admin-dev/` (gitignored), written atomically. It stands in
- * for the future Postgres repository behind narrow interfaces (`DraftRepository` here, the publish ports in sandbox-publish.ts), so the
+ * for the Postgres repository behind the same narrow interfaces (store/ports.ts), so the
  * screens never know where the data lives. NOTHING here can touch a production Volume: the directory is refused if it is, or is inside,
  * the catalog snapshot directory.
  */
@@ -49,16 +49,8 @@ export async function writeJsonAtomic(file: string, value: unknown): Promise<voi
 
 // ── Drafts ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-export type DraftRecord = { scope: Scope; rev: number; updatedAt: string; baseReleaseId: string | null; doc: ScopeDoc };
-
-export type SaveResult = { ok: true; record: DraftRecord } | { ok: false; conflict: DraftRecord | null };
-
-/** What the future Postgres repository implements (config_draft). `expectedRev: null` = "there must be no draft yet". */
-export interface DraftRepository {
-  load(scope: Scope): Promise<DraftRecord | null>;
-  save(scope: Scope, doc: ScopeDoc, expectedRev: number | null, baseReleaseId: string | null): Promise<SaveResult>;
-  discard(scope: Scope): Promise<void>;
-}
+import type { DraftRecord, DraftRepository } from "./store/ports";
+export type { DraftRecord, DraftRepository, SaveResult } from "./store/ports";
 
 export function fileDraftRepository(dir: string = adminDevDir()): DraftRepository {
   const file = (scope: Scope) => path.join(dir, "drafts", `${scope}.json`);
