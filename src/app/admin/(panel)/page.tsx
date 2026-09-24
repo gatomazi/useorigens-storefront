@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
-import { requireDevAdmin } from "@/lib/admin/require-dev-admin";
+import { requireAdmin } from "@/lib/admin/auth/guard";
+import { platform } from "@/lib/admin/platform";
 import { collectionProblems, readabilityProblems } from "@/lib/admin/validate-draft";
-import { inspectSandbox, listHistory } from "@/lib/admin/sandbox-publish";
+import { inspectPublishing, listHistory } from "@/lib/admin/ops";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { snapshotStatus } from "@/lib/catalog/snapshot-file";
 import { getCollections } from "@/lib/catalog/collections-file";
@@ -24,7 +25,7 @@ const ago = (iso: string | null | undefined): string => {
 };
 
 export default async function AdminOverview({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
-  await requireDevAdmin();
+  await requireAdmin();
   const sp = await searchParams;
   const ws = await loadWorkspace();
   const history = await listHistory();
@@ -33,7 +34,8 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
   const collections = getCollections();
   const sections = ws.doc.home?.sections ?? [];
   const problems = [...collectionProblems(ws.doc), ...readabilityProblems(ws.doc)];
-  const pending = await inspectSandbox();
+  const pending = await inspectPublishing();
+  const prod = platform().mode === "prod";
   const reading = readPublished();
   const custom = sections.filter((s) => s.id.startsWith("custom-")).length;
   const sandboxLive = process.env.SITE_CONFIG_DIR ? publishedFilePath() : null;
@@ -42,7 +44,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Visão geral</h1>
-        <p className="a-muted mt-2 max-w-2xl">Home do Sul. Tudo abaixo vem do estado real desta máquina: rascunho, publicação do sandbox, catálogo e coleções da INK sincronizados.</p>
+        <p className="a-muted mt-2 max-w-2xl">Home do Sul. Tudo abaixo vem do estado real: rascunho, publicação, catálogo e coleções da INK sincronizados.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
 
@@ -54,7 +56,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
           </p>
           <dl className="mt-3 space-y-1 text-[0.9375rem]">
             <div className="flex justify-between gap-3"><dt className="a-muted">Rascunho</dt><dd className="font-bold">{ws.record ? `rev ${ws.record.rev} · ${ago(ws.record.updatedAt)}` : "sem rascunho salvo"}</dd></div>
-            <div className="flex justify-between gap-3"><dt className="a-muted">Publicado (sandbox)</dt><dd className="font-bold">{head ? `release ${head.id} · ${ago(head.promotedAt)}` : "nada publicado (loja usa o seed)"}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="a-muted">{prod ? "Publicado" : "Publicado (sandbox)"}</dt><dd className="font-bold">{head ? `release ${head.id} · ${ago(head.promotedAt)}` : "nada publicado (loja usa o seed)"}</dd></div>
           </dl>
           <Link href="/admin/publicar" className="a-link mt-4 inline-block text-[0.9375rem]">Ver diferenças e publicar</Link>
         </div>
@@ -104,7 +106,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
 
       <section className="grid gap-4 lg:grid-cols-2" aria-label="Ambiente">
         <div className="a-card p-5">
-          <p className="a-h2">Sandbox de publicação</p>
+          <p className="a-h2">{prod ? "Publicação" : "Sandbox de publicação"}</p>
           <ul className="mt-3 space-y-2 text-[0.9375rem]">
             <li className="flex items-center justify-between gap-3"><span>Consistência (registro × arquivo × cache)</span>{pending.length === 0 ? <span className="a-badge ok">Coerente</span> : <span className="a-badge warn">Pendente: {pending.join(", ")}</span>}</li>
             <li className="flex items-center justify-between gap-3"><span>Leitor da loja (esta máquina)</span>{reading.source === "published" ? <span className="a-badge ok">Lendo release {reading.bundle.releaseId}</span> : <span className="a-badge">Seed · {reading.reason}</span>}</li>

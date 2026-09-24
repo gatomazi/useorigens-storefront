@@ -1,11 +1,13 @@
 import Link from "next/link";
-import { setCollectionEnabledAction } from "@/app/admin/actions";
+import { setCollectionEnabledAction, syncCollectionsAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { LibrarySearch } from "@/components/admin/LibrarySearch";
 import { libraryEntries, type LibraryEntry } from "@/lib/catalog/collection-source";
 import { getCollections } from "@/lib/catalog/collections-file";
 import { searchCollections } from "@/lib/admin/collection-search";
-import { requireDevAdmin } from "@/lib/admin/require-dev-admin";
+import { requireAdmin } from "@/lib/admin/auth/guard";
+import { platform } from "@/lib/admin/platform";
+import { snapshotStatus } from "@/lib/catalog/snapshot-file";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { enabledInternalIds, sectionsUsing } from "@/lib/site-config/collections-enabled";
@@ -16,6 +18,8 @@ const STORES = [
   { key: "use-norte", name: "Norte", editable: false },
   { key: "use-centro", name: "Centro-Oeste", editable: false },
 ] as const;
+
+const daysSince = (iso: string): number => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
 
 const FILTERS = new Set(["all", "public", "internal", "enabled", "empty"]);
 const MAX_ROWS = 120;
@@ -32,7 +36,7 @@ const reasonText = (e: LibraryEntry): string =>
   e.reason === "too-few-products" ? `Só ${e.matchedCount} produto(s) no catálogo: o carrossel precisa de pelo menos 3.` : e.reason === "needs-resync" ? "Registro antigo, sem os produtos: rode npm run collections:sync." : "";
 
 export default async function CollectionsLibrary({ searchParams }: { searchParams: Promise<{ q?: string; f?: string; store?: string; from?: string; ok?: string; err?: string }> }) {
-  await requireDevAdmin();
+  const actor = await requireAdmin();
   const sp = await searchParams;
   const q = (sp.q ?? "").slice(0, 80);
   const f = FILTERS.has(sp.f ?? "") ? (sp.f as string) : "all";
@@ -44,6 +48,11 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
   const synced = file.stores[store.key];
   const all = libraryEntries(store.key as CommerceStoreKey, enabled);
   const legacy = all.some((e) => e.needsResync);
+  const ageDays = synced ? daysSince(synced.syncedAt) : 0;
+  const currentCatalog = snapshotStatus().stores.find((c) => c.storeKey === store.key)?.syncedAt;
+  const staleReason = !synced ? null : ageDays >= 7 ? "Desatualizada (7+ dias)" : currentCatalog && new Date(currentCatalog) > new Date(synced.catalogSyncedAt) ? "O catálogo é mais novo que as coleções" : null;
+  const { syncs } = platform();
+  const lastRun = actor.role === "owner" ? await syncs.last("collections") : null;
   const filtered = searchCollections(all.filter((e) => passes(e, f)), q).sort((a, b) => (q ? 0 : a.position - b.position));
   const shown = filtered.slice(0, MAX_ROWS);
   const counts = {
@@ -87,9 +96,16 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
               <li>{synced.collections.length} coleções sincronizadas ({counts.public} públicas utilizáveis)</li>
               <li>{counts.internalTotal} internas · <strong>{counts.internalEnabled} habilitadas</strong> · {counts.internal} utilizáveis agora</li>
               <li className="a-muted">Catálogo de referência: {new Date(synced.catalogSyncedAt).toLocaleDateString("pt-BR")}. Contagens = produtos publicados desta loja, não o total bruto da INK.</li>
+              <li>Última sincronização: <strong>{new Date(synced.syncedAt).toLocaleString("pt-BR")}</strong> ({ageDays === 0 ? "hoje" : `há ${ageDays} dia(s)`}){staleReason && <span className="a-badge warn ml-2">{staleReason}</span>}</li>
             </ul>
           ) : <p className="a-flash err mt-3">Ainda não há coleções sincronizadas para esta loja. Rode <code>npm run collections:sync</code> (só leitura).</p>}
-          {legacy && <p className="a-flash err mt-3">Este arquivo é de uma versão antiga e não guarda os produtos das coleções internas. Rode <code>npm run collections:sync</code> de novo.</p>}
+          {legacy && <p className="a-flash err mt-3">Este arquivo é de uma versão antiga e não guarda os produtos das coleções internas. Sincronize de novo.</p>}
+          {actor.role === "owner" && (
+            <form action={syncCollectionsAction} className="mt-4">
+              <button type="submit" className="a-btn ghost sm">Sincronizar coleções agora</button>
+              <p className="a-muted mt-2 text-[0.8125rem]">Somente leitura na INK (cerca de 4 requisições). Se a INK falhar, os dados atuais são mantidos.{lastRun ? ` Última execução: ${lastRun.status === "succeeded" ? "ok" : lastRun.status === "running" ? "em andamento" : "falhou"} · ${new Date(lastRun.startedAt).toLocaleString("pt-BR")}.` : ""}</p>
+            </form>
+          )}
         </div>
       </div>
 

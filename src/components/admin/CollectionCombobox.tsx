@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { searchCollections } from "@/lib/admin/collection-search";
 
 /** What the client needs about a collection to offer it: no product ids, only what a person uses to choose. */
@@ -61,6 +61,11 @@ export function CollectionCombobox({
   const selectableIdx = results.map((r, i) => (r.selectable ? i : -1)).filter((i) => i >= 0);
   const enableHits = results.filter((r) => r.reason === "not-enabled" && r.eligible).slice(0, 3);
 
+  // Keyboard navigation keeps the highlighted option visible inside the (scrollable, height-capped) list.
+  useEffect(() => {
+    if (open && typed) document.getElementById(`${uid}-opt-${results[active]?.id}`)?.scrollIntoView({ block: "nearest" });
+  }, [active, open, typed, results, uid]);
+
   function choose(entry: ComboEntry) {
     setSelected(entry);
     setQuery(entry.name);
@@ -82,6 +87,9 @@ export function CollectionCombobox({
       const pos = selectableIdx.indexOf(active);
       const next = e.key === "ArrowDown" ? (pos + 1) % selectableIdx.length : (pos - 1 + selectableIdx.length) % selectableIdx.length;
       setActive(selectableIdx[pos === -1 ? 0 : next]);
+    } else if ((e.key === "Home" || e.key === "End") && open && selectableIdx.length > 0 && e.ctrlKey) {
+      e.preventDefault();
+      setActive(e.key === "Home" ? selectableIdx[0] : selectableIdx[selectableIdx.length - 1]);
     } else if (e.key === "Enter") {
       if (open && results[active]?.selectable) {
         e.preventDefault(); // choosing must not submit the surrounding form
@@ -134,7 +142,7 @@ export function CollectionCombobox({
       {hint && <p className="a-muted mt-1 text-[0.8125rem]">{hint}</p>}
 
       {showList && (
-        <ul id={listId} role="listbox" aria-label="Coleções" className="absolute left-0 right-0 z-30 mt-1 max-h-[min(22rem,60vh)] overflow-y-auto border border-black/50 bg-white shadow-lg">
+        <ul id={listId} role="listbox" aria-label="Coleções" className="absolute left-0 right-0 z-30 mt-1 max-h-[min(16rem,45vh)] overflow-y-auto border border-black/50 bg-white shadow-lg">
           {results.length === 0 && <li role="presentation" className="a-muted p-3 text-[0.9375rem]">Nenhuma coleção encontrada para “{query}”. Confira a grafia ou procure na Biblioteca.</li>}
           {results.map((r, i) => (
             <li

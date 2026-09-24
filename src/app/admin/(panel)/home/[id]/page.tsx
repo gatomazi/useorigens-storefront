@@ -5,7 +5,7 @@ import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { SectionEditorForm } from "@/components/admin/SectionEditorForm";
 import { listMedia } from "@/lib/admin/media";
-import { requireDevAdmin } from "@/lib/admin/require-dev-admin";
+import { requireAdmin } from "@/lib/admin/auth/guard";
 import { sourceStatus } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { toComboEntries } from "@/lib/admin/combo";
@@ -13,7 +13,7 @@ import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 
 export default async function EditSection({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
-  await requireDevAdmin();
+  await requireAdmin();
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   const ws = await loadWorkspace();
   const section = ws.doc.home?.sections.find((s) => s.id === id);

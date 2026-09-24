@@ -2,7 +2,7 @@ import Link from "next/link";
 import { addCollectionSection, duplicateSection, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
-import { requireDevAdmin } from "@/lib/admin/require-dev-admin";
+import { requireAdmin } from "@/lib/admin/auth/guard";
 import { collectionProblems, sectionReadability, sourceStatus } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
@@ -25,7 +25,7 @@ function RowForm({ action, rev, id, extra, children, danger = false, label }: { 
 }
 
 export default async function AdminHome({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
-  await requireDevAdmin();
+  await requireAdmin();
   const sp = await searchParams;
   const ws = await loadWorkspace();
   const rev = ws.record?.rev ?? null;

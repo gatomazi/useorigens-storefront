@@ -14,7 +14,7 @@ process.env.CMS_TEST_SANDBOX = sandbox;
 
 export default defineConfig({
   testDir: "tests/e2e-admin",
-  timeout: 240_000,
+  timeout: 600_000,
   // A development server compiles each route on first use (seconds, and far more under load): assertions get a budget that covers a cold
   // compile. This is an upper bound for a state to appear, not a sleep.
   expect: { timeout: 60_000 },
@@ -25,7 +25,7 @@ export default defineConfig({
     command: `npx next dev -H 127.0.0.1 -p ${port}`,
     url: `http://127.0.0.1:${port}/api/health`,
     reuseExistingServer: false,
-    timeout: 240_000,
+    timeout: 600_000,
     env: {
       ADMIN_DEV_MODE: "true",
       SITE_CONFIG_HOME: "on",

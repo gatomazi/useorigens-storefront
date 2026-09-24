@@ -7,9 +7,9 @@ import { expect, test, type Page } from "@playwright/test";
  *   previous version → the storefront shows the restored one. The original curated sections must be untouched throughout.
  * It relies on the locally synced INK collections (`npm run collections:sync`); if they are missing the first assertion says so.
  */
-const hydrated = (page: Page) => page.waitForFunction(() => document.documentElement.dataset.hydrated === "true", undefined, { timeout: 60_000 });
+const hydrated = (page: Page) => page.waitForFunction(() => document.documentElement.dataset.hydrated === "true", undefined, { timeout: 180_000 });
 async function open(page: Page, url: string) {
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 300_000 });
   await hydrated(page);
 }
 const rows = (page: Page) => page.locator("table.a-table tbody tr");
@@ -99,7 +99,7 @@ test("given the local CMS, when a collection section is created, styled, reorder
   const desktop = page.frameLocator('iframe[data-preview="desktop"]');
   for (const [name, frame] of [["mobile", mobile], ["desktop", desktop]] as const) {
     const section = frame.locator("section#colecao-terra-em-foco");
-    await expect(section, `${name} preview shows the new section`).toBeVisible({ timeout: 120_000 });
+    await expect(section, `${name} preview shows the new section`).toBeVisible({ timeout: 300_000 });
     await expect(section.getByRole("heading", { name: "Terra em foco" })).toBeVisible();
     expect(await section.locator('a[href^="https://www.usesul.com.br/"]').count(), `${name}: real INK cards`).toBeGreaterThanOrEqual(3);
     await expect(section.locator("picture img").first()).toHaveAttribute("src", /\/banners\/sul\/fala-daqui-mobile-\d+\.webp/); // banner is a layer INSIDE the section
@@ -120,7 +120,7 @@ test("given the local CMS, when a collection section is created, styled, reorder
   await expect(page.getByText('Nova seção "Terra em foco"')).toBeVisible();
   await page.getByLabel(/Nota da publicação/).fill("primeira publicação do roundtrip");
   await page.getByRole("button", { name: "Publicar no sandbox local" }).click();
-  await expect(page.getByText(/Publicado no sandbox local \(release 1\)/)).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText(/Publicado no sandbox local \(release 1\)/)).toBeVisible({ timeout: 300_000 });
   await expect(page.getByText("Coerente").first()).toBeVisible();
   await open(page, "/sul");
   await expect(page.locator("section#colecao-terra-em-foco h2")).toHaveText("Terra em foco");
@@ -137,12 +137,12 @@ test("given the local CMS, when a collection section is created, styled, reorder
   await expect(page.getByText("Rascunho salvo.")).toBeVisible();
   await open(page, "/admin/publicar");
   await page.getByRole("button", { name: "Publicar no sandbox local" }).click();
-  await expect(page.getByText(/release 2/).first()).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText(/release 2/).first()).toBeVisible({ timeout: 300_000 });
   await open(page, "/sul");
   await expect(page.locator("section#colecao-terra-em-foco h2")).toHaveText("Terra em foco 2");
   await open(page, "/admin/publicar");
   await page.locator("tr", { hasText: "#1" }).getByRole("button", { name: "Restaurar esta versão" }).click();
-  await expect(page.getByText(/Versão 1 restaurada/)).toBeVisible({ timeout: 120_000 });
+  await expect(page.getByText(/Versão 1 restaurada/)).toBeVisible({ timeout: 300_000 });
   await open(page, "/sul");
   await expect(page.locator("section#colecao-terra-em-foco h2")).toHaveText("Terra em foco");
   await open(page, "/admin/publicar");

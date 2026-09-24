@@ -3,8 +3,8 @@ import { PreviewShell } from "@/components/admin/PreviewShell";
 import { HomeSections } from "@/components/home/HomeSections";
 import { categoryProps } from "@/lib/catalog/collection-source";
 import { getCatalog } from "@/lib/catalog/repository";
-import { requireDevAdmin } from "@/lib/admin/require-dev-admin";
-import { composeBundle } from "@/lib/admin/sandbox-publish";
+import { requireAdmin } from "@/lib/admin/auth/guard";
+import { composeForPreview } from "@/lib/admin/ops";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { getRegionHome } from "@/lib/home";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
@@ -19,12 +19,12 @@ export const metadata: Metadata = { title: "Pré-visualização · Use Origens",
  * would show, including sections dropped for being invalid. Read-only: it writes nothing and fires no tracking.
  */
 export default async function AdminPreview({ searchParams }: { searchParams: Promise<{ source?: string }> }) {
-  await requireDevAdmin();
+  await requireAdmin();
   const { source } = await searchParams;
   const ws = await loadWorkspace();
   const usingPublished = source === "published";
   const doc = usingPublished ? ws.baseDoc : ws.doc;
-  const raw = await composeBundle(doc, "preview");
+  const raw = await composeForPreview(doc);
   const { bundle } = sanitizeBundle(raw, seedFromEnv());
   const catalog = getCatalog();
   const home = getRegionHome("sul");

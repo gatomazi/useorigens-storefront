@@ -24,8 +24,12 @@ declare global {
  * (pathname/search change) — never on remount-without-navigation, Strict Mode's double-invoke, or an
  * unrelated re-render, via `lastTracked` staying pinned to the current URL.
  */
-export function MetaPixel() {
-  const pixelId = metaPixelId();
+/**
+ * `pixelId` (server-resolved from the published CMS configuration, when there is one) wins; `undefined` means "no published configuration":
+ * fall back to the build-time env exactly as before, so nothing changes until a configuration is deliberately published.
+ */
+export function MetaPixel({ pixelId: resolved }: { pixelId?: string | null } = {}) {
+  const pixelId = resolved === undefined ? metaPixelId() : resolved;
   const { record } = useConsent();
   const accepted = record?.choice === "accepted";
   const pathname = usePathname();
