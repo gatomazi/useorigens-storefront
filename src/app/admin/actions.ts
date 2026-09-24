@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { requireDevAdmin } from "@/lib/admin/require-dev-admin";
 import { deleteUpload, listUploads, saveUpload } from "@/lib/admin/media";
 import { findCollection } from "@/lib/catalog/collections-file";
+import { collectionState } from "@/lib/catalog/collections";
+import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
+import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionRef, parseSectionForm } from "@/lib/admin/section-form";
 import { publishToSandbox, reconcileSandbox } from "@/lib/admin/sandbox-publish";
 import { applyAndSave, discardDraft, loadWorkspace, type SaveOutcome } from "@/lib/admin/workspace";
@@ -25,7 +28,7 @@ function back(path: string, flash: { ok?: string; err?: string[] }): never {
   const q = new URLSearchParams();
   if (flash.ok) q.set("ok", flash.ok);
   if (flash.err?.length) q.set("err", flash.err.join(" | ").slice(0, 900));
-  redirect(`${path}${q.size ? `?${q}` : ""}`);
+  redirect(`${path}${q.size ? `${path.includes("?") ? "&" : "?"}${q}` : ""}`);
 }
 
 async function run(fd: FormData, op: DraftOp, okMessage: string, returnTo: string, focusToEditor = false): Promise<never> {
@@ -38,8 +41,12 @@ async function run(fd: FormData, op: DraftOp, okMessage: string, returnTo: strin
 }
 
 export async function addCollectionSection(fd: FormData) {
+  await requireDevAdmin();
   const ref = parseCollectionRef(text(fd, "collection"));
-  if (!ref) back("/admin/home", { err: ["Escolha uma coleção da lista."] });
+  if (!ref) back("/admin/home", { err: ["Escolha uma coleção nas sugestões (digite parte do nome)."] });
+  // Same rule the editor's autocomplete applies, enforced here too: never trust that the form only offered valid choices.
+  const problem = sourceProblem({ kind: "ink-category", ...ref, order: "category", limit: 6 }, (await loadWorkspace()).doc);
+  if (problem) back("/admin/home", { err: [problem] });
   const limit = Math.min(24, Math.max(3, Math.round(Number(text(fd, "limit")) || 6)));
   return run(fd, { type: "add-carousel", title: text(fd, "title") || findCollection(ref.store, ref.collectionId)?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit } }, "Seção criada no rascunho.", "/admin/home", true);
 }
@@ -68,7 +75,39 @@ export async function saveSection(fd: FormData) {
   const ws = await loadWorkspace();
   const section = ws.doc.home?.sections.find((s) => s.id === id);
   if (!section) back("/admin/home", { err: ["Seção não encontrada."] });
-  return run(fd, { type: "update", id, patch: parseSectionForm(fd, section) }, "Rascunho salvo.", `/admin/home/${id}`);
+  const patch = parseSectionForm(fd, section);
+  const problem = patch.source ? sourceProblem(patch.source, ws.doc) : null;
+  if (problem) back(`/admin/home/${id}`, { err: [problem] });
+  return run(fd, { type: "update", id, patch }, "Rascunho salvo.", `/admin/home/${id}`);
+}
+
+/**
+ * Library: enable or disable ONE internal collection for the Sul document. Explicit, individual, reversible; nothing is sent to INK.
+ * Enabling requires the collection to exist, be internal, and have enough real products; disabling is refused (with the list of
+ * sections) while a section uses it. `q`, `f` and `from` only carry the library's own filter and the "back to where I was" link.
+ */
+export async function setCollectionEnabledAction(fd: FormData) {
+  await requireDevAdmin();
+  const ref = parseCollectionRef(text(fd, "ref"));
+  const enable = text(fd, "enabled") === "true";
+  const from = text(fd, "from");
+  const q = new URLSearchParams();
+  for (const k of ["q", "f"]) if (text(fd, k)) q.set(k, text(fd, k));
+  if (from.startsWith("/admin/")) q.set("from", from);
+  const to = `/admin/colecoes${q.size ? `?${q}` : ""}`;
+  if (!ref || ref.store !== "use-sul") back(to, { err: ["Só as coleções do Sul podem ser habilitadas nesta versão."] });
+  const record = findCollection(ref.store, ref.collectionId);
+  if (!record) back(to, { err: ["Coleção não encontrada no snapshot sincronizado."] });
+  if (record.isAvailable) back(to, { err: ["Coleções públicas já podem ser usadas; só as internas precisam ser habilitadas."] });
+  if (enable) {
+    const state = collectionState(record, new Set());
+    if (!state.eligible) back(to, { err: [state.reason === "needs-resync" ? "Registro antigo: rode npm run collections:sync antes de habilitar." : `Só ${record.matchedCount} produto(s) dessa coleção existem no catálogo local (mínimo 3).`] });
+  }
+  const outcome = await applyAndSave({ type: "set-collection-enabled", ...ref, enabled: enable }, revNumber(fd));
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  const enabledNow = enabledInternalIds((await loadWorkspace()).doc, ref.store).has(ref.collectionId);
+  back(to, { ok: enabledNow ? `“${record.name}” habilitada para uso no CMS (a INK não foi alterada).` : `“${record.name}” desabilitada.` });
 }
 
 export async function discardDraftAction() {

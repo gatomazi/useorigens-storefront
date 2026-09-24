@@ -28,9 +28,10 @@ Opcional: `ADMIN_DEV_DATA_DIR` (caminho absoluto) muda onde o sandbox guarda os 
 
 1. **Visão geral** (`/admin`): estado real: rascunho × publicado, catálogo, coleções sincronizadas, seções com problema.
 2. **Home · Seções**: a ordem da home. Use ↑/↓ para mover, **Ocultar/Ativar**, **Duplicar** (a cópia começa oculta) e **Editar**. O hero fica sempre no topo e o rodapé no fim.
-3. **Nova seção a partir de uma coleção da INK**: escolha a coleção (só aparecem as públicas com pelo menos 3 produtos que existem no catálogo local; o número mostrado é o de produtos elegíveis, não o total bruto da INK), dê um título e **Criar seção**. Ela entra no rascunho, antes da campanha.
-4. **Editor da seção**: título, subtítulo, botão “Ver todos” (coleção real da loja, URL da loja ou página interna), fonte (coleção ou a curadoria atual), quantidade de cards, layout, **cor do texto**, **fundo** (sem cor / cor sólida / degradê), **imagem mobile e desktop** opcionais (banners do projeto ou enviadas), **foco** por dispositivo, **sobreposição** e um aviso de legibilidade do texto. **Salvar rascunho** atualiza a pré-visualização (375 px e desktop, com os componentes reais e os cards reais do snapshot; não dispara tracking).
-5. **Publicar**: veja as diferenças, **Publicar no sandbox local**. A loja local (`/sul`) passa a mostrar a nova versão. O histórico permite **Restaurar esta versão** (cria uma nova release) e **Descartar rascunho**.
+3. **Coleções** (`/admin/colecoes`): a Biblioteca com todas as coleções da INK, inclusive as **internas** (ocultas na INK). Busca sem acento por nome, slug ou número; filtros Todas / Públicas / Internas / Habilitadas no CMS / Sem produtos elegíveis. Para usar uma coleção interna, clique em **Habilitar** nela (individual e reversível; nada é enviado à INK). Enquanto uma seção a usa, ela não pode ser desabilitada.
+4. **Nova seção a partir de uma coleção da INK**: no campo **Coleção**, digite parte do nome, o slug ou o número (↑/↓ e Enter, ou o mouse). As sugestões iniciais são só as coleções utilizáveis (públicas e internas habilitadas, com ≥ 3 produtos no catálogo local); se o que você digitou é uma interna ainda não habilitada, a lista diz isso e leva à Biblioteca. Dê um título e **Criar seção**. Ela entra no rascunho, antes da campanha. Coleção interna não tem “Ver todos” (a INK não expõe página pública para ela).
+5. **Editor da seção**: título, subtítulo, botão “Ver todos” (coleção real da loja, URL da loja ou página interna), fonte (coleção ou a curadoria atual), quantidade de cards, layout, **cor do texto**, **fundo** (sem cor / cor sólida / degradê), **imagem mobile e desktop** opcionais (banners do projeto ou enviadas), **foco** por dispositivo, **sobreposição** e um aviso de legibilidade do texto. **Salvar rascunho** atualiza a pré-visualização (375 px e desktop, com os componentes reais e os cards reais do snapshot; não dispara tracking).
+6. **Publicar**: veja as diferenças, **Publicar no sandbox local**. A loja local (`/sul`) passa a mostrar a nova versão. O histórico permite **Restaurar esta versão** (cria uma nova release) e **Descartar rascunho**.
 
 **Mídia**: banners do projeto e envio de imagens (PNG, JPEG ou WebP até 8 MB, 6000 px), somente neste computador; não é versionado nem é o armazenamento de produção.
 
@@ -46,6 +47,8 @@ Opcional: `ADMIN_DEV_DATA_DIR` (caminho absoluto) muda onde o sandbox guarda os 
 
 Para recomeçar do zero: pare o servidor e `rm -rf data/admin-dev`. Sem `published.json` a loja usa a home original (seed).
 
+**Coleções habilitadas** ficam no próprio documento (rascunho e `published.json`), então acompanham publicar, restaurar e descartar. O arquivo `collections-snapshot.json` (fora do repositório, em `data/generated/` ou no Volume) vem de `npm run collections:sync` (só leitura, ~4 GETs); se ele for da versão antiga, a Biblioteca pede uma nova sincronização.
+
 ## Segurança do modo local
 
 O painel, suas ações e a pré-visualização só respondem quando **todas** as condições valem: processo de **desenvolvimento**, `ADMIN_DEV_MODE=true`, Host `localhost`/`127.0.0.1`/`[::1]` e nenhum cabeçalho de proxy apontando para fora. Qualquer outro caso (build de produção, Railway, host público, `?ADMIN_DEV_MODE=true` na URL, requisição encaminhada) é **404**, também para as server actions e para `/admin/media/*`. A verificação está no `proxy.ts`, no layout e em cada action/rota. O diretório do sandbox é recusado se estiver dentro do diretório do catálogo (o Volume).
@@ -59,4 +62,4 @@ npx vitest run         # unitários
 
 ## Limites desta versão
 
-Só a região **Sul** é editável (Norte e Centro-Oeste aparecem como “em breve”). Não há curadoria manual de produtos (só coleção INK ou a curadoria atual), nem arrastar-e-soltar (a ordem é por botões), nem edição de tracking. A troca de fonte de uma seção original para uma coleção **substitui a curadoria** dela e só vale depois de publicada.
+Só a região **Sul** é editável (Norte e Centro-Oeste aparecem como “em breve”). Coleções internas só podem ser habilitadas no Sul. Não há curadoria manual de produtos (só coleção INK ou a curadoria atual), nem arrastar-e-soltar (a ordem é por botões), nem edição de tracking. A troca de fonte de uma seção original para uma coleção **substitui a curadoria** dela e só vale depois de publicada.

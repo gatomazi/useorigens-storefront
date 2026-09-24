@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 
 /**
  * The local CMS round trip, end to end, in a real browser against a real dev server (sandbox in a temp dir):
- *   create a collection section → give it a background and a banner → reorder → save draft → reload (persists) → preview at 375 px and
+ *   Biblioteca: find an internal collection (no accents) → enable it → autocomplete → create a section from it → give it a background and a banner → reorder → save draft → reload (persists) → preview at 375 px and
  *   desktop (real cards, no tracking) → publish to the SANDBOX → the storefront (flag ON) shows it → edit + publish again → restore the
  *   previous version → the storefront shows the restored one. The original curated sections must be untouched throughout.
  * It relies on the locally synced INK collections (`npm run collections:sync`); if they are missing the first assertion says so.
@@ -31,17 +31,43 @@ test("given the local CMS, when a collection section is created, styled, reorder
   expect(original.slice(0, 4)).toEqual(["O seu lugar, do seu jeito.", "Sua cidade, de 8 jeitos.", "Da Nossa Terra", "Escolha o seu estado"]);
   expect(original.length).toBe(10); // nine sections plus the fixed footer row
 
-  // 2. Create a section from a real INK collection.
-  const picker = page.getByLabel(/Coleção \(só públicas/);
-  await expect(picker, "no usable INK collections: run `npm run collections:sync` first").toBeVisible();
-  const option = picker.locator("option", { hasText: "Da Nossa Terra" });
-  await expect(option).toHaveCount(1);
-  await picker.selectOption({ label: (await option.innerText()).trim() });
+  // 2. Library: an INTERNAL (hidden on INK) collection is found without accents, enabled individually, and only then offered by the autocomplete.
+  await open(page, "/admin/colecoes");
+  await expect(page.getByRole("heading", { name: "Coleções da INK" }), "no synced collections: run `npm run collections:sync` first").toBeVisible();
+  await page.getByLabel(/Buscar por nome, slug ou número/).fill("fe de origem"); // no accents, no case: finds "Fé de Origem"
+  const libRow = page.locator("table.a-table tbody tr", { hasText: "Fé de Origem" });
+  await expect(libRow).toHaveCount(1);
+  await expect(libRow).toContainText("Interna (oculta na INK)");
+  await expect(libRow).toContainText("Desabilitada");
+  // Before enabling, the section creator does not offer it as selectable (it explains where to enable it).
+  await open(page, "/admin/home");
+  const combo = page.getByRole("combobox", { name: /Coleção \(busque pelo nome\)/ });
+  await combo.fill("fe de origem");
+  const hidden = page.getByRole("option", { name: /Fé de Origem/ });
+  await expect(hidden).toHaveAttribute("aria-disabled", "true");
+  await open(page, "/admin/colecoes?q=fe+de+origem");
+  await page.locator("table.a-table tbody tr", { hasText: "Fé de Origem" }).getByRole("button", { name: "Habilitar" }).click();
+  await expect(page.getByText(/“Fé de Origem” habilitada para uso no CMS/)).toBeVisible();
+  await expect(page.locator("table.a-table tbody tr", { hasText: "Fé de Origem" })).toContainText("Habilitada no CMS");
+  // Enabling one does not enable its neighbours.
+  await page.goto("/admin/colecoes?q=sul+-+rs", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("table.a-table tbody tr", { hasText: "SUL - RS" }).first().getByRole("button", { name: "Habilitar" })).toBeVisible();
+
+  // 2b. Autocomplete (keyboard) in the section creator picks it; the saved link is store + id.
+  await open(page, "/admin/home");
+  const picker = page.getByRole("combobox", { name: /Coleção \(busque pelo nome\)/ });
+  await picker.fill("fe de");
+  await expect(page.getByRole("option", { name: /Fé de Origem/ })).not.toHaveAttribute("aria-disabled", "true");
+  await picker.press("ArrowDown");
+  await picker.press("Enter");
+  await expect(picker).toHaveValue("Fé de Origem");
   await page.getByLabel("Título (opcional)").fill("Terra em foco");
   await page.getByLabel("Cards").fill("6");
   await page.getByRole("button", { name: "Criar seção" }).click();
   await expect(page).toHaveURL(/\/admin\/home\/custom-[0-9a-f]+(\?|$)/);
   await expect(page.getByText("Seção criada no rascunho.")).toBeVisible();
+  // An internal collection has no public page: the editor says so instead of offering a "Ver todos".
+  await expect(page.getByText(/Coleção interna: link “Ver todos” desativado/)).toBeVisible();
 
   // 3. Background: solid regional green, light text, plus a banner with a dark veil.
   await page.getByLabel("Cor sólida").check();
@@ -83,6 +109,12 @@ test("given the local CMS, when a collection section is created, styled, reorder
   await expect(mobile.getByRole("heading", { name: "Da Nossa Terra", exact: true })).toBeVisible();
   expect(trackerRequests).toEqual([]);
 
+  // 5b. While a section uses it, the collection cannot be disabled.
+  await open(page, "/admin/colecoes?q=fe+de+origem");
+  const usedRow = page.locator("table.a-table tbody tr", { hasText: "Fé de Origem" });
+  await expect(usedRow).toContainText("Usada em: Terra em foco");
+  await expect(usedRow.getByRole("button", { name: "Desabilitar" })).toBeDisabled();
+
   // 6. Publish to the sandbox and see it on the storefront (flag ON, reading the sandbox).
   await open(page, "/admin/publicar");
   await expect(page.getByText('Nova seção "Terra em foco"')).toBeVisible();
@@ -94,6 +126,7 @@ test("given the local CMS, when a collection section is created, styled, reorder
   await expect(page.locator("section#colecao-terra-em-foco h2")).toHaveText("Terra em foco");
   await expect(page.locator("section#terra h2")).toHaveText("Da Nossa Terra"); // the curated section is untouched
   expect(await page.locator("section#colecao-terra-em-foco a[href^='https://www.usesul.com.br/']").count()).toBeGreaterThanOrEqual(3);
+  expect(await page.locator("section#colecao-terra-em-foco a[href*='/collections/']").count(), "no 'Ver todos' for an internal collection").toBe(0);
 
   // 7. Edit, publish again, then restore release 1.
   await open(page, "/admin/home");

@@ -33,3 +33,12 @@
 .a-thumb { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #ddd; }
 .a-card { min-width: 0; position: relative; }
 @media (max-width: 640px) { .a-btn { white-space: normal; text-align: center; padding-block: 0.4rem; } }
+
+/* A table that becomes a list of cards below 720px: each cell is labelled by its data-label, so nothing is hidden behind a sideways scroll. */
+@media (max-width: 719px) {
+  .a-table.a-stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .a-table.a-stack, .a-table.a-stack tbody, .a-table.a-stack tr, .a-table.a-stack td { display: block; width: 100%; }
+  .a-table.a-stack tr { padding: 0.75rem 0; border-bottom: 2px solid rgb(0 0 0 / 0.2); }
+  .a-table.a-stack td { border-bottom: 0; padding: 0.3rem 0.75rem; text-align: left !important; }
+  .a-table.a-stack td[data-label]::before { content: attr(data-label); display: block; font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 0.15rem; }
+}

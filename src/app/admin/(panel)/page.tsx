@@ -7,7 +7,8 @@ import { inspectSandbox, listHistory } from "@/lib/admin/sandbox-publish";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { snapshotStatus } from "@/lib/catalog/snapshot-file";
 import { getCollections } from "@/lib/catalog/collections-file";
-import { MIN_USABLE_PRODUCTS } from "@/lib/catalog/collection-source";
+import { libraryEntries, MIN_USABLE_PRODUCTS } from "@/lib/catalog/collection-source";
+import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { siteConfigHomeEnabled } from "@/lib/site-config/flag";
 import { publishedFilePath, readPublished } from "@/lib/site-config/published";
 import { numberPt } from "@/lib/format";
@@ -85,16 +86,19 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
             <p className="a-flash err mt-3">Ainda não sincronizadas. Rode <code>npm run collections:sync</code> (só leitura, ~4 requisições).</p>
           ) : (
             <ul className="mt-3 space-y-1 text-[0.9375rem]">
-              {(Object.entries(collections.stores) as [keyof typeof STORE_NAME, NonNullable<(typeof collections.stores)["use-sul"]>][]).map(([key, s]) => {
-                const visible = s.collections.filter((c) => c.isAvailable);
-                const usable = visible.filter((c) => c.merchProductIds.length >= MIN_USABLE_PRODUCTS);
+              {(Object.entries(collections.stores) as [keyof typeof STORE_NAME, unknown][]).map(([key]) => {
+                const rows = libraryEntries(key, key === "use-sul" ? enabledInternalIds(ws.doc, "use-sul") : new Set());
+                const publicUsable = rows.filter((e) => e.visibility === "public" && e.selectable).length;
+                const internal = rows.filter((e) => e.visibility === "internal");
+                const internalEligible = internal.filter((e) => e.eligible).length;
+                const internalEnabled = internal.filter((e) => e.enabled).length;
                 return (
-                  <li key={key} className="flex justify-between gap-3"><span className="a-muted">{STORE_NAME[key] ?? key}</span><span className="font-bold">{usable.length} utilizáveis · {visible.length} públicas · {s.collections.length} no total</span></li>
+                  <li key={key} className="flex justify-between gap-3"><span className="a-muted">{STORE_NAME[key] ?? key}</span><span className="text-right font-bold">{publicUsable} públicas utilizáveis · {internalEligible} internas elegíveis ({internalEnabled} habilitadas) · {rows.length} no total</span></li>
                 );
               })}
             </ul>
           )}
-          <p className="a-muted mt-3 text-[0.8125rem]">“Utilizáveis” = públicas na loja com pelo menos {MIN_USABLE_PRODUCTS} produtos que existem no catálogo local. O total bruto da INK inclui produtos ocultos.</p>
+          <p className="a-muted mt-3 text-[0.8125rem]">Elegível = pelo menos {MIN_USABLE_PRODUCTS} produtos publicados no catálogo local da mesma loja. O total bruto da INK inclui produtos ocultos. Internas precisam ser habilitadas na <Link href="/admin/colecoes" className="a-link">Biblioteca</Link>.</p>
         </div>
       </section>
 

@@ -5,7 +5,10 @@ import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireDevAdmin } from "@/lib/admin/require-dev-admin";
 import { collectionProblems, sectionReadability, sourceStatus } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
-import { availableCategories } from "@/lib/catalog/collection-source";
+import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
+import { toComboEntries } from "@/lib/admin/combo";
+import { libraryEntries } from "@/lib/catalog/collection-source";
+import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import type { Section } from "@/lib/site-config/schema";
 
 const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", footer: "Rodapé" };
@@ -27,7 +30,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const ws = await loadWorkspace();
   const rev = ws.record?.rev ?? null;
   const sections = ws.doc.home?.sections ?? [];
-  const categories = availableCategories("use-sul").filter((c) => c.usable);
+  const entries = toComboEntries(libraryEntries("use-sul", enabledInternalIds(ws.doc, "use-sul")));
+  const anySelectable = entries.some((e) => e.selectable);
   const problems = collectionProblems(ws.doc);
 
   return (
@@ -58,7 +62,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           </thead>
           <tbody>
             {sections.map((s: Section, i) => {
-              const status = sourceStatus(s);
+              const status = sourceStatus(s, ws.doc);
               const locked = s.template === "hero" || s.template === "footer";
               const readable = sectionReadability(s);
               const custom = s.id.startsWith("custom-");
@@ -107,18 +111,12 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
 
       <section className="a-card p-5" aria-labelledby="nova-secao">
         <h2 id="nova-secao" className="a-h2">Nova seção a partir de uma coleção da INK</h2>
-        {categories.length === 0 ? (
-          <p className="a-flash err mt-3">Nenhuma coleção utilizável: rode <code>npm run collections:sync</code> (só leitura) depois de um catálogo sincronizado.</p>
+        {entries.length === 0 ? (
+          <p className="a-flash err mt-3">Nenhuma coleção sincronizada: rode <code>npm run collections:sync</code> (só leitura) depois de um catálogo sincronizado.</p>
         ) : (
-          <form action={addCollectionSection} className="mt-3 grid gap-4 md:grid-cols-[2fr_2fr_1fr_auto] md:items-end">
+          <form action={addCollectionSection} className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1fr_auto] md:items-start">
             <input type="hidden" name="rev" value={rev ?? "null"} />
-            <div>
-              <label className="a-label" htmlFor="collection">Coleção (só públicas, com produtos no catálogo)</label>
-              <select id="collection" name="collection" className="a-select" required defaultValue="">
-                <option value="" disabled>Escolha…</option>
-                {categories.map((c) => <option key={c.collectionId} value={`use-sul:${c.collectionId}`}>{c.name} · {c.productCount} produtos elegíveis</option>)}
-              </select>
-            </div>
+            <CollectionCombobox name="collection" label="Coleção (busque pelo nome)" entries={entries} libraryFrom="/admin/home" hint={anySelectable ? "Inclui as coleções internas que você habilitou na Biblioteca." : "Nenhuma coleção utilizável ainda."} />
             <div>
               <label className="a-label" htmlFor="title">Título (opcional)</label>
               <input id="title" name="title" className="a-input" maxLength={120} placeholder="Usa o nome da coleção" />
@@ -127,9 +125,10 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
               <label className="a-label" htmlFor="limit">Cards</label>
               <input id="limit" name="limit" type="number" min={3} max={24} defaultValue={6} className="a-input" />
             </div>
-            <button type="submit" className="a-btn">Criar seção</button>
+            <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
           </form>
         )}
+        <p className="a-muted mt-3 text-[0.8125rem]">Precisa de uma coleção interna? <Link className="a-link" href="/admin/colecoes?from=/admin/home">Habilite-a na Biblioteca</Link>.</p>
         <p className="a-muted mt-3 text-[0.8125rem]">A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A ordem dos cards é a devolvida pela INK; não é “mais vendidos” nem “mais recentes”. A seção nova entra só no rascunho, antes da campanha.</p>
       </section>
 

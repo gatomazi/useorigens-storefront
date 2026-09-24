@@ -1,11 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
 import { readability } from "@/lib/admin/contrast";
 import type { Appearance, Section } from "@/lib/site-config/schema";
 
 export type MediaOption = { assetId: string; label: string; src: string; width: number; height: number; kind: "banner" | "upload" };
-export type CategoryOption = { value: string; label: string };
 
 const MODULES = [
   ["terra", "Da Nossa Terra (curadoria atual)"],
@@ -45,12 +45,12 @@ function FocalPad({ label, image, x, y, onChange }: { label: string; image?: Med
 }
 
 export function SectionEditorForm({
-  section, rev, media, categories, action,
+  section, rev, media, collections, action,
 }: {
   section: Section;
   rev: number | null;
   media: MediaOption[];
-  categories: CategoryOption[];
+  collections: ComboEntry[];
   action: (fd: FormData) => Promise<void>;
 }) {
   const a: Appearance = section.appearance;
@@ -76,6 +76,10 @@ export function SectionEditorForm({
   const [ovColor, setOvColor] = useState<string>("color" in a.overlay ? a.overlay.color : "#000000");
   const [ovOpacity, setOvOpacity] = useState("color" in a.overlay ? a.overlay.opacity : 0.45);
   const [sourceKind, setSourceKind] = useState<"editorial-module" | "ink-category">(section.source?.kind === "ink-category" ? "ink-category" : "editorial-module");
+  const currentRef = section.source?.kind === "ink-category" ? `${section.source.store}:${section.source.collectionId}` : undefined;
+  const [srcEntry, setSrcEntry] = useState<ComboEntry | null>(collections.find((e) => e.value === currentRef) ?? null);
+  const publicEntries = collections.filter((e) => e.visibility === "public" && e.selectable);
+  const internalSource = sourceKind === "ink-category" && srcEntry?.visibility === "internal";
   const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route">(section.cta?.dest.kind ?? "none");
 
   const byId = useMemo(() => new Map(media.map((m) => [m.assetId, m])), [media]);
@@ -115,7 +119,7 @@ export function SectionEditorForm({
             <legend className="a-h2 mb-3">Produtos</legend>
             <div role="radiogroup" aria-label="Fonte" className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 font-bold"><input type="radio" name="source_kind" value="editorial-module" checked={sourceKind === "editorial-module"} onChange={() => setSourceKind("editorial-module")} /> Curadoria editorial atual</label>
-              <label className="flex items-center gap-2 font-bold"><input type="radio" name="source_kind" value="ink-category" checked={sourceKind === "ink-category"} onChange={() => setSourceKind("ink-category")} disabled={categories.length === 0} /> Coleção da INK</label>
+              <label className="flex items-center gap-2 font-bold"><input type="radio" name="source_kind" value="ink-category" checked={sourceKind === "ink-category"} onChange={() => setSourceKind("ink-category")} disabled={collections.length === 0} /> Coleção da INK</label>
             </div>
             {sourceKind === "editorial-module" ? (
               <div>
@@ -127,13 +131,7 @@ export function SectionEditorForm({
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-[3fr_1fr]">
-                <div>
-                  <label className="a-label" htmlFor="source_collection">Coleção</label>
-                  <select id="source_collection" name="source_collection" className="a-select" defaultValue={cur?.kind === "ink-category" ? `${cur.store}:${cur.collectionId}` : ""} required>
-                    <option value="" disabled>Escolha…</option>
-                    {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                  </select>
-                </div>
+                <CollectionCombobox name="source_collection" label="Coleção (busque pelo nome, slug ou número)" entries={collections} defaultValue={currentRef} libraryFrom={`/admin/home/${section.id}`} onSelect={setSrcEntry} />
                 <div>
                   <label className="a-label" htmlFor="source_limit">Cards</label>
                   <input id="source_limit" name="source_limit" type="number" min={3} max={24} defaultValue={cur?.kind === "ink-category" ? cur.limit : 6} className="a-input" />
@@ -145,7 +143,14 @@ export function SectionEditorForm({
 
           <fieldset className="space-y-4">
             <legend className="a-h2 mb-3">Botão “Ver todos”</legend>
-            <div className="grid gap-4 md:grid-cols-2">
+            {internalSource && (
+              <div className="a-flash ok text-[0.875rem]">
+                <p className="font-bold">Coleção interna: link “Ver todos” desativado.</p>
+                <p>Ela não tem uma página pública verificada na loja da INK, então nenhum botão é criado (nem uma URL inventada).</p>
+                <input type="hidden" name="cta_kind" value="none" />
+              </div>
+            )}
+            {!internalSource && <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="a-label" htmlFor="cta_kind">Destino</label>
                 <select id="cta_kind" name="cta_kind" className="a-select" value={ctaKind} onChange={(e) => setCtaKind(e.target.value as typeof ctaKind)}>
@@ -156,18 +161,18 @@ export function SectionEditorForm({
                 </select>
               </div>
               {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver todos"} className="a-input" maxLength={32} /></div>}
-            </div>
-            {ctaKind === "ink-collection" && (
+            </div>}
+            {!internalSource && ctaKind === "ink-collection" && (
               <div>
                 <label className="a-label" htmlFor="cta_collection">Coleção</label>
                 <select id="cta_collection" name="cta_collection" className="a-select" defaultValue={section.cta?.dest.kind === "ink-collection" ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : ""} required>
                   <option value="" disabled>Escolha…</option>
-                  {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  {publicEntries.map((c) => <option key={c.value} value={c.value}>{c.name} · {c.matchedCount} produtos</option>)}
                 </select>
               </div>
             )}
-            {ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usesul.com.br/usesul/collections/…" /></div>}
-            {ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : ""} className="a-input" placeholder="/sul/sc" /></div>}
+            {!internalSource && ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usesul.com.br/usesul/collections/…" /></div>}
+            {!internalSource && ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : ""} className="a-input" placeholder="/sul/sc" /></div>}
           </fieldset>
 
           <fieldset className="space-y-4">

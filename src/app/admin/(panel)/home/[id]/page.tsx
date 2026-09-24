@@ -3,13 +3,14 @@ import { notFound } from "next/navigation";
 import { saveSection } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
-import { SectionEditorForm, type CategoryOption } from "@/components/admin/SectionEditorForm";
+import { SectionEditorForm } from "@/components/admin/SectionEditorForm";
 import { listMedia } from "@/lib/admin/media";
 import { requireDevAdmin } from "@/lib/admin/require-dev-admin";
 import { sourceStatus } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
-import { availableCategories } from "@/lib/catalog/collection-source";
-import { findCollection } from "@/lib/catalog/collections-file";
+import { toComboEntries } from "@/lib/admin/combo";
+import { libraryEntries } from "@/lib/catalog/collection-source";
+import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 
 export default async function EditSection({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
   await requireDevAdmin();
@@ -18,14 +19,8 @@ export default async function EditSection({ params, searchParams }: { params: Pr
   const section = ws.doc.home?.sections.find((s) => s.id === id);
   if (!section) notFound();
 
-  const usable = availableCategories("use-sul").filter((c) => c.usable);
-  const options: CategoryOption[] = usable.map((c) => ({ value: `use-sul:${c.collectionId}`, label: `${c.name} · ${c.productCount} produtos elegíveis` }));
-  // Keep the currently chosen collection selectable even if it stopped being usable, so the form can show (and the person can fix) it.
-  const cur = section.source?.kind === "ink-category" ? section.source : section.cta?.dest.kind === "ink-collection" ? section.cta.dest : null;
-  if (cur && !options.some((o) => o.value === `${cur.store}:${cur.collectionId}`)) {
-    options.unshift({ value: `${cur.store}:${cur.collectionId}`, label: `${findCollection(cur.store, cur.collectionId)?.name ?? `Coleção #${cur.collectionId}`} (indisponível)` });
-  }
-  const status = sourceStatus(section);
+  const entries = toComboEntries(libraryEntries("use-sul", enabledInternalIds(ws.doc, "use-sul")));
+  const status = sourceStatus(section, ws.doc);
   const media = await listMedia();
   const anchor = section.template === "hero" ? undefined : section.anchor;
 
@@ -44,7 +39,7 @@ export default async function EditSection({ params, searchParams }: { params: Pr
       <Flash ok={sp.ok} err={sp.err} />
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,34rem)_1fr]">
         <section className="a-card p-5" aria-label="Editor da seção">
-          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} media={media} categories={options} action={saveSection} />
+          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} media={media} collections={entries} action={saveSection} />
         </section>
         <section className="a-card p-5 2xl:sticky 2xl:top-4 2xl:self-start" aria-label="Pré-visualização">
           <PreviewFrame version={ws.record?.rev ?? 0} anchor={anchor} height={760} />
