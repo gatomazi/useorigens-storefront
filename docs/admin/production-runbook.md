@@ -1,71 +1,87 @@
-# CMS em produção: variáveis, provisionamento e rollout
+# CMS em produção, tudo no Railway: variáveis, provisionamento e rollout
 
-Guia operacional curto. O relatório da rodada (`cms-v1-round6.md`) diz o que foi construído e testado; este arquivo diz **o que fazer, em que ordem**.
+Guia operacional. O relatório da rodada (`cms-v1-round7-railway.md`) diz o que foi construído e testado; este arquivo diz **o que fazer, em que ordem**.
 
-**Regra de ouro:** enquanto qualquer variável do admin faltar, `/admin` responde 404 e a loja não muda. Os passos abaixo só ligam coisas; nenhum deles altera a home antes do passo 10.
+**Arquitetura:** um único serviço Next.js (`useorigens-storefront`) atende a loja (`useorigens.com.br`) e o painel (`admin.useorigens.com.br`) por **host**. PostgreSQL do Railway (rascunhos, versões, pessoas, sessões, auditoria). **Railway Storage Bucket** privado (imagens enviadas). **Volume existente** (`catalog-snapshot.json`, `collections-snapshot.json`, `site-config/published.json`). Login: **Login with Railway** (OAuth 2.0/OIDC). Sem Google, sem R2, sem Cloudflare, sem `media.` — as imagens saem pela própria loja em `/media/...`.
 
-## 1. Variáveis (no serviço único do Railway)
+**Regra de ouro:** enquanto qualquer variável obrigatória do admin faltar, `/admin` responde 404 e a loja não muda. Nada abaixo altera a home antes do passo 10 do rollout.
 
-Nomes apenas. Valores secretos vão direto no painel do Railway/Google/Cloudflare, nunca no chat, no Git ou em log.
+## 1. Variáveis (serviço `useorigens-storefront`)
 
-| Variável | Obrigatória | Para quê |
+Nomes apenas. Segredos entram direto no painel do Railway, **nunca** no chat, no Git ou em log. Preferir **referências** entre serviços (`${{Serviço.VARIÁVEL}}`) a copiar valores.
+
+| Variável | Obrigatória | Origem / valor |
 |---|---|---|
-| `ADMIN_HOST` | sim | host do painel, sem `https://` (ex.: `admin.useorigens.com.br`) |
-| `ADMIN_OWNER_EMAIL` | sim | e-mail Google do primeiro owner (criado no primeiro login) |
-| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` | sim | cliente OAuth (tipo Web) |
-| `ADMIN_SESSION_SECRET` | sim | ≥ 32 caracteres aleatórios; assina o cookie de login |
-| `DATABASE_URL` | sim | Postgres (referência de serviço do Railway) |
-| `DATABASE_SSL` | não | `require` se a URL for pública com TLS |
-| `DATABASE_POOL_MAX` | não | padrão 4 |
-| `R2_ENDPOINT`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` | para enviar imagens | R2 (S3 compatível) |
-| `MEDIA_PUBLIC_BASE_URL` | para enviar imagens | `https://media.useorigens.com.br` |
-| `SITE_CONFIG_HOME` | **desligado** | só vira `on` no passo 10 |
+| `ADMIN_HOST` | sim | `admin.useorigens.com.br` (sem `https://`) |
+| `ADMIN_OWNER_EMAIL` | sim | e-mail da conta Railway do primeiro owner |
+| `RAILWAY_OAUTH_CLIENT_ID` / `RAILWAY_OAUTH_CLIENT_SECRET` | sim | OAuth App (passo 3 abaixo); o secret aparece **uma única vez** |
+| `ADMIN_SESSION_SECRET` | sim | ≥ 32 caracteres aleatórios, gerados por você (`openssl rand -base64 48`) |
+| `DATABASE_URL` | sim | referência ao PostgreSQL do mesmo projeto (URL privada) |
+| `ADMIN_OWNER_RAILWAY_SUB` | não | id imutável da conta Railway do owner; só se o e-mail não vier verificado (ver seção 5) |
+| `BUCKET_ENDPOINT`, `BUCKET_NAME`, `BUCKET_ACCESS_KEY_ID`, `BUCKET_SECRET_ACCESS_KEY`, `BUCKET_REGION` | para enviar imagens | referências às variáveis `ENDPOINT`, `BUCKET`, `ACCESS_KEY_ID`, `SECRET_ACCESS_KEY`, `REGION` do serviço do bucket |
+| `BUCKET_ADDRESSING` | não | `path` só se o bucket for antigo e exigir path-style (a aba Credentials do bucket diz qual estilo vale). Padrão para `*.storageapi.dev`: virtual-hosted |
+| `DATABASE_SSL`, `DATABASE_POOL_MAX` | não | `require` se usar URL pública; padrão de pool 4 |
+| `SITE_CONFIG_HOME` | **deixar desligado** | vira `on` só no passo 10 |
 | `INK_TOKEN_*`, `ADMIN_SYNC_TOKEN` | já existem | usados pelos botões de sincronização |
 
-`ADMIN_DEV_MODE` **não** deve existir em produção (é ignorada, mas remova). O admin só fica ligado com o conjunto obrigatório completo e só responde no `ADMIN_HOST`.
+`ADMIN_DEV_MODE` **não** deve existir em produção (é ignorada). O admin só liga com o conjunto obrigatório completo e só responde no `ADMIN_HOST`. Exemplo de referência: `BUCKET_NAME=${{<nome do serviço do bucket>.BUCKET}}`.
 
 ## 2. Ordem do proprietário (o que só você pode fazer)
 
-1. **Escolher o e-mail do owner** (conta Google que vai administrar) → `ADMIN_OWNER_EMAIL`.
-2. **Railway → Postgres** no mesmo projeto. Referenciar a URL no serviço da loja como `DATABASE_URL`. (Custo estimado, não verificado: poucos dólares por mês. Confirmar no painel antes de aprovar.)
-3. **Google Cloud Console → Credenciais → ID do cliente OAuth → Aplicativo da Web.** Origem autorizada: `https://admin.useorigens.com.br`. **URI de redirecionamento autorizada, exatamente:** `https://admin.useorigens.com.br/admin/auth/callback`. Tela de consentimento: *Interna* se a conta for Google Workspace; senão *Externa* em modo de teste, com o e-mail do owner (e dos editores) como usuários de teste. Copiar Client ID e Secret **direto** para as variáveis do Railway.
-4. **Cloudflare R2:** criar o bucket; criar um token de API restrito a esse bucket (leitura e escrita de objetos); anotar Access Key ID, Secret e o endpoint `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`; ligar o domínio público `media.useorigens.com.br` ao bucket. **Pergunta em aberto:** onde está o DNS de `useorigens.com.br`? O domínio customizado do R2 exige a zona no Cloudflare. Se o DNS está em outro provedor, decidir entre mover a zona ou delegar só `media.` para o Cloudflare. Sem isso, o envio de imagens fica desligado e o resto do CMS funciona com os banners do projeto.
-5. **DNS do admin:** no Railway, adicionar `admin.useorigens.com.br` como domínio do serviço (ele mostra o alvo do CNAME); criar o registro no seu DNS; aguardar o certificado.
-6. **Gerar o segredo de sessão** no seu terminal (`openssl rand -base64 48`) e colar no Railway como `ADMIN_SESSION_SECRET`.
-7. Preencher as demais variáveis da tabela acima (`ADMIN_HOST`, `R2_*`, `MEDIA_PUBLIC_BASE_URL`).
+1. **Decidir o e-mail do owner** (a conta Railway que vai administrar). Editores também precisam de conta Railway; entrar **não** lhes dá acesso ao projeto Railway, só ao que o CMS autorizar.
+2. **PostgreSQL:** criar **um** PostgreSQL no projeto existente; no serviço da loja, `DATABASE_URL` como referência. Custo **não verificado**: confirmar no painel antes de aprovar. **Backup:** não presumir backup nativo; confirmar no painel do Railway o que o plano oferece e, antes da primeira migração, guardar um dump manual (`pg_dump -Fc` com a URL pública, de um terminal seu).
+3. **Login with Railway:** no workspace, *Settings → Developer → New OAuth App*. Nome livre. **URI de redirecionamento, exatamente:** `https://admin.useorigens.com.br/admin/auth/callback`. Copiar Client ID e Secret **direto** para o Railway (`RAILWAY_OAUTH_CLIENT_ID`, `RAILWAY_OAUTH_CLIENT_SECRET`); o secret só aparece uma vez. Escopos usados pelo app: apenas `openid email profile`.
+4. **Storage Bucket:** criar **um** bucket no projeto (região próxima ao serviço). Custo documentado pelo Railway: US$ 0,015 por GB-mês; operações S3 e egress do bucket sem cobrança. Referenciar suas variáveis no serviço da loja (tabela acima). O bucket é **privado**; não há domínio público de mídia.
+5. **Domínio do admin:** no serviço da loja, *Settings → Networking → Custom Domain*: `admin.useorigens.com.br`. O Railway mostra o **CNAME** e um **TXT** de verificação; criá-los no **DNS que hoje hospeda o domínio** (sem mover nameservers e sem tocar no domínio raiz). Aguardar o certificado.
+6. **Segredo de sessão:** gerar no seu terminal e colar no Railway como `ADMIN_SESSION_SECRET`.
+7. Preencher `ADMIN_HOST` e `ADMIN_OWNER_EMAIL`.
 
 ## 3. Verificação antes de ligar (somente leitura)
 
 ```bash
 railway run npm run db:status      # o que já está aplicado
 railway run npm run db:migrate     # aplica o que falta (idempotente; nunca roda sozinho em build/deploy)
-railway run npm run cms:check      # variáveis, banco, R2, Volume, INK — só nomes e OK/FAIL, nunca valores
+railway run npm run cms:check      # variáveis, redirect URI, banco, bucket, Volume, INK: só nomes e OK/FAIL
 ```
 
-`db:migrate` conecta do seu computador: use a URL **pública** do Postgres do Railway nesse comando (a interna `*.railway.internal` só existe dentro do projeto). Alternativa: rodar o mesmo comando dentro do serviço.
+`db:migrate` conecta do seu computador: use a URL **pública** do Postgres nesse comando (a interna só existe dentro do projeto), ou rode o mesmo comando dentro do serviço. `cms:check` testa o bucket com uma leitura (HEAD) de um objeto inexistente: não grava nem apaga nada.
 
 ## 4. Rollout controlado
 
 | # | Passo | Como saber que deu certo | Voltar atrás |
 |---|---|---|---|
-| 0 | (Opcional, release separada) banners WebP: `git checkout -b release/webp-banners main && git cherry-pick 150db18` (único conflito: remover `scripts/repro-image-optimizer-hang.mts`). Deploy normal. | home igual; imagens `/banners/sul/*-640.webp` respondem 200 | rollback normal do Railway |
+| 0 | (Opcional, release separada) banners WebP: `git checkout -b release/webp-banners main && git cherry-pick 150db18` (conflito trivial: `scripts/repro-image-optimizer-hang.mts`). Não fazer sem aprovação. | home igual; `/banners/sul/*-640.webp` respondem 200 | rollback normal |
 | 1 | Deploy da branch do CMS **sem** as variáveis do admin | `/admin` 404 em todos os hosts; home idêntica; `/api/ready` ok | rollback normal |
-| 2 | Provisionar Postgres, Google, R2, DNS (seção 2) | — | remover as variáveis desliga o admin (404) |
-| 3 | `db:migrate` e `cms:check` | `CMS READY` | `db:migrate` é aditivo; nada a desfazer |
+| 2 | Provisionar (seção 2): Postgres, OAuth App, bucket, domínio | — | remover as variáveis desliga o admin (404) |
+| 3 | `db:migrate` e `cms:check` | `CMS READY` | `db:migrate` é aditivo |
 | 4 | Adicionar as variáveis do admin (redeploy) | `https://admin…/admin` leva ao login; a loja segue igual | apagar `ADMIN_HOST` |
-| 5 | Entrar como owner; **Coleções → Sincronizar coleções agora** (≈ 4 leituras na INK) | Biblioteca mostra data da sincronização | os dados anteriores são mantidos em qualquer falha |
+| 5 | Entrar como owner; **Coleções → Sincronizar coleções agora** (≈ 4 leituras na INK) | Biblioteca mostra a data | dados anteriores mantidos em qualquer falha |
 | 6 | **Pessoas**: cadastrar editores (Sul) | editor entra e vê só o que pode | remover acesso |
-| 7 | Editar e **Publicar** com `SITE_CONFIG_HOME` ainda **off** | Publicar → "Coerente"; a loja **não** muda (a flag está desligada) | Restaurar versão |
-| 8 | Pré-visualizar 375/desktop; conferir seções | igual ao esperado | descartar rascunho |
-| 9 | Smoke: `curl` de `/sul`, `/api/ready`; conferir `published.json` no Volume (`site-config/`) | 200; `releaseId` = o da tela | — |
-| 10 | Ligar `SITE_CONFIG_HOME=on` (redeploy) | `/sul` mostra a versão publicada; conferir consentimento e um PageView Meta/GA4 depois do aceite | **desligar a flag** (a loja volta ao seed em segundos) ou **Restaurar versão** |
+| 7 | Enviar **uma** imagem de teste; conferir que `GET /media/…` da loja dá 404 enquanto não publicada | `/media/…` = 404 antes de publicar; a imagem aparece na Mídia do painel | — |
+| 8 | Editar e **Publicar** com `SITE_CONFIG_HOME` **off** (a loja não muda) | "Coerente"; `published.json` no Volume (`site-config/`) | Restaurar versão |
+| 9 | Pré-visualizar 375/desktop; smoke: `/sul`, busca, cidade, `/api/ready`, `/media/` inválido = 404 | tudo 200/404 esperados | descartar rascunho |
+| 10 | Ligar `SITE_CONFIG_HOME=on` (redeploy) **só depois** da conferência visual | `/sul` mostra a versão publicada; consentimento e PageView Meta/GA4 depois do aceite | **desligar a flag** (a loja volta ao seed) ou **Restaurar versão** |
+| 11 | (Separado, autorização própria) IDs de tracking regionais diferentes | — | restaurar versão |
 
-Rollback rápido, em ordem de velocidade: (1) `SITE_CONFIG_HOME` → vazio; (2) **Restaurar versão** no painel (nova release, histórico preservado); (3) remover `ADMIN_HOST` (fecha o painel; a loja segue como está); (4) rollback do deploy.
+Rollback rápido, do mais rápido ao mais lento: `SITE_CONFIG_HOME` → vazio; **Restaurar versão** no painel (nova release, histórico preservado); remover `ADMIN_HOST` (fecha o painel); rollback do deploy.
 
-## 5. O que o sistema garante sozinho
+## 5. Login with Railway: detalhes que importam
 
-- **A loja nunca depende do banco ou do R2** para renderizar: lê `published.json` (Volume) ou o seed embutido; arquivo ausente/corrompido → seed.
-- **Publicar é atômico e reconciliável**: registro `pending` no banco → arquivo (temp + rename) → `live` → invalida cache. Falha em qualquer ponto mantém a versão anterior; um reconciliador refaz o arquivo a partir do banco (também ~15 s depois de cada inicialização, útil quando o Volume é recriado).
-- **Imagens publicadas nunca somem**: o app não apaga objetos do R2; "remover" só esconde da biblioteca, e é recusado se alguma versão (inclusive restaurável) ou rascunho usa o arquivo.
-- **Tracking**: sem configuração publicada (ou com a flag desligada) o comportamento é exatamente o de hoje (`NEXT_PUBLIC_*`). Publicar é bloqueado se os IDs do documento diferirem dos IDs do build.
-- **Sincronizações** só leem a INK (GET), uma por vez (trava no banco), nunca apagam o último bom arquivo.
+- Provedor de identidade apenas. Endpoints por discovery (`https://backboard.railway.com/oauth/.well-known/openid-configuration`, com os URLs documentados como reserva). ID token **ES256**; verificamos assinatura, `iss`, `aud`, `exp`, `iat`, `nonce`; PKCE S256; autenticação do cliente por HTTP Basic.
+- Quem pode entrar é decidido pela **tabela de pessoas no PostgreSQL**, nunca pelo Railway. A conta é vinculada ao usuário pelo `sub` (imutável) no primeiro login; outra conta com o mesmo e-mail é recusada.
+- **E-mail verificado:** só aceitamos e-mail que o Railway declare verificado. Se o Railway não trouxer essa informação para a conta do owner, o painel recusa e mostra na tela o **identificador da conta**; coloque-o em `ADMIN_OWNER_RAILWAY_SUB` e entre de novo (procedimento controlado, sem confiar em e-mail).
+- O CMS **não** guarda tokens do Railway (só o `sub`, e-mail e nome). A sessão do painel é própria (cookie `__Host-`, `Secure`, `HttpOnly`, `SameSite=Lax`, 12 h absolutas / 2 h de inatividade, token só como hash no banco).
+
+## 6. Imagens: como funcionam
+
+- O upload passa pelo serviço: validação pelo formato real (PNG/JPEG/WebP/AVIF), ≤ 8 MB, ≤ 6000 px, sem animação, orientação aplicada, metadados removidos, WebP em 640/1080/1600/2400. Só as variantes processadas vão ao bucket, com nome por hash do conteúdo (`media/<sha256>/<largura>.webp`): imutáveis.
+- O bucket é privado. Imagens **publicadas** saem por `GET /media/<sha256>/<largura>.webp` na própria loja: só chaves listadas no `published.json` (local), formato estrito, `Cache-Control: public, max-age=31536000, immutable`, `nosniff`, cache em memória. Imagens de **rascunho** só por `/admin/media/…` (com sessão). Nenhuma URL do bucket chega ao navegador.
+- A loja **não** depende do bucket nem do banco para renderizar; se o bucket falhar, a seção usa a cor/gradiente de fallback. As páginas nunca leem o PostgreSQL.
+- O app **nunca apaga** objetos do bucket (o "restaurar" precisa deles). Limpeza é manual e deliberada.
+- **Custo:** o tráfego de `/media` passa pelo serviço e pode gerar egress **do serviço** (o do bucket é gratuito). Não há CDN. Os arquivos são pequenos e cacheáveis por um ano no navegador; medir depois do tráfego real. Estimativa, não orçamento.
+
+## 7. O que o sistema garante sozinho
+
+- **Publicar é atômico e reconciliável:** registro `pending` no banco → arquivo (temp + rename no Volume) → `live` → invalida cache. Falha em qualquer ponto mantém a versão anterior; o reconciliador refaz o arquivo a partir do banco (também ~15 s depois de cada inicialização, útil se o Volume for recriado).
+- **Tracking:** sem configuração publicada (ou com a flag desligada) o comportamento é exatamente o de hoje (`NEXT_PUBLIC_*`). Publicar é bloqueado se os IDs do documento diferirem dos do build.
+- **Sincronizações** só leem a INK (GET), uma por vez (trava no banco), e nunca apagam o último arquivo bom.

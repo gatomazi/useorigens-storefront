@@ -1,7 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 
 /**
- * A minimal S3-compatible client (Cloudflare R2), AWS Signature V4, using only `fetch` and `node:crypto` (no SDK to install, audit or
+ * A minimal S3-compatible client (Railway Storage Bucket), AWS Signature V4, using only `fetch` and `node:crypto` (no SDK to install, audit or
  * bundle). Server-only by construction: the keys live in server env vars and are never serialised to a client component. It talks ONLY to
  * the configured endpoint; no URL from a request, a document or a file name ever becomes a request target (keys are built from a sha256
  * and a fixed width by the caller and re-checked here).
@@ -43,23 +43,38 @@ export function signV4(input: SignInput): { authorization: string; signedHeaders
 
 export interface ObjectStore {
   put(key: string, body: Uint8Array, options: { contentType: string; cacheControl: string }): Promise<void>;
+  get(key: string): Promise<{ body: Buffer; contentType: string } | null>;
   exists(key: string): Promise<boolean>;
   remove(key: string): Promise<void>;
 }
 
 /** Object keys this CMS writes: `media/<sha256>/<width>.webp`. Anything else is refused before a request is built. */
-const KEY_RE = /^media\/[0-9a-f]{64}\/\d{3,4}\.webp$/;
+export const OBJECT_KEY_RE = /^media\/[0-9a-f]{64}\/\d{3,4}\.webp$/;
 
-export function createObjectStore(config: ObjectStoreConfig, fetchImpl: typeof fetch = fetch): ObjectStore {
+export type Addressing = "virtual" | "path";
+
+/** Railway buckets use virtual-hosted style (`<bucket>.<endpoint host>`; older ones may need path style: the bucket's Credentials tab says which). */
+export function defaultAddressing(endpoint: string): Addressing {
+  try {
+    return new URL(endpoint).hostname.endsWith("storageapi.dev") ? "virtual" : "path";
+  } catch {
+    return "path";
+  }
+}
+
+export function createObjectStore(config: ObjectStoreConfig & { addressing?: Addressing }, fetchImpl: typeof fetch = fetch): ObjectStore {
   const base = new URL(config.endpoint);
   const region = config.region ?? "auto";
-  const request = async (method: "PUT" | "HEAD" | "DELETE", key: string, body?: Uint8Array, extra: Record<string, string> = {}): Promise<Response> => {
-    if (!KEY_RE.test(key)) throw new Error("refusing an object key outside media/<sha256>/<width>.webp");
-    const path = `${base.pathname.replace(/\/$/, "")}/${encodeSegment(config.bucket)}/${key.split("/").map(encodeSegment).join("/")}`;
+  const addressing = config.addressing ?? defaultAddressing(config.endpoint);
+  const request = async (method: "PUT" | "GET" | "HEAD" | "DELETE", key: string, body?: Uint8Array, extra: Record<string, string> = {}): Promise<Response> => {
+    if (!OBJECT_KEY_RE.test(key)) throw new Error("refusing an object key outside media/<sha256>/<width>.webp");
+    const encodedKey = key.split("/").map(encodeSegment).join("/");
+    const host = addressing === "virtual" ? `${config.bucket}.${base.host}` : base.host;
+    const path = addressing === "virtual" ? `/${encodedKey}` : `${base.pathname.replace(/\/$/, "")}/${encodeSegment(config.bucket)}/${encodedKey}`;
     const amzDate = new Date().toISOString().replace(/[:-]|\.\d{3}/g, "");
     const payloadHash = sha256Hex(body ?? "");
-    const { authorization } = signV4({ method, host: base.host, path, payloadHash, accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey, region, service: "s3", amzDate });
-    return fetchImpl(`${base.origin}${path}`, {
+    const { authorization } = signV4({ method, host, path, payloadHash, accessKeyId: config.accessKeyId, secretAccessKey: config.secretAccessKey, region, service: "s3", amzDate });
+    return fetchImpl(`${base.protocol}//${host}${path}`, {
       method,
       headers: { Authorization: authorization, "x-amz-date": amzDate, "x-amz-content-sha256": payloadHash, ...extra },
       body: body ? Buffer.from(body) : undefined,
@@ -71,6 +86,12 @@ export function createObjectStore(config: ObjectStoreConfig, fetchImpl: typeof f
     async put(key, body, options) {
       const res = await request("PUT", key, body, { "Content-Type": options.contentType, "Cache-Control": options.cacheControl });
       if (!res.ok) throw new Error(`object store PUT failed (${res.status})`);
+    },
+    async get(key) {
+      const res = await request("GET", key);
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error(`object store GET failed (${res.status})`);
+      return { body: Buffer.from(await res.arrayBuffer()), contentType: res.headers.get("content-type") ?? "application/octet-stream" };
     },
     async exists(key) {
       const res = await request("HEAD", key);

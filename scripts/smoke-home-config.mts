@@ -250,6 +250,13 @@ async function main() {
     const post = await fetch(`http://localhost:${s.port}/admin/home`, { method: "POST", headers: { "Next-Action": "abc", "Content-Type": "text/plain" }, body: "[]" });
     check(`${s.name.trim()}: a server-action POST to /admin -> 404`, post.status === 404, post.status);
   }
+  console.log("\n=== /media (CMS images) ===");
+  for (const s of servers) {
+    for (const p of [`/media/${"a".repeat(64)}/640.webp`, "/media/../etc/passwd", "/media/x/y.webp", "/media/", `/media/${"a".repeat(64)}/640.svg`]) {
+      const r = await fetch(`http://127.0.0.1:${s.port}${p}`); // (a trailing-slash redirect is followed: the end state must be a 404)
+      check(`${s.name.trim()}: ${p.slice(0, 40)} -> 404 (nothing published, no bucket, no traversal)`, r.status === 404, r.status);
+    }
+  }
   const previewLess = await (await fetch(`${base}/sul`)).text();
   check("the storefront never links to or loads anything from /admin", !previewLess.includes("/admin"));
 

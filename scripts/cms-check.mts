@@ -9,8 +9,7 @@ import path from "node:path";
 import { adminConfig } from "../src/lib/admin/config";
 import { createPgDb } from "../src/lib/admin/db/pg-db";
 import { loadMigrations, migrationStatus } from "../src/lib/admin/db/migrate";
-import { createObjectStore } from "../src/lib/admin/media/s3";
-import { isAllowedMediaSrc } from "../src/lib/site-config/media-hosts";
+import { createObjectStore, defaultAddressing } from "../src/lib/admin/media/s3";
 
 let failures = 0;
 let warnings = 0;
@@ -23,8 +22,10 @@ console.log("\n[1] Admin configuration (names only)");
 const env = process.env;
 const config = adminConfig({ ...env, NODE_ENV: "production", ADMIN_DEV_MODE: undefined });
 if (config.mode === "prod") {
-  ok(`admin host ${config.adminHost}, owner set, Google client set, session secret set, DATABASE_URL set`);
-  if (config.oidcIssuer !== "https://accounts.google.com") warn("ADMIN_OIDC_ISSUER is not Google's: fine for a test provider, wrong for production");
+  ok(`admin host ${config.adminHost}, owner set, Railway OAuth client set, session secret set, DATABASE_URL set`);
+  if (config.oidcIssuer !== "https://backboard.railway.com") warn("ADMIN_OIDC_ISSUER is not Railway's: fine for a test provider, wrong for production");
+  ok(`redirect URI to register in the Railway OAuth App, exactly: ${config.adminOrigin}/admin/auth/callback`);
+  if (!config.ownerSub) warn("ADMIN_OWNER_RAILWAY_SUB is not set: the owner is bound by a VERIFIED e-mail equal to ADMIN_OWNER_EMAIL (if Railway does not report the e-mail as verified, sign in once, copy the account id shown on the refusal screen, and set this variable)");
   if (!config.adminOrigin.startsWith("https://")) warn("the admin origin is not https");
 } else {
   bad(`the production admin would be OFF (404). Missing or invalid: ${config.mode === "off" ? config.missing.join(", ") : "unknown"}`);
@@ -48,23 +49,22 @@ if (config.mode === "prod") {
   }
 } else warn("skipped (admin not configured)");
 
-console.log("\n[3] Media storage (R2)");
-const r2 = { endpoint: env.R2_ENDPOINT, bucket: env.R2_BUCKET, accessKeyId: env.R2_ACCESS_KEY_ID, secretAccessKey: env.R2_SECRET_ACCESS_KEY, publicBase: env.MEDIA_PUBLIC_BASE_URL };
-const missingR2 = Object.entries(r2).filter(([, v]) => !v).map(([k]) => k);
-if (missingR2.length === 5) warn("R2 not configured: uploads are disabled (the admin still works with the project's banners)");
-else if (missingR2.length > 0) bad(`R2 is partially configured; missing: ${missingR2.join(", ")}`);
+console.log("\n[3] Media storage (Railway Storage Bucket, private)");
+const bucket = { endpoint: env.BUCKET_ENDPOINT, name: env.BUCKET_NAME, accessKeyId: env.BUCKET_ACCESS_KEY_ID, secretAccessKey: env.BUCKET_SECRET_ACCESS_KEY };
+const missingBucket = Object.entries({ BUCKET_ENDPOINT: bucket.endpoint, BUCKET_NAME: bucket.name, BUCKET_ACCESS_KEY_ID: bucket.accessKeyId, BUCKET_SECRET_ACCESS_KEY: bucket.secretAccessKey }).filter(([, v]) => !v).map(([k]) => k);
+if (missingBucket.length === 4) warn("bucket not configured: uploads are disabled (the admin still works with the project's banners)");
+else if (missingBucket.length > 0) bad(`the bucket is partially configured; missing: ${missingBucket.join(", ")}`);
 else {
   const probe = `media/${"0".repeat(64)}/640.webp`;
   try {
-    const store = createObjectStore({ endpoint: r2.endpoint!, bucket: r2.bucket!, accessKeyId: r2.accessKeyId!, secretAccessKey: r2.secretAccessKey! });
-    await store.exists(probe); // 404 = authenticated and empty; 403 or a network error throws
-    ok("the bucket answers and the credentials are accepted");
+    const addressing = env.BUCKET_ADDRESSING === "path" || env.BUCKET_ADDRESSING === "virtual" ? env.BUCKET_ADDRESSING : defaultAddressing(bucket.endpoint!);
+    const store = createObjectStore({ endpoint: bucket.endpoint!, bucket: bucket.name!, accessKeyId: bucket.accessKeyId!, secretAccessKey: bucket.secretAccessKey!, region: env.BUCKET_REGION || "auto", addressing });
+    await store.exists(probe); // 404 = authenticated and empty; 403 or a network error throws (nothing is written or deleted)
+    ok(`the bucket answers (${addressing}-style addressing) and the credentials are accepted; nothing was written`);
   } catch (e) {
-    bad(`cannot reach the bucket with these credentials: ${scrub(e)}`);
+    bad(`cannot reach the bucket with these credentials: ${scrub(e)} (if the bucket is an older one, try BUCKET_ADDRESSING=path)`);
   }
-  const sample = `${r2.publicBase!.replace(/\/$/, "")}/${probe}`;
-  if (isAllowedMediaSrc(sample)) ok("MEDIA_PUBLIC_BASE_URL is an origin the storefront accepts");
-  else bad("MEDIA_PUBLIC_BASE_URL is not https://media.useorigens.com.br (or listed in MEDIA_EXTRA_ORIGINS): the storefront would ignore published images");
+  ok("images are served by the storefront's own /media route (the bucket stays private; no public bucket domain is needed)");
 }
 
 console.log("\n[4] Volume and published configuration");

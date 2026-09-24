@@ -1,19 +1,54 @@
 import { createHash, createHmac, createPublicKey, randomBytes, timingSafeEqual, verify as verifySignature } from "node:crypto";
-import { GOOGLE_ISSUER } from "../config";
+import { RAILWAY_ISSUER } from "../config";
 
 /**
- * Google OpenID Connect (authorization-code flow with PKCE), implemented directly on the specification with `node:crypto` and `fetch`
- * (no auth framework, no dependency to audit). Everything that decides trust is here and unit-tested:
+ * Login with Railway (OpenID Connect, authorization-code flow with PKCE), implemented directly on the specification with `node:crypto`
+ * and `fetch` (no auth framework, no dependency to audit). Everything that decides trust is here and unit-tested:
  *   - `state` and `nonce` are random, bound to the browser by a signed, short-lived cookie, and compared in constant time;
- *   - the ID token's RS256 signature is verified against the provider's published keys (`kid` lookup), then `iss`, `aud`, `exp`,
- *     `iat`, `nonce` and `email_verified` are checked. The e-mail is read ONLY from a verified token, never from the browser.
- * The provider is Google (`https://accounts.google.com`); a loopback issuer exists only so the automated tests can run a fake one.
+ *   - the ID token's signature (ES256, Railway's only algorithm) is verified against the provider's published keys (`kid` lookup), then
+ *     `iss`, `aud`, `exp`, `iat` and `nonce` are checked;
+ *   - the client authenticates to the token endpoint with HTTP Basic (`client_secret_basic`), and only `openid email profile` is asked:
+ *     Railway is used purely as an IDENTITY provider (no workspace, project or API scope, no refresh token).
+ * Endpoints come from Railway's discovery document (cached, and every endpoint must live under https://backboard.railway.com/), with the
+ * documented URLs as a fallback. A loopback issuer exists only so the automated tests can run a fake provider.
  */
-export type OidcEndpoints = { authorization: string; token: string; jwks: string };
+export type OidcEndpoints = { authorization: string; token: string; jwks: string; userinfo: string };
 
+const RAILWAY_FALLBACK: OidcEndpoints = {
+  authorization: "https://backboard.railway.com/oauth/auth",
+  token: "https://backboard.railway.com/oauth/token",
+  jwks: "https://backboard.railway.com/oauth/jwks",
+  userinfo: "https://backboard.railway.com/oauth/me",
+};
+
+/** Fixed endpoints for the loopback test provider, and the documented fallback for Railway. */
 export function oidcEndpoints(issuer: string): OidcEndpoints {
-  if (issuer === GOOGLE_ISSUER) return { authorization: "https://accounts.google.com/o/oauth2/v2/auth", token: "https://oauth2.googleapis.com/token", jwks: "https://www.googleapis.com/oauth2/v3/certs" };
-  return { authorization: `${issuer}/authorize`, token: `${issuer}/token`, jwks: `${issuer}/jwks` }; // test provider (loopback only; see config.ts)
+  if (issuer === RAILWAY_ISSUER) return RAILWAY_FALLBACK;
+  return { authorization: `${issuer}/authorize`, token: `${issuer}/token`, jwks: `${issuer}/jwks`, userinfo: `${issuer}/me` };
+}
+
+let discoveryCache: { issuer: string; endpoints: OidcEndpoints; at: number } | null = null;
+
+/** Railway's discovery document, cached for an hour; anything unexpected (other issuer, other host, malformed) falls back to the documented URLs. */
+export async function discoverEndpoints(issuer: string, fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<OidcEndpoints> {
+  if (issuer !== RAILWAY_ISSUER) return oidcEndpoints(issuer);
+  if (discoveryCache && discoveryCache.issuer === issuer && now - discoveryCache.at < 60 * 60_000) return discoveryCache.endpoints;
+  try {
+    const res = await fetchImpl(`${issuer}/oauth/.well-known/openid-configuration`, { signal: AbortSignal.timeout(6_000), redirect: "error" });
+    if (!res.ok) throw new Error("discovery unavailable");
+    const doc = (await res.json()) as Record<string, unknown>;
+    const under = (v: unknown): v is string => typeof v === "string" && v.startsWith(`${RAILWAY_ISSUER}/`);
+    if (doc.issuer !== RAILWAY_ISSUER || !under(doc.authorization_endpoint) || !under(doc.token_endpoint) || !under(doc.jwks_uri) || !under(doc.userinfo_endpoint)) throw new Error("unexpected discovery document");
+    const endpoints = { authorization: doc.authorization_endpoint, token: doc.token_endpoint, jwks: doc.jwks_uri, userinfo: doc.userinfo_endpoint };
+    discoveryCache = { issuer, endpoints, at: now };
+    return endpoints;
+  } catch {
+    return RAILWAY_FALLBACK;
+  }
+}
+
+export function resetDiscoveryCacheForTests(): void {
+  discoveryCache = null;
 }
 
 const b64u = (b: Buffer | string): string => Buffer.from(b).toString("base64url");
@@ -66,35 +101,58 @@ export function buildAuthUrl(input: { endpoints: OidcEndpoints; clientId: string
     client_id: input.clientId,
     redirect_uri: input.redirectUri,
     response_type: "code",
-    scope: "openid email",
+    scope: "openid email profile",
     state: input.login.state,
     nonce: input.login.nonce,
     code_challenge: codeChallenge(input.login.verifier),
     code_challenge_method: "S256",
-    prompt: "select_account",
   }).toString();
   return u.toString();
 }
 
 // ── Token exchange and ID-token verification ────────────────────────────────────────────────────────────────
 
-export type Jwk = { kid?: string; kty: string; alg?: string; n?: string; e?: string; use?: string };
-export type IdClaims = { sub: string; email: string; emailVerified: boolean; name: string | null };
+export type Jwk = { kid?: string; kty: string; crv?: string; alg?: string; x?: string; y?: string; n?: string; e?: string; use?: string };
+export type IdClaims = { sub: string; email: string | null; emailVerified: boolean; name: string | null };
 
 export class OidcError extends Error {}
 
-export async function exchangeCode(input: { endpoints: OidcEndpoints; clientId: string; clientSecret: string; redirectUri: string; code: string; verifier: string; fetchImpl?: typeof fetch }): Promise<string> {
+const formEncode = (v: string): string => encodeURIComponent(v).replace(/%20/g, "+");
+
+export type TokenSet = { idToken: string; accessToken: string | null };
+
+/** Authorization-code exchange. The client authenticates with HTTP Basic; the PKCE verifier proves the same browser started the flow. */
+export async function exchangeCode(input: { endpoints: OidcEndpoints; clientId: string; clientSecret: string; redirectUri: string; code: string; verifier: string; fetchImpl?: typeof fetch }): Promise<TokenSet> {
+  const basic = Buffer.from(`${formEncode(input.clientId)}:${formEncode(input.clientSecret)}`).toString("base64");
   const res = await (input.fetchImpl ?? fetch)(input.endpoints.token, {
     method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ grant_type: "authorization_code", code: input.code, redirect_uri: input.redirectUri, client_id: input.clientId, client_secret: input.clientSecret, code_verifier: input.verifier }),
+    headers: { "Content-Type": "application/x-www-form-urlencoded", Authorization: `Basic ${basic}`, Accept: "application/json" },
+    body: new URLSearchParams({ grant_type: "authorization_code", code: input.code, redirect_uri: input.redirectUri, code_verifier: input.verifier }),
     signal: AbortSignal.timeout(8_000),
     redirect: "error",
   });
   if (!res.ok) throw new OidcError(`token endpoint answered ${res.status}`);
-  const body = (await res.json()) as { id_token?: unknown };
+  const body = (await res.json()) as { id_token?: unknown; access_token?: unknown };
   if (typeof body.id_token !== "string" || body.id_token.split(".").length !== 3) throw new OidcError("no id_token in the token response");
-  return body.id_token;
+  return { idToken: body.id_token, accessToken: typeof body.access_token === "string" ? body.access_token : null };
+}
+
+/**
+ * The userinfo endpoint, called with the access token we just obtained from the token endpoint (server to server, over TLS). Used ONLY when
+ * the ID token itself carries no e-mail; its `sub` must equal the verified ID token's, so it can add facts about the same account, never
+ * change which account it is.
+ */
+export async function fetchUserinfo(endpoints: OidcEndpoints, accessToken: string, fetchImpl: typeof fetch = fetch): Promise<{ sub: string; email: string | null; emailVerified: boolean; name: string | null }> {
+  const res = await fetchImpl(endpoints.userinfo, { headers: { Authorization: `Bearer ${accessToken}`, Accept: "application/json" }, signal: AbortSignal.timeout(8_000), redirect: "error" });
+  if (!res.ok) throw new OidcError(`userinfo endpoint answered ${res.status}`);
+  const body = (await res.json()) as Record<string, unknown>;
+  if (typeof body.sub !== "string") throw new OidcError("userinfo without a subject");
+  return {
+    sub: body.sub,
+    email: typeof body.email === "string" && body.email.includes("@") ? body.email.trim().toLowerCase() : null,
+    emailVerified: body.email_verified === true || body.email_verified === "true",
+    name: typeof body.name === "string" ? body.name.slice(0, 120) : null,
+  };
 }
 
 let jwksCache: { url: string; keys: Jwk[]; at: number } | null = null;
@@ -113,7 +171,9 @@ export function resetJwksCacheForTests(): void {
   jwksCache = null;
 }
 
-export function verifyIdToken(input: { idToken: string; keys: Jwk[]; issuers: string[]; clientId: string; nonce: string; now?: number; clockSkewSec?: number }): IdClaims {
+const ALGS: Record<string, { hash: string; ieee?: boolean; kty: string }> = { ES256: { hash: "sha256", ieee: true, kty: "EC" }, RS256: { hash: "sha256", kty: "RSA" } };
+
+export function verifyIdToken(input: { idToken: string; keys: Jwk[]; issuers: string[]; clientId: string; nonce: string; algs?: string[]; now?: number; clockSkewSec?: number }): IdClaims {
   const [h, p, sig] = input.idToken.split(".");
   if (!h || !p || !sig) throw new OidcError("malformed id_token");
   let header: { alg?: string; kid?: string };
@@ -124,11 +184,16 @@ export function verifyIdToken(input: { idToken: string; keys: Jwk[]; issuers: st
   } catch {
     throw new OidcError("malformed id_token");
   }
-  if (header.alg !== "RS256") throw new OidcError("unsupported signing algorithm"); // never "none", never HS256 with a public key
-  const key = input.keys.find((k) => k.kty === "RSA" && k.kid === header.kid && k.n && k.e);
+  const allowed = input.algs ?? ["ES256"];
+  const alg = header.alg && allowed.includes(header.alg) ? ALGS[header.alg] : undefined;
+  if (!alg) throw new OidcError("unsupported signing algorithm"); // never "none", never HS256 with a public key
+  const key = input.keys.find((k) => k.kty === alg.kty && k.kid === header.kid && (alg.kty === "EC" ? k.x && k.y && k.crv === "P-256" : k.n && k.e));
   if (!key) throw new OidcError("unknown signing key");
-  const publicKey = createPublicKey({ key: { kty: "RSA", n: key.n, e: key.e }, format: "jwk" });
-  if (!verifySignature("RSA-SHA256", Buffer.from(`${h}.${p}`), publicKey, fromB64u(sig))) throw new OidcError("bad signature");
+  const jwk = alg.kty === "EC" ? { kty: "EC", crv: "P-256", x: key.x, y: key.y } : { kty: "RSA", n: key.n, e: key.e };
+  const publicKey = createPublicKey({ key: jwk, format: "jwk" });
+  const signature = fromB64u(sig);
+  if (alg.ieee && signature.length !== 64) throw new OidcError("bad signature");
+  if (!verifySignature(alg.hash, Buffer.from(`${h}.${p}`), alg.ieee ? { key: publicKey, dsaEncoding: "ieee-p1363" } : publicKey, signature)) throw new OidcError("bad signature");
 
   const nowSec = Math.floor((input.now ?? Date.now()) / 1000);
   const skew = input.clockSkewSec ?? 60;
@@ -140,8 +205,8 @@ export function verifyIdToken(input: { idToken: string; keys: Jwk[]; issuers: st
   if (typeof claims.iat !== "number" || claims.iat - skew > nowSec) throw new OidcError("token issued in the future");
   if (typeof claims.nonce !== "string" || !constantTimeEqual(claims.nonce, input.nonce)) throw new OidcError("nonce mismatch");
   if (typeof claims.sub !== "string" || claims.sub.length === 0 || claims.sub.length > 255) throw new OidcError("no subject");
-  if (typeof claims.email !== "string" || !claims.email.includes("@")) throw new OidcError("no e-mail");
-  return { sub: claims.sub, email: claims.email.trim().toLowerCase(), emailVerified: claims.email_verified === true || claims.email_verified === "true", name: typeof claims.name === "string" ? claims.name.slice(0, 120) : null };
+  const email = typeof claims.email === "string" && claims.email.includes("@") ? claims.email.trim().toLowerCase() : null;
+  return { sub: claims.sub, email, emailVerified: email !== null && (claims.email_verified === true || claims.email_verified === "true"), name: typeof claims.name === "string" ? claims.name.slice(0, 120) : null };
 }
 
-export const issuersFor = (issuer: string): string[] => (issuer === GOOGLE_ISSUER ? [GOOGLE_ISSUER, "accounts.google.com"] : [issuer]);
+export const issuersFor = (issuer: string): string[] => [issuer];

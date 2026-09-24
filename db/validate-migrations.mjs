@@ -83,8 +83,8 @@ await rejects("unknown audit action", `insert into audit_log (actor,action) valu
 await rejects("editing the audit log", `update audit_log set actor='someone-else'`);
 await rejects("deleting from the audit log", `delete from audit_log`);
 
-await accepts("google_sub binds an account to a user (0002)", `update admin_user set google_sub='1234567890' where email='owner@example.com'`);
-await rejects("the same google account on two users", `update admin_user set google_sub='1234567890' where email='ed@example.com'`);
+await accepts("provider_sub binds an account to a user (0002)", `update admin_user set provider_sub='1234567890' where email='owner@example.com'`);
+await rejects("the same provider account on two users", `update admin_user set provider_sub='1234567890' where email='ed@example.com'`);
 await accepts("a sync run starts", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await rejects("a second collections sync at the same time (partial unique index)", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await accepts("a catalog sync may run in parallel with a collections sync", `insert into sync_run (kind, requested_by) values ('catalog','owner')`);

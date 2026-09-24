@@ -54,6 +54,9 @@ export function proxy(request: NextRequest) {
     return response;
   }
 
+  // CMS images (`/media/<sha256>/<width>.webp`, served only if published) are not storefront pages: never behind the catalog gate.
+  if (pathname.startsWith("/media/")) return NextResponse.next();
+
   const { ready } = catalogReadiness(ENABLED_REGIONS);
 
   if (!ready) {

@@ -18,7 +18,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Pessoas</h1>
-        <p className="a-muted mt-2 max-w-2xl">Só quem está nesta lista consegue entrar (com a conta Google desse e-mail). Editores só veem e publicam as regiões marcadas. O owner é definido pelo ambiente e tem acesso a tudo.</p>
+        <p className="a-muted mt-2 max-w-2xl">Só quem está nesta lista consegue entrar (com uma conta Railway cujo e-mail verificado seja esse; entrar não dá acesso ao projeto Railway). Editores só veem e publicam as regiões marcadas. O owner é definido pelo ambiente e tem acesso a tudo.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
 

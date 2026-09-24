@@ -134,10 +134,10 @@ export function pgReleaseStore(db: Db): ReleaseStore {
 
 // ── People ───────────────────────────────────────────────────────────────────────────────────────────────────
 
-type UserDbRow = { id: string; email: string; name: string | null; role: Role; scopes: Scope[]; active: boolean; google_sub: string | null; created_at: unknown; last_login_at: unknown };
-const USER_COLUMNS = `id, email, name, role, scopes, active, google_sub, created_at, last_login_at`;
+type UserDbRow = { id: string; email: string; name: string | null; role: Role; scopes: Scope[]; active: boolean; provider_sub: string | null; created_at: unknown; last_login_at: unknown };
+const USER_COLUMNS = `id, email, name, role, scopes, active, provider_sub, created_at, last_login_at`;
 const toUser = (r: UserDbRow): UserRow => ({
-  id: r.id, email: r.email, name: r.name, role: r.role, scopes: r.scopes ?? [], active: r.active, googleSub: r.google_sub, createdAt: iso(r.created_at), lastLoginAt: r.last_login_at ? iso(r.last_login_at) : null,
+  id: r.id, email: r.email, name: r.name, role: r.role, scopes: r.scopes ?? [], active: r.active, providerSub: r.provider_sub, createdAt: iso(r.created_at), lastLoginAt: r.last_login_at ? iso(r.last_login_at) : null,
 });
 
 export function pgUserRepository(db: Db): UserRepository {
@@ -148,6 +148,7 @@ export function pgUserRepository(db: Db): UserRepository {
   return {
     findByEmail: (email) => one(`select ${USER_COLUMNS} from admin_user where email = $1`, [email.trim().toLowerCase()]),
     findById: (id) => one(`select ${USER_COLUMNS} from admin_user where id = $1`, [id]),
+    findByProviderSub: (sub) => one(`select ${USER_COLUMNS} from admin_user where provider_sub = $1`, [sub]),
     async list() {
       return (await db.query<UserDbRow>(`select ${USER_COLUMNS} from admin_user order by role, email`)).rows.map(toUser);
     },
@@ -168,8 +169,8 @@ export function pgUserRepository(db: Db): UserRepository {
         id, role, scopes, patch.active ?? current.active, patch.name === undefined ? current.name : patch.name,
       ]);
     },
-    async bindGoogleSub(id, sub) {
-      const r = await db.query(`update admin_user set google_sub = $2 where id = $1 and (google_sub is null or google_sub = $2)`, [id, sub]);
+    async bindProviderSub(id, sub) {
+      const r = await db.query(`update admin_user set provider_sub = $2 where id = $1 and (provider_sub is null or provider_sub = $2)`, [id, sub]);
       return r.rowCount > 0;
     },
     async touchLogin(id) {
@@ -192,7 +193,7 @@ export function pgSessionRepository(db: Db): SessionRepository {
     async lookup(token, idleMs) {
       if (!/^[A-Za-z0-9_-]{43}$/.test(token)) return null;
       const r = await db.query<UserDbRow & { s_created: unknown; s_seen: unknown; s_expires: unknown }>(
-        `select u.id, u.email, u.name, u.role, u.scopes, u.active, u.google_sub, u.created_at, u.last_login_at, s.created_at as s_created, s.last_seen_at as s_seen, s.expires_at as s_expires
+        `select u.id, u.email, u.name, u.role, u.scopes, u.active, u.provider_sub, u.created_at, u.last_login_at, s.created_at as s_created, s.last_seen_at as s_seen, s.expires_at as s_expires
          from admin_session s join admin_user u on u.id = s.user_id
          where s.token_hash = $1 and s.expires_at > now() and s.last_seen_at > now() - ($2::bigint * interval '1 millisecond') and u.active`,
         [hashToken(token), idleMs],

@@ -1,5 +1,6 @@
-// A fake OpenID Connect provider for the production-mode E2E (never Google, never the network): authorization-code + PKCE, RS256 ID tokens,
-// a JWKS, and a control endpoint the test uses to choose who "signs in". Loopback only.
+// A fake OpenID Connect provider shaped like Login with Railway, for the production-mode E2E (never Railway, never the network):
+// authorization-code + PKCE, ES256 ID tokens, client_secret_basic, a userinfo endpoint, a JWKS, and a control endpoint the test uses to
+// choose who "signs in" (and whether the ID token carries the e-mail). Loopback only.
 import { createHash, createSign, generateKeyPairSync } from "node:crypto";
 import { createServer } from "node:http";
 
@@ -7,12 +8,13 @@ const port = Number(process.env.E2E_IDP_PORT ?? 4555);
 const issuer = `http://127.0.0.1:${port}`;
 const clientId = process.env.E2E_CLIENT_ID ?? "e2e-client";
 const clientSecret = process.env.E2E_CLIENT_SECRET ?? "e2e-secret";
-const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
-const jwk = { ...(publicKey.export({ format: "jwk" }) as object), kid: "e2e-key", alg: "RS256", use: "sig" };
+const { privateKey, publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });
+const jwk = { ...(publicKey.export({ format: "jwk" }) as object), kid: "e2e-key", alg: "ES256", use: "sig" };
 const b64u = (b: Buffer | string) => Buffer.from(b).toString("base64url");
 
-let identity = { email: "owner@e2e.test", sub: "sub-owner", verified: true };
+let identity = { email: "owner@e2e.test", sub: "sub-owner", verified: true, inToken: true };
 const codes = new Map<string, { nonce: string; challenge: string; identity: typeof identity }>();
+const tokens = new Map<string, typeof identity>();
 
 createServer((req, res) => {
   const url = new URL(req.url ?? "/", issuer);
@@ -28,6 +30,12 @@ createServer((req, res) => {
       res.end("ok");
     });
     return;
+  }
+  if (url.pathname === "/me") {
+    const who = tokens.get(String(req.headers.authorization ?? "").replace("Bearer ", ""));
+    if (!who) { res.statusCode = 401; return res.end(); }
+    res.setHeader("Content-Type", "application/json");
+    return res.end(JSON.stringify({ sub: who.sub, email: who.email, email_verified: who.verified, name: "E2E" }));
   }
   if (url.pathname === "/authorize") {
     const code = b64u(Buffer.from(`${Math.random()}${Date.now()}`));
@@ -46,15 +54,19 @@ createServer((req, res) => {
       const p = new URLSearchParams(body);
       const entry = codes.get(p.get("code") ?? "");
       const fail = (status: number, error: string) => { res.statusCode = status; res.end(JSON.stringify({ error })); };
-      if (!entry || p.get("client_secret") !== clientSecret || p.get("client_id") !== clientId) return fail(400, "invalid_grant");
+      const basic = Buffer.from(String(req.headers.authorization ?? "").replace("Basic ", ""), "base64").toString();
+      if (!entry || basic !== `${clientId}:${clientSecret}` || p.get("client_secret")) return fail(400, "invalid_grant");
       if (b64u(createHash("sha256").update(p.get("code_verifier") ?? "").digest()) !== entry.challenge) return fail(400, "bad_verifier");
       codes.delete(p.get("code")!);
       const now = Math.floor(Date.now() / 1000);
-      const header = b64u(JSON.stringify({ alg: "RS256", kid: "e2e-key", typ: "JWT" }));
-      const claims = b64u(JSON.stringify({ iss: issuer, aud: clientId, sub: entry.identity.sub, email: entry.identity.email, email_verified: entry.identity.verified, nonce: entry.nonce, iat: now, exp: now + 600 }));
-      const sig = b64u(createSign("RSA-SHA256").update(`${header}.${claims}`).sign(privateKey));
+      const header = b64u(JSON.stringify({ alg: "ES256", kid: "e2e-key", typ: "JWT" }));
+      const who = entry.identity;
+      const claims = b64u(JSON.stringify({ iss: issuer, aud: clientId, sub: who.sub, ...(who.inToken ? { email: who.email, email_verified: who.verified } : {}), nonce: entry.nonce, iat: now, exp: now + 600 }));
+      const sig = b64u(createSign("SHA256").update(`${header}.${claims}`).sign({ key: privateKey, dsaEncoding: "ieee-p1363" }));
+      const accessToken = `at-${Math.random().toString(16).slice(2)}`;
+      tokens.set(accessToken, who);
       res.setHeader("Content-Type", "application/json");
-      res.end(JSON.stringify({ id_token: `${header}.${claims}.${sig}`, access_token: "unused" }));
+      res.end(JSON.stringify({ id_token: `${header}.${claims}.${sig}`, access_token: accessToken }));
     });
     return;
   }

@@ -5,7 +5,7 @@ import { defineConfig } from "@playwright/test";
 
 /**
  * The PRODUCTION-mode admin, end to end, on a real `next start` build, with every external service replaced by a local stand-in:
- * PostgreSQL (PGlite over the wire protocol), Google (a fake OpenID provider), R2 (a fake S3 with a public read path). Nothing outside
+ * PostgreSQL (PGlite over the wire protocol), Login with Railway (a fake OpenID provider), a Railway Storage Bucket (a fake PRIVATE S3). Nothing outside
  * this machine is contacted and no secret is real. Needs a build first:
  *   NEXT_PUBLIC_META_PIXEL_ID=… NEXT_PUBLIC_GA_MEASUREMENT_ID=… npm run build && npm run test:admin:prod
  * The catalog snapshot is COPIED from data/generated into a temp "Volume" (the app writes published.json there, never into the repo).
@@ -39,18 +39,17 @@ export default defineConfig({
         NODE_ENV: "production",
         ADMIN_HOST: `127.0.0.1:${APP}`,
         ADMIN_OWNER_EMAIL: "owner@e2e.test",
-        GOOGLE_OAUTH_CLIENT_ID: "e2e-client",
-        GOOGLE_OAUTH_CLIENT_SECRET: "e2e-secret",
+        RAILWAY_OAUTH_CLIENT_ID: "e2e-client",
+        RAILWAY_OAUTH_CLIENT_SECRET: "e2e-secret",
         ADMIN_SESSION_SECRET: "e2e-session-secret-e2e-session-secret-0123456789",
         ADMIN_OIDC_ISSUER: "http://127.0.0.1:4555",
         DATABASE_URL: "postgres://postgres@127.0.0.1:54390/postgres",
         DATABASE_POOL_MAX: "3",
-        R2_ENDPOINT: "http://127.0.0.1:4600",
-        R2_BUCKET: "e2e-bucket",
-        R2_ACCESS_KEY_ID: "E2EACCESSKEY",
-        R2_SECRET_ACCESS_KEY: "e2e-secret-access-key",
-        MEDIA_PUBLIC_BASE_URL: "http://127.0.0.1:4600",
-        MEDIA_EXTRA_ORIGINS: "http://127.0.0.1:4600",
+        BUCKET_ENDPOINT: "http://127.0.0.1:4600",
+        BUCKET_NAME: "e2e-bucket",
+        BUCKET_ACCESS_KEY_ID: "E2EACCESSKEY",
+        BUCKET_SECRET_ACCESS_KEY: "e2e-secret-access-key",
+        BUCKET_REGION: "auto",
         SITE_CONFIG_HOME: "on",
         CATALOG_SNAPSHOT_DIR: volume,
       },

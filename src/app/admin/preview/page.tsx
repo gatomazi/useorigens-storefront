@@ -5,6 +5,7 @@ import { categoryProps } from "@/lib/catalog/collection-source";
 import { getCatalog } from "@/lib/catalog/repository";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { composeForPreview } from "@/lib/admin/ops";
+import { withPreviewMedia } from "@/lib/admin/preview-media";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { getRegionHome } from "@/lib/home";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
@@ -25,7 +26,8 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
   const usingPublished = source === "published";
   const doc = usingPublished ? ws.baseDoc : ws.doc;
   const raw = await composeForPreview(doc);
-  const { bundle } = sanitizeBundle(raw, seedFromEnv());
+  const { bundle: sanitized } = sanitizeBundle(raw, seedFromEnv());
+  const bundle = sanitized ? withPreviewMedia(sanitized) : null;
   const catalog = getCatalog();
   const home = getRegionHome("sul");
   return (

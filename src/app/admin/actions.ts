@@ -21,7 +21,7 @@ import { applyAndSave, discardDraft, loadWorkspace, SCOPE, type SaveOutcome } fr
 import type { DraftOp } from "@/lib/admin/draft-ops";
 
 /**
- * Every server action of the CMS. Each one authenticates and authorises on its own (`requireAdmin`: development guard or Google session,
+ * Every server action of the CMS. Each one authenticates and authorises on its own (`requireAdmin`: development guard or Railway session,
  * host, Origin, role, region) before doing anything — the proxy and the layout are not trusted as the only barrier — and answers with a
  * redirect carrying a short flash message, so a reload never re-submits a form.
  */
@@ -246,7 +246,7 @@ export async function saveUserAction(fd: FormData) {
   if (scopes.length === 0) back("/admin/usuarios", { err: ["Escolha ao menos uma região."] });
   const created = await users.create({ email, name: null, role: "editor", scopes });
   await platform().audit.record({ actor: actor.id, action: "user.create", target: created.id, meta: { scopes } }).catch(() => undefined);
-  back("/admin/usuarios", { ok: "Editor cadastrado. Ele já pode entrar com a conta Google desse e-mail." });
+  back("/admin/usuarios", { ok: "Editor cadastrado. Ele já pode entrar com a conta Railway desse e-mail." });
 }
 
 export async function deactivateUserAction(fd: FormData) {

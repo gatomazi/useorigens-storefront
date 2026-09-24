@@ -6,7 +6,7 @@ import type { ScopeDoc } from "../site-config/schema";
 /** Thin bindings of the publishing functions to the platform selected for this process, for the screens. */
 export const publishDeps = (actorId: string | null = null): PublishDeps => {
   const p = platform();
-  return { releases: p.releases, files: p.files, media: (ids) => p.media.resolve(ids), actorId };
+  return { releases: p.releases, files: p.files, media: (ids, purpose) => p.media.resolve(ids, purpose), actorId };
 };
 export const listHistory = () => platform().releases.list(50);
 export const inspectPublishing = () => inspectReleases(publishDeps());

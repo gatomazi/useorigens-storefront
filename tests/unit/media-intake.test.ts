@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import { describe, expect, test } from "vitest";
 import { processImage, safeLabel } from "@/lib/admin/media/process";
-import { allowedMediaOrigins, isAllowedMediaSrc, MEDIA_ORIGIN } from "@/lib/site-config/media-hosts";
+import { adminMediaUrl, isAllowedMediaSrc, publicMediaUrl } from "@/lib/site-config/media-hosts";
 import { parseMediaInfo, validateBundle } from "@/lib/site-config/schema";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { buildSeedBundle } from "@/lib/site-config/seed";
@@ -63,26 +63,34 @@ describe("image intake", () => {
   });
 });
 
-describe("published media hosts", () => {
-  const good = `${MEDIA_ORIGIN}/media/${SHA}/1080.webp`;
-  test("given the media origin's object layout, when checked, then it is allowed; local /public paths too", () => {
+describe("published media sources (same origin only)", () => {
+  const key = `media/${SHA}/1080.webp`;
+  const good = publicMediaUrl(key);
+  test("given the CMS's own /media layout and /public paths, when checked, then they are allowed", () => {
+    expect(good).toBe(`/media/${SHA}/1080.webp`);
     expect(isAllowedMediaSrc(good)).toBe(true);
     expect(isAllowedMediaSrc("/banners/sul/hero-mobile.png")).toBe(true);
   });
 
-  test("given any other host, scheme, path shape, credentials or query, when checked, then it is refused", () => {
-    for (const bad of [`https://evil.example/media/${SHA}/1080.webp`, `http://media.useorigens.com.br/media/${SHA}/1080.webp`, `${MEDIA_ORIGIN}/other/${SHA}.webp`, `${MEDIA_ORIGIN}/media/${SHA}/1080.svg`, `${MEDIA_ORIGIN}/media/${SHA}/1080.webp?x=1`, `https://user:pw@media.useorigens.com.br/media/${SHA}/1080.webp`, "//evil.example/x.png", "/a/../b.png", "javascript:alert(1)", 5, null]) expect(isAllowedMediaSrc(bad), String(bad)).toBe(false);
+  test("given any absolute URL, another /media shape, an /admin URL, or a traversal, when checked, then it is refused", () => {
+    for (const bad of [`https://evil.example/media/${SHA}/1080.webp`, `https://media.useorigens.com.br/media/${SHA}/1080.webp`, "//evil.example/x.png", `/media/${SHA}/1080.svg`, `/media/${SHA}/1080.webp?x=1`, "/media/short/1080.webp", "/media/../etc/passwd", "/media", `/admin/media/${SHA}/1080.webp`, adminMediaUrl(key), "/a/../b.png", "javascript:alert(1)", "/x y.png", 5, null]) expect(isAllowedMediaSrc(bad), String(bad)).toBe(false);
   });
 
-  test("given an owner-configured extra origin, when checked, then only that exact origin is added", () => {
-    const env = { MEDIA_EXTRA_ORIGINS: "http://127.0.0.1:4600, https://staging-media.example.com" };
-    expect(allowedMediaOrigins(env)).toEqual([MEDIA_ORIGIN, "http://127.0.0.1:4600", "https://staging-media.example.com"]);
-    expect(isAllowedMediaSrc(`http://127.0.0.1:4600/media/${SHA}/640.webp`, env)).toBe(true);
-    expect(isAllowedMediaSrc(`http://127.0.0.1:4601/media/${SHA}/640.webp`, env)).toBe(false);
+  test("given the local sandbox's upload URL, when checked, then it is allowed outside production only", () => {
+    const dev = "/admin/media/0123456789abcdef01234567.webp";
+    const saved = process.env.NODE_ENV;
+    try {
+      (process.env as Record<string, string>).NODE_ENV = "development";
+      expect(isAllowedMediaSrc(dev)).toBe(true);
+      (process.env as Record<string, string>).NODE_ENV = "production";
+      expect(isAllowedMediaSrc(dev)).toBe(false);
+    } finally {
+      (process.env as Record<string, string>).NODE_ENV = saved!;
+    }
   });
 
   test("given a media entry with variants, when parsed, then valid ones are kept and malformed ones are dropped", () => {
-    const info = { src: good, width: 2400, height: 800, variants: [{ w: 640, src: `${MEDIA_ORIGIN}/media/${SHA}/640.webp` }, { w: 2400, src: good }] };
+    const info = { src: good, width: 2400, height: 800, variants: [{ w: 640, src: `/media/${SHA}/640.webp` }, { w: 2400, src: good }] };
     expect(parseMediaInfo(info)).toEqual(info);
     expect(parseMediaInfo({ ...info, variants: [] })).toBeNull();
     expect(parseMediaInfo({ ...info, variants: [{ w: 10, src: good }] })).toBeNull();
@@ -90,13 +98,14 @@ describe("published media hosts", () => {
     expect(parseMediaInfo({ src: good, width: 0, height: 5 })).toBeNull();
   });
 
-  test("given a bundle whose media table points at a foreign host, when validated strictly, then it is refused; the tolerant reader ignores that entry only", () => {
+  test("given a bundle whose media table points at a foreign host or an admin URL, when validated strictly, then it is refused; the tolerant reader ignores that entry only", () => {
     const seed = buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null });
-    const bad = { ...seed, media: { ...seed.media, "upload:X": { src: "https://evil.example/media/x.webp", width: 10, height: 10 } } };
+    const bad = { ...seed, media: { ...seed.media, "upload:X": { src: "https://evil.example/media/x.webp", width: 10, height: 10 }, "upload:Y": { src: `/admin/media/${SHA}/640.webp`, width: 10, height: 10 } } };
     expect(validateBundle(bad).ok).toBe(false);
     const r = sanitizeBundle(bad, seed);
     expect(r.bundle).not.toBeNull();
     expect(r.bundle!.media["upload:X"]).toBeUndefined();
+    expect(r.bundle!.media["upload:Y"]).toBeUndefined();
     expect(r.diagnostics.join(" ")).toContain("upload:X");
   });
 });
