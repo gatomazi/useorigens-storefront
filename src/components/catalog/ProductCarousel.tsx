@@ -55,6 +55,7 @@ export function ProductCarousel({
   poster = false,
   tone = "light",
   viewAllHref,
+  viewAllLabel = "Ver todos",
   sourceSection,
 }: {
   items: CarouselItem[];
@@ -66,6 +67,7 @@ export function ProductCarousel({
   tone?: "light" | "dark";
   /** Real store collection URL for "Ver todos". Omit when there is no single real destination. */
   viewAllHref?: string;
+  viewAllLabel?: string;
   /** GoToInk `source_section` — one value for the whole carousel instance, e.g. "home_terra". This is the one
    * shared click point behind five of the home's sections (Da Nossa Terra, Redesenhos, Feito Para Você, Fala
    * daqui, DDD) — CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md §2. */
@@ -103,7 +105,7 @@ export function ProductCarousel({
               href={viewAllHref}
               className={`group inline-flex min-h-11 items-center gap-1.5 text-[0.9375rem] font-semibold transition-colors ${dark ? "text-white hover:text-region-accent" : "text-ink hover:text-region-primary"}`}
             >
-              <span className="link-line inline">Ver todos</span>
+              <span className="link-line inline">{viewAllLabel}</span>
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>

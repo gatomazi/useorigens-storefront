@@ -5,6 +5,7 @@ import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
 import { Campaign } from "@/components/home/Campaign";
 import { RegionHero } from "@/components/home/RegionHero";
+import { HomeSections } from "@/components/home/HomeSections";
 import { StateCards } from "@/components/home/StateCards";
 import { SOURCES } from "@/lib/analytics/sources";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
@@ -12,6 +13,10 @@ import { REAL_COLLECTIONS } from "@/lib/editorial/collections";
 import { getRegionHome } from "@/lib/home";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { ENABLED_REGIONS } from "@/lib/site";
+import { categoryLookup } from "@/lib/catalog/collection-source";
+import { findCollection } from "@/lib/catalog/collections-file";
+import { getCatalog } from "@/lib/catalog/repository";
+import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
 
 export const revalidate = 3600;
 
@@ -37,6 +42,13 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
   if (!isRegionSlug(region) || !ENABLED_REGIONS.includes(region)) notFound();
 
   const home = getRegionHome(region);
+
+  // Config-driven home (CMS foundation). OFF unless SITE_CONFIG_HOME=on; the hard-coded home below is what production serves.
+  if (siteConfigHomeEnabled()) {
+    // Collections come from the local collections snapshot only when a section asks for one (none does in the seed) — never from INK.
+    return <HomeSections region={region} home={home} bundle={homeBundle()} categories={categoryLookup(getCatalog().merch(region))} slugOf={(store, id) => findCollection(store, id)?.slug ?? null} />;
+  }
+
   const { showcase } = home;
   const cityPath = showcase ? `/${region}/${showcase.city.uf.toLowerCase()}/${showcase.city.slug}` : null;
   const falaPhoto = usableBannerAsset("collection", bannerFor(region, "collection", "fala-daqui"));

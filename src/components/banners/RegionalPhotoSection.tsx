@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { BannerBackground } from "@/components/banners/BannerBackground";
 import type { BannerAsset } from "@/lib/editorial/banners";
 
@@ -14,19 +15,25 @@ export function RegionalPhotoSection({
   asset,
   wash = "regional-wash",
   baseClassName = "bg-ground",
+  baseStyle,
+  washStyle,
   priority = false,
 }: {
   asset: BannerAsset;
   /** Which globals.css wash to draw on top: light/warm (default), the region's primary tint, or near-black. */
-  wash?: "regional-wash" | "regional-wash-primary" | "regional-wash-dark";
+  wash?: "regional-wash" | "regional-wash-primary" | "regional-wash-dark" | "none";
+  /** Config-driven overlay (CMS): replaces the preset class with an explicit background. Unused by the original home. */
+  washStyle?: CSSProperties;
   /** Colour shown for an instant before the photo paints (and if it ever fails to load). Match the wash's tone. */
   baseClassName?: string;
+  /** Config-driven fill (CMS) for colours that have no static class: applied to the same base layer. */
+  baseStyle?: CSSProperties;
   priority?: boolean;
 }) {
   return (
-    <div aria-hidden="true" className={`absolute inset-0 -z-10 overflow-hidden ${baseClassName}`}>
+    <div aria-hidden="true" className={`absolute inset-0 -z-10 overflow-hidden ${baseClassName}`} style={baseStyle}>
       <BannerBackground asset={asset} priority={priority} />
-      <div className={`${wash} absolute inset-0`} />
+      {washStyle ? <div className="absolute inset-0" style={washStyle} /> : wash !== "none" && <div className={`${wash} absolute inset-0`} />}
     </div>
   );
 }
