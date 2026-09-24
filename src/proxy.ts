@@ -20,7 +20,9 @@
 // regardless of readiness.
 import { NextResponse, type NextRequest } from "next/server";
 import { catalogReadiness } from "@/lib/catalog/readiness";
+import { adminConfig, adminHostOf } from "@/lib/admin/config";
 import { devAdminEnabled } from "@/lib/admin/dev-guard";
+import { decideRoute } from "@/lib/admin/routing";
 import { siteUrl } from "@/lib/config/env";
 import { ENABLED_REGIONS } from "@/lib/site";
 
@@ -33,16 +35,22 @@ function isCanonicalHost(request: NextRequest): boolean {
 }
 
 export function proxy(request: NextRequest) {
-  // The local CMS (docs/admin/cms-local-usage.md) exists only on a developer's own machine: in any other process (build, start,
-  // Railway) every admin path is a plain 404 before anything renders, whatever the query string. On a dev machine it bypasses the
-  // catalog gate below (the admin must work while the catalog is missing) and is never indexable or cached. Each admin page, action and
-  // route handler re-checks the request itself (src/lib/admin/require-dev-admin.ts).
+  // The admin surface (docs/admin/cms-v1-round6.md). `decideRoute` is the first layer: on the configured ADMIN_HOST only /admin/** exists
+  // (with noindex + no-store, and never behind the catalog gate below, since the admin must work while the catalog is missing); on every
+  // other host /admin/** is a plain 404, except on a development server started with ADMIN_DEV_MODE. The Host header decides which host this
+  // is; it is never treated as identity — every admin page, Server Action and route handler authenticates and authorises on its own.
   const { pathname } = request.nextUrl;
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    if (!devAdminEnabled()) return new Response(null, { status: 404 });
+  const decision = decideRoute({ host: request.headers.get("host") ?? request.nextUrl.host, pathname, adminHost: adminHostOf(), devAdmin: devAdminEnabled() });
+  if (decision.action === "not-found") return new Response(null, { status: 404 });
+  if (decision.action === "redirect") {
+    const config = adminConfig();
+    const response = NextResponse.redirect(new URL(decision.pathname, config.mode === "prod" ? config.adminOrigin : request.nextUrl.origin), 307);
+    for (const [k, v] of Object.entries(decision.headers)) response.headers.set(k, v);
+    return response;
+  }
+  if (decision.headers) {
     const response = NextResponse.next();
-    response.headers.set("X-Robots-Tag", "noindex, nofollow");
-    response.headers.set("Cache-Control", "no-store");
+    for (const [k, v] of Object.entries(decision.headers)) response.headers.set(k, v);
     return response;
   }
 
@@ -75,5 +83,9 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
+  // `/api/**` stays OUT of the proxy, exactly as before: matching it changed how the static, ISR-cached search index route is served and
+  // broke the empty-catalog guarantee (scripts/verify-bootstrap.mts caught it: the index was served as 200 instead of 503). Consequence,
+  // documented in docs/admin/cms-v1-round6.md: the public read-only API (/api/cidades/*) also answers on the admin host; it serves data
+  // the storefront already publishes, and every admin route is under /admin/** where the checks above apply.
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
 };
