@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { CartRefCapture } from "@/components/cart-mirror/CartRefCapture";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
@@ -25,6 +26,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
   const catalog = getCatalog();
   return (
     <ConsentProvider>
+      <CartRefCapture />
       <div data-region={region} style={regionThemeStyle(region)} className="relative">
         <AnnouncementBar region={region} cityCount={catalog.coveredCityIds(region).size} />
         <Header region={region} />

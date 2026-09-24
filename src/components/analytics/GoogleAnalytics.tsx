@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { withoutCartRef } from "@/lib/cart-mirror/url";
 import { useConsent } from "@/lib/consent/ConsentProvider";
 import { gaMeasurementId } from "@/lib/config/public-env";
 import { trackPageView } from "@/lib/analytics/track";
@@ -40,7 +41,8 @@ export function GoogleAnalytics() {
   const wasAccepted = useRef(false);
   const revokedThisSession = useRef(false);
 
-  const currentPath = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
+  const query = withoutCartRef(searchParams?.toString() ?? ""); // the cart token never reaches analytics
+  const currentPath = pathname + (query ? `?${query}` : "");
   // `window` doesn't exist during SSR — the component always renders null there anyway (consent is never
   // "accepted" on the server, see ConsentProvider's `getServerConsentSnapshot`), but this computation itself
   // runs on every render including that first server pass, so it needs its own guard.

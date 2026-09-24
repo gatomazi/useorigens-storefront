@@ -9,6 +9,7 @@ import { TrackedStateLink } from "../analytics/TrackedStateLink";
 import { HeaderDropdown } from "./HeaderDropdown";
 import { HeaderShell } from "./HeaderShell";
 import { MobileMenu, type NavItem } from "./MobileMenu";
+import { CartMirrorMenu } from "../cart-mirror/CartMirrorMenu";
 import { SearchDialog } from "../search/SearchDialog";
 
 export function AnnouncementBar({ region, cityCount }: { region: RegionSlug; cityCount: number }) {
@@ -107,6 +108,7 @@ export function Header({ region }: { region: RegionSlug }) {
               ))}
             </ul>
           </HeaderDropdown>
+          <CartMirrorMenu />
           <SearchDialog region={region} />
         </div>
       </div>
