@@ -15,7 +15,7 @@ export const TEMPLATE_KEYS = ["hero", "city-styles", "product-carousel", "states
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
 /** Closed list of analytics origins a carousel may report (keys of `SOURCES`); never a free string (would pollute Meta/GA4). */
-export const CAROUSEL_SOURCE_KEYS = ["homeTerra", "homeRedesenhos", "homeFeitoParaVoce", "homeFala", "homeDdd"] as const;
+export const CAROUSEL_SOURCE_KEYS = ["homeTerra", "homeRedesenhos", "homeFeitoParaVoce", "homeFala", "homeDdd", "homeCollection"] as const;
 export type CarouselSourceKey = (typeof CAROUSEL_SOURCE_KEYS)[number];
 
 export const EDITORIAL_MODULE_KEYS = ["terra", "recreations", "lenda", "dizeres", "ddd"] as const;
@@ -259,6 +259,13 @@ function checkVendor(c: Collector, path: string, v: unknown, pattern: RegExp, sc
   } else if (v.mode === "inherit") {
     if (scope === "global") c.fail(`${path}.mode`, "global cannot inherit");
   } else if (v.mode !== "disabled") c.fail(`${path}.mode`, "must be inherit | override | disabled");
+}
+
+/** Validates ONE section on its own (used by the editor and by the tolerant published-bundle reader). */
+export function validateSection(input: unknown, path = "section"): ValidationResult<Section> {
+  const c = new Collector();
+  checkSection(c, path, input);
+  return c.errors.length === 0 ? { ok: true, value: input as Section } : { ok: false, errors: c.errors };
 }
 
 export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {

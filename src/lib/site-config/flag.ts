@@ -1,5 +1,5 @@
 import "server-only";
-import { buildSeedBundle } from "./seed";
+import { readPublished, seedFromEnv } from "./published";
 import type { PublishedBundle } from "./schema";
 
 /**
@@ -11,13 +11,12 @@ export function siteConfigHomeEnabled(): boolean {
 }
 
 /**
- * The bundle the config-driven home renders. Today: the immutable seed only (no published file reader yet — that is a
- * later step and needs the Volume namespace decided in docs/admin/cms-v1-round2.md §5). Tracking IDs are taken from the current env
- * exactly as the trackers read them, so a bundle resolved from this seed matches today's behaviour.
+ * The bundle the config-driven home renders (only reached with the flag on): the published `published.json` when it is present and
+ * usable, otherwise the immutable seed. Never null, never empty. Tracking IDs in the seed come from the current env exactly as the
+ * trackers read them (the trackers themselves are untouched by this).
  */
 export function homeBundle(): PublishedBundle {
-  return buildSeedBundle({
-    metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || null,
-    ga4MeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || null,
-  });
+  return readPublished().bundle;
 }
+
+export { seedFromEnv };

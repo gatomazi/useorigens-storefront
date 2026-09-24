@@ -137,25 +137,29 @@ function CarouselSection({
     />
   );
 
-  if (surface === "paper") {
+  // A section with a photo or a colour/gradient of its own is drawn as a self-contained block: the background is a layer INSIDE it (never a
+  // band between sections) and the text colour follows the tone. Sections with no visual keep exactly the original markup.
+  const visual = hasImage(bg) || bg.fill.kind !== "none";
+  if (!visual && surface === "paper") {
     return (
       <section id={s.anchor} className="paper">
         <div className="wrap py-14 lg:py-24">{carousel}</div>
       </section>
     );
   }
-  if (surface === "region-primary") {
-    // The regional block: its photo (when published) is this section's own background, never a slice before it.
+  if (!visual && surface === "plain") {
     return (
-      <section id={s.anchor} className="relative isolate overflow-hidden bg-region-primary text-white">
-        {(hasImage(bg) || !isSameFill(bg.fill, NATIVE_FILL[surface])) && <SectionBackdrop bg={bg} priority={priority} nativeFill={NATIVE_FILL[surface]} />}
-        <div className="wrap py-14 lg:py-24">{carousel}</div>
+      <section id={s.anchor} className="wrap py-14 lg:py-24">
+        {carousel}
       </section>
     );
   }
+  const surfaceClass = surface === "region-primary" ? "bg-region-primary" : surface === "paper" ? "paper" : "";
+  const toneClass = tone === "dark" ? "text-white" : "";
   return (
-    <section id={s.anchor} className="wrap py-14 lg:py-24">
-      {carousel}
+    <section id={s.anchor} className={["relative isolate overflow-hidden", surfaceClass, toneClass].filter(Boolean).join(" ")}>
+      {(hasImage(bg) || !isSameFill(bg.fill, NATIVE_FILL[surface])) && <SectionBackdrop bg={bg} priority={priority} nativeFill={NATIVE_FILL[surface]} />}
+      <div className="wrap py-14 lg:py-24">{carousel}</div>
     </section>
   );
 }
