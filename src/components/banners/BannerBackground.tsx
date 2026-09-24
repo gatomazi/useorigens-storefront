@@ -14,6 +14,11 @@ import type { BannerAsset, BannerImage } from "@/lib/editorial/banners";
  * Remote images (an allowed https host) still use the optimizer.
  */
 function localSet(image: BannerImage): { srcSet: string; src: string } {
+  if (image.variants && image.variants.length > 0) {
+    // A CMS upload: pre-sized WebP files on the media origin (validated at publish and by the tolerant reader), used as they are.
+    const mid = image.variants[Math.min(1, image.variants.length - 1)];
+    return { srcSet: image.variants.map((v) => `${v.src} ${v.w}w`).join(", "), src: mid.src };
+  }
   const entry = BANNER_VARIANTS[image.src];
   if (!entry || entry.variants.length === 0) return { srcSet: image.src, src: image.src }; // unknown file: the original, still no optimizer
   const mid = entry.variants[Math.min(1, entry.variants.length - 1)];
@@ -21,7 +26,7 @@ function localSet(image: BannerImage): { srcSet: string; src: string } {
 }
 
 export function BannerBackground({ asset, priority = false }: { asset: BannerAsset; priority?: boolean }) {
-  const isLocal = (i: BannerImage) => i.src.startsWith("/");
+  const isLocal = (i: BannerImage) => i.src.startsWith("/") || (i.variants?.length ?? 0) > 0; // "local" = never the optimizer
   const imgClass = "absolute inset-0 h-full w-full object-cover";
   const style = { objectPosition: asset.focal ?? "50% 50%" };
   const loading = priority ? ("eager" as const) : ("lazy" as const);

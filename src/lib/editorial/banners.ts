@@ -26,6 +26,8 @@ export type BannerImage = {
   src: string;
   width: number;
   height: number;
+  /** Pre-sized WebP widths of a CMS upload (served from the media origin): used as a `srcset` directly, never through the image optimizer. */
+  variants?: { w: number; src: string }[];
 };
 
 export type BannerAsset = {

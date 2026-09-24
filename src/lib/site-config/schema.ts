@@ -6,6 +6,7 @@
  * The storefront reads only a `PublishedBundle` (a validated snapshot, resolved at publish time: media entries carry the
  * final URL and dimensions, so rendering never needs the database or the storage API).
  */
+import { isAllowedMediaSrc } from "./media-hosts";
 import type { CommerceStoreKey } from "../geo/regions";
 
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
@@ -94,7 +95,8 @@ export type ScopeDoc = {
   collections?: { enabled: CollectionRef[] };
 };
 
-export type MediaAssetInfo = { src: string; width: number; height: number };
+/** `variants` (uploads only): the pre-sized WebP widths the storefront uses as a `srcset`, so an uploaded image never goes through the image optimizer. */
+export type MediaAssetInfo = { src: string; width: number; height: number; variants?: { w: number; src: string }[] };
 
 /** What the storefront reads: every scope, plus the resolved media table. Written atomically by the publisher. */
 export type PublishedBundle = {
@@ -334,6 +336,17 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   return c.errors.length === 0 ? { ok: true, value: input as unknown as ScopeDoc } : { ok: false, errors: c.errors };
 }
 
+const validVariants = (v: unknown): boolean =>
+  v === undefined || (Array.isArray(v) && v.length >= 1 && v.length <= 6 && v.every((x) => isRecord(x) && Number.isInteger(x.w) && (x.w as number) >= 100 && (x.w as number) <= 4000 && isAllowedMediaSrc(x.src)));
+
+/** One entry of a bundle's media table, or null when it is not renderable (unknown host, bad path, bad size, bad variants). Shared by the strict validator and the tolerant reader. */
+export function parseMediaInfo(m: unknown): MediaAssetInfo | null {
+  if (!isRecord(m) || !isAllowedMediaSrc(m.src) || !Number.isInteger(m.width) || !Number.isInteger(m.height) || (m.width as number) <= 0 || (m.height as number) <= 0 || !validVariants(m.variants)) return null;
+  const info: MediaAssetInfo = { src: m.src, width: m.width as number, height: m.height as number };
+  if (m.variants !== undefined) info.variants = (m.variants as { w: number; src: string }[]).map((v) => ({ w: v.w, src: v.src }));
+  return info;
+}
+
 export function validateBundle(input: unknown): ValidationResult<PublishedBundle> {
   const errors: string[] = [];
   if (!isRecord(input) || input.schemaVersion !== 1) return { ok: false, errors: ["bundle.schemaVersion: must be 1"] };
@@ -351,8 +364,7 @@ export function validateBundle(input: unknown): ValidationResult<PublishedBundle
   if (!isRecord(media)) errors.push("bundle.media: must be an object");
   else {
     for (const [id, m] of Object.entries(media)) {
-      const ok = isRecord(m) && typeof m.src === "string" && /^(\/|https:\/\/)/.test(m.src) && !m.src.includes("..") && Number.isInteger(m.width) && Number.isInteger(m.height) && (m.width as number) > 0 && (m.height as number) > 0;
-      if (!ok) errors.push(`bundle.media.${id}: invalid`);
+      if (parseMediaInfo(m) === null) errors.push(`bundle.media.${id}: invalid`);
     }
     // Every image referenced by an active section must resolve: a missing entry would render a broken picture.
     if (isRecord(docs)) {

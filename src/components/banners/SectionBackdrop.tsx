@@ -46,8 +46,8 @@ function washProps(overlay: Overlay): { wash: "regional-wash" | "regional-wash-p
 }
 
 const toAsset = (mobile: ResolvedImage, desktop: ResolvedImage, focal: string): BannerAsset => ({
-  mobile: { src: mobile.src, width: mobile.width, height: mobile.height },
-  desktop: { src: desktop.src, width: desktop.width, height: desktop.height },
+  mobile: { src: mobile.src, width: mobile.width, height: mobile.height, variants: mobile.variants },
+  desktop: { src: desktop.src, width: desktop.width, height: desktop.height, variants: desktop.variants },
   alt: "",
   focal,
 });

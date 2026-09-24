@@ -8,7 +8,7 @@
  *   - an invalid hero or footer               ⇒ the whole scope falls back to the seed (the home cannot exist without them).
  * Pure: no I/O, so it is unit-tested with hand-made objects.
  */
-import { SCOPES, validateScopeDoc, validateSection, type MediaAssetInfo, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
+import { parseMediaInfo, SCOPES, validateScopeDoc, validateSection, type MediaAssetInfo, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
 export type SanitizeResult = { bundle: PublishedBundle | null; diagnostics: string[] };
 
@@ -21,8 +21,8 @@ function sanitizeMedia(raw: unknown, diagnostics: string[]): Record<string, Medi
     return out;
   }
   for (const [id, m] of Object.entries(raw)) {
-    const ok = isRecord(m) && typeof m.src === "string" && /^(\/|https:\/\/)/.test(m.src) && !m.src.includes("..") && Number.isInteger(m.width) && Number.isInteger(m.height) && (m.width as number) > 0 && (m.height as number) > 0;
-    if (ok) out[id] = { src: m.src as string, width: m.width as number, height: m.height as number };
+    const info = parseMediaInfo(m);
+    if (info) out[id] = info;
     else diagnostics.push(`media "${id}" is invalid and was ignored`);
   }
   return out;
