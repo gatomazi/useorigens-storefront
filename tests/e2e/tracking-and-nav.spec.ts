@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 /** Injects a capturing `window.fbq` mock before any page script runs — the same approach
  * CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md §3 asks for ("Usar fbq mockado"), and it lets the calling
@@ -54,24 +55,13 @@ async function blockInkNavigation(page: Page) {
 }
 
 /**
- * The city search index (`/api/cidades/{region}`) loads on demand, the first time the dialog opens — a real
- * fetch that, under the heavy concurrent load of a full parallel test run, has occasionally not resolved to
- * any suggestion within a generous wait. `CitySearch`'s own `loadIndex` retries on the *next* focus after a
- * failed fetch (its cache entry is deleted on rejection — see the component), so reopening the dialog once
- * gives a stalled/failed load a second real chance instead of just waiting longer on the same one. */
-async function fillAndAwaitSuggestion(page: Page, openDialog: () => Promise<import("@playwright/test").Locator>, term: string) {
-  let dialog = await openDialog();
-  for (let attempt = 0; attempt < 2; attempt++) {
-    await dialog.getByRole("combobox").fill(term);
-    try {
-      await dialog.getByRole("option").first().waitFor({ state: "visible", timeout: 15_000 });
-      return dialog;
-    } catch (err) {
-      if (attempt === 1) throw err;
-      await page.keyboard.press("Escape");
-      dialog = await openDialog();
-    }
-  }
+ * Opens the search dialog and types a term, then waits for the first suggestion. Single attempt: the index is served from an ISR-cached
+ * route and the click lands on a hydrated page (fixtures.ts), so a missing suggestion is a real failure, not something to retry.
+ */
+async function fillAndAwaitSuggestion(_page: Page, openDialog: () => Promise<import("@playwright/test").Locator>, term: string) {
+  const dialog = await openDialog();
+  await dialog.getByRole("combobox").fill(term);
+  await dialog.getByRole("option").first().waitFor({ state: "visible", timeout: 15_000 });
   return dialog;
 }
 
@@ -116,9 +106,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
     page.on("request", (req) => {
       if (req.url().includes("facebook.net") || req.url().includes("facebook.com/tr")) metaRequests.push(req.url());
     });
-    // Not `waitUntil: "domcontentloaded"`: this test clicks the search trigger almost immediately after
-    // navigating, and the default `waitUntil` gives React time to hydrate and attach its onClick first —
-    // the same reasoning `sul.spec.ts`'s own `openHeroSearch` helper already relies on.
+    // (page.goto in this suite resolves only once the page is hydrated — see fixtures.ts.)
     await page.goto("/sul");
     const openDialog = async () => {
       await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Big_Shoulders, Bodoni_Moda, Hanken_Grotesk } from "next/font/google";
+import { HydrationSignal } from "@/components/layout/HydrationSignal";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Ir para o conteúdo
         </a>
         {children}
+        <HydrationSignal />
       </body>
     </html>
   );
