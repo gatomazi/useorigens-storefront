@@ -27,7 +27,8 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { adminSyncToken, allowFixtureSync } from "@/lib/config/env";
 import { promoteSnapshot, syncCatalog, type SyncResult } from "@/lib/catalog/sync-service";
-import { beginSyncJob, currentSyncJob, finishSyncJobFailure, finishSyncJobSuccess, SyncAlreadyRunningError } from "@/lib/catalog/sync-job";
+import { syncCollections } from "@/lib/catalog/collections-sync";
+import { beginSyncJob, currentSyncJob, finishSyncJobFailure, finishSyncJobSuccess, SyncAlreadyRunningError, type CollectionsStep } from "@/lib/catalog/sync-job";
 import type { CatalogSnapshot } from "@/lib/catalog/types";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { ENABLED_REGIONS } from "@/lib/site";
@@ -66,6 +67,7 @@ export async function POST(request: Request) {
   let storeKeys: CommerceStoreKey[] = [];
   let fixtureSnapshot: CatalogSnapshot | undefined;
   let fixtureSyncDelayMs = 0;
+  let withCollections = false;
   if (bodyText) {
     let parsed: unknown;
     try {
@@ -73,7 +75,11 @@ export async function POST(request: Request) {
     } catch {
       return Response.json({ error: "body must be JSON" }, { status: 400 });
     }
-    const body = parsed as { storeKeys?: unknown; fixtureSnapshot?: unknown; fixtureSyncDelayMs?: unknown };
+    const body = parsed as { storeKeys?: unknown; fixtureSnapshot?: unknown; fixtureSyncDelayMs?: unknown; withCollections?: unknown };
+    if (body.withCollections !== undefined) {
+      if (typeof body.withCollections !== "boolean") return Response.json({ error: "withCollections must be a boolean" }, { status: 400 });
+      withCollections = body.withCollections;
+    }
     if (body.storeKeys !== undefined) {
       if (!Array.isArray(body.storeKeys) || body.storeKeys.some((k) => typeof k !== "string" || !VALID_STORE_KEYS.includes(k as CommerceStoreKey))) {
         return Response.json({ error: `storeKeys must be an array of: ${VALID_STORE_KEYS.join(", ")}` }, { status: 400 });
@@ -129,7 +135,19 @@ export async function POST(request: Request) {
           }))
         : await syncCatalog(storeKeys);
       revalidateCatalogPages();
-      finishSyncJobSuccess(running.startedAt, result);
+      // Optional, non-destructive second step (only after the catalog itself succeeded): refresh the INK collections against the NEW
+      // catalog. Read-only (≈4 GETs), last-good per store, and any failure is reported in the job without touching the catalog result or
+      // the collections file the storefront already uses.
+      let collections: CollectionsStep | undefined;
+      if (withCollections && !fixtureSnapshot) {
+        try {
+          collections = { outcomes: await syncCollections() };
+          revalidatePath("/[region]", "layout");
+        } catch (err) {
+          collections = { error: err instanceof Error ? err.message : String(err) };
+        }
+      }
+      finishSyncJobSuccess(running.startedAt, result, collections);
     } catch (err) {
       // Never leak the raw error object (could theoretically carry request internals) — just its message.
       finishSyncJobFailure(running.startedAt, err);

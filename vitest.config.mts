@@ -9,5 +9,6 @@ export default defineConfig({
       "server-only": path.resolve(import.meta.dirname, "tests/stubs/server-only.ts"),
     },
   },
-  test: { include: ["tests/unit/**/*.test.ts"], environment: "node" },
+  // tests/integration run the repository SQL against a real PostgreSQL engine (PGlite, in-process, in-memory): slower to start, no server needed.
+  test: { include: ["tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"], environment: "node", testTimeout: 60_000, hookTimeout: 120_000 },
 });

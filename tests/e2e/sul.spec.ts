@@ -1,32 +1,16 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 /**
- * The hero field is a trigger: it opens the search sheet (full screen on phones), where the real input lives.
- *
- * The city index (`/api/cidades/{region}`) is fetched on demand, the moment the real input focuses (which
- * happens as soon as the dialog opens) — a real network request that, under the heavy concurrent load of a
- * full parallel test run, has occasionally stalled or failed rather than just being slow (confirmed: a whole
- * test timeout elapsed waiting for a suggestion/empty-state that never came). `CitySearch`'s own `loadIndex`
- * retries on the *next* focus after a failed fetch (its cache entry is deleted on rejection), so this waits
- * for that first fetch to actually settle and, if it never does within a generous window, closes and reopens
- * once to give a stalled/failed load a real second chance — every test that opens search this way benefits
- * without needing its own retry logic.
+ * The hero field is a trigger: it opens the search sheet (full screen on phones), where the real input lives. Every navigation in this
+ * suite already waits for hydration (see fixtures.ts), so the click below always lands on an installed handler — there is no retry
+ * or re-open: if the dialog does not open, that is the failure.
  */
 async function openHeroSearch(page: Page) {
-  for (let attempt = 0; attempt < 2; attempt++) {
-    const indexFetch = page.waitForResponse((res) => res.url().includes("/api/cidades/"), { timeout: 15_000 });
-    await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-    const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
-    await expect(dialog).toBeVisible();
-    try {
-      await indexFetch;
-      return dialog;
-    } catch {
-      if (attempt === 1) return dialog; // let the caller's own assertion produce the real failure
-      await page.keyboard.press("Escape");
-    }
-  }
-  throw new Error("unreachable");
+  await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+  await expect(dialog).toBeVisible();
+  return dialog;
 }
 
 test.describe("/sul critical flows", () => {

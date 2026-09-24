@@ -31,8 +31,9 @@ declare global {
  * track.ts) is the single controlled place that ever sends one, so there is no double-counting between GA4's
  * automatic config-time page_view and this component's own manual one.
  */
-export function GoogleAnalytics() {
-  const measurementId = gaMeasurementId();
+/** `measurementId`: see `MetaPixel` — `undefined` keeps the build-time env fallback. */
+export function GoogleAnalytics({ measurementId: resolved }: { measurementId?: string | null } = {}) {
+  const measurementId = resolved === undefined ? gaMeasurementId() : resolved;
   const { record } = useConsent();
   const accepted = record?.choice === "accepted";
   const pathname = usePathname();

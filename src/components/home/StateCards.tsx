@@ -60,11 +60,11 @@ function RegionChips({ region, uf, shown, more }: { region: RegionSlug; uf: stri
  * no JS needed), replacing the old horizontal swipe row, which made it hard to compare states at a glance
  * (CLAUDE_ADDENDUM_PRODUCT_STATE_SELECTOR_REDESIGNS.md). Both trees render; CSS shows the one that fits the width.
  */
-export function StateCards({ region, states }: { region: RegionSlug; states: StateCard[] }) {
+export function StateCards({ region, states, title = "Escolha o seu estado" }: { region: RegionSlug; states: StateCard[]; title?: string }) {
   return (
     <section id="estados" aria-labelledby="states-title" className="wrap py-14 lg:py-24">
       <h2 id="states-title" className="t-h2">
-        Escolha o seu estado
+        {title}
       </h2>
 
       {/* Desktop and up: three cover cards. */}

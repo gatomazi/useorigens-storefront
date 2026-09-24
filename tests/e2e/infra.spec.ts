@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test.describe("infra: health, readiness, no external calls", () => {
   test("given GET /api/health, when called, then it answers 200 with no I/O", async ({ page }) => {

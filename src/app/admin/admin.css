@@ -1,0 +1,44 @@
+/* Local CMS styles. Reuses the storefront tokens (--ground, --paper, --ink, --region-*) from globals.css; only what the panel needs on top. */
+.admin { color: var(--ink); background: var(--ground); min-height: 100dvh; }
+.a-card { background: #fff; border: 1px solid rgb(0 0 0 / 0.16); }
+.a-h1 { font-family: var(--font-display-stack); font-weight: 800; font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1; letter-spacing: 0.01em; text-transform: uppercase; }
+.a-h2 { font-size: 0.8125rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+.a-muted { color: var(--ink-mute); }
+.a-label { display: block; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 0.3rem; }
+.a-input, .a-select, .a-textarea { width: 100%; border: 1px solid rgb(0 0 0 / 0.38); background: #fff; padding: 0.55rem 0.7rem; font: inherit; font-size: 0.9375rem; border-radius: 0; min-height: 2.5rem; }
+.a-textarea { min-height: 4.5rem; resize: vertical; }
+.a-input:focus-visible, .a-select:focus-visible, .a-textarea:focus-visible, .a-btn:focus-visible, .a-link:focus-visible { outline: 3px solid var(--region-accent); outline-offset: 1px; }
+.a-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 2.5rem; padding: 0 1rem; border: 2px solid var(--ink); background: var(--ink); color: #fff; font: inherit; font-size: 0.8125rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.a-btn:hover { background: var(--region-primary); border-color: var(--region-primary); }
+.a-btn.ghost { background: transparent; color: var(--ink); }
+.a-btn.ghost:hover { background: var(--ink); color: #fff; }
+.a-btn.sm { min-height: 2rem; padding: 0 0.6rem; font-size: 0.75rem; }
+.a-btn.danger { border-color: #8c1d18; color: #8c1d18; background: transparent; }
+.a-btn.danger:hover { background: #8c1d18; color: #fff; }
+.a-btn[disabled] { opacity: 0.4; cursor: not-allowed; }
+.a-link { color: var(--ink); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 2px; text-decoration-color: var(--region-accent); }
+.a-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.15rem 0.5rem; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; border: 1px solid rgb(0 0 0 / 0.3); background: #fff; }
+.a-badge.ok { background: #e3ecd9; border-color: #4d543d; color: #2d3520; }
+.a-badge.warn { background: #fbefd0; border-color: #b8842a; color: #6b4a0c; }
+.a-badge.bad { background: #f6dcda; border-color: #8c1d18; color: #6f1712; }
+.a-badge.dev { background: #000; color: #fff; border-color: #000; }
+.a-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }
+.a-table th { text-align: left; font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mute); padding: 0.5rem 0.75rem; border-bottom: 2px solid #000; }
+.a-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid rgb(0 0 0 / 0.12); vertical-align: middle; }
+.a-flash { border-left: 4px solid; padding: 0.75rem 1rem; font-weight: 600; }
+.a-flash.ok { border-color: #4d543d; background: #e3ecd9; }
+.a-flash.err { border-color: #8c1d18; background: #f6dcda; }
+.a-frame-shell { background: #cfcfcf; border: 1px solid rgb(0 0 0 / 0.25); overflow: hidden; }
+.a-swatch { width: 1.75rem; height: 1.75rem; border: 1px solid rgb(0 0 0 / 0.4); flex: none; }
+.a-thumb { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #ddd; }
+.a-card { min-width: 0; position: relative; }
+@media (max-width: 640px) { .a-btn { white-space: normal; text-align: center; padding-block: 0.4rem; } }
+
+/* A table that becomes a list of cards below 720px: each cell is labelled by its data-label, so nothing is hidden behind a sideways scroll. */
+@media (max-width: 719px) {
+  .a-table.a-stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .a-table.a-stack, .a-table.a-stack tbody, .a-table.a-stack tr, .a-table.a-stack td { display: block; width: 100%; }
+  .a-table.a-stack tr { padding: 0.75rem 0; border-bottom: 2px solid rgb(0 0 0 / 0.2); }
+  .a-table.a-stack td { border-bottom: 0; padding: 0.3rem 0.75rem; text-align: left !important; }
+  .a-table.a-stack td[data-label]::before { content: attr(data-label); display: block; font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 0.15rem; }
+}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment, type ReactNode } from "react";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { SearchDialog } from "@/components/search/SearchDialog";
@@ -6,6 +7,8 @@ import { usableBannerAsset, type BannerConfig } from "@/lib/editorial/banners";
 import { numberPt } from "@/lib/format";
 import type { HeroFamilyCard } from "@/lib/home";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
+
+const HERO_COPY = { title: "O seu lugar,\ndo seu jeito.", body: "Encontre sua cidade e vista o lugar que faz parte de você." };
 
 /**
  * Hero ("O seu lugar, do seu jeito."): headline, search and the three commercial families (Ponto de Origem, Feito em,
@@ -22,22 +25,41 @@ import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
  * borders, an olive (primary) link and olive card hover. Cards keep a neutral surface: the INK photos are shot on an
  * opaque #e5e5e5, so the card surface IS that colour and the mockup disappears into it (no white frame, art untouched).
  */
-export function RegionHero({ region, cityCount, trio, config }: { region: RegionSlug; cityCount: number; trio: HeroFamilyCard[]; config: BannerConfig }) {
+export function RegionHero({
+  region,
+  cityCount,
+  trio,
+  config,
+  copy = HERO_COPY,
+  backdrop,
+}: {
+  region: RegionSlug;
+  cityCount: number;
+  trio: HeroFamilyCard[];
+  config: BannerConfig;
+  /** Config-driven copy (CMS). `\n` in the title is a line break. Defaults to the original text. */
+  copy?: { title: string; body: string };
+  /** Config-driven background layer (CMS). When given (even `null`), it replaces `config`'s banner. */
+  backdrop?: ReactNode;
+}) {
   const r = REGIONS[region];
-  const background = usableBannerAsset("hero", config);
+  const background = backdrop === undefined ? usableBannerAsset("hero", config) : null;
   return (
     <section aria-labelledby="hero-title" className="relative isolate">
-      {background && <RegionalPhotoSection asset={background} priority />}
+      {backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />}
       <div className="wrap pb-10 pt-6 lg:pb-16 lg:pt-12">
         <div className="grid gap-7 lg:grid-cols-12 lg:items-center lg:gap-8">
           <div className="lg:col-span-6">
             <span aria-hidden="true" className="mb-4 block h-[3px] w-12 bg-region-accent" />
             <h1 id="hero-title" className="t-display">
-              O seu lugar,
-              <br />
-              do seu jeito.
+              {copy.title.split("\n").map((line, i) => (
+                <Fragment key={i}>
+                  {i > 0 && <br />}
+                  {line}
+                </Fragment>
+              ))}
             </h1>
-            <p className="t-body mt-5 max-w-md text-ink">Encontre sua cidade e vista o lugar que faz parte de você.</p>
+            <p className="t-body mt-5 max-w-md text-ink">{copy.body}</p>
             <div className="mt-6 max-w-xl">
               <SearchDialog region={region} variant="hero" />
             </div>

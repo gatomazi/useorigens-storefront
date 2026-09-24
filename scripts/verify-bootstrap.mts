@@ -26,7 +26,7 @@
 //   7. Cleans up: kills the (possibly restarted) server, removes the temp directory.
 import { spawn, type ChildProcess } from "node:child_process";
 import { mkdtemp, rm } from "node:fs/promises";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fixtureCityIds, fixtureSnapshot, SUL_CITY_COUNT } from "./fixture-snapshot.mjs";
@@ -117,7 +117,47 @@ function killGroup(child: ChildProcess, signal: NodeJS.Signals) {
   }
 }
 
+/**
+ * `next start` writes ISR results into `.next/server/app` (and the image cache under `.next/cache`) while it serves. A build that has
+ * already served requests — from an earlier run of this script, a fixture sync, or a manual `next start` — therefore holds cached pages
+ * and API bodies (for example `/api/cidades/sul` with a fixture index) that answer 200 where a truly empty Volume must answer 503.
+ * Rather than loosening the 503 assertions, refuse to run on such a build and say how to start clean.
+ */
+function assertPristineBuild(): void {
+  const buildId = path.join(process.cwd(), ".next", "BUILD_ID");
+  if (!existsSync(buildId)) {
+    console.error("verify:bootstrap needs a build: run `npm run build` first.");
+    process.exit(2);
+  }
+  const builtAt = statSync(buildId).mtimeMs;
+  const usedMarker = path.join(process.cwd(), ".next", ".verify-bootstrap-used");
+  const newer: string[] = existsSync(usedMarker) ? [".next/.verify-bootstrap-used (an earlier run of this script)"] : [];
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (statSync(full).mtimeMs > builtAt + 20_000) newer.push(path.relative(process.cwd(), full));
+    }
+  };
+  walk(path.join(process.cwd(), ".next", "server", "app"));
+  if (newer.length === 0) writeFileSync(usedMarker, new Date().toISOString()); // this run is about to serve requests from this build
+  if (newer.length > 0) {
+    console.error(
+      `verify:bootstrap refuses to run: this build has already served requests (${newer.length} sign(s) of earlier use, e.g. ${newer[0]}).\n` +
+        "Cached ISR output from an earlier run would answer 200 where an empty Volume must answer 503, so the result would not mean anything.\n" +
+        "Start clean:  rm -rf .next && npm run build && npm run verify:bootstrap",
+    );
+    process.exit(2);
+  }
+}
+
 async function main() {
+  assertPristineBuild();
+  // A server left over from an interrupted run would answer instead of the one this run starts, and every result would be about the wrong process.
+  if (await fetch(`${BASE}/api/health`, { signal: AbortSignal.timeout(1500) }).then((r) => r.ok, () => false)) {
+    console.error(`verify:bootstrap refuses to run: something already answers on ${BASE} (a leftover server from an interrupted run?). Stop it and retry.`);
+    process.exit(2);
+  }
   tmpDir = await mkdtemp(path.join(tmpdir(), "verify-bootstrap-"));
   console.log(`Simulated empty Volume: ${tmpDir}`);
 

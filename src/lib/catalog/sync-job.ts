@@ -1,6 +1,10 @@
 import "server-only";
 import type { CommerceStoreKey } from "../geo/regions";
+import type { CollectionsOutcome } from "./collections-sync";
 import type { SyncResult } from "./sync-service";
+
+/** What the optional collections step of a catalog sync did. It can never change the catalog result: a failure here is reported, not raised. */
+export type CollectionsStep = { outcomes: CollectionsOutcome[] } | { error: string };
 
 /**
  * In-memory job state for the single background sync in flight, if any. Deliberately not persisted anywhere
@@ -14,7 +18,7 @@ import type { SyncResult } from "./sync-service";
 export type SyncJobState =
   | { status: "idle" }
   | { status: "running"; startedAt: string; storeKeys: CommerceStoreKey[] }
-  | { status: "succeeded"; startedAt: string; finishedAt: string; result: SyncResult }
+  | { status: "succeeded"; startedAt: string; finishedAt: string; result: SyncResult; collections?: CollectionsStep }
   | { status: "failed"; startedAt: string; finishedAt: string; error: string };
 
 let job: SyncJobState = { status: "idle" };
@@ -42,8 +46,8 @@ export function beginSyncJob(storeKeys: readonly CommerceStoreKey[]): Extract<Sy
   return next;
 }
 
-export function finishSyncJobSuccess(startedAt: string, result: SyncResult): void {
-  job = { status: "succeeded", startedAt, finishedAt: new Date().toISOString(), result };
+export function finishSyncJobSuccess(startedAt: string, result: SyncResult, collections?: CollectionsStep): void {
+  job = { status: "succeeded", startedAt, finishedAt: new Date().toISOString(), result, ...(collections ? { collections } : {}) };
 }
 
 export function finishSyncJobFailure(startedAt: string, error: unknown): void {

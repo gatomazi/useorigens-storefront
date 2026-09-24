@@ -352,7 +352,9 @@ recriar dados: o Volume com o snapshot continua o mesmo, independente de qual ve
 sobre ele — a menos que o schema do snapshot (`CatalogSnapshot.version`) mude entre versões; nesse caso,
 restaure o Volume a partir de um backup anterior ao rollback (ver "Backup" acima) antes de reverter o código.
 
-## Por que não Redis / banco de dados
+## Por que não Redis / banco de dados (para o catálogo e a vitrine)
+
+> **CMS (a partir da Rodada 6):** o painel administrativo usa um Postgres próprio (rascunhos, versões, pessoas, auditoria) e o R2 (imagens). **A vitrine continua sem depender de nenhum dos dois**: ela lê apenas o Volume (`catalog-snapshot.json`, `collections-snapshot.json`, `site-config/published.json`) ou o seed embutido. Sem as variáveis do admin, `/admin` responde 404 e nada muda. Variáveis, ordem de provisionamento e rollout: [`docs/admin/production-runbook.md`](../admin/production-runbook.md).
 
 - A única coisa que precisa sobreviver entre deploys é o snapshot do catálogo — um objeto de poucos MB, lido
   inteiro a cada rebuild do cache em processo. Um Volume + arquivo já resolve isso sem operar um serviço a

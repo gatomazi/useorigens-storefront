@@ -36,6 +36,8 @@ export const SOURCES = {
   homeFeitoParaVoce: "home_feito_para_voce",
   homeFala: "home_fala",
   homeDdd: "home_ddd",
+  /** A home carousel created in the CMS from an INK collection (a closed, enumerated origin — never a free string from a document). */
+  homeCollection: "home_colecao",
   stateShowcase: "state_showcase",
   cityStyles: "city_styles",
   cityFala: "city_fala",

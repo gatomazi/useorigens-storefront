@@ -54,7 +54,7 @@ export function Header({ region }: { region: RegionSlug }) {
         <div className="flex items-center gap-1">
           <MobileMenu items={mobileItems} />
           <Link href={`/${region}`} className="flex min-h-11 items-center gap-2.5" aria-label={`Use Origens ${REGIONS[region].name}, página inicial`}>
-            <Image src={`/brand/logo-${region === "centro-oeste" ? "centro" : region}.png`} alt="" width={40} height={40} className="h-9 w-9" priority />
+            <Image src={`/brand/logo-${region === "centro-oeste" ? "centro" : region}.png`} alt="" width={40} height={40} className="h-9 w-9" priority unoptimized />
             <span translate="no" className="font-display text-[1.6rem] font-black uppercase leading-none tracking-[0.02em]">Use Origens</span>
           </Link>
         </div>

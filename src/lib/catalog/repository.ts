@@ -27,7 +27,11 @@ export type Catalog = {
   lore(region: RegionSlug): Lore;
   /** Number of cities with at least one family, per region. */
   coveredCityIds(region: RegionSlug): Set<string>;
+  /** Every product of ONE store's snapshot, by INK product id (merch and city designs). Used to resolve INK collection members. */
+  productsOfStore(store: CommerceStoreKey): StoreProducts;
 };
+
+export type StoreProducts = { merch: ReadonlyMap<string, MerchProduct>; cityDesigns: ReadonlyMap<string, UnrankedBinding> };
 
 /**
  * `regional` (default): a region's own INK store wins, matching how commerce runs today.
@@ -97,6 +101,7 @@ function build(): { catalog: Catalog; mtimeMs: number } {
     covered.set(region, set);
   }
 
+  const productsCache = new Map<CommerceStoreKey, StoreProducts>();
   const loreCache = new Map<RegionSlug, Lore>();
   const syncedTimes = stores.map((s) => s.syncedAt).sort();
   const catalog: Catalog = {
@@ -115,6 +120,17 @@ function build(): { catalog: Catalog; mtimeMs: number } {
       return built;
     },
     coveredCityIds: (region) => covered.get(region) ?? new Set(),
+    productsOfStore: (store) => {
+      const cached = productsCache.get(store);
+      if (cached) return cached;
+      const index = snapshot.stores[store];
+      const built: StoreProducts = {
+        merch: new Map((index?.merch ?? []).map((m) => [m.inkProductId, m])),
+        cityDesigns: new Map((index?.bindings ?? []).map((b) => [b.inkProductId, b])),
+      };
+      productsCache.set(store, built);
+      return built;
+    },
   };
   return { catalog, mtimeMs };
 }

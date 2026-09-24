@@ -10,6 +10,7 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { regionThemeStyle } from "@/lib/theme/region-theme";
 import { ENABLED_REGIONS } from "@/lib/site";
+import { publishedTracking } from "@/lib/site-config/tracking";
 
 // No region page is prebuilt: this layout reads the catalog snapshot (header count, footer sync date), and the
 // snapshot lives on the runtime Volume, which does not exist at `next build` time. Prebuilding `/sul` baked an
@@ -24,6 +25,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
   if (!isRegionSlug(region) || !ENABLED_REGIONS.includes(region)) notFound();
 
   const catalog = getCatalog();
+  const tracking = publishedTracking(region);
   return (
     <ConsentProvider>
       <CartRefCapture />
@@ -35,8 +37,8 @@ export default async function RegionLayout({ children, params }: { children: Rea
       </div>
       {/* useSearchParams inside MetaPixel/GoogleAnalytics needs a Suspense boundary so the rest of the tree can still prerender. */}
       <Suspense fallback={null}>
-        <MetaPixel />
-        <GoogleAnalytics />
+        <MetaPixel pixelId={tracking?.metaPixelId} />
+        <GoogleAnalytics measurementId={tracking?.ga4MeasurementId} />
       </Suspense>
       <ConsentBanner region={region} />
     </ConsentProvider>
