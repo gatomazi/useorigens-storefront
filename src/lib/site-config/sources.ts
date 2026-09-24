@@ -9,7 +9,8 @@ import type { Destination, EditorialModuleKey, Source } from "./schema";
 export type UnavailableReason =
   | "ink-collections-not-synced" // no collections snapshot (yet) — the current production state
   | "collection-not-found" // the collection is not in the snapshot of that store
-  | "collection-unavailable" // hidden on the live store (`is_available` false): internal segmentation, never a showcase
+  | "collection-not-enabled" // an internal (hidden-on-INK) collection the CMS has not enabled
+  | "collection-needs-resync" // recorded by an older sync that kept no members: run collections:sync again
   | "collection-has-no-products" // none of its products exist in the store's catalog snapshot
   | "manual-source-not-implemented";
 

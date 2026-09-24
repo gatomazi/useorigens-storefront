@@ -13,8 +13,7 @@ import { REAL_COLLECTIONS } from "@/lib/editorial/collections";
 import { getRegionHome } from "@/lib/home";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { ENABLED_REGIONS } from "@/lib/site";
-import { categoryLookup } from "@/lib/catalog/collection-source";
-import { findCollection } from "@/lib/catalog/collections-file";
+import { categoryProps } from "@/lib/catalog/collection-source";
 import { getCatalog } from "@/lib/catalog/repository";
 import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
 
@@ -46,7 +45,9 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
   // Config-driven home (CMS foundation). OFF unless SITE_CONFIG_HOME=on; the hard-coded home below is what production serves.
   if (siteConfigHomeEnabled()) {
     // Collections come from the local collections snapshot only when a section asks for one (none does in the seed) — never from INK.
-    return <HomeSections region={region} home={home} bundle={homeBundle()} categories={categoryLookup(getCatalog().merch(region))} slugOf={(store, id) => findCollection(store, id)?.slug ?? null} />;
+    const bundle = homeBundle();
+    const catalog = getCatalog();
+    return <HomeSections region={region} home={home} bundle={bundle} {...categoryProps((store) => catalog.productsOfStore(store), bundle.docs[region])} />;
   }
 
   const { showcase } = home;

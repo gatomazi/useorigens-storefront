@@ -2,11 +2,12 @@ import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { matcherForStore, parseCollectionsPage, sameCollections, shouldPromoteCollections, sortCollections, type StoreCollections } from "@/lib/catalog/collections";
-import { availableCategories, categoryLookup } from "@/lib/catalog/collection-source";
+import { collectionState, matcherForStore, MAX_STORED_MEMBERS, normalizeCollectionsSnapshot, parseCollectionsPage, sameCollections, shouldPromoteCollections, sortCollections, type CollectionRecord, type StoreCollections } from "@/lib/catalog/collections";
+import { categoryLookup, libraryEntries, publicCollectionSlug, selectableEntries } from "@/lib/catalog/collection-source";
+import type { StoreProducts } from "@/lib/catalog/repository";
 import { readCollectionsFile } from "@/lib/catalog/collections-file";
 import { syncCollections } from "@/lib/catalog/collections-sync";
-import type { MerchProduct } from "@/lib/catalog/types";
+import type { MerchProduct, UnrankedBinding } from "@/lib/catalog/types";
 import { fetchStoreCollections, InkCollectionsError, MAX_BODY_BYTES } from "@/lib/ink/collections-client";
 import { collectionUrl, destinationHref, resolveSource } from "@/lib/site-config/sources";
 
@@ -25,28 +26,40 @@ describe("collections page parsing", () => {
     if (!r.ok) return;
     const c = r.value.collections[0];
     expect(c.reportedProductCount).toBe(4);
-    expect(c.merchProductIds).toEqual(["11", "12", "13"]); // 555555 is not in the catalog: dropped, never invented
+    expect(c.memberIds).toEqual(["11", "12", "13"]); // 555555 is not in the catalog: dropped, never invented
+    expect(c).toMatchObject({ matchedCount: 3, merchCount: 3, cityDesignCount: 0 });
     expect(JSON.stringify(c)).not.toContain("555555");
   });
 
-  test("given ids of city-design bindings, when parsed, then they are counted but not stored one by one", () => {
-    const r = parseCollectionsPage(inkPage([inkItem({ product_ids: [9001, 9002, 11] })]), match);
-    expect(r.ok && r.value.collections[0]).toMatchObject({ bindingProductCount: 2, merchProductIds: ["11"] });
+  test("given city designs and merch mixed, when parsed, then both kinds are members, in INK's order, and counted separately", () => {
+    const r = parseCollectionsPage(inkPage([inkItem({ product_ids: [9001, 11, 9002, 12] })]), match);
+    expect(r.ok && r.value.collections[0]).toMatchObject({ memberIds: ["9001", "11", "9002", "12"], matchedCount: 4, merchCount: 2, cityDesignCount: 2 });
   });
 
-  test("given an unavailable collection, when parsed, then its products are not kept (internal segmentation is never a showcase)", () => {
-    const r = parseCollectionsPage(inkPage([inkItem({ is_available: false }), inkItem({ id: 2, slug: "x", is_available: null })]), match);
-    expect(r.ok && r.value.collections.map((c) => [c.isAvailable, c.merchProductIds])).toEqual([[false, []], [false, []]]);
+  test("given an INTERNAL (hidden) collection, when parsed, then its real members are kept — visibility is not eligibility", () => {
+    const r = parseCollectionsPage(inkPage([inkItem({ is_available: false, product_ids: [9001, 9002, 11, 555] }), inkItem({ id: 2, slug: "x", is_available: null, product_ids: [12] })]), match);
+    expect(r.ok && r.value.collections.map((c) => [c.isAvailable, c.memberIds])).toEqual([[false, ["9001", "9002", "11"]], [false, ["12"]]]);
+  });
+
+  test("given a huge collection, when parsed, then the total is counted but only the first members are stored (no raw id dump)", () => {
+    const big = Array.from({ length: 200 }, (_, i) => 20_000 + i);
+    const wide = matcherForStore({ bindings: big.map((id) => ({ inkProductId: String(id) })), merch: [] });
+    const r = parseCollectionsPage(inkPage([inkItem({ product_ids: [...big, ...Array.from({ length: 100_000 }, (_, i) => 1_000_000 + i)] })]), wide);
+    const c = r.ok ? r.value.collections[0] : null;
+    expect(c).toMatchObject({ matchedCount: 200, reportedProductCount: 100_200 });
+    expect(c!.memberIds).toHaveLength(MAX_STORED_MEMBERS);
+    expect(c!.memberIds[0]).toBe("20000"); // INK's order
+    expect(JSON.stringify(c).length).toBeLessThan(1000);
   });
 
   test("given repeated ids in one collection, when matched, then a product counts once", () => {
     const r = parseCollectionsPage(inkPage([inkItem({ product_ids: [11, 11, 11] })]), match);
-    expect(r.ok && r.value.collections[0].merchProductIds).toEqual(["11"]);
+    expect(r.ok && r.value.collections[0]).toMatchObject({ memberIds: ["11"], matchedCount: 1 });
   });
 
   test("given a store index, when matching, then an id only counts for the store the index belongs to", () => {
     const norte = matcherForStore({ bindings: [], merch: [{ inkProductId: "9999" }] });
-    expect(norte(["11", "9999"])).toEqual({ merchIds: ["9999"], bindingCount: 0 });
+    expect(norte(["11", "9999"])).toEqual({ members: ["9999"], matched: 1, merch: 1, cityDesigns: 0 });
   });
 
   test("given malformed pages, when parsed, then each is rejected as a whole", () => {
@@ -61,7 +74,7 @@ describe("collections page parsing", () => {
 });
 
 describe("promotion guard and idempotency", () => {
-  const store = (n: number, total = n, catalogSyncedAt = "c1"): StoreCollections => ({ commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt, totalCount: total, collections: Array.from({ length: n }, (_, i) => ({ id: i + 1, name: "n", slug: "s", position: i, isAvailable: true, reportedProductCount: 1, merchProductIds: ["11"], bindingProductCount: 0 })) });
+  const store = (n: number, total = n, catalogSyncedAt = "c1"): StoreCollections => ({ commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt, totalCount: total, collections: Array.from({ length: n }, (_, i) => ({ id: i + 1, name: "n", slug: "s", position: i, isAvailable: true, reportedProductCount: 1, matchedCount: 1, merchCount: 1, cityDesignCount: 0, memberIds: ["11"] })) });
 
   test("given fewer collections than INK reports, when judged, then it is refused as partial", () => {
     expect(shouldPromoteCollections(undefined, store(3, 5))).toMatchObject({ promote: false });
@@ -182,7 +195,7 @@ describe("sync service (isolated files, no INK)", () => {
     const out = await syncCollections({ storeKeys: ["use-sul"], deps: deps(okFetch()) });
     expect(out).toEqual([{ storeKey: "use-sul", ok: true, changed: true, collections: 1, available: 1, requests: 1 }]);
     expect(await readFile(path.join(dir, "catalog-snapshot.json"), "utf8")).toBe(before);
-    expect(readCollectionsFile(file()).snapshot.stores["use-sul"]?.collections[0].merchProductIds).toEqual(["11", "12", "13"]);
+    expect(readCollectionsFile(file()).snapshot.stores["use-sul"]?.collections[0].memberIds).toEqual(["11", "12", "13"]);
   });
 
   test("given a second identical sync, when run, then it reports unchanged and does not rewrite the file", async () => {
@@ -217,7 +230,7 @@ describe("sync service (isolated files, no INK)", () => {
   });
 });
 
-describe("compatibility with today's production state (no collections file)", () => {
+describe("compatibility (no file, corrupt file, the older v1 file)", () => {
   let dir: string;
   const env = process.env;
   beforeEach(async () => {
@@ -228,38 +241,75 @@ describe("compatibility with today's production state (no collections file)", ()
     process.env = env;
     await rm(dir, { recursive: true, force: true });
   });
+  const empty = { version: 2, stores: {} };
 
   test("given no collections file, when read, then it is empty and nothing throws", () => {
-    expect(readCollectionsFile(path.join(dir, "collections-snapshot.json")).snapshot).toEqual({ version: 1, stores: {} });
-    expect(availableCategories("use-sul", path.join(dir, "collections-snapshot.json"))).toEqual([]);
+    expect(readCollectionsFile(path.join(dir, "collections-snapshot.json")).snapshot).toEqual(empty);
+    expect(libraryEntries("use-sul", new Set(), path.join(dir, "collections-snapshot.json"))).toEqual([]);
   });
 
-  test("given a corrupt or wrong-version file, when read, then it is treated as empty", async () => {
-    for (const body of ["{not json", '{"version":2,"stores":{}}', '{"version":1,"stores":{"use-mars":{"collections":[]}}}', "null"]) {
+  test("given a corrupt, unknown-version or unknown-store file, when read, then it is treated as empty", async () => {
+    for (const body of ["{not json", '{"version":3,"stores":{}}', '{"version":2,"stores":{"use-mars":{"collections":[]}}}', "null"]) {
       await writeFile(path.join(dir, "c.json"), body);
-      expect(readCollectionsFile(path.join(dir, "c.json")).snapshot).toEqual({ version: 1, stores: {} });
+      expect(readCollectionsFile(path.join(dir, "c.json")).snapshot, body).toEqual(empty);
     }
   });
 
+  const v1 = {
+    version: 1,
+    stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 3, collections: [
+      { id: 10, name: "Pública antiga", slug: "publica", position: 1, isAvailable: true, reportedProductCount: 50, merchProductIds: ["1", "2", "3"], bindingProductCount: 0 },
+      { id: 11, name: "Interna antiga", slug: "interna", position: 2, isAvailable: false, reportedProductCount: 5000, merchProductIds: [], bindingProductCount: 900 },
+      { id: 12, name: "Pública com cidades", slug: "cidades", position: 3, isAvailable: true, reportedProductCount: 5000, merchProductIds: [], bindingProductCount: 900 },
+    ] } },
+  };
+
+  test("given the older v1 file, when read, then it is migrated in memory and every record is flagged for resync", () => {
+    const snap = normalizeCollectionsSnapshot(v1)!;
+    expect(snap.version).toBe(2);
+    const records = snap.stores["use-sul"]!.collections;
+    expect(records.every((r) => r.needsResync)).toBe(true);
+    expect(records[1]).toMatchObject({ matchedCount: 900, cityDesignCount: 900, memberIds: [] }); // the v1 sync kept none of them
+  });
+
+  test("given v1 records, when their state is judged, then a hidden collection is never presented as ready, and only the OLD rule is honoured for public merch", () => {
+    const [pub, internal, cities] = normalizeCollectionsSnapshot(v1)!.stores["use-sul"]!.collections;
+    expect(collectionState(pub, new Set())).toMatchObject({ selectable: true });
+    expect(collectionState(internal, new Set([11]))).toMatchObject({ selectable: false, reason: "needs-resync" }); // enabling cannot make up for missing members
+    expect(collectionState(cities, new Set())).toMatchObject({ selectable: false, reason: "needs-resync" });
+  });
+
+  test("given a v1 file on disk, when the library and the lookup use it, then the internal one asks for a resync and is not resolvable", async () => {
+    const file = path.join(dir, "v1.json");
+    await writeFile(file, JSON.stringify(v1));
+    expect(libraryEntries("use-sul", new Set([11]), file).find((e) => e.id === 11)).toMatchObject({ selectable: false, reason: "needs-resync", needsResync: true });
+    const lookup = categoryLookup(() => ({ merch: new Map(), cityDesigns: new Map() }), () => new Set([11]), file);
+    expect(lookup("use-sul", 11, 6)).toEqual({ status: "unavailable", reason: "collection-needs-resync" });
+  });
+
   test("given no collections file, when an ink-category section resolves, then it is unavailable and the section hides (today's behaviour)", () => {
-    const lookup = categoryLookup([], path.join(dir, "collections-snapshot.json"));
+    const lookup = categoryLookup(() => ({ merch: new Map(), cityDesigns: new Map() }), () => new Set(), path.join(dir, "collections-snapshot.json"));
     expect(resolveSource({ kind: "ink-category", store: "use-sul", collectionId: 152188, order: "category", limit: 6 }, {} as never, lookup)).toEqual({ status: "unavailable", reason: "ink-collections-not-synced" });
     expect(resolveSource({ kind: "ink-category", store: "use-sul", collectionId: 152188, order: "category", limit: 6 }, {} as never)).toEqual({ status: "unavailable", reason: "ink-collections-not-synced" });
   });
 });
 
-describe("category lookup and CMS availability", () => {
+describe("internal collections, CMS enablement and product resolution", () => {
   let dir: string;
   let filePath: string;
   const env = process.env;
-  const product = (id: string, store: MerchProduct["commerceStoreKey"] = "use-sul", over: Partial<MerchProduct> = {}): MerchProduct => ({ inkProductId: id, commerceStoreKey: store, regionSlug: "sul", name: `Produto ${id}`, slug: `p-${id}`, storeProductUrl: `https://www.usesul.com.br/usesul/product/${id}`, imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/x.jpg", price: 99.9, totalSalesCount: 0, syncedAt: "t", ...over });
+  const merchProduct = (id: string, over: Partial<MerchProduct> = {}): MerchProduct => ({ inkProductId: id, commerceStoreKey: "use-sul", regionSlug: "sul", name: `Produto ${id}`, slug: `p-${id}`, storeProductUrl: `https://www.usesul.com.br/usesul/product/${id}`, imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/x.jpg", price: 99.9, totalSalesCount: 0, syncedAt: "t", ...over });
+  const cityDesign = (id: string, over: Partial<UnrankedBinding> = {}): UnrankedBinding => ({ cityId: "4218004", designFamily: "ponto-de-origem", designVariant: "base", commerceStoreKey: "use-sul", inkProductId: id, slug: `d-${id}`, storeProductUrl: `https://www.usesul.com.br/usesul/product/d-${id}`, imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/y.jpg", price: 109.9, syncedAt: "t", ...over });
+  const rec = (over: Partial<CollectionRecord>): CollectionRecord => ({ id: 1, name: "x", slug: "x", position: 1, isAvailable: true, reportedProductCount: 10, matchedCount: 0, merchCount: 0, cityDesignCount: 0, memberIds: [], ...over });
   const snapshot = {
-    version: 1,
-    stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 4, collections: [
-      { id: 10, name: "Da Nossa Terra", slug: "da-nossa-terra", position: 1, isAvailable: true, reportedProductCount: 133, merchProductIds: ["3", "1", "2", "4"], bindingProductCount: 0 },
-      { id: 11, name: "Poucos", slug: "poucos", position: 2, isAvailable: true, reportedProductCount: 5, merchProductIds: ["1", "2"], bindingProductCount: 0 },
-      { id: 12, name: "SUL - RS", slug: "sul-rs", position: 3, isAvailable: false, reportedProductCount: 35011, merchProductIds: [], bindingProductCount: 3973 },
-      { id: 13, name: "Vazia", slug: "vazia", position: 4, isAvailable: true, reportedProductCount: 0, merchProductIds: [], bindingProductCount: 0 },
+    version: 2,
+    stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 6, collections: [
+      rec({ id: 10, name: "Da Nossa Terra", slug: "da-nossa-terra", position: 1, matchedCount: 4, merchCount: 4, memberIds: ["3", "1", "2", "4"] }),
+      rec({ id: 11, name: "Poucos", slug: "poucos", position: 2, matchedCount: 2, merchCount: 2, memberIds: ["1", "2"] }),
+      rec({ id: 12, name: "SUL - TERRIT. - RS", slug: "sul-territ-rs", position: 3, isAvailable: false, matchedCount: 500, merchCount: 0, cityDesignCount: 500, memberIds: ["d1", "d2", "d3", "d4"] }),
+      rec({ id: 13, name: "Fé de Origem", slug: "fe-de-origem", position: 4, isAvailable: false, matchedCount: 3, merchCount: 3, memberIds: ["2", "1", "4"] }),
+      rec({ id: 14, name: "Interna quase vazia", slug: "quase", position: 5, isAvailable: false, matchedCount: 1, merchCount: 1, memberIds: ["1"] }),
+      rec({ id: 15, name: "Vazia", slug: "vazia", position: 6, matchedCount: 0 }),
     ] } },
   };
   beforeEach(async () => {
@@ -272,41 +322,82 @@ describe("category lookup and CMS availability", () => {
     process.env = env;
     await rm(dir, { recursive: true, force: true });
   });
-  const merch = [product("1"), product("2"), product("3"), product("4"), product("1", "use-norte", { regionSlug: "norte", storeProductUrl: "https://www.usenorte.com.br/usenorte/product/1" })];
+  const products = (over: Partial<StoreProducts> = {}): (() => StoreProducts) => () => ({
+    merch: new Map(["1", "2", "3", "4"].map((id) => [id, merchProduct(id)])),
+    cityDesigns: new Map(["d1", "d2", "d3", "d4"].map((id) => [id, cityDesign(id)])),
+    ...over,
+  });
+  const lookup = (enabled: number[] = [], productsOf = products()) => categoryLookup(productsOf, () => new Set(enabled), filePath);
 
-  test("given a synced snapshot, when the CMS asks what it can offer, then only available collections with real products are listed, with the real count", () => {
-    expect(availableCategories("use-sul", filePath)).toEqual([
-      { collectionId: 10, name: "Da Nossa Terra", slug: "da-nossa-terra", position: 1, productCount: 4, usable: true },
-      { collectionId: 11, name: "Poucos", slug: "poucos", position: 2, productCount: 2, usable: false },
-    ]);
-    expect(availableCategories("use-norte", filePath)).toEqual([]);
+  test("given the synced file, when the state of each collection is judged, then visibility and eligibility are independent", () => {
+    const by = Object.fromEntries(libraryEntries("use-sul", new Set(), filePath).map((e) => [e.id, e]));
+    expect(by[10]).toMatchObject({ visibility: "public", enabled: true, eligible: true, selectable: true, reason: null });
+    expect(by[11]).toMatchObject({ visibility: "public", eligible: false, selectable: false, reason: "too-few-products" });
+    expect(by[12]).toMatchObject({ visibility: "internal", enabled: false, eligible: true, selectable: false, reason: "not-enabled" });
+    expect(by[14]).toMatchObject({ visibility: "internal", eligible: false, reason: "too-few-products" });
+    expect(by[15]).toMatchObject({ selectable: false, reason: "too-few-products" });
   });
 
-  test("given an available collection, when resolved, then items keep INK's order, come from the same store only and respect the limit", () => {
-    const r = categoryLookup(merch, filePath)("use-sul", 10, 3);
+  test("given an internal collection, when the CMS enables it explicitly, then it becomes selectable; enabling one does not enable another", () => {
+    const by = Object.fromEntries(libraryEntries("use-sul", new Set([12]), filePath).map((e) => [e.id, e]));
+    expect(by[12]).toMatchObject({ enabled: true, selectable: true, reason: null });
+    expect(by[13]).toMatchObject({ enabled: false, selectable: false, reason: "not-enabled" });
+    expect(selectableEntries("use-sul", new Set([12]), filePath).map((e) => e.id)).toEqual([10, 12]);
+  });
+
+  test("given an internal collection that is NOT enabled, when resolved, then it yields no products even though they exist", () => {
+    expect(lookup([])("use-sul", 12, 6)).toEqual({ status: "unavailable", reason: "collection-not-enabled" });
+  });
+
+  test("given an enabled internal collection of city designs, when resolved, then real products appear, labelled by family and city, in INK's order", () => {
+    const r = lookup([12])("use-sul", 12, 3);
     expect(r.status).toBe("ok");
     if (r.status !== "ok") return;
-    expect(r.items.map((i) => i.id)).toEqual(["3", "1", "2"]);
-    expect(r.items.every((i) => i.href.startsWith("https://www.usesul.com.br/"))).toBe(true); // the Norte product with id 1 never leaks in
+    expect(r.items.map((i) => i.id)).toEqual(["d1", "d2", "d3"]);
+    expect(r.items[0]).toMatchObject({ name: "Ponto de Origem", context: "Tijucas · SC", state: "SC", href: "https://www.usesul.com.br/usesul/product/d-d1" });
   });
 
-  test("given ids that are no longer in the catalog, when resolved, then they are skipped, and a collection left empty is unavailable", () => {
-    const only = categoryLookup([product("2")], filePath);
-    expect(only("use-sul", 10, 6)).toMatchObject({ status: "ok", items: [{ id: "2" }] });
-    expect(categoryLookup([], filePath)("use-sul", 10, 6)).toEqual({ status: "unavailable", reason: "collection-has-no-products" });
+  test("given an enabled internal collection of merch, when resolved, then the merch products appear", () => {
+    const r = lookup([13])("use-sul", 13, 6);
+    expect(r).toMatchObject({ status: "ok" });
+    expect(r.status === "ok" && r.items.map((i) => i.id)).toEqual(["2", "1", "4"]);
   });
 
-  test("given a hidden, unknown or empty collection, when resolved, then each is unavailable with its own reason", () => {
-    const lookup = categoryLookup(merch, filePath);
-    expect(lookup("use-sul", 12, 6)).toEqual({ status: "unavailable", reason: "collection-unavailable" });
-    expect(lookup("use-sul", 999, 6)).toEqual({ status: "unavailable", reason: "collection-not-found" });
-    expect(lookup("use-sul", 13, 6)).toEqual({ status: "unavailable", reason: "collection-has-no-products" });
-    expect(lookup("use-norte", 10, 6)).toEqual({ status: "unavailable", reason: "ink-collections-not-synced" });
+  test("given hidden, missing or other-store ids among the members, when resolved, then they never appear", () => {
+    const partial = products({ merch: new Map([["2", merchProduct("2")], ["4", merchProduct("4", { commerceStoreKey: "use-norte", storeProductUrl: "https://www.usenorte.com.br/usenorte/product/4" })]]) });
+    const r = lookup([13], partial)("use-sul", 13, 6);
+    expect(r.status === "ok" && r.items.map((i) => i.id)).toEqual(["2", "4"]); // "1" is not in the store's snapshot: skipped, not invented
+    expect(r.status === "ok" && r.items.find((i) => i.id === "4")!.href).toContain("usenorte"); // (a product the snapshot of THIS store holds under that id keeps its own url)
   });
 
-  test("given a product whose store URL is not an allowed commerce host, when resolved, then it is not shown", () => {
-    const bad = [product("1", "use-sul", { storeProductUrl: "https://evil.example/p/1" })];
-    expect(categoryLookup(bad, filePath)("use-sul", 11, 6)).toEqual({ status: "unavailable", reason: "collection-has-no-products" });
+  test("given a product whose url is not an allowed commerce host, when resolved, then it is not shown", () => {
+    const bad = products({ merch: new Map([["1", merchProduct("1", { storeProductUrl: "https://evil.example/p/1" })]]) });
+    expect(lookup([13], bad)("use-sul", 13, 6)).toEqual({ status: "unavailable", reason: "collection-has-no-products" });
+  });
+
+  test("given a collection with fewer than 3 real products, when resolved, then it can still resolve (the editor refuses to build on it, the library explains why)", () => {
+    expect(lookup([14])("use-sul", 14, 6)).toMatchObject({ status: "ok" });
+    expect(libraryEntries("use-sul", new Set([14]), filePath).find((e) => e.id === 14)).toMatchObject({ selectable: false, reason: "too-few-products" });
+  });
+
+  test("given unknown, other-store and empty collections, when resolved, then each is unavailable with its own reason", () => {
+    expect(lookup()("use-sul", 999, 6)).toEqual({ status: "unavailable", reason: "collection-not-found" });
+    expect(lookup()("use-norte", 10, 6)).toEqual({ status: "unavailable", reason: "ink-collections-not-synced" });
+    expect(lookup()("use-sul", 15, 6)).toEqual({ status: "unavailable", reason: "collection-has-no-products" });
+  });
+
+  test("given the stored link is store + id, when a collection is renamed on INK, then the same id still resolves", async () => {
+    const renamed = JSON.parse(JSON.stringify(snapshot));
+    renamed.stores["use-sul"].collections[0].name = "Outro nome";
+    const file2 = path.join(dir, "renamed.json");
+    await writeFile(file2, JSON.stringify(renamed));
+    expect(categoryLookup(products(), () => new Set(), file2)("use-sul", 10, 6)).toMatchObject({ status: "ok" });
+  });
+
+  test("given public and internal collections, when the 'Ver todos' slug is asked, then only the public one has a page (no invented URL for an internal one)", () => {
+    expect(publicCollectionSlug("use-sul", 10, filePath)).toBe("da-nossa-terra");
+    expect(publicCollectionSlug("use-sul", 12, filePath)).toBeNull();
+    expect(publicCollectionSlug("use-sul", 999, filePath)).toBeNull();
   });
 });
 

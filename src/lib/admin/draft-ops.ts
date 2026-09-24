@@ -8,7 +8,8 @@
  *  - a section can only be moved among the movable ones (never past the hero or the footer);
  *  - a duplicate gets a new id and a unique anchor and starts INACTIVE, so a copy never appears on the home by accident.
  */
-import { validateSection, type Appearance, type Section, type ScopeDoc, type Source } from "../site-config/schema";
+import { sectionsUsing } from "../site-config/collections-enabled";
+import { validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Section, type ScopeDoc, type Source } from "../site-config/schema";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance">;
 
@@ -18,7 +19,8 @@ export type DraftOp =
   | { type: "move"; id: string; direction: "up" | "down" }
   | { type: "set-active"; id: string; active: boolean }
   | { type: "remove"; id: string }
-  | { type: "update"; id: string; patch: Partial<Editable> };
+  | { type: "update"; id: string; patch: Partial<Editable> }
+  | ({ type: "set-collection-enabled"; enabled: boolean } & CollectionRef);
 
 export type OpResult = { ok: true; doc: ScopeDoc; focusId?: string } | { ok: false; errors: string[] };
 
@@ -52,6 +54,7 @@ const fail = (...errors: string[]): OpResult => ({ ok: false, errors });
 
 /** Applies one operation. The input document is never mutated; on any problem nothing changes and the reasons come back. */
 export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
+  if (op.type === "set-collection-enabled") return setCollectionEnabled(doc, op);
   const sections = doc.home?.sections;
   if (!sections) return fail("this scope has no home");
   const index = "id" in op ? sections.findIndex((s) => s.id === op.id) : -1;
@@ -116,4 +119,29 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       return withSections(next, op.id);
     }
   }
+}
+
+/**
+ * Enables or disables an INTERNAL collection for this document (its explicit, reversible editorial permission; nothing in INK changes).
+ * Disabling is refused while any section still uses the collection, and the reply names those sections: nothing is broken silently.
+ */
+function setCollectionEnabled(doc: ScopeDoc, op: { store: CollectionRef["store"]; collectionId: number; enabled: boolean }): OpResult {
+  const current = doc.collections?.enabled ?? [];
+  const has = current.some((r) => r.store === op.store && r.collectionId === op.collectionId);
+  if (op.enabled) {
+    if (has) return { ok: true, doc };
+    const next: ScopeDoc = { ...doc, collections: { enabled: [...current, { store: op.store, collectionId: op.collectionId }] } };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (!has) return { ok: true, doc };
+  const using = sectionsUsing(doc, op.store, op.collectionId);
+  if (using.length > 0) {
+    return { ok: false, errors: [`Esta coleção é usada por: ${using.map((s) => `"${s.title ?? s.id}"`).join(", ")}. Remova ou troque a fonte dessas seções antes de desabilitá-la.`] };
+  }
+  const remaining = current.filter((r) => !(r.store === op.store && r.collectionId === op.collectionId));
+  const next: ScopeDoc = { ...doc };
+  if (remaining.length > 0) next.collections = { enabled: remaining };
+  else delete next.collections;
+  return { ok: true, doc: next };
 }

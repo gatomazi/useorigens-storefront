@@ -57,9 +57,13 @@ function catalogWithMerch() {
   }));
   return snap;
 }
+const rec = (o: Record<string, unknown>) => ({ position: 1, isAvailable: true, reportedProductCount: 133, matchedCount: MERCH_IDS.length, merchCount: MERCH_IDS.length, cityDesignCount: 0, memberIds: MERCH_IDS, ...o });
 const collectionsFixture = () => ({
-  version: 1,
-  stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 1, collections: [{ id: 152188, name: "Da Nossa Terra", slug: "da-nossa-terra", position: 3, isAvailable: true, reportedProductCount: 133, merchProductIds: MERCH_IDS, bindingProductCount: 0 }] } },
+  version: 2,
+  stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 2, collections: [
+    rec({ id: 152188, name: "Da Nossa Terra", slug: "da-nossa-terra", position: 3 }),
+    rec({ id: 152999, name: "Interna do smoke", slug: "interna-smoke", position: 4, isAvailable: false }), // hidden on INK: needs explicit CMS enablement
+  ] } },
 });
 const publishedWith = (releaseId: string, mutate?: (b: ReturnType<typeof buildSeedBundle>) => void) => {
   const bundle = buildSeedBundle({ metaPixelId: META, ga4MeasurementId: GA });
@@ -163,8 +167,9 @@ async function main() {
   const file = path.join(on2.volume!, "collections-snapshot.json");
   for (const [label, body] of [
     ["corrupt file", "{not json"],
-    ["valid but empty file", JSON.stringify({ version: 1, stores: {} })],
-    ["valid file with a Sul collection", JSON.stringify({ version: 1, stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 1, collections: [{ id: 152188, name: "Da Nossa Terra", slug: "da-nossa-terra", position: 3, isAvailable: true, reportedProductCount: 133, merchProductIds: ["1"], bindingProductCount: 0 }] } } })],
+    ["valid but empty file", JSON.stringify({ version: 2, stores: {} })],
+    ["older v1 file", JSON.stringify({ version: 1, stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 1, collections: [{ id: 152188, name: "Da Nossa Terra", slug: "da-nossa-terra", position: 3, isAvailable: true, reportedProductCount: 133, merchProductIds: ["1"], bindingProductCount: 0 }] } } })],
+    ["valid file with a Sul collection", JSON.stringify({ version: 2, stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 1, collections: [rec({ id: 152188, name: "Da Nossa Terra", slug: "da-nossa-terra", memberIds: ["1"], matchedCount: 1, merchCount: 1 })] } } })],
   ] as const) {
     await writeFile(file, body);
     const r = await fetch(`${base}/sul?cachebust=${Math.random()}`);
@@ -208,6 +213,20 @@ async function main() {
   await write(JSON.stringify(publishedWith("smoke-gone", (b) => { (b.docs.sul.home!.sections.find((x) => x.id === "custom-smoke") as { source: { collectionId: number } }).source.collectionId = 999999; })));
   const gone = await home();
   check("a section whose collection no longer exists is omitted (no empty carousel), the home stays whole", !gone.includes('id="colecao-smoke"') && gone.includes('id="hero-title"') && gone.includes('id="origem"'));
+  // An INTERNAL (hidden on INK) collection feeds a section only when the published document enables it — and never gets a "Ver todos".
+  const internalSection = (enable: boolean) => publishedWith(enable ? "smoke-int-on" : "smoke-int-off", (b) => {
+    const sec = b.docs.sul.home!.sections.find((x) => x.id === "custom-smoke") as { source: { collectionId: number }; cta?: unknown };
+    sec.source.collectionId = 152999;
+    delete sec.cta;
+    if (enable) (b.docs.sul as { collections?: unknown }).collections = { enabled: [{ store: "use-sul", collectionId: 152999 }] };
+  });
+  await write(JSON.stringify(internalSection(false)));
+  const notEnabled = await home();
+  check("an internal collection that is NOT enabled in the published document renders no section", !notEnabled.includes('id="colecao-smoke"') && notEnabled.includes('id="origem"'));
+  await write(JSON.stringify(internalSection(true)));
+  const enabled = await home();
+  check("an enabled internal collection renders real products from the same store's snapshot", enabled.includes('id="colecao-smoke"') && (enabled.match(/href="https:\/\/www\.usesul\.com\.br\/usesul\/product\/teste-70000/g) ?? []).length >= 3);
+  check("...and gets no 'Ver todos' link to a collection page that INK does not expose", !enabled.includes("/collections/interna-smoke"));
   for (const [label, body] of [["corrupt file", "{oops"], ["incompatible version", JSON.stringify({ ...publishedWith("v9"), schemaVersion: 9 })], ["empty object", "{}"]] as const) {
     await write(body);
     const h = await home();

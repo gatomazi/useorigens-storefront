@@ -77,6 +77,11 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
     }
   }
   const candidate = { ...raw, home: sections ? { sections } : undefined } as unknown as ScopeDoc;
+  if (candidate.collections !== undefined && !validateScopeDoc({ ...candidate, home: undefined, collections: candidate.collections }).ok) {
+    // A malformed enablement list must not take the home down: without it, sections on internal collections are simply not rendered.
+    diagnostics.push(`${scope}: collections list is invalid and was ignored`);
+    delete (candidate as { collections?: unknown }).collections;
+  }
   if (candidate.home === undefined) delete (candidate as { home?: unknown }).home;
   const checked = validateScopeDoc(candidate);
   if (!checked.ok) {

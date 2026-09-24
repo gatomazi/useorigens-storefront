@@ -114,4 +114,39 @@ describe("draft operations", () => {
     expect(d.home!.sections[0].template).toBe("hero");
     expect(d.home!.sections.at(-1)!.template).toBe("footer");
   });
+
+  const REF = { store: "use-sul", collectionId: 152122 } as const;
+
+  test("given an internal collection, when it is enabled, then only that one is stored in the document, idempotently, and the document stays valid", () => {
+    const once = ok(seedDoc(), { type: "set-collection-enabled", ...REF, enabled: true }).doc;
+    expect(once.collections).toEqual({ enabled: [REF] });
+    const twice = ok(once, { type: "set-collection-enabled", ...REF, enabled: true }).doc;
+    expect(twice.collections).toEqual({ enabled: [REF] });
+    expect(validateScopeDoc(twice).ok).toBe(true);
+    const other = ok(twice, { type: "set-collection-enabled", store: "use-sul", collectionId: 1, enabled: true }).doc;
+    expect(other.collections!.enabled).toHaveLength(2);
+  });
+
+  test("given an enabled collection nobody uses, when it is disabled, then the list (and the key) disappears; the input document is not mutated", () => {
+    const enabled = ok(seedDoc(), { type: "set-collection-enabled", ...REF, enabled: true }).doc;
+    const frozen = structuredClone(enabled);
+    const off = ok(enabled, { type: "set-collection-enabled", ...REF, enabled: false }).doc;
+    expect(off.collections).toBeUndefined();
+    expect(enabled).toEqual(frozen);
+    expect(ok(off, { type: "set-collection-enabled", ...REF, enabled: false }).doc).toEqual(off); // disabling twice is a no-op
+  });
+
+  test("given a section that uses the collection as source or as its 'Ver todos' target, when disabling is attempted, then it is refused and names the section", () => {
+    let d = ok(seedDoc(), { type: "set-collection-enabled", ...REF, enabled: true }).doc;
+    d = ok(d, { type: "add-carousel", title: "Uso interno", source: { ...SRC, collectionId: REF.collectionId } }).doc;
+    const refused = applyOp(d, { type: "set-collection-enabled", ...REF, enabled: false }, ctx);
+    expect(refused.ok).toBe(false);
+    expect(!refused.ok && refused.errors[0]).toContain("Uso interno");
+    expect(d.collections).toEqual({ enabled: [REF] }); // nothing changed
+  });
+
+  test("given a malformed reference, when it is enabled, then the document is not changed", () => {
+    const r = applyOp(seedDoc(), { type: "set-collection-enabled", store: "use-mars" as never, collectionId: -3, enabled: true }, ctx);
+    expect(r.ok).toBe(false);
+  });
 });

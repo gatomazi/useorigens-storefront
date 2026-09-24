@@ -157,4 +157,21 @@ describe("published.json reader (file)", () => {
       process.env = env;
     }
   });
+
+  test("given a valid enablement list, when sanitized, then it is kept as it is", () => {
+    const b = clone(seed());
+    b.docs.sul.collections = { enabled: [{ store: "use-sul", collectionId: 152122 }] };
+    const r = sanitizeBundle(b, seed());
+    expect(r.diagnostics).toEqual([]);
+    expect(r.bundle!.docs.sul.collections).toEqual({ enabled: [{ store: "use-sul", collectionId: 152122 }] });
+  });
+
+  test("given a malformed enablement list, when sanitized, then only the list is dropped and the whole home survives", () => {
+    const b = clone(seed());
+    (b.docs.sul as { collections?: unknown }).collections = { enabled: [{ store: "use-mars", collectionId: "x" }] };
+    const r = sanitizeBundle(b, seed());
+    expect(r.diagnostics.join(" ")).toContain("collections list is invalid");
+    expect(r.bundle!.docs.sul.collections).toBeUndefined();
+    expect(sul(r.bundle!).map((s) => s.anchor)).toEqual(sul(seed()).map((s) => s.anchor));
+  });
 });

@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { PreviewShell } from "@/components/admin/PreviewShell";
 import { HomeSections } from "@/components/home/HomeSections";
-import { categoryLookup } from "@/lib/catalog/collection-source";
-import { findCollection } from "@/lib/catalog/collections-file";
+import { categoryProps } from "@/lib/catalog/collection-source";
 import { getCatalog } from "@/lib/catalog/repository";
 import { requireDevAdmin } from "@/lib/admin/require-dev-admin";
 import { composeBundle } from "@/lib/admin/sandbox-publish";
@@ -31,7 +30,7 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
   const home = getRegionHome("sul");
   return (
     <PreviewShell region="sul" cityCount={home.cityCount} syncedAt={catalog.syncedAt} label={usingPublished ? "Pré-visualização · publicado" : `Pré-visualização · rascunho${ws.record ? ` rev ${ws.record.rev}` : " (sem alterações)"}`}>
-      <HomeSections region="sul" home={home} bundle={bundle ?? raw} categories={categoryLookup(catalog.merch("sul"))} slugOf={(store, id) => findCollection(store, id)?.slug ?? null} />
+      <HomeSections region="sul" home={home} bundle={bundle ?? raw} {...categoryProps((store) => catalog.productsOfStore(store), (bundle ?? raw).docs.sul)} />
     </PreviewShell>
   );
 }

@@ -23,7 +23,7 @@ export type CollectionsOutcome =
 export async function syncCollections(opts: { storeKeys?: CommerceStoreKey[]; deps?: CollectionsFetchDeps; filePath?: string; now?: () => Date } = {}): Promise<CollectionsOutcome[]> {
   const catalog = await readSnapshot();
   const current = readCollectionsFile(opts.filePath).snapshot;
-  const next: CollectionsSnapshot = { version: 1, stores: { ...current.stores } };
+  const next: CollectionsSnapshot = { version: 2, stores: { ...current.stores } };
   const keys = opts.storeKeys ?? (Object.keys(INK_STORES) as CommerceStoreKey[]);
   const outcomes: CollectionsOutcome[] = [];
   let dirty = false;

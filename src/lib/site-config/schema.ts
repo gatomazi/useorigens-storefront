@@ -80,11 +80,18 @@ export type Section = {
 export type VendorSetting = { mode: "inherit" } | { mode: "override"; id: string } | { mode: "disabled" };
 export type TrackingConfig = { meta: VendorSetting; ga4: VendorSetting };
 
+export type CollectionRef = { store: CommerceStoreKey; collectionId: number };
+
 export type ScopeDoc = {
   schemaVersion: 1;
   scope: Scope;
   tracking: TrackingConfig;
   home?: { sections: Section[] };
+  /**
+   * INK collections this scope's CMS has explicitly ENABLED as section sources. Only meaningful for internal (hidden-on-INK) collections:
+   * public ones are usable by default. Part of the document, so a publish and a rollback carry it together with the sections that use it.
+   */
+  collections?: { enabled: CollectionRef[] };
 };
 
 export type MediaAssetInfo = { src: string; width: number; height: number };
@@ -268,6 +275,20 @@ export function validateSection(input: unknown, path = "section"): ValidationRes
   return c.errors.length === 0 ? { ok: true, value: input as Section } : { ok: false, errors: c.errors };
 }
 
+function checkCollections(c: Collector, path: string, v: unknown): void {
+  if (!isRecord(v) || !Array.isArray(v.enabled)) return c.fail(path, "must be { enabled: [...] }");
+  if (v.enabled.length > 300) c.fail(`${path}.enabled`, "at most 300 entries");
+  const seen = new Set<string>();
+  v.enabled.forEach((ref, i) => {
+    if (!isRecord(ref) || typeof ref.store !== "string" || !STORES.includes(ref.store) || typeof ref.collectionId !== "number" || !Number.isInteger(ref.collectionId) || ref.collectionId <= 0) {
+      return c.fail(`${path}.enabled[${i}]`, "must be { store, collectionId }");
+    }
+    const key = `${ref.store}:${ref.collectionId}`;
+    if (seen.has(key)) c.fail(`${path}.enabled[${i}]`, "duplicate");
+    seen.add(key);
+  });
+}
+
 export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   const c = new Collector();
   if (!isRecord(input)) return { ok: false, errors: ["doc: must be an object"] };
@@ -279,6 +300,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   else {
     checkVendor(c, "doc.tracking.meta", input.tracking.meta, META_PIXEL, sc);
     checkVendor(c, "doc.tracking.ga4", input.tracking.ga4, GA4, sc);
+  }
+  if (input.collections !== undefined) {
+    if (sc === "global") c.fail("doc.collections", "global has no collections in V1");
+    else checkCollections(c, "doc.collections", input.collections);
   }
   if (input.home !== undefined) {
     if (sc === "global") c.fail("doc.home", "global has no home in V1");

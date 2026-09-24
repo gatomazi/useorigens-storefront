@@ -4,19 +4,22 @@ import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { catalogSnapshotDir } from "../config/env";
 import type { CommerceStoreKey } from "../geo/regions";
-import { EMPTY_COLLECTIONS, isCollectionsSnapshot, type CollectionRecord, type CollectionsSnapshot, type StoreCollections } from "./collections";
+import { EMPTY_COLLECTIONS, normalizeCollectionsSnapshot, type CollectionRecord, type CollectionsSnapshot, type StoreCollections } from "./collections";
 
 /** Next to the catalog snapshot, in its own file: the catalog format is untouched, and deleting this file restores today's behaviour. */
 export function collectionsPath(): string {
   return path.join(catalogSnapshotDir(), "collections-snapshot.json");
 }
 
-/** Missing, unreadable or invalid file ⇒ "no collections" (never throws, never breaks a page). */
+/**
+ * Missing, unreadable or invalid file ⇒ "no collections" (never throws, never breaks a page). The previous (v1) format is read and
+ * migrated in memory with `needsResync` flags; nothing is rewritten by a read.
+ */
 export function readCollectionsFile(filePath: string = collectionsPath()): { snapshot: CollectionsSnapshot; mtimeMs: number } {
   try {
     const mtimeMs = statSync(filePath).mtimeMs;
     const parsed: unknown = JSON.parse(readFileSync(filePath, "utf8"));
-    return { snapshot: isCollectionsSnapshot(parsed) ? parsed : EMPTY_COLLECTIONS, mtimeMs };
+    return { snapshot: normalizeCollectionsSnapshot(parsed) ?? EMPTY_COLLECTIONS, mtimeMs };
   } catch {
     return { snapshot: EMPTY_COLLECTIONS, mtimeMs: 0 };
   }
