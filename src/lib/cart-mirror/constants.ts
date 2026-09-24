@@ -1,5 +1,5 @@
 /** Client-safe: imported by browser code too, so it must not pull in server-only modules (`@/lib/site` does). */
-const INK_SUL_ORIGIN = "https://www.usesul.com.br";
+export const INK_SUL_ORIGIN = "https://www.usesul.com.br";
 
 /** Query parameter the INK-side loader appends to its own links to /sul (docs/storefront-cart-mirror-contract.md). */
 export const CART_REF_PARAM = "cart_ref";

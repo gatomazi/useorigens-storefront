@@ -1,3 +1,4 @@
+import { ARRIVAL_PRODUCT_PARAM, ARRIVAL_SRC_PARAM } from "../analytics/origens-events";
 import { CART_REF_PARAM, CART_REF_PATTERN } from "./constants";
 
 export type CartRefExtraction = {
@@ -18,9 +19,11 @@ export function extractCartRef(search: string): CartRefExtraction {
   return { token, present: values.length > 0, search: rest ? `?${rest}` : "" };
 }
 
-/** Query string for analytics: whatever the URL carries, never the cart token. */
+/** Query string for analytics: whatever the URL carries, never the cart token nor our one-time arrival markers. */
 export function withoutCartRef(query: string): string {
   const params = new URLSearchParams(query);
   params.delete(CART_REF_PARAM);
+  params.delete(ARRIVAL_SRC_PARAM);
+  params.delete(ARRIVAL_PRODUCT_PARAM);
   return params.toString();
 }
