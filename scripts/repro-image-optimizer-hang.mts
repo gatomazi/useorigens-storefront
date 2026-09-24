@@ -2,7 +2,7 @@
 // (docs/admin/cms-v1-round3.md §4). Read-only against a LOCAL server; sends nothing anywhere else.
 //
 //   npm run build && npx next start -p 3407        # a production server; the optimizer cache may be warm or cold
-//   npx tsx scripts/repro-image-optimizer-hang.mts http://localhost:3407
+//   npx tsx scripts/repro-image-optimizer-hang.mts http://localhost:3407 [image]
 //
 // Each round picks a `w` the optimizer has not produced yet (a new cache key = a cold entry), starts ONE request and aborts it
 // after 100-300 ms (a visitor navigating away, or a test closing its page), while three other requests for the SAME url are
@@ -11,7 +11,9 @@
 const base = process.argv[2];
 if (!base) throw new Error("usage: repro-image-optimizer-hang.mts <baseUrl of a running production server>");
 const WIDTHS = [16, 32, 48, 64, 96, 128, 256, 384, 640, 750, 828, 1080, 1200, 1920, 2048, 3840]; // Next's default `imageSizes` + `deviceSizes`
-const url = (w: number) => `${base}/_next/image?url=${encodeURIComponent("/banners/sul/city-desktop.png")}&w=${w}&q=80`;
+// Optional 2nd argument: the image to optimise (a /public path or an allowed https URL). Defaults to the old local city banner.
+const image = process.argv[3] ?? "/banners/sul/city-desktop.png";
+const url = (w: number) => `${base}/_next/image?url=${encodeURIComponent(image)}&w=${w}&q=80`;
 const headers = { Accept: "image/avif,image/webp,*/*" };
 
 async function get(u: string, timeoutMs: number): Promise<string> {
