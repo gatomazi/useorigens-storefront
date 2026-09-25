@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
+import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
+import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
 import type { Appearance, Section } from "@/lib/site-config/schema";
 
@@ -45,8 +47,10 @@ function FocalPad({ label, image, x, y, onChange }: { label: string; image?: Med
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [],
+  section, rev, scope, media, collections, action, notes = [], featured,
 }: {
+  /** Hero only: the configured cards as resolved against the region's catalog. */
+  featured?: { mode: "edit" | "legacy"; initial: FeaturedSlotView[]; eligible: number; regionName: string; search: (scope: string, query: string) => Promise<{ results: FeaturedCandidate[]; total: number; error?: string }> };
   /** Real-data notes of a structured component (how many styles / states the region's catalog can feed). */
   notes?: string[];
   section: Section;
@@ -127,6 +131,8 @@ export function SectionEditorForm({
           </div>
         )}
       </fieldset>
+
+      {section.template === "hero" && featured && <HeroFeaturedProducts scope={scope} regionName={featured.regionName} mode={featured.mode} initial={featured.initial} eligible={featured.eligible} search={featured.search} />}
 
       {section.template === "campaign" && (
         <fieldset className="space-y-4">

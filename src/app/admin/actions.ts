@@ -22,7 +22,8 @@ import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import type { Scope, TrackingConfig, VendorSetting } from "@/lib/site-config/schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
-import { parseCollectionRef, parseSectionForm } from "@/lib/admin/section-form";
+import { parseCollectionRef, parseFeaturedFields, parseSectionForm } from "@/lib/admin/section-form";
+import { legacyFeaturedRefs, resolveFeatured, searchFeaturedCandidates, type FeaturedCandidate } from "@/lib/hero-featured";
 import { buildRegionSeed } from "@/lib/admin/region-seed";
 import { STRUCTURED_TEMPLATES, type StructuredTemplate } from "@/lib/site-config/structured";
 import { launchBlockers } from "@/lib/admin/launch";
@@ -135,9 +136,33 @@ export async function saveSection(fd: FormData) {
   const section = ws.doc.home?.sections.find((s) => s.id === id);
   if (!section) back("/admin/home", { err: ["Seção não encontrada."] });
   const patch = parseSectionForm(fd, section);
+  if (section.template === "hero") {
+    // The hero's cards: edited as a list of real products of THIS region's store, seeded from the original Sul cards, or reset to the code's default.
+    const mode = text(fd, "featured_mode");
+    if (mode === "edit") {
+      const { refs, invalid } = parseFeaturedFields(fd);
+      if (invalid.length > 0) back(`/admin/home/${id}`, { err: [`Produto inválido em: ${invalid.join(", ")}.`] });
+      const kept = new Set((section.featured ?? []).map((r) => `${r.store}:${r.productId}`));
+      const slots = resolveFeatured(scope, refs);
+      // A NEW choice must be a real, eligible product of this region's store; a reference already in the draft is kept even when a sync made it
+      // ineligible (the panel flags it and the storefront omits it), so a resync never erases the owner's choice.
+      const rejected = slots.filter((sl) => !sl.ok && !kept.has(`${sl.ref.store}:${sl.ref.productId}`));
+      if (rejected.length > 0) back(`/admin/home/${id}`, { err: rejected.map((sl) => `Produto ${sl.ref.productId} não pode ser usado: ${sl.reason}.`) });
+      patch.featured = refs;
+    } else if (mode === "seed") patch.featured = legacyFeaturedRefs(scope);
+    else if (mode === "reset" && scope === "sul") patch.featured = undefined;
+  }
   const problem = patch.source ? sourceProblem(patch.source, ws.doc) : null;
   if (problem) back(`/admin/home/${id}`, { err: [problem] });
   return run(fd, { type: "update", id, patch }, "Rascunho salvo.", `/admin/home/${id}`);
+}
+
+/** Search of real, eligible products of the region's own store for a hero card position (bounded; local snapshot only, INK is never called). */
+export async function searchHeroProductsAction(scopeValue: string, query: string): Promise<{ results: FeaturedCandidate[]; total: number; error?: string }> {
+  const actor = await requireAdmin({ mutation: true });
+  if (!isRegionScope(scopeValue) || !canEdit(actor, scopeValue)) return { results: [], total: 0, error: "Você não tem permissão para essa região." };
+  if (!allow(`hero-search:${actor.id}`, 120, 60_000)) return { results: [], total: 0, error: "Muitas buscas seguidas. Aguarde um instante." };
+  return searchFeaturedCandidates(scopeValue, String(query).slice(0, 60), 12);
 }
 
 /**

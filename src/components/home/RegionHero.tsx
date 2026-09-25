@@ -49,7 +49,7 @@ export function RegionHero({
       {backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />}
       <div className="wrap pb-10 pt-6 lg:pb-16 lg:pt-12">
         <div className="grid gap-7 lg:grid-cols-12 lg:items-center lg:gap-8">
-          <div className="lg:col-span-6">
+          <div className={trio.length > 0 ? "lg:col-span-6" : "lg:col-span-8"}>
             <span aria-hidden="true" className="mb-4 block h-[3px] w-12 bg-region-accent" />
             <h1 id="hero-title" className="t-display">
               {copy.title.split("\n").map((line, i) => (
@@ -72,7 +72,7 @@ export function RegionHero({
           </div>
 
           {trio.length > 0 && (
-            <ul className="no-scrollbar -mx-[var(--gutter)] flex snap-x snap-mandatory scroll-pl-[var(--gutter)] gap-3 overflow-x-auto px-[var(--gutter)] pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:col-span-6">
+            <ul className={`no-scrollbar -mx-[var(--gutter)] flex snap-x snap-mandatory scroll-pl-[var(--gutter)] gap-3 overflow-x-auto px-[var(--gutter)] pb-2 md:mx-0 md:grid ${trio.length === 1 ? "md:max-w-[17rem] md:grid-cols-1" : trio.length === 2 ? "md:grid-cols-2" : "md:grid-cols-3"} md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:col-span-6`}>
               {trio.map((d, i) => (
                 <li key={d.familyId} className={`settle settle-${i + 1} w-[62%] max-w-[17rem] shrink-0 snap-start sm:w-[44%] md:w-auto md:max-w-none`}>
                   <Link

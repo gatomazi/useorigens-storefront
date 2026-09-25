@@ -5,6 +5,7 @@ import { Campaign } from "@/components/home/Campaign";
 import { RegionHero } from "@/components/home/RegionHero";
 import { StateCards } from "@/components/home/StateCards";
 import { SOURCES } from "@/lib/analytics/sources";
+import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { firstImageSectionId, hasImage, renderableSections, resolveBackground } from "@/lib/site-config/resolve";
@@ -47,7 +48,7 @@ export function HomeSections({ region, home, bundle, categories, slugOf }: { reg
                 key={s.id}
                 region={region}
                 cityCount={home.cityCount}
-                trio={home.heroFamilies}
+                trio={heroCards(region, s.featured, home.heroFamilies)}
                 config={{}}
                 copy={s.title && s.subtitle ? { title: s.title, body: s.subtitle } : undefined}
                 backdrop={<SectionBackdrop bg={bg} priority={priorityId === s.id} />}

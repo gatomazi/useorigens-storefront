@@ -184,6 +184,8 @@ function launchedBundle() {
       ],
     };
     bundle.docs[region].home.sections.splice(1, 0, structuredDefaults("city-styles", region, "custom-estilos", new Set(["hero", "colecao-regiao", "footer"])));
+    // Norte configures two hero cards (real fixture products of its own store); Centro-Oeste leaves the hero uncustomised (no cards, never Sul's).
+    if (region === "norte") bundle.docs[region].home.sections[0].featured = [0, 1].map((i) => ({ store: h.store, productId: String(8_000_000_000 + i) }));
     bundle.docs[region].launched = true;
   }
   return bundle;
@@ -248,6 +250,10 @@ async function regionsScenario() {
     check(`/${region}: the state chooser lists only this region's states, linking inside the region`, html.includes('id="estados"') && new RegExp(`href="/${region}/[a-z]{2}"`).test(html) && !/href="\/(sul)\/[a-z]{2}"/.test(html));
     check(`/${region}: the regional campaign carries this region's neutral copy, never Sul's text`, html.includes(`no ${REGIONS[region].name}.`) && !html.includes("cada cidade do Sul"));
     check(`/${region}: the city-styles section (when the region has real styles for its example city) has no foreign store links`, !html.includes('id="estilos"') || !html.slice(html.indexOf('id="estilos"'), html.indexOf('id="estados"') > 0 ? html.indexOf('id="estados"') : undefined).includes("usesul.com.br"));
+    const heroHtml = html.match(/<section[^>]*aria-labelledby="hero-title"[\s\S]*?<\/section>/)?.[0] ?? "";
+    const heroCards = (heroHtml.match(/href="\/[a-z-]+\/[a-z]{2}\/[a-z0-9-]+\/[a-z-]+"/g) ?? []).filter((x) => x.includes(`/${region}/`));
+    if (region === "norte") check(`/${region}: the hero shows exactly its two configured cards (own store, in-region links), in a two-column grid`, heroCards.length === 2 && heroHtml.includes("md:grid-cols-2") && !heroHtml.includes("usesul.com.br"), { cards: heroCards.length });
+    else check(`/${region}: an uncustomised hero shows no cards and nothing from Sul`, heroCards.length === 0 && !/href="\/sul\//.test(heroHtml), { cards: heroCards.length }); // (the fixture clones the Sul hero background; only links matter)
     check(`/${region}/privacidade -> 200`, (await fetch(`${base}/${region}/privacidade`)).status === 200);
     check(`/api/cidades/${region} -> 200 with cities`, (await (await fetch(`${base}/api/cidades/${region}`)).text()).length > 100);
   }
