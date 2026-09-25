@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { setCollectionEnabledAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
+import { setCollectionEnabledAction, setCollectionNavbarAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { LibrarySearch } from "@/components/admin/LibrarySearch";
 import { libraryEntries, type LibraryEntry } from "@/lib/catalog/collection-source";
@@ -13,7 +13,8 @@ import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { currentScope, storeOf } from "@/lib/admin/scope";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
-import { enabledInternalIds, sectionsUsing } from "@/lib/site-config/collections-enabled";
+import { MAX_NAVBAR_COLLECTIONS } from "@/lib/site-config/schema";
+import { enabledInternalIds, navbarCollectionIds, sectionsUsing } from "@/lib/site-config/collections-enabled";
 import { numberPt } from "@/lib/format";
 
 const STORES = [
@@ -48,6 +49,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
   const from = sp.from?.startsWith("/admin/") ? sp.from : null;
   const ws = await loadWorkspace(scope);
   const enabled = enabledInternalIds(ws.doc, store.key);
+  const inNavbar = navbarCollectionIds(ws.doc, store.key);
   const file = getCollections();
   const synced = file.stores[store.key];
   const all = libraryEntries(store.key as CommerceStoreKey, enabled);
@@ -150,9 +152,9 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
         <section className="a-card overflow-x-auto" aria-label="Coleções">
           <table className="a-table a-stack">
             <caption className="sr-only">Coleções de {store.name}</caption>
-            <thead><tr><th scope="col">Coleção</th><th scope="col">Na INK</th><th scope="col">Produtos no catálogo</th><th scope="col">No CMS</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
+            <thead><tr><th scope="col">Coleção</th><th scope="col">Na INK</th><th scope="col">Produtos no catálogo</th><th scope="col">No CMS</th><th scope="col">Navbar da INK</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
             <tbody>
-              {shown.length === 0 && <tr><td colSpan={5} className="a-muted">Nenhuma coleção corresponde à busca e ao filtro.{" "}<Link className="a-link" href={carry({ q: "", f: "all" }).replace(/q=&?|f=all&?/g, "")}>Limpar</Link></td></tr>}
+              {shown.length === 0 && <tr><td colSpan={6} className="a-muted">Nenhuma coleção corresponde à busca e ao filtro.{" "}<Link className="a-link" href={carry({ q: "", f: "all" }).replace(/q=&?|f=all&?/g, "")}>Limpar</Link></td></tr>}
               {shown.map((e) => {
                 const users = e.visibility === "internal" ? sectionsUsing(ws.doc, e.store, e.id) : [];
                 return (
@@ -170,6 +172,26 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
                     <td data-label="No CMS">
                       {e.visibility === "public" ? <span className="a-muted">Habilitada (pública)</span> : e.enabled ? <span className="a-badge ok">Habilitada no CMS</span> : <span className="a-badge">Desabilitada</span>}
                       {users.length > 0 && <p className="a-muted mt-1 text-[0.8125rem]">Usada em: {users.map((s) => s.title ?? s.id).join(", ")}</p>}
+                    </td>
+                    <td data-label="Navbar da INK">
+                      {e.visibility === "public" ? (
+                        <form action={setCollectionNavbarAction}>
+                          <input type="hidden" name="ref" value={`${e.store}:${e.id}`} />
+                          <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                          <input type="hidden" name="scope" value={scope} />
+                          <input type="hidden" name="q" value={q} />
+                          <input type="hidden" name="f" value={f === "all" ? "" : f} />
+                          <input type="hidden" name="from" value={from ?? ""} />
+                          {inNavbar.has(e.id) ? (
+                            <>
+                              <span className="a-badge ok">Na navbar</span>{" "}
+                              <button type="submit" name="shown" value="false" className="a-btn sm ghost">Tirar</button>
+                            </>
+                          ) : (
+                            <button type="submit" name="shown" value="true" className="a-btn sm ghost" disabled={e.matchedCount < 1 || inNavbar.size >= MAX_NAVBAR_COLLECTIONS} title={e.matchedCount < 1 ? "Sem produtos no catálogo local." : inNavbar.size >= MAX_NAVBAR_COLLECTIONS ? `A navbar comporta no máximo ${MAX_NAVBAR_COLLECTIONS} coleções.` : undefined}>Mostrar</button>
+                          )}
+                        </form>
+                      ) : <span className="a-muted" title="Coleção interna: não tem página pública na INK.">Indisponível</span>}
                     </td>
                     <td className="text-right">
                       {e.visibility === "internal" && (

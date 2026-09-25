@@ -108,7 +108,15 @@ export type ScopeDoc = {
    * INK collections this scope's CMS has explicitly ENABLED as section sources. Only meaningful for internal (hidden-on-INK) collections:
    * public ones are usable by default. Part of the document, so a publish and a rollback carry it together with the sections that use it.
    */
-  collections?: { enabled: CollectionRef[] };
+  collections?: {
+    enabled: CollectionRef[];
+    /**
+     * Collections shown in the navbar the storefront's Worker draws on the INK product pages (Round "navbar da INK"). INDEPENDENT of `enabled`
+     * (which is about home sections): only PUBLIC INK collections with a real page and products are ever rendered, checked at read time
+     * (`site-config/navbar.ts`). Menu order = INK's own navbar position, so there is nothing to order here.
+     */
+    navbar?: CollectionRef[];
+  };
 };
 
 /** `variants` (uploads only): the pre-sized WebP widths the storefront uses as a `srcset`, so an uploaded image never goes through the image optimizer. */
@@ -297,18 +305,27 @@ export function validateSection(input: unknown, path = "section"): ValidationRes
   return c.errors.length === 0 ? { ok: true, value: input as Section } : { ok: false, errors: c.errors };
 }
 
-function checkCollections(c: Collector, path: string, v: unknown): void {
-  if (!isRecord(v) || !Array.isArray(v.enabled)) return c.fail(path, "must be { enabled: [...] }");
-  if (v.enabled.length > 300) c.fail(`${path}.enabled`, "at most 300 entries");
+/** Most collections the INK navbar may list: it is a menu, not a catalog. */
+export const MAX_NAVBAR_COLLECTIONS = 8;
+
+function checkRefList(c: Collector, path: string, list: unknown, max: number): void {
+  if (!Array.isArray(list)) return c.fail(path, "must be an array");
+  if (list.length > max) c.fail(path, `at most ${max} entries`);
   const seen = new Set<string>();
-  v.enabled.forEach((ref, i) => {
+  list.forEach((ref, i) => {
     if (!isRecord(ref) || typeof ref.store !== "string" || !STORES.includes(ref.store) || typeof ref.collectionId !== "number" || !Number.isInteger(ref.collectionId) || ref.collectionId <= 0) {
-      return c.fail(`${path}.enabled[${i}]`, "must be { store, collectionId }");
+      return c.fail(`${path}[${i}]`, "must be { store, collectionId }");
     }
     const key = `${ref.store}:${ref.collectionId}`;
-    if (seen.has(key)) c.fail(`${path}.enabled[${i}]`, "duplicate");
+    if (seen.has(key)) c.fail(`${path}[${i}]`, "duplicate");
     seen.add(key);
   });
+}
+
+function checkCollections(c: Collector, path: string, v: unknown): void {
+  if (!isRecord(v) || !Array.isArray(v.enabled)) return c.fail(path, "must be { enabled: [...] }");
+  checkRefList(c, `${path}.enabled`, v.enabled, 300);
+  if (v.navbar !== undefined) checkRefList(c, `${path}.navbar`, v.navbar, MAX_NAVBAR_COLLECTIONS);
 }
 
 export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
@@ -332,10 +349,14 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
     else {
       checkCollections(c, "doc.collections", input.collections);
       // A region only enables collections of ITS OWN INK store: the wrong store's collection can never be enabled here.
-      if (isRecord(input.collections) && Array.isArray(input.collections.enabled)) {
-        input.collections.enabled.forEach((ref, i) => {
-          if (isRecord(ref) && ref.store !== REGIONS[sc as RegionSlug]?.storeKey) c.fail(`doc.collections.enabled[${i}].store`, "belongs to another region's INK store");
-        });
+      if (isRecord(input.collections)) {
+        for (const key of ["enabled", "navbar"] as const) {
+          const list = input.collections[key];
+          if (!Array.isArray(list)) continue;
+          list.forEach((ref, i) => {
+            if (isRecord(ref) && ref.store !== REGIONS[sc as RegionSlug]?.storeKey) c.fail(`doc.collections.${key}[${i}].store`, "belongs to another region's INK store");
+          });
+        }
       }
     }
   }

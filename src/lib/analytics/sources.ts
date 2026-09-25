@@ -40,6 +40,8 @@ export const SOURCES = {
   homeCollection: "home_colecao",
   /** The home's "Sua cidade, de 8 jeitos" example-city cards that open the INK product directly. */
   homeStyles: "home_styles",
+  /** The text search results page (`/<region>/busca`): a product card that opens the INK product. */
+  search: "search_results",
   stateShowcase: "state_showcase",
   cityStyles: "city_styles",
   cityFala: "city_fala",
