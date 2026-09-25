@@ -94,26 +94,28 @@ async function start(s: (typeof servers)[number]) {
   await waitHealthy(s.port);
 }
 
-async function trackingProbe(port: number) {
+/**
+ * Measurement does NOT wait for the cookie banner (owner's decision, src/lib/consent/policy.ts): a brand-new visitor who has clicked nothing,
+ * and one who already chose "Rejeitar", both cause the Meta and GA4 requests. Vendor hosts are aborted at the network layer: the request is
+ * OBSERVED (that is the proof) but never leaves the machine.
+ */
+async function trackingProbe(port: number, opts: { rejectedBefore: boolean }) {
   const browser = await chromium.launch();
   const context = await browser.newContext();
   const seen: string[] = [];
-  // Vendor hosts are aborted: the request is OBSERVED (that is the proof) but never leaves the machine.
   await context.route(/connect\.facebook\.net|googletagmanager\.com|google-analytics\.com/, (route) => {
     seen.push(route.request().url());
     return route.abort();
   });
   await context.route("**/_next/image**", (route) => route.abort()); // fixture images do not exist; not what is under test
+  if (opts.rejectedBefore) await context.addInitScript(() => window.localStorage.setItem("useorigens:consent:marketing", JSON.stringify({ choice: "rejected", version: 2, decidedAt: "2026-09-25T00:00:00.000Z" })));
   const page = await context.newPage();
   await page.goto(`http://localhost:${port}/sul`, { waitUntil: "domcontentloaded" });
-  await page.getByRole("region", { name: "Preferências de cookies" }).waitFor();
-  await page.waitForTimeout(1500);
-  const beforeConsent = [...seen];
-  await page.getByRole("button", { name: /Aceitar/ }).click();
-  await page.waitForTimeout(2500);
-  const afterConsent = [...seen];
+  await page.waitForTimeout(3500);
+  const bannerShown = await page.getByRole("region", { name: "Preferências de cookies" }).isVisible();
+  const withoutAnyClick = [...seen];
   await browser.close();
-  return { beforeConsent, afterConsent };
+  return { withoutAnyClick, bannerShown };
 }
 
 async function main() {
@@ -148,11 +150,14 @@ async function main() {
     check("no HTML from a foreign host: document is text/html", (nosniff.headers.get("content-type") ?? "").startsWith("text/html"));
 
     const html = home;
-    check("tracking: no vendor script/hosts in the server HTML before consent", !/fbevents|googletagmanager|connect\.facebook\.net/.test(html));
-    const t = await trackingProbe(s.port);
-    check("tracking: ZERO vendor requests before consent", t.beforeConsent.length === 0, t.beforeConsent);
-    check("tracking: after consent Meta loads with the env-fallback Pixel base", t.afterConsent.some((u) => u.includes("connect.facebook.net")), t.afterConsent);
-    check(`tracking: after consent GA4 loads with the env-fallback ID (${GA})`, t.afterConsent.some((u) => u.includes("googletagmanager.com") && u.includes(GA)), t.afterConsent);
+    check("tracking: the server HTML carries no vendor script tag (the tools load client-side)", !/fbevents|googletagmanager|connect\.facebook\.net/.test(html));
+    const fresh = await trackingProbe(s.port, { rejectedBefore: false });
+    check("tracking: a new visitor who clicked nothing already loads Meta (banner does not gate it)", fresh.withoutAnyClick.some((u) => u.includes("connect.facebook.net")), fresh.withoutAnyClick);
+    check(`tracking: ...and GA4 with the env-fallback ID (${GA})`, fresh.withoutAnyClick.some((u) => u.includes("googletagmanager.com") && u.includes(GA)), fresh.withoutAnyClick);
+    check("tracking: the cookie banner is still shown for that visitor", fresh.bannerShown);
+    const rejected = await trackingProbe(s.port, { rejectedBefore: true });
+    check("tracking: a visitor who already chose Rejeitar is still measured (same as the INK store)", rejected.withoutAnyClick.some((u) => u.includes("connect.facebook.net")) && rejected.withoutAnyClick.some((u) => u.includes("googletagmanager.com") && u.includes(GA)), rejected.withoutAnyClick);
+    check("tracking: ...and the banner does not reappear for them", !rejected.bannerShown);
   }
 
   console.log("\n=== flag OFF vs flag ON ===");

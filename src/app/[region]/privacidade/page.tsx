@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { measurementRequiresConsent } from "@/lib/consent/policy";
 import { PrivacyPreferencesLink } from "@/components/consent/PrivacyPreferencesLink";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { ENABLED_REGIONS } from "@/lib/site";
@@ -29,6 +30,7 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
   const { region } = await params;
   if (!isRegionSlug(region) || !ENABLED_REGIONS.includes(region)) notFound();
   const r = REGIONS[region];
+  const gated = measurementRequiresConsent(); // false by default: measurement does not wait for the banner (src/lib/consent/policy.ts)
 
   return (
     <div className="wrap py-14 lg:py-20">
@@ -39,9 +41,9 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
         <section>
           <h2 className="t-h3">O que este site faz com cookies</h2>
           <p className="t-body mt-2 text-ink-soft">
-            Usamos cookies essenciais para o funcionamento do site — por exemplo, para lembrar a sua escolha sobre
-            cookies — e, apenas com a sua aceitação, cookies opcionais de análise e marketing, que nos ajudam a
-            entender como as pessoas encontram a camiseta da própria cidade e a melhorar a experiência.
+            {gated
+              ? "Usamos cookies essenciais para o funcionamento do site — por exemplo, para lembrar a sua escolha sobre cookies — e, apenas com a sua aceitação, cookies opcionais de análise e marketing, que nos ajudam a entender como as pessoas encontram a camiseta da própria cidade e a melhorar a experiência."
+              : "Usamos cookies essenciais para o funcionamento do site — por exemplo, para lembrar a sua escolha no aviso de cookies — e cookies e ferramentas de análise e marketing de terceiros, que nos ajudam a entender como as pessoas encontram a camiseta da própria cidade, a medir anúncios e a melhorar a experiência. Essas ferramentas funcionam desde que você abre o site."}
           </p>
         </section>
 
@@ -49,12 +51,14 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
           <h2 className="t-h3">Categorias de cookies</h2>
           <ul className="t-body mt-2 list-disc space-y-1 pl-5 text-ink-soft">
             <li>
-              <strong>Essenciais</strong>: guardam a sua escolha (aceitar ou rejeitar) e preferências básicas de
+              <strong>Essenciais</strong>: guardam a sua escolha no aviso de cookies e preferências básicas de
               navegação. O site depende deles para funcionar, por isso não podem ser desativados.
             </li>
             <li>
-              <strong>Análise e marketing (opcionais)</strong>: ferramentas de medição que só são ativadas depois que
-              você aceita. Sem o seu aceite, elas não são carregadas e nenhuma informação é enviada a elas.
+              <strong>Análise e marketing</strong>:{" "}
+              {gated
+                ? "ferramentas de medição que só são ativadas depois que você aceita. Sem o seu aceite, elas não são carregadas e nenhuma informação é enviada a elas."
+                : "ferramentas de medição de terceiros (Meta e Google) que ficam ativas ao navegar pelo site, independentemente da sua escolha no aviso de cookies."}
             </li>
           </ul>
         </section>
@@ -62,7 +66,7 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
         <section>
           <h2 className="t-h3">Ferramentas de análise e marketing</h2>
           <p className="t-body mt-2 text-ink-soft">
-            Hoje, quando você aceita, usamos o Meta Pixel (Meta Platforms, Inc.) e o Google Analytics (Google LLC).
+            {gated ? "Hoje, quando você aceita, usamos" : "Hoje usamos"} o Meta Pixel (Meta Platforms, Inc.) e o Google Analytics (Google LLC).
             Eles registram, de forma agregada, ações como visitar páginas, concluir uma busca de cidade, escolher uma
             cidade ou um estado e seguir para a loja. Nunca enviamos nome, e-mail, telefone ou outro dado pessoal
             digitado por você. Podemos incluir outras ferramentas de medição no futuro; se isso acontecer, esta página
@@ -82,12 +86,11 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
         </section>
 
         <section>
-          <h2 className="t-h3">Como rejeitar ou mudar de ideia</h2>
+          <h2 className="t-h3">{gated ? "Como rejeitar ou mudar de ideia" : "Suas escolhas"}</h2>
           <p className="t-body mt-2 text-ink-soft">
-            Você pode rejeitar os cookies opcionais no aviso que aparece na primeira visita e mudar a sua escolha a
-            qualquer momento, aqui ou em &quot;Preferências de privacidade&quot;, no rodapé do site. Se você retirar o
-            aceite, deixamos de enviar novos eventos para essas ferramentas. Rejeitar não limita o uso da busca, a
-            navegação pelas cidades ou a compra.
+            {gated
+              ? "Você pode rejeitar os cookies opcionais no aviso que aparece na primeira visita e mudar a sua escolha a qualquer momento, aqui ou em \"Preferências de privacidade\", no rodapé do site. Se você retirar o aceite, deixamos de enviar novos eventos para essas ferramentas. Rejeitar não limita o uso da busca, a navegação pelas cidades ou a compra."
+              : "O aviso de cookies registra a sua escolha, mas ela não desliga as ferramentas de medição acima. Para limitar esse rastreamento, use as configurações do seu navegador, extensões de bloqueio ou os controles de anúncios da Meta e do Google (links nas políticas acima). Nada disso limita o uso da busca, a navegação pelas cidades ou a compra."}
           </p>
           <div className="mt-3">
             <PrivacyPreferencesLink />

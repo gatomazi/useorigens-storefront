@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { withoutCartRef } from "@/lib/cart-mirror/url";
 import { useConsent } from "@/lib/consent/ConsentProvider";
+import { measurementAllowed } from "@/lib/consent/policy";
 import { gaMeasurementId } from "@/lib/config/public-env";
 import { trackPageView } from "@/lib/analytics/track";
 
@@ -35,7 +36,7 @@ declare global {
 export function GoogleAnalytics({ measurementId: resolved }: { measurementId?: string | null } = {}) {
   const measurementId = resolved === undefined ? gaMeasurementId() : resolved;
   const { record } = useConsent();
-  const accepted = record?.choice === "accepted";
+  const accepted = measurementAllowed(record); // true from the start unless the strict consent gate is on (src/lib/consent/policy.ts)
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lastTracked = useRef<string | null>(null);

@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { withoutCartRef } from "@/lib/cart-mirror/url";
 import { useConsent } from "@/lib/consent/ConsentProvider";
+import { measurementAllowed } from "@/lib/consent/policy";
 import { metaPixelId } from "@/lib/config/public-env";
 
 declare global {
@@ -32,7 +33,7 @@ declare global {
 export function MetaPixel({ pixelId: resolved }: { pixelId?: string | null } = {}) {
   const pixelId = resolved === undefined ? metaPixelId() : resolved;
   const { record } = useConsent();
-  const accepted = record?.choice === "accepted";
+  const accepted = measurementAllowed(record); // true from the start unless the strict consent gate is on (src/lib/consent/policy.ts)
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lastTracked = useRef<string | null>(null);
