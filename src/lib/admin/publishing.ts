@@ -4,7 +4,7 @@ import path from "node:path";
 import { bundleChecksum } from "../site-config/checksum";
 import { publish, reconcile, type FileState, type PublishOutcome, type PublishPorts, type ReleaseRecord } from "../site-config/publish-flow";
 import { resolveTracking, type TrackingOrigin } from "../site-config/resolve";
-import { validateBundle, type MediaAssetInfo, type PublishedBundle, type ScopeDoc } from "../site-config/schema";
+import { validateBundle, type MediaAssetInfo, type PublishedBundle, type Scope, type ScopeDoc } from "../site-config/schema";
 import { buildSeedBundle } from "../site-config/seed";
 import { readJson, withLock, writeJsonAtomic } from "./local-store";
 import { collectionProblems, readabilityProblems } from "./validate-draft";
@@ -81,7 +81,7 @@ export async function pendingTrackingChanges(deps: Pick<PublishDeps, "releases" 
 }
 
 /** `confirmTracking`: the person confirmed the effective tracking IDs listed by `pendingTrackingChanges` (required only when there are changes). */
-export type PublishRequest = { kind: "publish"; doc: ScopeDoc; note?: string; confirmTracking?: boolean } | { kind: "rollback"; toReleaseId: string; note?: string };
+export type PublishRequest = { kind: "publish"; doc: ScopeDoc; note?: string; confirmTracking?: boolean } | { kind: "rollback"; toReleaseId: string; scope?: Scope; note?: string; confirmTracking?: boolean };
 export type PublishResult = { ok: true; outcome: PublishOutcome } | { ok: false; errors: string[] };
 
 export async function publishRelease(deps: PublishDeps, request: PublishRequest, revalidate: () => Promise<void>): Promise<PublishResult> {
@@ -99,11 +99,23 @@ export async function publishRelease(deps: PublishDeps, request: PublishRequest,
   } else {
     const old = await deps.releases.restorable(request.toReleaseId);
     if (!old) return { ok: false, errors: [`a versão ${request.toReleaseId} não existe ou nunca esteve no ar`] };
-    const strict = validateBundle(old);
+    const head = await deps.releases.head();
+    const scope = request.scope;
+    // Per region: only that region's document (and the media it needs) comes back from the old release; every other region keeps the
+    // state it has NOW. Without a scope the whole old bundle is restored (kept for old callers).
+    const restored = (id: string): PublishedBundle => {
+      if (!scope) return { ...old, releaseId: id };
+      const base = head?.bundle ?? seedForEnv();
+      return { ...base, releaseId: id, docs: { ...base.docs, [scope]: old.docs[scope] }, media: { ...base.media, ...old.media } };
+    };
+    const composed = restored(request.toReleaseId);
+    const strict = validateBundle(composed);
     if (!strict.ok) return { ok: false, errors: strict.errors };
-    compose = async (id) => ({ ...old, releaseId: id });
-    sections = old.docs.sul.home?.sections.filter((s) => s.active).length ?? 0;
-    scopesChanged = ["sul"];
+    const changes = trackingChanges(head?.bundle ?? null, composed);
+    if (changes.length > 0 && !request.confirmTracking) return { ok: false, errors: ["Restaurar esta versão muda o rastreamento efetivo. Confirme os IDs listados antes de restaurar.", ...changes] };
+    compose = async (id) => restored(id);
+    sections = (scope ? old.docs[scope] : old.docs.sul)?.home?.sections.filter((s) => s.active).length ?? 0;
+    scopesChanged = [scope ?? "sul"];
   }
   const begin: BeginRequest = { kind: request.kind, note: request.note ?? null, scopesChanged, sections, actorId: deps.actorId };
 

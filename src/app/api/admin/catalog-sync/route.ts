@@ -31,7 +31,7 @@ import { syncCollections } from "@/lib/catalog/collections-sync";
 import { beginSyncJob, currentSyncJob, finishSyncJobFailure, finishSyncJobSuccess, SyncAlreadyRunningError, type CollectionsStep } from "@/lib/catalog/sync-job";
 import type { CatalogSnapshot } from "@/lib/catalog/types";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
-import { ENABLED_REGIONS } from "@/lib/site";
+import { REGION_SLUGS } from "@/lib/geo/regions";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +51,7 @@ function isAuthorized(request: Request, expected: string): boolean {
  * region) and each region's search index route. Never touches unrelated pages, never enumerates cities. */
 function revalidateCatalogPages(): void {
   revalidatePath("/[region]", "layout");
-  for (const region of ENABLED_REGIONS) revalidatePath(`/api/cidades/${region}`);
+  for (const region of REGION_SLUGS) revalidatePath(`/api/cidades/${region}`);
 }
 
 export async function POST(request: Request) {

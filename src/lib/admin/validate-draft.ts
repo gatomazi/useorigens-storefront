@@ -3,7 +3,7 @@ import { categoryLookup, libraryEntries, MIN_USABLE_PRODUCTS } from "../catalog/
 import { findCollection } from "../catalog/collections-file";
 import { getCatalog } from "../catalog/repository";
 import { getRegionHome } from "../home";
-import type { RegionSlug } from "../geo/regions";
+import { REGIONS, type RegionSlug } from "../geo/regions";
 import { enabledInternalIds } from "../site-config/collections-enabled";
 import type { ScopeDoc, Section, Source } from "../site-config/schema";
 import { readability, type ReadabilityIssue } from "./contrast";
@@ -55,6 +55,8 @@ export function sourceStatus(section: Section, doc: ScopeDoc): SourceStatus | nu
 /** Why a collection cannot be used as a section source in this document, in Portuguese, or null when it can. Used by the actions BEFORE saving. */
 export function sourceProblem(source: Source, doc: ScopeDoc): string | null {
   if (source.kind !== "ink-category") return null;
+  // A region only uses collections of ITS OWN INK store: never another region's, whatever the form said.
+  if (doc.scope !== "global" && source.store !== REGIONS[doc.scope as RegionSlug].storeKey) return "Essa coleção pertence a outra loja da INK: cada região usa só as coleções da própria loja.";
   const entry = libraryEntries(source.store, enabledInternalIds(doc, source.store)).find((e) => e.id === source.collectionId);
   if (!entry) return "Essa coleção não existe no snapshot sincronizado.";
   if (entry.selectable) return null;

@@ -7,7 +7,8 @@ import { SOURCES } from "@/lib/analytics/sources";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import { resolveCity, resolveCityProduct } from "@/lib/catalog/resolver";
 import { formatPrice } from "@/lib/format";
-import { ENABLED_REGIONS } from "@/lib/site";
+import { isRegionSlug } from "@/lib/geo/regions";
+import { isRegionLaunched } from "@/lib/regions/launched";
 
 export const revalidate = 3600;
 
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function CityFamilyPage({ params }: { params: Params }) {
   const { region, uf, city: citySlug, family: familySlug } = await params;
-  if (!ENABLED_REGIONS.some((r) => r === region)) notFound();
+  if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
 
   const resolved = resolveCityProduct(region, uf, citySlug, familySlug);
   const cityData = resolveCity(region, uf, citySlug);

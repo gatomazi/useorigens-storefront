@@ -14,7 +14,7 @@ import { numberPt } from "@/lib/format";
 import { citiesOfRegion, mesoGroupsOfState } from "@/lib/geo/cities";
 import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, UF_TO_REGION, isRegionSlug } from "@/lib/geo/regions";
 import { normalizeText, slugify } from "@/lib/geo/text";
-import { ENABLED_REGIONS } from "@/lib/site";
+import { isRegionLaunched } from "@/lib/regions/launched";
 
 export const revalidate = 3600;
 
@@ -25,7 +25,7 @@ export function generateStaticParams() {
 
 function resolveState(regionSlug: string, ufParam: string) {
   const uf = ufParam.toUpperCase();
-  if (!isRegionSlug(regionSlug) || !ENABLED_REGIONS.includes(regionSlug)) return null;
+  if (!isRegionSlug(regionSlug) || !isRegionLaunched(regionSlug)) return null;
   return UF_TO_REGION[uf] === regionSlug ? uf : null;
 }
 

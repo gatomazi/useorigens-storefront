@@ -8,18 +8,21 @@ import { listMedia } from "@/lib/admin/media";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { sourceStatus } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
+import { currentScope, storeOf } from "@/lib/admin/scope";
 import { toComboEntries } from "@/lib/admin/combo";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 
 export default async function EditSection({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
-  await requireAdmin();
+  const actor = await requireAdmin();
+  const scope = await currentScope(actor);
+  const store = storeOf(scope);
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const ws = await loadWorkspace();
+  const ws = await loadWorkspace(scope);
   const section = ws.doc.home?.sections.find((s) => s.id === id);
   if (!section) notFound();
 
-  const entries = toComboEntries(libraryEntries("use-sul", enabledInternalIds(ws.doc, "use-sul")));
+  const entries = toComboEntries(libraryEntries(store, enabledInternalIds(ws.doc, store)));
   const status = sourceStatus(section, ws.doc);
   const media = await listMedia();
   const anchor = section.template === "hero" ? undefined : section.anchor;
@@ -39,7 +42,7 @@ export default async function EditSection({ params, searchParams }: { params: Pr
       <Flash ok={sp.ok} err={sp.err} />
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,34rem)_1fr]">
         <section className="a-card p-5" aria-label="Editor da seção">
-          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} media={media} collections={entries} action={saveSection} />
+          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} />
         </section>
         <section className="a-card p-5 2xl:sticky 2xl:top-4 2xl:self-start" aria-label="Pré-visualização">
           <PreviewFrame version={ws.record?.rev ?? 0} anchor={anchor} height={760} />

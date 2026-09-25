@@ -9,7 +9,7 @@
  *  - a duplicate gets a new id and a unique anchor and starts INACTIVE, so a copy never appears on the home by accident.
  */
 import { sectionsUsing } from "../site-config/collections-enabled";
-import { validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Section, type ScopeDoc, type Source } from "../site-config/schema";
+import { validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance">;
 
@@ -20,7 +20,13 @@ export type DraftOp =
   | { type: "set-active"; id: string; active: boolean }
   | { type: "remove"; id: string }
   | { type: "update"; id: string; patch: Partial<Editable> }
-  | ({ type: "set-collection-enabled"; enabled: boolean } & CollectionRef);
+  | ({ type: "set-collection-enabled"; enabled: boolean } & CollectionRef)
+  /** Creates the home of a region that has none yet, from sections the caller built out of REAL sources (see admin/region-seed.ts). */
+  | { type: "init-home"; sections: Section[] }
+  /** Replaces the tracking configuration of the document (validated: formats, legacy only for Sul, an inactive ID only in global). */
+  | { type: "set-tracking"; tracking: TrackingConfig }
+  /** Launches / recalls a region publicly (takes effect only when published). */
+  | { type: "set-launched"; launched: boolean };
 
 export type OpResult = { ok: true; doc: ScopeDoc; focusId?: string } | { ok: false; errors: string[] };
 
@@ -55,6 +61,22 @@ const fail = (...errors: string[]): OpResult => ({ ok: false, errors });
 /** Applies one operation. The input document is never mutated; on any problem nothing changes and the reasons come back. */
 export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-collection-enabled") return setCollectionEnabled(doc, op);
+  if (op.type === "init-home") {
+    if (doc.scope === "global") return fail("global has no home");
+    if (doc.home) return fail("this region already has a home");
+    const created: ScopeDoc = { ...doc, home: { sections: op.sections } };
+    const check = validateScopeDoc(created);
+    return check.ok ? { ok: true, doc: created } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-tracking") {
+    const next: ScopeDoc = { ...doc, tracking: op.tracking };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-launched") {
+    if (doc.scope === "global" || doc.scope === "sul") return fail("only Norte and Centro-Oeste are launched separately (Sul is always public)");
+    return { ok: true, doc: { ...doc, launched: op.launched } };
+  }
   const sections = doc.home?.sections;
   if (!sections) return fail("this scope has no home");
   const index = "id" in op ? sections.findIndex((s) => s.id === op.id) : -1;

@@ -1,7 +1,10 @@
 import { siteUrl } from "./config/env";
 import type { RegionSlug } from "./geo/regions";
 
-/** Regions with a finished storefront. Others 404 until their editorial experience exists. */
+/**
+ * The regions that are ALWAYS public: Sul only. Norte and Centro-Oeste become public per region through the CMS ("launched", published;
+ * see src/lib/regions/launched.ts). Kept for the places that must not depend on the CMS (the catalog gate, /api/ready).
+ */
 export const ENABLED_REGIONS: readonly RegionSlug[] = ["sul"];
 
 export const SITE_URL = siteUrl();

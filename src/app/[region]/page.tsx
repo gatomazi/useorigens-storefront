@@ -12,7 +12,7 @@ import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { REAL_COLLECTIONS } from "@/lib/editorial/collections";
 import { getRegionHome } from "@/lib/home";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
-import { ENABLED_REGIONS } from "@/lib/site";
+import { isRegionLaunched } from "@/lib/regions/launched";
 import { categoryProps } from "@/lib/catalog/collection-source";
 import { getCatalog } from "@/lib/catalog/repository";
 import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
  */
 export default async function RegionHome({ params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
-  if (!isRegionSlug(region) || !ENABLED_REGIONS.includes(region)) notFound();
+  if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
 
   const home = getRegionHome(region);
 

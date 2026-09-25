@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { measurementRequiresConsent } from "@/lib/consent/policy";
 import { PrivacyPreferencesLink } from "@/components/consent/PrivacyPreferencesLink";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
-import { ENABLED_REGIONS } from "@/lib/site";
+import { isRegionLaunched } from "@/lib/regions/launched";
 
 export const revalidate = 3600;
 
@@ -28,7 +28,7 @@ const LAST_UPDATED = "23 de setembro de 2026";
 
 export default async function PrivacyPolicyPage({ params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
-  if (!isRegionSlug(region) || !ENABLED_REGIONS.includes(region)) notFound();
+  if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const r = REGIONS[region];
   const gated = measurementRequiresConsent(); // false by default: measurement does not wait for the banner (src/lib/consent/policy.ts)
 

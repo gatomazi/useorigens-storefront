@@ -14,7 +14,8 @@ import { resolveCity } from "@/lib/catalog/resolver";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { formatPrice } from "@/lib/format";
 import { citiesOfSameMeso } from "@/lib/geo/cities";
-import { ENABLED_REGIONS } from "@/lib/site";
+import { isRegionSlug } from "@/lib/geo/regions";
+import { isRegionLaunched } from "@/lib/regions/launched";
 
 export const revalidate = 3600;
 
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function CityPage({ params }: { params: Params }) {
   const { region, uf, city: citySlug } = await params;
-  if (!ENABLED_REGIONS.some((r) => r === region)) notFound();
+  if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const resolved = resolveCity(region, uf, citySlug);
   if (!resolved) notFound();
 

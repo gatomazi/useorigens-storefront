@@ -47,6 +47,7 @@ const noImage = (): Appearance => ({ fill: { kind: "none" }, focal: { mobile: { 
  * a bundle built from this seed resolves to the current behaviour. Global starts disabled (D5).
  */
 /** `_legacyIds` is accepted for the callers that still pass the build-time IDs, but they are no longer written into the seed (see `legacy`). */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function buildSeedBundle(_legacyIds?: { metaPixelId: string | null; ga4MeasurementId: string | null }): PublishedBundle {
   const media: Collected = {};
   const banners = REGION_BANNERS.sul;

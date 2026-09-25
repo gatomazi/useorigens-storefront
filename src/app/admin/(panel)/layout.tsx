@@ -1,7 +1,9 @@
 import Link from "next/link";
-import { logoutAction } from "@/app/admin/actions";
+import { logoutAction, setScopeAction } from "@/app/admin/actions";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { platform } from "@/lib/admin/platform";
+import { currentScope, editableScopes, scopeName } from "@/lib/admin/scope";
+import { seedForEnv } from "@/lib/admin/publishing";
 import { siteUrl } from "@/lib/config/env";
 import { regionThemeStyle } from "@/lib/theme/region-theme";
 import { SidebarNav } from "@/components/admin/SidebarNav";
@@ -13,9 +15,12 @@ import { SidebarNav } from "@/components/admin/SidebarNav";
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
   const actor = await requireAdmin();
   const prod = platform().mode === "prod";
-  const scopes = new Set(actor.role === "owner" ? ["sul", "norte", "centro-oeste"] : actor.scopes);
+  const scope = await currentScope(actor);
+  const editable = editableScopes(actor);
+  const published = await platform().files.read();
+  const launchedIn = (r: string) => r === "sul" || (published?.docs[r as "norte"]?.launched ?? seedForEnv().docs[r as "norte"]?.launched) === true;
   return (
-    <div className="lg:grid lg:grid-cols-[15rem_1fr]" style={regionThemeStyle("sul")}>
+    <div className="lg:grid lg:grid-cols-[15rem_1fr]" style={regionThemeStyle(scope)}>
       <aside className="on-ink flex flex-col gap-6 bg-region-primary px-5 py-5 lg:min-h-dvh lg:sticky lg:top-0 lg:h-dvh" style={{ background: "var(--region-primary)" }}>
         <Link href="/admin" className="block">
           <span className="block text-[1.6rem] font-extrabold uppercase leading-none tracking-wide [font-family:var(--font-display-stack)]">Use Origens</span>
@@ -39,12 +44,15 @@ export default async function PanelLayout({ children }: { children: React.ReactN
       </aside>
       <div className="min-w-0">
         <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/15 bg-white px-5 py-3 lg:px-8">
-          <div className="flex items-center gap-3">
+          <form action={setScopeAction} className="flex flex-wrap items-center gap-2" aria-label="Região em edição">
             <span className="a-label !mb-0">Região</span>
-            <span className={scopes.has("sul") ? "a-badge ok" : "a-badge"}>Sul</span>
-            <span className="a-badge" title="Norte e Centro-Oeste estão no contrato, mas a home deles ainda não existe.">Norte · em breve</span>
-            <span className="a-badge" title="Norte e Centro-Oeste estão no contrato, mas a home deles ainda não existe.">Centro-Oeste · em breve</span>
-          </div>
+            {editable.map((r) => (
+              <button key={r} type="submit" name="scope" value={r} aria-pressed={r === scope} className={`a-btn sm ${r === scope ? "" : "ghost"}`} title={launchedIn(r) ? "Pública na loja" : "Em preparação: ainda não é pública"}>
+                {scopeName(r)}
+                <span className={`ml-2 a-badge ${launchedIn(r) ? "ok" : ""}`}>{launchedIn(r) ? "Pública" : "Prévia"}</span>
+              </button>
+            ))}
+          </form>
           {prod ? (
             <form action={logoutAction} className="lg:hidden"><button type="submit" className="a-btn ghost sm">Sair</button></form>
           ) : (

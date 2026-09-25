@@ -3,7 +3,7 @@ import { catalogReadiness } from "@/lib/catalog/readiness";
 import { citiesOfRegion } from "@/lib/geo/cities";
 import { isRegionSlug } from "@/lib/geo/regions";
 import type { SearchCity } from "@/lib/search/rank";
-import { ENABLED_REGIONS } from "@/lib/site";
+import { isRegionLaunched } from "@/lib/regions/launched";
 
 export const dynamic = "force-static";
 export const revalidate = 3600;
@@ -21,14 +21,14 @@ export function generateStaticParams() {
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
-  if (!isRegionSlug(region) || !ENABLED_REGIONS.includes(region)) {
+  if (!isRegionSlug(region) || !isRegionLaunched(region)) {
     return new Response(null, { status: 404 });
   }
 
   // This route is outside the proxy's bootstrap gate (its matcher excludes /api), so guard here: while the
   // catalog is missing or only partially synced, never render (and thereby ISR-cache) an empty index — the
   // client retries on its next focus.
-  if (!catalogReadiness(ENABLED_REGIONS).ready) {
+  if (!catalogReadiness([region]).ready) {
     return new Response(null, { status: 503, headers: { "Cache-Control": "no-store", "Retry-After": "60" } });
   }
 

@@ -1,14 +1,13 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { bundleChecksum } from "../site-config/checksum";
-import type { ScopeDoc } from "../site-config/schema";
+import type { Scope, ScopeDoc } from "../site-config/schema";
 import { applyOp, type DraftOp } from "./draft-ops";
 import { platform } from "./platform";
 import { seedForEnv } from "./publishing";
 import type { Actor, DraftRecord } from "./store/ports";
 
-/** The one place the screens and actions read and write the working draft of a scope. Sul only in this round. */
-export const SCOPE = "sul" as const;
+/** The one place the screens and actions read and write the working draft of a scope (a region, or "global" for tracking). */
 
 export type Workspace = {
   record: DraftRecord | null;
@@ -21,11 +20,11 @@ export type Workspace = {
   dirty: boolean;
 };
 
-export async function loadWorkspace(): Promise<Workspace> {
+export async function loadWorkspace(scope: Scope): Promise<Workspace> {
   const { drafts, files } = platform();
   const published = await files.read();
-  const baseDoc = (published?.docs[SCOPE] ?? seedForEnv().docs[SCOPE]) as ScopeDoc;
-  const record = await drafts.load(SCOPE);
+  const baseDoc = (published?.docs[scope] ?? seedForEnv().docs[scope]) as ScopeDoc;
+  const record = await drafts.load(scope);
   const doc = record?.doc ?? baseDoc;
   return { record, doc, baseDoc, publishedReleaseId: published?.releaseId ?? null, dirty: bundleChecksum(doc) !== bundleChecksum(baseDoc) };
 }
@@ -33,18 +32,18 @@ export async function loadWorkspace(): Promise<Workspace> {
 export type SaveOutcome = { ok: true; focusId?: string } | { ok: false; errors: string[]; conflict?: boolean };
 
 /** Applies one op to the working draft and saves it with the optimistic lock (`expectedRev` is what the form was rendered with). */
-export async function applyAndSave(op: DraftOp, expectedRev: number | null, actor: Actor | null): Promise<SaveOutcome> {
-  const ws = await loadWorkspace();
+export async function applyAndSave(scope: Scope, op: DraftOp, expectedRev: number | null, actor: Actor | null): Promise<SaveOutcome> {
+  const ws = await loadWorkspace(scope);
   const conflict = { ok: false as const, conflict: true, errors: ["O rascunho mudou em outra aba. Recarregue a página e tente de novo."] };
   if ((ws.record?.rev ?? null) !== expectedRev) return conflict;
   const result = applyOp(ws.doc, op, { newId: () => randomBytes(4).toString("hex") });
   if (!result.ok) return { ok: false, errors: result.errors };
-  const saved = await platform().drafts.save(SCOPE, result.doc, expectedRev, ws.publishedReleaseId, actor?.id ?? null);
+  const saved = await platform().drafts.save(scope, result.doc, expectedRev, ws.publishedReleaseId, actor?.id ?? null);
   if (!saved.ok) return conflict;
   return { ok: true, focusId: result.focusId };
 }
 
 /** Throws the draft away: the editor goes back to what is published (or to the seed). */
-export async function discardDraft(): Promise<void> {
-  await platform().drafts.discard(SCOPE);
+export async function discardDraft(scope: Scope): Promise<void> {
+  await platform().drafts.discard(scope);
 }
