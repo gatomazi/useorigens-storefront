@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { requireAdmin, SESSION_COOKIE } from "@/lib/admin/auth/guard";
+import { requireAdmin, SESSION_COOKIE, SESSION_COOKIE_PATH } from "@/lib/admin/auth/guard";
 import { deleteUpload, saveUpload } from "@/lib/admin/media";
 import { platform } from "@/lib/admin/platform";
 import { publishRelease, reconcileReleases, type PublishDeps } from "@/lib/admin/publishing";
@@ -266,7 +266,7 @@ export async function logoutAction() {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (token) await platform().sessions?.destroy(token);
-  jar.set(SESSION_COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
+  jar.set(SESSION_COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: SESSION_COOKIE_PATH, maxAge: 0 });
   await platform().audit.record({ actor: actor.id, action: "logout" }).catch(() => undefined);
   redirect("/admin/login");
 }

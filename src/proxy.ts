@@ -35,16 +35,20 @@ function isCanonicalHost(request: NextRequest): boolean {
 }
 
 export function proxy(request: NextRequest) {
-  // The admin surface (docs/admin/cms-v1-round6.md). `decideRoute` is the first layer: on the configured ADMIN_HOST only /admin/** exists
-  // (with noindex + no-store, and never behind the catalog gate below, since the admin must work while the catalog is missing); on every
-  // other host /admin/** is a plain 404, except on a development server started with ADMIN_DEV_MODE. The Host header decides which host this
-  // is; it is never treated as identity — every admin page, Server Action and route handler authenticates and authorises on its own.
+  // The admin surface lives at /admin on the SAME host as the storefront (ADMIN_HOST). `decideRoute` is the first layer: /admin/** on that
+  // host passes with noindex + no-store (and never behind the catalog gate below, since the admin must work while the catalog is missing);
+  // on the bare domain it redirects to that host; on any other host it is a plain 404 (except a development server with ADMIN_DEV_MODE).
+  // Everything that is not /admin/** is the storefront and is not touched by this block. The Host header only decides which of these
+  // cases applies; it is never treated as identity — every admin page, Server Action and route handler authenticates and authorises itself.
   const { pathname } = request.nextUrl;
   const decision = decideRoute({ host: request.headers.get("host") ?? request.nextUrl.host, pathname, adminHost: adminHostOf(), devAdmin: devAdminEnabled() });
   if (decision.action === "not-found") return new Response(null, { status: 404 });
   if (decision.action === "redirect") {
+    // The bare domain's /admin goes to the admin host (path and query kept); only ever to the configured host, never to a request-supplied one.
     const config = adminConfig();
-    const response = NextResponse.redirect(new URL(decision.pathname, config.mode === "prod" ? config.adminOrigin : request.nextUrl.origin), 307);
+    const target = config.mode === "prod" ? new URL(`${decision.pathname}${request.nextUrl.search}`, config.adminOrigin) : null;
+    if (!target) return new Response(null, { status: 404 });
+    const response = NextResponse.redirect(target, 307);
     for (const [k, v] of Object.entries(decision.headers)) response.headers.set(k, v);
     return response;
   }

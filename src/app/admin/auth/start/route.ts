@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminSurface, LOGIN_COOKIE } from "@/lib/admin/auth/guard";
+import { adminSurface, LOGIN_COOKIE, LOGIN_COOKIE_PATH } from "@/lib/admin/auth/guard";
 import { buildAuthUrl, discoverEndpoints, newLoginState, packLoginState, safeNext } from "@/lib/admin/auth/oidc";
 import { allow, clientKey } from "@/lib/admin/auth/rate-limit";
 
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const login = newLoginState(safeNext(request.nextUrl.searchParams.get("next")));
   const url = buildAuthUrl({ endpoints: await discoverEndpoints(config.oidcIssuer), clientId: config.oauthClientId, redirectUri: `${config.adminOrigin}/admin/auth/callback`, login });
   const response = NextResponse.redirect(url, 303);
-  response.cookies.set(LOGIN_COOKIE, packLoginState(login, config.sessionSecret), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
+  response.cookies.set(LOGIN_COOKIE, packLoginState(login, config.sessionSecret), { httpOnly: true, secure: true, sameSite: "lax", path: LOGIN_COOKIE_PATH, maxAge: 600 });
   response.headers.set("Cache-Control", "no-store");
   return response;
 }

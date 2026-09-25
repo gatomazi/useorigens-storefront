@@ -77,9 +77,9 @@ describe("login state and redirects", () => {
 
   test("given the authorization URL, when built, then it asks only openid email profile, with PKCE S256, state, nonce and the exact redirect URI", () => {
     const login = newLoginState("/admin");
-    const url = new URL(buildAuthUrl({ endpoints: oidcEndpoints(ISSUER), clientId: CLIENT, redirectUri: "https://admin.useorigens.com.br/admin/auth/callback", login }));
+    const url = new URL(buildAuthUrl({ endpoints: oidcEndpoints(ISSUER), clientId: CLIENT, redirectUri: "https://www.useorigens.com.br/admin/auth/callback", login }));
     expect(url.origin + url.pathname).toBe("https://backboard.railway.com/oauth/auth");
-    expect(Object.fromEntries(url.searchParams)).toMatchObject({ client_id: CLIENT, response_type: "code", scope: "openid email profile", state: login.state, nonce: login.nonce, code_challenge: codeChallenge(login.verifier), code_challenge_method: "S256", redirect_uri: "https://admin.useorigens.com.br/admin/auth/callback" });
+    expect(Object.fromEntries(url.searchParams)).toMatchObject({ client_id: CLIENT, response_type: "code", scope: "openid email profile", state: login.state, nonce: login.nonce, code_challenge: codeChallenge(login.verifier), code_challenge_method: "S256", redirect_uri: "https://www.useorigens.com.br/admin/auth/callback" });
     expect(url.searchParams.get("scope")).not.toMatch(/offline_access|workspace|project/);
     expect(url.toString()).not.toContain(login.verifier);
   });

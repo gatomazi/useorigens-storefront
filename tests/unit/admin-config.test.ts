@@ -3,7 +3,7 @@ import { adminConfig, isAdminHost } from "@/lib/admin/config";
 
 const FULL = {
   NODE_ENV: "production",
-  ADMIN_HOST: "admin.useorigens.com.br",
+  ADMIN_HOST: "www.useorigens.com.br",
   ADMIN_OWNER_EMAIL: "Dono@Example.com",
   RAILWAY_OAUTH_CLIENT_ID: "railway-client-id",
   RAILWAY_OAUTH_CLIENT_SECRET: "client-secret",
@@ -14,7 +14,7 @@ const FULL = {
 describe("admin mode decision", () => {
   test("given a production process with the complete variable set, when decided, then the admin is on, normalised, and Railway is the issuer", () => {
     const c = adminConfig(FULL);
-    expect(c).toMatchObject({ mode: "prod", adminHost: "admin.useorigens.com.br", adminOrigin: "https://admin.useorigens.com.br", ownerEmail: "dono@example.com", oidcIssuer: "https://backboard.railway.com", ownerSub: null });
+    expect(c).toMatchObject({ mode: "prod", adminHost: "www.useorigens.com.br", adminOrigin: "https://www.useorigens.com.br", ownerEmail: "dono@example.com", oidcIssuer: "https://backboard.railway.com", ownerSub: null });
   });
 
   test("given any single required variable missing, when decided, then the admin is OFF and names what is missing", () => {
@@ -56,15 +56,15 @@ describe("admin mode decision", () => {
 
   test("given a loopback admin host (automated tests), when decided, then the origin is http; a real host is always https", () => {
     expect(adminConfig({ ...FULL, ADMIN_HOST: "127.0.0.1:3400" })).toMatchObject({ adminOrigin: "http://127.0.0.1:3400" });
-    expect(adminConfig(FULL)).toMatchObject({ adminOrigin: "https://admin.useorigens.com.br" });
+    expect(adminConfig(FULL)).toMatchObject({ adminOrigin: "https://www.useorigens.com.br" });
   });
 
   test("given the admin host, when a Host header is compared, then case and default port are tolerated and look-alikes are not", () => {
-    expect(isAdminHost("ADMIN.useorigens.com.br", "admin.useorigens.com.br")).toBe(true);
-    expect(isAdminHost("admin.useorigens.com.br:443", "admin.useorigens.com.br")).toBe(true);
-    expect(isAdminHost("admin.useorigens.com.br.evil.example", "admin.useorigens.com.br")).toBe(false);
-    expect(isAdminHost("www.useorigens.com.br", "admin.useorigens.com.br")).toBe(false);
-    expect(isAdminHost(null, "admin.useorigens.com.br")).toBe(false);
-    expect(isAdminHost("admin.useorigens.com.br", null)).toBe(false);
+    expect(isAdminHost("WWW.useorigens.com.br", "www.useorigens.com.br")).toBe(true);
+    expect(isAdminHost("www.useorigens.com.br:443", "www.useorigens.com.br")).toBe(true);
+    expect(isAdminHost("www.useorigens.com.br.evil.example", "www.useorigens.com.br")).toBe(false);
+    expect(isAdminHost("useorigens.com.br", "www.useorigens.com.br")).toBe(false);
+    expect(isAdminHost(null, "www.useorigens.com.br")).toBe(false);
+    expect(isAdminHost("www.useorigens.com.br", null)).toBe(false);
   });
 });

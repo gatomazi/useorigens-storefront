@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { authorizeLogin } from "@/lib/admin/auth/authorize";
-import { adminSurface, LOGIN_COOKIE, SESSION_COOKIE, SESSION_TTL_MS } from "@/lib/admin/auth/guard";
+import { adminSurface, LOGIN_COOKIE, LOGIN_COOKIE_PATH, SESSION_COOKIE, SESSION_COOKIE_PATH, SESSION_TTL_MS } from "@/lib/admin/auth/guard";
 import { constantTimeEqual, discoverEndpoints, exchangeCode, fetchJwks, fetchUserinfo, issuersFor, unpackLoginState, verifyIdToken, OidcError, type IdClaims } from "@/lib/admin/auth/oidc";
 import { allow, clientKey } from "@/lib/admin/auth/rate-limit";
 import { platform } from "@/lib/admin/platform";
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const to = (path: string) => NextResponse.redirect(new URL(path, config.adminOrigin), 303);
   const fail = (code: string, ref?: string) => {
     const r = to(`/admin/login?erro=${code}${ref ? `&ref=${encodeURIComponent(ref)}` : ""}`);
-    r.cookies.set(LOGIN_COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
+    r.cookies.set(LOGIN_COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: LOGIN_COOKIE_PATH, maxAge: 0 });
     r.headers.set("Cache-Control", "no-store");
     return r;
   };
@@ -59,8 +59,8 @@ export async function GET(request: NextRequest) {
   const token = await sessions.create(decision.user.id, SESSION_TTL_MS);
   await audit.record({ actor: decision.user.id, action: "login" }).catch(() => undefined);
   const response = to(login.next);
-  response.cookies.set(SESSION_COOKIE, token, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: Math.floor(SESSION_TTL_MS / 1000) });
-  response.cookies.set(LOGIN_COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
+  response.cookies.set(SESSION_COOKIE, token, { httpOnly: true, secure: true, sameSite: "lax", path: SESSION_COOKIE_PATH, maxAge: Math.floor(SESSION_TTL_MS / 1000) });
+  response.cookies.set(LOGIN_COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: LOGIN_COOKIE_PATH, maxAge: 0 });
   response.headers.set("Cache-Control", "no-store");
   return response;
 }

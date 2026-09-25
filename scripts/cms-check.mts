@@ -25,6 +25,11 @@ if (config.mode === "prod") {
   ok(`admin host ${config.adminHost}, owner set, Railway OAuth client set, session secret set, DATABASE_URL set`);
   if (config.oidcIssuer !== "https://backboard.railway.com") warn("ADMIN_OIDC_ISSUER is not Railway's: fine for a test provider, wrong for production");
   ok(`redirect URI to register in the Railway OAuth App, exactly: ${config.adminOrigin}/admin/auth/callback`);
+  try {
+    const canonical = new URL(env.NEXT_PUBLIC_SITE_URL || "https://www.useorigens.com.br").host;
+    if (canonical === config.adminHost) ok("ADMIN_HOST is the storefront's own host: the panel lives at /admin on the same site (one service, no extra domain)");
+    else warn(`ADMIN_HOST (${config.adminHost}) is not the storefront host (${canonical}); the panel will answer only on ADMIN_HOST, and the OAuth callback must use it`);
+  } catch { /* NEXT_PUBLIC_SITE_URL is validated elsewhere */ }
   if (!config.ownerSub) warn("ADMIN_OWNER_RAILWAY_SUB is not set: the owner is bound by a VERIFIED e-mail equal to ADMIN_OWNER_EMAIL (if Railway does not report the e-mail as verified, sign in once, copy the account id shown on the refusal screen, and set this variable)");
   if (!config.adminOrigin.startsWith("https://")) warn("the admin origin is not https");
 } else {
@@ -43,7 +48,9 @@ if (config.mode === "prod") {
     else bad(`pending migrations: ${s.pending.join(", ")}  ->  npm run db:migrate`);
     if (s.unknown.length) warn(`the database has migrations this build does not know: ${s.unknown.join(", ")}`);
   } catch (e) {
-    bad(`cannot use the database: ${scrub(e)}`);
+    // The Railway Postgres has no public address by default: its internal host only resolves INSIDE the project.
+    if (new URL(config.databaseUrl).hostname.endsWith(".railway.internal")) warn(`the database uses Railway's internal host, which is not reachable from this machine (${scrub(e)}). Run this check inside the service: railway ssh --service useorigens-storefront -- npm run db:status`);
+    else bad(`cannot use the database: ${scrub(e)}`);
   } finally {
     await db.close().catch(() => undefined);
   }
@@ -59,8 +66,17 @@ else {
   try {
     const addressing = env.BUCKET_ADDRESSING === "path" || env.BUCKET_ADDRESSING === "virtual" ? env.BUCKET_ADDRESSING : defaultAddressing(bucket.endpoint!);
     const store = createObjectStore({ endpoint: bucket.endpoint!, bucket: bucket.name!, accessKeyId: bucket.accessKeyId!, secretAccessKey: bucket.secretAccessKey!, region: env.BUCKET_REGION || "auto", addressing });
-    await store.exists(probe); // 404 = authenticated and empty; 403 or a network error throws (nothing is written or deleted)
-    ok(`the bucket answers (${addressing}-style addressing) and the credentials are accepted; nothing was written`);
+    const region = env.BUCKET_REGION || "auto";
+    try {
+      await store.exists(probe); // 404 = authenticated and empty; 403 or a network error throws (nothing is written or deleted)
+      ok(`the bucket answers (${addressing}-style addressing, signing region "${region}") and the credentials are accepted; nothing was written`);
+    } catch (first) {
+      if (region === "auto") throw first;
+      // Railway shows the bucket's location (e.g. "iad") in REGION, but its S3 endpoint signs with "auto": try that before failing.
+      const auto = createObjectStore({ endpoint: bucket.endpoint!, bucket: bucket.name!, accessKeyId: bucket.accessKeyId!, secretAccessKey: bucket.secretAccessKey!, region: "auto", addressing });
+      await auto.exists(probe);
+      warn(`the bucket only accepted the signing region "auto", not "${region}": set BUCKET_REGION=auto in the service`);
+    }
   } catch (e) {
     bad(`cannot reach the bucket with these credentials: ${scrub(e)} (if the bucket is an older one, try BUCKET_ADDRESSING=path)`);
   }

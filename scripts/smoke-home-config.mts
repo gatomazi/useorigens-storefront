@@ -22,8 +22,8 @@ const META = "1558923262073052"; // the public production IDs, used only as env 
 const GA = "G-8GYTEJ1F77";
 const servers: { name: string; port: number; env: Record<string, string>; child?: ChildProcess; volume?: string }[] = [
   { name: "flag OFF", port: 3231, env: {} },
-  // ADMIN_HOST alone is a PARTIAL admin configuration (no database, no Google client, no secret): the admin must stay closed.
-  { name: "flag ON ", port: 3232, env: { SITE_CONFIG_HOME: "on", ADMIN_HOST: "admin.smoke.test" } },
+  // ADMIN_HOST alone is a PARTIAL admin configuration (no database, no OAuth client, no secret): the admin must stay closed.
+  { name: "flag ON ", port: 3232, env: { SITE_CONFIG_HOME: "on", ADMIN_HOST: "www.smoke.test" } },
 ];
 const tmpDirs: string[] = [];
 let failures = 0;
@@ -244,9 +244,11 @@ async function main() {
       check(`${s.name.trim()}: ${p} -> 404`, r.status === 404, r.status);
     }
     for (const p of ["/admin", "/admin/login", "/admin/auth/start", "/admin/home"]) {
-      const r = await fetch(`http://127.0.0.1:${s.port}${p}`, { headers: { Host: "admin.smoke.test" }, redirect: "manual" });
+      const r = await fetch(`http://127.0.0.1:${s.port}${p}`, { headers: { Host: "www.smoke.test" }, redirect: "manual" });
       check(`${s.name.trim()}: ${p} on the admin host WITHOUT a complete admin configuration -> 404`, r.status === 404, r.status);
     }
+    const publicOnAdminHost = await fetch(`http://127.0.0.1:${s.port}/sul`, { headers: { Host: "www.smoke.test" } });
+    check(`${s.name.trim()}: the storefront on that same host is untouched (/sul -> 200)`, publicOnAdminHost.status === 200, publicOnAdminHost.status);
     const post = await fetch(`http://localhost:${s.port}/admin/home`, { method: "POST", headers: { "Next-Action": "abc", "Content-Type": "text/plain" }, body: "[]" });
     check(`${s.name.trim()}: a server-action POST to /admin -> 404`, post.status === 404, post.status);
   }

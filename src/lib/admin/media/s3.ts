@@ -64,10 +64,22 @@ export function defaultAddressing(endpoint: string): Addressing {
 
 export function createObjectStore(config: ObjectStoreConfig & { addressing?: Addressing }, fetchImpl: typeof fetch = fetch): ObjectStore {
   const base = new URL(config.endpoint);
-  const region = config.region ?? "auto";
+  // Railway's REGION variable shows the bucket's LOCATION (e.g. "iad"), while its documentation says the S3 endpoint signs with "auto":
+  // start with what was configured and, on an authorization failure (403), retry once with the other; the one that works is kept.
+  const candidates = [...new Set([config.region ?? "auto", "auto"])];
+  let regionIndex = 0;
   const addressing = config.addressing ?? defaultAddressing(config.endpoint);
   const request = async (method: "PUT" | "GET" | "HEAD" | "DELETE", key: string, body?: Uint8Array, extra: Record<string, string> = {}): Promise<Response> => {
     if (!OBJECT_KEY_RE.test(key)) throw new Error("refusing an object key outside media/<sha256>/<width>.webp");
+    for (let i = regionIndex; ; i++) {
+      const res = await signedRequest(method, key, candidates[i], body, extra);
+      if (res.status !== 403 || i + 1 >= candidates.length) {
+        if (res.status !== 403) regionIndex = i;
+        return res;
+      }
+    }
+  };
+  const signedRequest = async (method: "PUT" | "GET" | "HEAD" | "DELETE", key: string, region: string, body?: Uint8Array, extra: Record<string, string> = {}): Promise<Response> => {
     const encodedKey = key.split("/").map(encodeSegment).join("/");
     const host = addressing === "virtual" ? `${config.bucket}.${base.host}` : base.host;
     const path = addressing === "virtual" ? `/${encodedKey}` : `${base.pathname.replace(/\/$/, "")}/${encodeSegment(config.bucket)}/${encodedKey}`;

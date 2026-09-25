@@ -11,7 +11,7 @@
 | Login | Google OIDC | **Login with Railway** (OIDC). Discovery oficial (`backboard.railway.com/oauth/.well-known/openid-configuration`, com os URLs documentados como reserva, e todo endpoint precisa estar sob `https://backboard.railway.com/`). Code + PKCE S256, `state`, `nonce`; ID token **ES256** (o único algoritmo do Railway; RS256/HS256/none recusados); `iss`, `aud`, `exp`, `iat`, JWKS por `kid`; cliente autenticado por HTTP Basic. **Escopos: só `openid email profile`.** Sem tokens guardados. |
 | Identidade | e-mail Google verificado | Vínculo pelo **`sub` imutável** (coluna `provider_sub`, migration `0002` ajustada: nunca foi aplicada em banco real). Outra conta com o mesmo e-mail é recusada; a conta vinculada continua entrando se o e-mail mudar. |
 | E-mail verificado | assumido | **Nunca assumido.** Só e-mail presente **e** verificado abre uma vaga na lista de pessoas. Se o ID token não trouxer e-mail, consulta-se `userinfo` (`/oauth/me`) só para a **mesma** conta. Se o Railway não vouchar o e-mail do owner: a tela de recusa mostra o **identificador da conta** e o owner o define em `ADMIN_OWNER_RAILWAY_SUB` (vínculo por id, procedimento controlado, sem confiar em e-mail). Ninguém vira editor só por conseguir entrar. |
-| Env | `GOOGLE_*` | `RAILWAY_OAUTH_CLIENT_ID`, `RAILWAY_OAUTH_CLIENT_SECRET`, `ADMIN_OWNER_RAILWAY_SUB` (opcional). Redirect URI a cadastrar, **exatamente**: `https://admin.useorigens.com.br/admin/auth/callback` (mantive a rota efetiva `/admin/auth/callback`, não `/auth/callback`: todo o painel usa o prefixo `/admin`). |
+| Env | `GOOGLE_*` | `RAILWAY_OAUTH_CLIENT_ID`, `RAILWAY_OAUTH_CLIENT_SECRET`, `ADMIN_OWNER_RAILWAY_SUB` (opcional). Redirect URI a cadastrar, **exatamente**: `https://www.useorigens.com.br/admin/auth/callback` (Rodada 7b; antes era o subdomínio `admin.`; mantive a rota efetiva `/admin/auth/callback`, não `/auth/callback`: todo o painel usa o prefixo `/admin`). |
 | Mídia | R2 + `media.useorigens.com.br` | **Railway Storage Bucket privado** (endpoint documentado `https://t3.storageapi.dev`, região `auto`, endereçamento virtual-hosted por padrão, path-style por `BUCKET_ADDRESSING=path`). Sem domínio de mídia, sem bucket público, sem CDN prometido. Env: `BUCKET_ENDPOINT`, `BUCKET_NAME`, `BUCKET_ACCESS_KEY_ID`, `BUCKET_SECRET_ACCESS_KEY`, `BUCKET_REGION` (referências às variáveis do serviço do bucket). |
 | Entrega de imagens | URL do R2 no `published.json` | `GET /media/<sha256>/<largura>.webp` **na própria loja**: formato estrito (sem traversal/SSRF), **só chaves listadas no `published.json`** (leitura local: nada de banco, nada de listar o bucket), `immutable` por um ano, `nosniff`, CSP `sandbox`, `ETag`/304, cache LRU em memória (32 MB), erro do bucket = 502 não cacheável (a seção cai para cor/gradiente). Fora do gate 503 do catálogo. O `published.json` guarda só caminhos relativos `/media/...`; URLs absolutas e `/admin/...` são recusadas na publicação e no leitor tolerante (exceção: o sandbox local de desenvolvimento). |
 | Prévia/rascunhos | URL pública | Imagens de rascunho **não** saem por `/media` (404 até publicar). A prévia usa `/admin/media/<sha256>/<largura>.webp`, autenticado e `no-store`, e só objetos de uploads conhecidos. |
@@ -65,9 +65,9 @@ Sem enviar segredos no chat: valores vão direto no painel do Railway.
 1. Informar (por variável, não no repositório) o e-mail do owner → `ADMIN_OWNER_EMAIL`. Editores, se houver, precisam de conta Railway.
 2. Aprovar custo e criar **um PostgreSQL** no projeto; `DATABASE_URL` por referência. Comprovar backup no painel.
 3. Aprovar custo (US$ 0,015/GB-mês, documentado) e criar **um Storage Bucket**; referenciar `BUCKET_ENDPOINT`, `BUCKET_NAME`, `BUCKET_ACCESS_KEY_ID`, `BUCKET_SECRET_ACCESS_KEY`, `BUCKET_REGION`.
-4. Criar a **OAuth App** (Settings → Developer) com redirect `https://admin.useorigens.com.br/admin/auth/callback`; Client ID/Secret → `RAILWAY_OAUTH_CLIENT_ID`, `RAILWAY_OAUTH_CLIENT_SECRET`.
-5. Custom domain `admin.useorigens.com.br` no serviço da loja; CNAME + TXT no DNS atual (sem migrar nada).
-6. `ADMIN_SESSION_SECRET` (gerado por você), `ADMIN_HOST=admin.useorigens.com.br`.
+4. Criar/ajustar a **OAuth App** (Settings → Developer) com redirect `https://www.useorigens.com.br/admin/auth/callback`; Client ID/Secret → `RAILWAY_OAUTH_CLIENT_ID`, `RAILWAY_OAUTH_CLIENT_SECRET`.
+5. ~~Custom domain do admin~~ (abandonado: ver Rodada 7b).
+6. `ADMIN_SESSION_SECRET` (gerado por você) e `ADMIN_HOST=www.useorigens.com.br`.
 7. Então, com a minha ajuda: `railway run npm run db:status` → `db:migrate` → `cms:check`; e os testes de ponta a ponta reais (login owner, editor negado em outra região, upload, seção, prévia, publicar/restaurar, coleções internas, tracking inalterado).
 8. Só depois: autorizar push/deploy (admin operacional primeiro, home ainda na configuração atual), depois `SITE_CONFIG_HOME=on` em separado, depois (opcional) IDs de tracking regionais.
 
@@ -78,3 +78,33 @@ Tabela completa no runbook (seção 4). Ordem: infraestrutura → admin privado 
 ## 7. Commits locais
 
 Ver `git log` na branch. Ficaram fora: `docs/design/lighthouse/`, `docs/screenshots/`, snapshots locais, `data/admin-dev`, `.env*`.
+
+---
+
+# Rodada 7b: painel em `/admin` no host `www` (mesmo serviço, sem DNS novo)
+
+Decisão do proprietário: abandonar `admin.useorigens.com.br` (o limite de dois domínios já foi atingido). O painel passa a viver em **`https://www.useorigens.com.br/admin`**, no mesmo serviço da loja. Sem wildcard, sem outro serviço, sem alteração de DNS.
+
+- **Integração:** `origin/main` já continha as Rodadas 1–6 (PR #1, com `150db18`), o cart-mirror e os eventos de tracking (PR #2). Fiz `git merge origin/main` na branch (sem conflito); nenhuma funcionalidade publicada foi perdida (a suíte completa da loja passou depois da integração).
+- **Roteamento (`routing.ts` + `proxy.ts`):** só caminhos `/admin/**` são tratados. No `ADMIN_HOST` passam com `noindex` e `no-store` (sem gate de catálogo); **todo o resto é a loja, intocado** (o teste compara status e cabeçalhos das rotas públicas no host do admin e em outro host). Em qualquer outro host `/admin/**` é 404. `useorigens.com.br/admin/...` redireciona 307 para `www` (caminho e consulta mantidos); o restante do domínio raiz não muda.
+- **Cookies:** como o painel divide o host com a loja, a sessão (`__Secure-uo_admin`) tem `Path=/admin` e o estado do login (`__Secure-uo_oidc`) `Path=/admin/auth`; ambos `Secure`, `HttpOnly`, `SameSite=Lax`, sem `Domain`. Teste E2E prova que uma requisição a `/sul` no mesmo host **não** leva o cookie. (`__Host-` foi abandonado: exige `Path=/`.)
+- **Origin/Host:** mutations exigem `Origin = https://www.useorigens.com.br`; o redirect do OAuth é montado a partir de `ADMIN_HOST`, nunca do `Host` recebido. `/media/...` (pública, só publicados) e `/admin/media/...` (autenticada) coexistem sem conflito.
+- **Callback:** exatamente `https://www.useorigens.com.br/admin/auth/callback`. Redirecionamentos raiz↔`www` não interferem: o login sempre começa e termina em `www`.
+- **CLI de banco:** `npm run db:status|db:migrate` agora é Node puro + `pg` (`db/db-cli.mjs`), para rodar **dentro** do serviço (`railway ssh`), já que o Postgres do Railway não tem endereço público. O código do runner é o mesmo que os testes exercitam.
+- **S3:** o cliente tenta a região configurada (`iad`, que é o que o Railway mostra) e, se o bucket recusar (403), repete uma vez com `auto` e memoriza o que funcionar.
+- **Estado real do Railway** (verificado só por nomes/flags, sem valores): ver seção 3 do runbook. Pendências: `ADMIN_HOST` ainda aponta para `admin.`; `ADMIN_SESSION_SECRET` tem < 32 caracteres (o painel ficaria desligado); conferir o callback no OAuth App.
+
+## Verificações da 7b
+
+| Verificação (depois de integrar `origin/main`) | Resultado |
+|---|---|
+| `tsc`, ESLint | limpo (2 avisos antigos em `db/validate-migrations.mjs`) |
+| Vitest (unitários + integração em Postgres real, incluindo cart-mirror e tracking do `main`) | **493 testes**, 29 arquivos |
+| Roteamento (`/admin` no host `www`, raiz → `www`, outros hosts 404, loja intocada) | 10 testes unitários novos |
+| Build de produção sem serviços, flags off | ok |
+| E2E do admin em modo produção (Postgres real via rede, OIDC Railway falso, bucket privado falso) | **8/8**, agora no mesmo host da loja: login, permissões por região, upload, prévia, publicar/restaurar, `/media`, cookie `Path=/admin` que **não** acompanha requisições públicas, rotas públicas idênticas no host do admin e em outro host |
+| E2E do admin em modo dev | **3/3** |
+| Smoke de produção (inclui loja intacta no mesmo host com configuração parcial do admin) | passou |
+| E2E da loja (Playwright, uma passagem, com cart-mirror e eventos de tracking) | **143/143** |
+| `verify:prerender` e `verify:bootstrap` (build limpo) | passaram |
+| CLI `db-cli.mjs` sobre o protocolo real do Postgres (status → migrate → migrate → status) | ok (idempotente) |

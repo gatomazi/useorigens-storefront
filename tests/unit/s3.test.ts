@@ -53,6 +53,21 @@ describe("object store", () => {
     expect(calls[0].url).toBe(`https://t3.storageapi.dev/my-bucket-jdhhd8oe18xi/media/${SHA}/640.webp`);
   });
 
+  test("given a configured signing region that Railway rejects (403), when used, then it retries once with \"auto\" and keeps what works", async () => {
+    const seen: string[] = [];
+    const impl = (async (_url: string, init: RequestInit) => {
+      const region = /Credential=[^/]+\/\d{8}\/([^/]+)\//.exec((init.headers as Record<string, string>).Authorization)![1];
+      seen.push(region);
+      return new Response(null, { status: region === "iad" ? 403 : 200 });
+    }) as unknown as typeof fetch;
+    const store = createObjectStore({ ...railway, region: "iad" }, impl);
+    expect(await store.exists(`media/${SHA}/640.webp`)).toBe(true);
+    expect(await store.exists(`media/${SHA}/1080.webp`)).toBe(true);
+    expect(seen).toEqual(["iad", "auto", "auto"]); // the second call goes straight to the region that worked
+    const denied = createObjectStore({ ...railway, region: "auto" }, (async () => new Response(null, { status: 403 })) as unknown as typeof fetch);
+    await expect(denied.exists(`media/${SHA}/640.webp`)).rejects.toThrow("403"); // a real denial is not retried forever
+  });
+
   test("given a stored object, when read, then its bytes and type come back; a missing one is null and an error throws", async () => {
     const key = `media/${SHA}/640.webp`;
     const ok = (async () => new Response(new Uint8Array([9, 8, 7]), { status: 200, headers: { "content-type": "image/webp" } })) as unknown as typeof fetch;
