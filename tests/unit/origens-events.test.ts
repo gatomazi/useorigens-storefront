@@ -14,8 +14,8 @@ describe("extractArrival — the one-time marker is a closed enum, consumed and 
     const r = extractArrival(`?utm_source=meta&${ARRIVAL_SRC_PARAM}=ink_cart_drawer&${ARRIVAL_PRODUCT_PARAM}=${SERRA}&x=1`);
     expect(r).toEqual({ entryPoint: "ink_cart_drawer", productSlug: SERRA, present: true, search: "?utm_source=meta&x=1" });
   });
-  test("given each of the three entry points, then all are accepted", () => {
-    for (const value of ["ink_cart_drawer", "ink_post_add", "ink_product_return"]) expect(extractArrival(`?origens_src=${value}`).entryPoint).toBe(value);
+  test("given each of the four entry points, then all are accepted", () => {
+    for (const value of ["ink_cart_drawer", "ink_post_add", "ink_product_detail", "ink_product_return"]) expect(extractArrival(`?origens_src=${value}`).entryPoint).toBe(value);
   });
   test("given an unknown/injected entry point or a slug outside the five, then nothing is accepted but both parameters are still removed", () => {
     for (const bad of ["storefront_cart_mirror", "INK_CART_DRAWER", "ink_cart_drawer,x", "<script>", "", "https://evil.example", TOKEN]) {
