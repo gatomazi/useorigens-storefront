@@ -2,7 +2,7 @@
  * The ONE decision about whether the admin exists in this process, and how. Pure (no I/O), so it is unit-tested and importable from the
  * proxy. Three outcomes:
  *   - "dev":  development server + ADMIN_DEV_MODE=true (loopback-only, per request; see dev-guard.ts). The local sandbox under data/admin-dev.
- *   - "prod": NODE_ENV=production AND the complete set of variables below. Google OIDC + PostgreSQL + (optionally) R2 + the Volume.
+ *   - "prod": NODE_ENV=production AND the complete set of variables below. Login with Railway (OIDC) + PostgreSQL + (optionally) a Railway Storage Bucket + the Volume.
  *   - "off":  everything else. `/admin/**` is a plain 404 and no admin code touches a database, R2 or the disk. `missing` says why.
  * ADMIN_DEV_MODE never enables anything in a production process: it is ignored (and reported), whatever else is set.
  */
@@ -14,8 +14,10 @@ export type AdminConfig =
       adminHost: string; // lower-case host[:port] the admin answers on
       adminOrigin: string; // https://host (http only for a loopback host, i.e. the automated tests)
       ownerEmail: string;
-      googleClientId: string;
-      googleClientSecret: string;
+      oauthClientId: string;
+      oauthClientSecret: string;
+      /** Optional: the owner's immutable Railway account id (`sub`). Lets the first owner be bound without trusting an e-mail claim. */
+      ownerSub: string | null;
       sessionSecret: string;
       databaseUrl: string;
       oidcIssuer: string;
@@ -23,17 +25,17 @@ export type AdminConfig =
 
 type Env = Record<string, string | undefined>;
 
-const REQUIRED = ["ADMIN_HOST", "ADMIN_OWNER_EMAIL", "GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "ADMIN_SESSION_SECRET", "DATABASE_URL"] as const;
+const REQUIRED = ["ADMIN_HOST", "ADMIN_OWNER_EMAIL", "RAILWAY_OAUTH_CLIENT_ID", "RAILWAY_OAUTH_CLIENT_SECRET", "ADMIN_SESSION_SECRET", "DATABASE_URL"] as const;
 const HOST_RE = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:\d{2,5})?$/;
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
-export const GOOGLE_ISSUER = "https://accounts.google.com";
+export const RAILWAY_ISSUER = "https://backboard.railway.com";
 const isLoopbackName = (host: string) => ["localhost", "127.0.0.1"].includes(host.split(":")[0]);
 
-/** Google in production. A loopback issuer is accepted only for the automated tests' fake provider. */
+/** Railway in production. A loopback issuer is accepted only for the automated tests' fake provider. */
 function issuerFrom(env: Env): string | null {
   const raw = env.ADMIN_OIDC_ISSUER?.trim();
-  if (!raw) return GOOGLE_ISSUER;
-  if (raw === GOOGLE_ISSUER) return raw;
+  if (!raw) return RAILWAY_ISSUER;
+  if (raw === RAILWAY_ISSUER) return raw;
   try {
     const u = new URL(raw);
     return u.protocol === "http:" && isLoopbackName(u.host) ? raw.replace(/\/$/, "") : null;
@@ -55,7 +57,7 @@ export function adminConfig(env: Env = process.env): AdminConfig {
   const sessionSecret = env.ADMIN_SESSION_SECRET ?? "";
   if (sessionSecret && sessionSecret.length < 32) missing.push("ADMIN_SESSION_SECRET (at least 32 characters)");
   const oidcIssuer = issuerFrom(env);
-  if (!oidcIssuer) missing.push("ADMIN_OIDC_ISSUER (unset, or Google's)");
+  if (!oidcIssuer) missing.push("ADMIN_OIDC_ISSUER (unset, or Railway's)");
   if (missing.length > 0 || !oidcIssuer) return { mode: "off", missing, ignoredDevMode };
 
   return {
@@ -63,8 +65,9 @@ export function adminConfig(env: Env = process.env): AdminConfig {
     adminHost,
     adminOrigin: `${isLoopbackName(adminHost) ? "http" : "https"}://${adminHost}`,
     ownerEmail,
-    googleClientId: env.GOOGLE_OAUTH_CLIENT_ID!.trim(),
-    googleClientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET!.trim(),
+    oauthClientId: env.RAILWAY_OAUTH_CLIENT_ID!.trim(),
+    oauthClientSecret: env.RAILWAY_OAUTH_CLIENT_SECRET!.trim(),
+    ownerSub: env.ADMIN_OWNER_RAILWAY_SUB?.trim() || null,
     sessionSecret,
     databaseUrl: env.DATABASE_URL!.trim(),
     oidcIssuer,

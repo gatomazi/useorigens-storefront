@@ -16,9 +16,9 @@
     "test": "vitest run",
     "test:admin": "playwright test -c playwright.admin.config.ts",
     "typecheck": "tsc --noEmit",
-    "db:status": "node --env-file-if-exists=.env.local --import tsx scripts/db.mts status",
-    "db:migrate": "node --env-file-if-exists=.env.local --import tsx scripts/db.mts migrate",
-    "db:validate": "node --import tsx scripts/db.mts validate",
+    "db:status": "node --env-file-if-exists=.env.local db/db-cli.mjs status",
+    "db:migrate": "node --env-file-if-exists=.env.local db/db-cli.mjs migrate",
+    "db:validate": "node db/db-cli.mjs validate",
     "test:admin:prod": "playwright test -c playwright.prod.config.ts",
     "cms:check": "node --env-file-if-exists=.env.local --import tsx scripts/cms-check.mts"
   },

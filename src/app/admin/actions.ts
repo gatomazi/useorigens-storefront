@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import { requireAdmin, SESSION_COOKIE } from "@/lib/admin/auth/guard";
+import { requireAdmin, SESSION_COOKIE, SESSION_COOKIE_PATH } from "@/lib/admin/auth/guard";
 import { deleteUpload, saveUpload } from "@/lib/admin/media";
 import { platform } from "@/lib/admin/platform";
 import { publishRelease, reconcileReleases, type PublishDeps } from "@/lib/admin/publishing";
@@ -21,7 +21,7 @@ import { applyAndSave, discardDraft, loadWorkspace, SCOPE, type SaveOutcome } fr
 import type { DraftOp } from "@/lib/admin/draft-ops";
 
 /**
- * Every server action of the CMS. Each one authenticates and authorises on its own (`requireAdmin`: development guard or Google session,
+ * Every server action of the CMS. Each one authenticates and authorises on its own (`requireAdmin`: development guard or Railway session,
  * host, Origin, role, region) before doing anything — the proxy and the layout are not trusted as the only barrier — and answers with a
  * redirect carrying a short flash message, so a reload never re-submits a form.
  */
@@ -246,7 +246,7 @@ export async function saveUserAction(fd: FormData) {
   if (scopes.length === 0) back("/admin/usuarios", { err: ["Escolha ao menos uma região."] });
   const created = await users.create({ email, name: null, role: "editor", scopes });
   await platform().audit.record({ actor: actor.id, action: "user.create", target: created.id, meta: { scopes } }).catch(() => undefined);
-  back("/admin/usuarios", { ok: "Editor cadastrado. Ele já pode entrar com a conta Google desse e-mail." });
+  back("/admin/usuarios", { ok: "Editor cadastrado. Ele já pode entrar com a conta Railway desse e-mail." });
 }
 
 export async function deactivateUserAction(fd: FormData) {
@@ -266,7 +266,7 @@ export async function logoutAction() {
   const jar = await cookies();
   const token = jar.get(SESSION_COOKIE)?.value;
   if (token) await platform().sessions?.destroy(token);
-  jar.set(SESSION_COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
+  jar.set(SESSION_COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: SESSION_COOKIE_PATH, maxAge: 0 });
   await platform().audit.record({ actor: actor.id, action: "logout" }).catch(() => undefined);
   redirect("/admin/login");
 }

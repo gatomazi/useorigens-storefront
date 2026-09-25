@@ -49,16 +49,18 @@ export interface PublishedFileStore {
 
 // ── People, sessions, audit ──────────────────────────────────────────────────────────────────────────────────
 
-export type UserRow = Actor & { active: boolean; googleSub: string | null; createdAt: string; lastLoginAt: string | null };
+export type UserRow = Actor & { active: boolean; providerSub: string | null; createdAt: string; lastLoginAt: string | null };
 
 export interface UserRepository {
   findByEmail(email: string): Promise<UserRow | null>;
   findById(id: string): Promise<UserRow | null>;
+  /** The user already bound to this provider account id, if any. */
+  findByProviderSub(sub: string): Promise<UserRow | null>;
   list(): Promise<UserRow[]>;
   create(input: { email: string; name: string | null; role: Role; scopes: Scope[] }): Promise<UserRow>;
   update(id: string, patch: { role?: Role; scopes?: Scope[]; active?: boolean; name?: string | null }): Promise<UserRow | null>;
-  /** Binds the Google account (`sub`) on first login. Returns false when this user is already bound to a DIFFERENT account. */
-  bindGoogleSub(id: string, sub: string): Promise<boolean>;
+  /** Binds the identity provider account (`sub`) on first login. Returns false when this user is already bound to a DIFFERENT account. */
+  bindProviderSub(id: string, sub: string): Promise<boolean>;
   touchLogin(id: string): Promise<void>;
 }
 

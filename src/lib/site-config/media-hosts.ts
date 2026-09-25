@@ -1,25 +1,24 @@
 /**
  * Where a published image may come from. A bundle's media table is data written by the CMS and read by the public storefront, so the
- * storefront only ever renders images from (a) files under /public and (b) the one media origin (R2 behind a Cloudflare custom domain),
- * and only the exact object layout the CMS writes: /media/<sha256>/<width>.webp. Pure; not `server-only` (the validators are shared).
+ * storefront only renders images that live under its OWN origin: files under /public, and CMS uploads served by its own `/media/...` route
+ * (a private Railway Storage Bucket behind that route: the bucket is never exposed, and no foreign host is ever referenced). Only the exact
+ * object layout the CMS writes is accepted for `/media/`, and the admin's own URLs (`/admin/...`) can never appear in a published production bundle.
+ * Pure; not `server-only` (the validators are shared).
  */
-export const MEDIA_ORIGIN = "https://media.useorigens.com.br";
-const OBJECT_PATH = /^\/media\/[0-9a-f]{64}\/\d{3,4}\.webp$/;
+export const MEDIA_PATH = /^\/media\/[0-9a-f]{64}\/\d{3,4}\.webp$/;
 
-/** The default origin plus any owner-configured extras (MEDIA_EXTRA_ORIGINS, comma-separated exact origins: a staging domain, or a loopback host in tests). */
-export function allowedMediaOrigins(env: Record<string, string | undefined> = process.env): string[] {
-  const extra = (env.MEDIA_EXTRA_ORIGINS ?? "").split(",").map((s) => s.trim().replace(/\/$/, "")).filter(Boolean);
-  return [MEDIA_ORIGIN, ...extra];
-}
-
-export function isAllowedMediaSrc(src: unknown, env: Record<string, string | undefined> = process.env): src is string {
-  if (typeof src !== "string" || src.length > 400 || src.includes("..") || /[\s\\]/.test(src)) return false;
-  if (src.startsWith("/")) return !src.startsWith("//");
-  try {
-    const u = new URL(src);
-    if (u.username || u.password || u.search || u.hash) return false;
-    return allowedMediaOrigins(env).includes(u.origin) && OBJECT_PATH.test(u.pathname);
-  } catch {
-    return false;
+export function isAllowedMediaSrc(src: unknown): src is string {
+  if (typeof src !== "string" || src.length > 200 || src.includes("..") || /[\s\\?#]/.test(src)) return false;
+  if (!src.startsWith("/") || src.startsWith("//")) return false; // same-origin paths only: no scheme, no host
+  if (src === "/admin" || src.startsWith("/admin/")) {
+    // The admin's own URLs can never be part of a PUBLISHED production bundle. The one exception is the local sandbox (development only):
+    // a dev upload is served by the dev-guarded /admin/media/<24 hex>.webp route.
+    return process.env.NODE_ENV !== "production" && /^\/admin\/media\/[0-9a-f]{24}\.webp$/.test(src);
   }
+  if (src === "/media" || src.startsWith("/media/")) return MEDIA_PATH.test(src);
+  return true;
 }
+
+/** The URL prefix the public route serves (`/media/<sha256>/<width>.webp`) and its authenticated preview twin for the admin. */
+export const publicMediaUrl = (key: string): string => `/${key}`;
+export const adminMediaUrl = (key: string): string => `/admin/${key}`;

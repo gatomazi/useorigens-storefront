@@ -6,8 +6,8 @@ import { createPgDb } from "./db/pg-db";
 import type { Db } from "./db/db";
 import { adminDevDir, fileDraftRepository, sandboxPublishedDir } from "./local-store";
 import { devMediaStore } from "./media/dev-store";
-import { r2MediaStore } from "./media/r2-store";
-import { createObjectStore } from "./media/s3";
+import { bucketMediaStore } from "./media/bucket-store";
+import { bucketFromEnv } from "./media/bucket-env";
 import type { MediaStore } from "./media/types";
 import { fileReleaseStore, filePublishedStore } from "./publishing";
 import { pgAuditLog, pgDraftRepository, pgReleaseStore, pgSessionRepository, pgSyncRunRepository, pgUserRepository } from "./store/pg-stores";
@@ -16,7 +16,7 @@ import type { AuditEntry, AuditLog, AuditRow, DraftRepository, PublishedFileStor
 /**
  * Where the admin's data lives, chosen once per process from `adminConfig()`:
  *   dev  → JSON files under data/admin-dev (no database, no login, loopback-only; see dev-guard.ts)
- *   prod → PostgreSQL (drafts, releases, people, sessions, audit, sync runs), R2 (uploads), the Volume namespace `site-config/` (published.json)
+ *   prod → PostgreSQL (drafts, releases, people, sessions, audit, sync runs), a Railway Storage Bucket (uploads), the Volume namespace `site-config/` (published.json)
  * Nothing here is imported by a public page, and nothing here runs at import time or during `next build`: the first admin request builds it.
  */
 export type Platform = {
@@ -76,12 +76,6 @@ function memorySyncs(): SyncRunRepository {
   };
 }
 
-function r2FromEnv(env: Record<string, string | undefined> = process.env) {
-  const { R2_ENDPOINT: endpoint, R2_BUCKET: bucket, R2_ACCESS_KEY_ID: accessKeyId, R2_SECRET_ACCESS_KEY: secretAccessKey, MEDIA_PUBLIC_BASE_URL: publicBase } = env;
-  if (!endpoint || !bucket || !accessKeyId || !secretAccessKey || !publicBase) return { objects: null, publicBase: null };
-  return { objects: createObjectStore({ endpoint, bucket, accessKeyId, secretAccessKey }), publicBase };
-}
-
 export function platform(): Platform {
   const config = adminConfig();
   if (config.mode === "off") throw new Error("the admin is not enabled in this process");
@@ -105,13 +99,13 @@ export function platform(): Platform {
     };
   } else {
     const db = createPgDb({ connectionString: config.databaseUrl, max: Number(process.env.DATABASE_POOL_MAX) || 4, ssl: process.env.DATABASE_SSL === "require" });
-    const { objects, publicBase } = r2FromEnv();
+    const objects = bucketFromEnv();
     built = {
       mode: "prod",
       drafts: pgDraftRepository(db),
       releases: pgReleaseStore(db),
       files: filePublishedStore(siteConfigDir()),
-      media: r2MediaStore({ db, objects, publicBase }),
+      media: bucketMediaStore({ db, objects }),
       audit: pgAuditLog(db),
       syncs: pgSyncRunRepository(db),
       users: pgUserRepository(db),

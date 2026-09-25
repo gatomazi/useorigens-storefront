@@ -16,8 +16,15 @@ import { canEdit, type Actor } from "../store/ports";
  *
  * Development (`ADMIN_DEV_MODE`, loopback only) has no login: the developer is the owner of a local sandbox.
  */
-export const SESSION_COOKIE = "__Host-uo_admin";
-export const LOGIN_COOKIE = "__Host-uo_oidc";
+/**
+ * Cookies. The admin shares its host with the storefront, so both cookies are scoped to the admin paths only: the browser never sends them
+ * to a public page. (`__Host-` would force Path=/, so `__Secure-` is used: it still requires Secure, and no Domain attribute is set, which
+ * keeps them host-only.) Session: HttpOnly, Secure, SameSite=Lax, Path=/admin. OIDC state: same, Path=/admin/auth.
+ */
+export const SESSION_COOKIE = "__Secure-uo_admin";
+export const LOGIN_COOKIE = "__Secure-uo_oidc";
+export const SESSION_COOKIE_PATH = "/admin";
+export const LOGIN_COOKIE_PATH = "/admin/auth";
 export const SESSION_TTL_MS = 12 * 60 * 60_000;
 export const SESSION_IDLE_MS = 2 * 60 * 60_000;
 

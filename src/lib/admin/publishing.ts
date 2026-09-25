@@ -16,7 +16,7 @@ import type { BeginRequest, PublishedFileStore, ReleaseStore, ReleaseView } from
  * What differs is only WHERE the ports point: the local sandbox uses a JSON ledger + a directory under data/admin-dev; production uses
  * PostgreSQL + the Volume namespace `site-config/`. Nothing here is imported by a public page.
  */
-export type MediaResolver = (assetIds: Iterable<string>) => Promise<Record<string, MediaAssetInfo>>;
+export type MediaResolver = (assetIds: Iterable<string>, purpose?: "publish" | "preview") => Promise<Record<string, MediaAssetInfo>>;
 export type PublishDeps = { releases: ReleaseStore; files: PublishedFileStore; media: MediaResolver; actorId: string | null };
 
 const envTracking = () => ({ metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || null, ga4MeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || null });

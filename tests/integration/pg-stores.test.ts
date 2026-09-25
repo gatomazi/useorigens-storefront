@@ -8,7 +8,7 @@ import { loadMigrations, migrate, migrationStatus } from "@/lib/admin/db/migrate
 import { createPgliteDb } from "@/lib/admin/db/pglite-db";
 import { ulid } from "@/lib/admin/ids";
 import type { ObjectStore } from "@/lib/admin/media/s3";
-import { r2MediaStore } from "@/lib/admin/media/r2-store";
+import { bucketMediaStore } from "@/lib/admin/media/bucket-store";
 import { filePublishedStore, publishRelease, reconcileReleases, inspectReleases, type PublishDeps } from "@/lib/admin/publishing";
 import { pgAuditLog, pgDraftRepository, pgReleaseStore, pgSessionRepository, pgSyncRunRepository, pgUserRepository } from "@/lib/admin/store/pg-stores";
 import { buildSeedBundle } from "@/lib/site-config/seed";
@@ -305,38 +305,45 @@ describe("sync runs", () => {
   });
 });
 
-describe("media in R2 (fake object store)", () => {
+describe("media in a private Railway bucket (fake object store)", () => {
   const fakeObjects = () => {
     const puts = new Map<string, number>();
+    const bodies = new Map<string, Buffer>();
     const store: ObjectStore = {
-      async put(key, body) { puts.set(key, body.length); },
+      async put(key, body) { puts.set(key, body.length); bodies.set(key, Buffer.from(body)); },
+      async get(key) { const b = bodies.get(key); return b ? { body: b, contentType: "image/webp" } : null; },
       async exists(key) { return puts.has(key); },
       async remove() { throw new Error("the application must never delete objects"); },
     };
     return { store, puts };
   };
   const png = () => sharp({ create: { width: 1300, height: 500, channels: 3, background: { r: 10, g: 120, b: 60 } } }).png().toBuffer();
-  const PUBLIC = "https://media.useorigens.com.br";
 
-  test("given an upload, when saved, then variants go to the store, the row is ready, URLs are on the media origin, and the original is not kept", async () => {
+  test("given an upload, when saved, then variants go to the store, the row is ready, the publishing URLs are same-origin /media paths, the library ones are authenticated /admin paths, and the original is not kept", async () => {
     const { store, puts } = fakeObjects();
-    const media = r2MediaStore({ db, objects: store, publicBase: PUBLIC });
+    const media = bucketMediaStore({ db, objects: store });
     const r = await media.save(await png(), "Minha Foto.png", null);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect([...puts.keys()].every((k) => /^media\/[0-9a-f]{64}\/\d{3,4}\.webp$/.test(k))).toBe(true);
     expect([...puts.keys()].map((k) => Number(k.match(/\/(\d+)\.webp$/)![1]))).toEqual([640, 1080, 1300]);
     expect(r.choice).toMatchObject({ label: "Minha Foto", kind: "upload", width: 1300, height: 500 });
-    expect(r.choice.src.startsWith(`${PUBLIC}/media/`)).toBe(true);
+    expect(r.choice.src).toMatch(/^\/admin\/media\/[0-9a-f]{64}\/640\.webp$/); // library thumbnails: signed-in editors only
     const resolved = await media.resolve([r.choice.assetId, "legacy:sul/hero-mobile", "upload:01J0000000000000000000NOPE"]);
     expect(resolved[r.choice.assetId]).toMatchObject({ width: 1300, variants: [{ w: 640 }, { w: 1080 }, { w: 1300 }] });
+    expect(resolved[r.choice.assetId].src).toMatch(/^\/media\/[0-9a-f]{64}\/1300\.webp$/); // what gets published: the storefront's own route
+    const preview = await media.resolve([r.choice.assetId], "preview");
+    expect(preview[r.choice.assetId].src).toMatch(/^\/admin\/media\/[0-9a-f]{64}\/1300\.webp$/);
+    expect(await media.knows!(r.choice.assetId.length ? [...puts.keys()][0].split("/")[1] : "")).toBe(true);
+    expect(await media.knows!("f".repeat(64))).toBe(false);
+    expect((await media.read!([...puts.keys()][0]))?.body.length).toBeGreaterThan(0);
     expect(resolved["upload:01J0000000000000000000NOPE"]).toBeUndefined();
     expect((await media.list()).some((m) => m.assetId === r.choice.assetId)).toBe(true);
   });
 
   test("given the same bytes twice, when saved, then the second is a duplicate: same asset, no second upload", async () => {
     const { store, puts } = fakeObjects();
-    const media = r2MediaStore({ db, objects: store, publicBase: PUBLIC });
+    const media = bucketMediaStore({ db, objects: store });
     const buf = await sharp({ create: { width: 900, height: 300, channels: 3, background: "#224466" } }).png().toBuffer();
     const a = await media.save(buf, "a.png", null);
     const count = puts.size;
@@ -347,7 +354,7 @@ describe("media in R2 (fake object store)", () => {
 
   test("given hostile or unsupported bytes, when saved, then nothing is uploaded and no row is created", async () => {
     const { store, puts } = fakeObjects();
-    const media = r2MediaStore({ db, objects: store, publicBase: PUBLIC });
+    const media = bucketMediaStore({ db, objects: store });
     const before = (await db.query(`select count(*)::int as n from media_asset`)).rows[0];
     expect((await media.save(Buffer.from("<svg onload=alert(1)/>"), "x.svg", null)).ok).toBe(false);
     expect((await media.save(Buffer.from("nope"), "x.png", null)).ok).toBe(false);
@@ -355,16 +362,16 @@ describe("media in R2 (fake object store)", () => {
     expect((await db.query(`select count(*)::int as n from media_asset`)).rows[0]).toEqual(before);
   });
 
-  test("given no R2 configuration, when uploading, then it is refused clearly and the existing banners still list", async () => {
-    const media = r2MediaStore({ db, objects: null, publicBase: null });
+  test("given no bucket configuration, when uploading, then it is refused clearly and the existing banners still list", async () => {
+    const media = bucketMediaStore({ db, objects: null });
     expect(media.canUpload).toBe(false);
-    expect(await media.save(await png(), "x.png", null)).toMatchObject({ ok: false, error: expect.stringContaining("R2") });
+    expect(await media.save(await png(), "x.png", null)).toMatchObject({ ok: false, error: expect.stringContaining("Bucket") });
     expect((await media.list()).some((m) => m.kind === "banner")).toBe(true);
   });
 
   test("given an asset referenced by a published release or a draft, when removal is requested, then it is refused; an unused one is only hidden, never deleted from storage", async () => {
     const { store, puts } = fakeObjects();
-    const media = r2MediaStore({ db, objects: store, publicBase: PUBLIC });
+    const media = bucketMediaStore({ db, objects: store });
     const used = await media.save(await sharp({ create: { width: 800, height: 300, channels: 3, background: "#aa5500" } }).png().toBuffer(), "usada.png", null);
     const free = await media.save(await sharp({ create: { width: 800, height: 300, channels: 3, background: "#0055aa" } }).png().toBuffer(), "livre.png", null);
     if (!used.ok || !free.ok) throw new Error("upload failed");

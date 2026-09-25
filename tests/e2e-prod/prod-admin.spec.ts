@@ -3,10 +3,11 @@ import sharp from "sharp";
 
 /**
  * The production-mode admin against a real `next start` build (see playwright.prod.config.ts): host separation, anonymous access,
- * Google sign-in (fake provider), allowlist, per-region permissions, and the whole editorial flow on Postgres + R2 + the Volume.
+ * Login with Railway (fake provider), allowlist, per-region permissions, and the whole editorial flow on Postgres + a private bucket + the Volume.
  */
 const ADMIN = "http://127.0.0.1:3400";
-const STORE = "http://localhost:3400"; // same server, a host that is NOT the admin host
+const STORE = "http://localhost:3400"; // same server, a host that is NOT the admin host (like Railway's temporary address)
+const SITE = ADMIN; // the admin lives at /admin on the storefront's own host: the public site is served there too
 const IDP = "http://127.0.0.1:4555";
 const S3 = "http://127.0.0.1:4600";
 
@@ -15,19 +16,19 @@ async function open(page: Page, path: string) {
   await page.goto(`${ADMIN}${path}`, { waitUntil: "domcontentloaded", timeout: 120_000 });
   await hydrated(page).catch(() => undefined); // the login page has no hydration marker
 }
-const identity = (email: string, verified = true) =>
-  fetch(`${IDP}/__identity`, { method: "POST", body: JSON.stringify({ email, sub: `sub-${email}`, verified }) });
+const identity = (email: string, opts: { verified?: boolean; inToken?: boolean; sub?: string } = {}) =>
+  fetch(`${IDP}/__identity`, { method: "POST", body: JSON.stringify({ email, sub: opts.sub ?? `sub-${email}`, verified: opts.verified ?? true, inToken: opts.inToken ?? true }) });
 
-async function signIn(page: Page, email: string, verified = true) {
-  await identity(email, verified);
+async function signIn(page: Page, email: string, opts: { verified?: boolean; inToken?: boolean; sub?: string } = {}) {
+  await identity(email, opts);
   await page.goto(`${ADMIN}/admin/login`);
-  await page.getByRole("link", { name: "Entrar com Google" }).click();
-  await page.waitForURL(/\/admin(\/login\?erro=\w+)?$/);
+  await page.getByRole("link", { name: "Entrar com Railway" }).click();
+  await page.waitForURL(/\/admin(\/login\?erro=\w+(&ref=[^&]*)?)?$/);
 }
-async function newSession(browser: Browser, email: string) {
+async function newSession(browser: Browser, email: string, opts: { verified?: boolean; inToken?: boolean } = {}) {
   const context = await browser.newContext();
   const page = await context.newPage();
-  await signIn(page, email);
+  await signIn(page, email, opts);
   return { context, page };
 }
 const rows = (page: Page) => page.locator("table.a-table tbody tr");
@@ -35,7 +36,7 @@ const titles = async (page: Page) => (await rows(page).locator("td:nth-child(2) 
 
 test.describe.configure({ mode: "serial" });
 
-test("given no session, when the admin host is visited, then only the login page exists and every other admin path sends the visitor there", async ({ request }) => {
+test("given no session, when the admin host is visited, then only the login page is reachable and every other admin path sends the visitor there", async ({ request }) => {
   const headersOk = (h: Record<string, string>) => {
     expect(h["x-robots-tag"]).toContain("noindex");
     expect(h["cache-control"]).toContain("no-store");
@@ -49,42 +50,45 @@ test("given no session, when the admin host is visited, then only the login page
   const login = await request.get(`${ADMIN}/admin/login`);
   expect(login.status()).toBe(200);
   headersOk(login.headers());
-  expect(await login.text()).toContain("Entrar com Google");
-  expect((await request.get(`${ADMIN}/`, { maxRedirects: 0 })).headers().location).toContain("/admin");
+  expect(await login.text()).toContain("Entrar com Railway");
+  expect((await request.get(`${ADMIN}/`, { maxRedirects: 0 })).status()).not.toBe(404); // the storefront root is unchanged
   const cb = await request.get(`${ADMIN}/admin/auth/callback?code=x&state=y`, { maxRedirects: 0 });
   expect(cb.headers().location).toContain("erro=sessao"); // no login cookie: never reaches the provider
 });
 
-test("given the store host, when any admin path is requested, then it does not exist; and the admin host does not serve the storefront", async ({ request }) => {
+test("given another host, /admin does not exist; and on the admin host the storefront is served exactly as before", async ({ request }) => {
   for (const p of ["/admin", "/admin/login", "/admin/auth/start", "/admin/auth/callback?code=x&state=y", "/admin/home", "/admin/media/aaaaaaaaaaaaaaaaaaaaaaaa.webp", "/admin/preview"]) {
     expect((await request.get(`${STORE}${p}`, { maxRedirects: 0 })).status(), p).toBe(404);
   }
-  // (/api/** is outside the proxy by design — see src/proxy.ts — so the read-only public index is not asserted here.)
-  for (const p of ["/sul", "/sul/sc", "/anything"]) {
-    expect((await request.get(`${ADMIN}${p}`, { maxRedirects: 0 })).status(), p).toBe(404);
+  // Public navigation on the admin host is untouched: same pages, same status, no admin headers.
+  for (const p of ["/sul", "/sul/privacidade", "/sul/sc", "/api/health", "/api/ready"]) {
+    const [onAdminHost, elsewhere] = await Promise.all([request.get(`${SITE}${p}`, { maxRedirects: 0 }), request.get(`${STORE}${p}`, { maxRedirects: 0 })]);
+    expect(onAdminHost.status(), p).toBe(elsewhere.status());
+    expect(onAdminHost.status(), p).toBe(200);
+    expect(onAdminHost.headers()["cache-control"] ?? "", p).not.toContain("no-store");
   }
-  expect((await request.get(`${STORE}/sul`)).status()).toBe(200);
-  expect((await request.get(`${STORE}/api/health`)).status()).toBe(200);
-  expect((await request.get(`${ADMIN}/api/health`)).status()).toBe(200); // probes answer on every host
+  expect((await request.get(`${SITE}/anything`, { maxRedirects: 0 })).status()).toBe(404);
+  expect((await request.get(`${SITE}/media/${"a".repeat(64)}/640.webp`)).status()).toBe(404); // nothing published
   // A look-alike Host header on the admin address is not the admin host.
   expect((await request.get(`${ADMIN}/admin/login`, { headers: { Host: "127.0.0.1:3401" } })).status()).toBe(404);
-  // X-Forwarded-Host is not identity: it neither opens the admin on the store host nor closes it on the admin host.
+  // X-Forwarded-Host is not identity: it neither opens the admin on another host nor changes anything on the admin host.
   expect((await request.get(`${STORE}/admin/login`, { headers: { "X-Forwarded-Host": "127.0.0.1:3400" } })).status()).toBe(404);
 });
 
-test("given Google answers with an e-mail that is not on the allowlist (or is unverified), when signing in, then access is refused and no session is created", async ({ browser }) => {
+test("given Railway answers with an e-mail that is not on the allowlist (or is unverified), when signing in, then access is refused and no session is created", async ({ browser }) => {
   const context = await browser.newContext();
   const page = await context.newPage();
   await signIn(page, "stranger@e2e.test");
   await expect(page).toHaveURL(/\/admin\/login\?erro=acesso/);
   await expect(page.getByText("Este e-mail não tem acesso ao painel")).toBeVisible();
-  expect((await context.cookies()).some((c) => c.name === "__Host-uo_admin")).toBe(false);
+  await expect(page.getByText(/Identificador da sua conta Railway/)).toBeVisible(); // the account id, so the owner can bind it if needed
+  expect((await context.cookies()).some((c) => c.name === "__Secure-uo_admin")).toBe(false);
   await page.goto(`${ADMIN}/admin`);
   await expect(page).toHaveURL(/\/admin\/login/);
 
-  await signIn(page, "owner@e2e.test", false); // the owner's address, but Google says it is not verified
+  await signIn(page, "owner@e2e.test", { verified: false }); // the owner's address, but Railway does not vouch for it
   await expect(page).toHaveURL(/erro=acesso/);
-  expect((await context.cookies()).some((c) => c.name === "__Host-uo_admin")).toBe(false);
+  expect((await context.cookies()).some((c) => c.name === "__Secure-uo_admin")).toBe(false);
   await context.close();
 });
 
@@ -92,8 +96,13 @@ test("given the configured owner, when signing in, then the session cookie is ha
   const { context, page } = await newSession(browser, "owner@e2e.test");
   await expect(page).toHaveURL(`${ADMIN}/admin`);
   await expect(page.getByRole("heading", { name: "Visão geral" })).toBeVisible();
-  const cookie = (await context.cookies()).find((c) => c.name === "__Host-uo_admin");
-  expect(cookie).toMatchObject({ httpOnly: true, secure: true, sameSite: "Lax", path: "/" });
+  const cookie = (await context.cookies()).find((c) => c.name === "__Secure-uo_admin");
+  expect(cookie).toMatchObject({ httpOnly: true, secure: true, sameSite: "Lax", path: "/admin" }); // scoped to the admin paths only
+  // The public site on the SAME host never receives the session cookie.
+  const publicRequest = page.waitForRequest((r) => new URL(r.url()).pathname === "/sul");
+  await page.goto(`${ADMIN}/sul`, { waitUntil: "load" });
+  expect((await (await publicRequest).allHeaders()).cookie ?? "").not.toContain("uo_admin");
+  await page.goto(`${ADMIN}/admin`);
   expect(await page.evaluate(() => document.cookie)).not.toContain("uo_admin"); // not readable by scripts
   expect(cookie!.value).not.toMatch(/owner|@/);
 
@@ -119,6 +128,13 @@ test("given the configured owner, when signing in, then the session cookie is ha
   await context.close();
 });
 
+test("given a provider whose ID token carries no e-mail, when the userinfo endpoint vouches for it, then the allowlisted editor still gets in (same account only)", async ({ browser }) => {
+  const { context, page } = await newSession(browser, "editor-sul@e2e.test", { inToken: false });
+  await expect(page).toHaveURL(`${ADMIN}/admin`);
+  await expect(page.getByRole("heading", { name: "Visão geral" })).toBeVisible();
+  await context.close();
+});
+
 test("given an editor of another region, when editing the Sul home or managing people, then the server refuses; an editor of Sul may edit but not manage people or sync", async ({ browser }) => {
   const norte = await newSession(browser, "editor-norte@e2e.test");
   await expect(norte.page).toHaveURL(`${ADMIN}/admin`);
@@ -137,7 +153,7 @@ test("given an editor of another region, when editing the Sul home or managing p
   await expect(norte.page.getByRole("button", { name: "Sincronizar coleções agora" })).toHaveCount(0);
   await norte.context.close();
 
-  const sul = await newSession(browser, "editor-sul@e2e.test");
+  const sul = await newSession(browser, "editor-sul@e2e.test", { inToken: false });
   await open(sul.page, "/admin/usuarios");
   await expect(sul.page.getByText("Você não tem permissão para isso.")).toBeVisible();
   await open(sul.page, "/admin/colecoes");
@@ -147,7 +163,7 @@ test("given an editor of another region, when editing the Sul home or managing p
   await sul.context.close();
 });
 
-test("given the owner, when a collection section is created from an enabled internal collection with an uploaded image and published, then Postgres, R2, the Volume and the storefront all agree; rollback restores the previous version", async ({ browser }) => {
+test("given the owner, when a collection section is created from an enabled internal collection with an uploaded image and published, then Postgres, the private bucket, the Volume and the storefront all agree; rollback restores the previous version", async ({ browser }) => {
   const trackers: string[] = [];
   const context = await browser.newContext();
   await context.route(/connect\.facebook\.net|facebook\.com\/tr|googletagmanager\.com|google-analytics\.com/, (route) => {
@@ -165,7 +181,7 @@ test("given the owner, when a collection section is created from an enabled inte
   await row.getByRole("button", { name: "Habilitar" }).click();
   await expect(page.getByText(/“Fé de Origem” habilitada/)).toBeVisible();
 
-  // 2. Upload an image: only processed WebP variants reach R2, under the content hash.
+  // 2. Upload an image: only processed WebP variants reach the bucket, under the content hash.
   await open(page, "/admin/midia");
   const png = await sharp({ create: { width: 1800, height: 700, channels: 3, background: { r: 30, g: 90, b: 60 } } }).png().toBuffer();
   await page.locator('input[type="file"]').setInputFiles({ name: "banner e2e.png", mimeType: "image/png", buffer: png });
@@ -178,6 +194,17 @@ test("given the owner, when a collection section is created from an enabled inte
   await page.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(page.getByText(/formato não permitido|não foi possível ler a imagem/)).toBeVisible();
   expect(((await (await fetch(`${S3}/__stats`)).json()) as { objects: number }).objects).toBe(4);
+  // The bucket is private: nothing is readable anonymously, neither publicly (not published yet) nor through the admin route.
+  const sha = stats.keys[0].split("/")[1];
+  expect((await context.request.get(`${SITE}/media/${sha}/640.webp`)).status()).toBe(404); // uploaded, but not published
+  expect((await fetch(`${ADMIN}/admin/media/${sha}/640.webp`)).status).toBe(404); // no session
+  // Signed-in reads go through the browser itself (it holds the `__Secure-` cookie; a bare request context does not send it over http).
+  const inBrowser = (path: string) => page.evaluate(async (u) => { const r = await fetch(u); return { status: r.status, type: r.headers.get("content-type"), cache: r.headers.get("cache-control") }; }, path);
+  const own = await inBrowser(`/admin/media/${sha}/640.webp`);
+  expect(own).toMatchObject({ status: 200, type: "image/webp" });
+  expect(own.cache).toContain("no-store");
+  expect((await inBrowser(`/admin/media/${"e".repeat(64)}/640.webp`)).status).toBe(404); // not a known upload
+  expect((await inBrowser(`/admin/media/${sha}/../640.webp`)).status).toBe(404);
 
   // 3. Create the section, style it with the upload, save.
   await open(page, "/admin/home");
@@ -204,13 +231,13 @@ test("given the owner, when a collection section is created from an enabled inte
   await expect(stale.getByText(/O rascunho mudou em outra aba/)).toBeVisible();
   await stale.close();
 
-  // 5. Preview (375 and desktop) uses the same renderer and the R2 variants, and sends nothing to a tracker.
+  // 5. Preview (375 and desktop) uses the same renderer and the bucket variants, and sends nothing to a tracker.
   await open(page, "/admin/home");
   for (const kind of ["mobile", "desktop"] as const) {
     const frame = page.frameLocator(`iframe[data-preview="${kind}"]`);
     const section = frame.locator("section#colecao-terra-em-foco");
     await expect(section, `${kind} preview`).toBeVisible({ timeout: 120_000 });
-    await expect(section.locator("picture source").first()).toHaveAttribute("srcset", /127\.0\.0\.1:4600\/media\/[0-9a-f]{64}\/640\.webp 640w/);
+    await expect(section.locator("picture source").first()).toHaveAttribute("srcset", /\/admin\/media\/[0-9a-f]{64}\/640\.webp 640w/); // drafts: the authenticated route
   }
   expect(trackers).toEqual([]);
 
@@ -221,14 +248,23 @@ test("given the owner, when a collection section is created from an enabled inte
   await expect(page.getByText(/Publicado \(release \d+\)/)).toBeVisible({ timeout: 120_000 });
   await expect(page.getByText("Coerente").first()).toBeVisible();
   const storePage = await context.newPage();
-  await storePage.goto(`${STORE}/sul`, { waitUntil: "domcontentloaded" });
+  await storePage.goto(`${SITE}/sul`, { waitUntil: "domcontentloaded" });
   const storeSection = storePage.locator("section#colecao-terra-em-foco");
   await expect(storeSection.locator("h2")).toHaveText("Terra em foco");
   const srcset = await storeSection.locator("picture source").first().getAttribute("srcset");
-  expect(srcset).toMatch(/127\.0\.0\.1:4600\/media\/[0-9a-f]{64}\/640\.webp 640w/);
+  expect(srcset).toMatch(/^\/media\/[0-9a-f]{64}\/640\.webp 640w/); // published: the storefront's OWN route, no foreign host
+  expect(srcset).not.toContain("http");
   const firstUrl = srcset!.split(",")[0].trim().split(" ")[0];
-  expect((await fetch(firstUrl)).status).toBe(200); // the public media origin really serves it
-  expect((await fetch(firstUrl)).headers.get("cache-control")).toContain("immutable");
+  const served = await context.request.get(`${SITE}${firstUrl}`);
+  expect(served.status()).toBe(200); // served from the private bucket through the storefront
+  expect(served.headers()["cache-control"]).toContain("immutable");
+  expect(served.headers()["content-type"]).toBe("image/webp");
+  expect(served.headers()["x-content-type-options"]).toBe("nosniff");
+  expect((await served.body()).subarray(0, 4).toString()).toBe("RIFF"); // real WebP bytes
+  // Only the published manifest is readable; nothing else of the bucket, and no traversal.
+  for (const bad of [`/media/${"e".repeat(64)}/640.webp`, `/media/${sha}/640.svg`, `/media/${sha}/../640.webp`, `/media/${sha}/640.webp/extra`, "/media/..%2f..%2fetc%2fpasswd", "/media/"]) {
+    expect((await context.request.get(`${SITE}${bad}`)).status(), bad).toBe(404);
+  }
   expect(await storeSection.locator("a[href*='/collections/']").count()).toBe(0); // internal collection: no "Ver todos"
   expect(await storeSection.locator("a[href^='https://www.usesul.com.br/']").count()).toBeGreaterThanOrEqual(3);
 
@@ -252,14 +288,22 @@ test("given the owner, when a collection section is created from an enabled inte
   await page.getByRole("button", { name: "Publicar", exact: true }).click();
   await expect(page.getByText(/release \d+/).first()).toBeVisible({ timeout: 120_000 });
   const live2 = await context.newPage();
-  await live2.goto(`${STORE}/sul`, { waitUntil: "domcontentloaded" });
-  await expect(live2.locator("section#colecao-terra-em-foco h2")).toHaveText("Terra em foco 2");
+  // ISR: the first request after an invalidation may be answered from the stale copy while the page regenerates; the next one is fresh.
+  const freshTitle = async (text: string) => {
+    let attempts = 0;
+    await expect(async () => {
+      attempts++;
+      await live2.goto(`${SITE}/sul`, { waitUntil: "domcontentloaded" });
+      await expect(live2.locator("section#colecao-terra-em-foco h2")).toHaveText(text, { timeout: 2_000 });
+    }).toPass({ timeout: 30_000 });
+    return attempts;
+  };
+  expect(await freshTitle("Terra em foco 2")).toBeLessThanOrEqual(3);
   await open(page, "/admin/publicar");
   const first = page.locator("tbody tr", { hasText: "primeira versão" });
   await first.getByRole("button", { name: "Restaurar esta versão" }).click();
   await expect(page.getByText(/Versão \d+ restaurada/)).toBeVisible({ timeout: 120_000 });
-  await live2.goto(`${STORE}/sul`, { waitUntil: "domcontentloaded" });
-  await expect(live2.locator("section#colecao-terra-em-foco h2")).toHaveText("Terra em foco");
+  expect(await freshTitle("Terra em foco")).toBeLessThanOrEqual(3);
   await open(page, "/admin/publicar");
   await expect(page.locator("tbody tr").first()).toContainText("Restauração");
   await expect(page.locator("tbody tr")).toHaveCount(3);

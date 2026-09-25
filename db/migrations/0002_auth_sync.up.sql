@@ -1,11 +1,11 @@
 -- CMS V1 — Round 6: production integration. Additive only (no data is rewritten).
---   * admin_user.google_sub: the Google account is bound to the allowlisted e-mail on first login, so a later takeover of the same
---     e-mail address by a different Google account is refused.
+--   * admin_user.provider_sub: the identity provider's immutable account id (`sub`, Login with Railway) is bound to the allowlisted user on
+--     first login, so a later takeover of the same e-mail address by a different account is refused.
 --   * media_asset: AVIF accepted as an input type; a display label.
 --   * audit_log: two more actions.
 --   * sync_run: one row per catalog/collections sync, also the "already running" lock (unique partial index).
 
-alter table admin_user add column google_sub text unique check (google_sub is null or char_length(google_sub) between 1 and 255);
+alter table admin_user add column provider_sub text unique check (provider_sub is null or char_length(provider_sub) between 1 and 255);
 
 alter table media_asset drop constraint media_asset_mime_check;
 alter table media_asset add constraint media_asset_mime_check check (mime in ('image/png', 'image/jpeg', 'image/webp', 'image/avif'));
