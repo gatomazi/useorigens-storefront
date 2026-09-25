@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { bundleChecksum } from "../site-config/checksum";
 import { publish, reconcile, type FileState, type PublishOutcome, type PublishPorts, type ReleaseRecord } from "../site-config/publish-flow";
-import { resolveTracking } from "../site-config/resolve";
+import { resolveTracking, type TrackingOrigin } from "../site-config/resolve";
 import { validateBundle, type MediaAssetInfo, type PublishedBundle, type ScopeDoc } from "../site-config/schema";
 import { buildSeedBundle } from "../site-config/seed";
 import { readJson, withLock, writeJsonAtomic } from "./local-store";
@@ -35,22 +35,53 @@ export async function composeBundle(deps: Pick<PublishDeps, "releases" | "media"
   return { schemaVersion: 1, releaseId, docs: { ...base.docs, [doc.scope]: doc }, media: { ...seed.media, ...base.media, ...(await deps.media(ids)) } };
 }
 
-/** Publish pre-flight: strict bundle validation, every INK collection section still resolves, readable text, tracking unchanged (D5). */
+const TOOL_LABEL = { meta: "Meta Pixel", ga4: "GA4" } as const;
+const ORIGIN_LABEL: Record<TrackingOrigin, string> = { own: "próprio", global: "global", legacy: "legado (variável do build)", disabled: "desligado", "inherit-inactive": "herda um global inativo", unconfigured: "sem configuração" };
+const REGION_LABEL = { sul: "Sul", norte: "Norte", "centro-oeste": "Centro-Oeste" } as const;
+
+/** The effective ID of every region and tool, with its origin, from a bundle (or from nothing published yet). */
+export function effectiveTable(bundle: PublishedBundle | null): { scope: keyof typeof REGION_LABEL; tool: "meta" | "ga4"; id: string | null; origin: TrackingOrigin }[] {
+  const legacy = { metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || null, ga4MeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || null };
+  return (Object.keys(REGION_LABEL) as (keyof typeof REGION_LABEL)[]).flatMap((scope) => {
+    const t = resolveTracking(bundle, scope, legacy);
+    return [
+      { scope, tool: "meta" as const, id: t.metaPixelId, origin: t.origin.meta },
+      { scope, tool: "ga4" as const, id: t.ga4MeasurementId, origin: t.origin.ga4 },
+    ];
+  });
+}
+
+const describeEffective = (id: string | null, origin: TrackingOrigin) => (id ? `${id} (${ORIGIN_LABEL[origin]})` : `nenhum (${ORIGIN_LABEL[origin]})`);
+
+/**
+ * What a publish would change in the EFFECTIVE tracking of any region (lines for the owner to confirm). Empty when no region's effective
+ * ID changes: an ordinary content publish never asks. Changing the global ID, or a region's choice, lists every region
+ * it touches, because inheritance moves several regions at once.
+ */
+export function trackingChanges(before: PublishedBundle | null, after: PublishedBundle): string[] {
+  const was = effectiveTable(before);
+  return effectiveTable(after).flatMap((row, i) => {
+    const prev = was[i];
+    if (prev.id === row.id) return []; // only a different ID matters to production traffic; a change of origin alone (e.g. legacy → own with the same ID) is not a change
+    return [`${REGION_LABEL[row.scope]} · ${TOOL_LABEL[row.tool]}: ${describeEffective(prev.id, prev.origin)} → ${describeEffective(row.id, row.origin)}`];
+  });
+}
+
+/** Publish pre-flight: strict bundle validation, every INK collection section still resolves, readable text. (Tracking is confirmed separately.) */
 export async function preflight(deps: Pick<PublishDeps, "releases" | "media">, doc: ScopeDoc): Promise<string[]> {
   const bundle = await composeBundle(deps, doc, "preflight");
   const strict = validateBundle(bundle);
-  const problems = [...(strict.ok ? [] : strict.errors), ...collectionProblems(doc), ...readabilityProblems(doc)];
-  const env = envTracking();
-  if (env.metaPixelId || env.ga4MeasurementId) {
-    // This round does not change production tracking: a document whose effective IDs differ from the ones the build was made with is refused.
-    const effective = resolveTracking(bundle, doc.scope, env);
-    if (effective.metaPixelId !== env.metaPixelId) problems.push("O ID do Meta Pixel do documento difere do ID em produção. A troca de IDs não faz parte desta versão.");
-    if (effective.ga4MeasurementId !== env.ga4MeasurementId) problems.push("O ID do GA4 do documento difere do ID em produção. A troca de IDs não faz parte desta versão.");
-  }
-  return problems;
+  return [...(strict.ok ? [] : strict.errors), ...collectionProblems(doc), ...readabilityProblems(doc)];
 }
 
-export type PublishRequest = { kind: "publish"; doc: ScopeDoc; note?: string } | { kind: "rollback"; toReleaseId: string; note?: string };
+/** The tracking lines this draft would change, versus what is live now (or nothing published yet). */
+export async function pendingTrackingChanges(deps: Pick<PublishDeps, "releases" | "media">, doc: ScopeDoc): Promise<string[]> {
+  const head = await deps.releases.head();
+  return trackingChanges(head?.bundle ?? null, await composeBundle(deps, doc, "preflight"));
+}
+
+/** `confirmTracking`: the person confirmed the effective tracking IDs listed by `pendingTrackingChanges` (required only when there are changes). */
+export type PublishRequest = { kind: "publish"; doc: ScopeDoc; note?: string; confirmTracking?: boolean } | { kind: "rollback"; toReleaseId: string; note?: string };
 export type PublishResult = { ok: true; outcome: PublishOutcome } | { ok: false; errors: string[] };
 
 export async function publishRelease(deps: PublishDeps, request: PublishRequest, revalidate: () => Promise<void>): Promise<PublishResult> {
@@ -60,6 +91,8 @@ export async function publishRelease(deps: PublishDeps, request: PublishRequest,
   if (request.kind === "publish") {
     const errors = await preflight(deps, request.doc);
     if (errors.length > 0) return { ok: false, errors };
+    const changes = await pendingTrackingChanges(deps, request.doc);
+    if (changes.length > 0 && !request.confirmTracking) return { ok: false, errors: ["Esta publicação muda o rastreamento efetivo. Confirme os IDs listados na tela Publicar antes de publicar.", ...changes] };
     compose = (id) => composeBundle(deps, request.doc, id);
     sections = request.doc.home?.sections.filter((s) => s.active).length ?? 0;
     scopesChanged = [request.doc.scope];

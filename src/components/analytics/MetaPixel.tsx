@@ -6,6 +6,15 @@ import { useEffect, useRef } from "react";
 import { withoutCartRef } from "@/lib/cart-mirror/url";
 import { useConsent } from "@/lib/consent/ConsentProvider";
 import { measurementAllowed } from "@/lib/consent/policy";
+import { setActiveMetaPixel } from "@/lib/analytics/active-ids";
+
+/** Pixel IDs already initialised in this page session. The SDK keeps them all; init is never repeated, and events never go to "all initialised pixels" (see active-ids.ts). */
+const initialised = new Set<string>();
+function ensureInit(id: string): void {
+  if (typeof window.fbq !== "function" || initialised.has(id)) return;
+  window.fbq("init", id);
+  initialised.add(id);
+}
 import { metaPixelId } from "@/lib/config/public-env";
 
 declare global {
@@ -60,12 +69,19 @@ export function MetaPixel({ pixelId: resolved }: { pixelId?: string | null } = {
     wasAccepted.current = accepted;
   }, [accepted]);
 
+  // Which pixel this page sends to (server-resolved per region). Cleared on unmount so a move to a region without one sends nothing.
+  useEffect(() => {
+    setActiveMetaPixel(accepted && pixelId ? pixelId : null);
+    return () => setActiveMetaPixel(null);
+  }, [accepted, pixelId]);
+
   useEffect(() => {
     if (!accepted || !pixelId) return;
     if (typeof window.fbq !== "function") return; // script hasn't finished loading yet — onLoad below handles the first PageView
+    ensureInit(pixelId); // a client-side move to another region may bring a pixel that was never initialised here
     if (lastTracked.current === currentUrl) return;
     lastTracked.current = currentUrl;
-    window.fbq("track", "PageView");
+    window.fbq("trackSingle", pixelId, "PageView"); // to THIS page's pixel only
   }, [accepted, pixelId, currentUrl]);
 
   if (!pixelId || !accepted) return null;
@@ -75,9 +91,10 @@ export function MetaPixel({ pixelId: resolved }: { pixelId?: string | null } = {
       id="meta-pixel"
       strategy="afterInteractive"
       onLoad={() => {
+        ensureInit(pixelId);
         if (lastTracked.current === currentUrl) return;
         lastTracked.current = currentUrl;
-        window.fbq?.("track", "PageView");
+        window.fbq?.("trackSingle", pixelId, "PageView");
       }}
       dangerouslySetInnerHTML={{
         // No `fbq('track', 'PageView')` in this bootstrap on purpose (CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md
@@ -88,7 +105,6 @@ export function MetaPixel({ pixelId: resolved }: { pixelId?: string | null } = {
         __html: `
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('consent', 'grant');
-fbq('init', '${pixelId}');
 `,
       }}
     />

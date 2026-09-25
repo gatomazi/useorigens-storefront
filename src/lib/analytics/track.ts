@@ -16,6 +16,7 @@
  */
 
 import { hasAnalyticsConsent } from "@/lib/consent/store";
+import { activeGa4, activeMetaPixel } from "./active-ids";
 import type { CartItemsBucket, MirrorAgeBucket, OrigensEntryPoint } from "./origens-events";
 
 declare global {
@@ -28,22 +29,32 @@ declare global {
 // Every helper also requires a live "accepted" decision: after "Preferências de privacidade" → Rejeitar the SDK
 // globals stay on `window` for the rest of the session, so their mere presence is not consent. Tracking is
 // best-effort — a provider that throws must never break the click/navigation that triggered it.
+// Every event is ADDRESSED to the ID of the region being visited (src/lib/analytics/active-ids.ts): Meta `trackSingle` / `trackSingleCustom` and
+// GA4 `send_to`. A region with no ID for a tool (or one still to be resolved) sends nothing to it. This is what keeps a client-side move
+// Sul → Norte → Centro-Oeste → Sul from leaking events to a previously initialised pixel, and keeps one event = one send even when two
+// regions share the same global ID.
 function fbqReady(): boolean {
-  return typeof window !== "undefined" && typeof window.fbq === "function" && hasAnalyticsConsent();
+  return typeof window !== "undefined" && typeof window.fbq === "function" && hasAnalyticsConsent() && activeMetaPixel() !== null;
 }
 function gtagReady(): boolean {
-  return typeof window !== "undefined" && typeof window.gtag === "function" && hasAnalyticsConsent();
+  return typeof window !== "undefined" && typeof window.gtag === "function" && hasAnalyticsConsent() && activeGa4() !== null;
 }
-function sendFbq(...args: unknown[]): void {
+function sendFbq(kind: "track" | "trackCustom", name: string, params?: Record<string, unknown>): void {
+  const id = activeMetaPixel();
+  if (!id) return;
   try {
-    window.fbq!(...args);
+    const method = kind === "track" ? "trackSingle" : "trackSingleCustom";
+    if (params) window.fbq!(method, id, name, params);
+    else window.fbq!(method, id, name);
   } catch {
     // Blocked/broken SDK (ad blocker, extension): tracking is best-effort, navigation must go on.
   }
 }
-function sendGtag(...args: unknown[]): void {
+function sendGtag(command: "event", name: string, params: Record<string, unknown> = {}): void {
+  const id = activeGa4();
+  if (!id) return;
   try {
-    window.gtag!(...args);
+    window.gtag!(command, name, { ...params, send_to: id });
   } catch {
     // Same as sendFbq.
   }

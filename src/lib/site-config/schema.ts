@@ -78,7 +78,16 @@ export type Section = {
   appearance: Appearance;
 };
 
-export type VendorSetting = { mode: "inherit" } | { mode: "override"; id: string } | { mode: "disabled" };
+/**
+ * One tool (Meta Pixel or GA4) in one document. Independent per tool, per document:
+ *   inherit   the region uses the GLOBAL document's ID for this tool, but only while the global one is active ("override" there);
+ *   override  the document's OWN ID replaces the global one (never both);
+ *   disabled  no ID for this tool. In the GLOBAL document `disabled` may keep a remembered `id` (an inactive global ID, kept so the owner
+ *             can switch it on later without retyping);
+ *   legacy    Sul only: keep using the build-time NEXT_PUBLIC_* value the storefront had before the CMS existed, until an explicit
+ *             configuration replaces it. Never available to other regions, and never copied to them.
+ */
+export type VendorSetting = { mode: "inherit" } | { mode: "override"; id: string } | { mode: "disabled"; id?: string } | { mode: "legacy" };
 export type TrackingConfig = { meta: VendorSetting; ga4: VendorSetting };
 
 export type CollectionRef = { store: CommerceStoreKey; collectionId: number };
@@ -267,7 +276,11 @@ function checkVendor(c: Collector, path: string, v: unknown, pattern: RegExp, sc
     if (typeof v.id !== "string" || !pattern.test(v.id)) c.fail(`${path}.id`, "invalid id format for this vendor");
   } else if (v.mode === "inherit") {
     if (scope === "global") c.fail(`${path}.mode`, "global cannot inherit");
-  } else if (v.mode !== "disabled") c.fail(`${path}.mode`, "must be inherit | override | disabled");
+  } else if (v.mode === "legacy") {
+    if (scope !== "sul") c.fail(`${path}.mode`, "legacy (build-time IDs) exists only for sul");
+  } else if (v.mode === "disabled") {
+    if (v.id !== undefined && (scope !== "global" || typeof v.id !== "string" || !pattern.test(v.id))) c.fail(`${path}.id`, "only the global document may keep an inactive ID, in the vendor's format");
+  } else c.fail(`${path}.mode`, "must be inherit | override | disabled | legacy");
 }
 
 /** Validates ONE section on its own (used by the editor and by the tolerant published-bundle reader). */

@@ -1,20 +1,27 @@
 import "server-only";
+import type { EffectiveTracking } from "./resolve";
 import type { Scope } from "./schema";
 import { siteConfigHomeEnabled } from "./flag";
 import { readPublished } from "./published";
 import { resolveTracking } from "./resolve";
 
+/** The build-time IDs the storefront used before the CMS existed ("legacy"). Only Sul may ever use them. */
+export const legacyIds = () => ({ metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || null, ga4MeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || null });
+
 /**
- * The tracking IDs a region's pages use, resolved from the PUBLISHED configuration (`global` + regional override, each vendor
- * independently). Returns `undefined` — meaning "keep using the build-time NEXT_PUBLIC_* values, untouched" — unless BOTH the flag is on
- * (`SITE_CONFIG_HOME=on`) and a published.json exists and is usable. A missing, corrupt or seed-only state therefore changes nothing for
- * paid traffic. Reads a local file (cached by mtime); no database, no network. The consent gate is unchanged: the components still render
- * nothing before the person accepts, and one ID per document means one SDK initialisation per page.
+ * The tracking IDs a region's pages use, resolved on the SERVER from the PUBLISHED configuration (global + regional, each tool
+ * independently: inherit / own / off), read from the local published.json (cached by mtime: no database, no network, nothing per PageView).
+ *
+ * Without a usable published configuration (flag off, no file, corrupt file) the answer is the legacy one: Sul keeps its build-time IDs,
+ * exactly as before the CMS; Norte and Centro-Oeste get NOTHING, never Sul's IDs. The IDs reach the client components as props, so a
+ * published change reaches new visitors without a build or deploy (the layout is invalidated on publish).
  */
-export function publishedTracking(region: Scope): { metaPixelId: string | null; ga4MeasurementId: string | null } | undefined {
-  if (!siteConfigHomeEnabled()) return undefined;
-  const state = readPublished();
-  if (state.source !== "published") return undefined;
-  const t = resolveTracking(state.bundle, region, { metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || null, ga4MeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || null });
+export function effectiveTracking(region: Scope): EffectiveTracking {
+  const state = siteConfigHomeEnabled() ? readPublished() : null;
+  return resolveTracking(state?.source === "published" ? state.bundle : null, region, legacyIds());
+}
+
+export function publishedTracking(region: Scope): { metaPixelId: string | null; ga4MeasurementId: string | null } {
+  const t = effectiveTracking(region);
   return { metaPixelId: t.metaPixelId, ga4MeasurementId: t.ga4MeasurementId };
 }

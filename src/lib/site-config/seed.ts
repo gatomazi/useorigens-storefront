@@ -41,15 +41,13 @@ function photoAppearance(asset: BannerAsset, media: Collected, overlay: Appearan
 
 const noImage = (): Appearance => ({ fill: { kind: "none" }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } });
 
-function vendor(id: string | null): VendorSetting {
-  return id ? { mode: "override", id } : { mode: "disabled" };
-}
 
 /**
  * `env` carries the tracking IDs the site uses today (NEXT_PUBLIC_*): Sul overrides Global with exactly those values, so
  * a bundle built from this seed resolves to the current behaviour. Global starts disabled (D5).
  */
-export function buildSeedBundle(env: { metaPixelId: string | null; ga4MeasurementId: string | null }): PublishedBundle {
+/** `_legacyIds` is accepted for the callers that still pass the build-time IDs, but they are no longer written into the seed (see `legacy`). */
+export function buildSeedBundle(_legacyIds?: { metaPixelId: string | null; ga4MeasurementId: string | null }): PublishedBundle {
   const media: Collected = {};
   const banners = REGION_BANNERS.sul;
   const hero = banners.hero.asset;
@@ -110,10 +108,13 @@ export function buildSeedBundle(env: { metaPixelId: string | null; ga4Measuremen
     releaseId: SEED_RELEASE_ID,
     docs: {
       global: doc("global", tracking({ mode: "disabled" }, { mode: "disabled" })),
-      sul: doc("sul", tracking(vendor(env.metaPixelId), vendor(env.ga4MeasurementId)), { sections }),
-      // Prepared, not published: Norte / Centro-Oeste storefronts do not exist yet (ENABLED_REGIONS), so no home and no own IDs.
-      norte: doc("norte", tracking({ mode: "inherit" }, { mode: "inherit" })),
-      "centro-oeste": doc("centro-oeste", tracking({ mode: "inherit" }, { mode: "inherit" })),
+      // Sul keeps the tracking it had before the CMS: the build-time NEXT_PUBLIC_* IDs, read at runtime ("legacy"), until an explicit configuration
+      // is published. The IDs are deliberately NOT copied into the document, so nothing here can ever leak them to another region.
+      sul: doc("sul", tracking({ mode: "legacy" }, { mode: "legacy" }), { sections }),
+      // Prepared, not launched: no home yet (it is created in the admin from the region's own INK collections) and NO tracking: they never
+      // inherit Sul's IDs, and they only follow the global IDs after someone explicitly chooses "inherit" for them.
+      norte: doc("norte", tracking({ mode: "disabled" }, { mode: "disabled" })),
+      "centro-oeste": doc("centro-oeste", tracking({ mode: "disabled" }, { mode: "disabled" })),
     },
     media,
   };

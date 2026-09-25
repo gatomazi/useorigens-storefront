@@ -1,3 +1,4 @@
+import { setActiveGa4 } from "@/lib/analytics/active-ids";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ARRIVAL_PRODUCT_PARAM, ARRIVAL_SRC_PARAM, cartItemsBucket, extractArrival, mirrorAgeBucket, ORIGENS_PRODUCT_SLUGS, referrerAllowsArrival } from "@/lib/analytics/origens-events";
 import { trackCartMirrorView, trackGoToCartClick, trackStorefrontArrived, whenAnalyticsReady } from "@/lib/analytics/track";
@@ -68,8 +69,9 @@ describe("the three events — consent-gated, closed parameter set, no token/URL
   let calls: unknown[][];
   beforeEach(() => {
     consent.granted = true;
+    setActiveGa4("G-8GYTEJ1F77");
     calls = [];
-    vi.stubGlobal("window", { gtag: (...args: unknown[]) => calls.push(args) });
+    vi.stubGlobal("window", { gtag: (...args: unknown[]) => { const [c, n, params] = args as [string, string, Record<string, unknown>]; const { send_to: to, ...rest } = params; expect(to).toBe("G-8GYTEJ1F77"); calls.push([c, n, rest]); } });
   });
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -111,6 +113,7 @@ describe("the three events — consent-gated, closed parameter set, no token/URL
 });
 
 describe("whenAnalyticsReady — sends once, only when really available, then gives up", () => {
+  beforeEach(() => setActiveGa4("G-8GYTEJ1F77"));
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.useRealTimers();
