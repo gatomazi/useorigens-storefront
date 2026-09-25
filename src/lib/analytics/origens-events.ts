@@ -7,7 +7,7 @@
  */
 
 /** Where the click that brought the visitor here happened, on the INK side. */
-export const ORIGENS_ENTRY_POINTS = ["ink_cart_drawer", "ink_post_add", "ink_product_return"] as const;
+export const ORIGENS_ENTRY_POINTS = ["ink_cart_drawer", "ink_post_add", "ink_product_detail", "ink_product_return"] as const;
 export type OrigensEntryPoint = (typeof ORIGENS_ENTRY_POINTS)[number];
 
 /** The only INK product pages that carry our loader (the Worker's exact allowlist). A slug outside this list is dropped, never sent. */
