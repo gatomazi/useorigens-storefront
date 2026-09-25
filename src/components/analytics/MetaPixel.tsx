@@ -3,6 +3,7 @@
 import Script from "next/script";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { withoutCartRef } from "@/lib/cart-mirror/url";
 import { useConsent } from "@/lib/consent/ConsentProvider";
 import { metaPixelId } from "@/lib/config/public-env";
 
@@ -38,7 +39,8 @@ export function MetaPixel({ pixelId: resolved }: { pixelId?: string | null } = {
   const wasAccepted = useRef(false);
   const revokedThisSession = useRef(false);
 
-  const currentUrl = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
+  const query = withoutCartRef(searchParams?.toString() ?? ""); // the cart token never reaches analytics
+  const currentUrl = pathname + (query ? `?${query}` : "");
 
   // Revocation while already loaded this session: tell the SDK to stop (Meta's own consent API), and forget
   // the URL we last tracked so nothing resumes silently if consent is granted again later without a reload.
