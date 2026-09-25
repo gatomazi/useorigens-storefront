@@ -7,7 +7,7 @@ const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
 
 const EDITED_FIELDS: [keyof Section, string][] = [
-  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["fallback", "alternativa sem imagem"],
+  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["featured", "produtos em destaque do hero"], ["count", "quantidade de estilos"], ["fallback", "alternativa sem imagem"],
 ];
 
 export function diffDocs(published: ScopeDoc, draft: ScopeDoc): Change[] {

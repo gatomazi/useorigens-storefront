@@ -90,7 +90,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
   // A field that is not in the form is left alone; a field that is present and empty clears the value (a carousel's title is then rejected).
   if (f.get("title") !== null) patch.title = str(f, "title") || undefined;
   if (f.get("subtitle") !== null) patch.subtitle = str(f, "subtitle") || undefined;
-  if (section.template === "product-carousel" || section.template === "campaign" || section.template === "hero") {
+  if (section.template === "product-carousel" || section.template === "campaign" || section.template === "hero" || section.template === "city-styles" || section.template === "states") {
     patch.appearance = parseAppearance(f, section.appearance);
   }
   if (section.template === "product-carousel") {
@@ -102,6 +102,28 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     const surface = surfaceRaw === "paper" || surfaceRaw === "region-primary" ? surfaceRaw : "plain";
     patch.layout = { variant, tone, surface };
   }
-  if (section.template === "campaign") patch.fallback = str(f, "fallback") === "fill" ? "fill" : "crops";
+  if (section.template === "campaign") {
+    patch.fallback = str(f, "fallback") === "fill" ? "fill" : "crops";
+    // No button configured = the original "Encontrar minha cidade" search; a label without a destination is dropped, never a dead link.
+    patch.cta = parseCta(f);
+  }
+  if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", 8)), 1, 8);
   return patch;
+}
+
+/**
+ * The hero's featured-product fields: `featured_1..3` hold "store:productId" (or nothing). Returns the references in slot order (empty slots
+ * closed up: the cards are a list, not fixed holes) and the malformed values, which are refused instead of silently dropped.
+ */
+export function parseFeaturedFields(f: Fields): { refs: { store: CommerceStoreKey; productId: string }[]; invalid: string[] } {
+  const refs: { store: CommerceStoreKey; productId: string }[] = [];
+  const invalid: string[] = [];
+  for (const slot of [1, 2, 3]) {
+    const raw = str(f, `featured_${slot}`);
+    if (!raw) continue;
+    const m = /^(use-sul|use-norte|use-centro):(\d{1,20})$/.exec(raw);
+    if (m) refs.push({ store: m[1] as CommerceStoreKey, productId: m[2] });
+    else invalid.push(`posição ${slot}`);
+  }
+  return { refs, invalid };
 }

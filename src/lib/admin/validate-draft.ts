@@ -89,6 +89,7 @@ export function sectionTone(section: Section): "light" | "dark" | null {
   if (section.template === "product-carousel") return section.layout?.tone ?? "light";
   if (section.template === "hero") return "light";
   if (section.template === "campaign") return "dark";
+  if (section.template === "city-styles" || section.template === "states") return section.layout?.tone ?? "light";
   return null;
 }
 

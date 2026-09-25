@@ -5,8 +5,9 @@ import { Campaign } from "@/components/home/Campaign";
 import { RegionHero } from "@/components/home/RegionHero";
 import { StateCards } from "@/components/home/StateCards";
 import { SOURCES } from "@/lib/analytics/sources";
+import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
-import type { RegionSlug } from "@/lib/geo/regions";
+import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { firstImageSectionId, hasImage, renderableSections, resolveBackground } from "@/lib/site-config/resolve";
 import type { Fill, PublishedBundle, Section } from "@/lib/site-config/schema";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
@@ -47,29 +48,64 @@ export function HomeSections({ region, home, bundle, categories, slugOf }: { reg
                 key={s.id}
                 region={region}
                 cityCount={home.cityCount}
-                trio={home.heroFamilies}
+                trio={heroCards(region, s.featured, home.heroFamilies)}
                 config={{}}
                 copy={s.title && s.subtitle ? { title: s.title, body: s.subtitle } : undefined}
                 backdrop={<SectionBackdrop bg={bg} priority={priorityId === s.id} />}
               />
             );
 
-          case "city-styles":
+          case "city-styles": {
             if (!showcase || !cityPath) return null;
-            return (
-              <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className="wrap py-14 lg:py-24">
+            // Only the styles that really exist for the example city (never padded); the configured count is a ceiling.
+            // Also only products of THIS region's own INK store, whatever the catalog holds (never a foreign product).
+            const ownStore = REGIONS[region].storeKey;
+            const entries = showcase.families.filter((f) => f.primary.commerceStoreKey === ownStore).slice(0, s.count ?? 8);
+            if (entries.length === 0) return null;
+            const content = (
+              <>
                 <div className="mb-8 max-w-2xl lg:mb-12">
                   <h2 id={s.headingId} className="t-h2">
                     {s.title}
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
                 </div>
-                <FamilyGrid entries={showcase.families} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk />
+                <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk />
+              </>
+            );
+            if (!hasImage(bg) && bg.fill.kind === "none") {
+              return (
+                <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className="wrap py-14 lg:py-24">
+                  {content}
+                </section>
+              );
+            }
+            return (
+              <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className="relative isolate overflow-hidden">
+                <SectionBackdrop bg={bg} priority={priorityId === s.id} />
+                <div className="wrap py-14 lg:py-24">{content}</div>
               </section>
             );
+          }
 
-          case "states":
-            return <StateCards key={s.id} region={region} states={home.states} title={s.title} />;
+          case "states": {
+            // A state with no covered city has nothing real to open: it is left out rather than linking to an empty page.
+            const states = home.states.filter((st) => st.cityCount > 0);
+            if (states.length === 0) return null;
+            const visual = hasImage(bg) || bg.fill.kind !== "none";
+            return (
+              <StateCards
+                key={s.id}
+                region={region}
+                states={states}
+                title={s.title}
+                subtitle={s.subtitle}
+                anchor={s.anchor}
+                headingId={s.headingId}
+                backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
+              />
+            );
+          }
 
           case "product-carousel":
             return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} slugOf={slugOf} />;
@@ -77,13 +113,17 @@ export function HomeSections({ region, home, bundle, categories, slugOf }: { reg
           case "campaign": {
             const image = hasImage(bg);
             const useFill = !image && s.fallback === "fill" && bg.fill.kind !== "none";
+            const ctaHref = s.cta ? destinationHref(s.cta.dest, slugOf) : null;
             return (
               <Campaign
                 key={s.id}
                 region={region}
                 crops={home.campaignCrops}
                 config={{}}
-                copy={s.title && s.subtitle ? { title: s.title, body: s.subtitle } : undefined}
+                copy={s.title ? { title: s.title, body: s.subtitle ?? "" } : undefined}
+                anchor={s.anchor}
+                headingId={s.headingId}
+                cta={ctaHref && s.cta ? { label: s.cta.label, href: ctaHref } : undefined}
                 backdrop={{
                   node: image || useFill ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : null,
                   hasImage: image,
