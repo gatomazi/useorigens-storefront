@@ -24,6 +24,7 @@ import type { Scope, TrackingConfig, VendorSetting } from "@/lib/site-config/sch
 import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionRef, parseSectionForm } from "@/lib/admin/section-form";
 import { buildRegionSeed } from "@/lib/admin/region-seed";
+import { STRUCTURED_TEMPLATES, type StructuredTemplate } from "@/lib/site-config/structured";
 import { launchBlockers } from "@/lib/admin/launch";
 import { isRegionScope, REGION_SCOPES, SCOPE_COOKIE, scopeName, scopeOf, storeOf } from "@/lib/admin/scope";
 import { applyAndSave, discardDraft, loadWorkspace, type SaveOutcome } from "@/lib/admin/workspace";
@@ -110,6 +111,13 @@ export async function moveSection(fd: FormData) {
 export async function setSectionActive(fd: FormData) {
   const active = text(fd, "active") === "true";
   return run(fd, { type: "set-active", id: text(fd, "id"), active }, active ? "Seção ativada." : "Seção ocultada.", "/admin/home");
+}
+
+/** Adds one structured home component (city styles, state chooser, regional campaign) to the DRAFT of the region the form was rendered for. */
+export async function addStructuredSection(fd: FormData) {
+  const template = text(fd, "template");
+  if (!(STRUCTURED_TEMPLATES as readonly string[]).includes(template)) back("/admin/home", { err: ["Modelo de seção desconhecido."] });
+  return run(fd, { type: "add-structured", template: template as StructuredTemplate }, "Seção criada no rascunho. Ajuste os textos e a aparência; nada vai para a loja até publicar.", "/admin/home", true);
 }
 
 export async function duplicateSection(fd: FormData) {

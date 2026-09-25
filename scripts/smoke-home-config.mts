@@ -17,6 +17,7 @@ import { chromium } from "@playwright/test";
 import { fixtureSnapshot } from "./fixture-snapshot.mjs";
 import { buildSeedBundle } from "../src/lib/site-config/seed";
 import { REGIONS, type RegionSlug } from "../src/lib/geo/regions";
+import { structuredDefaults } from "../src/lib/site-config/structured";
 
 const nextBin = path.join(process.cwd(), "node_modules", ".bin", "next");
 const META = "1558923262073052"; // the public production IDs, used only as env fallback values; every vendor request is aborted
@@ -176,9 +177,13 @@ function launchedBundle() {
           analyticsSource: "homeCollection", cta: { label: "Ver todos", dest: { kind: "ink-collection", store: h.store, collectionId: h.collectionId } },
           appearance: { fill: { kind: "none" }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } },
         },
+        // The three structured components as the CMS creates them for this region (the home the panel would publish).
+        structuredDefaults("states", region, "custom-estados", new Set(["hero", "colecao-regiao", "footer"])),
+        structuredDefaults("campaign", region, "custom-campanha", new Set(["hero", "colecao-regiao", "footer"])),
         structuredClone(sul[sul.length - 1]),
       ],
     };
+    bundle.docs[region].home.sections.splice(1, 0, structuredDefaults("city-styles", region, "custom-estilos", new Set(["hero", "colecao-regiao", "footer"])));
     bundle.docs[region].launched = true;
   }
   return bundle;
@@ -240,6 +245,9 @@ async function regionsScenario() {
     check(`/${region}: "Ver todos" points to its own store's collection`, html.includes(`https://www.${h.host}/${h.path}/collections/colecao-${region}`));
     check(`/${region}: never an empty count ("0 cidades")`, !/\b0 cidades\b/.test(html.replaceAll("<!-- -->", "")));
     check(`/${region}: the hero and the configured section render in order`, sectionIds(html).includes("colecao-regiao") && html.includes('id="hero-title"'));
+    check(`/${region}: the state chooser lists only this region's states, linking inside the region`, html.includes('id="estados"') && new RegExp(`href="/${region}/[a-z]{2}"`).test(html) && !/href="\/(sul)\/[a-z]{2}"/.test(html));
+    check(`/${region}: the regional campaign carries this region's neutral copy, never Sul's text`, html.includes(`no ${REGIONS[region].name}.`) && !html.includes("cada cidade do Sul"));
+    check(`/${region}: the city-styles section (when the region has real styles for its example city) has no foreign store links`, !html.includes('id="estilos"') || !html.slice(html.indexOf('id="estilos"'), html.indexOf('id="estados"') > 0 ? html.indexOf('id="estados"') : undefined).includes("usesul.com.br"));
     check(`/${region}/privacidade -> 200`, (await fetch(`${base}/${region}/privacidade`)).status === 200);
     check(`/api/cidades/${region} -> 200 with cities`, (await (await fetch(`${base}/api/cidades/${region}`)).text()).length > 100);
   }

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { StateOutline } from "@/components/brand/StateOutline";
 import { BannerBackground } from "@/components/banners/BannerBackground";
@@ -60,12 +61,31 @@ function RegionChips({ region, uf, shown, more }: { region: RegionSlug; uf: stri
  * no JS needed), replacing the old horizontal swipe row, which made it hard to compare states at a glance
  * (CLAUDE_ADDENDUM_PRODUCT_STATE_SELECTOR_REDESIGNS.md). Both trees render; CSS shows the one that fits the width.
  */
-export function StateCards({ region, states, title = "Escolha o seu estado" }: { region: RegionSlug; states: StateCard[]; title?: string }) {
-  return (
-    <section id="estados" aria-labelledby="states-title" className="wrap py-14 lg:py-24">
-      <h2 id="states-title" className="t-h2">
+export function StateCards({
+  region,
+  states,
+  title = "Escolha o seu estado",
+  subtitle,
+  anchor = "estados",
+  headingId = "states-title",
+  backdrop,
+}: {
+  region: RegionSlug;
+  states: StateCard[];
+  title?: string;
+  subtitle?: string;
+  /** DOM ids (defaults are the original ones). */
+  anchor?: string;
+  headingId?: string;
+  /** Config-driven background layer (CMS): the section then becomes a self-contained block with the layer INSIDE it, never a band between sections. */
+  backdrop?: ReactNode;
+}) {
+  const body = (
+    <>
+      <h2 id={headingId} className="t-h2">
         {title}
       </h2>
+      {subtitle && <p className="t-body mt-3 max-w-2xl text-ink-soft">{subtitle}</p>}
 
       {/* Desktop and up: three cover cards. */}
       <ul className="mt-8 hidden gap-6 md:grid md:grid-cols-3 lg:mt-12">
@@ -131,6 +151,19 @@ export function StateCards({ region, states, title = "Escolha o seu estado" }: {
           );
         })}
       </div>
+    </>
+  );
+  if (backdrop) {
+    return (
+      <section id={anchor} aria-labelledby={headingId} className="relative isolate overflow-hidden">
+        {backdrop}
+        <div className="wrap py-14 lg:py-24">{body}</div>
+      </section>
+    );
+  }
+  return (
+    <section id={anchor} aria-labelledby={headingId} className="wrap py-14 lg:py-24">
+      {body}
     </section>
   );
 }

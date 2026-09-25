@@ -75,6 +75,8 @@ export type Section = {
   analyticsSource?: CarouselSourceKey;
   /** Campaign only: what shows when no background image is published. */
   fallback?: "crops" | "fill";
+  /** City styles only: how many of the city's style cards to show (1..8; fewer when the region's catalog has fewer real ones). */
+  count?: number;
   appearance: Appearance;
 };
 
@@ -268,6 +270,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
   if (v.source !== undefined) checkSource(c, `${path}.source`, v.source);
   if (v.analyticsSource !== undefined && !(CAROUSEL_SOURCE_KEYS as readonly unknown[]).includes(v.analyticsSource)) c.fail(`${path}.analyticsSource`, "not an allowed analytics origin");
   if (v.fallback !== undefined && v.fallback !== "crops" && v.fallback !== "fill") c.fail(`${path}.fallback`, "must be crops | fill");
+  if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > 8)) c.fail(`${path}.count`, "city styles only, an integer 1..8");
   if (v.template === "product-carousel") {
     if (!v.layout) c.fail(`${path}.layout`, "required for product-carousel");
     if (!v.source) c.fail(`${path}.source`, "required for product-carousel");
@@ -353,6 +356,8 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
           if (isRecord(s.source) && s.source.kind === "ink-category" && s.source.store !== ownStore) c.fail(`doc.home.sections[${i}].source.store`, "belongs to another region's INK store");
           const dest = isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null;
           if (dest && dest.kind === "ink-collection" && dest.store !== ownStore) c.fail(`doc.home.sections[${i}].cta.dest.store`, "belongs to another region's INK store");
+          // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
+          if (dest && dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].cta.dest.path`, "must be a page of this region");
         });
       }
       const anchors = new Set<string>();

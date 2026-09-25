@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { addCollectionSection, duplicateSection, initRegionHomeAction, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
+import { addCollectionSection, addStructuredSection, duplicateSection, initRegionHomeAction, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
+import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
+import { campaignStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
+import { SINGLETON_TEMPLATES, STRUCTURED_MODELS } from "@/lib/site-config/structured";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireAdmin } from "@/lib/admin/auth/guard";
@@ -129,7 +132,9 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
 
       {ws.doc.home && (
       <section className="a-card p-5" aria-labelledby="nova-secao">
-        <h2 id="nova-secao" className="a-h2">Nova seção a partir de uma coleção da INK</h2>
+        <h2 id="nova-secao" className="a-h2">Adicionar seção</h2>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">A seção entra só no rascunho de <strong>{scopeName(scope)}</strong>, com valores iniciais desta região. Nada vai para a loja até publicar.</p>
+        <h3 className="mt-5 font-extrabold">Produtos: a partir de uma coleção da INK</h3>
         {entries.length === 0 ? (
           <p className="a-flash err mt-3">Nenhuma coleção sincronizada: rode <code>npm run collections:sync</code> (só leitura) depois de um catálogo sincronizado.</p>
         ) : (
@@ -150,6 +155,24 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         )}
         <p className="a-muted mt-3 text-[0.8125rem]">Precisa de uma coleção interna? <Link className="a-link" href="/admin/colecoes?from=/admin/home">Habilite-a na Biblioteca</Link>.</p>
         <p className="a-muted mt-3 text-[0.8125rem]">A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A ordem dos cards é a devolvida pela INK; não é “mais vendidos” nem “mais recentes”. A seção nova entra só no rascunho, antes da campanha.</p>
+
+        <h3 className="mt-8 font-extrabold">Componentes da home</h3>
+        <ul className="mt-3 grid gap-4 md:grid-cols-3" aria-label="Componentes da home">
+          {STRUCTURED_MODELS.map((model) => {
+            const existing = sections.find((x) => x.template === model.template) ?? null;
+            const single = SINGLETON_TEMPLATES.includes(model.template);
+            const status = model.template === "city-styles" ? cityStylesStatus(scope, existing ?? undefined) : model.template === "states" ? statesStatus(scope) : campaignStatus(scope);
+            const addForm = single && existing ? null : (
+              <form action={addStructuredSection}>
+                <input type="hidden" name="rev" value={rev ?? "null"} />
+                <input type="hidden" name="scope" value={scope} />
+                <input type="hidden" name="template" value={model.template} />
+                <button type="submit" className="a-btn sm" aria-label={`Adicionar ${model.name}`}>{existing ? "Adicionar outra" : "Adicionar"}</button>
+              </form>
+            );
+            return <StructuredModelCard key={model.template} model={model} status={status} existing={existing ? { id: existing.id, title: existing.title } : null} addForm={addForm} />;
+          })}
+        </ul>
       </section>
       )}
 
