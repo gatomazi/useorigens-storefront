@@ -26,9 +26,9 @@ import { timingSafeEqual } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { adminSyncToken, allowFixtureSync } from "@/lib/config/env";
-import { promoteSnapshot, syncCatalog, type SyncResult } from "@/lib/catalog/sync-service";
-import { syncCollections } from "@/lib/catalog/collections-sync";
-import { beginSyncJob, currentSyncJob, finishSyncJobFailure, finishSyncJobSuccess, SyncAlreadyRunningError, type CollectionsStep } from "@/lib/catalog/sync-job";
+import { promoteSnapshot, type SyncResult } from "@/lib/catalog/sync-service";
+import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
+import { beginSyncJob, currentSyncJob, finishSyncJobFailure, finishSyncJobSuccess, SyncAlreadyRunningError } from "@/lib/catalog/sync-job";
 import type { CatalogSnapshot } from "@/lib/catalog/types";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { REGION_SLUGS } from "@/lib/geo/regions";
@@ -117,37 +117,28 @@ export async function POST(request: Request) {
   }
 
   after(async () => {
+    if (!fixtureSnapshot) {
+      await runCatalogSyncJob(running, { storeKeys, withCollections, onPromoted: revalidateCatalogPages });
+      return;
+    }
     try {
       if (fixtureSyncDelayMs > 0) await new Promise((resolve) => setTimeout(resolve, fixtureSyncDelayMs));
-      const result: SyncResult = fixtureSnapshot
-        ? await promoteSnapshot(fixtureSnapshot).then(() => ({
-            startedAt: running.startedAt,
-            finishedAt: new Date().toISOString(),
-            outcomes: Object.keys(fixtureSnapshot.stores).map((storeKey) => ({
-              storeKey: storeKey as CommerceStoreKey,
-              ok: true as const,
-              productCount: fixtureSnapshot.stores[storeKey as CommerceStoreKey]?.productCount ?? 0,
-              bindingCount: fixtureSnapshot.stores[storeKey as CommerceStoreKey]?.bindings.length ?? 0,
-              merchCount: fixtureSnapshot.stores[storeKey as CommerceStoreKey]?.merch.length ?? 0,
-              excludedCount: fixtureSnapshot.stores[storeKey as CommerceStoreKey]?.excluded.length ?? 0,
-              rejected: 0,
-            })),
-          }))
-        : await syncCatalog(storeKeys);
+      const snapshot = fixtureSnapshot;
+      const result: SyncResult = await promoteSnapshot(snapshot).then(() => ({
+        startedAt: running.startedAt,
+        finishedAt: new Date().toISOString(),
+        outcomes: Object.keys(snapshot.stores).map((storeKey) => ({
+          storeKey: storeKey as CommerceStoreKey,
+          ok: true as const,
+          productCount: snapshot.stores[storeKey as CommerceStoreKey]?.productCount ?? 0,
+          bindingCount: snapshot.stores[storeKey as CommerceStoreKey]?.bindings.length ?? 0,
+          merchCount: snapshot.stores[storeKey as CommerceStoreKey]?.merch.length ?? 0,
+          excludedCount: snapshot.stores[storeKey as CommerceStoreKey]?.excluded.length ?? 0,
+          rejected: 0,
+        })),
+      }));
       revalidateCatalogPages();
-      // Optional, non-destructive second step (only after the catalog itself succeeded): refresh the INK collections against the NEW
-      // catalog. Read-only (≈4 GETs), last-good per store, and any failure is reported in the job without touching the catalog result or
-      // the collections file the storefront already uses.
-      let collections: CollectionsStep | undefined;
-      if (withCollections && !fixtureSnapshot) {
-        try {
-          collections = { outcomes: await syncCollections() };
-          revalidatePath("/[region]", "layout");
-        } catch (err) {
-          collections = { error: err instanceof Error ? err.message : String(err) };
-        }
-      }
-      finishSyncJobSuccess(running.startedAt, result, collections);
+      finishSyncJobSuccess(running.startedAt, result);
     } catch (err) {
       // Never leak the raw error object (could theoretically carry request internals) — just its message.
       finishSyncJobFailure(running.startedAt, err);

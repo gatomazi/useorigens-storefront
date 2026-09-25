@@ -58,6 +58,7 @@ for (const region of REGIONS) {
     await open(page, "/admin/colecoes");
     await expect(page.getByText(new RegExp(`Coleções da loja INK de ${region.store}`))).toBeVisible();
     await expect(page.locator("table.a-table tbody")).not.toContainText("SUL - RS");
+    await expect(page.getByRole("button", { name: new RegExp(`Sincronizar catálogo de ${region.store}`) })).toBeVisible(); // the owner can sync this store's catalog from the panel
     const enableButtons = page.locator("table.a-table tbody").getByRole("button", { name: "Habilitar" });
     if ((await enableButtons.count()) > 0) {
       const row = page.locator("table.a-table tbody tr").filter({ has: page.getByRole("button", { name: "Habilitar" }) }).first();
