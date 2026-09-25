@@ -10,7 +10,7 @@
 // flag being inert, the published.json reader (a published section from a collection shows up with real cards; corrupt / incompatible files fall
 // back to the seed), the preview being tracker-free, and the local admin answering 404 on a production build. What it cannot cover yet is printed as SKIP with the reason (upload and preview are not implemented).
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { chromium } from "@playwright/test";
@@ -183,6 +183,29 @@ function launchedBundle() {
   }
   return bundle;
 }
+/**
+ * `next start` servers of one build share `.next`, so the pre-rendered (ISR) pages one server wrote for /norte or /centro-oeste would be read by the
+ * next one. These regions (and Sul, whose header links change with them) are the only routes whose answer differs between the servers below, so their cache entries are removed around each run.
+ */
+async function purgeRegionCache() {
+  const app = path.join(process.cwd(), ".next", "server", "app");
+  for (const base of [app, path.join(app, "api", "cidades")]) {
+    for (const entry of await readdir(base).catch(() => [] as string[])) {
+      if (/^(sul|norte|centro-oeste)(\.|$)/.test(entry)) await rm(path.join(base, entry), { recursive: true, force: true });
+    }
+  }
+}
+async function stopServer(child: ChildProcess) {
+  if (!child.pid) return;
+  for (const sig of ["SIGTERM", "SIGKILL"] as const) {
+    try {
+      process.kill(-child.pid, sig);
+    } catch {
+      /* gone */
+    }
+    await new Promise((r) => setTimeout(r, 300));
+  }
+}
 async function startRegionServer(port: number, withNewRegions: boolean, extraEnv: Record<string, string> = {}) {
   const volume = await mkdtemp(path.join(tmpdir(), "smoke-regions-"));
   tmpDirs.push(volume);
@@ -196,19 +219,21 @@ async function startRegionServer(port: number, withNewRegions: boolean, extraEnv
   });
   extra.push(child);
   await waitHealthy(port);
+  return child;
 }
 const extra: ChildProcess[] = [];
 
 async function regionsScenario() {
   console.log("\n=== launched regions: three stores (Norte and Centro-Oeste have their own catalog) ===");
-  await startRegionServer(3233, true);
+  await purgeRegionCache();
+  const three = await startRegionServer(3233, true);
   const base = "http://localhost:3233";
   const sulHome = await (await fetch(`${base}/sul`)).text();
   for (const region of ["norte", "centro-oeste"] as const) {
     const h = HOSTS[region];
     const r = await fetch(`${base}/${region}`);
     const html = await r.text();
-    check(`/${region} (launched, own catalog) -> 200`, r.status === 200, r.status);
+    check(`/${region} (launched, own catalog) -> 200`, r.status === 200, { status: r.status, snippet: html.slice(0, 200) });
     const own = html.match(new RegExp(`href="https://www\\.${h.host.replace(".", "\\.")}/${h.path}/product/teste-`, "g")) ?? [];
     check(`/${region}: REAL products of its own INK store (>= 3 links to ${h.host})`, own.length >= 3, own.length);
     check(`/${region}: no link to another region's INK store`, !/usesul\.com\.br\/usesul\/product|usenorte\.com\.br\/usenorte\/product\/teste-70|usecentro\.com\.br\/usecentro\/product\/teste-70/.test(html.replace(new RegExp(`https://www\\.${h.host.replace(".", "\\.")}/${h.path}/product/teste-`, "g"), "")), undefined);
@@ -225,17 +250,27 @@ async function regionsScenario() {
   notLaunched.docs.norte.launched = false;
   check("(the same bundle with Norte recalled is what a recall publishes: covered by the CMS E2E and unit tests)", notLaunched.docs.norte.launched === false);
 
+  await stopServer(three);
+  await purgeRegionCache();
   console.log("\n=== launched regions: today's production (only Sul has a catalog) ===");
-  await startRegionServer(3234, false);
+  const sulOnlyServer = await startRegionServer(3234, false);
   const only = "http://localhost:3234";
-  check("published.json marks Norte/Centro launched, but without their catalog: /norte -> 404", (await fetch(`${only}/norte`)).status === 404);
+  const onlyNorte = (await fetch(`${only}/norte`)).status;
+  check("published.json marks Norte/Centro launched, but without their catalog: /norte -> 404", onlyNorte === 404, onlyNorte);
   check("...and /centro-oeste -> 404 (never an empty page)", (await fetch(`${only}/centro-oeste`)).status === 404);
   const sulOnly = await (await fetch(`${only}/sul`)).text();
   check("...Sul is untouched and still links to the legacy INK stores for the other regions", sulOnly.includes("https://www.usenorte.com.br") && !sulOnly.includes('href="/norte"'));
   check("...and the city-search API of a non-public region is 404", (await fetch(`${only}/api/cidades/norte`)).status === 404);
+  await stopServer(sulOnlyServer);
+  await purgeRegionCache();
 }
 
 async function main() {
+  if (process.env.SMOKE_REGIONS_ONLY) {
+    await regionsScenario();
+    console.log(failures === 0 ? "\nSMOKE (regions only) PASSED" : `\nSMOKE (regions only) FAILED (${failures})`);
+    return;
+  }
   for (const s of servers) await start(s);
 
   const bodies: Record<string, string> = {};

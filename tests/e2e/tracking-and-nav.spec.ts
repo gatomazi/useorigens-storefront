@@ -1,5 +1,5 @@
 import type { Page } from "@playwright/test";
-import { expect, test } from "./fixtures";
+import { expect, normalizeFbq, normalizeGtag, test } from "./fixtures";
 
 /** Injects a capturing `window.fbq` mock before any page script runs — the same approach
  * CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md §3 asks for ("Usar fbq mockado"), and it lets the calling
@@ -13,7 +13,7 @@ import { expect, test } from "./fixtures";
  * once the document never unloads (verified empirically — see the GoToInk tests below). */
 async function withFbqMock(page: Page): Promise<unknown[][]> {
   const calls: unknown[][] = [];
-  await page.exposeFunction("__reportFbq", (args: unknown[]) => calls.push(args));
+  await page.exposeFunction("__reportFbq", (args: unknown[]) => calls.push(normalizeFbq(args)));
   await page.addInitScript(() => {
     (window as unknown as { fbq: (...args: unknown[]) => void }).fbq = (...args: unknown[]) => {
       (window as unknown as { __reportFbq: (args: unknown[]) => void }).__reportFbq(args);
@@ -71,7 +71,7 @@ async function fillAndAwaitSuggestion(_page: Page, openDialog: () => Promise<imp
  * every already-passing Meta-only test stays exactly as it was — new GA4 coverage is purely additive. */
 async function withGtagMock(page: Page): Promise<unknown[][]> {
   const calls: unknown[][] = [];
-  await page.exposeFunction("__reportGtag", (args: unknown[]) => calls.push(args));
+  await page.exposeFunction("__reportGtag", (args: unknown[]) => calls.push(normalizeGtag(args)));
   await page.addInitScript(() => {
     (window as unknown as { gtag: (...args: unknown[]) => void }).gtag = (...args: unknown[]) => {
       (window as unknown as { __reportGtag: (args: unknown[]) => void }).__reportGtag(args);

@@ -12,7 +12,11 @@ import { setActiveMetaPixel } from "@/lib/analytics/active-ids";
 const initialised = new Set<string>();
 function ensureInit(id: string): void {
   if (typeof window.fbq !== "function" || initialised.has(id)) return;
-  window.fbq("init", id);
+  try {
+    window.fbq("init", id);
+  } catch {
+    return; // a blocked or broken fbq must never break the page
+  }
   initialised.add(id);
 }
 import { metaPixelId } from "@/lib/config/public-env";

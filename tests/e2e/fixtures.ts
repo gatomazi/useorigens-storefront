@@ -27,3 +27,15 @@ export const test = base.extend({
 });
 
 export { expect };
+
+/**
+ * Events are ADDRESSED to the visited region's ID (Meta `trackSingle`/`trackSingleCustom`, GA4 `send_to`; src/lib/analytics/track.ts). These tests are
+ * about WHAT an event carries, not where it goes (that is covered by unit tests and the per-region tracking E2E), so mocks record the classic shape.
+ */
+export const normalizeFbq = (a: unknown[]): unknown[] => (a[0] === "trackSingle" ? ["track", ...a.slice(2)] : a[0] === "trackSingleCustom" ? ["trackCustom", ...a.slice(2)] : a);
+export const normalizeGtag = (a: unknown[]): unknown[] => {
+  if (a[0] !== "event" || typeof a[2] !== "object" || a[2] === null) return a;
+  const { send_to: _to, ...rest } = a[2] as Record<string, unknown>;
+  void _to;
+  return [a[0], a[1], rest];
+};

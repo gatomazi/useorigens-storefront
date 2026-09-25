@@ -126,3 +126,10 @@ Rollback rápido: `SITE_CONFIG_HOME=off` → **Restaurar versão** → apagar `A
 - **Publicar é atômico e reconciliável:** registro `pending` no banco → arquivo (temp + rename no Volume) → `live` → invalida cache. Falha em qualquer ponto mantém a versão anterior; o reconciliador refaz o arquivo a partir do banco (também ~15 s depois de cada inicialização).
 - **Tracking:** sem configuração publicada (ou com a flag desligada) o comportamento é exatamente o de hoje (`NEXT_PUBLIC_*`). Publicar é bloqueado se os IDs do documento diferirem dos do build.
 - **Sincronizações** só leem a INK (GET), uma por vez (trava no banco), e nunca apagam o último arquivo bom.
+
+
+## Regiões e tracking (Rodada 8)
+
+- Norte e Centro-Oeste são editáveis no painel (seletor de região no topo) e **só ficam públicas** quando o owner usa **Publicar → Lançar <região> ao público**, com a flag `SITE_CONFIG_HOME` ligada e o catálogo da loja INK da região sincronizado (cobertura ≥ 50% das cidades). **Recolher** volta à prévia (404 público). Ambos são publicações da região, reversíveis, sem efeito nas outras regiões nem no catálogo.
+- Tracking em `/admin/tracking`: global (owner) e por região; Meta e GA4 independentes; salvar = rascunho; publicar exige confirmar os IDs efetivos quando eles mudam. Sul usa os IDs do build ("legado") até uma escolha explícita; Norte/Centro começam sem rastreamento.
+- Sem migração de banco nesta rodada. Detalhes e roteiro: [`cms-v1-round8-regions-tracking.md`](cms-v1-round8-regions-tracking.md).

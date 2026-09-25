@@ -12,7 +12,12 @@ import { setActiveGa4 } from "@/lib/analytics/active-ids";
 const configured = new Set<string>();
 function ensureConfig(id: string): void {
   if (typeof window.gtag !== "function" || configured.has(id)) return;
-  window.gtag("config", id, { send_page_view: false });
+  try {
+    window.gtag("config", id, { send_page_view: false });
+  } catch {
+    // A blocked or broken gtag must never break the page: the ID is simply not configured (and not remembered, so a later attempt may work).
+    return;
+  }
   configured.add(id);
 }
 import { gaMeasurementId } from "@/lib/config/public-env";
