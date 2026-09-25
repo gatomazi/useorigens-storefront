@@ -9,12 +9,15 @@
  *  - a duplicate gets a new id and a unique anchor and starts INACTIVE, so a copy never appears on the home by accident.
  */
 import { sectionsUsing } from "../site-config/collections-enabled";
+import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredTemplate } from "../site-config/structured";
 import { validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "featured">;
 
 export type DraftOp =
   | { type: "add-carousel"; title: string; source: Source }
+  /** Adds one of the structured home components (city styles, state chooser, regional campaign) with the defaults of THIS region. */
+  | { type: "add-structured"; template: StructuredTemplate }
   | { type: "duplicate"; id: string }
   | { type: "move"; id: string; direction: "up" | "down" }
   | { type: "set-active"; id: string; active: boolean }
@@ -51,11 +54,6 @@ const slug = (text: string): string =>
     .replace(/^-+|-+$/g, "")
     .slice(0, 24) || "secao";
 
-function uniqueAnchor(base: string, taken: Set<string>): string {
-  let anchor = base.slice(0, 34);
-  for (let n = 2; taken.has(anchor); n++) anchor = `${base.slice(0, 34 - String(n).length - 1)}-${n}`;
-  return anchor;
-}
 
 const isLocked = (s: Section) => s.template === "hero" || s.template === "footer" || s.locked === true;
 const fail = (...errors: string[]): OpResult => ({ ok: false, errors });
@@ -105,6 +103,19 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       next.splice(at, 0, created);
       return withSections(next, id);
     }
+    case "add-structured": {
+      if (doc.scope === "global") return fail("global has no home");
+      const existing = SINGLETON_TEMPLATES.includes(op.template) ? sections.find((s) => s.template === op.template) : undefined;
+      if (existing) return fail(`this region already has this section ("${existing.title ?? existing.id}"): edit it instead of adding another`);
+      const id = `${CUSTOM_PREFIX}${ctx.newId()}`;
+      const created = structuredDefaults(op.template, doc.scope, id, new Set(sections.map((s) => s.anchor)));
+      const check = validateSection(created);
+      if (!check.ok) return { ok: false, errors: check.errors };
+      // City styles go right after the hero (as on the Sul home); the state chooser and campaigns go before the footer, campaigns last.
+      const at = op.template === "city-styles" ? 1 : next.length - 1;
+      next.splice(at, 0, created);
+      return withSections(next, id);
+    }
     case "duplicate": {
       const source = next[index];
       if (source.template !== "product-carousel") return fail("only carousels can be duplicated");
@@ -141,6 +152,13 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       const check = validateSection(merged);
       if (!check.ok) return { ok: false, errors: check.errors };
       next[index] = merged;
+      // Region-level rules (a Norte button cannot lead to /sul, a section cannot use another region's store) live on the whole document:
+      // only the problems of THIS section are reported, so an edit is never blocked by something unrelated.
+      const whole = validateScopeDoc({ ...doc, home: { sections: next } });
+      if (!whole.ok) {
+        const own = whole.errors.filter((e) => e.startsWith(`doc.home.sections[${index}]`));
+        if (own.length > 0) return { ok: false, errors: own };
+      }
       return withSections(next, op.id);
     }
   }

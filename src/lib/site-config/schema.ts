@@ -56,6 +56,9 @@ export type Source =
   | { kind: "ink-category"; store: CommerceStoreKey; collectionId: number; order: "category" | "manual"; limit: number }
   | { kind: "manual"; productIds: string[]; limit: number };
 
+export type FeaturedProductRef = { store: CommerceStoreKey; productId: string };
+export const MAX_FEATURED = 3;
+
 export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary" };
 
 export type Section = {
@@ -75,6 +78,14 @@ export type Section = {
   analyticsSource?: CarouselSourceKey;
   /** Campaign only: what shows when no background image is published. */
   fallback?: "crops" | "fill";
+  /** City styles only: how many of the city's style cards to show (1..8; fewer when the region's catalog has fewer real ones). */
+  count?: number;
+  /**
+   * Hero only: the (up to three) products shown as cards next to the headline, by stable reference (store + INK product id, never a copy of
+   * a price or a photo: those are read from the catalog snapshot at render time). `undefined` = not customised: Sul keeps the three cards
+   * the code has always shown, the other regions show none. `[]` = customised to show no card.
+   */
+  featured?: FeaturedProductRef[];
   appearance: Appearance;
 };
 
@@ -276,6 +287,19 @@ function checkSection(c: Collector, path: string, v: unknown): void {
   if (v.source !== undefined) checkSource(c, `${path}.source`, v.source);
   if (v.analyticsSource !== undefined && !(CAROUSEL_SOURCE_KEYS as readonly unknown[]).includes(v.analyticsSource)) c.fail(`${path}.analyticsSource`, "not an allowed analytics origin");
   if (v.fallback !== undefined && v.fallback !== "crops" && v.fallback !== "fill") c.fail(`${path}.fallback`, "must be crops | fill");
+  if (v.featured !== undefined) {
+    if (v.template !== "hero" || !Array.isArray(v.featured) || v.featured.length > MAX_FEATURED) c.fail(`${path}.featured`, `hero only, at most ${MAX_FEATURED} products`);
+    else {
+      const seen = new Set<string>();
+      v.featured.forEach((ref, i) => {
+        if (!isRecord(ref) || typeof ref.store !== "string" || !STORES.includes(ref.store) || typeof ref.productId !== "string" || !/^\d{1,20}$/.test(ref.productId)) return c.fail(`${path}.featured[${i}]`, "must be { store, productId (numeric INK id) }");
+        const key = `${ref.store}:${ref.productId}`;
+        if (seen.has(key)) c.fail(`${path}.featured[${i}]`, "the same product twice");
+        seen.add(key);
+      });
+    }
+  }
+  if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > 8)) c.fail(`${path}.count`, "city styles only, an integer 1..8");
   if (v.template === "product-carousel") {
     if (!v.layout) c.fail(`${path}.layout`, "required for product-carousel");
     if (!v.source) c.fail(`${path}.source`, "required for product-carousel");
@@ -374,6 +398,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
           if (isRecord(s.source) && s.source.kind === "ink-category" && s.source.store !== ownStore) c.fail(`doc.home.sections[${i}].source.store`, "belongs to another region's INK store");
           const dest = isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null;
           if (dest && dest.kind === "ink-collection" && dest.store !== ownStore) c.fail(`doc.home.sections[${i}].cta.dest.store`, "belongs to another region's INK store");
+          // The hero's cards are products of THIS region's own INK store (a Norte card can never be a Sul product).
+          if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && ref.store !== ownStore) c.fail(`doc.home.sections[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
+          // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
+          if (dest && dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].cta.dest.path`, "must be a page of this region");
         });
       }
       const anchors = new Set<string>();

@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
+import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
+import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
 import type { Appearance, Section } from "@/lib/site-config/schema";
 
@@ -45,8 +47,12 @@ function FocalPad({ label, image, x, y, onChange }: { label: string; image?: Med
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action,
+  section, rev, scope, media, collections, action, notes = [], featured,
 }: {
+  /** Hero only: the configured cards as resolved against the region's catalog. */
+  featured?: { mode: "edit" | "legacy"; initial: FeaturedSlotView[]; eligible: number; regionName: string; search: (scope: string, query: string) => Promise<{ results: FeaturedCandidate[]; total: number; error?: string }> };
+  /** Real-data notes of a structured component (how many styles / states the region's catalog can feed). */
+  notes?: string[];
   section: Section;
   rev: number | null;
   scope: string;
@@ -56,8 +62,7 @@ export function SectionEditorForm({
 }) {
   const a: Appearance = section.appearance;
   const isCarousel = section.template === "product-carousel";
-  const hasVisual = isCarousel || section.template === "hero" || section.template === "campaign";
-  const textOnly = section.template === "states" || section.template === "city-styles";
+  const hasVisual = isCarousel || section.template === "hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states";
 
   const [tone, setTone] = useState<"light" | "dark">(isCarousel ? section.layout?.tone ?? "light" : section.template === "campaign" ? "dark" : "light");
   const [fillKind, setFillKind] = useState<"none" | "solid" | "gradient">(a.fill.kind);
@@ -112,8 +117,41 @@ export function SectionEditorForm({
           <textarea id="subtitle" name="subtitle" defaultValue={section.subtitle} className="a-textarea" maxLength={300} />
           {section.template === "city-styles" && <p className="a-muted mt-1 text-[0.8125rem]">Use <code>{"{city}"}</code> onde o nome da cidade de exemplo deve aparecer.</p>}
         </div>
-        {textOnly && <p className="a-muted text-[0.875rem]">O layout desta seção é fixo; aqui só o texto muda.</p>}
+        {section.template === "city-styles" && (
+          <div className="max-w-[12rem]">
+            <label className="a-label" htmlFor="count">Quantos estilos mostrar</label>
+            <input id="count" name="count" type="number" min={1} max={8} defaultValue={section.count ?? 8} className="a-input" />
+            <p className="a-muted mt-1 text-[0.8125rem]">Até 8. Só aparecem os que existem de verdade para a cidade de exemplo.</p>
+          </div>
+        )}
+        {notes.length > 0 && (
+          <div className="a-flash ok text-[0.875rem]" role="status">
+            <p className="font-extrabold">Dados reais desta região</p>
+            {notes.map((n) => <p key={n} className="mt-1">{n}</p>)}
+          </div>
+        )}
       </fieldset>
+
+      {section.template === "hero" && featured && <HeroFeaturedProducts scope={scope} regionName={featured.regionName} mode={featured.mode} initial={featured.initial} eligible={featured.eligible} search={featured.search} />}
+
+      {section.template === "campaign" && (
+        <fieldset className="space-y-4">
+          <legend className="a-h2 mb-3">Botão</legend>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="a-label" htmlFor="cta_kind">Destino</label>
+              <select id="cta_kind" name="cta_kind" className="a-select" value={ctaKind} onChange={(e) => setCtaKind(e.target.value as typeof ctaKind)}>
+                <option value="none">Busca de cidade (padrão)</option>
+                <option value="route">Página desta região</option>
+                <option value="external">URL da loja Use (Sul, Norte ou Centro)</option>
+              </select>
+            </div>
+            {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver mais"} className="a-input" maxLength={32} /></div>}
+          </div>
+          {ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho (dentro de /{scope})</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : `/${scope}`} className="a-input" placeholder={`/${scope}/pa`} /><p className="a-muted mt-1 text-[0.8125rem]">Ex.: <code>/{scope}</code> ou a página de um estado. Um caminho de outra região é recusado.</p></div>}
+          {ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usenorte.com.br/" /></div>}
+        </fieldset>
+      )}
 
       {isCarousel && (
         <>

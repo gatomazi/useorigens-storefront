@@ -593,7 +593,7 @@ test.describe("Shared consent (Meta + GA4): vendor-neutral banner, revocation st
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
     const banner = page.getByRole("region", { name: "Preferências de cookies" });
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText("Usamos cookies para melhorar sua experiência e entender como o site é utilizado");
+    await expect(banner).toContainText("Nosso site utiliza cookies para você ter uma melhor experiência. Saiba mais em nossa Política de Privacidade.");
     await expect(banner).not.toContainText(/Meta|Pixel|Google|Analytics/i);
     await expect(banner.getByRole("link", { name: "Política de Privacidade" })).toBeVisible();
     const reject = await banner.getByRole("button", { name: "Rejeitar" }).boundingBox();

@@ -24,6 +24,9 @@ export function Campaign({
   config,
   copy = CAMPAIGN_COPY,
   backdrop,
+  anchor = "origem",
+  headingId = "origin-title",
+  cta,
 }: {
   region: RegionSlug;
   crops: { imageUrl: string; family: string }[];
@@ -34,12 +37,17 @@ export function Campaign({
    * `hasImage` whether a photo is published, `showCrops` whether the macro crops stand in for a missing photo.
    */
   backdrop?: { node: ReactNode; hasImage: boolean; showCrops: boolean };
+  /** DOM ids of the section and its heading (several campaigns may exist on one home; the defaults are the original ones). */
+  anchor?: string;
+  headingId?: string;
+  /** A configured button. Absent = the original "Encontrar minha cidade" search. */
+  cta?: { label: string; href: string };
 }) {
   const legacyPhoto = backdrop ? null : usableBannerAsset("campaign", config);
   const photo = backdrop ? backdrop.hasImage : legacyPhoto !== null;
   const showCrops = backdrop ? backdrop.showCrops : !photo;
   return (
-    <section id="origem" aria-labelledby="origin-title" className="relative isolate overflow-hidden text-white">
+    <section id={anchor} aria-labelledby={headingId} className="relative isolate overflow-hidden text-white">
       {backdrop ? (
         (backdrop.node ?? <div aria-hidden="true" className="on-ink absolute inset-0 -z-10" />)
       ) : legacyPhoto ? (
@@ -50,12 +58,18 @@ export function Campaign({
       <div className="wrap py-14 lg:py-24">
         <div className="grid items-center gap-10 lg:grid-cols-12 lg:gap-8">
           <div className="lg:col-span-6">
-            <h2 id="origin-title" className="t-h2 [text-wrap:balance]">
+            <h2 id={headingId} className="t-h2 [text-wrap:balance]">
               {copy.title}
             </h2>
-            <p className="t-body mt-5 max-w-md text-white/80">{copy.body}</p>
+            {copy.body && <p className="t-body mt-5 max-w-md text-white/80">{copy.body}</p>}
             <div className="mt-8">
-              <SearchDialog region={region} variant="cta" />
+              {cta ? (
+                <a href={cta.href} className="btn btn-light">
+                  {cta.label}
+                </a>
+              ) : (
+                <SearchDialog region={region} variant="cta" />
+              )}
             </div>
           </div>
           {showCrops && crops.length > 0 && (
