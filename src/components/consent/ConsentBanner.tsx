@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useConsent } from "@/lib/consent/ConsentProvider";
-import { measurementRequiresConsent } from "@/lib/consent/policy";
 import type { RegionSlug } from "@/lib/geo/regions";
 
 /**
@@ -11,8 +10,8 @@ import type { RegionSlug } from "@/lib/geo/regions";
  * past it, or navigating away must never count as consent. It never blocks the rest of the page — search and
  * every product page work identically either way.
  *
- * The copy is vendor-neutral on purpose: the choice covers every optional measurement tool the storefront uses
- * (today Meta + Google Analytics, possibly others later), so the detail lives in the privacy policy, not here.
+ * The copy is the INK stores' own sentence and vendor-neutral on purpose: the choice covers every optional measurement tool the
+ * storefront uses (today Meta + Google Analytics, possibly others later), so the detail lives in the privacy policy, not here.
  * Both buttons share the same size and weight so neither choice is visually pushed.
  */
 export function ConsentBanner({ region }: { region: RegionSlug }) {
@@ -27,9 +26,7 @@ export function ConsentBanner({ region }: { region: RegionSlug }) {
     >
       <div className="wrap flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="text-[0.8125rem] leading-snug text-white/90 sm:max-w-2xl sm:text-[0.875rem]">
-          {measurementRequiresConsent()
-            ? "Usamos cookies para melhorar sua experiência e entender como o site é utilizado."
-            : "Usamos cookies e ferramentas de medição de terceiros (Meta e Google Analytics) para entender como o site é utilizado e medir anúncios."}{" "}
+          Nosso site utiliza cookies para você ter uma melhor experiência.{" "}
           Saiba mais em nossa{" "}
           <Link href={`/${region}/privacidade`} className="link-line font-semibold text-white">
             Política de Privacidade
