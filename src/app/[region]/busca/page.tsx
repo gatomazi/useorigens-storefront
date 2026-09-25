@@ -10,6 +10,10 @@ import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { cleanQuery, MAX_QUERY_CHARS, parsePage, searchDocs } from "@/lib/search/catalog-search";
 
+// Every query is its own page: never prerendered nor ISR-cached (the region layout above is generateStaticParams/ISR, and reading `searchParams` alone
+// makes a production render fail with DYNAMIC_SERVER_USAGE there).
+export const dynamic = "force-dynamic";
+
 type Props = { params: Promise<{ region: string }>; searchParams: Promise<{ q?: string | string[]; page?: string | string[] }> };
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {

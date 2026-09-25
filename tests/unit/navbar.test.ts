@@ -126,3 +126,16 @@ describe("publicNavbar (what the Worker reads)", () => {
     expect(publicNavbar("sul").collections).toEqual([]);
   });
 });
+
+describe("publish screen diff", () => {
+  test("given only a navbar change, when diffed, then it is a publishable change that names the collection; undoing it clears it", async () => {
+    const { diffDocs } = await import("@/lib/admin/diff");
+    const base = seedDoc();
+    const shown = ok(base, { type: "set-collection-navbar", ...REF, shown: true });
+    const names = (r: { collectionId: number }) => (r.collectionId === REF.collectionId ? "Seu Lugar" : null);
+    expect(diffDocs(base, shown, names).map((c) => c.text)).toEqual(['"Seu Lugar" passa a aparecer na navbar da INK']);
+    expect(diffDocs(shown, base, names).map((c) => [c.kind, c.text])).toEqual([["navbar-removed", '"Seu Lugar" sai da navbar da INK']]);
+    expect(diffDocs(shown, shown, names)).toEqual([]);
+    expect(diffDocs(base, shown)[0].text).toContain(`coleção #${REF.collectionId}`);
+  });
+});

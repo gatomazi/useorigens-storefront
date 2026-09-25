@@ -22,7 +22,9 @@ Dados reais (snapshot local de 2026-09-21): `florianopolis` → 12 produtos; `ch
 
 ## CMS
 
-Documento da região: `collections.navbar?: CollectionRef[]` (novo, opcional; documentos existentes seguem válidos), **independente** de `collections.enabled` (que é sobre seções da home). Biblioteca de coleções (`/admin/colecoes`): coluna **Navbar da INK** com Mostrar/Tirar (só coleções públicas com produtos; máx. 8; interna → “Indisponível”). É um op de rascunho (`set-collection-navbar`) como os demais: vale ao **publicar**. Testes: `tests/unit/navbar.test.ts`.
+Documento da região: `collections.navbar?: CollectionRef[]` (novo, opcional; documentos existentes seguem válidos), **independente** de `collections.enabled` (que é sobre seções da home). Biblioteca de coleções (`/admin/colecoes`): coluna **Navbar da INK** com Mostrar/Tirar (só coleções públicas com produtos; máx. 8; interna → “Indisponível”). É um op de rascunho (`set-collection-navbar`) como os demais: vale ao **publicar**. A tela **Publicar** lista a mudança (“"Seu Lugar" passa a aparecer na navbar da INK”); antes desta rodada uma mudança só de navbar apareceria como “Nada a publicar” (`diffDocs` só olhava seções). Testes: `tests/unit/navbar.test.ts` e o e2e `tests/e2e-admin/navbar.spec.ts` (mostrar → publicar → `/api/navbar/sul` lista → tirar → publicar → vazio; roda no sandbox, com o snapshot de coleções local: `CATALOG_SNAPSHOT_DIR=<dir> npx playwright test -c playwright.admin.config.ts tests/e2e-admin/navbar.spec.ts`).
+
+**Produção vs dev:** a página de busca é `dynamic = 'force-dynamic'` (o layout da região é ISR; ler `searchParams` sozinho dava `DYNAMIC_SERVER_USAGE`/500 em `next start`, invisível em `next dev`). Conferido com `next build && next start`: 200, `Cache-Control: private, no-store`, resultados por consulta.
 
 ## Arquivos
 
