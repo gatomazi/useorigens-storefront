@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import { cookies, headers } from "next/headers";
 import { requireAdmin, SESSION_COOKIE, SESSION_COOKIE_PATH } from "@/lib/admin/auth/guard";
 import { deleteUpload, saveUpload } from "@/lib/admin/media";
@@ -10,6 +11,9 @@ import { publishRelease, reconcileReleases, type PublishDeps } from "@/lib/admin
 import { publishDeps } from "@/lib/admin/ops";
 import { allow } from "@/lib/admin/auth/rate-limit";
 import { syncCollections } from "@/lib/catalog/collections-sync";
+import { beginSyncJob, SyncAlreadyRunningError } from "@/lib/catalog/sync-job";
+import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
+import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { ALL_SCOPES } from "@/lib/admin/auth/authorize";
 import { canEdit, type Actor } from "@/lib/admin/store/ports";
 import { findCollection } from "@/lib/catalog/collections-file";
@@ -354,11 +358,44 @@ export async function syncCollectionsAction() {
   }
   const failed = outcomes.filter((o) => !o.ok);
   const summary = { stores: outcomes.length, failed: failed.length, requests: outcomes.reduce((n, o) => n + (o.ok ? o.requests : 0), 0) };
-  await syncs.finish(run.id, { ok: true, summary });
+  // A run in which any store failed is recorded as failed: it must not throttle the retry the person makes right after fixing the cause.
+  await syncs.finish(run.id, failed.length === 0 ? { ok: true, summary } : { ok: false, error: failed.map((f) => (f.ok ? "" : `${f.storeKey}: ${f.error}`)).join("; ").slice(0, 500) });
   await platform().audit.record({ actor: actor.id, action: "collections.sync", meta: summary }).catch(() => undefined);
   revalidatePath("/[region]", "layout");
   revalidatePath("/admin", "layout");
   back("/admin/colecoes", failed.length ? { err: [`Sincronização parcial: ${failed.map((f) => (f.ok ? "" : `${f.storeKey}: ${f.error}`)).join("; ")}. Os dados anteriores foram mantidos.`] } : { ok: `Coleções sincronizadas (${summary.requests} requisições de leitura à INK).` });
+}
+
+/**
+ * Refreshes the CATALOG (and then the collections) of the INK store of the region being edited. Owner only. Read-only against INK, paced (a
+ * store takes a few minutes), so it runs in the background exactly like the authenticated route: the person is answered at once and the
+ * Coleções screen shows the job. One sync at a time (the same in-process lock as the route); never touches the last-good data on failure.
+ */
+export async function syncCatalogAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const scope = await scopeOf(fd, actor);
+  const store = storeOf(scope);
+  if (!tokenFor(store)) back("/admin/colecoes", { err: [`A variável ${INK_STORES[store]?.tokenEnv ?? "INK_TOKEN_*"} não está configurada neste ambiente (ou o serviço ainda não terminou de reiniciar depois de criá-la).`] });
+  let running: ReturnType<typeof beginSyncJob>;
+  try {
+    running = beginSyncJob([store]);
+  } catch (error) {
+    if (error instanceof SyncAlreadyRunningError) back("/admin/colecoes", { err: ["Já há uma sincronização de catálogo em andamento. Aguarde terminar."] });
+    throw error;
+  }
+  after(() =>
+    runCatalogSyncJob(running, {
+      storeKeys: [store],
+      withCollections: true,
+      onPromoted: () => {
+        revalidatePath("/[region]", "layout");
+        for (const region of REGION_SLUGS) revalidatePath(`/api/cidades/${region}`);
+      },
+    }),
+  );
+  await audit(actor, "catalog.sync", scope, store, { withCollections: true });
+  revalidatePath("/admin", "layout");
+  back("/admin/colecoes", { ok: `Sincronização do catálogo de ${scopeName(scope)} iniciada. Leva alguns minutos; recarregue esta página para acompanhar. As coleções são atualizadas ao final.` });
 }
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { setCollectionEnabledAction, syncCollectionsAction } from "@/app/admin/actions";
+import { setCollectionEnabledAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { LibrarySearch } from "@/components/admin/LibrarySearch";
 import { libraryEntries, type LibraryEntry } from "@/lib/catalog/collection-source";
@@ -8,6 +8,8 @@ import { searchCollections } from "@/lib/admin/collection-search";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { platform } from "@/lib/admin/platform";
 import { snapshotStatus } from "@/lib/catalog/snapshot-file";
+import { currentSyncJob } from "@/lib/catalog/sync-job";
+import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { currentScope, storeOf } from "@/lib/admin/scope";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
@@ -51,7 +53,12 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
   const all = libraryEntries(store.key as CommerceStoreKey, enabled);
   const legacy = all.some((e) => e.needsResync);
   const ageDays = synced ? daysSince(synced.syncedAt) : 0;
-  const currentCatalog = snapshotStatus().stores.find((c) => c.storeKey === store.key)?.syncedAt;
+  const catalogInfo = snapshotStatus().stores.find((c) => c.storeKey === store.key);
+  const currentCatalog = catalogInfo?.syncedAt;
+  const job = currentSyncJob();
+  const tokenEnv = INK_STORES[store.key as CommerceStoreKey]?.tokenEnv ?? "INK_TOKEN_*";
+  const hasToken = Boolean(tokenFor(store.key as CommerceStoreKey));
+  const jobRunning = job.status === "running";
   const staleReason = !synced ? null : ageDays >= 7 ? "Desatualizada (7+ dias)" : currentCatalog && new Date(currentCatalog) > new Date(synced.catalogSyncedAt) ? "O catálogo é mais novo que as coleções" : null;
   const { syncs } = platform();
   const lastRun = actor.role === "owner" ? await syncs.last("collections") : null;
@@ -99,8 +106,33 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
               <li className="a-muted">Catálogo de referência: {new Date(synced.catalogSyncedAt).toLocaleDateString("pt-BR")}. Contagens = produtos publicados desta loja, não o total bruto da INK.</li>
               <li>Última sincronização: <strong>{new Date(synced.syncedAt).toLocaleString("pt-BR")}</strong> ({ageDays === 0 ? "hoje" : `há ${ageDays} dia(s)`}){staleReason && <span className="a-badge warn ml-2">{staleReason}</span>}</li>
             </ul>
-          ) : <p className="a-flash err mt-3">Ainda não há coleções sincronizadas para esta loja. Rode <code>npm run collections:sync</code> (só leitura).</p>}
+          ) : <p className="a-flash err mt-3">Ainda não há coleções sincronizadas para esta loja. Sincronize primeiro o catálogo (botão abaixo); as coleções são atualizadas ao final.</p>}
           {legacy && <p className="a-flash err mt-3">Este arquivo é de uma versão antiga e não guarda os produtos das coleções internas. Sincronize de novo.</p>}
+          <div className="mt-4 border-t border-black/15 pt-4" aria-label={`Catálogo de ${store.name}`}>
+            <p className="font-bold">Catálogo da loja {store.name}</p>
+            {catalogInfo && catalogInfo.productCount > 0 ? (
+              <p className="a-muted mt-1 text-[0.875rem]">{numberPt.format(catalogInfo.productCount)} produtos · sincronizado em {new Date(catalogInfo.syncedAt).toLocaleString("pt-BR")}</p>
+            ) : (
+              <p className="a-flash err mt-1">O catálogo desta loja ainda não foi sincronizado. Sem ele não há como casar as coleções nem lançar a região.</p>
+            )}
+            {!hasToken && <p className="a-flash err mt-2">A variável <code>{tokenEnv}</code> não está configurada neste ambiente. Crie-a no Railway e espere o serviço reiniciar.</p>}
+            {job.status === "running" && <p className="a-flash ok mt-2">Sincronização em andamento desde {new Date(job.startedAt).toLocaleTimeString("pt-BR")} ({job.storeKeys.join(", ") || "todas as lojas"}). Recarregue a página para acompanhar.</p>}
+            {job.status === "succeeded" && (
+              <p className="a-muted mt-2 text-[0.8125rem]">
+                Última sincronização de catálogo: {new Date(job.finishedAt).toLocaleString("pt-BR")} ·{" "}
+                {job.result.outcomes.map((o) => (o.ok ? `${o.storeKey}: ${o.productCount} produtos` : `${o.storeKey}: falhou (${o.error})`)).join("; ")}
+                {job.collections && ("error" in job.collections ? ` · coleções: falhou (${job.collections.error})` : ` · coleções: ${job.collections.outcomes.map((o) => (o.ok ? `${o.storeKey} ${o.collections}` : `${o.storeKey} falhou (${o.error})`)).join("; ")}`)}
+              </p>
+            )}
+            {job.status === "failed" && <p className="a-flash err mt-2">A última sincronização de catálogo falhou: {job.error}. Os dados anteriores foram mantidos.</p>}
+            {actor.role === "owner" && (
+              <form action={syncCatalogAction} className="mt-3">
+                <input type="hidden" name="scope" value={scope} />
+                <button type="submit" className="a-btn ghost sm" disabled={jobRunning || !hasToken}>Sincronizar catálogo de {store.name}</button>
+                <p className="a-muted mt-2 text-[0.8125rem]">Só leitura na INK. Leva alguns minutos (requisições espaçadas) e roda em segundo plano; ao terminar, as coleções desta loja também são atualizadas. Se falhar, os dados atuais são mantidos.</p>
+              </form>
+            )}
+          </div>
           {actor.role === "owner" && (
             <form action={syncCollectionsAction} className="mt-4">
               <button type="submit" className="a-btn ghost sm">Sincronizar coleções agora</button>
