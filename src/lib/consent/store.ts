@@ -13,6 +13,7 @@
  */
 // v2: the choice now covers every optional measurement tool (Meta + GA4), not only the Meta Pixel — v1 decisions
 // were given under narrower copy, so they are treated as "no decision" and asked again.
+import { measurementAllowed } from "./policy";
 export const CONSENT_VERSION = 2;
 export type ConsentChoice = "accepted" | "rejected";
 export type ConsentRecord = { choice: ConsentChoice; version: number; decidedAt: string };
@@ -76,11 +77,12 @@ function setAndPersist(record: ConsentRecord | null): void {
   notify();
 }
 
-/** True only for an explicit, current-version "accepted" decision — the single check every tracking call site and
- * provider loader shares, so revoking or rejecting stops new events everywhere at once. */
+/** Whether measurement may run right now — the single check every tracking call site and provider loader shares. With the strict gate on
+ * (`NEXT_PUBLIC_MEASUREMENT_REQUIRES_CONSENT=true`) it is true only for an explicit, current-version "accepted" decision, so revoking or
+ * rejecting stops new events everywhere at once; by default (see policy.ts) measurement does not wait for the banner. */
 export function hasAnalyticsConsent(): boolean {
-  if (typeof window === "undefined") return false;
-  return getConsentSnapshot()?.choice === "accepted";
+  if (typeof window === "undefined") return false; // events are client-only; nothing is ever sent from a server render
+  return measurementAllowed(getConsentSnapshot());
 }
 
 export function writeConsent(choice: ConsentChoice): void {

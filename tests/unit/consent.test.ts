@@ -25,9 +25,12 @@ function stubWindow() {
 
 beforeEach(() => {
   vi.resetModules();
+  // These tests exercise the consent MECHANISM, i.e. the strict gate (production builds leave it off: see measurement-policy.test.ts).
+  vi.stubEnv("NEXT_PUBLIC_MEASUREMENT_REQUIRES_CONSENT", "true");
 });
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
 });
 
 describe("consent store", () => {

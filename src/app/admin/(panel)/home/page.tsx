@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { addCollectionSection, duplicateSection, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
+import { addCollectionSection, duplicateSection, initRegionHomeAction, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { collectionProblems, sectionReadability, sourceStatus } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
+import { currentScope, scopeName, storeOf } from "@/lib/admin/scope";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
 import { toComboEntries } from "@/lib/admin/combo";
 import { libraryEntries } from "@/lib/catalog/collection-source";
@@ -13,10 +14,11 @@ import type { Section } from "@/lib/site-config/schema";
 
 const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", footer: "Rodapé" };
 
-function RowForm({ action, rev, id, extra, children, danger = false, label }: { action: (fd: FormData) => Promise<void>; rev: number | null; id: string; extra?: Record<string, string>; children: React.ReactNode; danger?: boolean; label: string }) {
+function RowForm({ action, rev, scope, id, extra, children, danger = false, label }: { action: (fd: FormData) => Promise<void>; rev: number | null; scope: string; id: string; extra?: Record<string, string>; children: React.ReactNode; danger?: boolean; label: string }) {
   return (
     <form action={action}>
       <input type="hidden" name="rev" value={rev ?? "null"} />
+      <input type="hidden" name="scope" value={scope} />
       <input type="hidden" name="id" value={id} />
       {Object.entries(extra ?? {}).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
       <button type="submit" aria-label={label} title={label} className={`a-btn sm ${danger ? "danger" : "ghost"}`}>{children}</button>
@@ -25,12 +27,14 @@ function RowForm({ action, rev, id, extra, children, danger = false, label }: { 
 }
 
 export default async function AdminHome({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
-  await requireAdmin();
+  const actor = await requireAdmin();
+  const scope = await currentScope(actor);
+  const store = storeOf(scope);
   const sp = await searchParams;
-  const ws = await loadWorkspace();
+  const ws = await loadWorkspace(scope);
   const rev = ws.record?.rev ?? null;
   const sections = ws.doc.home?.sections ?? [];
-  const entries = toComboEntries(libraryEntries("use-sul", enabledInternalIds(ws.doc, "use-sul")));
+  const entries = toComboEntries(libraryEntries(store, enabledInternalIds(ws.doc, store)));
   const anySelectable = entries.some((e) => e.selectable);
   const problems = collectionProblems(ws.doc);
 
@@ -38,7 +42,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="a-h1">Home · Seções</h1>
+          <h1 className="a-h1">Home · Seções <span className="a-muted">· {scopeName(scope)}</span></h1>
           <p className="a-muted mt-2 max-w-2xl">A ordem abaixo é a ordem da home. O hero fica sempre no topo e o rodapé no fim. As seções originais podem ser editadas, movidas e ocultadas; só as criadas aqui podem ser removidas.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -54,9 +58,22 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         </div>
       )}
 
+      {!ws.doc.home && (
+        <section className="a-card p-5" aria-labelledby="criar-home">
+          <h2 id="criar-home" className="a-h2">Esta região ainda não tem home</h2>
+          <p className="a-muted mt-2 max-w-2xl">A home inicial é montada só com o que existe de verdade na loja da INK de {scopeName(scope)}: um topo, o seletor de estados (se houver páginas de estado reais) e até 3 carrosséis das coleções <strong>públicas</strong> com produtos suficientes no catálogo. Nada é copiado do Sul. Tudo pode ser editado, reordenado, ocultado ou removido depois.</p>
+          <form action={initRegionHomeAction} className="mt-4">
+            <input type="hidden" name="rev" value={rev ?? "null"} />
+            <input type="hidden" name="scope" value={scope} />
+            <button type="submit" className="a-btn">Criar home inicial</button>
+          </form>
+        </section>
+      )}
+
+      {ws.doc.home && (
       <div className="a-card overflow-x-auto">
         <table className="a-table">
-          <caption className="sr-only">Seções da home do Sul, em ordem</caption>
+          <caption className="sr-only">Seções da home de {scopeName(scope)}, em ordem</caption>
           <thead>
             <tr><th scope="col">#</th><th scope="col">Seção</th><th scope="col">Fonte dos produtos</th><th scope="col">Estado</th><th scope="col"><span className="sr-only">Ações</span></th></tr>
           </thead>
@@ -92,14 +109,14 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
                       {!locked && (
                         <>
-                          <RowForm action={moveSection} rev={rev} id={s.id} extra={{ direction: "up" }} label={`Mover “${s.title ?? s.anchor}” para cima`}>↑</RowForm>
-                          <RowForm action={moveSection} rev={rev} id={s.id} extra={{ direction: "down" }} label={`Mover “${s.title ?? s.anchor}” para baixo`}>↓</RowForm>
-                          <RowForm action={setSectionActive} rev={rev} id={s.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${s.title ?? s.anchor}”` : `Ativar “${s.title ?? s.anchor}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>
+                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} extra={{ direction: "up" }} label={`Mover “${s.title ?? s.anchor}” para cima`}>↑</RowForm>
+                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} extra={{ direction: "down" }} label={`Mover “${s.title ?? s.anchor}” para baixo`}>↓</RowForm>
+                          <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${s.title ?? s.anchor}”` : `Ativar “${s.title ?? s.anchor}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>
                         </>
                       )}
                       <Link href={`/admin/home/${s.id}`} className="a-btn sm">Editar</Link>
-                      {s.template === "product-carousel" && <RowForm action={duplicateSection} rev={rev} id={s.id} label={`Duplicar “${s.title ?? s.anchor}”`}>Duplicar</RowForm>}
-                      {custom && <RowForm action={removeSection} rev={rev} id={s.id} label={`Remover “${s.title ?? s.anchor}”`} danger>Remover</RowForm>}
+                      {s.template === "product-carousel" && <RowForm action={duplicateSection} rev={rev} scope={scope} id={s.id} label={`Duplicar “${s.title ?? s.anchor}”`}>Duplicar</RowForm>}
+                      {custom && <RowForm action={removeSection} rev={rev} scope={scope} id={s.id} label={`Remover “${s.title ?? s.anchor}”`} danger>Remover</RowForm>}
                     </div>
                   </td>
                 </tr>
@@ -108,7 +125,9 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           </tbody>
         </table>
       </div>
+      )}
 
+      {ws.doc.home && (
       <section className="a-card p-5" aria-labelledby="nova-secao">
         <h2 id="nova-secao" className="a-h2">Nova seção a partir de uma coleção da INK</h2>
         {entries.length === 0 ? (
@@ -116,6 +135,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         ) : (
           <form action={addCollectionSection} className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1fr_auto] md:items-start">
             <input type="hidden" name="rev" value={rev ?? "null"} />
+            <input type="hidden" name="scope" value={scope} />
             <CollectionCombobox name="collection" label="Coleção (busque pelo nome)" entries={entries} libraryFrom="/admin/home" hint={anySelectable ? "Inclui as coleções internas que você habilitou na Biblioteca." : "Nenhuma coleção utilizável ainda."} />
             <div>
               <label className="a-label" htmlFor="title">Título (opcional)</label>
@@ -131,6 +151,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         <p className="a-muted mt-3 text-[0.8125rem]">Precisa de uma coleção interna? <Link className="a-link" href="/admin/colecoes?from=/admin/home">Habilite-a na Biblioteca</Link>.</p>
         <p className="a-muted mt-3 text-[0.8125rem]">A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A ordem dos cards é a devolvida pela INK; não é “mais vendidos” nem “mais recentes”. A seção nova entra só no rascunho, antes da campanha.</p>
       </section>
+      )}
 
       <section className="a-card p-5" aria-label="Pré-visualização do rascunho">
         <PreviewFrame version={ws.record?.rev ?? 0} height={700} />

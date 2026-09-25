@@ -1,5 +1,23 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { setActiveGa4, setActiveMetaPixel } from "@/lib/analytics/active-ids";
 import { trackGoToInk, trackPageView, trackSearch, trackSelectCity, trackSelectState } from "@/lib/analytics/track";
+
+// Every event is now ADDRESSED to the visited region's ID (Meta trackSingle / GA4 send_to). The sinks below assert the address and hand the rest
+// to the (unchanged) payload assertions; the addressing rules themselves are in tracking-routing.test.ts.
+const PIXEL = "1558923262073052";
+const GA = "G-8GYTEJ1F77";
+const fbqSink = (calls: unknown[][]) => (...args: unknown[]) => {
+  const [method, id, ...rest] = args;
+  expect(id).toBe(PIXEL);
+  calls.push([method === "trackSingle" ? "track" : method === "trackSingleCustom" ? "trackCustom" : method, ...rest]);
+};
+const gtagSink = (calls: unknown[][]) => (...args: unknown[]) => {
+  const [command, name, params] = args as [string, string, Record<string, unknown>];
+  expect(params.send_to).toBe(GA);
+  const { send_to: _sendTo, ...rest } = params;
+  void _sendTo;
+  calls.push([command, name, rest]);
+};
 
 // track.ts asks the consent store whether an "accepted" decision is live; these tests drive that answer directly.
 const consent = vi.hoisted(() => ({ granted: true }));
@@ -10,6 +28,8 @@ vi.mock("@/lib/consent/store", () => ({ hasAnalyticsConsent: () => consent.grant
 // test the "Pixel absent" no-op path for free; a minimal `vi.stubGlobal` stands in for `window.fbq` itself.
 beforeEach(() => {
   consent.granted = true;
+  setActiveMetaPixel(PIXEL);
+  setActiveGa4(GA);
 });
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -44,7 +64,7 @@ describe("track.ts — fbq loaded", () => {
 
   beforeEach(() => {
     calls = [];
-    vi.stubGlobal("window", { fbq: (...args: unknown[]) => calls.push(args) });
+    vi.stubGlobal("window", { fbq: fbqSink(calls) });
   });
 
   test("given a completed search, when trackSearch runs, then it fires the standard Search event with search_string", () => {
@@ -93,7 +113,7 @@ describe("track.ts — gtag loaded (fbq absent)", () => {
 
   beforeEach(() => {
     calls = [];
-    vi.stubGlobal("window", { gtag: (...args: unknown[]) => calls.push(args) });
+    vi.stubGlobal("window", { gtag: gtagSink(calls) });
   });
 
   test("given a completed search, when trackSearch runs, then it fires view_search_results with search_term and the GA4-only extras", () => {
@@ -181,7 +201,7 @@ describe("track.ts — consent revoked or never given while both SDKs are still 
   test("given fbq/gtag exist but consent is not granted, when every track function runs, then nothing is sent to either", () => {
     const fbqCalls: unknown[][] = [];
     const gtagCalls: unknown[][] = [];
-    vi.stubGlobal("window", { fbq: (...a: unknown[]) => fbqCalls.push(a), gtag: (...a: unknown[]) => gtagCalls.push(a) });
+    vi.stubGlobal("window", { fbq: fbqSink(fbqCalls), gtag: gtagSink(gtagCalls) });
     consent.granted = false;
     trackSearch("Tijucas");
     trackSelectCity({ city: "Tijucas", state: "SC", region: "sul" });
@@ -194,7 +214,7 @@ describe("track.ts — consent revoked or never given while both SDKs are still 
 
   test("given consent is granted then revoked mid-session, when an event follows, then only the pre-revoke one was sent", () => {
     const gtagCalls: unknown[][] = [];
-    vi.stubGlobal("window", { gtag: (...a: unknown[]) => gtagCalls.push(a) });
+    vi.stubGlobal("window", { gtag: gtagSink(gtagCalls) });
     trackSelectState({ state: "SC", region: "sul" });
     consent.granted = false;
     trackSelectState({ state: "RS", region: "sul" });
@@ -207,7 +227,7 @@ describe("track.ts — consent revoked or never given while both SDKs are still 
       fbq: () => {
         throw new Error("blocked");
       },
-      gtag: (...a: unknown[]) => gtagCalls.push(a),
+      gtag: gtagSink(gtagCalls),
     });
     expect(() => trackGoToInk({ productId: "1", sourceSection: "city_styles" })).not.toThrow();
     expect(gtagCalls.map((c) => c[1])).toEqual(["select_item", "go_to_ink"]);

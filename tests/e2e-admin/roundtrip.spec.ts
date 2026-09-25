@@ -141,8 +141,8 @@ test("given the local CMS, when a collection section is created, styled, reorder
   await open(page, "/sul");
   await expect(page.locator("section#colecao-terra-em-foco h2")).toHaveText("Terra em foco 2");
   await open(page, "/admin/publicar");
-  await page.locator("tr", { hasText: "#1" }).getByRole("button", { name: "Restaurar esta versão" }).click();
-  await expect(page.getByText(/Versão 1 restaurada/)).toBeVisible({ timeout: 300_000 });
+  await page.locator("tr", { hasText: "#1" }).getByRole("button", { name: "Restaurar Sul" }).click();
+  await expect(page.getByText(/Sul: versão 1 restaurada/)).toBeVisible({ timeout: 300_000 });
   await open(page, "/sul");
   await expect(page.locator("section#colecao-terra-em-foco h2")).toHaveText("Terra em foco");
   await open(page, "/admin/publicar");

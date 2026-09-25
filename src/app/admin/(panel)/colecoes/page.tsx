@@ -9,14 +9,15 @@ import { requireAdmin } from "@/lib/admin/auth/guard";
 import { platform } from "@/lib/admin/platform";
 import { snapshotStatus } from "@/lib/catalog/snapshot-file";
 import { loadWorkspace } from "@/lib/admin/workspace";
+import { currentScope, storeOf } from "@/lib/admin/scope";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { enabledInternalIds, sectionsUsing } from "@/lib/site-config/collections-enabled";
 import { numberPt } from "@/lib/format";
 
 const STORES = [
   { key: "use-sul", name: "Sul", editable: true },
-  { key: "use-norte", name: "Norte", editable: false },
-  { key: "use-centro", name: "Centro-Oeste", editable: false },
+  { key: "use-norte", name: "Norte", editable: true },
+  { key: "use-centro", name: "Centro-Oeste", editable: true },
 ] as const;
 
 const daysSince = (iso: string): number => Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000));
@@ -40,10 +41,11 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
   const sp = await searchParams;
   const q = (sp.q ?? "").slice(0, 80);
   const f = FILTERS.has(sp.f ?? "") ? (sp.f as string) : "all";
-  const store = (STORES.find((s) => s.key === sp.store) ?? STORES[0]);
+  const scope = await currentScope(actor);
+  const store = STORES.find((s) => s.key === storeOf(scope)) ?? STORES[0]; // the Library shows the INK store of the region being edited, never another one
   const from = sp.from?.startsWith("/admin/") ? sp.from : null;
-  const ws = await loadWorkspace();
-  const enabled = store.editable ? enabledInternalIds(ws.doc, store.key) : new Set<number>();
+  const ws = await loadWorkspace(scope);
+  const enabled = enabledInternalIds(ws.doc, store.key);
   const file = getCollections();
   const synced = file.stores[store.key];
   const all = libraryEntries(store.key as CommerceStoreKey, enabled);
@@ -65,7 +67,6 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
     const p = new URLSearchParams();
     if (q) p.set("q", q);
     if (f !== "all") p.set("f", f);
-    if (store.key !== "use-sul") p.set("store", store.key);
     if (from) p.set("from", from);
     for (const [k, v] of Object.entries(extra)) p.set(k, v);
     return `/admin/colecoes?${p}`;
@@ -109,14 +110,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
         </div>
       </div>
 
-      <nav aria-label="Loja" className="flex flex-wrap gap-2">
-        {STORES.map((s) => (
-          <Link key={s.key} href={s.key === "use-sul" ? "/admin/colecoes" : `/admin/colecoes?store=${s.key}`} aria-current={s.key === store.key ? "page" : undefined} className={`a-btn sm ${s.key === store.key ? "" : "ghost"}`}>
-            {s.name}{s.editable ? "" : " · preparação"}
-          </Link>
-        ))}
-      </nav>
-      {!store.editable && <p className="a-flash ok">Modo preparação: a home de {store.name} ainda não existe. Você pode consultar o inventário, mas habilitar coleções só está disponível para o Sul nesta versão.</p>}
+      <p className="a-muted">Coleções da loja INK de <strong>{store.name}</strong> (a região em edição). Para ver outra loja, troque a região no topo.</p>
 
       <div className="a-card p-5"><LibrarySearch q={q} f={f} /></div>
 
@@ -128,7 +122,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
             <tbody>
               {shown.length === 0 && <tr><td colSpan={5} className="a-muted">Nenhuma coleção corresponde à busca e ao filtro.{" "}<Link className="a-link" href={carry({ q: "", f: "all" }).replace(/q=&?|f=all&?/g, "")}>Limpar</Link></td></tr>}
               {shown.map((e) => {
-                const users = e.visibility === "internal" && store.editable ? sectionsUsing(ws.doc, e.store, e.id) : [];
+                const users = e.visibility === "internal" ? sectionsUsing(ws.doc, e.store, e.id) : [];
                 return (
                   <tr key={e.id}>
                     <td>
@@ -146,10 +140,11 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
                       {users.length > 0 && <p className="a-muted mt-1 text-[0.8125rem]">Usada em: {users.map((s) => s.title ?? s.id).join(", ")}</p>}
                     </td>
                     <td className="text-right">
-                      {store.editable && e.visibility === "internal" && (
+                      {e.visibility === "internal" && (
                         <form action={setCollectionEnabledAction}>
                           <input type="hidden" name="ref" value={`${e.store}:${e.id}`} />
                           <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                          <input type="hidden" name="scope" value={scope} />
                           <input type="hidden" name="q" value={q} />
                           <input type="hidden" name="f" value={f === "all" ? "" : f} />
                           <input type="hidden" name="from" value={from ?? ""} />

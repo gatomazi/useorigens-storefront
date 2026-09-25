@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
-
+import { normalizeFbq, normalizeGtag } from "./fixtures";
 const REF = "AbCdEfGhIjKlMnOpQrStUv";
 const IMG = "https://gcp-images.majestic.ink.rsvcloud.com/images/product_art/final_image/1880b16e4d326a02dea0508acc56925d.jpg";
 const COLORS = ["Preta", "Branca", "Verde", "Cinza", "Marinho", "Vinho", "Areia", "Azul"];
@@ -145,8 +145,8 @@ test.describe("Cart mirror consumer: analytics never see the token", () => {
   test("given accepted consent and both providers mocked, then no fbq/gtag call carries the token and there is exactly one PageView/page_view for the clean URL", async ({ page }) => {
     const fbq: unknown[][] = [];
     const gtag: unknown[][] = [];
-    await page.exposeFunction("__reportFbq", (a: unknown[]) => fbq.push(a));
-    await page.exposeFunction("__reportGtag", (a: unknown[]) => gtag.push(a));
+    await page.exposeFunction("__reportFbq", (a: unknown[]) => fbq.push(normalizeFbq(a)));
+    await page.exposeFunction("__reportGtag", (a: unknown[]) => gtag.push(normalizeGtag(a)));
     await page.addInitScript(() => {
       const w = window as unknown as Record<string, unknown>;
       w.fbq = (...a: unknown[]) => (w.__reportFbq as (a: unknown[]) => void)(a);
@@ -170,7 +170,7 @@ test.describe("Cart mirror consumer: analytics never see the token", () => {
 const SLUG = "paranaense-essencia";
 async function mockAnalytics(page: Page, { consent = true, throwing = false }: { consent?: boolean; throwing?: boolean } = {}) {
   const gtag: unknown[][] = [];
-  await page.exposeFunction("__reportGtag", (a: unknown[]) => gtag.push(a));
+  await page.exposeFunction("__reportGtag", (a: unknown[]) => gtag.push(normalizeGtag(a)));
   await page.addInitScript(({ consent, throwing }) => {
     const w = window as unknown as Record<string, unknown>;
     w.fbq = () => undefined;

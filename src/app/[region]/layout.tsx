@@ -9,7 +9,7 @@ import { AnnouncementBar, Footer, Header } from "@/components/layout/SiteChrome"
 import { getCatalog } from "@/lib/catalog/repository";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { regionThemeStyle } from "@/lib/theme/region-theme";
-import { ENABLED_REGIONS } from "@/lib/site";
+import { isRegionLaunched } from "@/lib/regions/launched";
 import { publishedTracking } from "@/lib/site-config/tracking";
 
 // No region page is prebuilt: this layout reads the catalog snapshot (header count, footer sync date), and the
@@ -22,7 +22,7 @@ export function generateStaticParams() {
 
 export default async function RegionLayout({ children, params }: { children: React.ReactNode; params: Promise<{ region: string }> }) {
   const { region } = await params;
-  if (!isRegionSlug(region) || !ENABLED_REGIONS.includes(region)) notFound();
+  if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
 
   const catalog = getCatalog();
   const tracking = publishedTracking(region);

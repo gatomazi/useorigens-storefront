@@ -6,6 +6,8 @@ import { platform } from "@/lib/admin/platform";
 import { collectionProblems, readabilityProblems } from "@/lib/admin/validate-draft";
 import { inspectPublishing, listHistory } from "@/lib/admin/ops";
 import { loadWorkspace } from "@/lib/admin/workspace";
+import { currentScope, REGION_SCOPES, scopeName, storeOf } from "@/lib/admin/scope";
+import { effectiveTable, seedForEnv } from "@/lib/admin/publishing";
 import { snapshotStatus } from "@/lib/catalog/snapshot-file";
 import { getCollections } from "@/lib/catalog/collections-file";
 import { libraryEntries, MIN_USABLE_PRODUCTS } from "@/lib/catalog/collection-source";
@@ -25,9 +27,12 @@ const ago = (iso: string | null | undefined): string => {
 };
 
 export default async function AdminOverview({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
-  await requireAdmin();
+  const actor = await requireAdmin();
+  const scope = await currentScope(actor);
   const sp = await searchParams;
-  const ws = await loadWorkspace();
+  const ws = await loadWorkspace(scope);
+  const published = await platform().files.read();
+  const effective = effectiveTable(published ?? seedForEnv());
   const history = await listHistory();
   const head = history.find((r) => r.status === "live");
   const catalog = snapshotStatus();
@@ -44,7 +49,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Visão geral</h1>
-        <p className="a-muted mt-2 max-w-2xl">Home do Sul. Tudo abaixo vem do estado real: rascunho, publicação, catálogo e coleções da INK sincronizados.</p>
+        <p className="a-muted mt-2 max-w-2xl">Home de {scopeName(scope)} (troque a região no topo). Tudo abaixo vem do estado real: rascunho, publicação, catálogo e coleções da INK sincronizados.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
 
@@ -89,7 +94,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
           ) : (
             <ul className="mt-3 space-y-1 text-[0.9375rem]">
               {(Object.entries(collections.stores) as [keyof typeof STORE_NAME, unknown][]).map(([key]) => {
-                const rows = libraryEntries(key, key === "use-sul" ? enabledInternalIds(ws.doc, "use-sul") : new Set());
+                const rows = libraryEntries(key, key === storeOf(scope) ? enabledInternalIds(ws.doc, key) : new Set());
                 const publicUsable = rows.filter((e) => e.visibility === "public" && e.selectable).length;
                 const internal = rows.filter((e) => e.visibility === "internal");
                 const internalEligible = internal.filter((e) => e.eligible).length;
@@ -102,6 +107,29 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
           )}
           <p className="a-muted mt-3 text-[0.8125rem]">Elegível = pelo menos {MIN_USABLE_PRODUCTS} produtos publicados no catálogo local da mesma loja. O total bruto da INK inclui produtos ocultos. Internas precisam ser habilitadas na <Link href="/admin/colecoes" className="a-link">Biblioteca</Link>.</p>
         </div>
+      </section>
+
+      <section className="a-card overflow-x-auto" aria-label="Regiões e tracking efetivo">
+        <table className="a-table a-stack">
+          <caption className="a-h2 p-4 text-left">Regiões e tracking efetivo (o que está publicado)</caption>
+          <thead><tr><th scope="col">Região</th><th scope="col">Estado</th><th scope="col">Meta Pixel</th><th scope="col">GA4</th></tr></thead>
+          <tbody>
+            {REGION_SCOPES.map((r) => {
+              const meta = effective.find((x) => x.scope === r && x.tool === "meta")!;
+              const ga = effective.find((x) => x.scope === r && x.tool === "ga4")!;
+              const isLaunched = r === "sul" || published?.docs[r]?.launched === true;
+              return (
+                <tr key={r}>
+                  <td data-label="Região" className="font-bold">{scopeName(r)}</td>
+                  <td data-label="Estado">{isLaunched ? <span className="a-badge ok">Pública</span> : <span className="a-badge">Prévia</span>}</td>
+                  <td data-label="Meta Pixel">{meta.id ? <code>{meta.id}</code> : <span className="a-muted">nenhum</span>} <span className="a-muted text-[0.8125rem]">({meta.origin})</span></td>
+                  <td data-label="GA4">{ga.id ? <code>{ga.id}</code> : <span className="a-muted">nenhum</span>} <span className="a-muted text-[0.8125rem]">({ga.origin})</span></td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <p className="a-muted p-4 text-[0.8125rem]">Edite em <Link href="/admin/tracking" className="a-link">Tracking</Link>. “legacy” = os IDs de sempre do Sul, lidos da configuração do build até uma configuração explícita ser publicada.</p>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2" aria-label="Ambiente">

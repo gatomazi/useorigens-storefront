@@ -6,33 +6,65 @@ import type { Appearance, Fill, MediaAssetInfo, Overlay, Point, PublishedBundle,
 
 // ── Tracking ──────────────────────────────────────────────────────────────────────────────────────────────────
 
+/** Where an effective ID comes from (shown next to it in the admin). */
+export type TrackingOrigin =
+  | "own" // the region's own ID (override)
+  | "global" // inherited from the active global ID
+  | "legacy" // Sul only: the build-time NEXT_PUBLIC_* value, until an explicit configuration replaces it
+  | "disabled" // switched off on purpose
+  | "inherit-inactive" // "inherit" while the global tool is inactive: no ID
+  | "unconfigured"; // nothing configured for this region (Norte / Centro-Oeste default): no ID
+
+export type EffectiveVendor = { id: string | null; origin: TrackingOrigin };
+
 export type EffectiveTracking = {
   metaPixelId: string | null;
   ga4MeasurementId: string | null;
-  /** `env` = no published config, the current NEXT_PUBLIC_* values are used untouched (D5: no observable change). */
+  origin: { meta: TrackingOrigin; ga4: TrackingOrigin };
+  /** `env` = no published config: only Sul has an effective ID (the legacy build-time one); every other region has none. */
   source: "published" | "env";
 };
 
-function effectiveId(setting: VendorSetting, global: VendorSetting): string | null {
-  if (setting.mode === "override") return setting.id;
-  if (setting.mode === "disabled") return null;
-  // inherit: the global setting decides. A (schema-invalid) global that also inherits resolves to nothing, never loops.
-  return global.mode === "override" ? global.id : null;
+export type LegacyIds = { metaPixelId: string | null; ga4MeasurementId: string | null };
+
+/**
+ * One tool, one document. `disabled` → nothing; `override` → its own ID (validated by the schema; never combined with the global one);
+ * `inherit` → the GLOBAL ID, but only while the global tool is active ("override" there); `legacy` → the build-time value (Sul only).
+ * A (schema-invalid) global that itself inherits resolves to nothing, never loops.
+ */
+export function resolveVendor(setting: VendorSetting | undefined, global: VendorSetting | undefined, legacyId: string | null, scope: Scope): EffectiveVendor {
+  if (!setting) return scope === "sul" ? { id: legacyId, origin: "legacy" } : { id: null, origin: "unconfigured" };
+  switch (setting.mode) {
+    case "override":
+      return { id: setting.id, origin: "own" };
+    case "disabled":
+      return { id: null, origin: "disabled" };
+    case "legacy":
+      return scope === "sul" ? { id: legacyId, origin: "legacy" } : { id: null, origin: "unconfigured" }; // never leaks to another region
+    case "inherit":
+      return global?.mode === "override" ? { id: global.id, origin: "global" } : { id: null, origin: "inherit-inactive" };
+  }
 }
 
 /**
- * One effective ID per vendor, per document. Each vendor inherits or overrides independently (D5). Without a published
- * bundle the caller-supplied env values are returned as-is.
+ * The effective IDs of one region, per tool, independently. Without a published bundle only Sul has IDs (the legacy build-time ones,
+ * exactly what the storefront had before the CMS); Norte and Centro-Oeste NEVER inherit them.
  */
-export function resolveTracking(bundle: PublishedBundle | null, scope: Scope, env: { metaPixelId: string | null; ga4MeasurementId: string | null }): EffectiveTracking {
-  if (!bundle) return { ...env, source: "env" };
+export function resolveTracking(bundle: PublishedBundle | null, scope: Scope, legacy: LegacyIds): EffectiveTracking {
+  if (!bundle) {
+    const own = scope === "sul";
+    return {
+      metaPixelId: own ? legacy.metaPixelId : null,
+      ga4MeasurementId: own ? legacy.ga4MeasurementId : null,
+      origin: { meta: own ? "legacy" : "unconfigured", ga4: own ? "legacy" : "unconfigured" },
+      source: "env",
+    };
+  }
   const doc = bundle.docs[scope];
   const global = bundle.docs.global.tracking;
-  return {
-    metaPixelId: effectiveId(doc.tracking.meta, global.meta),
-    ga4MeasurementId: effectiveId(doc.tracking.ga4, global.ga4),
-    source: "published",
-  };
+  const meta = resolveVendor(doc?.tracking?.meta, global?.meta, legacy.metaPixelId, scope);
+  const ga4 = resolveVendor(doc?.tracking?.ga4, global?.ga4, legacy.ga4MeasurementId, scope);
+  return { metaPixelId: meta.id, ga4MeasurementId: ga4.id, origin: { meta: meta.origin, ga4: ga4.origin }, source: "published" };
 }
 
 // ── Appearance ────────────────────────────────────────────────────────────────────────────────────────────────

@@ -10,12 +10,13 @@
 // flag being inert, the published.json reader (a published section from a collection shows up with real cards; corrupt / incompatible files fall
 // back to the seed), the preview being tracker-free, and the local admin answering 404 on a production build. What it cannot cover yet is printed as SKIP with the reason (upload and preview are not implemented).
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { chromium } from "@playwright/test";
 import { fixtureSnapshot } from "./fixture-snapshot.mjs";
 import { buildSeedBundle } from "../src/lib/site-config/seed";
+import { REGIONS, type RegionSlug } from "../src/lib/geo/regions";
 
 const nextBin = path.join(process.cwd(), "node_modules", ".bin", "next");
 const META = "1558923262073052"; // the public production IDs, used only as env fallback values; every vendor request is aborted
@@ -94,29 +95,182 @@ async function start(s: (typeof servers)[number]) {
   await waitHealthy(s.port);
 }
 
-async function trackingProbe(port: number) {
+/**
+ * Measurement does NOT wait for the cookie banner (owner's decision, src/lib/consent/policy.ts): a brand-new visitor who has clicked nothing,
+ * and one who already chose "Rejeitar", both cause the Meta and GA4 requests. Vendor hosts are aborted at the network layer: the request is
+ * OBSERVED (that is the proof) but never leaves the machine.
+ */
+async function trackingProbe(port: number, opts: { rejectedBefore: boolean }) {
   const browser = await chromium.launch();
   const context = await browser.newContext();
   const seen: string[] = [];
-  // Vendor hosts are aborted: the request is OBSERVED (that is the proof) but never leaves the machine.
   await context.route(/connect\.facebook\.net|googletagmanager\.com|google-analytics\.com/, (route) => {
     seen.push(route.request().url());
     return route.abort();
   });
   await context.route("**/_next/image**", (route) => route.abort()); // fixture images do not exist; not what is under test
+  if (opts.rejectedBefore) await context.addInitScript(() => window.localStorage.setItem("useorigens:consent:marketing", JSON.stringify({ choice: "rejected", version: 2, decidedAt: "2026-09-25T00:00:00.000Z" })));
   const page = await context.newPage();
   await page.goto(`http://localhost:${port}/sul`, { waitUntil: "domcontentloaded" });
-  await page.getByRole("region", { name: "Preferências de cookies" }).waitFor();
-  await page.waitForTimeout(1500);
-  const beforeConsent = [...seen];
-  await page.getByRole("button", { name: /Aceitar/ }).click();
-  await page.waitForTimeout(2500);
-  const afterConsent = [...seen];
+  await page.waitForTimeout(3500);
+  const bannerShown = await page.getByRole("region", { name: "Preferências de cookies" }).isVisible();
+  const withoutAnyClick = [...seen];
   await browser.close();
-  return { beforeConsent, afterConsent };
+  return { withoutAnyClick, bannerShown };
+}
+
+
+// ── Launched regions (Norte / Centro-Oeste) ─────────────────────────────────────────────────────────────────────────────
+// Two production servers on temporary Volumes with a published.json that marks BOTH new regions launched:
+//   "3 stores" has a catalog + collections for every store  → the regions are public, with REAL products linking to their OWN INK store;
+//   "Sul only" is today's production (only Sul has a catalog) → the same published.json must NOT make them public (no empty page, no "0 cidades").
+const geoRows = JSON.parse(await readFile(path.join(process.cwd(), "data", "geo", "municipios.json"), "utf8")) as [number, string, string, string, string][];
+const HOSTS: Record<Exclude<RegionSlug, "sul">, { host: string; path: string; store: "use-norte" | "use-centro"; collectionId: number }> = {
+  norte: { host: "usenorte.com.br", path: "usenorte", store: "use-norte", collectionId: 300001 },
+  "centro-oeste": { host: "usecentro.com.br", path: "usecentro", store: "use-centro", collectionId: 300002 },
+};
+function regionCatalog(withNewRegions: boolean) {
+  const snap = catalogWithMerch() as { stores: Record<string, unknown> };
+  if (!withNewRegions) return snap;
+  for (const region of ["norte", "centro-oeste"] as const) {
+    const h = HOSTS[region];
+    const cities = geoRows.filter((r) => (REGIONS[region].ufs as readonly string[]).includes(r[2])).map((r) => String(r[0]));
+    const covered = cities.slice(0, Math.ceil(cities.length * 0.6));
+    const merchIds = [1, 2, 3, 4].map((n) => `${h.collectionId}0${n}`);
+    snap.stores[h.store] = {
+      commerceStoreKey: h.store, syncedAt: new Date().toISOString(), productCount: covered.length + merchIds.length, excluded: [],
+      bindings: covered.map((cityId, i) => ({
+        cityId, designFamily: "ponto-de-origem", designVariant: "base", isPrimary: true, priority: 0, commerceStoreKey: h.store, inkProductId: String(8_000_000_000 + i), slug: `fixture-${region}-${i}`,
+        storeProductUrl: `https://www.${h.host}/${h.path}/product/fixture`, imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/fixture.jpg", price: 109.9, syncedAt: new Date().toISOString(),
+      })),
+      merch: merchIds.map((id, i) => ({
+        inkProductId: id, commerceStoreKey: h.store, regionSlug: region, name: `Camiseta ${region} ${i + 1}`, slug: `teste-${id}`, storeProductUrl: `https://www.${h.host}/${h.path}/product/teste-${id}`,
+        imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/fixture.jpg", price: 99.9, totalSalesCount: 0, syncedAt: new Date().toISOString(),
+      })),
+    };
+  }
+  return snap;
+}
+function regionCollections(withNewRegions: boolean) {
+  const file = collectionsFixture() as { stores: Record<string, unknown> };
+  if (!withNewRegions) return file;
+  for (const region of ["norte", "centro-oeste"] as const) {
+    const h = HOSTS[region];
+    const merchIds = [1, 2, 3, 4].map((n) => `${h.collectionId}0${n}`);
+    file.stores[h.store] = { commerceStoreKey: h.store, syncedAt: "t", catalogSyncedAt: "c", totalCount: 1, collections: [rec({ id: h.collectionId, name: `Coleção ${region}`, slug: `colecao-${region}`, memberIds: merchIds, matchedCount: 4, merchCount: 4 })] };
+  }
+  return file;
+}
+function launchedBundle() {
+  const bundle = buildSeedBundle({ metaPixelId: META, ga4MeasurementId: GA });
+  bundle.releaseId = "regions-1";
+  const sul = bundle.docs.sul.home!.sections;
+  for (const region of ["norte", "centro-oeste"] as const) {
+    const h = HOSTS[region];
+    bundle.docs[region].home = {
+      sections: [
+        structuredClone(sul[0]),
+        {
+          id: "custom-regiao", anchor: "colecao-regiao", headingId: "colecao-regiao-title", template: "product-carousel", active: true, title: `Coleção ${region}`,
+          layout: { variant: "standard", tone: "light", surface: "plain" }, source: { kind: "ink-category", store: h.store, collectionId: h.collectionId, order: "category", limit: 6 },
+          analyticsSource: "homeCollection", cta: { label: "Ver todos", dest: { kind: "ink-collection", store: h.store, collectionId: h.collectionId } },
+          appearance: { fill: { kind: "none" }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } },
+        },
+        structuredClone(sul[sul.length - 1]),
+      ],
+    };
+    bundle.docs[region].launched = true;
+  }
+  return bundle;
+}
+/**
+ * `next start` servers of one build share `.next`, so the pre-rendered (ISR) pages one server wrote for /norte or /centro-oeste would be read by the
+ * next one. These regions (and Sul, whose header links change with them) are the only routes whose answer differs between the servers below, so their cache entries are removed around each run.
+ */
+async function purgeRegionCache() {
+  const app = path.join(process.cwd(), ".next", "server", "app");
+  for (const base of [app, path.join(app, "api", "cidades")]) {
+    for (const entry of await readdir(base).catch(() => [] as string[])) {
+      if (/^(sul|norte|centro-oeste)(\.|$)/.test(entry)) await rm(path.join(base, entry), { recursive: true, force: true });
+    }
+  }
+}
+async function stopServer(child: ChildProcess) {
+  if (!child.pid) return;
+  for (const sig of ["SIGTERM", "SIGKILL"] as const) {
+    try {
+      process.kill(-child.pid, sig);
+    } catch {
+      /* gone */
+    }
+    await new Promise((r) => setTimeout(r, 300));
+  }
+}
+async function startRegionServer(port: number, withNewRegions: boolean, extraEnv: Record<string, string> = {}) {
+  const volume = await mkdtemp(path.join(tmpdir(), "smoke-regions-"));
+  tmpDirs.push(volume);
+  await writeFile(path.join(volume, "catalog-snapshot.json"), JSON.stringify(regionCatalog(withNewRegions)));
+  await writeFile(path.join(volume, "collections-snapshot.json"), JSON.stringify(regionCollections(withNewRegions)));
+  const cfgDir = path.join(volume, "site-config");
+  await mkdir(cfgDir, { recursive: true });
+  await writeFile(path.join(cfgDir, "published.json"), JSON.stringify(launchedBundle()));
+  const child = spawn(nextBin, ["start", "-p", String(port)], {
+    cwd: process.cwd(), env: { ...process.env, CATALOG_SNAPSHOT_DIR: volume, SITE_CONFIG_DIR: cfgDir, NODE_ENV: "production", SITE_CONFIG_HOME: "on", NEXT_PUBLIC_META_PIXEL_ID: META, NEXT_PUBLIC_GA_MEASUREMENT_ID: GA, ...extraEnv }, stdio: "ignore", detached: true,
+  });
+  extra.push(child);
+  await waitHealthy(port);
+  return child;
+}
+const extra: ChildProcess[] = [];
+
+async function regionsScenario() {
+  console.log("\n=== launched regions: three stores (Norte and Centro-Oeste have their own catalog) ===");
+  await purgeRegionCache();
+  const three = await startRegionServer(3233, true);
+  const base = "http://localhost:3233";
+  const sulHome = await (await fetch(`${base}/sul`)).text();
+  for (const region of ["norte", "centro-oeste"] as const) {
+    const h = HOSTS[region];
+    const r = await fetch(`${base}/${region}`);
+    const html = await r.text();
+    check(`/${region} (launched, own catalog) -> 200`, r.status === 200, { status: r.status, snippet: html.slice(0, 200) });
+    const own = html.match(new RegExp(`href="https://www\\.${h.host.replace(".", "\\.")}/${h.path}/product/teste-`, "g")) ?? [];
+    check(`/${region}: REAL products of its own INK store (>= 3 links to ${h.host})`, own.length >= 3, own.length);
+    check(`/${region}: no link to another region's INK store`, !/usesul\.com\.br\/usesul\/product|usenorte\.com\.br\/usenorte\/product\/teste-70|usecentro\.com\.br\/usecentro\/product\/teste-70/.test(html.replace(new RegExp(`https://www\\.${h.host.replace(".", "\\.")}/${h.path}/product/teste-`, "g"), "")), undefined);
+    check(`/${region}: "Ver todos" points to its own store's collection`, html.includes(`https://www.${h.host}/${h.path}/collections/colecao-${region}`));
+    check(`/${region}: never an empty count ("0 cidades")`, !/\b0 cidades\b/.test(html.replaceAll("<!-- -->", "")));
+    check(`/${region}: the hero and the configured section render in order`, sectionIds(html).includes("colecao-regiao") && html.includes('id="hero-title"'));
+    check(`/${region}/privacidade -> 200`, (await fetch(`${base}/${region}/privacidade`)).status === 200);
+    check(`/api/cidades/${region} -> 200 with cities`, (await (await fetch(`${base}/api/cidades/${region}`)).text()).length > 100);
+  }
+  const sulAgain = await (await fetch(`${base}/sul`)).text();
+  check("Sul is unchanged by the launch of the other regions (same sections, still its own store)", JSON.stringify(sectionIds(sulAgain)) === JSON.stringify(sectionIds(sulHome)) && !sulAgain.includes("usenorte.com.br/usenorte/product"));
+  check("Sul now links to the launched regions on this site (not to the legacy INK stores)", sulAgain.includes('href="/norte"') && sulAgain.includes('href="/centro-oeste"'));
+  const notLaunched = launchedBundle();
+  notLaunched.docs.norte.launched = false;
+  check("(the same bundle with Norte recalled is what a recall publishes: covered by the CMS E2E and unit tests)", notLaunched.docs.norte.launched === false);
+
+  await stopServer(three);
+  await purgeRegionCache();
+  console.log("\n=== launched regions: today's production (only Sul has a catalog) ===");
+  const sulOnlyServer = await startRegionServer(3234, false);
+  const only = "http://localhost:3234";
+  const onlyNorte = (await fetch(`${only}/norte`)).status;
+  check("published.json marks Norte/Centro launched, but without their catalog: /norte -> 404", onlyNorte === 404, onlyNorte);
+  check("...and /centro-oeste -> 404 (never an empty page)", (await fetch(`${only}/centro-oeste`)).status === 404);
+  const sulOnly = await (await fetch(`${only}/sul`)).text();
+  check("...Sul is untouched and still links to the legacy INK stores for the other regions", sulOnly.includes("https://www.usenorte.com.br") && !sulOnly.includes('href="/norte"'));
+  check("...and the city-search API of a non-public region is 404", (await fetch(`${only}/api/cidades/norte`)).status === 404);
+  await stopServer(sulOnlyServer);
+  await purgeRegionCache();
 }
 
 async function main() {
+  if (process.env.SMOKE_REGIONS_ONLY) {
+    await regionsScenario();
+    console.log(failures === 0 ? "\nSMOKE (regions only) PASSED" : `\nSMOKE (regions only) FAILED (${failures})`);
+    return;
+  }
   for (const s of servers) await start(s);
 
   const bodies: Record<string, string> = {};
@@ -148,11 +302,14 @@ async function main() {
     check("no HTML from a foreign host: document is text/html", (nosniff.headers.get("content-type") ?? "").startsWith("text/html"));
 
     const html = home;
-    check("tracking: no vendor script/hosts in the server HTML before consent", !/fbevents|googletagmanager|connect\.facebook\.net/.test(html));
-    const t = await trackingProbe(s.port);
-    check("tracking: ZERO vendor requests before consent", t.beforeConsent.length === 0, t.beforeConsent);
-    check("tracking: after consent Meta loads with the env-fallback Pixel base", t.afterConsent.some((u) => u.includes("connect.facebook.net")), t.afterConsent);
-    check(`tracking: after consent GA4 loads with the env-fallback ID (${GA})`, t.afterConsent.some((u) => u.includes("googletagmanager.com") && u.includes(GA)), t.afterConsent);
+    check("tracking: the server HTML carries no vendor script tag (the tools load client-side)", !/fbevents|googletagmanager|connect\.facebook\.net/.test(html));
+    const fresh = await trackingProbe(s.port, { rejectedBefore: false });
+    check("tracking: a new visitor who clicked nothing already loads Meta (banner does not gate it)", fresh.withoutAnyClick.some((u) => u.includes("connect.facebook.net")), fresh.withoutAnyClick);
+    check(`tracking: ...and GA4 with the env-fallback ID (${GA})`, fresh.withoutAnyClick.some((u) => u.includes("googletagmanager.com") && u.includes(GA)), fresh.withoutAnyClick);
+    check("tracking: the cookie banner is still shown for that visitor", fresh.bannerShown);
+    const rejected = await trackingProbe(s.port, { rejectedBefore: true });
+    check("tracking: a visitor who already chose Rejeitar is still measured (same as the INK store)", rejected.withoutAnyClick.some((u) => u.includes("connect.facebook.net")) && rejected.withoutAnyClick.some((u) => u.includes("googletagmanager.com") && u.includes(GA)), rejected.withoutAnyClick);
+    check("tracking: ...and the banner does not reappear for them", !rejected.bannerShown);
   }
 
   console.log("\n=== flag OFF vs flag ON ===");
@@ -262,6 +419,8 @@ async function main() {
   const previewLess = await (await fetch(`${base}/sul`)).text();
   check("the storefront never links to or loads anything from /admin", !previewLess.includes("/admin"));
 
+  await regionsScenario();
+
   console.log("\n=== not testable yet ===");
   skip("media upload", "dev-only upload is covered by `npm run test:admin`; production storage (R2) is not provisioned");
   skip("draft preview in a browser", "covered by `npm run test:admin` (needs a development server: the admin does not exist on a production build)");
@@ -271,6 +430,18 @@ async function main() {
 }
 
 async function cleanup() {
+  for (const c of extra) {
+    if (c.pid) {
+      for (const sig of ["SIGTERM", "SIGKILL"] as const) {
+        try {
+          process.kill(-c.pid, sig);
+        } catch {
+          /* gone */
+        }
+        await new Promise((r) => setTimeout(r, 300));
+      }
+    }
+  }
   for (const s of servers) {
     if (s.child?.pid) {
       for (const sig of ["SIGTERM", "SIGKILL"] as const) {

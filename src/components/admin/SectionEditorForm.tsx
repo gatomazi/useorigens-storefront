@@ -45,10 +45,11 @@ function FocalPad({ label, image, x, y, onChange }: { label: string; image?: Med
 }
 
 export function SectionEditorForm({
-  section, rev, media, collections, action,
+  section, rev, scope, media, collections, action,
 }: {
   section: Section;
   rev: number | null;
+  scope: string;
   media: MediaOption[];
   collections: ComboEntry[];
   action: (fd: FormData) => Promise<void>;
@@ -96,6 +97,7 @@ export function SectionEditorForm({
   return (
     <form action={action} className="space-y-8">
       <input type="hidden" name="rev" value={rev ?? "null"} />
+      <input type="hidden" name="scope" value={scope} />
       <input type="hidden" name="id" value={section.id} />
 
       <fieldset className="space-y-4">

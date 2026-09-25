@@ -4,14 +4,15 @@ import { canUpload, listMedia, MAX_UPLOAD_BYTES } from "@/lib/admin/media";
 import { platform } from "@/lib/admin/platform";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { loadWorkspace } from "@/lib/admin/workspace";
+import { REGION_SCOPES } from "@/lib/admin/scope";
 
 export default async function MediaPage({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
   await requireAdmin();
   const sp = await searchParams;
-  const [media, ws] = await Promise.all([listMedia(), loadWorkspace()]);
+  const [media, docs] = await Promise.all([listMedia(), Promise.all(REGION_SCOPES.map(async (r) => JSON.stringify((await loadWorkspace(r)).doc)))]);
   const prod = platform().mode === "prod";
   const uploads = canUpload();
-  const used = JSON.stringify(ws.doc);
+  const used = docs.join(" "); // media is shared by the three regions: "in use" means in use by ANY region's draft
   return (
     <div className="space-y-6">
       <div>

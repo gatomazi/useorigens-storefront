@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useConsent } from "@/lib/consent/ConsentProvider";
+import { measurementRequiresConsent } from "@/lib/consent/policy";
 import type { RegionSlug } from "@/lib/geo/regions";
 
 /**
@@ -26,7 +27,10 @@ export function ConsentBanner({ region }: { region: RegionSlug }) {
     >
       <div className="wrap flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="text-[0.8125rem] leading-snug text-white/90 sm:max-w-2xl sm:text-[0.875rem]">
-          Usamos cookies para melhorar sua experiência e entender como o site é utilizado. Saiba mais em nossa{" "}
+          {measurementRequiresConsent()
+            ? "Usamos cookies para melhorar sua experiência e entender como o site é utilizado."
+            : "Usamos cookies e ferramentas de medição de terceiros (Meta e Google Analytics) para entender como o site é utilizado e medir anúncios."}{" "}
+          Saiba mais em nossa{" "}
           <Link href={`/${region}/privacidade`} className="link-line font-semibold text-white">
             Política de Privacidade
           </Link>

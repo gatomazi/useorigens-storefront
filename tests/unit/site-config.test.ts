@@ -44,40 +44,74 @@ describe("seed", () => {
   test("given the seed, when hashed, then it matches the pinned checksum — the seed is immutable unless a change is deliberate", () => {
     // If this fails you changed the current Sul home (copy, order, banners, layout or tracking mapping). That is only legitimate
     // together with the hard-coded home in src/app/[region]/page.tsx and a fresh run of scripts/verify-home-equivalence.mts.
-    expect(bundleChecksum(seed())).toBe("29c7302fd1c650a3b3e1aaecb1a74f1d6dad5f67afae2fc48070608e2a242a62");
+    expect(bundleChecksum(seed())).toBe("5d12e508b95eaa379dadb4a85f104decca5da54ffa50b86154dad668073dec5e"); // re-pinned in Round 8: Sul tracking is now "legacy" (build-time IDs read at runtime) and Norte/Centro-Oeste start disabled
   });
 
-  test("given env without tracking IDs, when seeded, then Sul is disabled rather than inventing an ID", () => {
-    const bundle = buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null });
-    expect(bundle.docs.sul.tracking).toEqual({ meta: { mode: "disabled" }, ga4: { mode: "disabled" } });
+  test("given the seed, when built with or without env IDs, then Sul is 'legacy' either way (the IDs are read at runtime, never written into the document)", () => {
+    expect(buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null }).docs.sul.tracking).toEqual({ meta: { mode: "legacy" }, ga4: { mode: "legacy" } });
+    expect(buildSeedBundle(ENV).docs.sul.tracking).toEqual({ meta: { mode: "legacy" }, ga4: { mode: "legacy" } });
+    expect(bundleChecksum(buildSeedBundle(ENV))).toBe(bundleChecksum(buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null })));
   });
 });
 
-describe("tracking resolution (D5)", () => {
-  test("given no published bundle, when resolved, then the current env values are returned untouched", () => {
-    expect(resolveTracking(null, "sul", ENV)).toEqual({ metaPixelId: "1558923262073052", ga4MeasurementId: "G-8GYTEJ1F77", source: "env" });
+describe("tracking resolution: global + regional, per tool", () => {
+  const NONE = { metaPixelId: null, ga4MeasurementId: null };
+  const at = (b: ReturnType<typeof seed>, scope: "sul" | "norte" | "centro-oeste") => resolveTracking(b, scope, ENV);
+  const S = "1558923262073052"; // Sul's legacy Pixel
+  const G = "G-8GYTEJ1F77"; // Sul's legacy GA4
+
+  test("given no published bundle, when resolved, then ONLY Sul has IDs (the legacy build-time ones); Norte and Centro-Oeste never inherit them", () => {
+    expect(resolveTracking(null, "sul", ENV)).toMatchObject({ metaPixelId: S, ga4MeasurementId: G, origin: { meta: "legacy", ga4: "legacy" }, source: "env" });
+    for (const r of ["norte", "centro-oeste"] as const) expect(resolveTracking(null, r, ENV)).toMatchObject({ ...NONE, origin: { meta: "unconfigured", ga4: "unconfigured" } });
   });
 
-  test("given the seed, when Sul is resolved, then it matches today's IDs", () => {
-    expect(resolveTracking(seed(), "sul", { metaPixelId: null, ga4MeasurementId: null })).toEqual({ metaPixelId: "1558923262073052", ga4MeasurementId: "G-8GYTEJ1F77", source: "published" });
+  test("given the seed, when resolved, then Sul is legacy (today's IDs, read from the build), Norte/Centro-Oeste are disabled, and no ID is stored in the document", () => {
+    const b = seed();
+    expect(at(b, "sul")).toMatchObject({ metaPixelId: S, ga4MeasurementId: G, origin: { meta: "legacy", ga4: "legacy" }, source: "published" });
+    expect(at(b, "norte")).toMatchObject({ ...NONE, origin: { meta: "disabled", ga4: "disabled" } });
+    expect(at(b, "centro-oeste")).toMatchObject(NONE);
+    expect(JSON.stringify(b.docs)).not.toContain(S);
+    expect(JSON.stringify(b.docs)).not.toContain(G);
   });
 
-  test("given the seed, when a region inherits and the global is off, then nothing is enabled", () => {
-    expect(resolveTracking(seed(), "norte", ENV)).toEqual({ metaPixelId: null, ga4MeasurementId: null, source: "published" });
+  test("given legacy on a region other than Sul (a hand-edited document), when resolved, then it leaks nothing to that region", () => {
+    const b = clone(seed());
+    b.docs.norte.tracking = { meta: { mode: "legacy" }, ga4: { mode: "legacy" } };
+    expect(at(b, "norte")).toMatchObject({ ...NONE, origin: { meta: "unconfigured", ga4: "unconfigured" } });
   });
 
-  test("given a global Meta ID, when a region inherits Meta but overrides GA4, then each vendor resolves independently", () => {
-    const bundle = clone(seed());
-    bundle.docs.global.tracking.meta = { mode: "override", id: "1111111111111111" };
-    bundle.docs.norte.tracking = { meta: { mode: "inherit" }, ga4: { mode: "override", id: "G-NORTE0001" } };
-    expect(resolveTracking(bundle, "norte", ENV)).toEqual({ metaPixelId: "1111111111111111", ga4MeasurementId: "G-NORTE0001", source: "published" });
+  test("given an ACTIVE global ID, when a region inherits, then it uses it; when the global is inactive (disabled, even with a remembered ID), then inheriting yields no ID and says why", () => {
+    const b = clone(seed());
+    b.docs.norte.tracking = { meta: { mode: "inherit" }, ga4: { mode: "inherit" } };
+    b.docs.global.tracking.meta = { mode: "override", id: "1111111111111111" };
+    b.docs.global.tracking.ga4 = { mode: "disabled", id: "G-REMEMBER01" };
+    expect(at(b, "norte")).toMatchObject({ metaPixelId: "1111111111111111", ga4MeasurementId: null, origin: { meta: "global", ga4: "inherit-inactive" } });
   });
 
-  test("given a region that disables a vendor, when the global has an ID, then the region still gets none", () => {
-    const bundle = clone(seed());
-    bundle.docs.global.tracking.ga4 = { mode: "override", id: "G-GLOBAL0001" };
-    bundle.docs.norte.tracking.ga4 = { mode: "disabled" };
-    expect(resolveTracking(bundle, "norte", ENV).ga4MeasurementId).toBeNull();
+  test("given a region with its OWN ID while the global is active, when resolved, then the own ID replaces the global one (never both)", () => {
+    const b = clone(seed());
+    b.docs.global.tracking.meta = { mode: "override", id: "1111111111111111" };
+    b.docs["centro-oeste"].tracking = { meta: { mode: "override", id: "2222222222222222" }, ga4: { mode: "disabled" } };
+    expect(at(b, "centro-oeste")).toMatchObject({ metaPixelId: "2222222222222222", ga4MeasurementId: null, origin: { meta: "own", ga4: "disabled" } });
+  });
+
+  test("given each tool chooses independently, when Norte inherits Meta but has its own GA4 and Centro-Oeste has its own Meta with GA4 off, then each resolves on its own", () => {
+    const b = clone(seed());
+    b.docs.global.tracking.meta = { mode: "override", id: "1111111111111111" };
+    b.docs.global.tracking.ga4 = { mode: "override", id: "G-GLOBAL0001" };
+    b.docs.norte.tracking = { meta: { mode: "inherit" }, ga4: { mode: "override", id: "G-NORTE0001" } };
+    b.docs["centro-oeste"].tracking = { meta: { mode: "override", id: "3333333333333333" }, ga4: { mode: "disabled" } };
+    expect(at(b, "norte")).toMatchObject({ metaPixelId: "1111111111111111", ga4MeasurementId: "G-NORTE0001" });
+    expect(at(b, "centro-oeste")).toMatchObject({ metaPixelId: "3333333333333333", ga4MeasurementId: null });
+    expect(at(b, "sul")).toMatchObject({ metaPixelId: S, ga4MeasurementId: G }); // untouched by any of the above
+  });
+
+  test("given the future migration to global IDs (owner sets global, switches the three regions to inherit), when resolved, then all three get the global IDs and nothing else changed", () => {
+    const b = clone(seed());
+    b.docs.global.tracking.meta = { mode: "override", id: "9999999999999999" };
+    b.docs.global.tracking.ga4 = { mode: "override", id: "G-UNIFIED001" };
+    for (const r of ["sul", "norte", "centro-oeste"] as const) b.docs[r].tracking = { meta: { mode: "inherit" }, ga4: { mode: "inherit" } };
+    for (const r of ["sul", "norte", "centro-oeste"] as const) expect(at(b, r)).toMatchObject({ metaPixelId: "9999999999999999", ga4MeasurementId: "G-UNIFIED001", origin: { meta: "global", ga4: "global" } });
   });
 });
 

@@ -5,6 +5,21 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { withoutCartRef } from "@/lib/cart-mirror/url";
 import { useConsent } from "@/lib/consent/ConsentProvider";
+import { measurementAllowed } from "@/lib/consent/policy";
+import { setActiveGa4 } from "@/lib/analytics/active-ids";
+
+/** Measurement IDs already configured in this page session (gtag keeps them all; `config` is never repeated, and events are addressed with `send_to`, see active-ids.ts). */
+const configured = new Set<string>();
+function ensureConfig(id: string): void {
+  if (typeof window.gtag !== "function" || configured.has(id)) return;
+  try {
+    window.gtag("config", id, { send_page_view: false });
+  } catch {
+    // A blocked or broken gtag must never break the page: the ID is simply not configured (and not remembered, so a later attempt may work).
+    return;
+  }
+  configured.add(id);
+}
 import { gaMeasurementId } from "@/lib/config/public-env";
 import { trackPageView } from "@/lib/analytics/track";
 
@@ -35,7 +50,7 @@ declare global {
 export function GoogleAnalytics({ measurementId: resolved }: { measurementId?: string | null } = {}) {
   const measurementId = resolved === undefined ? gaMeasurementId() : resolved;
   const { record } = useConsent();
-  const accepted = record?.choice === "accepted";
+  const accepted = measurementAllowed(record); // true from the start unless the strict consent gate is on (src/lib/consent/policy.ts)
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const lastTracked = useRef<string | null>(null);
@@ -66,9 +81,16 @@ export function GoogleAnalytics({ measurementId: resolved }: { measurementId?: s
     wasAccepted.current = accepted;
   }, [accepted]);
 
+  // Which measurement ID this page sends to (server-resolved per region). Cleared on unmount so a move to a region without one sends nothing.
+  useEffect(() => {
+    setActiveGa4(accepted && measurementId ? measurementId : null);
+    return () => setActiveGa4(null);
+  }, [accepted, measurementId]);
+
   useEffect(() => {
     if (!accepted || !measurementId) return;
     if (typeof window.gtag !== "function") return; // script hasn't finished loading yet — onLoad below handles the first page_view
+    ensureConfig(measurementId); // a client-side move to another region may bring an ID that was never configured here
     if (lastTracked.current === currentPath) return;
     lastTracked.current = currentPath;
     trackPageView({ pageLocation: currentUrl, pagePath: currentPath, pageTitle: document.title });
@@ -81,6 +103,7 @@ export function GoogleAnalytics({ measurementId: resolved }: { measurementId?: s
       id="ga4"
       strategy="afterInteractive"
       onLoad={() => {
+        ensureConfig(measurementId);
         if (lastTracked.current === currentPath) return;
         lastTracked.current = currentPath;
         trackPageView({ pageLocation: currentUrl, pagePath: currentPath, pageTitle: document.title });
@@ -92,7 +115,7 @@ export function GoogleAnalytics({ measurementId: resolved }: { measurementId?: s
         // this component. No `gtag('event','page_view', ...)` here on purpose: the route-change effect above
         // and the `onLoad` callback below are the only two places that ever send one, sharing `lastTracked`.
         __html: `
-!function(w,d,s,id){w.dataLayer=w.dataLayer||[];if(!w.gtag){w.gtag=function(){w.dataLayer.push(arguments)};var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=!0;j.src='https://www.googletagmanager.com/gtag/js?id='+id;f.parentNode.insertBefore(j,f)}w.gtag('js',new Date());w.gtag('config',id,{send_page_view:false})}(window,document,'script','${measurementId}');
+!function(w,d,s,id){w.dataLayer=w.dataLayer||[];if(!w.gtag){w.gtag=function(){w.dataLayer.push(arguments)};var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=!0;j.src='https://www.googletagmanager.com/gtag/js?id='+id;f.parentNode.insertBefore(j,f)}w.gtag('js',new Date())}(window,document,'script','${measurementId}');
 `,
       }}
     />

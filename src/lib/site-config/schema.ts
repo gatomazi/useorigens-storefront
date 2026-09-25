@@ -7,7 +7,7 @@
  * final URL and dimensions, so rendering never needs the database or the storage API).
  */
 import { isAllowedMediaSrc } from "./media-hosts";
-import type { CommerceStoreKey } from "../geo/regions";
+import { REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
 export type Scope = (typeof SCOPES)[number];
@@ -78,7 +78,16 @@ export type Section = {
   appearance: Appearance;
 };
 
-export type VendorSetting = { mode: "inherit" } | { mode: "override"; id: string } | { mode: "disabled" };
+/**
+ * One tool (Meta Pixel or GA4) in one document. Independent per tool, per document:
+ *   inherit   the region uses the GLOBAL document's ID for this tool, but only while the global one is active ("override" there);
+ *   override  the document's OWN ID replaces the global one (never both);
+ *   disabled  no ID for this tool. In the GLOBAL document `disabled` may keep a remembered `id` (an inactive global ID, kept so the owner
+ *             can switch it on later without retyping);
+ *   legacy    Sul only: keep using the build-time NEXT_PUBLIC_* value the storefront had before the CMS existed, until an explicit
+ *             configuration replaces it. Never available to other regions, and never copied to them.
+ */
+export type VendorSetting = { mode: "inherit" } | { mode: "override"; id: string } | { mode: "disabled"; id?: string } | { mode: "legacy" };
 export type TrackingConfig = { meta: VendorSetting; ga4: VendorSetting };
 
 export type CollectionRef = { store: CommerceStoreKey; collectionId: number };
@@ -88,6 +97,13 @@ export type ScopeDoc = {
   scope: Scope;
   tracking: TrackingConfig;
   home?: { sections: Section[] };
+  /**
+   * Regions other than Sul: is the region publicly LAUNCHED (reachable in the storefront, listed in the navigation)? A region can be fully
+   * editable, drafted and previewed in the CMS long before that. Absent/false = still in preview. Sul is always launched and ignores this.
+   * Part of the document, so publishing (or restoring) a release changes it together with everything else, per region, and a release is
+   * the audit trail of every launch and recall.
+   */
+  launched?: boolean;
   /**
    * INK collections this scope's CMS has explicitly ENABLED as section sources. Only meaningful for internal (hidden-on-INK) collections:
    * public ones are usable by default. Part of the document, so a publish and a rollback carry it together with the sections that use it.
@@ -267,7 +283,11 @@ function checkVendor(c: Collector, path: string, v: unknown, pattern: RegExp, sc
     if (typeof v.id !== "string" || !pattern.test(v.id)) c.fail(`${path}.id`, "invalid id format for this vendor");
   } else if (v.mode === "inherit") {
     if (scope === "global") c.fail(`${path}.mode`, "global cannot inherit");
-  } else if (v.mode !== "disabled") c.fail(`${path}.mode`, "must be inherit | override | disabled");
+  } else if (v.mode === "legacy") {
+    if (scope !== "sul") c.fail(`${path}.mode`, "legacy (build-time IDs) exists only for sul");
+  } else if (v.mode === "disabled") {
+    if (v.id !== undefined && (scope !== "global" || typeof v.id !== "string" || !pattern.test(v.id))) c.fail(`${path}.id`, "only the global document may keep an inactive ID, in the vendor's format");
+  } else c.fail(`${path}.mode`, "must be inherit | override | disabled | legacy");
 }
 
 /** Validates ONE section on its own (used by the editor and by the tolerant published-bundle reader). */
@@ -303,9 +323,21 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
     checkVendor(c, "doc.tracking.meta", input.tracking.meta, META_PIXEL, sc);
     checkVendor(c, "doc.tracking.ga4", input.tracking.ga4, GA4, sc);
   }
+  if (input.launched !== undefined) {
+    if (typeof input.launched !== "boolean") c.fail("doc.launched", "must be boolean");
+    else if (sc === "global") c.fail("doc.launched", "global is not a region");
+  }
   if (input.collections !== undefined) {
     if (sc === "global") c.fail("doc.collections", "global has no collections in V1");
-    else checkCollections(c, "doc.collections", input.collections);
+    else {
+      checkCollections(c, "doc.collections", input.collections);
+      // A region only enables collections of ITS OWN INK store: the wrong store's collection can never be enabled here.
+      if (isRecord(input.collections) && Array.isArray(input.collections.enabled)) {
+        input.collections.enabled.forEach((ref, i) => {
+          if (isRecord(ref) && ref.store !== REGIONS[sc as RegionSlug]?.storeKey) c.fail(`doc.collections.enabled[${i}].store`, "belongs to another region's INK store");
+        });
+      }
+    }
   }
   if (input.home !== undefined) {
     if (sc === "global") c.fail("doc.home", "global has no home in V1");
@@ -313,6 +345,16 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
     if (!Array.isArray(sections)) c.fail("doc.home.sections", "must be an array");
     else {
       sections.forEach((s, i) => checkSection(c, `doc.home.sections[${i}]`, s));
+      // Sources and "Ver todos" targets must come from THIS region's INK store (a Norte section can never show or link Sul's collection).
+      const ownStore = REGIONS[sc as RegionSlug]?.storeKey;
+      if (ownStore) {
+        sections.forEach((s, i) => {
+          if (!isRecord(s)) return;
+          if (isRecord(s.source) && s.source.kind === "ink-category" && s.source.store !== ownStore) c.fail(`doc.home.sections[${i}].source.store`, "belongs to another region's INK store");
+          const dest = isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null;
+          if (dest && dest.kind === "ink-collection" && dest.store !== ownStore) c.fail(`doc.home.sections[${i}].cta.dest.store`, "belongs to another region's INK store");
+        });
+      }
       const anchors = new Set<string>();
       const ids = new Set<string>();
       sections.forEach((s, i) => {

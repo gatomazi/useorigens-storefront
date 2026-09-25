@@ -1,7 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
+import { launchedRegions } from "@/lib/regions/launched";
 import { INSTAGRAM_URL, LEGACY_STORE_URLS } from "@/lib/site";
+
+/** Another region: this site's own page once that region is publicly launched, otherwise the legacy INK store it has always linked to. */
+const otherRegionHref = (slug: RegionSlug, launched: readonly RegionSlug[]): string => (launched.includes(slug) ? `/${slug}` : LEGACY_STORE_URLS[slug]);
 import { numberPt } from "@/lib/format";
 import { SOURCES } from "@/lib/analytics/sources";
 import { PrivacyPreferencesLink } from "../consent/PrivacyPreferencesLink";
@@ -34,6 +38,7 @@ export function Header({ region }: { region: RegionSlug }) {
   const items = navItems(region);
   const ufs = REGIONS[region].ufs;
   const others = (Object.values(REGIONS) as (typeof REGIONS)[RegionSlug][]).filter((r) => r.slug !== region);
+  const launched = launchedRegions();
   // "Regiões" used to point at a product category (#geografia, the DDD carousel) — semantically wrong: it
   // reads as geographic navigation, so it must actually be one. Real navigation, not a category shortcut: a
   // direct link per state plus "Ver estados" (the home's own chooser). Mobile gets the same three state links
@@ -45,7 +50,7 @@ export function Header({ region }: { region: RegionSlug }) {
     ...stateLinks.map(({ label, href, uf }) => ({ label, href, trackState: { state: uf, region } })),
     { label: "Fala daqui", href: `/${region}#fala` },
     { label: "Estados", href: `/${region}#estados` },
-    ...others.map((r) => ({ label: r.name, href: LEGACY_STORE_URLS[r.slug], external: true })),
+    ...others.map((r) => ({ label: r.name, href: otherRegionHref(r.slug, launched), external: !launched.includes(r.slug) })),
   ];
 
   return (
@@ -101,7 +106,7 @@ export function Header({ region }: { region: RegionSlug }) {
             <ul className="absolute right-0 top-full z-50 mt-1 min-w-52 border-2 border-ink bg-white py-1 text-ink">
               {others.map((r) => (
                 <li key={r.slug}>
-                  <a href={LEGACY_STORE_URLS[r.slug]} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
+                  <a href={otherRegionHref(r.slug, launched)} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
                     {r.name}
                   </a>
                 </li>
@@ -119,6 +124,7 @@ export function Header({ region }: { region: RegionSlug }) {
 export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: string | null }) {
   const r = REGIONS[region];
   const others = (Object.values(REGIONS) as (typeof REGIONS)[RegionSlug][]).filter((x) => x.slug !== region);
+  const launched = launchedRegions();
   const updated = syncedAt ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "America/Sao_Paulo" }).format(new Date(syncedAt)) : null;
 
   return (
@@ -147,7 +153,7 @@ export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: str
           <ul className="space-y-0">
             {others.map((o) => (
               <li key={o.slug}>
-                <a href={LEGACY_STORE_URLS[o.slug]} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]">
+                <a href={otherRegionHref(o.slug, launched)} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]">
                   {o.name}
                 </a>
               </li>

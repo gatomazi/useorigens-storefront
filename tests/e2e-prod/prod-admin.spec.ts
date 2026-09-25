@@ -141,14 +141,17 @@ test("given an editor of another region, when editing the Sul home or managing p
   await open(norte.page, "/admin/usuarios");
   await expect(norte.page).toHaveURL(/\/admin\?err=/);
   await expect(norte.page.getByText("Você não tem permissão para isso.")).toBeVisible();
+  // The Norte editor only works on Norte: the switcher offers nothing else, the page is Norte's, and a form forged to another region is refused by the server.
   await open(norte.page, "/admin/home");
-  const combo = norte.page.getByRole("combobox", { name: /Coleção \(busque pelo nome\)/ });
-  await combo.fill("da nossa terra");
-  await norte.page.getByRole("option", { name: /Da Nossa Terra/ }).click();
-  await norte.page.getByRole("button", { name: "Criar seção" }).click();
+  await expect(norte.page.getByRole("form", { name: "Região em edição" }).getByRole("button")).toHaveCount(1);
+  await expect(norte.page.getByRole("heading", { name: /Home · Seções/ })).toContainText("Norte");
+  await norte.page.evaluate(() => {
+    const form = document.querySelector('form input[name="scope"]')?.closest("form") as HTMLFormElement;
+    (form.querySelector('input[name="scope"]') as HTMLInputElement).value = "sul";
+    form.requestSubmit();
+  });
   await expect(norte.page).toHaveURL(/\/admin\?err=/); // refused before anything was written
-  await open(norte.page, "/admin/home");
-  expect((await titles(norte.page)).length).toBe(10); // the seed home: nothing was created
+  await expect(norte.page.getByText("Você não tem permissão para editar essa região.")).toBeVisible();
   await open(norte.page, "/admin/colecoes");
   await expect(norte.page.getByRole("button", { name: "Sincronizar coleções agora" })).toHaveCount(0);
   await norte.context.close();
@@ -183,7 +186,9 @@ test("given the owner, when a collection section is created from an enabled inte
 
   // 2. Upload an image: only processed WebP variants reach the bucket, under the content hash.
   await open(page, "/admin/midia");
-  const png = await sharp({ create: { width: 1800, height: 700, channels: 3, background: { r: 30, g: 90, b: 60 } } }).png().toBuffer();
+  // Noise does not compress: the file is several MB, well past the 1 MB default limit of Server Actions (a real upload failed with it in production).
+  const png = await sharp({ create: { width: 1800, height: 700, channels: 3, background: { r: 30, g: 90, b: 60 }, noise: { type: "gaussian", mean: 128, sigma: 60 } } }).png().toBuffer();
+  expect(png.length).toBeGreaterThan(2 * 1024 * 1024);
   await page.locator('input[type="file"]').setInputFiles({ name: "banner e2e.png", mimeType: "image/png", buffer: png });
   await page.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(page.getByText(/Imagem "banner e2e" enviada/)).toBeVisible();
@@ -301,8 +306,8 @@ test("given the owner, when a collection section is created from an enabled inte
   expect(await freshTitle("Terra em foco 2")).toBeLessThanOrEqual(3);
   await open(page, "/admin/publicar");
   const first = page.locator("tbody tr", { hasText: "primeira versão" });
-  await first.getByRole("button", { name: "Restaurar esta versão" }).click();
-  await expect(page.getByText(/Versão \d+ restaurada/)).toBeVisible({ timeout: 120_000 });
+  await first.getByRole("button", { name: "Restaurar Sul" }).click();
+  await expect(page.getByText(/Sul: versão \d+ restaurada/)).toBeVisible({ timeout: 120_000 });
   expect(await freshTitle("Terra em foco")).toBeLessThanOrEqual(3);
   await open(page, "/admin/publicar");
   await expect(page.locator("tbody tr").first()).toContainText("Restauração");

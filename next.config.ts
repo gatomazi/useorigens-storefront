@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    // Server Actions are capped at 1 MB by default, which rejected every CMS image upload ("Body exceeded 1 MB limit"). Uploads are validated
+    // at 8 MB (src/lib/admin/media/process.ts); the extra room is the multipart overhead. Only the admin has Server Actions.
+    serverActions: { bodySizeLimit: "9mb" },
+  },
   images: {
     // Only INK's product image host is allowed (seen in every product of the three stores).
     remotePatterns: [
