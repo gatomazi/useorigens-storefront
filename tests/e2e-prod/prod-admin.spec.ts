@@ -183,7 +183,9 @@ test("given the owner, when a collection section is created from an enabled inte
 
   // 2. Upload an image: only processed WebP variants reach the bucket, under the content hash.
   await open(page, "/admin/midia");
-  const png = await sharp({ create: { width: 1800, height: 700, channels: 3, background: { r: 30, g: 90, b: 60 } } }).png().toBuffer();
+  // Noise does not compress: the file is several MB, well past the 1 MB default limit of Server Actions (a real upload failed with it in production).
+  const png = await sharp({ create: { width: 1800, height: 700, channels: 3, background: { r: 30, g: 90, b: 60 }, noise: { type: "gaussian", mean: 128, sigma: 60 } } }).png().toBuffer();
+  expect(png.length).toBeGreaterThan(2 * 1024 * 1024);
   await page.locator('input[type="file"]').setInputFiles({ name: "banner e2e.png", mimeType: "image/png", buffer: png });
   await page.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(page.getByText(/Imagem "banner e2e" enviada/)).toBeVisible();
