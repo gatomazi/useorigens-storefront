@@ -167,6 +167,102 @@ test.describe("Cart mirror consumer: analytics never see the token", () => {
   });
 });
 
+const SLUG = "paranaense-essencia";
+async function mockAnalytics(page: Page, { consent = true, throwing = false }: { consent?: boolean; throwing?: boolean } = {}) {
+  const gtag: unknown[][] = [];
+  await page.exposeFunction("__reportGtag", (a: unknown[]) => gtag.push(a));
+  await page.addInitScript(({ consent, throwing }) => {
+    const w = window as unknown as Record<string, unknown>;
+    w.fbq = () => undefined;
+    w.gtag = (...a: unknown[]) => {
+      if (throwing) throw new Error("blocked");
+      (w.__reportGtag as (a: unknown[]) => void)(a);
+    };
+    if (consent) window.localStorage.setItem("useorigens:consent:marketing", JSON.stringify({ choice: "accepted", version: 2, decidedAt: "2026-09-23T00:00:00.000Z" }));
+  }, { consent, throwing });
+  await page.route(/connect\.facebook\.net|googletagmanager\.com/, (route) => route.abort());
+  return gtag;
+}
+const custom = (gtag: unknown[][], name: string) => gtag.filter((c) => c[0] === "event" && c[1] === name).map((c) => c[2] as Record<string, string>);
+
+test.describe("Origens events v1: arrival from the INK, mirror view and go-to-cart click", () => {
+  test("given a landing from an INK link with consent, then ONE arrival event, the markers and the token are gone from the URL before any analytics payload", async ({ page }) => {
+    const gtag = await mockAnalytics(page);
+    await mockApi(page, ok(snap(2)));
+    await page.goto(`/sul?utm=a&origens_src=ink_cart_drawer&origens_p=${SLUG}&cart_ref=${REF}`);
+    await expect(trigger(page)).toBeVisible();
+    await page.waitForTimeout(1500);
+    expect(search(page)).toBe("?utm=a");
+    expect(custom(gtag, "origens_storefront_arrived")).toEqual([{ entry_point: "ink_cart_drawer", region: "sul", product_slug: SLUG }]);
+    expect(JSON.stringify(gtag)).not.toContain(REF);
+    expect(JSON.stringify(gtag)).not.toContain("origens_src");
+    expect(JSON.stringify(gtag)).not.toContain("origens_p");
+    const pageViews = custom(gtag, "page_view");
+    expect(pageViews).toHaveLength(1);
+    expect(pageViews[0].page_location).not.toMatch(/cart_ref|origens_/);
+    await page.reload();
+    await page.waitForTimeout(800);
+    expect(custom(gtag, "origens_storefront_arrived")).toHaveLength(1); // the reload has no marker: consumed once
+  });
+
+  test("given no consent, then no custom event is sent but the URL is still cleaned", async ({ page }) => {
+    const gtag = await mockAnalytics(page, { consent: false });
+    await mockApi(page, ok(snap(1)));
+    await page.goto(`/sul?origens_src=ink_post_add&origens_p=${SLUG}&cart_ref=${REF}`);
+    await page.waitForTimeout(1500);
+    expect(search(page)).toBe("");
+    expect(gtag).toEqual([]);
+  });
+
+  test("given an unknown entry point or slug, then nothing is sent and both markers are removed", async ({ page }) => {
+    const gtag = await mockAnalytics(page);
+    await page.goto("/sul?origens_src=https%3A%2F%2Fevil.example&origens_p=not-one-of-five");
+    await page.waitForTimeout(1200);
+    expect(search(page)).toBe("");
+    expect(custom(gtag, "origens_storefront_arrived")).toHaveLength(0);
+  });
+
+  test("given the panel is opened twice and the link clicked, then one view per opening and ONE click event with a bucket, no token", async ({ page }) => {
+    const gtag = await mockAnalytics(page);
+    await blockInkNavigation(page);
+    await mockApi(page, ok(snap(2)));
+    await page.goto(`/sul?cart_ref=${REF}`);
+    await trigger(page).click();
+    await expect(dialog(page)).toBeVisible();
+    await page.waitForTimeout(500);
+    expect(custom(gtag, "origens_cart_mirror_view")).toEqual([{ entry_point: "storefront_cart_mirror", region: "sul", cart_items_bucket: "2", mirror_age_bucket: "1_5m" }]);
+    await dialog(page).getByTestId("cart-mirror-go").click();
+    expect(custom(gtag, "origens_go_to_cart_click")).toEqual([{ entry_point: "storefront_cart_mirror", region: "sul", cart_items_bucket: "2", transport_type: "beacon" }]);
+    await dialog(page).getByTestId("cart-mirror-continue").click();
+    await trigger(page).click();
+    await page.waitForTimeout(400);
+    expect(custom(gtag, "origens_cart_mirror_view")).toHaveLength(2);
+    expect(JSON.stringify(gtag)).not.toContain(REF);
+    expect(gtag.filter((c) => c[1] === "begin_checkout" || c[1] === "purchase")).toHaveLength(0);
+  });
+
+  test("given an unavailable snapshot (error/neutral), then no view event is sent", async ({ page }) => {
+    const gtag = await mockAnalytics(page);
+    await mockApi(page, status(500));
+    await page.goto(`/sul?cart_ref=${REF}`);
+    await page.waitForTimeout(1200);
+    expect(custom(gtag, "origens_cart_mirror_view")).toHaveLength(0);
+  });
+
+  test("given gtag throws on every call, then the click on Ir para meu carrinho is still a normal link click", async ({ page }) => {
+    await mockAnalytics(page, { throwing: true });
+    await mockApi(page, ok(snap(1)));
+    await page.goto(`/sul?cart_ref=${REF}`);
+    await trigger(page).click();
+    const go = dialog(page).getByTestId("cart-mirror-go");
+    await expect(go).toHaveAttribute("href", "https://www.usesul.com.br/usesul/product/serra-catarinense?origens_open_cart=1");
+    const navigation = page.waitForRequest((request) => request.url().startsWith("https://www.usesul.com.br/usesul/product/serra-catarinense"), { timeout: 8000 }).catch(() => null);
+    await page.route("https://www.usesul.com.br/**", (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<html>INK stub</html>" }));
+    await go.click();
+    expect(await navigation).not.toBeNull();
+  });
+});
+
 test.describe("Cart mirror consumer: UI", () => {
   test("given 2 items, then count, lines, detail, prices, total, age and the snapshot notice are shown; no checkout, no editing", async ({ page }) => {
     await mockApi(page, ok(snap(2, { items: [line(0, { color: "Marinho", size: "M" }), line(1)] })));

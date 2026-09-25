@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { cartItemsBucket, mirrorAgeBucket } from "@/lib/analytics/origens-events";
+import { trackCartMirrorView, trackGoToCartClick } from "@/lib/analytics/track";
 import { ageLabel } from "@/lib/cart-mirror/age";
 import { INK_CART_URL, MAX_SNAPSHOT_AGE_SECONDS } from "@/lib/cart-mirror/constants";
 import { fetchMirror, type MirrorResult } from "@/lib/cart-mirror/client";
@@ -106,6 +108,20 @@ export function CartMirrorMenu() {
     if (state.status === "ok" && ageSeconds > MAX_SNAPSHOT_AGE_SECONDS) clearToken();
   }, [state.status, ageSeconds]);
 
+  // "Meu carrinho" view: ONE `origens_cart_mirror_view` per opening of the panel, only while a valid snapshot is on screen (never the
+  // neutral/error state, never a re-render or a background refresh: `reported` latches until the panel closes).
+  const units = state.status === "ok" ? state.snapshot.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
+  const reportedRef = useRef(false);
+  useEffect(() => {
+    if (!open) {
+      reportedRef.current = false;
+      return;
+    }
+    if (state.status !== "ok" || reportedRef.current) return;
+    reportedRef.current = true;
+    trackCartMirrorView({ cartItemsBucket: cartItemsBucket(units), mirrorAgeBucket: mirrorAgeBucket(ageSeconds) });
+  }, [open, state.status, units, ageSeconds]);
+
   if (!token || state.status === "idle") return null;
 
   const openPanel = () => {
@@ -203,7 +219,13 @@ export function CartMirrorMenu() {
         </div>
 
         <div className="grid gap-3 border-t border-line bg-ground px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-6">
-          <a href={INK_CART_URL} className="btn" data-testid="cart-mirror-go">
+          <a
+            href={INK_CART_URL}
+            className="btn"
+            data-testid="cart-mirror-go"
+            // Best-effort measurement only: the navigation is the anchor's own and never waits for, or depends on, analytics.
+            onClick={() => trackGoToCartClick({ cartItemsBucket: cartItemsBucket(units) })}
+          >
             Ir para meu carrinho
           </a>
           <button type="button" onClick={closePanel} className="btn btn-ghost" data-testid="cart-mirror-continue">
