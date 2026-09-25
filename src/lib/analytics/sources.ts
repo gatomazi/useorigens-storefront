@@ -38,6 +38,8 @@ export const SOURCES = {
   homeDdd: "home_ddd",
   /** A home carousel created in the CMS from an INK collection (a closed, enumerated origin — never a free string from a document). */
   homeCollection: "home_colecao",
+  /** The home's "Sua cidade, de 8 jeitos" example-city cards that open the INK product directly. */
+  homeStyles: "home_styles",
   stateShowcase: "state_showcase",
   cityStyles: "city_styles",
   cityFala: "city_fala",

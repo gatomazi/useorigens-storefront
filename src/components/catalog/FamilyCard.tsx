@@ -11,10 +11,9 @@ import { ProductPhoto } from "./ProductPhoto";
  * commercial priority comes from order (see families.ts), never from a bigger card (CLAUDE_STYLE_MODELS_LAYOUT_REFINEMENT.md).
  * The card exists through alignment and spacing, not a heavy border or shadow.
  *
- * `directToInk` (CLAUDE_USE_ORIGENS_META_PIXEL_INK_ESTADOS.md §2): when the person has already explicitly
- * chosen this exact city (the city page itself, or "Outros estilos" on that city's own PDPs — never the
- * home's example-city showcase, where no real city was chosen yet), the card skips the intermediate storefront
- * PDP and opens the real INK product directly. Only when there is nothing to choose: a family with design
+ * `directToInk` (CLAUDE_USE_ORIGENS_META_PIXEL_INK_ESTADOS.md §2; extended to the home's example-city "8 jeitos"
+ * cards by the owner): the card skips the intermediate storefront PDP and opens the real INK product directly
+ * (the city page, "Outros estilos" on a city's PDPs, and the home's example city). Only when there is nothing to choose: a family with design
  * variants (`entry.variants.length > 0`) keeps the internal PDP, since that is exactly where the variant
  * picker lets the person choose between them — skipping it would silently hide a real choice, not remove an
  * unnecessary step. Falls back to the internal PDP link (never a broken link) whenever `purchaseUrl` can't

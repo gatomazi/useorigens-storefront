@@ -70,7 +70,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
               ao abrir a sua, você vê só os estilos que existem para ela.
             </p>
           </div>
-          <FamilyGrid entries={showcase.families} hrefBase={cityPath} cityName={showcase.city.name} />
+          <FamilyGrid entries={showcase.families} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk />
         </section>
       )}
 

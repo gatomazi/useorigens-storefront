@@ -64,7 +64,7 @@ export function HomeSections({ region, home, bundle, categories, slugOf }: { reg
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
                 </div>
-                <FamilyGrid entries={showcase.families} hrefBase={cityPath} cityName={showcase.city.name} />
+                <FamilyGrid entries={showcase.families} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk />
               </section>
             );
 
