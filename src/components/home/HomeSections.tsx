@@ -70,7 +70,7 @@ export function HomeSections({ region, home, bundle, categories, slugOf }: { reg
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
                 </div>
-                <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} />
+                <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk />
               </>
             );
             if (!hasImage(bg) && bg.fill.kind === "none") {

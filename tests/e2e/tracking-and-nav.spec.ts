@@ -255,6 +255,24 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
     expect(href).toMatch(/^https:\/\/www\.usesul\.com\.br\//);
   });
 
+  test("given the home's '8 jeitos' example city, when a style with no variants is clicked, then it opens the INK product directly (no storefront PDP step) and fires one GoToInk from home_styles", async ({ page }) => {
+    await grantConsent(page);
+    const calls = await withFbqMock(page);
+    await blockInkNavigation(page);
+    await page.goto("/sul");
+    const cards = page.locator("#estilos").getByRole("link", { name: /^Comprar .* na loja$/ });
+    expect(await cards.count(), "at least one style without variants links straight to INK").toBeGreaterThan(0);
+    const card = cards.first();
+    expect(await card.getAttribute("href")).toMatch(/^https:\/\/www\.usesul\.com\.br\//);
+    await card.click();
+    const goToInk = fbqCalls(calls, "GoToInk");
+    expect(goToInk).toHaveLength(1);
+    expect(goToInk[0][2]).toMatchObject({ source_section: "home_styles" });
+    // A style WITH variants keeps the internal page (there is a real choice to make there).
+    const internal = page.locator("#estilos a[href^='/sul/']");
+    for (const href of await internal.evaluateAll((els) => els.map((e) => e.getAttribute("href")))) expect(href).toMatch(/^\/sul\/[a-z]{2}\/[a-z0-9-]+\/[a-z0-9-]+$/);
+  });
+
   test("given the PDP's own buy button, when clicked, then exactly one GoToInk fires (source_section: pdp)", async ({ page }) => {
     await grantConsent(page);
     const calls = await withFbqMock(page);
@@ -575,7 +593,7 @@ test.describe("Shared consent (Meta + GA4): vendor-neutral banner, revocation st
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
     const banner = page.getByRole("region", { name: "Preferências de cookies" });
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText("Usamos cookies para melhorar sua experiência e entender como o site é utilizado");
+    await expect(banner).toContainText("Nosso site utiliza cookies para você ter uma melhor experiência. Saiba mais em nossa Política de Privacidade.");
     await expect(banner).not.toContainText(/Meta|Pixel|Google|Analytics/i);
     await expect(banner.getByRole("link", { name: "Política de Privacidade" })).toBeVisible();
     const reject = await banner.getByRole("button", { name: "Rejeitar" }).boundingBox();
