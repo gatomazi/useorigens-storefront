@@ -5,8 +5,7 @@ import { FamilyCard } from "./FamilyCard";
  * The families that really exist for a city (1 to 8), as one consistent collection: every card the same size,
  * in commercial order (families.ts) — never a bigger "featured" card (CLAUDE_STYLE_MODELS_LAYOUT_REFINEMENT.md).
  * Always a grid, on every width: 2 columns on phones, 3 from 768px, 4 from 1024px. Used on the home (one city's
- * example, `directToInk` left false — no real city was explicitly chosen there yet) and on a city's own pages
- * (`directToInk={true}` — see FamilyCard for the exact rule).
+ * example) and on a city's own pages, both with `directToInk` (see FamilyCard for the exact rule).
  */
 export function FamilyGrid({
   entries,
