@@ -354,7 +354,7 @@ export async function uploadMediaAction(fd: FormData) {
   const result = await saveUpload(Buffer.from(await file.arrayBuffer()), file.name, actor.id === "dev-local" ? null : actor.id).catch((error: unknown) => {
     // The reason is logged (never a secret: the object-store client only reports the HTTP status) and its class shown to the owner.
     console.error("[admin] media upload failed:", error instanceof Error ? `${error.name}: ${error.message}`.slice(0, 300) : "unknown");
-    return { ok: false as const, error: describeUploadFailure(error) };
+    return { ok: false as const, error: describeUploadFailure(error, process.env.BUCKET_ADDRESSING) };
   });
   revalidatePath("/admin", "layout");
   if (!result.ok) back("/admin/midia", { err: [result.error] });

@@ -96,3 +96,13 @@ describe("object store", () => {
     await expect(createObjectStore(config, recorder(404).impl).remove(key)).resolves.toBeUndefined();
   });
 });
+
+describe("failures carry the S3 error code", () => {
+  test("given a 404 NoSuchBucket XML body, when a PUT fails, then the error names the code (and nothing else from the body)", async () => {
+    const fetchImpl = (async () => new Response("<Error><Code>NoSuchBucket</Code><Message>The specified bucket does not exist secret-detail</Message></Error>", { status: 404 })) as typeof fetch;
+    const store = createObjectStore({ endpoint: "https://t3.storageapi.dev", bucket: "b", accessKeyId: "AK", secretAccessKey: "SK", region: "auto", addressing: "path" }, fetchImpl);
+    const key = `media/${"a".repeat(64)}/640.webp`;
+    await expect(store.put(key, new Uint8Array([1]), { contentType: "image/webp", cacheControl: "x" })).rejects.toThrow("object store PUT failed (404 NoSuchBucket)");
+    await expect(store.put(key, new Uint8Array([1]), { contentType: "image/webp", cacheControl: "x" })).rejects.not.toThrow(/secret-detail/);
+  });
+});
