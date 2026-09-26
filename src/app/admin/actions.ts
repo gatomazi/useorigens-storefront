@@ -304,6 +304,18 @@ export async function rollbackAction(fd: FormData) {
   back("/admin/publicar", { ok: `${scopeName(scope)}: versão ${toReleaseId} restaurada como nova publicação${platform().mode === "prod" ? "" : " no sandbox local"}.` });
 }
 
+/** Deletes ONE release from the history (owner only, explicit confirmation). Never the live one; audited. The database migration 0003 allows it. */
+export async function deleteReleaseAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const id = text(fd, "release");
+  if (text(fd, "confirmDelete") !== "on") back("/admin/publicar", { err: [`Marque a confirmação para apagar a release ${id}.`] });
+  const result = await platform().releases.remove(id);
+  revalidatePath("/admin", "layout");
+  if (!result.ok) back("/admin/publicar", { err: [result.error] });
+  await audit(actor, "release.delete", "global", id);
+  back("/admin/publicar", { ok: `Release ${id} apagada do histórico.` });
+}
+
 export async function reconcileAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const done = await reconcileReleases(deps(actor), revalidateStorefront);

@@ -133,3 +133,10 @@ Rollback rápido: `SITE_CONFIG_HOME=off` → **Restaurar versão** → apagar `A
 - Norte e Centro-Oeste são editáveis no painel (seletor de região no topo) e **só ficam públicas** quando o owner usa **Publicar → Lançar <região> ao público**, com a flag `SITE_CONFIG_HOME` ligada e o catálogo da loja INK da região sincronizado (cobertura ≥ 50% das cidades). **Recolher** volta à prévia (404 público). Ambos são publicações da região, reversíveis, sem efeito nas outras regiões nem no catálogo.
 - Tracking em `/admin/tracking`: global (owner) e por região; Meta e GA4 independentes; salvar = rascunho; publicar exige confirmar os IDs efetivos quando eles mudam. Sul usa os IDs do build ("legado") até uma escolha explícita; Norte/Centro começam sem rastreamento.
 - Sem migração de banco nesta rodada. Detalhes e roteiro: [`cms-v1-round8-regions-tracking.md`](cms-v1-round8-regions-tracking.md).
+
+
+## Histórico de versões: ordem, paginação e exclusão (migration 0003)
+
+- A lista de versões da tela Publicar é paginada (10 por página) e ordenada pelo número da release (a ordenação antiga tratava o número como texto e colocava #9 antes de #10). A versão "No ar" vem do ponteiro de cabeça do banco, não da posição na lista.
+- O owner pode **apagar** uma versão do histórico (botão Apagar, com confirmação). Nunca a que está no ar nem uma publicação em andamento. Apagar tira a versão da lista de restauração; a ordem e o conteúdo das demais não mudam.
+- Isso exige a **migration `0003_release_delete`** no banco de produção (troca a regra "append-only" por "só não pode apagar a versão no ar", com `on delete set null` nos ponteiros de pai e de base do rascunho). Passos, como nas anteriores: `railway ssh` no serviço da loja e `node db/db-cli.mjs status` (deve listar `0003_release_delete` pendente), depois `node db/db-cli.mjs migrate`. **Só com sua autorização.** Antes da migration, o botão Apagar responde que a migration está pendente e nada é apagado.

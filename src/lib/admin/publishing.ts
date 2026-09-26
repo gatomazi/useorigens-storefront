@@ -1,5 +1,5 @@
 import "server-only";
-import { readFile } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { bundleChecksum } from "../site-config/checksum";
 import { publish, reconcile, type FileState, type PublishOutcome, type PublishPorts, type ReleaseRecord } from "../site-config/publish-flow";
@@ -233,9 +233,24 @@ export function fileReleaseStore(ledgerPath: string, historyDir: string): Releas
       const bundle = record ? await readJson<PublishedBundle>(bundleFile(record.id)) : null;
       return record && bundle ? { record, bundle } : null;
     },
-    async list(limit) {
-      return (await read()).releases.slice().reverse().slice(0, limit).map(view);
+    async list(limit, offset = 0) {
+      return (await read()).releases.slice().reverse().slice(offset, offset + limit).map(view);
     },
+    async count() {
+      return (await read()).releases.length;
+    },
+    remove: (id) =>
+      withLock(async () => {
+        const ledger = await read();
+        const release = ledger.releases.find((r) => r.id === id);
+        if (!release) return { ok: false as const, error: "versão não encontrada" };
+        if (ledger.headId === id) return { ok: false as const, error: "a versão que está no ar não pode ser apagada" };
+        if (release.status === "pending") return { ok: false as const, error: "há uma publicação em andamento com esta versão" };
+        ledger.releases = ledger.releases.filter((r) => r.id !== id);
+        await writeJsonAtomic(ledgerPath, ledger);
+        await rm(bundleFile(id), { force: true });
+        return { ok: true as const };
+      }),
     async reconcileState() {
       const ledger = await read();
       return { head: ledger.releases.find((r) => r.id === ledger.headId) ?? null, pending: ledger.releases.filter((r) => r.status === "pending"), headRevalidated: ledger.headRevalidated };
