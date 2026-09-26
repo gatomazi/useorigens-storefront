@@ -5,7 +5,7 @@ import { bundleChecksum } from "../site-config/checksum";
 import { publish, reconcile, type FileState, type PublishOutcome, type PublishPorts, type ReleaseRecord } from "../site-config/publish-flow";
 import { resolveTracking, type TrackingOrigin } from "../site-config/resolve";
 import { mediaRefsOfDoc, validateBundle, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "../site-config/schema";
-import { pageAsHomeDoc, pageHref } from "../site-config/pages";
+import { pageAsHomeDoc } from "../site-config/pages";
 import { buildSeedBundle } from "../site-config/seed";
 import { readJson, withLock, writeJsonAtomic } from "./local-store";
 import { collectionProblems, customizerProblems, readabilityProblems } from "./validate-draft";

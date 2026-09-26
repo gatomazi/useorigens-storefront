@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { saveSection, searchHeroProductsAction } from "@/app/admin/actions";
+import { pageOptions } from "@/lib/admin/pages-view";
+import { platform } from "@/lib/admin/platform";
 import { eligibleFeaturedCount, legacyFeaturedRefs, resolveFeatured } from "@/lib/hero-featured";
 import { REGIONS, STATE_NAMES } from "@/lib/geo/regions";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
@@ -60,7 +62,7 @@ export default async function EditSection({ params, searchParams }: { params: Pr
       <Flash ok={sp.ok} err={sp.err} />
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,34rem)_1fr]">
         <section className="a-card p-5" aria-label="Editor da seção">
-          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={structured?.notes} featured={featured} stateCovers={stateCovers} />
+          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={structured?.notes} featured={featured} stateCovers={stateCovers} pages={pageOptions(ws.doc, (await platform().files.read())?.docs[scope] ?? ws.baseDoc)} customizers={(ws.doc.customizers ?? []).map((m) => ({ id: m.id, name: m.name, active: m.active, live: Boolean(ws.baseDoc.customizers?.some((x) => x.id === m.id)) }))} anchors={(ws.doc.home?.sections ?? []).map((x) => ({ anchor: x.anchor, label: x.title?.replace(/\n/g, " ") ?? x.anchor }))} />
         </section>
         <section className="a-card p-5 2xl:sticky 2xl:top-4 2xl:self-start" aria-label="Pré-visualização">
           <PreviewFrame version={ws.record?.rev ?? 0} anchor={anchor} height={760} />

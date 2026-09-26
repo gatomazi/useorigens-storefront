@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 const ITEMS = [
   { href: "/admin", label: "Visão geral" },
   { href: "/admin/home", label: "Home · Seções" },
+  { href: "/admin/paginas", label: "Páginas" },
+  { href: "/admin/personalizacao", label: "Personalização" },
   { href: "/admin/colecoes", label: "Coleções" },
   { href: "/admin/tracking", label: "Tracking" },
   { href: "/admin/publicar", label: "Publicar" },
