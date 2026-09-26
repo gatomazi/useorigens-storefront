@@ -16,7 +16,12 @@ export const LEGACY_STORE_URLS = {
   "centro-oeste": "https://www.usecentro.com.br",
 } as const;
 
-export const INSTAGRAM_URL = "https://www.instagram.com/usesul.oficial";
+/** Each store has its own Instagram account (taken from the stores' own sites). */
+export const INSTAGRAM_URLS = {
+  sul: "https://www.instagram.com/usesul.oficial",
+  norte: "https://www.instagram.com/usenorte.oficial",
+  "centro-oeste": "https://www.instagram.com/usecentro.oficial",
+} as const;
 
 /** Curated, deterministic showcase per region. Every entry is validated against real data at render time. */
 export const SHOWCASE: Readonly<Record<RegionSlug, { hero: [uf: string, slug: string]; wall: [uf: string, slug: string][] }>> = {

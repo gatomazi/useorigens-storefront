@@ -254,10 +254,13 @@ async function regionsScenario() {
     const heroCards = (heroHtml.match(/href="\/[a-z-]+\/[a-z]{2}\/[a-z0-9-]+\/[a-z-]+"/g) ?? []).filter((x) => x.includes(`/${region}/`));
     if (region === "norte") check(`/${region}: the hero shows exactly its two configured cards (own store, in-region links), in a two-column grid`, heroCards.length === 2 && heroHtml.includes("md:grid-cols-2") && !heroHtml.includes("usesul.com.br"), { cards: heroCards.length });
     else check(`/${region}: an uncustomised hero shows no cards and nothing from Sul`, heroCards.length === 0 && !/href="\/sul\//.test(heroHtml), { cards: heroCards.length }); // (the fixture clones the Sul hero background; only links matter)
+    const instagram = region === "norte" ? "usenorte.oficial" : "usecentro.oficial";
+    check(`/${region}: the footer links to THIS store's Instagram, not Sul's`, html.includes(`instagram.com/${instagram}`) && !html.includes("instagram.com/usesul.oficial"));
     check(`/${region}/privacidade -> 200`, (await fetch(`${base}/${region}/privacidade`)).status === 200);
     check(`/api/cidades/${region} -> 200 with cities`, (await (await fetch(`${base}/api/cidades/${region}`)).text()).length > 100);
   }
   const sulAgain = await (await fetch(`${base}/sul`)).text();
+  check("Sul keeps its own Instagram in the footer", sulHome.includes("instagram.com/usesul.oficial"));
   check("Sul is unchanged by the launch of the other regions (same sections, still its own store)", JSON.stringify(sectionIds(sulAgain)) === JSON.stringify(sectionIds(sulHome)) && !sulAgain.includes("usenorte.com.br/usenorte/product"));
   check("Sul now links to the launched regions on this site (not to the legacy INK stores)", sulAgain.includes('href="/norte"') && sulAgain.includes('href="/centro-oeste"'));
   const notLaunched = launchedBundle();
