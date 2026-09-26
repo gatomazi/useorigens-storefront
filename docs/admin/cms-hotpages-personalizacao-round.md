@@ -1,5 +1,7 @@
 # CMS: hotpages, categorias-pai e personalização
 
+> **Parcialmente substituído** por [`cms-hotpages-personalizacao-release-gate.md`](cms-hotpages-personalizacao-release-gate.md): o fluxo definitivo não tem vínculo com pedido da INK. Onde este relatório fala de "Vincular pedido", estados "vinculada"/"concluída", `CUSTOMIZATION_HANDOFF` ou "produto de destino" do modelo, vale o release gate (esses itens foram removidos do produto; o histórico foi preservado).
+
 Rodada local e autônoma. **Nada foi enviado**: sem push, merge, PR, deploy, migração real, mudança no Railway, DNS, Worker, loja INK, tracking ou políticas. A migration `0004` foi escrita e validada só em Postgres local (PGlite); não foi aplicada em nenhum ambiente.
 
 > As duas imagens de referência do pacote **não estavam disponíveis** nesta sessão. Os mockups dos testes e das capturas são placeholders neutros (imagens pretas). Troque pelos mockups reais em Mídia; nenhuma linha de código depende deles.
