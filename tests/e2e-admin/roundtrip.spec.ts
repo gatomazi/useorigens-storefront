@@ -191,3 +191,23 @@ test("given a dev-only upload, when a hostile or oversized file is sent, then it
   expect((await page.request.get("/admin/media/../../etc/passwd")).status()).toBe(404);
   expect((await page.request.get("/admin/media/zzzzzzzzzzzzzzzzzzzzzzzz.webp")).status()).toBe(404);
 });
+
+test("given several pictures at once, when sent, then each is uploaded on its own with its own result, a wide one is shrunk in the browser and a bad one fails alone", async ({ page }) => {
+  const { default: sharp } = await import("sharp");
+  const solid = (r: number, g: number, b: number, width = 64, height = 48) => sharp({ create: { width, height, channels: 3, background: { r, g, b } } }).png().toBuffer();
+  const files = [
+    { name: "verde.png", mimeType: "image/png", buffer: await solid(20, 120, 60) },
+    { name: "larga demais.png", mimeType: "image/png", buffer: await solid(200, 30, 30, 3400, 400) }, // long side above 3000 px: shrunk by the browser
+    { name: "quebrada.png", mimeType: "image/png", buffer: Buffer.from("not an image") },
+    { name: "azul.png", mimeType: "image/png", buffer: await solid(30, 40, 200) },
+  ];
+  await open(page, "/admin/midia");
+  await page.locator('input[type="file"]').setInputFiles(files);
+  await page.getByRole("button", { name: "Enviar", exact: true }).click();
+  const results = page.getByRole("status", { name: "Resultado do envio" });
+  await expect(results.getByText("Enviada", { exact: true })).toHaveCount(3, { timeout: 180_000 });
+  await expect(results.getByText("Falhou", { exact: true })).toHaveCount(1);
+  await expect(results.locator("li", { hasText: "quebrada.png" })).toContainText(/não foi possível ler a imagem|formato não permitido/);
+  await expect(results.locator("li", { hasText: "larga demais.png" })).toContainText("reduzida no navegador");
+  await expect(page.locator('li img[src^="/admin/media/"]')).not.toHaveCount(0); // the library shows what was stored
+});

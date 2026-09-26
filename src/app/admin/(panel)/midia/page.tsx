@@ -1,5 +1,6 @@
 import { deleteMediaAction, uploadMediaAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
+import { MediaUploader } from "@/components/admin/MediaUploader";
 import { canUpload, listMedia, MAX_UPLOAD_BYTES } from "@/lib/admin/media";
 import { platform } from "@/lib/admin/platform";
 import { requireAdmin } from "@/lib/admin/auth/guard";
@@ -21,13 +22,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
       </div>
       <Flash ok={sp.ok} err={sp.err} />
       {uploads ? (
-        <form action={uploadMediaAction} encType="multipart/form-data" className="a-card grid gap-4 p-5 md:grid-cols-[1fr_auto] md:items-end">
-          <div>
-            <label className="a-label" htmlFor="file">Enviar imagem (PNG, JPEG, WebP ou AVIF, até {MAX_UPLOAD_BYTES / 1024 / 1024} MB, 6000 px)</label>
-            <input id="file" name="file" type="file" accept="image/png,image/jpeg,image/webp,image/avif" className="a-input" required />
-          </div>
-          <button type="submit" className="a-btn">Enviar</button>
-        </form>
+        <MediaUploader action={uploadMediaAction} maxMb={MAX_UPLOAD_BYTES / 1024 / 1024} />
       ) : (
         <p className="a-flash err">O envio de imagens ainda não está configurado neste ambiente (falta o Bucket do Railway: variáveis BUCKET_*). Você pode usar os banners do projeto.</p>
       )}

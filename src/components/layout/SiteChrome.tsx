@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
-import { INSTAGRAM_URL, LEGACY_STORE_URLS } from "@/lib/site";
+import { INSTAGRAM_URLS, LEGACY_STORE_URLS } from "@/lib/site";
 
 /** Another region: this site's own page once that region is publicly launched, otherwise the legacy INK store it has always linked to. */
 const otherRegionHref = (slug: RegionSlug, launched: readonly RegionSlug[]): string => (launched.includes(slug) ? `/${slug}` : LEGACY_STORE_URLS[slug]);
@@ -170,7 +170,7 @@ export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: str
               </a>
             </li>
             <li>
-              <a href={INSTAGRAM_URL} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]" rel="noopener">
+              <a href={INSTAGRAM_URLS[region]} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]" rel="noopener">
                 Instagram
               </a>
             </li>
