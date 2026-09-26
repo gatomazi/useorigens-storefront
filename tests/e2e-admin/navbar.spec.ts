@@ -18,6 +18,11 @@ test("given the local CMS, when a public collection is shown in the INK navbar a
   expect((await navbar(page)).collections, "nothing configured: empty list, never an error").toEqual([]);
 
   await open(page, "/admin/colecoes?q=seu+lugar");
+  // The library says whether the text search covers the collections completely (needs a collections resync otherwise).
+  const coverage = page.getByTestId("search-coverage");
+  await expect(coverage).toContainText("Busca do site por nome de coleção");
+  if (process.env.EXPECT_SEARCH_COVERAGE === "complete") await expect(coverage).not.toContainText("parcial");
+  if (process.env.EXPECT_SEARCH_COVERAGE === "partial") await expect(coverage).toContainText("sincronize as coleções");
   const seuLugar = row(page, "Seu Lugar");
   await expect(seuLugar, "no synced collections: run `npm run collections:sync` first").toHaveCount(1);
   await expect(seuLugar).toContainText("Pública");

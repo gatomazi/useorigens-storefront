@@ -35,6 +35,12 @@ export type CollectionRecord = {
   cityDesignCount: number;
   /** The first matched ids, in the order INK returned them (at most MAX_STORED_MEMBERS). Not "best sellers", not "newest". */
   memberIds: string[];
+  /**
+   * EVERY matched id (de-duplicated, INK order), stored ONLY for PUBLIC collections: the text search lists a collection's products when its name is
+   * searched, and the 48 above are a showcase slice, not the membership. Present ⇒ the search by collection name is complete for it (`searchMembers`).
+   * Absent on records written before this field existed (and on internal collections, which are never searched): they need a collections resync.
+   */
+  searchMemberIds?: string[];
   /** Set on records migrated from the v1 file, which dropped the members of hidden collections and all city designs: needs a resync. */
   needsResync?: true;
 };
@@ -58,8 +64,9 @@ const SLUG = /^[a-z0-9][a-z0-9-]{0,80}$/;
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 
-/** Which of a collection's ids exist in the store's catalog, and the first ones in INK's order. Injected so parsing never needs the catalog. */
-export type IdMatcher = (ids: readonly string[]) => { members: string[]; matched: number; merch: number; cityDesigns: number };
+/** Which of a collection's ids exist in the store's catalog, and the first ones in INK's order. Injected so parsing never needs the catalog.
+ * `keepAll` also returns every matched id (`all`); asked only for public collections so a 100k-id internal segmentation is never held in the file. */
+export type IdMatcher = (ids: readonly string[], options?: { keepAll?: boolean }) => { members: string[]; matched: number; merch: number; cityDesigns: number; all?: string[] };
 
 /**
  * Validates ONE page of `GET /v1/stores/collections` and reduces every collection immediately (the raw `product_ids` array is dropped as
@@ -85,7 +92,7 @@ export function parseCollectionsPage(raw: unknown, match: IdMatcher): Parsed<{ c
     if (c.is_available !== null && typeof c.is_available !== "boolean") return { ok: false, error: `collections[${i}].is_available` };
     if (!Array.isArray(c.product_ids) || c.product_ids.some((p) => typeof p !== "number")) return { ok: false, error: `collections[${i}].product_ids` };
     const ids = (c.product_ids as number[]).map(String);
-    const matched = match(ids);
+    const matched = match(ids, { keepAll: c.is_available === true });
     out.push({
       id: c.id,
       name: c.name,
@@ -97,6 +104,7 @@ export function parseCollectionsPage(raw: unknown, match: IdMatcher): Parsed<{ c
       merchCount: matched.merch,
       cityDesignCount: matched.cityDesigns,
       memberIds: matched.members,
+      ...(matched.all ? { searchMemberIds: matched.all } : {}),
     });
   }
   return { ok: true, value: { collections: out, page: page as number, totalPages: totalPages as number, totalCount: totalCount as number } };
@@ -106,8 +114,9 @@ export function parseCollectionsPage(raw: unknown, match: IdMatcher): Parsed<{ c
 export function matcherForStore(index: { bindings: readonly { inkProductId: string }[]; merch: readonly { inkProductId: string }[] }): IdMatcher {
   const cityDesigns = new Set(index.bindings.map((b) => b.inkProductId));
   const merch = new Set(index.merch.map((m) => m.inkProductId));
-  return (ids) => {
+  return (ids, options) => {
     const members: string[] = [];
+    const all: string[] | undefined = options?.keepAll ? [] : undefined;
     let merchCount = 0;
     let cityCount = 0;
     const seen = new Set<string>();
@@ -118,8 +127,9 @@ export function matcherForStore(index: { bindings: readonly { inkProductId: stri
       else if (cityDesigns.has(id)) cityCount++;
       else continue;
       if (members.length < MAX_STORED_MEMBERS) members.push(id);
+      all?.push(id);
     }
-    return { members, matched: merchCount + cityCount, merch: merchCount, cityDesigns: cityCount };
+    return { members, matched: merchCount + cityCount, merch: merchCount, cityDesigns: cityCount, ...(all ? { all } : {}) };
   };
 }
 
@@ -211,6 +221,24 @@ export function collectionState(record: CollectionRecord, enabledInternal: Reado
   if (!reason && !eligible) reason = "too-few-products";
   if (!reason && !enabled) reason = "not-enabled";
   return { visibility, enabled, eligible, selectable: enabled && eligible, reason };
+}
+
+/**
+ * The COMPLETE membership of a collection for the text search, or null when it is not known completely. Complete means: a stored full list whose size
+ * equals the matched count, or a short collection whose showcase slice already is everything (`memberIds.length === matchedCount`, ≤ 48). Anything else
+ * is a truncated slice: the search must not list it by name (it would return an arbitrary subset and a misleading total).
+ */
+export function searchMembers(record: CollectionRecord): readonly string[] | null {
+  if (record.needsResync || record.matchedCount === 0) return null;
+  if (record.searchMemberIds !== undefined) return Array.isArray(record.searchMemberIds) && record.searchMemberIds.length === record.matchedCount && record.searchMemberIds.every((id) => typeof id === "string") ? record.searchMemberIds : null;
+  return record.memberIds.length === record.matchedCount ? record.memberIds : null;
+}
+
+/** For the admin: how many public collections the search covers completely, and which ones still need a collections resync. Pure. */
+export function searchCoverage(records: readonly CollectionRecord[]): { complete: number; partial: string[] } {
+  const publicWithProducts = records.filter((r) => r.isAvailable && r.matchedCount > 0);
+  const partial = publicWithProducts.filter((r) => searchMembers(r) === null).map((r) => r.name);
+  return { complete: publicWithProducts.length - partial.length, partial };
 }
 
 export function isCollectionsSnapshotShape(value: unknown): boolean {

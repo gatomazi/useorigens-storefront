@@ -3,6 +3,7 @@ import { cityById } from "../geo/cities";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
 import { prepareDocs, type PreparedDoc, type SearchDoc } from "../search/catalog-search";
 import { purchaseUrl } from "./commerce";
+import { searchMembers, type CollectionRecord } from "./collections";
 import { getStoreCollections } from "./collections-file";
 import { DESIGN_FAMILIES, variantLabel } from "./families";
 import { getCatalog, type Catalog } from "./repository";
@@ -19,13 +20,14 @@ import type { CityDesignBinding } from "./types";
  */
 const familyById = new Map(DESIGN_FAMILIES.map((f) => [f.id, f]));
 
-/** Product id -> names of the PUBLIC INK collections it belongs to. Only collections whose membership is stored COMPLETELY count: the snapshot keeps the
- * first 48 members of a collection, so matching a bigger one by name would return an arbitrary slice and a misleading total. */
-function collectionNamesByProduct(region: RegionSlug): Map<string, string[]> {
+/** Product id -> names of the PUBLIC INK collections it belongs to, from each collection's COMPLETE membership (`searchMembers`). A collection whose
+ * membership is only a truncated slice (a snapshot from before the full lists were stored) is skipped rather than matched by name: it would return an
+ * arbitrary subset with a misleading total. `searchCoverage` tells the admin which ones need a collections resync. */
+export function collectionNamesByProduct(records: readonly CollectionRecord[]): Map<string, string[]> {
   const out = new Map<string, string[]>();
-  for (const record of getStoreCollections(REGIONS[region].storeKey)?.collections ?? []) {
-    if (!record.isAvailable || record.needsResync || record.memberIds.length === 0 || record.memberIds.length !== record.matchedCount) continue;
-    for (const id of record.memberIds) out.set(id, [...(out.get(id) ?? []), record.name]);
+  for (const record of records) {
+    if (!record.isAvailable) continue;
+    for (const id of searchMembers(record) ?? []) out.set(id, [...(out.get(id) ?? []), record.name]);
   }
   return out;
 }
@@ -56,8 +58,9 @@ function cityDoc(binding: CityDesignBinding, tier: number, collections: Map<stri
   };
 }
 
-function build(catalog: Catalog, region: RegionSlug): PreparedDoc[] {
-  const collections = collectionNamesByProduct(region);
+/** Pure given its inputs (the catalog and the region's collection records), so the coverage rules are unit-tested without files. */
+export function buildSearchDocs(catalog: Catalog, region: RegionSlug, collectionRecords: readonly CollectionRecord[]): PreparedDoc[] {
+  const collections = collectionNamesByProduct(collectionRecords);
   const docs: SearchDoc[] = [];
   const seen = new Set<string>();
   const push = (doc: SearchDoc | null) => {
@@ -104,10 +107,10 @@ const cache = new Map<RegionSlug, { catalog: Catalog; collectionsKey: string; do
 export function regionSearchDocs(region: RegionSlug): PreparedDoc[] {
   const catalog = getCatalog();
   const store = getStoreCollections(REGIONS[region].storeKey);
-  const collectionsKey = store ? `${store.syncedAt}:${store.collections.length}` : "none";
+  const collectionsKey = store ? `${store.syncedAt}:${store.collections.length}` : "none"; // a collections resync rewrites syncedAt
   const hit = cache.get(region);
   if (hit && hit.catalog === catalog && hit.collectionsKey === collectionsKey) return hit.docs;
-  const docs = build(catalog, region);
+  const docs = buildSearchDocs(catalog, region, store?.collections ?? []);
   cache.set(region, { catalog, collectionsKey, docs });
   return docs;
 }

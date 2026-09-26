@@ -3,6 +3,7 @@ import { setCollectionEnabledAction, setCollectionNavbarAction, syncCatalogActio
 import { Flash } from "@/components/admin/Flash";
 import { LibrarySearch } from "@/components/admin/LibrarySearch";
 import { libraryEntries, type LibraryEntry } from "@/lib/catalog/collection-source";
+import { searchCoverage } from "@/lib/catalog/collections";
 import { getCollections } from "@/lib/catalog/collections-file";
 import { searchCollections } from "@/lib/admin/collection-search";
 import { requireAdmin } from "@/lib/admin/auth/guard";
@@ -54,6 +55,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
   const synced = file.stores[store.key];
   const all = libraryEntries(store.key as CommerceStoreKey, enabled);
   const legacy = all.some((e) => e.needsResync);
+  const coverage = searchCoverage(synced?.collections ?? []);
   const ageDays = synced ? daysSince(synced.syncedAt) : 0;
   const catalogInfo = snapshotStatus().stores.find((c) => c.storeKey === store.key);
   const currentCatalog = catalogInfo?.syncedAt;
@@ -105,6 +107,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
             <ul className="mt-3 space-y-1">
               <li>{synced.collections.length} coleções sincronizadas ({counts.public} públicas utilizáveis)</li>
               <li>{counts.internalTotal} internas · <strong>{counts.internalEnabled} habilitadas</strong> · {counts.internal} utilizáveis agora</li>
+              <li data-testid="search-coverage">Busca do site por nome de coleção: <strong>{coverage.complete} coleção(ões) públicas completas</strong>{coverage.partial.length > 0 && <span className="a-badge warn ml-2" title={coverage.partial.join(", ")}>{coverage.partial.length} parcial(is): sincronize as coleções</span>}</li>
               <li className="a-muted">Catálogo de referência: {new Date(synced.catalogSyncedAt).toLocaleDateString("pt-BR")}. Contagens = produtos publicados desta loja, não o total bruto da INK.</li>
               <li>Última sincronização: <strong>{new Date(synced.syncedAt).toLocaleString("pt-BR")}</strong> ({ageDays === 0 ? "hoje" : `há ${ageDays} dia(s)`}){staleReason && <span className="a-badge warn ml-2">{staleReason}</span>}</li>
             </ul>
