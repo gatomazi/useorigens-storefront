@@ -34,7 +34,7 @@ function headerDoc(region: RegionSlug) {
 }
 
 function navItems(region: RegionSlug): NavItem[] {
-  return headerLinks(headerDoc(region)).map((l) => ({ label: l.label, href: `/${region}#${l.anchor}` }));
+  return headerLinks(headerDoc(region)).map((l) => ({ label: l.label, href: l.href ? l.href(region) : `/${region}#${l.anchor}` }));
 }
 
 export function Header({ region }: { region: RegionSlug }) {

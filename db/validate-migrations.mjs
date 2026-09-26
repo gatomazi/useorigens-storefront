@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync", "0003_release_delete"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -102,6 +102,17 @@ await rejects("a finished sync without finished_at", `update sync_run set status
 await accepts("a sync finishes", `update sync_run set status='succeeded', finished_at=now() where kind='collections'`);
 await accepts("a new collections sync after the previous finished", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await accepts("audit for the new action", `insert into audit_log (actor,action) values ('system','collections.sync')`);
+const REQ = (id, key, tok, extra = "") => [`insert into customization_request (id, token_hash, region, customizer_id, customizer_slug, customizer_name, customizer_version, snapshot, request_values, idempotency_key, expires_at${extra ? ", " + extra.split("=")[0] : ""}) values ($1,$2,'sul','cz-1','pai','Pai',1,'{}'::jsonb,'{}'::jsonb,$3, now() + interval '30 days'${extra ? ", " + extra.split("=")[1] : ""})`, [id, tok, key]];
+await accepts("a customization request (0004)", ...REQ("01J00000000000000000000A01", "k".repeat(20), "a".repeat(64)));
+await rejects("the same idempotency key twice in a region (a double click)", ...REQ("01J00000000000000000000A02", "k".repeat(20), "b".repeat(64)));
+await rejects("a token stored in clear (not a sha256)", ...REQ("01J00000000000000000000A03", "m".repeat(20), "plain-reference"));
+await rejects("an order number with markup", `update customization_request set order_store='use-sul', order_number='<script>', status='linkedToInkOrder' where id='01J00000000000000000000A01'`);
+await rejects("an order without its store", `update customization_request set order_number='INK-1001' where id='01J00000000000000000000A01'`);
+await rejects("linked status without an order", `update customization_request set status='linkedToInkOrder' where id='01J00000000000000000000A01'`);
+await accepts("linking a real-looking order (0004)", `update customization_request set order_store='use-sul', order_number='INK-1001', status='linkedToInkOrder' where id='01J00000000000000000000A01'`);
+await accepts("a second request to link", ...REQ("01J00000000000000000000A04", "n".repeat(20), "d".repeat(64)));
+await rejects("the same INK order on two requests", `update customization_request set order_store='use-sul', order_number='INK-1001', status='linkedToInkOrder' where id='01J00000000000000000000A04'`);
+await accepts("audit for the new actions (0004)", `insert into audit_log (actor,action) values ('system','request.link')`);
 await db.close();
 console.log(failures === 0 ? "\nRESULT: ALL CHECKS PASSED" : `\nRESULT: ${failures} FAILED`);
 process.exit(failures === 0 ? 1 - 1 : 1);

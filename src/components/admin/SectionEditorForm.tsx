@@ -47,9 +47,41 @@ function FocalPad({ label, image, x, y, onChange }: { label: string; image?: Med
   );
 }
 
+function PagePicker({ pages, current }: { pages: { value: string; label: string; live: boolean }[]; current: string }) {
+  return (
+    <div>
+      <label className="a-label" htmlFor="cta_page">Página</label>
+      <select id="cta_page" name="cta_page" className="a-select" defaultValue={current} required>
+        <option value="" disabled>Escolha…</option>
+        {pages.map((p) => <option key={p.value} value={p.value}>{p.label}{p.live ? "" : " (ainda não publicada)"}</option>)}
+      </select>
+      <p className="a-muted mt-1 text-[0.8125rem]">Só é possível publicar este link quando a página escolhida já estiver publicada e ativa.</p>
+    </div>
+  );
+}
+function AnchorPicker({ anchors, current }: { anchors: { anchor: string; label: string }[]; current: string }) {
+  return (
+    <div>
+      <label className="a-label" htmlFor="cta_anchor">Seção</label>
+      <select id="cta_anchor" name="cta_anchor" className="a-select" defaultValue={current} required>
+        <option value="" disabled>Escolha…</option>
+        {anchors.map((a) => <option key={a.anchor} value={a.anchor}>{a.label}</option>)}
+      </select>
+    </div>
+  );
+}
+
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [], featured, stateCovers,
+  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pages = [], customizers = [], anchors = [],
 }: {
+  /** Set when the section belongs to a PAGE (hotpage / landing) instead of the home: the id of the page. */
+  page?: string;
+  /** Pages of this region a button may lead to: value `hotpage/slug`, with a status the editor should know. */
+  pages?: { value: string; label: string; live: boolean }[];
+  /** Personalization models of this region (for the reserved first card). */
+  customizers?: { id: string; name: string; live: boolean; active: boolean }[];
+  /** Anchors of this container's sections (for "an anchor on this page"). */
+  anchors?: { anchor: string; label: string }[];
   /** State chooser only: the region's states with the cover the code already has for them (Sul), to explain what an empty choice means. */
   stateCovers?: { uf: string; name: string; legacy: boolean }[];
   /** Hero only: the configured cards as resolved against the region's catalog. */
@@ -65,9 +97,9 @@ export function SectionEditorForm({
 }) {
   const a: Appearance = section.appearance;
   const isCarousel = section.template === "product-carousel";
-  const hasVisual = isCarousel || section.template === "hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states";
+  const hasVisual = isCarousel || section.template === "hero" || section.template === "page-hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states";
 
-  const [tone, setTone] = useState<"light" | "dark">(isCarousel ? section.layout?.tone ?? "light" : section.template === "campaign" ? "dark" : "light");
+  const [tone, setTone] = useState<"light" | "dark">(isCarousel ? section.layout?.tone ?? "light" : section.template === "campaign" ? "dark" : section.template === "page-hero" ? section.layout?.tone ?? "dark" : "light");
   const [fillKind, setFillKind] = useState<"none" | "solid" | "gradient">(a.fill.kind);
   const initialChoice = a.fill.kind === "solid" ? (a.fill.color.startsWith("token:") ? a.fill.color : "custom") : "token:ground";
   const [choice, setChoice] = useState<string>(initialChoice);
@@ -93,6 +125,7 @@ export function SectionEditorForm({
 
   const [navShow, setNavShow] = useState(Boolean(section.nav));
   const [navLabel, setNavLabel] = useState(section.nav?.label ?? suggestedNavLabel(section));
+  const [ccShow, setCcShow] = useState(Boolean(section.customizerCard));
   const byId = useMemo(() => new Map(media.map((m) => [m.assetId, m])), [media]);
   const hasImage = Boolean(imgM || imgD);
 
@@ -109,6 +142,7 @@ export function SectionEditorForm({
       <input type="hidden" name="rev" value={rev ?? "null"} />
       <input type="hidden" name="scope" value={scope} />
       <input type="hidden" name="id" value={section.id} />
+      {page && <><input type="hidden" name="page" value={page} /><input type="hidden" name="page_scope" value="1" /></>}
 
       <fieldset className="space-y-4">
         <legend className="a-h2 mb-3">Conteúdo</legend>
@@ -164,7 +198,54 @@ export function SectionEditorForm({
 
       {section.template === "hero" && featured && <HeroFeaturedProducts scope={scope} regionName={featured.regionName} mode={featured.mode} initial={featured.initial} eligible={featured.eligible} search={featured.search} />}
 
-      {section.template === "campaign" && (
+      {section.template === "page-hero" && (
+        <fieldset className="space-y-3">
+          <legend className="a-h2 mb-3">Cor do texto</legend>
+          <select name="layout_tone" className="a-select max-w-xs" value={tone} onChange={(e) => setTone(e.target.value as "light" | "dark")} aria-label="Cor do texto">
+            <option value="dark">Texto claro (sobre fundo escuro)</option>
+            <option value="light">Texto escuro (sobre fundo claro)</option>
+          </select>
+        </fieldset>
+      )}
+
+      {isCarousel && (
+        <fieldset className="space-y-4">
+          <legend className="a-h2 mb-3">Primeiro card personalizável</legend>
+          <input type="hidden" name="cc_present" value="1" />
+          <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="cc_show" checked={ccShow} onChange={(e) => setCcShow(e.target.checked)} /> Destacar um produto personalizável como primeiro card</label>
+          <p className="a-muted text-[0.875rem]">O primeiro card fica sempre na posição 1, na mesma família visual dos produtos, e leva à página de personalização desta região (não abre o checkout da INK). A seção continua com o mesmo total de cards: 1 personalizável + os demais produtos.</p>
+          {ccShow && (
+            <div className="space-y-4">
+              <div>
+                <label className="a-label" htmlFor="cc_customizer">Modelo de personalização (desta região)</label>
+                <select id="cc_customizer" name="cc_customizer" className="a-select" defaultValue={section.customizerCard?.customizerId ?? ""} required>
+                  <option value="" disabled>Escolha…</option>
+                  {customizers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.live ? "" : " (ainda não publicado)"}{c.active ? "" : " (desativado)"}</option>)}
+                </select>
+                {customizers.length === 0 && <p className="a-flash err mt-2 text-[0.875rem]">Esta região ainda não tem modelos. Cadastre em Personalização.</p>}
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div><label className="a-label" htmlFor="cc_title">Título do card</label><input id="cc_title" name="cc_title" defaultValue={section.customizerCard?.title ?? "Personalize a sua nesse modelo"} className="a-input" maxLength={60} required /></div>
+                <div><label className="a-label" htmlFor="cc_button">Texto do botão</label><input id="cc_button" name="cc_button" defaultValue={section.customizerCard?.button ?? "Personalizar"} className="a-input" maxLength={24} required /></div>
+              </div>
+              <div><label className="a-label" htmlFor="cc_description">Descrição curta (opcional)</label><input id="cc_description" name="cc_description" defaultValue={section.customizerCard?.description ?? "Escolha as palavras que contam sua história"} className="a-input" maxLength={120} /></div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="a-label" htmlFor="cc_image">Imagem do card (mockup próprio da estampa)</label>
+                  <select id="cc_image" name="cc_image" className="a-select" defaultValue={section.customizerCard?.image?.assetId ?? ""}>
+                    <option value="">Usar a imagem do modelo</option>
+                    {media.some((m) => m.kind === "upload") && <optgroup label="Enviadas">{media.filter((m) => m.kind === "upload").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
+                    <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label}</option>)}</optgroup>
+                  </select>
+                </div>
+                <div><label className="a-label" htmlFor="cc_alt">Descrição da imagem (acessibilidade)</label><input id="cc_alt" name="cc_alt" defaultValue={section.customizerCard?.image?.alt ?? ""} className="a-input" maxLength={200} /></div>
+              </div>
+            </div>
+          )}
+        </fieldset>
+      )}
+
+      {(section.template === "campaign" || section.template === "page-hero") && (
         <fieldset className="space-y-4">
           <legend className="a-h2 mb-3">Botão</legend>
           <div className="grid gap-4 md:grid-cols-2">
@@ -172,12 +253,16 @@ export function SectionEditorForm({
               <label className="a-label" htmlFor="cta_kind">Destino</label>
               <select id="cta_kind" name="cta_kind" className="a-select" value={ctaKind} onChange={(e) => setCtaKind(e.target.value as typeof ctaKind)}>
                 <option value="none">Busca de cidade (padrão)</option>
-                <option value="route">Página desta região</option>
+                <option value="route">Página desta região (endereço)</option>
+                <option value="page">Hotpage ou categoria-pai publicada</option>
+                <option value="anchor">Uma seção desta página</option>
                 <option value="external">URL da loja Use (Sul, Norte ou Centro)</option>
               </select>
             </div>
             {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver mais"} className="a-input" maxLength={32} /></div>}
           </div>
+          {ctaKind === "page" && <PagePicker pages={pages} current={section.cta?.dest.kind === "page" ? `${section.cta.dest.pageKind}/${section.cta.dest.slug}` : ""} />}
+          {ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
           {ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho (dentro de /{scope})</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : `/${scope}`} className="a-input" placeholder={`/${scope}/pa`} /><p className="a-muted mt-1 text-[0.8125rem]">Ex.: <code>/{scope}</code> ou a página de um estado. Um caminho de outra região é recusado.</p></div>}
           {ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usenorte.com.br/" /></div>}
         </fieldset>
@@ -228,6 +313,8 @@ export function SectionEditorForm({
                   <option value="ink-collection">Coleção da INK (página real na loja)</option>
                   <option value="external">URL da loja Use (Sul, Norte ou Centro)</option>
                   <option value="route">Página desta loja</option>
+                  <option value="page">Hotpage ou categoria-pai publicada</option>
+                  <option value="anchor">Uma seção desta página</option>
                 </select>
               </div>
               {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver todos"} className="a-input" maxLength={32} /></div>}
@@ -242,6 +329,8 @@ export function SectionEditorForm({
               </div>
             )}
             {!internalSource && ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usesul.com.br/usesul/collections/…" /></div>}
+            {!internalSource && ctaKind === "page" && <PagePicker pages={pages} current={section.cta?.dest.kind === "page" ? `${section.cta.dest.pageKind}/${section.cta.dest.slug}` : ""} />}
+            {!internalSource && ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
             {!internalSource && ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : ""} className="a-input" placeholder="/sul/sc" /></div>}
           </fieldset>
 
@@ -348,7 +437,7 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
-      {section.template !== "hero" && section.template !== "footer" && (
+      {section.template !== "hero" && section.template !== "footer" && section.template !== "page-hero" && !page && (
         <fieldset className="space-y-3">
           <legend className="a-h2 mb-3">Menu do topo</legend>
           <input type="hidden" name="nav_present" value="1" />
@@ -357,7 +446,12 @@ export function SectionEditorForm({
             <div className="max-w-sm">
               <label className="a-label" htmlFor="nav_label">Apelido (o texto que aparece no menu)</label>
               <input id="nav_label" name="nav_label" value={navLabel} onChange={(e) => setNavLabel(e.target.value)} className="a-input" maxLength={24} required />
-              <p className="a-muted mt-1 text-[0.8125rem]">Até 24 caracteres. O link leva a esta seção da home. A ordem do menu é a ordem das seções na home.</p>
+              <p className="a-muted mt-1 text-[0.8125rem]">Até 24 caracteres. A ordem do menu é a ordem das seções na home.</p>
+              <label className="a-label mt-3" htmlFor="nav_dest">Para onde o link leva</label>
+              <select id="nav_dest" name="nav_dest" className="a-select" defaultValue={section.nav?.dest?.kind === "page" ? `${section.nav.dest.pageKind}/${section.nav.dest.slug}` : ""}>
+                <option value="">Esta seção da home</option>
+                {pages.map((p) => <option key={p.value} value={p.value}>{p.label}{p.live ? "" : " (ainda não publicada)"}</option>)}
+              </select>
             </div>
           )}
           <p className="a-muted text-[0.8125rem]">Enquanto nenhuma seção for marcada, o menu mostra só as seções históricas (Estilos, Fala daqui, Estados) que esta região realmente tem.</p>

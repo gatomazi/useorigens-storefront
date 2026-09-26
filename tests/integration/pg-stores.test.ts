@@ -42,16 +42,16 @@ async function seedUser(email: string, role: "owner" | "editor" = "editor", scop
 describe("migrations", () => {
   test("given a fresh database, when migrated, then every migration is applied once and a second run applies nothing", async () => {
     const fresh = await createPgliteDb();
-    expect(await migrate(fresh, migrations)).toEqual(["0001_init", "0002_auth_sync", "0003_release_delete"]);
+    expect(await migrate(fresh, migrations)).toEqual(["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests"]);
     expect(await migrate(fresh, migrations)).toEqual([]);
-    expect(await migrationStatus(fresh, migrations)).toEqual({ applied: ["0001_init", "0002_auth_sync", "0003_release_delete"], pending: [], unknown: [] });
+    expect(await migrationStatus(fresh, migrations)).toEqual({ applied: ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests"], pending: [], unknown: [] });
     await fresh.close();
   });
 
   test("given a database that is behind, when its status is read, then the pending versions are reported and nothing is applied", async () => {
     const half = await createPgliteDb();
     await migrate(half, migrations.slice(0, 1));
-    expect((await migrationStatus(half, migrations)).pending).toEqual(["0002_auth_sync", "0003_release_delete"]);
+    expect((await migrationStatus(half, migrations)).pending).toEqual(["0002_auth_sync", "0003_release_delete", "0004_customization_requests"]);
     await half.close();
   });
 
