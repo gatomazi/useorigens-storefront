@@ -74,6 +74,8 @@ for (const region of [{ name: "Norte" as const, slug: "norte", uf: "pa" }, { nam
     await hydrated(page);
     await page.getByLabel("Título", { exact: true }).fill(`Escolha o estado do ${region.name}`);
     await page.getByLabel("Subtítulo").fill("Cada estado com as cidades que já têm camiseta.");
+    // A banner for one state only (state covers): the others keep no picture.
+    await page.locator(`#state_cover_${region.uf.toUpperCase()}`).selectOption("legacy:sul/fala-daqui-desktop");
     await page.getByRole("button", { name: "Salvar rascunho" }).click();
     await expect(flash(page, /Rascunho salvo/)).toBeVisible();
     for (const kind of ["mobile", "desktop"] as const) {
@@ -82,6 +84,8 @@ for (const region of [{ name: "Norte" as const, slug: "norte", uf: "pa" }, { nam
       await expect(frame.locator("section[id^='estados']").first()).toContainText("Cada estado com as cidades");
       expect(await frame.locator(`section[id^='estados'] a[href^='/${region.slug}/']`).count()).toBeGreaterThan(0); // links stay inside the region
       expect(await frame.locator("section[id^='estados'] a[href^='/sul/']").count()).toBe(0);
+      // Exactly one state card has the picture we chose (in the desktop cards or the phone accordion, both trees render).
+      expect(await frame.locator("section[id^='estados'] article img, section[id^='estados'] details img").count(), `${kind} cover`).toBeGreaterThan(0);
     }
 
     // C. Regional campaign: add → neutral copy (no Sul text) → edit with a button to a page of THIS region → save.

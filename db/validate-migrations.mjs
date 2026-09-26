@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -57,11 +57,21 @@ await rejects("promotion without promoted_at", `update release set status='live'
 await accepts("promotion of the pending release", `update release set status='live', promoted_at=now() where status='pending'`);
 await accepts("head moves to the promoted release", `update release_head set release_id=(select max(id) from release), revalidated=false, updated_at=now()`);
 await rejects("changing the status of a live release", `update release set status='failed', failed_reason='x' where kind='publish'`);
-await rejects("deleting a release", `delete from release where kind='publish'`);
+await rejects("deleting the LIVE release (0003)", `delete from release where id = (select release_id from release_head)`);
 await accepts("a new pending publish is possible after promotion", `insert into release (parent_id,kind,bundle,checksum) select max(id),'publish',$1::jsonb,$2 from release`, [bundle, "e".repeat(64)]);
+await rejects("deleting a release in flight (0003)", `delete from release where status='pending'`);
 await accepts("abandoned pending release is failed with a reason", `update release set status='failed', failed_reason='abandoned' where status='pending'`);
 await rejects("failed release without a reason", `insert into release (kind,status,bundle,checksum) values ('publish','failed',$1::jsonb,$2)`, [bundle, "f".repeat(64)]);
 
+await accepts("a failed, non-live release can be deleted (0003)", `delete from release where status='failed'`);
+await accepts("a live release that is no longer the head can be deleted; its children lose the parent pointer (0003)", `
+  with a as (insert into release (kind,status,bundle,checksum,promoted_at) values ('publish','live',$1::jsonb,$2,now()) returning id),
+       b as (insert into release (parent_id,kind,status,bundle,checksum,promoted_at) select id,'publish','live',$1::jsonb,$3,now() from a returning id)
+  update release_head set release_id = (select id from b)`, [bundle, "c".repeat(64), "d".repeat(64)]);
+await accepts("deleting the old parent", `delete from release where checksum = $1`, ["c".repeat(64)]);
+const orphan = await db.query(`select parent_id from release where checksum = $1`, ["d".repeat(64)]);
+orphan.rows.length === 1 && orphan.rows[0].parent_id === null ? ok("the child keeps its content and only loses the parent pointer (0003)") : bad("parent pointer cleared", JSON.stringify(orphan.rows));
+await rejects("changing a release's content is still forbidden", `update release set checksum = $1 where checksum = $2`, ["9".repeat(64), "d".repeat(64)]);
 await accepts("draft for sul", `insert into config_draft (scope,doc) values ('sul','{}'::jsonb)`);
 await rejects("draft for an unknown scope", `insert into config_draft (scope,doc) values ('lua','{}'::jsonb)`);
 const fresh = await db.query(`update config_draft set doc='{"a":1}'::jsonb, rev=rev+1 where scope='sul' and rev=1 returning rev`);

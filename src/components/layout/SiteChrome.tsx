@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
-import { INSTAGRAM_URL, LEGACY_STORE_URLS } from "@/lib/site";
+import { INSTAGRAM_URLS, LEGACY_STORE_URLS } from "@/lib/site";
 import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
 import { hasStatesSection, headerLinks } from "@/lib/site-config/nav";
 
@@ -176,7 +176,7 @@ export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: str
               </a>
             </li>
             <li>
-              <a href={INSTAGRAM_URL} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]" rel="noopener">
+              <a href={INSTAGRAM_URLS[region]} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]" rel="noopener">
                 Instagram
               </a>
             </li>

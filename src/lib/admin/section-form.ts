@@ -4,6 +4,7 @@
  * goes through `validateSection` in `applyOp`.
  */
 import { EDITORIAL_MODULE_KEYS, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type Overlay, type Section, type Source } from "./contract";
+import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 
 type Fields = { get(name: string): FormDataEntryValue | null };
@@ -110,6 +111,17 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
   if (section.template !== "hero" && section.template !== "footer" && f.get("nav_present") !== null) {
     // "Mostrar no menu" + the apelido; unchecked clears it. An empty apelido is not defaulted here: the validator refuses it and says so.
     patch.nav = f.get("nav_show") !== null ? { label: str(f, "nav_label") } : undefined;
+  }
+  if (section.template === "states" && f.get("state_covers_present") !== null) {
+    // One picture per state; an empty choice clears that state's cover (it then keeps the code's own cover, if any).
+    const covers: Record<string, { assetId: string; alt: string; decorative: boolean }> = {};
+    for (const uf of Object.keys(STATE_NAMES)) {
+      const assetId = str(f, `state_cover_${uf}`);
+      if (!assetId) continue;
+      const alt = str(f, `state_alt_${uf}`);
+      covers[uf] = { assetId, alt, decorative: alt === "" };
+    }
+    patch.stateCovers = Object.keys(covers).length > 0 ? covers : undefined;
   }
   if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", 8)), 1, 8);
   return patch;

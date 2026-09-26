@@ -70,6 +70,16 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
         }
         sections.push({ ...section, appearance: { ...section.appearance, image: known.mobile || known.desktop ? known : undefined } });
       } else sections.push(section);
+      // A state cover the table does not know is dropped (that state falls back to no cover / the code's own), never rendered broken.
+      const last = sections[sections.length - 1];
+      if (last.stateCovers) {
+        const kept = Object.fromEntries(Object.entries(last.stateCovers).filter(([uf, ref]) => {
+          const known = ref.assetId in media;
+          if (!known) diagnostics.push(`${scope}: "${section.id}" cover of ${uf} "${ref.assetId}" is not in the media table and was dropped`);
+          return known;
+        }));
+        sections[sections.length - 1] = { ...last, stateCovers: Object.keys(kept).length > 0 ? kept : undefined };
+      }
     }
     if (sections[0]?.template !== "hero" || sections[sections.length - 1]?.template !== "footer") {
       diagnostics.push(`${scope}: hero first / footer last not satisfied, using the seed`);

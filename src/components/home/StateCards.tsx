@@ -5,7 +5,7 @@ import { StateOutline } from "@/components/brand/StateOutline";
 import { BannerBackground } from "@/components/banners/BannerBackground";
 import { TrackedStateLink } from "@/components/analytics/TrackedStateLink";
 import { SOURCES } from "@/lib/analytics/sources";
-import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
+import { bannerFor, usableBannerAsset, type BannerAsset } from "@/lib/editorial/banners";
 import type { StateCard } from "@/lib/home";
 import { pluralCidades } from "@/lib/format";
 import type { RegionSlug } from "@/lib/geo/regions";
@@ -69,6 +69,7 @@ export function StateCards({
   anchor = "estados",
   headingId = "states-title",
   backdrop,
+  covers,
 }: {
   region: RegionSlug;
   states: StateCard[];
@@ -79,6 +80,8 @@ export function StateCards({
   headingId?: string;
   /** Config-driven background layer (CMS): the section then becomes a self-contained block with the layer INSIDE it, never a band between sections. */
   backdrop?: ReactNode;
+  /** CMS covers per UF; a state without one keeps the cover the code has for it (if any). */
+  covers?: Record<string, BannerAsset>;
 }) {
   const body = (
     <>
@@ -92,7 +95,7 @@ export function StateCards({
         {states.map((state) => {
           const shown = state.regions.slice(0, 4);
           const more = state.regions.length - shown.length;
-          const cover = usableBannerAsset("state", bannerFor(region, "state", state.uf));
+          const cover = covers?.[state.uf] ?? usableBannerAsset("state", bannerFor(region, "state", state.uf));
           return (
             <li key={state.uf}>
               <article className="flex h-full flex-col overflow-hidden">
@@ -123,7 +126,7 @@ export function StateCards({
         {states.map((state) => {
           const shown = state.regions.slice(0, 6);
           const more = state.regions.length - shown.length;
-          const cover = usableBannerAsset("state", bannerFor(region, "state", state.uf));
+          const cover = covers?.[state.uf] ?? usableBannerAsset("state", bannerFor(region, "state", state.uf));
           return (
             <details key={state.uf} name="estados-mobile" className="group border-b border-line">
               <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 [&::-webkit-details-marker]:hidden">

@@ -304,6 +304,18 @@ export async function rollbackAction(fd: FormData) {
   back("/admin/publicar", { ok: `${scopeName(scope)}: versão ${toReleaseId} restaurada como nova publicação${platform().mode === "prod" ? "" : " no sandbox local"}.` });
 }
 
+/** Deletes ONE release from the history (owner only, explicit confirmation). Never the live one; audited. The database migration 0003 allows it. */
+export async function deleteReleaseAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const id = text(fd, "release");
+  if (text(fd, "confirmDelete") !== "on") back("/admin/publicar", { err: [`Marque a confirmação para apagar a release ${id}.`] });
+  const result = await platform().releases.remove(id);
+  revalidatePath("/admin", "layout");
+  if (!result.ok) back("/admin/publicar", { err: [result.error] });
+  await audit(actor, "release.delete", "global", id);
+  back("/admin/publicar", { ok: `Release ${id} apagada do histórico.` });
+}
+
 export async function reconcileAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const done = await reconcileReleases(deps(actor), revalidateStorefront);
@@ -372,20 +384,24 @@ export async function discardGlobalTrackingAction() {
   back("/admin/tracking", { ok: "Rascunho do tracking global descartado." });
 }
 
-export async function uploadMediaAction(fd: FormData) {
+/**
+ * Uploads ONE picture and answers with a result (no redirect), so the media screen can send several one after another and show each outcome.
+ * The browser shrinks very large photos first (MediaUploader); the server still decodes, validates and re-encodes everything itself.
+ */
+export async function uploadMediaAction(fd: FormData): Promise<{ ok: boolean; message: string }> {
   const actor = await requireAdmin({ mutation: true });
   const file = fd.get("file");
-  if (!(file instanceof File) || file.size === 0) back("/admin/midia", { err: ["Escolha um arquivo."] });
-  if (!allow(`upload:${actor.id}`, 30, 10 * 60_000)) back("/admin/midia", { err: ["Muitos envios seguidos. Aguarde alguns minutos."] });
+  if (!(file instanceof File) || file.size === 0) return { ok: false, message: "Escolha um arquivo." };
+  if (!allow(`upload:${actor.id}`, 60, 10 * 60_000)) return { ok: false, message: "Muitos envios seguidos. Aguarde alguns minutos." };
   const result = await saveUpload(Buffer.from(await file.arrayBuffer()), file.name, actor.id === "dev-local" ? null : actor.id).catch((error: unknown) => {
     // The reason is logged (never a secret: the object-store client only reports the HTTP status) and its class shown to the owner.
     console.error("[admin] media upload failed:", error instanceof Error ? `${error.name}: ${error.message}`.slice(0, 300) : "unknown");
     return { ok: false as const, error: describeUploadFailure(error, process.env.BUCKET_ADDRESSING) };
   });
   revalidatePath("/admin", "layout");
-  if (!result.ok) back("/admin/midia", { err: [result.error] });
+  if (!result.ok) return { ok: false, message: result.error };
   await audit(actor, "media.upload", "sul", result.choice.assetId);
-  back("/admin/midia", { ok: result.duplicate ? `A imagem "${result.choice.label}" já existia; foi reaproveitada.` : `Imagem "${result.choice.label}" enviada${platform().mode === "prod" ? "" : " (somente neste computador)"}.` });
+  return { ok: true, message: result.duplicate ? `A imagem "${result.choice.label}" já existia; foi reaproveitada.` : `Imagem "${result.choice.label}" enviada${platform().mode === "prod" ? "" : " (somente neste computador)"}.` };
 }
 
 export async function deleteMediaAction(fd: FormData) {
