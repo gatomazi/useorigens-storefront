@@ -117,7 +117,7 @@ describe.each([
 
   test("given expired requests, when purged, then the ones nobody is working on are removed and linked or in-review ones stay", async () => {
     const s = store();
-    const old = (h: string, status?: "inReview") => ({ ...fresh(h as "sul").input, expiresAt: new Date(Date.now() - 1000).toISOString() });
+    const old = (h: string) => ({ ...fresh(h as "sul").input, expiresAt: new Date(Date.now() - 1000).toISOString() });
     const gone = (await s.create(old("sul"))).record;
     const kept = (await s.create(old("sul"))).record;
     await s.setStatus(kept.id, "inReview", "ana@x");

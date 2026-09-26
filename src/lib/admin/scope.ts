@@ -17,6 +17,14 @@ export const isRegionScope = (v: unknown): v is RegionSlug => typeof v === "stri
 export const storeOf = (scope: RegionSlug): CommerceStoreKey => REGIONS[scope].storeKey;
 export const scopeName = (scope: Scope): string => (scope === "global" ? "Global" : REGIONS[scope].name);
 
+/** A history entry's `scopesChanged` item as text: a region/global, or a page / model marker (`page:hotpage/slug`, `customizer:slug`). */
+export function changedLabel(item: string): string {
+  if (item === "global") return "Global";
+  if (item.startsWith("page:")) return `Página ${item.slice(item.indexOf("/") + 1)}`;
+  if (item.startsWith("customizer:")) return `Modelo ${item.slice("customizer:".length)}`;
+  return isRegionScope(item) ? REGIONS[item].name : item;
+}
+
 /** Regions this person may edit (owner: all; editor: their scopes). */
 export const editableScopes = (actor: Actor): RegionSlug[] => REGION_SCOPES.filter((s) => canEdit(actor, s));
 

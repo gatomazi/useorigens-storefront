@@ -130,7 +130,6 @@ export function linkProblems(composed: ScopeDoc, sections: Section[]): string[] 
       if (!model) out.push(`${name}: o modelo de personalização do primeiro card ainda não foi publicado. Publique o modelo antes.`);
       else if (!model.active) out.push(`${name}: o modelo "${model.name}" do primeiro card está desativado.`);
       else if (!model.pageMockup) out.push(`${name}: o modelo "${model.name}" não tem a imagem (mockup) da página.`);
-      else if (!s.customizerCard.image && !model.cardImage) out.push(`${name}: o primeiro card precisa de uma imagem (do card ou do modelo).`);
     }
   }
   return out;

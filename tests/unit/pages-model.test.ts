@@ -251,7 +251,10 @@ describe("publishing a page, a model or the region are independent", () => {
     composed.pages = [page];
     const m: Customizer = { id: "cz-1", slug: "pai", name: "Pai", source: SUL_COLLECTION, fields: [], previewMode: "mockupWithTextSummary", active: true, version: 1, pageMockup: PIC };
     composed.customizers = [m];
-    expect(linkProblems(composed, [carousel]).join(" ")).toMatch(/precisa de uma imagem/);
+    expect(linkProblems(composed, [carousel])).toEqual([]); // the card falls back to the model's mockup
+    composed.customizers = [{ ...m, pageMockup: undefined }];
+    expect(linkProblems(composed, [carousel]).join(" ")).toMatch(/não tem a imagem \(mockup\)/);
+    composed.customizers = [m];
     carousel.customizerCard!.image = PIC;
     expect(linkProblems(composed, [carousel])).toEqual([]);
     composed.customizers = [{ ...m, active: false }];

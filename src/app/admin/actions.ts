@@ -643,7 +643,7 @@ export async function publishTargetAction(fd: FormData) {
   if (!result.ok) back(back_, { err: result.errors });
   await audit(actor, result.outcome.status === "failed" ? "publish.failed" : "publish", scope, result.outcome.releaseId, { target: kind, id, status: result.outcome.status });
   if (result.outcome.status === "failed") back(back_, { err: ["A publicação falhou ao gravar o arquivo; a versão anterior continua no ar."] });
-  back(back_, { ok: `${kind === "page" ? "Página" : "Modelo"} publicado${platform().mode === "prod" ? "" : " no sandbox local"} (release ${result.outcome.releaseId}).` });
+  back(back_, { ok: `${kind === "page" ? "Página publicada" : "Modelo publicado"}${platform().mode === "prod" ? "" : " no sandbox local"} (release ${result.outcome.releaseId}).` });
 }
 
 /** Restores ONE page or ONE model from an earlier release (as a new release); the home and everything else are left exactly as they are. */
