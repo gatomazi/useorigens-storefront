@@ -1,11 +1,20 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
 /**
  * Hotpages, parent-category landings and personalization, end to end on the local dev server (sandbox in a temp dir; nothing here touches production).
  * Scenarios A (editorial hotpage) → B (category landing + link from the home) → C (model with 4→6 lines and the fixed first card) →
  * D (city / locality / caption) → E (operation: manual order link, restore keeps old requests, honest copy). Uses the locally synced catalogs.
- * The two reference mockups of the briefing were not in the package: two neutral placeholder pictures stand in for them.
+ * Mockups: the two reference pictures are read from `referencias/` (pai-paranaense-churrasqueiro-lenda.png, la-de-santiago.png) and uploaded through the CMS media flow
+ * exactly as they are. When a file is missing the test says which one and uses a neutral stand-in, so nothing is ever invented in its place.
  */
+const REFERENCE_DIR = path.join(process.cwd(), "referencias");
+const REFERENCES = { pai: "pai-paranaense-churrasqueiro-lenda.png", santiago: "la-de-santiago.png" } as const;
+const read = (file: string) => readFile(path.join(REFERENCE_DIR, file)).catch(() => null);
+/** Part of the uploaded file name each model's mockup is picked by (the real name when the reference exists, the stand-in's otherwise). */
+const mockupName = { pai: "mockup-pai", santiago: "mockup-santiago" };
+
 const hydrated = (page: Page) => page.waitForFunction(() => document.documentElement.dataset.hydrated === "true", undefined, { timeout: 180_000 });
 async function open(page: Page, url: string) {
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 300_000 });
@@ -34,11 +43,17 @@ test("A · hotpage: create, compose, style, reorder, preview, publish, restore �
   await open(page, "/admin");
   state.sulHomeBefore = sections(await publicHtml(page, "/sul"));
 
-  // Media for the later scenarios (the briefing's reference mockups were not available: neutral stand-ins).
+  // Media for the later scenarios: the real reference mockups when present, neutral stand-ins (and a loud note) when not.
+  const realPai = await read(REFERENCES.pai);
+  const realSantiago = await read(REFERENCES.santiago);
+  const missing = [!realPai && `referencias/${REFERENCES.pai}`, !realSantiago && `referencias/${REFERENCES.santiago}`].filter(Boolean) as string[];
+  if (missing.length > 0) test.info().annotations.push({ type: "missing-reference-mockup", description: missing.join(", ") });
+  if (realPai) mockupName.pai = REFERENCES.pai.replace(/\.png$/, "");
+  if (realSantiago) mockupName.santiago = REFERENCES.santiago.replace(/\.png$/, "");
   await open(page, "/admin/midia");
   await page.locator('input[type="file"]').setInputFiles([
-    { name: "mockup-pai.png", mimeType: "image/png", buffer: await tee(10, 10, 10) },
-    { name: "mockup-santiago.png", mimeType: "image/png", buffer: await tee(20, 20, 24) },
+    realPai ? { name: REFERENCES.pai, mimeType: "image/png", buffer: realPai } : { name: "mockup-pai.png", mimeType: "image/png", buffer: await tee(10, 10, 10) },
+    realSantiago ? { name: REFERENCES.santiago, mimeType: "image/png", buffer: realSantiago } : { name: "mockup-santiago.png", mimeType: "image/png", buffer: await tee(20, 20, 24) },
     { name: "card-pai.png", mimeType: "image/png", buffer: await tee(30, 24, 20) },
   ]);
   await page.getByRole("button", { name: "Enviar", exact: true }).click();
@@ -123,6 +138,10 @@ test("A · hotpage: create, compose, style, reorder, preview, publish, restore �
   await expect(flash(page, /restaurada como nova publicação/)).toBeVisible({ timeout: 300_000 });
   expect(sections(await publicHtml(page, "/sul"))).toEqual(state.sulHomeBefore);
   expect(await publicHtml(page, "/sul/h/dia-dos-pais")).toContain("Presentes para pais");
+
+  // The preview is not a public page: it is noindex, and the public URL of a draft-only page never exists.
+  const preview = await page.request.get(`/admin/preview?page=${state.pageId}`, { timeout: 300_000 });
+  expect(await preview.text()).toMatch(/<meta name="robots" content="noindex/);
 });
 
 const landing: { id: string } = { id: "" };
@@ -214,7 +233,10 @@ test("B · category landing: three subthemes from real collections, an internal 
   expect(await publicHtml(page, "/sul")).toContain('href="/sul/colecoes/pais"');
 });
 
-const model: { paiId: string; santiagoId: string; paiRef: string; santiagoRef: string } = { paiId: "", santiagoId: "", paiRef: "", santiagoRef: "" };
+
+const model: { paiId: string; santiagoId: string; paiPrivate: string } = { paiId: "", santiagoId: "", paiPrivate: "" };
+const BUY_NOW = /comprar agora|finalizar compra|checkout|carrinho/i;
+const send = (page: Page) => page.getByRole("button", { name: "Enviar solicitação", exact: true });
 
 /** Picks a media option (the media table lists uploads as "name (w×h)") by part of its name. */
 async function pickMedia(page: Page, selector: string, part: string) {
@@ -225,7 +247,35 @@ async function pickMedia(page: Page, selector: string, part: string) {
   await select.selectOption({ label: wanted! });
 }
 
-test("C · model 'Pai Paranaense' (4 lines, up to 6): mockup, first fixed card 1 + 5, public page with validation, request in the queue", async ({ page }) => {
+/** The image is really drawn (decoded, non-empty) and keeps the aspect ratio of the file that was uploaded: the art is not cropped or stretched. */
+async function expectMockup(page: Page, img: ReturnType<Page["locator"]>, ratio: number | null) {
+  await expect.poll(() => img.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0), { message: "mockup decoded" }).toBe(true);
+  if (ratio) {
+    const { w, h } = await img.evaluate((i: HTMLImageElement) => ({ w: i.naturalWidth, h: i.naturalHeight }));
+    expect(Math.abs(w / h - ratio) / ratio).toBeLessThan(0.02);
+  }
+}
+async function ratioOf(file: string, fallback: number): Promise<number> {
+  const bytes = await read(file);
+  if (!bytes) return fallback;
+  const { default: sharp } = await import("sharp");
+  const meta = await sharp(bytes).metadata();
+  return (meta.width ?? 1) / (meta.height ?? 1);
+}
+
+async function fillContact(page: Page, c: { name?: string; whatsapp?: string; email?: string; confirm?: boolean }) {
+  if (c.name !== undefined) await page.getByLabel(/^Nome/).fill(c.name);
+  if (c.whatsapp !== undefined) await page.getByLabel(/^WhatsApp/).fill(c.whatsapp);
+  if (c.email !== undefined) await page.getByLabel(/^E-mail/).fill(c.email);
+  if (c.confirm !== undefined) await page.getByLabel(/Autorizo a equipe/).setChecked(c.confirm);
+}
+async function openPublic(page: Page, url: string) {
+  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 300_000 });
+  await hydrated(page);
+}
+
+test("C · model 'Pai Paranaense' (4 lines, up to 6): mockup, first fixed card 1 + 5, contact form, three ways of being reached, request in the queue", async ({ page }) => {
+  const paiRatio = await ratioOf(REFERENCES.pai, 0.9);
   await open(page, "/admin/personalizacao");
   const create = page.locator("section[aria-labelledby=novo]");
   await create.getByLabel("Nome").fill("Pai Paranaense");
@@ -235,7 +285,7 @@ test("C · model 'Pai Paranaense' (4 lines, up to 6): mockup, first fixed card 1
   model.paiId = page.url().split("/personalizacao/")[1].split("?")[0];
   await hydrated(page);
 
-  await pickMedia(page, "#mockup_image", "mockup-pai");
+  await pickMedia(page, "#mockup_image", mockupName.pai);
   await page.locator("#mockup_alt").fill("Camiseta com o texto do Pai Paranaense");
   await page.getByLabel(/O cliente escreve várias linhas/).check();
   await page.locator("#lg_label").fill("Linhas da camiseta");
@@ -248,6 +298,15 @@ test("C · model 'Pai Paranaense' (4 lines, up to 6): mockup, first fixed card 1
   await page.getByLabel(/Modelo ativo/).check();
   await page.getByRole("button", { name: "Salvar rascunho" }).click();
   await expect(flash(page, /Modelo salvo no rascunho/)).toBeVisible();
+  // The editor no longer has any checkout-flavoured field.
+  await expect(page.locator("#ink_product_id")).toHaveCount(0);
+  // The admin preview (mobile 375 and desktop) draws the mockup untouched.
+  for (const kind of ["mobile", "desktop"] as const) {
+    const frame = page.frameLocator(`iframe[data-preview="${kind}"]`);
+    await expectMockup(page, frame.getByAltText("Camiseta com o texto do Pai Paranaense"), paiRatio);
+    await expect(frame.getByRole("button", { name: "Testar o envio (prévia)" })).toBeVisible(); // the preview never sends
+    await expect(frame.getByLabel(/^Nome/)).toBeVisible(); // and it shows the contact section
+  }
 
   // Publishing the model: only this model; the public page exists afterwards, before that it is a 404.
   expect(await status(page, "/sul/personalizar/pai-paranaense")).toBe(404);
@@ -276,11 +335,18 @@ test("C · model 'Pai Paranaense' (4 lines, up to 6): mockup, first fixed card 1
   await expect(carousel.locator("li").first()).toHaveAttribute("data-customizer-card", "true");
   await expect(carousel.locator("li[data-customizer-card] a").first()).toHaveAttribute("href", "/sul/personalizar/pai-paranaense");
   await expect(carousel.locator("[data-customizer-card]")).toHaveCount(1);
+  await carousel.locator("[data-customizer-card]").scrollIntoViewIfNeeded();
+  await expectMockup(page, carousel.locator("[data-customizer-card] img").first(), null);
+  await expect(carousel.locator("[data-customizer-card]")).toContainText("Personalizável");
+  expect(await carousel.locator("[data-customizer-card]").innerText()).not.toMatch(BUY_NOW); // it is not a buyable product
 
-  // The public personalization page: 4 initial lines, up to 6, validation and an honest confirmation.
-  await page.goto("/sul/personalizar/pai-paranaense", { waitUntil: "domcontentloaded", timeout: 300_000 });
-  await hydrated(page);
+  // The public page: intro copy that separates a request from a purchase; 4 initial lines, up to 6.
+  await openPublic(page, "/sul/personalizar/pai-paranaense");
+  await expect(page.getByTestId("customization-intro")).toContainText("Esta etapa não é uma compra nem reserva um produto");
+  await expectMockup(page, page.getByAltText("Camiseta com o texto do Pai Paranaense"), paiRatio);
   await expect(page.getByText("Imagem ilustrativa", { exact: false })).toBeVisible();
+  await expect(page.getByTestId("contact-fieldset")).toBeVisible();
+  await expect(page.getByLabel(/Autorizo a equipe/)).not.toBeChecked(); // unticked by default
   for (const [i, text] of ["PAI", "PARANAENSE", "CHURRASQUEIRO", "LENDA"].entries()) await expect(page.getByLabel(`Linha ${i + 1}`, { exact: true })).toHaveValue(text);
   await expect(page.getByLabel("Linha 5", { exact: true })).toHaveCount(0);
   const add = page.getByRole("button", { name: /Adicionar linha/ });
@@ -290,35 +356,96 @@ test("C · model 'Pai Paranaense' (4 lines, up to 6): mockup, first fixed card 1
   await page.getByLabel("Linha 5", { exact: true }).fill("DE SANGUE");
   await page.getByLabel("Linha 6", { exact: true }).fill("E FÉ");
   await expect(page.getByRole("heading", { name: "Resumo da sua personalização" })).toBeVisible();
+  expect(await page.locator("body").innerText()).not.toMatch(BUY_NOW);
 
+  // Nothing filled in the contact: three problems at once, and what was typed stays.
+  await send(page).click();
+  await expect(page.getByRole("alert").filter({ hasText: /Nome:/ })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: /WhatsApp ou um e-mail/ })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: /Marque a autorização/ })).toBeVisible();
+  await expect(page.getByLabel("Linha 5", { exact: true })).toHaveValue("DE SANGUE");
+  await expect(page.getByTestId("customization-done")).toHaveCount(0);
+
+  // Bad contact data, and a missing confirmation.
+  await fillContact(page, { name: "A", whatsapp: "99999-8888", email: "sem-arroba", confirm: false });
+  await send(page).click();
+  await expect(page.getByRole("alert").filter({ hasText: /Nome:/ })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: /WhatsApp:/ })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: /E-mail:/ })).toBeVisible();
+  await fillContact(page, { name: "Ana Souza", whatsapp: "(51) 99999-8888", email: "", confirm: false });
+  await send(page).click();
+  await expect(page.getByRole("alert").filter({ hasText: /Marque a autorização/ })).toBeVisible(); // valid channel, but no confirmation
+  await expect(page.getByTestId("customization-done")).toHaveCount(0);
+
+  // The personalization lines are validated too (markup, over the model's own limit).
+  await fillContact(page, { confirm: true });
   await page.getByLabel("Linha 1", { exact: true }).fill("<b>PAI</b>");
-  await page.getByRole("button", { name: "Enviar solicitação de personalização" }).click();
-  await expect(page.getByRole("alert").first()).toBeVisible(); // markup is not accepted
+  await send(page).click();
+  await expect(page.getByRole("alert").first()).toBeVisible();
   await expect(page.getByTestId("customization-done")).toHaveCount(0);
   await page.getByLabel("Linha 1", { exact: true }).fill("PAI");
   await page.getByLabel("Linha 2", { exact: true }).fill("MUITO MAIS DO QUE DEZESSEIS CARACTERES");
-  await page.getByRole("button", { name: "Enviar solicitação de personalização" }).click();
-  await expect(page.getByRole("alert").first()).toBeVisible(); // over the model's own limit
+  await send(page).click();
+  await expect(page.getByRole("alert").first()).toBeVisible();
   await page.getByLabel("Linha 2", { exact: true }).fill("PARANAENSE");
-  await page.getByRole("button", { name: "Enviar solicitação de personalização" }).click();
-  await expect(page.getByTestId("customization-done")).toBeVisible({ timeout: 60_000 });
-  model.paiRef = (await page.getByTestId("customization-reference").innerText()).trim();
-  expect(model.paiRef.length).toBeGreaterThan(20);
-  await expect(page.getByTestId("customization-done")).toContainText("não acompanha automaticamente uma compra");
-  await expect(page.getByTestId("customization-done")).toContainText("E FÉ");
 
-  // The operator finds it in the queue, with model, version and region.
+  // 1) name + WhatsApp only.
+  await send(page).click();
+  const done = page.getByTestId("customization-done");
+  await expect(done).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId("customization-reference")).toHaveText(/^[0-9A-Z]{8}$/);
+  await expect(done).toContainText("Vamos preparar sua estampa e entrar em contato pelo WhatsApp ou e-mail informado quando ela estiver pronta para comprar");
+  await expect(done).toContainText("Nenhuma compra foi realizada nesta etapa");
+  await expect(done).toContainText("E FÉ");
+  await expect(page.getByTestId("customization-channels")).toHaveText("Contato informado: WhatsApp final 8888");
+  const doneText = await done.innerText();
+  expect(doneText).not.toContain("99999"); // the number is masked on screen
+  expect(doneText).not.toMatch(BUY_NOW);
+  expect(page.url()).not.toMatch(/Ana|Souza|99999|@/); // no contact in the URL
+  model.paiPrivate = (await page.getByTestId("customization-private-link").getAttribute("href")) ?? "";
+  expect(model.paiPrivate).toMatch(/^\/sul\/personalizar\/solicitacao\/[A-Za-z0-9_-]{32}$/);
+
+  // 2) name + e-mail only (a fresh page: a fresh idempotency key).
+  await openPublic(page, "/sul/personalizar/pai-paranaense");
+  await fillContact(page, { name: "Bruno", email: "  Bruno.Lima@Exemplo.COM ", confirm: true });
+  await send(page).click();
+  await expect(page.getByTestId("customization-done")).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId("customization-channels")).toHaveText("Contato informado: B***@exemplo.com");
+
+  // 3) both channels, and a double click that must create ONE request.
+  await openPublic(page, "/sul/personalizar/pai-paranaense");
+  await fillContact(page, { name: "Carla Dias", whatsapp: "+55 51 98888-7777", email: "carla@exemplo.com", confirm: true });
+  await send(page).dblclick();
+  await expect(page.getByTestId("customization-done")).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByTestId("customization-channels")).toContainText("WhatsApp final 7777");
+  await expect(page.getByTestId("customization-channels")).toContainText("c***@exemplo.com");
+
+  // The queue: the three requests, with who asked and which channels exist, never the numbers themselves.
   await open(page, "/admin/personalizacao/solicitacoes");
-  const row = page.locator("table.a-table tbody tr", { hasText: "Pai Paranaense" }).first();
-  await expect(row).toContainText("v1");
-  await expect(row).toContainText("Sul");
-  await row.getByRole("link", { name: "Abrir" }).click();
-  await expect(page.getByRole("heading", { name: "O que o cliente pediu" })).toBeVisible();
-  await expect(page.getByText("Linha 6")).toBeVisible();
-  await expect(page.getByText("E FÉ")).toBeVisible();
+  const rows = page.locator("table.a-table tbody tr", { hasText: "Pai Paranaense" });
+  await expect(rows).toHaveCount(3);
+  const carla = rows.filter({ hasText: "Carla Dias" });
+  await expect(carla).toHaveCount(1); // the double click made one request
+  await expect(carla.getByTestId("has-whatsapp")).toBeVisible();
+  await expect(carla.getByTestId("has-email")).toBeVisible();
+  await expect(rows.filter({ hasText: "Ana Souza" }).getByTestId("has-email")).toHaveCount(0);
+  await expect(rows.filter({ hasText: "Bruno" }).getByTestId("has-whatsapp")).toHaveCount(0);
+  for (const row of await rows.all()) await expect(row).toContainText("Recebida");
+  const tableText = await page.locator("table.a-table").innerText();
+  expect(tableText).not.toMatch(/99999|98888|@exemplo/); // the queue never prints the contact itself
+  await expect(page.getByTestId("queue-open-count")).toContainText("3 pendente(s)");
+  await expect(page.getByTestId("pending-requests").first()).toContainText("3");
+  await open(page, "/admin");
+  await expect(page.getByTestId("overview-pending-requests")).toContainText("3");
+  // Search by name works; searching by the phone number does not (the contact is not indexed).
+  await open(page, "/admin/personalizacao/solicitacoes?q=Bruno");
+  await expect(page.locator("table.a-table tbody tr", { hasText: "Pai Paranaense" })).toHaveCount(1);
+  await open(page, "/admin/personalizacao/solicitacoes?q=988887777");
+  await expect(page.locator("table.a-table tbody tr", { hasText: "Pai Paranaense" })).toHaveCount(0);
 });
 
 test("D · model 'Lá de Santiago': city, optional locality and caption; labels and version travel with the request; a later edit never rewrites it", async ({ page }) => {
+  const santiagoRatio = await ratioOf(REFERENCES.santiago, 0.9);
   await open(page, "/admin/personalizacao");
   const create = page.locator("section[aria-labelledby=novo]");
   await create.getByLabel("Nome").fill("Lá de Santiago");
@@ -328,7 +455,7 @@ test("D · model 'Lá de Santiago': city, optional locality and caption; labels 
   model.santiagoId = page.url().split("/personalizacao/")[1].split("?")[0];
   await hydrated(page);
 
-  await pickMedia(page, "#mockup_image", "mockup-santiago");
+  await pickMedia(page, "#mockup_image", mockupName.santiago);
   await page.locator("#mockup_alt").fill("Camiseta Lá de Santiago");
   const addField = page.getByRole("button", { name: /Adicionar campo/ });
   for (const [i, [label, max, required]] of ([["Cidade", "30", true], ["Localidade", "30", false], ["Legenda", "40", false]] as const).entries()) {
@@ -343,21 +470,22 @@ test("D · model 'Lá de Santiago': city, optional locality and caption; labels 
   await page.getByRole("button", { name: /Publicar página no sandbox local/ }).click();
   await expect(flash(page, /Modelo publicado/)).toBeVisible({ timeout: 300_000 });
 
-  await page.goto("/sul/personalizar/la-de-santiago", { waitUntil: "domcontentloaded", timeout: 300_000 });
-  await hydrated(page);
+  await openPublic(page, "/sul/personalizar/la-de-santiago");
+  await expectMockup(page, page.getByAltText("Camiseta Lá de Santiago"), santiagoRatio);
   await expect(page.getByLabel(/^Cidade/)).toBeVisible();
   await expect(page.getByLabel(/^Localidade/)).toBeVisible();
   await expect(page.getByLabel(/^Legenda/)).toBeVisible();
   await expect(page.getByLabel(/^Linha 1/)).toHaveCount(0); // no line group in this model
-  await page.getByRole("button", { name: "Enviar solicitação de personalização" }).click();
-  await expect(page.getByRole("alert").first()).toBeVisible(); // the city is required
+  await send(page).click();
+  await expect(page.getByRole("alert").filter({ hasText: /Cidade: preencha/ })).toBeVisible(); // the city is required
   await page.getByLabel(/^Cidade/).fill("Santiago");
   await page.getByLabel(/^Legenda/).fill("Terra dos poetas");
-  await page.getByRole("button", { name: "Enviar solicitação de personalização" }).click();
+  await fillContact(page, { name: "Diego", email: "diego@exemplo.com", confirm: true });
+  await send(page).click();
   await expect(page.getByTestId("customization-done")).toBeVisible({ timeout: 60_000 });
   await expect(page.getByTestId("customization-done")).toContainText("Santiago");
   await expect(page.getByTestId("customization-done")).not.toContainText("Localidade"); // the empty optional one is left out
-  model.santiagoRef = (await page.getByTestId("customization-reference").innerText()).trim();
+  await expect(page.getByTestId("customization-done")).toContainText("Nenhuma compra foi realizada nesta etapa");
 
   // The model changes (v2): the label of the city field is renamed and republished.
   await open(page, `/admin/personalizacao/${model.santiagoId}`);
@@ -366,109 +494,191 @@ test("D · model 'Lá de Santiago': city, optional locality and caption; labels 
   await expect(flash(page, /Modelo salvo no rascunho/)).toBeVisible();
   await page.getByRole("button", { name: /Publicar página no sandbox local/ }).click();
   await expect(flash(page, /Modelo publicado/)).toBeVisible({ timeout: 300_000 });
-  await page.goto("/sul/personalizar/la-de-santiago", { waitUntil: "domcontentloaded", timeout: 300_000 });
+  await openPublic(page, "/sul/personalizar/la-de-santiago");
   await expect(page.getByLabel(/^Cidade do coração/)).toBeVisible();
 
   // The request made before still shows the original label and the original version.
   await open(page, "/admin/personalizacao/solicitacoes");
   const row = page.locator("table.a-table tbody tr", { hasText: "Lá de Santiago" }).first();
   await expect(row).toContainText("v1");
+  await expect(row).toContainText("Diego");
   await row.getByRole("link", { name: "Abrir" }).click();
   await expect(page.locator("dt", { hasText: /^Cidade$/ })).toBeVisible();
   await expect(page.getByText("Cidade do coração")).toHaveCount(0);
   await expect(page.getByText("Terra dos poetas")).toBeVisible();
+  await expectMockup(page, page.getByTestId("request-mockup"), null);
 });
 
-test("E · operation: manual link to a fictitious INK order, status changes, a restore never rewrites requests, honest copy, nothing leaks", async ({ page }) => {
-  await open(page, "/admin/personalizacao/solicitacoes");
-  await page.locator("table.a-table tbody tr", { hasText: "Lá de Santiago" }).first().getByRole("link", { name: "Abrir" }).click();
+test("E · operation: the queue is the workbench: protected contact, manual channels, the art states, a product link that only stays on the region's store, and no order anywhere", async ({ page, context }) => {
+  // Every request to WhatsApp is watched: nothing may open it but a person's click.
+  const contacted: string[] = [];
+  await context.route(/^https:\/\/(wa\.me|api\.whatsapp\.com)\//, (route) => { contacted.push(route.request().url()); return route.fulfill({ status: 200, contentType: "text/html", body: "<title>wa</title>" }); });
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+
+  await open(page, "/admin/personalizacao/solicitacoes?q=Ana");
+  await page.locator("table.a-table tbody tr", { hasText: "Ana Souza" }).getByRole("link", { name: "Abrir" }).click();
   await hydrated(page);
+  await expect(page.getByTestId("request-status")).toHaveText("Recebida");
 
-  // No confirmation box, no link.
-  await page.locator("#order").fill("INK-90001");
-  await page.getByRole("button", { name: "Vincular pedido" }).click();
-  await expect(page.getByText(/Marque a confirmação/)).toBeVisible();
-  await page.locator("#order").fill("INK 90001!");
-  await page.getByLabel(/Conferi este número/).check();
-  await page.getByRole("button", { name: "Vincular pedido" }).click();
-  await expect(page.getByText(/Número de pedido inválido/)).toBeVisible();
-  await page.locator("#order").fill("INK-90001");
-  await page.getByLabel(/Conferi este número/).check();
-  await page.getByRole("button", { name: "Vincular pedido" }).click();
-  await expect(flash(page, /Vinculada ao pedido INK-90001.*a INK não recebeu a personalização/)).toBeVisible();
+  // The full contact is here (authenticated panel) and only here.
+  await expect(page.getByTestId("contact-name")).toHaveText("Ana Souza");
+  await expect(page.getByTestId("contact-whatsapp")).toHaveText("+5551999998888");
+  await expect(page.getByTestId("contact-email")).toHaveText("não informado");
+  await expect(page.getByTestId("request-mockup")).toBeVisible();
+  const ref = (await page.getByTestId("request-ref").innerText()).trim();
+  expect(contacted).toEqual([]); // opening the request contacted nobody
 
-  // The same order cannot be claimed by another request.
-  await open(page, "/admin/personalizacao/solicitacoes");
-  await page.locator("table.a-table tbody tr", { hasText: "Pai Paranaense" }).first().getByRole("link", { name: "Abrir" }).click();
-  await hydrated(page);
-  await page.locator("#order").fill("INK-90001");
-  await page.getByLabel(/Conferi este número/).check();
-  await page.getByRole("button", { name: "Vincular pedido" }).click();
-  await expect(page.getByRole("status").locator(".a-flash.err")).toBeVisible();
+  // Nothing about orders, payment or checkout exists in the operation.
+  await expect(page.locator("#order")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Vincular pedido/ })).toHaveCount(0);
+  await expect(page.getByLabel(/número do pedido/i)).toHaveCount(0);
+  const options = await page.locator("#status option").allTextContents();
+  expect(options.join(" ")).not.toMatch(/pedido|vincul|pag|compra/i);
 
-  // A status change on the Pai request.
-  await page.locator("#status").selectOption({ index: 0 });
-  await page.locator("#note").fill("conferido pela equipe");
-  await page.getByRole("button", { name: "Atualizar estado" }).click();
+  // Suggested message + channels: WhatsApp opens only on a click; e-mail is absent (no address); copy goes to the clipboard.
+  const message = page.locator("#suggested-message");
+  await expect(message).toContainText("Olá, Ana!");
+  await expect(message).toContainText(ref);
+  await expect(message).not.toContainText("https://");
+  const wa = page.getByTestId("open-whatsapp");
+  expect(await wa.getAttribute("href")).toMatch(/^https:\/\/wa\.me\/5551999998888\?text=/);
+  await expect(wa).toHaveAttribute("target", "_blank");
+  await expect(wa).toHaveAttribute("rel", /noopener/);
+  await expect(page.getByTestId("open-mailto")).toHaveCount(0);
+  expect(contacted).toEqual([]); // still nothing sent
+  await message.fill("Olá, Ana! Sua estampa ficou pronta.");
+  expect(decodeURIComponent((await wa.getAttribute("href")) ?? "")).toContain("Sua estampa ficou pronta"); // the link follows the edited text
+  const [popup] = await Promise.all([context.waitForEvent("page"), wa.click()]);
+  await popup.waitForLoadState("domcontentloaded").catch(() => undefined);
+  expect(popup.url()).toContain("wa.me/5551999998888");
+  await popup.close();
+  expect(contacted.length).toBe(1); // exactly one, and only after the click
+  await page.getByTestId("copy-message").click();
+  await expect(page.getByTestId("copy-message")).toHaveText("Mensagem copiada");
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("Olá, Ana! Sua estampa ficou pronta.");
+  await expect(page.getByTestId("request-status")).toHaveText("Recebida"); // clicking a channel does not change the status
+
+  // The states: Recebida → Em criação → Arte pronta → Cliente contatado (needs a person's confirmation) → Encerrada.
+  const move = async (label: string, opts: { confirm?: boolean; note?: string } = {}) => {
+    await page.locator("#status").selectOption({ label });
+    if (opts.note) await page.locator("#note").fill(opts.note);
+    if (opts.confirm) await page.getByTestId("confirm-contacted").check();
+    await page.getByRole("button", { name: "Atualizar estado" }).click();
+  };
+  expect((await page.locator("#status option").allTextContents()).sort()).toEqual(["Cancelada", "Em criação"]);
+  await move("Em criação", { note: "comecei a arte" });
   await expect(flash(page, /Estado atualizado/)).toBeVisible();
+  await expect(page.getByTestId("request-status")).toHaveText("Em criação");
+  await move("Arte pronta");
+  await expect(page.getByTestId("request-status")).toHaveText("Arte pronta");
+  await move("Cliente contatado"); // without the confirmation
+  await expect(page.getByText(/Marque a confirmação de que você já falou com o cliente/)).toBeVisible();
+  await expect(page.getByTestId("request-status")).toHaveText("Arte pronta");
 
-  // The queue shows both, with the linked order only on the first.
-  await open(page, "/admin/personalizacao/solicitacoes");
-  await expect(page.locator("table.a-table tbody tr", { hasText: "Lá de Santiago" }).first()).toContainText("INK-90001");
-  await expect(page.locator("table.a-table tbody tr", { hasText: "Pai Paranaense" }).first()).not.toContainText("INK-90001");
+  // The product link: only https on this region's INK store; anything else is refused; a saved one goes into the suggested message.
+  const link = page.locator("#product_link");
+  for (const bad of ["https://www.usenorte.com.br/x", "https://www.usesul.com.br.evil.example/x", "https://www.usesul.com.br@evil.example/x", "javascript:alert(1)", "http://www.usesul.com.br/x"]) {
+    await link.fill(bad);
+    await page.getByRole("button", { name: /Salvar link|Atualizar link/ }).click();
+    await expect(page.getByRole("status").locator(".a-flash.err")).toBeVisible();
+    await expect(page.getByTestId("product-link-saved")).toHaveCount(0);
+  }
+  await link.fill("https://www.usesul.com.br/usesul/product/pai-paranaense-ana#x");
+  await page.getByRole("button", { name: /Salvar link/ }).click();
+  await expect(flash(page, /Link do produto salvo/)).toBeVisible();
+  await expect(page.getByTestId("product-link-saved")).toBeVisible();
+  await expect(page.locator("#suggested-message")).toContainText("https://www.usesul.com.br/usesul/product/pai-paranaense-ana");
+  await expect(page.locator("#suggested-message")).not.toContainText("#x");
 
-  // Restore the model to its first version: the old request keeps the labels it was made with.
+  await move("Cliente contatado", { confirm: true, note: "enviei o link no WhatsApp" });
+  await expect(flash(page, /Estado atualizado/)).toBeVisible();
+  await expect(page.getByTestId("request-status")).toHaveText("Cliente contatado");
+  await expect(page.getByText("Contato registrado pela equipe")).toBeVisible();
+  await page.locator("#note-only").fill("cliente gostou da arte");
+  await page.getByRole("button", { name: "Registrar observação" }).click();
+  await expect(flash(page, /Observação registrada/)).toBeVisible();
+  await move("Encerrada");
+  await expect(page.getByTestId("request-status")).toHaveText("Encerrada");
+  const history = await page.getByTestId("request-history").innerText();
+  for (const expected of ["Solicitação recebida", "Estado: Em criação · comecei a arte", "Estado: Arte pronta", "Estado: Cliente contatado · enviei o link no WhatsApp", "Observação: cliente gostou da arte", "Link do produto definido", "Estado: Encerrada"]) expect(history).toContain(expected);
+  expect(history).not.toMatch(/pedido|INK-/i);
+
+  // The customer's private reference page: the status in plain words, the contact masked, and no product link or order.
+  const privateHtml = await publicHtml(page, model.paiPrivate);
+  expect(privateHtml).toContain("Solicitação encerrada");
+  expect(privateHtml).toContain("WhatsApp final 8888");
+  expect(privateHtml).not.toContain("99999");
+  expect(privateHtml).not.toContain("pai-paranaense-ana");
+  expect(privateHtml).not.toMatch(/checkout|carrinho|pedido n/i);
+  expect(privateHtml).toContain("noindex");
+  expect(await status(page, model.paiPrivate.replace("/sul/", "/norte/"))).toBe(404); // another region's URL never shows it
+  expect(await status(page, "/sul/personalizar/solicitacao/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")).toBe(404);
+
+  // A model restore never rewrites requests already made; the queue shows the other statuses coherently.
   await open(page, `/admin/personalizacao/${model.santiagoId}`);
   await page.getByRole("button", { name: "Restaurar esta versão" }).first().click();
   await expect(flash(page, /restaurada como nova publicação/)).toBeVisible({ timeout: 300_000 });
-  await page.goto("/sul/personalizar/la-de-santiago", { waitUntil: "domcontentloaded", timeout: 300_000 });
+  await openPublic(page, "/sul/personalizar/la-de-santiago");
   await expect(page.getByLabel(/^Cidade/).first()).toBeVisible();
   await open(page, "/admin/personalizacao/solicitacoes");
   await page.locator("table.a-table tbody tr", { hasText: "Lá de Santiago" }).first().getByRole("link", { name: "Abrir" }).click();
   await expect(page.locator("dt", { hasText: /^Cidade$/ })).toBeVisible();
-  await expect(page.getByTestId("linked-order")).toHaveText("INK-90001");
+  await expect(page.getByTestId("contact-email")).toHaveText("diego@exemplo.com");
 
-  // The public page never presents personalization as travelling with an INK purchase, and never links a checkout.
+  // Public surfaces: no CTA of purchase, no product link, other regions have nothing.
   const html = await publicHtml(page, "/sul/personalizar/pai-paranaense");
   expect(html).toContain("noindex");
-  expect(html).not.toMatch(/checkout|carrinho/i);
+  expect(html).not.toMatch(BUY_NOW);
   expect(html).not.toMatch(/enviad[ao] (para|à) (a )?INK|segue com (a )?sua compra/i);
-
-  // Private surfaces: an unknown reference is a 404 (no enumeration), another region has no such model, drafts never render.
-  expect(await status(page, "/sul/personalizar/solicitacao/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")).toBe(404);
+  expect(html).toContain("Enviar solicitação");
   expect(await status(page, "/norte/personalizar/la-de-santiago")).toBe(404);
   expect(await status(page, "/centro-oeste/personalizar/pai-paranaense")).toBe(404);
-  const own = await page.request.get(`/sul/personalizar/solicitacao/${model.paiRef}`, { timeout: 300_000 });
+  expect(contacted.length).toBe(1); // the whole scenario reached WhatsApp exactly once: the click that was made
+
+  // The customer's reference page is private: never cached, never indexed, never leaking a referrer.
+  const own = await page.request.get(model.paiPrivate, { timeout: 300_000 });
   expect(own.status()).toBe(200);
   expect(own.headers()["cache-control"]).toMatch(/no-store|no-cache|private/); // dev says no-cache; `next start` adds private, no-store
   expect(own.headers()["referrer-policy"] ?? (await own.text())).toMatch(/no-referrer/);
 });
 
-test("F · captures: one 375 px and one desktop view of each new page type, and the mobile request confirmation (CAPTURE=1)", async ({ browser }) => {
+test("F · captures: one 375 px and one desktop view of each new page type, the customer's confirmation and the operator's queue (CAPTURE=1)", async ({ browser, page }) => {
   test.skip(!process.env.CAPTURE, "captures are produced on demand");
   const dir = "docs/screenshots/2026-09-26-hotpages";
+  const base = test.info().project.use.baseURL as string;
   const shots: Array<[string, string]> = [["hotpage", "/sul/h/dia-dos-pais"], ["categoria", "/sul/colecoes/pais"], ["personalizar-pai", "/sul/personalizar/pai-paranaense"], ["personalizar-santiago", "/sul/personalizar/la-de-santiago"]];
-  for (const [name, path] of shots) {
+  for (const [name, target] of shots) {
     for (const [label, width, height] of [["375", 375, 900], ["desktop", 1280, 900]] as const) {
-      const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, baseURL: test.info().project.use.baseURL as string });
-      const page = await context.newPage();
-      await page.goto(path, { waitUntil: "networkidle", timeout: 300_000 });
-      await page.evaluate(() => document.fonts?.ready);
-      await page.screenshot({ path: `${dir}/${name}-${label}.png`, fullPage: label === "375" });
+      const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, baseURL: base });
+      const shot = await context.newPage();
+      await shot.goto(target, { waitUntil: "networkidle", timeout: 300_000 });
+      await shot.evaluate(() => document.fonts?.ready);
+      await shot.screenshot({ path: `${dir}/${name}-${label}.png`, fullPage: label === "375" });
       await context.close();
     }
   }
-  const context = await browser.newContext({ viewport: { width: 375, height: 900 }, baseURL: test.info().project.use.baseURL as string });
-  const page = await context.newPage();
-  await page.goto("/sul/personalizar/pai-paranaense", { waitUntil: "networkidle", timeout: 300_000 });
-  await hydrated(page);
-  const add = page.getByRole("button", { name: /Adicionar linha/ });
+  const context = await browser.newContext({ viewport: { width: 375, height: 900 }, baseURL: base });
+  const mobile = await context.newPage();
+  await mobile.goto("/sul/personalizar/pai-paranaense", { waitUntil: "networkidle", timeout: 300_000 });
+  await hydrated(mobile);
+  const add = mobile.getByRole("button", { name: /Adicionar linha/ });
   await add.click();
   await add.click();
-  await page.getByLabel("Linha 5", { exact: true }).fill("DE SANGUE");
-  await page.getByLabel("Linha 6", { exact: true }).fill("E FÉ");
-  await page.getByRole("button", { name: "Enviar solicitação de personalização" }).click();
-  await expect(page.getByTestId("customization-done")).toBeVisible({ timeout: 60_000 });
-  await page.screenshot({ path: `${dir}/solicitacao-375.png`, fullPage: true });
+  await mobile.getByLabel("Linha 5", { exact: true }).fill("DE SANGUE");
+  await mobile.getByLabel("Linha 6", { exact: true }).fill("E FÉ");
+  await fillContact(mobile, { name: "Marina Lopes", whatsapp: "(51) 98888-1234", email: "", confirm: true });
+  await mobile.screenshot({ path: `${dir}/formulario-contato-375.png`, fullPage: true });
+  await send(mobile).click();
+  await expect(mobile.getByTestId("customization-done")).toBeVisible({ timeout: 60_000 });
+  await mobile.screenshot({ path: `${dir}/solicitacao-375.png`, fullPage: true });
   await context.close();
+
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await open(page, "/admin/personalizacao/solicitacoes");
+  await page.screenshot({ path: `${dir}/fila-desktop.png`, fullPage: true });
+  await page.locator("table.a-table tbody tr", { hasText: "Marina Lopes" }).getByRole("link", { name: "Abrir" }).click();
+  await expect(page).toHaveURL(/\/solicitacoes\/[0-9A-Z]{26}/);
+  await expect(page.getByTestId("request-ref")).toBeVisible();
+  await hydrated(page);
+  await page.screenshot({ path: `${dir}/solicitacao-painel-desktop.png`, fullPage: true });
 });

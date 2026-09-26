@@ -181,9 +181,11 @@ test("given an editor of another region, when editing the Sul home or managing p
 test("given the owner, when a collection section is created from an enabled internal collection with an uploaded image and published, then Postgres, the private bucket, the Volume and the storefront all agree; rollback restores the previous version", async ({ browser }) => {
   const trackers: string[] = [];
   const context = await browser.newContext();
+  // Third-party measurement is replaced by local stubs: nothing leaves this machine, and every request the page makes to a tracker is recorded so the test
+  // can tell "requested" from "not requested" deterministically (no waiting on an external network). The IDs come from the BUILD under test (see the config).
   await context.route(/connect\.facebook\.net|facebook\.com\/tr|googletagmanager\.com|google-analytics\.com/, (route) => {
     trackers.push(route.request().url());
-    return route.abort();
+    return route.fulfill({ status: 200, contentType: "application/javascript", body: "/* stub */" });
   });
   await context.route("**/_next/image**", (route) => route.abort());
   const page = await context.newPage();
@@ -290,8 +292,10 @@ test("given the owner, when a collection section is created from an enabled inte
   await storePage.waitForTimeout(800);
   expect(trackers).toEqual([]);
   await storePage.getByRole("button", { name: /Aceitar/ }).click();
-  await expect.poll(() => trackers.some((u) => u.includes("connect.facebook.net")) && trackers.some((u) => u.includes("googletagmanager.com"))).toBe(true);
-  expect(trackers.some((u) => u.includes("1558923262073052") || u.includes("G-8GYTEJ1F77"))).toBe(true);
+  await expect.poll(() => trackers.some((u) => u.includes("connect.facebook.net")) && trackers.some((u) => u.includes("googletagmanager.com/gtag/js"))).toBe(true);
+  // The IDs are the build's own (NEXT_PUBLIC_*): a build without them would request no tracker at all, which is what the poll above reports.
+  expect(trackers.find((u) => u.includes("googletagmanager.com/gtag/js"))).toMatch(/[?&]id=G-[A-Z0-9]{6,}/);
+  expect(await storePage.evaluate(() => Array.from(((window as unknown as { fbq?: { queue?: ArrayLike<unknown>[] } }).fbq?.queue) ?? []).some((call) => call[0] === "init" && /^\d{10,20}$/.test(String(call[1]))))).toBe(true);
   await storePage.close();
 
   // 7. Second version, then restore the first: the storefront follows; history keeps everything.
