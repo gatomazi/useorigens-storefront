@@ -1,6 +1,6 @@
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
-import type { CommerceStoreKey } from "../geo/regions";
-import type { Destination, EditorialModuleKey, Source } from "./schema";
+import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
+import { PAGE_SEGMENT, type Destination, type EditorialModuleKey, type Source } from "./schema";
 
 /**
  * Section data sources (docs/admin/cms-v1-round2.md §3, docs/admin/cms-v1-round3.md §3). A source either yields items or says,
@@ -46,10 +46,15 @@ export function collectionUrl(store: CommerceStoreKey, slug: string): string | n
   return site && COLLECTION_SLUG.test(slug) ? `https://www.${site}.com.br/${site}/collections/${slug}` : null;
 }
 
-/** Real href of a CTA destination, or `null` when it cannot be resolved (an INK collection needs its slug from the snapshot). */
-export function destinationHref(dest: Destination, slugOf?: (store: CommerceStoreKey, collectionId: number) => string | null): string | null {
+/**
+ * Real href of a CTA destination, or `null` when it cannot be resolved (an INK collection needs its slug from the snapshot; a page needs the
+ * region it is rendered in). A link to a page is only ever built for the region being rendered: a page of another region is never linked.
+ */
+export function destinationHref(dest: Destination, slugOf?: (store: CommerceStoreKey, collectionId: number) => string | null, region?: RegionSlug): string | null {
   if (dest.kind === "route") return dest.path;
   if (dest.kind === "external") return dest.url;
+  if (dest.kind === "anchor") return `#${dest.anchor}`;
+  if (dest.kind === "page") return region ? `/${region}/${PAGE_SEGMENT[dest.pageKind]}/${dest.slug}` : null;
   const slug = slugOf?.(dest.store, dest.collectionId);
   return slug ? collectionUrl(dest.store, slug) : null;
 }

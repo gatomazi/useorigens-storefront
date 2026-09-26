@@ -89,7 +89,7 @@ export function SectionEditorForm({
   const [srcEntry, setSrcEntry] = useState<ComboEntry | null>(collections.find((e) => e.value === currentRef) ?? null);
   const publicEntries = collections.filter((e) => e.visibility === "public" && e.selectable);
   const internalSource = sourceKind === "ink-category" && srcEntry?.visibility === "internal";
-  const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route">(section.cta?.dest.kind ?? "none");
+  const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
 
   const [navShow, setNavShow] = useState(Boolean(section.nav));
   const [navLabel, setNavLabel] = useState(section.nav?.label ?? suggestedNavLabel(section));
