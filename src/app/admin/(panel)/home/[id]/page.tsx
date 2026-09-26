@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { saveSection, searchHeroProductsAction } from "@/app/admin/actions";
 import { eligibleFeaturedCount, legacyFeaturedRefs, resolveFeatured } from "@/lib/hero-featured";
-import { REGIONS } from "@/lib/geo/regions";
+import { REGIONS, STATE_NAMES } from "@/lib/geo/regions";
+import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import type { FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
@@ -39,6 +40,8 @@ export default async function EditSection({ params, searchParams }: { params: Pr
         ? { mode: "legacy" as const, initial: slotViews(legacyFeaturedRefs("sul")), eligible: eligibleFeaturedCount(scope), regionName: REGIONS[scope].name, search: searchHeroProductsAction }
         : { mode: "edit" as const, initial: slotViews(section.featured ?? []), eligible: eligibleFeaturedCount(scope), regionName: REGIONS[scope].name, search: searchHeroProductsAction }
       : undefined;
+  // State chooser: the region's states (and, for Sul, which ones already have a cover in code).
+  const stateCovers = section.template === "states" ? REGIONS[scope].ufs.map((uf) => ({ uf, name: STATE_NAMES[uf], legacy: usableBannerAsset("state", bannerFor(scope, "state", uf)) !== null })) : undefined;
   const structured = section.template === "city-styles" ? cityStylesStatus(scope, section) : section.template === "states" ? statesStatus(scope) : section.template === "campaign" ? campaignStatus(scope) : null;
 
   return (
@@ -57,7 +60,7 @@ export default async function EditSection({ params, searchParams }: { params: Pr
       <Flash ok={sp.ok} err={sp.err} />
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,34rem)_1fr]">
         <section className="a-card p-5" aria-label="Editor da seção">
-          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={structured?.notes} featured={featured} />
+          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={structured?.notes} featured={featured} stateCovers={stateCovers} />
         </section>
         <section className="a-card p-5 2xl:sticky 2xl:top-4 2xl:self-start" aria-label="Pré-visualização">
           <PreviewFrame version={ws.record?.rev ?? 0} anchor={anchor} height={760} />

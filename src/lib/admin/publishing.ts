@@ -31,7 +31,7 @@ export async function composeBundle(deps: Pick<PublishDeps, "releases" | "media"
   const head = await deps.releases.head();
   const base = head?.bundle ?? seed;
   const ids = new Set<string>();
-  for (const s of doc.home?.sections ?? []) for (const ref of [s.appearance.image?.mobile, s.appearance.image?.desktop]) if (ref) ids.add(ref.assetId);
+  for (const s of doc.home?.sections ?? []) for (const ref of [s.appearance.image?.mobile, s.appearance.image?.desktop, ...Object.values(s.stateCovers ?? {})]) if (ref) ids.add(ref.assetId);
   return { schemaVersion: 1, releaseId, docs: { ...base.docs, [doc.scope]: doc }, media: { ...seed.media, ...base.media, ...(await deps.media(ids)) } };
 }
 

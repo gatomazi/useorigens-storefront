@@ -8,7 +8,7 @@ import { SOURCES } from "@/lib/analytics/sources";
 import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
-import { firstImageSectionId, hasImage, renderableSections, resolveBackground } from "@/lib/site-config/resolve";
+import { firstImageSectionId, hasImage, renderableSections, resolveBackground, resolveStateCovers } from "@/lib/site-config/resolve";
 import type { Fill, PublishedBundle, Section } from "@/lib/site-config/schema";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { destinationHref, resolveSource, type CategoryLookup } from "@/lib/site-config/sources";
@@ -103,6 +103,7 @@ export function HomeSections({ region, home, bundle, categories, slugOf }: { reg
                 anchor={s.anchor}
                 headingId={s.headingId}
                 backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
+                covers={resolveStateCovers(s, media)}
               />
             );
           }
