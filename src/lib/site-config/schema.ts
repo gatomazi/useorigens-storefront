@@ -122,11 +122,19 @@ export type ScopeDoc = {
   collections?: {
     enabled: CollectionRef[];
     /**
-     * Collections shown in the navbar the storefront's Worker draws on the INK product pages (Round "navbar da INK"). INDEPENDENT of `enabled`
-     * (which is about home sections): only PUBLIC INK collections with a real page and products are ever rendered, checked at read time
-     * (`site-config/navbar.ts`). Menu order = INK's own navbar position, so there is nothing to order here.
+     * LEGACY (round 1 of the INK navbar): a flat list of collections shown in the navbar, ordered by INK's own position. Kept readable so documents
+     * published before the two groups existed keep their selection: `effectiveNavbarGroups` maps it to `top`. New edits write `navbarGroups` and
+     * drop this key. Never written by new code.
      */
     navbar?: CollectionRef[];
+    /**
+     * Where each PUBLIC INK collection appears in the navbar the Worker draws on the INK product pages: `top` (straight on the bar) or `more`
+     * ("Demais categorias" dropdown). A collection not listed is not shown. Any number in each group, in the order listed (the owner's order, never
+     * alphabetical); a collection belongs to at most ONE group. INDEPENDENT of `enabled` (home sections). Only collections that are PUBLIC on INK, have
+     * products and a valid slug are ever published to the Worker, checked at read time (`site-config/navbar.ts`); an ineligible one keeps its place here.
+     * There are no special slots ("Novidades", "destaque"): those are just names of collections.
+     */
+    navbarGroups?: { top: CollectionRef[]; more: CollectionRef[] };
   };
 };
 
@@ -329,8 +337,8 @@ export function validateSection(input: unknown, path = "section"): ValidationRes
   return c.errors.length === 0 ? { ok: true, value: input as Section } : { ok: false, errors: c.errors };
 }
 
-/** Most collections the INK navbar may list: it is a menu, not a catalog. */
-export const MAX_NAVBAR_COLLECTIONS = 8;
+/** Sanity ceiling per navbar group (payload size), NOT an editorial limit: the owner decides how many collections go on top or in the dropdown. */
+export const MAX_NAVBAR_GROUP = 60;
 
 function checkRefList(c: Collector, path: string, list: unknown, max: number): void {
   if (!Array.isArray(list)) return c.fail(path, "must be an array");
@@ -349,7 +357,15 @@ function checkRefList(c: Collector, path: string, list: unknown, max: number): v
 function checkCollections(c: Collector, path: string, v: unknown): void {
   if (!isRecord(v) || !Array.isArray(v.enabled)) return c.fail(path, "must be { enabled: [...] }");
   checkRefList(c, `${path}.enabled`, v.enabled, 300);
-  if (v.navbar !== undefined) checkRefList(c, `${path}.navbar`, v.navbar, MAX_NAVBAR_COLLECTIONS);
+  if (v.navbar !== undefined) checkRefList(c, `${path}.navbar`, v.navbar, 300); // legacy flat list
+  if (v.navbarGroups !== undefined) {
+    if (!isRecord(v.navbarGroups) || !Array.isArray(v.navbarGroups.top) || !Array.isArray(v.navbarGroups.more)) return c.fail(`${path}.navbarGroups`, "must be { top: [...], more: [...] }");
+    checkRefList(c, `${path}.navbarGroups.top`, v.navbarGroups.top, MAX_NAVBAR_GROUP);
+    checkRefList(c, `${path}.navbarGroups.more`, v.navbarGroups.more, MAX_NAVBAR_GROUP);
+    // One collection, one place: never on top AND in the dropdown.
+    const top = new Set(v.navbarGroups.top.filter(isRecord).map((r) => `${r.store}:${r.collectionId}`));
+    v.navbarGroups.more.forEach((r, i) => { if (isRecord(r) && top.has(`${r.store}:${r.collectionId}`)) c.fail(`${path}.navbarGroups.more[${i}]`, "already in the top group"); });
+  }
 }
 
 export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
@@ -374,8 +390,9 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
       checkCollections(c, "doc.collections", input.collections);
       // A region only enables collections of ITS OWN INK store: the wrong store's collection can never be enabled here.
       if (isRecord(input.collections)) {
-        for (const key of ["enabled", "navbar"] as const) {
-          const list = input.collections[key];
+        const groups = isRecord(input.collections.navbarGroups) ? input.collections.navbarGroups : {};
+        const lists: [string, unknown][] = [["enabled", input.collections.enabled], ["navbar", input.collections.navbar], ["navbarGroups.top", groups.top], ["navbarGroups.more", groups.more]];
+        for (const [key, list] of lists) {
           if (!Array.isArray(list)) continue;
           list.forEach((ref, i) => {
             if (isRecord(ref) && ref.store !== REGIONS[sc as RegionSlug]?.storeKey) c.fail(`doc.collections.${key}[${i}].store`, "belongs to another region's INK store");

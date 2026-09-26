@@ -1,7 +1,8 @@
+import { effectiveNavbarGroups } from "../site-config/navbar-groups";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
@@ -38,12 +39,35 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
     const edited = EDITED_FIELDS.filter(([key]) => json(old[key]) !== json(s[key])).map(([, name]) => name);
     if (edited.length > 0) changes.push({ kind: "edited", sectionId: s.id, text: `"${label(s)}": ${edited.join(", ")}` });
   }
-  // The INK navbar list is part of the document but not of any section: without this, changing only the navbar would read "nothing to publish".
-  const key = (r: CollectionRef) => `${r.store}:${r.collectionId}`;
-  const navBefore = new Map((published.collections?.navbar ?? []).map((r) => [key(r), r]));
-  const navAfter = new Map((draft.collections?.navbar ?? []).map((r) => [key(r), r]));
-  const named = (r: CollectionRef) => `"${nameOf(r) ?? `coleção #${r.collectionId}`}"`;
-  for (const [k, r] of navAfter) if (!navBefore.has(k)) changes.push({ kind: "navbar-added", sectionId: `navbar:${k}`, text: `${named(r)} passa a aparecer na navbar da INK` });
-  for (const [k, r] of navBefore) if (!navAfter.has(k)) changes.push({ kind: "navbar-removed", sectionId: `navbar:${k}`, text: `${named(r)} sai da navbar da INK` });
+  // The INK navbar groups are part of the document but not of any section: without this, changing only the navbar would read "nothing to publish".
+  changes.push(...navbarChanges(published, draft, nameOf));
   return changes;
+}
+
+const GROUP_LABEL = { top: "no topo da navbar da INK", more: "em Demais categorias da navbar da INK" } as const;
+
+/** What changed in the navbar groups between two documents: entering, leaving, changing group, and changing order inside a group. Pure. */
+function navbarChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer): Change[] {
+  const before = effectiveNavbarGroups(published).groups;
+  const after = effectiveNavbarGroups(draft).groups;
+  const key = (r: CollectionRef) => `${r.store}:${r.collectionId}`;
+  const where = (g: typeof before) => new Map<string, { ref: CollectionRef; group: "top" | "more"; index: number }>([...g.top.map((ref, index) => [key(ref), { ref, group: "top" as const, index }] as const), ...g.more.map((ref, index) => [key(ref), { ref, group: "more" as const, index }] as const)]);
+  const was = where(before);
+  const now = where(after);
+  const named = (r: CollectionRef) => `"${nameOf(r) ?? `coleção #${r.collectionId}`}"`;
+  const out: Change[] = [];
+  for (const [k, n] of now) {
+    const w = was.get(k);
+    if (!w) out.push({ kind: "navbar-added", sectionId: `navbar:${k}`, text: `${named(n.ref)} passa a aparecer ${GROUP_LABEL[n.group]}` });
+    else if (w.group !== n.group) out.push({ kind: "navbar-moved", sectionId: `navbar:${k}`, text: `${named(n.ref)} muda para ${GROUP_LABEL[n.group]}` });
+  }
+  for (const [k, w] of was) if (!now.has(k)) out.push({ kind: "navbar-removed", sectionId: `navbar:${k}`, text: `${named(w.ref)} sai da navbar da INK` });
+  // Order inside a group, among the collections that stay in it.
+  for (const group of ["top", "more"] as const) {
+    const stay = (g: typeof before, other: typeof before) => g[group].filter((r) => other[group].some((o) => key(o) === key(r))).map(key);
+    const a = stay(before, after);
+    const b = stay(after, before);
+    if (a.join() !== b.join()) out.push({ kind: "navbar-moved", sectionId: `navbar:order:${group}`, text: `A ordem ${GROUP_LABEL[group]} mudou` });
+  }
+  return out;
 }
