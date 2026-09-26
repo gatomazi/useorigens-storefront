@@ -41,6 +41,17 @@ export function signV4(input: SignInput): { authorization: string; signedHeaders
   return { authorization: `AWS4-HMAC-SHA256 Credential=${input.accessKeyId}/${scope},SignedHeaders=${signedHeaders},Signature=${signature}`, signedHeaders, signature };
 }
 
+/** The S3 error code of a failed response (`<Code>NoSuchBucket</Code>`), e.g. to tell a wrong bucket name from a bad signature. Not a secret: a fixed vocabulary. */
+async function failure(what: string, res: Response): Promise<Error> {
+  let code = "";
+  try {
+    code = /<Code>([A-Za-z]{3,40})<\/Code>/.exec((await res.text()).slice(0, 2000))?.[1] ?? "";
+  } catch {
+    /* no readable body */
+  }
+  return new Error(`object store ${what} failed (${res.status}${code ? ` ${code}` : ""})`);
+}
+
 export interface ObjectStore {
   put(key: string, body: Uint8Array, options: { contentType: string; cacheControl: string }): Promise<void>;
   get(key: string): Promise<{ body: Buffer; contentType: string } | null>;
@@ -97,23 +108,23 @@ export function createObjectStore(config: ObjectStoreConfig & { addressing?: Add
   return {
     async put(key, body, options) {
       const res = await request("PUT", key, body, { "Content-Type": options.contentType, "Cache-Control": options.cacheControl });
-      if (!res.ok) throw new Error(`object store PUT failed (${res.status})`);
+      if (!res.ok) throw await failure("PUT", res);
     },
     async get(key) {
       const res = await request("GET", key);
       if (res.status === 404) return null;
-      if (!res.ok) throw new Error(`object store GET failed (${res.status})`);
+      if (!res.ok) throw await failure("GET", res);
       return { body: Buffer.from(await res.arrayBuffer()), contentType: res.headers.get("content-type") ?? "application/octet-stream" };
     },
     async exists(key) {
       const res = await request("HEAD", key);
       if (res.status === 404) return false;
-      if (!res.ok) throw new Error(`object store HEAD failed (${res.status})`);
+      if (!res.ok) throw await failure("HEAD", res);
       return true;
     },
     async remove(key) {
       const res = await request("DELETE", key);
-      if (!res.ok && res.status !== 404) throw new Error(`object store DELETE failed (${res.status})`);
+      if (!res.ok && res.status !== 404) throw await failure("DELETE", res);
     },
   };
 }
