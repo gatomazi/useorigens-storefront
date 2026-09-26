@@ -3,6 +3,7 @@ import { deleteReleaseAction, discardDraftAction, publishAction, reconcileAction
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { diffDocs } from "@/lib/admin/diff";
+import { findCollection } from "@/lib/catalog/collections-file";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { launchBlockers } from "@/lib/admin/launch";
 import { historyPage, inspectPublishing, preflightDoc, publishDeps } from "@/lib/admin/ops";
@@ -19,7 +20,7 @@ export default async function PublishPage({ searchParams }: { searchParams: Prom
   const prod = platform().mode === "prod";
   const sp = await searchParams;
   const ws = await loadWorkspace(scope);
-  const changes = diffDocs(ws.baseDoc, ws.doc);
+  const changes = diffDocs(ws.baseDoc, ws.doc, (ref) => findCollection(ref.store, ref.collectionId)?.name ?? null);
   const errors = await preflightDoc(ws.doc);
   const trackingLines = await pendingTrackingChanges(publishDeps(), ws.doc);
   const { rows: history, total, pages, page, headId } = await historyPage(Number(sp.p));

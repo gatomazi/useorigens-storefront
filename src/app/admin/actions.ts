@@ -206,6 +206,32 @@ export async function setCollectionEnabledAction(fd: FormData) {
   back(to, { ok: enabledNow ? `“${record.name}” habilitada para uso no CMS (a INK não foi alterada).` : `“${record.name}” desabilitada.` });
 }
 
+/**
+ * Library: show or hide ONE public collection in the navbar the Worker draws on the INK product pages. Independent of "enabled for the home":
+ * only PUBLIC collections (a real page on the INK store) with products are offered; internal ones have no public page, so they are refused here.
+ */
+export async function setCollectionNavbarAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
+  const show = text(fd, "shown") === "true";
+  const from = text(fd, "from");
+  const q = new URLSearchParams();
+  for (const k of ["q", "f"]) if (text(fd, k)) q.set(k, text(fd, k));
+  if (from.startsWith("/admin/")) q.set("from", from);
+  const to = `/admin/colecoes${q.size ? `?${q}` : ""}`;
+  if (!ref || ref.store !== storeOf(scope)) back(to, { err: [`Esta coleção pertence a outra loja da INK: a região ${scopeName(scope)} só usa coleções da própria loja.`] });
+  const record = findCollection(ref.store, ref.collectionId);
+  if (!record) back(to, { err: ["Coleção não encontrada no snapshot sincronizado."] });
+  if (show) {
+    if (!record.isAvailable) back(to, { err: ["Só coleções públicas na INK têm página própria: uma coleção interna não pode aparecer na navbar."] });
+    if (record.matchedCount < 1) back(to, { err: ["Esta coleção não tem produtos no catálogo local; ela não apareceria na navbar."] });
+  }
+  const outcome = await applyAndSave(scope, { type: "set-collection-navbar", ...ref, shown: show }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  back(to, { ok: show ? `“${record.name}” vai aparecer na navbar da INK depois que você publicar.` : `“${record.name}” sai da navbar da INK depois que você publicar.` });
+}
+
 export async function discardDraftAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   await discardDraft(scope);
