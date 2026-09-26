@@ -152,6 +152,18 @@ test("given an editor of another region, when editing the Sul home or managing p
   });
   await expect(norte.page).toHaveURL(/\/admin\?err=/); // refused before anything was written
   await expect(norte.page.getByText("Você não tem permissão para editar essa região.")).toBeVisible();
+  // The same holds for pages and personalization models: forged to Sul, the server writes nothing.
+  for (const [path, fields] of [["/admin/paginas", { title: "Forjada" }], ["/admin/personalizacao", { name: "Forjado" }]] as const) {
+    await open(norte.page, path);
+    await norte.page.evaluate((values) => {
+      const form = document.querySelector('form input[name="scope"]')?.closest("form") as HTMLFormElement;
+      (form.querySelector('input[name="scope"]') as HTMLInputElement).value = "sul";
+      for (const [name, value] of Object.entries(values)) (form.querySelector(`[name="${name}"]`) as HTMLInputElement).value = value;
+      form.requestSubmit();
+    }, fields as Record<string, string>);
+    await expect(norte.page).toHaveURL(/\/admin\?err=/);
+    await expect(norte.page.getByText("Você não tem permissão para editar essa região.")).toBeVisible();
+  }
   await open(norte.page, "/admin/colecoes");
   await expect(norte.page.getByRole("button", { name: "Sincronizar coleções agora" })).toHaveCount(0);
   await norte.context.close();
@@ -162,7 +174,7 @@ test("given an editor of another region, when editing the Sul home or managing p
   await open(sul.page, "/admin/colecoes");
   await expect(sul.page.getByRole("button", { name: "Sincronizar coleções agora" })).toHaveCount(0);
   await open(sul.page, "/admin/home");
-  await expect(sul.page.getByRole("heading", { name: /Nova seção/ })).toBeVisible();
+  await expect(sul.page.getByRole("heading", { name: /Adicionar seção/ })).toBeVisible();
   await sul.context.close();
 });
 
