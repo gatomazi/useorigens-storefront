@@ -7,7 +7,6 @@ import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { toComboEntries } from "@/lib/admin/combo";
-import { collectionProducts } from "@/lib/admin/customizer-view";
 import { listMedia } from "@/lib/admin/media";
 import { listHistory, preflightDoc } from "@/lib/admin/ops";
 import { MODEL_STATE_LABEL, modelState } from "@/lib/admin/pages-view";
@@ -39,7 +38,6 @@ export default async function CustomizerEditor({ params, searchParams }: { param
   const blockers = await preflightDoc(ws.doc, { kind: "customizer", id });
   const history = (await listHistory()).filter((r) => r.status === "live" && r.scopesChanged.includes(`customizer:${live?.slug ?? model.slug}`));
   const collection = findCollection(model.source.store, model.source.collectionId);
-  const products = collectionProducts(model.source.store, model.source.collectionId);
   const g = model.lineGroup;
   const hidden = <><input type="hidden" name="rev" value={rev ?? "null"} /><input type="hidden" name="scope" value={scope} /></>;
   const currentRef = `${model.source.store}:${model.source.collectionId}`;
@@ -74,18 +72,9 @@ export default async function CustomizerEditor({ params, searchParams }: { param
             </fieldset>
 
             <fieldset className="space-y-4">
-              <legend className="a-h2 mb-3">Coleção e produto da INK</legend>
+              <legend className="a-h2 mb-3">Coleção da INK</legend>
               <CollectionCombobox name="source_collection" label="Coleção da INK (desta loja)" entries={entries} defaultValue={currentRef} libraryFrom={`/admin/personalizacao/${model.id}`} hint="Pública, ou interna habilitada na Biblioteca. Isto não altera a coleção na INK." />
               {!collection && <p className="a-flash err">Esta coleção não existe no snapshot sincronizado.</p>}
-              <div>
-                <label className="a-label" htmlFor="ink_product_id">Produto exato de destino (opcional)</label>
-                <select id="ink_product_id" name="ink_product_id" className="a-select" defaultValue={model.inkProductId ?? ""}>
-                  <option value="">Nenhum: personalização sem checkout vinculado</option>
-                  {products.items.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
-                  {model.inkProductId && !products.items.some((p) => p.id === model.inkProductId) && <option value={model.inkProductId}>#{model.inkProductId} (fora da lista mostrada)</option>}
-                </select>
-                <p className="a-muted mt-1 text-[0.8125rem]">Só produtos desta coleção que existem no catálogo da mesma loja ({products.total}{products.total > products.items.length ? `; mostrando ${products.items.length}` : ""}). Nunca escolhemos um produto sozinhos. O produto vira só um link separado, com aviso de que a personalização <strong>não</strong> vai junto.</p>
-              </div>
             </fieldset>
 
             <fieldset className="space-y-4">
@@ -150,7 +139,7 @@ export default async function CustomizerEditor({ params, searchParams }: { param
           <section className="a-card p-5" aria-label="Pré-visualização"><PreviewFrame version={ws.record?.rev ?? 0} customizer={model.id} height={760} /></section>
           <section className="a-card p-5" aria-labelledby="publicar-modelo">
             <h2 id="publicar-modelo" className="a-h2">Publicar este modelo</h2>
-            <p className="a-muted mt-1 text-[0.875rem]">Publica só este modelo. É a <strong>página de solicitação</strong>: não é “checkout automático” e não envia nada à INK.</p>
+            <p className="a-muted mt-1 text-[0.875rem]">Publica só este modelo. É a <strong>página de solicitação</strong>: cada envio vai para a fila com o contato do cliente. Não é checkout e não envia nada à INK.</p>
             {blockers.length > 0 && <div className="a-flash err mt-3"><p className="font-extrabold">Ainda não dá para publicar:</p><ul className="mt-1 list-disc pl-5">{blockers.map((b) => <li key={b}>{b}</li>)}</ul></div>}
             <form action={publishTargetAction} className="mt-3 flex flex-wrap items-end gap-3">
               {hidden}<input type="hidden" name="target" value="customizer" /><input type="hidden" name="id" value={model.id} />

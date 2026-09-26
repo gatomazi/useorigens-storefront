@@ -15,7 +15,7 @@ const ITEMS = [
 ];
 
 /** `storeHref` is the public page of the region being edited; `null` while that region is still in preview (its public page is a 404). */
-export function SidebarNav({ owner = false, storeHref = "/sul", storeLabel = "Abrir a loja local ↗" }: { owner?: boolean; storeHref?: string | null; storeLabel?: string }) {
+export function SidebarNav({ pendingRequests = 0, owner = false, storeHref = "/sul", storeLabel = "Abrir a loja local ↗" }: { pendingRequests?: number; owner?: boolean; storeHref?: string | null; storeLabel?: string }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Painel" className="flex flex-wrap gap-1.5 lg:flex-col lg:gap-1">
@@ -29,6 +29,9 @@ export function SidebarNav({ owner = false, storeHref = "/sul", storeLabel = "Ab
             className={`px-3 py-2 text-[0.9375rem] font-bold ${active ? "bg-white text-ink" : "text-white hover:bg-white/15"}`}
           >
             {item.label}
+            {item.href === "/admin/personalizacao" && pendingRequests > 0 && (
+              <span className="ml-2 inline-block min-w-[1.4rem] rounded-full bg-white px-1.5 text-center text-[0.75rem] font-extrabold text-ink" data-testid="pending-requests" title="Solicitações de personalização esperando a equipe">{pendingRequests}<span className="sr-only"> solicitações pendentes</span></span>
+            )}
           </Link>
         );
       })}

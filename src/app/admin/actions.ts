@@ -26,7 +26,7 @@ import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionRef, parseFeaturedFields, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm } from "@/lib/admin/customizer-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
-import { canLinkOrder, nextStatuses, ORDER_NUMBER, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
+import { nextStatuses, productLinkFor, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
 import type { PageKind } from "@/lib/site-config/schema";
 import { legacyFeaturedRefs, resolveFeatured, searchFeaturedCandidates, type FeaturedCandidate } from "@/lib/hero-featured";
 import { buildRegionSeed } from "@/lib/admin/region-seed";
@@ -720,6 +720,8 @@ export async function setRequestStatusAction(fd: FormData) {
   const to = text(fd, "status") as RequestStatus;
   const here = `/admin/personalizacao/solicitacoes/${record.id}`;
   if (!(REQUEST_STATUSES as readonly string[]).includes(to) || !nextStatuses(record.status).includes(to)) back(here, { err: ["Mudança de estado não permitida a partir do estado atual."] });
+  // "Cliente contatado" is a HUMAN statement (someone wrote to the customer): it is never set by a click on a link, a webhook or silence.
+  if (to === "customerContacted" && text(fd, "confirm") !== "on") back(here, { err: ["Marque a confirmação de que você já falou com o cliente por WhatsApp ou e-mail."] });
   const result = await platform().requests.setStatus(record.id, to, actor.email || actor.id, text(fd, "note") || undefined);
   if (!result.ok) back(here, { err: [result.error] });
   await audit(actor, "request.status", record.region, record.id, { to });
@@ -727,17 +729,36 @@ export async function setRequestStatusAction(fd: FormData) {
   back(here, { ok: "Estado atualizado." });
 }
 
-/** Links a request to an INK order an operator has confirmed BY HAND (the order number is typed by a person; nothing here verifies it against INK). */
-export async function linkRequestOrderAction(fd: FormData) {
+/** An internal note (what was asked of the customer, what they answered). It is history for the team: never shown to the customer. */
+export async function addRequestNoteAction(fd: FormData) {
   const { actor, record } = await requestFor(fd);
   const here = `/admin/personalizacao/solicitacoes/${record.id}`;
-  const number = text(fd, "order").replace(/^#/, "");
-  if (!canLinkOrder(record.status)) back(here, { err: ["Esta solicitação não pode receber um pedido no estado atual."] });
-  if (!ORDER_NUMBER.test(number)) back(here, { err: ["Número de pedido inválido: use de 3 a 40 letras, números ou hífen."] });
-  if (text(fd, "confirm") !== "on") back(here, { err: ["Marque a confirmação de que este número foi conferido no painel da INK."] });
-  const result = await platform().requests.linkOrder(record.id, { store: storeOf(record.region), number }, actor.email || actor.id);
+  const note = text(fd, "note");
+  if (!note) back(here, { err: ["Escreva a observação."] });
+  const result = await platform().requests.addNote(record.id, actor.email || actor.id, note);
   if (!result.ok) back(here, { err: [result.error] });
-  await audit(actor, "request.link", record.region, record.id, { order: number });
+  await audit(actor, "request.note", record.region, record.id);
   revalidatePath("/admin", "layout");
-  back(here, { ok: `Vinculada ao pedido ${number}. O vínculo é manual: a INK não recebeu a personalização.` });
+  back(here, { ok: "Observação registrada." });
+}
+
+/**
+ * The INK product page prepared for THIS customer, typed by the team after the print exists. A purchase orientation only: it is not an order, nothing
+ * is verified against INK, and it is only accepted when it is https on the request's own region's INK store (no other host, so no open redirect).
+ */
+export async function setRequestProductLinkAction(fd: FormData) {
+  const { actor, record } = await requestFor(fd);
+  const here = `/admin/personalizacao/solicitacoes/${record.id}`;
+  const raw = text(fd, "product_link");
+  let url: string | null = null;
+  if (raw) {
+    const checked = productLinkFor(record.region, raw);
+    if (!checked.ok) back(here, { err: [checked.error] });
+    else url = checked.url;
+  }
+  const result = await platform().requests.setProductLink(record.id, url, actor.email || actor.id);
+  if (!result.ok) back(here, { err: [result.error] });
+  await audit(actor, "request.product", record.region, record.id, { set: url !== null });
+  revalidatePath("/admin", "layout");
+  back(here, { ok: url ? "Link do produto salvo. Ele entra na mensagem sugerida; nada é enviado sozinho." : "Link do produto removido." });
 }

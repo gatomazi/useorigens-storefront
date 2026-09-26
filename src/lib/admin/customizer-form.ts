@@ -37,8 +37,6 @@ export function parseCustomizerForm(f: Fields, current: Customizer, region: { st
     if (src[1] !== region.store) errors.push("Esta coleção pertence a outra loja da INK: cada região usa só as coleções da própria loja.");
     else patch.source = { store: src[1] as CommerceStoreKey, collectionId: Number(src[2]) };
   }
-  const product = str(f, "ink_product_id");
-  patch.inkProductId = product === "" ? undefined : product;
 
   patch.cardImage = media(str(f, "card_image"), str(f, "card_alt"));
   const mockupId = str(f, "mockup_image");
