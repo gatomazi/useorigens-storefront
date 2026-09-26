@@ -6,6 +6,11 @@ export function enabledInternalIds(doc: ScopeDoc | undefined, store: CommerceSto
   return new Set((doc?.collections?.enabled ?? []).filter((r) => r.store === store).map((r) => r.collectionId));
 }
 
+/** The collections a scope's document shows in the INK navbar, for one store. Pure. */
+export function navbarCollectionIds(doc: ScopeDoc | undefined, store: CommerceStoreKey): ReadonlySet<number> {
+  return new Set((doc?.collections?.navbar ?? []).filter((r) => r.store === store).map((r) => r.collectionId));
+}
+
 /** Which sections of a document use a collection, as its product source or as the target of their "Ver todos" button. Pure. */
 export function sectionsUsing(doc: ScopeDoc, store: string, collectionId: number): Section[] {
   return (doc.home?.sections ?? []).filter(

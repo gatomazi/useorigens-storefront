@@ -24,6 +24,8 @@ export type DraftOp =
   | { type: "remove"; id: string }
   | { type: "update"; id: string; patch: Partial<Editable> }
   | ({ type: "set-collection-enabled"; enabled: boolean } & CollectionRef)
+  /** Shows / hides a PUBLIC INK collection in the navbar the Worker draws on the INK product pages (independent of `set-collection-enabled`). */
+  | ({ type: "set-collection-navbar"; shown: boolean } & CollectionRef)
   /** Creates the home of a region that has none yet, from sections the caller built out of REAL sources (see admin/region-seed.ts). */
   | { type: "init-home"; sections: Section[] }
   /** Replaces the tracking configuration of the document (validated: formats, legacy only for Sul, an inactive ID only in global). */
@@ -59,6 +61,7 @@ const fail = (...errors: string[]): OpResult => ({ ok: false, errors });
 /** Applies one operation. The input document is never mutated; on any problem nothing changes and the reasons come back. */
 export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-collection-enabled") return setCollectionEnabled(doc, op);
+  if (op.type === "set-collection-navbar") return setCollectionNavbar(doc, op);
   if (op.type === "init-home") {
     if (doc.scope === "global") return fail("global has no home");
     if (doc.home) return fail("this region already has a home");
@@ -170,7 +173,7 @@ function setCollectionEnabled(doc: ScopeDoc, op: { store: CollectionRef["store"]
   const has = current.some((r) => r.store === op.store && r.collectionId === op.collectionId);
   if (op.enabled) {
     if (has) return { ok: true, doc };
-    const next: ScopeDoc = { ...doc, collections: { enabled: [...current, { store: op.store, collectionId: op.collectionId }] } };
+    const next: ScopeDoc = { ...doc, collections: { ...doc.collections, enabled: [...current, { store: op.store, collectionId: op.collectionId }] } };
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }
@@ -181,7 +184,27 @@ function setCollectionEnabled(doc: ScopeDoc, op: { store: CollectionRef["store"]
   }
   const remaining = current.filter((r) => !(r.store === op.store && r.collectionId === op.collectionId));
   const next: ScopeDoc = { ...doc };
-  if (remaining.length > 0) next.collections = { enabled: remaining };
+  // The navbar list is a separate decision: emptying the enablements must not drop it.
+  if (remaining.length > 0 || (doc.collections?.navbar?.length ?? 0) > 0) next.collections = { ...doc.collections, enabled: remaining };
   else delete next.collections;
   return { ok: true, doc: next };
+}
+
+/**
+ * Shows or hides one collection in the INK navbar. Independent of the home: it never touches `enabled` nor the sections. Only the reference is
+ * stored; whether the collection is public, has products and a valid slug is checked when the storefront publishes the list (`site-config/navbar.ts`),
+ * so a collection that later disappears from INK simply stops rendering instead of breaking the menu.
+ */
+function setCollectionNavbar(doc: ScopeDoc, op: { store: CollectionRef["store"]; collectionId: number; shown: boolean }): OpResult {
+  const current = doc.collections?.navbar ?? [];
+  const has = current.some((r) => r.store === op.store && r.collectionId === op.collectionId);
+  if (op.shown === has) return { ok: true, doc };
+  const navbar = op.shown ? [...current, { store: op.store, collectionId: op.collectionId }] : current.filter((r) => !(r.store === op.store && r.collectionId === op.collectionId));
+  const enabled = doc.collections?.enabled ?? [];
+  const next: ScopeDoc = { ...doc };
+  if (navbar.length > 0) next.collections = { enabled, navbar };
+  else if (enabled.length > 0) next.collections = { enabled };
+  else delete next.collections;
+  const check = validateScopeDoc(next);
+  return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
 }

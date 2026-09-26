@@ -41,15 +41,23 @@ describe("collections page parsing", () => {
     expect(r.ok && r.value.collections.map((c) => [c.isAvailable, c.memberIds])).toEqual([[false, ["9001", "9002", "11"]], [false, ["12"]]]);
   });
 
-  test("given a huge collection, when parsed, then the total is counted but only the first members are stored (no raw id dump)", () => {
+  test("given a huge collection, when parsed, then the total is counted, the showcase keeps the first members, and only the MATCHED ids (never the raw 100k) are stored for a public one", () => {
     const big = Array.from({ length: 200 }, (_, i) => 20_000 + i);
     const wide = matcherForStore({ bindings: big.map((id) => ({ inkProductId: String(id) })), merch: [] });
-    const r = parseCollectionsPage(inkPage([inkItem({ product_ids: [...big, ...Array.from({ length: 100_000 }, (_, i) => 1_000_000 + i)] })]), wide);
+    const raw = [...big, ...Array.from({ length: 100_000 }, (_, i) => 1_000_000 + i)];
+    const r = parseCollectionsPage(inkPage([inkItem({ product_ids: raw })]), wide);
     const c = r.ok ? r.value.collections[0] : null;
     expect(c).toMatchObject({ matchedCount: 200, reportedProductCount: 100_200 });
     expect(c!.memberIds).toHaveLength(MAX_STORED_MEMBERS);
     expect(c!.memberIds[0]).toBe("20000"); // INK's order
-    expect(JSON.stringify(c).length).toBeLessThan(1000);
+    expect(c!.searchMemberIds).toHaveLength(200); // complete membership for the text search, still only ids that exist in the catalog
+    expect(c!.searchMemberIds!.slice(0, 3)).toEqual(["20000", "20001", "20002"]);
+    expect(JSON.stringify(c).length).toBeLessThan(4000);
+    // An INTERNAL segmentation (hidden on INK, never searched) keeps the old small footprint.
+    const internal = parseCollectionsPage(inkPage([inkItem({ is_available: false, product_ids: raw })]), wide);
+    const i = internal.ok ? internal.value.collections[0] : null;
+    expect(i!.searchMemberIds).toBeUndefined();
+    expect(JSON.stringify(i).length).toBeLessThan(1000);
   });
 
   test("given repeated ids in one collection, when matched, then a product counts once", () => {
