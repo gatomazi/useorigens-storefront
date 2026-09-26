@@ -12,7 +12,8 @@ const ITEMS = [
   { href: "/admin/midia", label: "Mídia" },
 ];
 
-export function SidebarNav({ owner = false, storeHref = "/sul", storeLabel = "Abrir a loja local ↗" }: { owner?: boolean; storeHref?: string; storeLabel?: string }) {
+/** `storeHref` is the public page of the region being edited; `null` while that region is still in preview (its public page is a 404). */
+export function SidebarNav({ owner = false, storeHref = "/sul", storeLabel = "Abrir a loja local ↗" }: { owner?: boolean; storeHref?: string | null; storeLabel?: string }) {
   const pathname = usePathname();
   return (
     <nav aria-label="Painel" className="flex flex-wrap gap-1.5 lg:flex-col lg:gap-1">
@@ -29,9 +30,13 @@ export function SidebarNav({ owner = false, storeHref = "/sul", storeLabel = "Ab
           </Link>
         );
       })}
-      <a href={storeHref} target="_blank" rel="noreferrer" className="px-3 py-2 text-[0.9375rem] font-bold text-white/80 hover:bg-white/15">
-        {storeLabel}
-      </a>
+      {storeHref ? (
+        <a href={storeHref} target="_blank" rel="noreferrer" className="px-3 py-2 text-[0.9375rem] font-bold text-white/80 hover:bg-white/15">
+          {storeLabel}
+        </a>
+      ) : (
+        <span className="px-3 py-2 text-[0.8125rem] text-white/60">Região ainda em prévia: a loja pública só existe depois do lançamento.</span>
+      )}
     </nav>
   );
 }

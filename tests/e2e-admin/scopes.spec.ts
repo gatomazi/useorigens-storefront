@@ -37,8 +37,10 @@ for (const region of REGIONS) {
     await open(page, "/sul");
     expect(await page.locator(`footer a[href="/${region.slug}"], header a[href="/${region.slug}"]`).count()).toBe(0);
 
-    // 2. Region switcher; the region has no home yet.
+    // 2. Region switcher; the region has no home yet. While in preview the sidebar offers no store link (its public page is a 404).
     await chooseRegion(page, region.name);
+    await expect(page.getByRole("link", { name: /Abrir a loja/ })).toHaveCount(0);
+    await expect(page.getByText(/Região ainda em prévia/)).toBeVisible();
     await open(page, "/admin/home");
     await expect(page.getByRole("heading", { name: "Esta região ainda não tem home" })).toBeVisible();
     await open(page, "/admin/publicar");
@@ -74,6 +76,8 @@ for (const region of REGIONS) {
     await page.getByRole("button", { name: `Lançar ${region.name} ao público` }).click();
     await expect(flash(page, new RegExp(`${region.name} lançada publicamente`))).toBeVisible({ timeout: 300_000 });
 
+    await open(page, "/admin");
+    await expect(page.getByRole("link", { name: /Abrir a loja/ })).toHaveAttribute("href", `/${region.slug}`); // follows the selected region once it is public
     // 6. Public: real products, links to the region's OWN INK store, the region shows in the navigation, Sul is untouched.
     await open(page, `/${region.slug}`);
     expect(await page.locator(`a[href^="https://www.${region.host}/"]`).count(), "real INK products of the region").toBeGreaterThanOrEqual(3);

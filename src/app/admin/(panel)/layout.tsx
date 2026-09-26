@@ -26,7 +26,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <span className="block text-[1.6rem] font-extrabold uppercase leading-none tracking-wide [font-family:var(--font-display-stack)]">Use Origens</span>
           <span className="mt-1 block text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/70">{prod ? "Painel" : "Painel · local"}</span>
         </Link>
-        <SidebarNav owner={prod && actor.role === "owner"} storeHref={prod ? `${siteUrl().replace(/\/$/, "")}/sul` : "/sul"} storeLabel={prod ? "Abrir a loja ↗" : "Abrir a loja local ↗"} />
+        <SidebarNav owner={prod && actor.role === "owner"} storeHref={launchedIn(scope) ? (prod ? `${siteUrl().replace(/\/$/, "")}/${scope}` : `/${scope}`) : null} storeLabel={prod ? "Abrir a loja ↗" : "Abrir a loja local ↗"} />
         <div className="mt-auto hidden text-[0.75rem] leading-snug text-white/70 lg:block">
           {prod ? (
             <>
