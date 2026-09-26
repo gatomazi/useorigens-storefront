@@ -13,7 +13,7 @@ import { effectiveNavbarGroups, movedWithin, withNavbarGroups, withPosition, typ
 import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredTemplate } from "../site-config/structured";
 import { validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav">;
 
 export type DraftOp =
   | { type: "add-carousel"; title: string; source: Source }

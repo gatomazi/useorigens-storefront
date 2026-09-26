@@ -86,6 +86,8 @@ export type Section = {
    * the code has always shown, the other regions show none. `[]` = customised to show no card.
    */
   featured?: FeaturedProductRef[];
+  /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. */
+  nav?: { label: string };
   /**
    * State chooser only: a cover picture per state (key = UF, e.g. "PA"). A state without one keeps the cover the code has for it (Sul) or shows
    * none. The images are resolved into the published media table like any section image.
@@ -311,6 +313,9 @@ function checkSection(c: Collector, path: string, v: unknown): void {
         seen.add(key);
       });
     }
+  }
+  if (v.nav !== undefined) {
+    if (v.template === "hero" || v.template === "footer" || !isRecord(v.nav) || !isStr(v.nav.label, 24)) c.fail(`${path}.nav`, "not for the hero or footer; label 1..24 characters");
   }
   if (v.stateCovers !== undefined) {
     if (v.template !== "states" || !isRecord(v.stateCovers) || Object.keys(v.stateCovers).length > 27) c.fail(`${path}.stateCovers`, "state chooser only, at most one cover per state");

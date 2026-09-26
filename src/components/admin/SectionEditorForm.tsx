@@ -5,6 +5,7 @@ import { CollectionCombobox, type ComboEntry } from "@/components/admin/Collecti
 import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
 import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
+import { suggestedNavLabel } from "@/lib/site-config/nav";
 import type { Appearance, Section } from "@/lib/site-config/schema";
 
 export type MediaOption = { assetId: string; label: string; src: string; width: number; height: number; kind: "banner" | "upload" };
@@ -90,6 +91,8 @@ export function SectionEditorForm({
   const internalSource = sourceKind === "ink-category" && srcEntry?.visibility === "internal";
   const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route">(section.cta?.dest.kind ?? "none");
 
+  const [navShow, setNavShow] = useState(Boolean(section.nav));
+  const [navLabel, setNavLabel] = useState(section.nav?.label ?? suggestedNavLabel(section));
   const byId = useMemo(() => new Map(media.map((m) => [m.assetId, m])), [media]);
   const hasImage = Boolean(imgM || imgD);
 
@@ -342,6 +345,22 @@ export function SectionEditorForm({
               {issues.map((i) => <p key={i.message}>{i.level === "blocking" ? "⛔ " : "⚠️ "}{i.message}</p>)}
             </div>
           )}
+        </fieldset>
+      )}
+
+      {section.template !== "hero" && section.template !== "footer" && (
+        <fieldset className="space-y-3">
+          <legend className="a-h2 mb-3">Menu do topo</legend>
+          <input type="hidden" name="nav_present" value="1" />
+          <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="nav_show" checked={navShow} onChange={(e) => setNavShow(e.target.checked)} /> Mostrar esta seção no menu do topo da loja</label>
+          {navShow && (
+            <div className="max-w-sm">
+              <label className="a-label" htmlFor="nav_label">Apelido (o texto que aparece no menu)</label>
+              <input id="nav_label" name="nav_label" value={navLabel} onChange={(e) => setNavLabel(e.target.value)} className="a-input" maxLength={24} required />
+              <p className="a-muted mt-1 text-[0.8125rem]">Até 24 caracteres. O link leva a esta seção da home. A ordem do menu é a ordem das seções na home.</p>
+            </div>
+          )}
+          <p className="a-muted text-[0.8125rem]">Enquanto nenhuma seção for marcada, o menu mostra só as seções históricas (Estilos, Fala daqui, Estados) que esta região realmente tem.</p>
         </fieldset>
       )}
 
