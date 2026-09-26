@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -103,16 +103,54 @@ await accepts("a sync finishes", `update sync_run set status='succeeded', finish
 await accepts("a new collections sync after the previous finished", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await accepts("audit for the new action", `insert into audit_log (actor,action) values ('system','collections.sync')`);
 const REQ = (id, key, tok, extra = "") => [`insert into customization_request (id, token_hash, region, customizer_id, customizer_slug, customizer_name, customizer_version, snapshot, request_values, idempotency_key, expires_at${extra ? ", " + extra.split("=")[0] : ""}) values ($1,$2,'sul','cz-1','pai','Pai',1,'{}'::jsonb,'{}'::jsonb,$3, now() + interval '30 days'${extra ? ", " + extra.split("=")[1] : ""})`, [id, tok, key]];
-await accepts("a customization request (0004)", ...REQ("01J00000000000000000000A01", "k".repeat(20), "a".repeat(64)));
+await accepts("a customization request", ...REQ("01J00000000000000000000A01", "k".repeat(20), "a".repeat(64)));
 await rejects("the same idempotency key twice in a region (a double click)", ...REQ("01J00000000000000000000A02", "k".repeat(20), "b".repeat(64)));
 await rejects("a token stored in clear (not a sha256)", ...REQ("01J00000000000000000000A03", "m".repeat(20), "plain-reference"));
-await rejects("an order number with markup", `update customization_request set order_store='use-sul', order_number='<script>', status='linkedToInkOrder' where id='01J00000000000000000000A01'`);
-await rejects("an order without its store", `update customization_request set order_number='INK-1001' where id='01J00000000000000000000A01'`);
-await rejects("linked status without an order", `update customization_request set status='linkedToInkOrder' where id='01J00000000000000000000A01'`);
-await accepts("linking a real-looking order (0004)", `update customization_request set order_store='use-sul', order_number='INK-1001', status='linkedToInkOrder' where id='01J00000000000000000000A01'`);
-await accepts("a second request to link", ...REQ("01J00000000000000000000A04", "n".repeat(20), "d".repeat(64)));
-await rejects("the same INK order on two requests", `update customization_request set order_store='use-sul', order_number='INK-1001', status='linkedToInkOrder' where id='01J00000000000000000000A04'`);
-await accepts("audit for the new actions (0004)", `insert into audit_log (actor,action) values ('system','request.link')`);
+
+// ── 0005: manual-contact workflow ────────────────────────────────────────────────────────────────────────────────────────
+const ID1 = "01J00000000000000000000A01";
+{ const r = await db.query(`select status from customization_request where id='${ID1}'`); r.rows[0]?.status === "received" ? ok("a new request starts as 'received' (0005)") : bad("default status", String(r.rows[0]?.status)); }
+await accepts("a contact with name, WhatsApp, confirmation and notice version", `update customization_request set customer_name='Ana Souza', customer_whatsapp='+5551999998888', contact_confirmed_at=now(), contact_notice_version='2026-09-v1' where id='${ID1}'`);
+await accepts("a contact with only an e-mail", `insert into customization_request (id, token_hash, region, customizer_id, customizer_slug, customizer_name, customizer_version, snapshot, request_values, idempotency_key, expires_at, customer_name, customer_email, contact_confirmed_at, contact_notice_version) values ('01J00000000000000000000B01','${"e".repeat(64)}','sul','cz-1','pai','Pai',1,'{}'::jsonb,'{}'::jsonb,'${"q".repeat(20)}', now() + interval '30 days','Zé','ze@exemplo.com',now(),'v1')`);
+await rejects("a name without any channel", `update customization_request set customer_whatsapp=null, customer_email=null where id='${ID1}'`);
+await rejects("a contact without the confirmation", `update customization_request set contact_confirmed_at=null where id='${ID1}'`);
+await rejects("a one-letter name", `update customization_request set customer_name='A' where id='${ID1}'`);
+await rejects("a WhatsApp that is not +digits", `update customization_request set customer_whatsapp='(51) 99999-8888' where id='${ID1}'`);
+await rejects("an e-mail with markup", `update customization_request set customer_email='<b>x</b>@a.com' where id='${ID1}'`);
+await accepts("a product link on the region's own INK store", `update customization_request set product_link='https://www.usesul.com.br/usesul/product/pai-paranaense-x', product_link_by='ana@x', product_link_at=now() where id='${ID1}'`);
+await rejects("a product link on another region's store", `update customization_request set product_link='https://www.usenorte.com.br/x' where id='${ID1}'`);
+await rejects("a product link to a look-alike host", `update customization_request set product_link='https://www.usesul.com.br.evil.example/x' where id='${ID1}'`);
+await rejects("a product link with credentials (open-redirect trick)", `update customization_request set product_link='https://www.usesul.com.br@evil.example/x' where id='${ID1}'`);
+await rejects("a plain-http product link", `update customization_request set product_link='http://www.usesul.com.br/x' where id='${ID1}'`);
+await rejects("a product link with whitespace", `update customization_request set product_link='https://www.usesul.com.br/a b' where id='${ID1}'`);
+for (const st of ["inCreation", "artReady", "customerContacted", "closed", "cancelled", "received"]) await accepts(`status ${st}`, `update customization_request set status='${st}' where id='${ID1}'`);
+await rejects("a legacy status name after 0005", `update customization_request set status='linkedToInkOrder' where id='${ID1}'`);
+await accepts("a note in the history", `insert into customization_request_event (request_id, actor, action, detail) values ('${ID1}','ana@x','note','pedi a cidade certa')`);
+await accepts("a product-link event", `insert into customization_request_event (request_id, actor, action, detail) values ('${ID1}','ana@x','product-link','definido')`);
+await rejects("an unknown event action", `insert into customization_request_event (request_id, actor, action) values ('${ID1}','ana@x','order-paid')`);
+await accepts("audit for a note", `insert into audit_log (actor,action) values ('system','request.note')`);
+await accepts("audit for a product link", `insert into audit_log (actor,action) values ('system','request.product')`);
+
+// ── 0004 → 0005 on data that already exists: nothing is lost, statuses are renamed in place ────────────────────────────────
+{
+  const legacy = new PGlite();
+  await legacy.exec(versions.slice(0, 4).map((v) => read(v, "up")).join("\n"));
+  const ins = (id, tok, key, status, order = "") => legacy.query(`insert into customization_request (id, token_hash, region, customizer_id, customizer_slug, customizer_name, customizer_version, snapshot, request_values, idempotency_key, expires_at, status${order ? ", order_store, order_number" : ""}) values ($1,$2,'sul','cz-1','pai','Pai',1,'{}'::jsonb,'{}'::jsonb,$3, now() + interval '30 days', $4${order ? ", 'use-sul', $5" : ""})`, order ? [id, tok, key, status, order] : [id, tok, key, status]);
+  const cases = [["submitted", "received"], ["awaitingOrderLink", "received"], ["inReview", "inCreation"], ["linkedToInkOrder", "closed"], ["fulfilled", "closed"], ["cancelled", "cancelled"]];
+  for (const [i, [from]] of cases.entries()) await ins(`01J${"0".repeat(21)}C${i}`, String(i).repeat(64), `legacy-key-${i}`.padEnd(20, "x"), from, from === "linkedToInkOrder" ? "INK-7001" : "");
+  await legacy.query(`insert into customization_request_event (request_id, actor, action, detail) values ('01J${"0".repeat(21)}C3','ana@x','linked','INK-7001')`);
+  await legacy.exec(read("0005_customization_contact_workflow", "up"));
+  const rows = (await legacy.query(`select status, order_number, customer_name from customization_request order by id`)).rows;
+  cases.forEach(([from, to], i) => (rows[i].status === to ? ok(`legacy '${from}' becomes '${to}' (0005)`) : bad(`legacy ${from}`, `got ${rows[i].status}`)));
+  rows[3].order_number === "INK-7001" ? ok("the legacy order number stays in the table (history kept)") : bad("legacy order kept", String(rows[3].order_number));
+  rows.every((r) => r.customer_name === null) ? ok("legacy requests simply have no contact") : bad("legacy contact", "unexpected contact");
+  const ev = (await legacy.query(`select count(*)::int as n from customization_request_event where action='linked'`)).rows[0].n;
+  ev === 1 ? ok("the legacy 'linked' event is still in the history") : bad("legacy event", String(ev));
+  await legacy.exec(read("0005_customization_contact_workflow", "down"));
+  const back = (await legacy.query(`select status from customization_request order by id`)).rows.map((r) => r.status);
+  back.length === 6 ? ok("0005 down keeps every request") : bad("down keeps requests", String(back.length));
+  await legacy.close();
+}
 await db.close();
 console.log(failures === 0 ? "\nRESULT: ALL CHECKS PASSED" : `\nRESULT: ${failures} FAILED`);
 process.exit(failures === 0 ? 1 - 1 : 1);

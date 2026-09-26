@@ -1,49 +1,69 @@
 import { createHash, createHmac } from "node:crypto";
-import type { RegionSlug } from "../geo/regions";
-import type { CommerceStoreKey } from "../geo/regions";
+import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
+import { REGIONS } from "../geo/regions";
 import type { ModelSnapshot, Values } from "./validate";
 
 /**
- * Personalization REQUESTS: what a customer typed on a model's page, stored so the operation can act on it. A request is NOT an order and does not
- * travel to INK by itself: linking it to an INK order is a manual, audited step (see docs/admin/cms-hotpages-personalizacao-round.md, "Fronteira com a INK").
+ * Personalization REQUESTS: what a customer typed on a model's page, plus how to reach them. A request is NOT an order and nothing here talks to INK:
+ * the team makes the print by hand, contacts the customer (WhatsApp or e-mail, by a person, after a click) and points them to the INK store to buy.
+ * The CMS follows the REQUEST and the CONTACT, never the commercial order (see docs/admin/cms-hotpages-personalizacao-release-gate.md).
  */
-export const REQUEST_STATUSES = ["submitted", "awaitingOrderLink", "inReview", "linkedToInkOrder", "fulfilled", "cancelled"] as const;
+export const REQUEST_STATUSES = ["received", "inCreation", "artReady", "customerContacted", "closed", "cancelled"] as const;
 export type RequestStatus = (typeof REQUEST_STATUSES)[number];
 
 export const STATUS_LABEL: Record<RequestStatus, string> = {
-  submitted: "Recebida",
-  awaitingOrderLink: "Aguardando vínculo com o pedido",
-  inReview: "Em análise",
-  linkedToInkOrder: "Vinculada a um pedido da INK",
-  fulfilled: "Concluída",
+  received: "Recebida",
+  inCreation: "Em criação",
+  artReady: "Arte pronta",
+  customerContacted: "Cliente contatado",
+  closed: "Encerrada",
   cancelled: "Cancelada",
 };
-/** What the customer sees on the reference page: never internal detail. */
+/** What the customer sees on the reference page: never internal detail, never a promise of a date. */
 export const PUBLIC_STATUS_LABEL: Record<RequestStatus, string> = {
-  submitted: "Solicitação recebida",
-  awaitingOrderLink: "Solicitação recebida: aguardando o vínculo com a sua compra",
-  inReview: "Em análise pela equipe",
-  linkedToInkOrder: "Vinculada à sua compra",
-  fulfilled: "Concluída",
-  cancelled: "Cancelada",
+  received: "Solicitação recebida",
+  inCreation: "Estamos preparando a sua estampa",
+  artReady: "Estampa pronta: nossa equipe vai falar com você pelo contato informado",
+  customerContacted: "Nossa equipe já entrou em contato pelo canal informado",
+  closed: "Solicitação encerrada",
+  cancelled: "Solicitação cancelada",
 };
 
-/** Manual status changes an operator may make (linking an order is its own action and the only way into `linkedToInkOrder`). */
+/** Statuses a request can be in while someone still has to act on it (received, being made, ready but the customer not yet told). */
+export const OPEN_STATUSES: readonly RequestStatus[] = ["received", "inCreation", "artReady"];
+
+/** Manual status changes an operator may make. `closed` and `cancelled` are administrative: neither says anything about a purchase. */
 const NEXT: Record<RequestStatus, RequestStatus[]> = {
-  submitted: ["awaitingOrderLink", "inReview", "cancelled"],
-  awaitingOrderLink: ["inReview", "cancelled"],
-  inReview: ["awaitingOrderLink", "fulfilled", "cancelled"],
-  linkedToInkOrder: ["inReview", "fulfilled", "cancelled"],
-  fulfilled: [],
-  cancelled: ["submitted"],
+  received: ["inCreation", "cancelled"],
+  inCreation: ["artReady", "received", "cancelled"],
+  artReady: ["customerContacted", "inCreation", "cancelled"],
+  customerContacted: ["closed", "artReady", "cancelled"],
+  closed: ["inCreation"],
+  cancelled: ["received"],
 };
 export const nextStatuses = (from: RequestStatus): RequestStatus[] => NEXT[from];
-export const canLinkOrder = (from: RequestStatus): boolean => from === "submitted" || from === "awaitingOrderLink" || from === "inReview";
 
-/** An INK order number as an operator would copy it: letters, digits and hyphens only, so nothing else can be smuggled in. */
-export const ORDER_NUMBER = /^[A-Za-z0-9-]{3,40}$/;
+/**
+ * Requests made before the manual-contact flow used other status names (they tracked an INK order). They are read tolerantly, without losing anything:
+ * "awaiting link" and "submitted" were still untouched, "in review" was being worked, and the two order-based endings are administrative closings.
+ */
+const LEGACY_STATUS: Record<string, RequestStatus> = { submitted: "received", awaitingOrderLink: "received", inReview: "inCreation", linkedToInkOrder: "closed", fulfilled: "closed" };
+export function normalizeStatus(raw: unknown): RequestStatus {
+  if (typeof raw === "string") {
+    if ((REQUEST_STATUSES as readonly string[]).includes(raw)) return raw as RequestStatus;
+    if (raw in LEGACY_STATUS) return LEGACY_STATUS[raw];
+  }
+  return "received";
+}
 
-export type RequestEvent = { at: string; actor: string; action: "created" | "status" | "linked" | "replaced"; detail?: string };
+export type RequestEventAction = "created" | "status" | "replaced" | "note" | "product-link" | "linked";
+/** `linked` only exists in history written before this flow; it is shown without the order number and never produced again. */
+export type RequestEvent = { at: string; actor: string; action: RequestEventAction; detail?: string };
+
+/** Who to talk to, as the customer typed it (normalised) and confirmed. Requests made before the contact form have none (`contact: null`). */
+export type RequestContact = { name: string; whatsapp?: string; email?: string; confirmedAt: string; noticeVersion: string };
+export type ProductLink = { url: string; setBy: string; setAt: string };
+
 export type RequestRecord = {
   id: string;
   tokenHash: string;
@@ -56,7 +76,11 @@ export type RequestRecord = {
   snapshot: ModelSnapshot;
   values: Values;
   status: RequestStatus;
-  order: { store: CommerceStoreKey; number: string; linkedBy: string; linkedAt: string } | null;
+  contact: RequestContact | null;
+  /** When an operator recorded that the customer was contacted (set by the status change, never inferred). */
+  contactedAt: string | null;
+  /** The INK product page prepared for this customer, typed by the team. A purchase orientation only: it is not tied to an order. */
+  productLink: ProductLink | null;
   idempotencyKey: string;
   createdAt: string;
   updatedAt: string;
@@ -70,11 +94,13 @@ export type NewRequest = {
   tokenHash: string;
   snapshot: ModelSnapshot;
   values: Values;
+  contact: RequestContact;
   expiresAt: string;
   /** Token hash of an earlier request of the same region this one replaces (the customer edited and sent again): the old one becomes `cancelled`. */
   replacesTokenHash?: string;
 };
 
+/** `q` looks at the reference, the customer's name, the model and the typed text (never the contact details). */
 export type RequestFilter = { region?: RegionSlug; status?: RequestStatus; customizerId?: string; q?: string };
 
 export interface RequestStore {
@@ -83,10 +109,40 @@ export interface RequestStore {
   get(id: string): Promise<RequestRecord | null>;
   findByTokenHash(hash: string): Promise<RequestRecord | null>;
   list(filter: RequestFilter, limit: number, offset: number): Promise<{ rows: RequestRecord[]; total: number }>;
+  /** How many requests still wait for someone (see `OPEN_STATUSES`) in these regions. */
+  countOpen(regions: readonly RegionSlug[]): Promise<number>;
+  /** Moves the request along the allowed transitions. Reaching `customerContacted` records `contactedAt` (a person confirmed it). */
   setStatus(id: string, to: RequestStatus, actor: string, note?: string): Promise<{ ok: true; record: RequestRecord } | { ok: false; error: string }>;
-  linkOrder(id: string, order: { store: CommerceStoreKey; number: string }, actor: string): Promise<{ ok: true; record: RequestRecord } | { ok: false; error: string }>;
-  /** Removes the requests past their retention that no operator is still working on. Returns how many. */
+  /** An internal note in the history (what was asked of the customer, what they answered). */
+  addNote(id: string, actor: string, note: string): Promise<{ ok: true; record: RequestRecord } | { ok: false; error: string }>;
+  /** Sets (or clears, with `null`) the product link; the URL must already have passed `productLinkFor`. */
+  setProductLink(id: string, url: string | null, actor: string): Promise<{ ok: true; record: RequestRecord } | { ok: false; error: string }>;
+  /** Removes the requests past their retention that nobody is still working on. Returns how many. */
   purgeExpired(now: Date): Promise<number>;
+}
+
+/** The store hosts a product link may point to, per region: ONLY that region's own INK store. */
+const STORE_HOST: Record<CommerceStoreKey, string> = { "use-sul": "www.usesul.com.br", "use-norte": "www.usenorte.com.br", "use-centro": "www.usecentro.com.br", "use-origens": "loja.useorigens.com.br" };
+
+/**
+ * Validates the "product ready to buy" link an operator typed: https, no credentials or port, the host EXACTLY the region's INK store (so it can never
+ * be a redirect to another site) and a sane length. Returns the normalised URL, or why it was refused.
+ */
+export function productLinkFor(region: RegionSlug, raw: string): { ok: true; url: string } | { ok: false; error: string } {
+  const text = raw.trim();
+  if (text.length === 0 || text.length > 500 || /[\s<>"'\p{C}]/u.test(text)) return { ok: false, error: "Link inválido: cole o endereço completo da página do produto, sem espaços." };
+  let url: URL;
+  try {
+    url = new URL(text);
+  } catch {
+    return { ok: false, error: "Link inválido: cole o endereço completo da página do produto." };
+  }
+  const host = STORE_HOST[REGIONS[region].storeKey];
+  if (url.protocol !== "https:") return { ok: false, error: "O link precisa começar com https://." };
+  if (url.username || url.password || url.port) return { ok: false, error: "O link não pode ter usuário, senha nem porta." };
+  if (url.hostname !== host) return { ok: false, error: `O link precisa ser da loja INK de ${REGIONS[region].name} (${host}).` };
+  url.hash = "";
+  return { ok: true, url: url.toString() };
 }
 
 // ── The opaque reference ─────────────────────────────────────────────────────────────────────────────────────
@@ -109,11 +165,3 @@ export const expiryFrom = (now: Date, days: number): string => new Date(now.getT
 
 /** A short, non-secret way to talk about a request in the queue: the tail of its id. */
 export const shortRef = (id: string): string => id.slice(-8);
-
-/** How the INK handoff is configured. `verified` is reserved: no mechanism to attach a personalization to a paid order has been proven, so it is never reported. */
-export type HandoffMode = "unavailable" | "manual" | "verified";
-export function handoffMode(env: Record<string, string | undefined> = process.env): HandoffMode {
-  const v = env.CUSTOMIZATION_HANDOFF;
-  if (v === "unavailable") return "unavailable";
-  return "manual"; // the default everywhere; "verified" is intentionally not honoured until an integration is proven and reviewed
-}

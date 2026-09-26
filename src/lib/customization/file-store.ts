@@ -1,43 +1,63 @@
 import "server-only";
 import path from "node:path";
-import { adminDevDir, readJson, withLock } from "../admin/local-store";
+import { adminDevDir, readJson, withLock, writeJsonAtomic } from "../admin/local-store";
 import { ulid } from "../admin/ids";
-import { writeJsonAtomic } from "../admin/local-store";
-import { canLinkOrder, nextStatuses, ORDER_NUMBER, type RequestFilter, type RequestRecord, type RequestStatus, type RequestStore } from "./requests";
-import { REGIONS, type CommerceStoreKey } from "../geo/regions";
+import type { RegionSlug } from "../geo/regions";
+import { nextStatuses, normalizeStatus, OPEN_STATUSES, type RequestFilter, type RequestRecord, type RequestStatus, type RequestStore } from "./requests";
 import { summaryOf } from "./validate";
+
+/** Fields a record written before the manual-contact flow may still carry. They are ignored, never shown and never rewritten by a new action's read. */
+type StoredRecord = Omit<RequestRecord, "status" | "contact" | "contactedAt" | "productLink"> & Partial<Pick<RequestRecord, "contact" | "contactedAt" | "productLink">> & { status: string };
 
 /** The local sandbox stand-in for the Postgres request table (`data/admin-dev/requests.json`, gitignored). Same interface, same rules. */
 export function fileRequestStore(file: string = path.join(adminDevDir(), "requests.json")): RequestStore {
-  type Db = { requests: RequestRecord[] };
+  type Db = { requests: StoredRecord[] };
   const read = async (): Promise<Db> => (await readJson<Db>(file)) ?? { requests: [] };
   const write = (db: Db) => writeJsonAtomic(file, db);
   const now = () => new Date().toISOString();
+  /** The public shape of a stored record: legacy status names mapped, absent contact fields explicit. */
+  const view = (stored: StoredRecord): RequestRecord => {
+    const { order: legacyOrder, ...r } = stored as StoredRecord & { order?: unknown };
+    void legacyOrder; // an order linked under the old flow stays in the file for the record, but is never part of what the product reads
+    return { ...r, status: normalizeStatus(r.status), contact: r.contact ?? null, contactedAt: r.contactedAt ?? null, productLink: r.productLink ?? null };
+  };
   const matches = (r: RequestRecord, f: RequestFilter): boolean => {
     if (f.region && r.region !== f.region) return false;
     if (f.status && r.status !== f.status) return false;
     if (f.customizerId && r.customizerId !== f.customizerId) return false;
     if (f.q) {
       const q = f.q.toLowerCase();
-      const hay = [r.id, r.order?.number ?? "", r.customizerName, ...summaryOf(r.snapshot, r.values).map((s) => s.value)].join(" ").toLowerCase();
+      const hay = [r.id, r.contact?.name ?? "", r.customizerName, ...summaryOf(r.snapshot, r.values).map((s) => s.value)].join(" ").toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
   };
+  const change = (id: string, apply: (r: StoredRecord, at: string) => string | null) =>
+    withLock(async () => {
+      const db = await read();
+      const r = db.requests.find((x) => x.id === id);
+      if (!r) return { ok: false as const, error: "solicitação não encontrada" };
+      const at = now();
+      const error = apply(r, at);
+      if (error) return { ok: false as const, error };
+      r.updatedAt = at;
+      await write(db);
+      return { ok: true as const, record: view(r) };
+    });
   return {
     create: (input) =>
       withLock(async () => {
         const db = await read();
         const existing = db.requests.find((r) => r.region === input.region && r.idempotencyKey === input.idempotencyKey);
-        if (existing) return { record: existing, duplicate: true };
+        if (existing) return { record: view(existing), duplicate: true };
         const at = now();
-        const record: RequestRecord = {
+        const record: StoredRecord = {
           id: ulid(), tokenHash: input.tokenHash, region: input.region, customizerId: input.snapshot.id, customizerSlug: input.snapshot.slug, customizerName: input.snapshot.name,
-          customizerVersion: input.snapshot.version, snapshot: input.snapshot, values: input.values, status: "submitted", order: null, idempotencyKey: input.idempotencyKey,
-          createdAt: at, updatedAt: at, expiresAt: input.expiresAt, events: [{ at, actor: "customer", action: "created" }],
+          customizerVersion: input.snapshot.version, snapshot: input.snapshot, values: input.values, status: "received", contact: input.contact, contactedAt: null, productLink: null,
+          idempotencyKey: input.idempotencyKey, createdAt: at, updatedAt: at, expiresAt: input.expiresAt, events: [{ at, actor: "customer", action: "created" }],
         };
         if (input.replacesTokenHash) {
-          const old = db.requests.find((r) => r.tokenHash === input.replacesTokenHash && r.region === input.region && r.status === "submitted");
+          const old = db.requests.find((r) => r.tokenHash === input.replacesTokenHash && r.region === input.region && normalizeStatus(r.status) === "received");
           if (old) {
             old.status = "cancelled";
             old.updatedAt = at;
@@ -46,50 +66,49 @@ export function fileRequestStore(file: string = path.join(adminDevDir(), "reques
         }
         db.requests.push(record);
         await write(db);
-        return { record, duplicate: false };
+        return { record: view(record), duplicate: false };
       }),
     async get(id) {
-      return (await read()).requests.find((r) => r.id === id) ?? null;
+      const r = (await read()).requests.find((x) => x.id === id);
+      return r ? view(r) : null;
     },
     async findByTokenHash(hash) {
-      return (await read()).requests.find((r) => r.tokenHash === hash) ?? null;
+      const r = (await read()).requests.find((x) => x.tokenHash === hash);
+      return r ? view(r) : null;
     },
     async list(filter, limit, offset) {
-      const all = (await read()).requests.filter((r) => matches(r, filter)).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      const all = (await read()).requests.map(view).filter((r) => matches(r, filter)).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
       return { rows: all.slice(offset, offset + limit), total: all.length };
     },
+    async countOpen(regions: readonly RegionSlug[]) {
+      return (await read()).requests.filter((r) => regions.includes(r.region) && OPEN_STATUSES.includes(normalizeStatus(r.status))).length;
+    },
     setStatus: (id, to: RequestStatus, actor, note) =>
-      withLock(async () => {
-        const db = await read();
-        const r = db.requests.find((x) => x.id === id);
-        if (!r) return { ok: false as const, error: "solicitação não encontrada" };
-        if (!nextStatuses(r.status).includes(to)) return { ok: false as const, error: `não é possível passar de "${r.status}" para "${to}"` };
+      change(id, (r, at) => {
+        const from = normalizeStatus(r.status);
+        if (!nextStatuses(from).includes(to)) return `não é possível passar de "${from}" para "${to}"`;
         r.status = to;
-        r.updatedAt = now();
-        r.events.push({ at: r.updatedAt, actor, action: "status", detail: `${to}${note ? `: ${note.slice(0, 200)}` : ""}` });
-        await write(db);
-        return { ok: true as const, record: r };
+        if (to === "customerContacted") r.contactedAt = at;
+        r.events.push({ at, actor, action: "status", detail: `${to}${note ? `: ${note.slice(0, 200)}` : ""}` });
+        return null;
       }),
-    linkOrder: (id, order: { store: CommerceStoreKey; number: string }, actor) =>
-      withLock(async () => {
-        const db = await read();
-        const r = db.requests.find((x) => x.id === id);
-        if (!r) return { ok: false as const, error: "solicitação não encontrada" };
-        if (!canLinkOrder(r.status)) return { ok: false as const, error: "esta solicitação não pode receber um pedido no estado atual" };
-        if (order.store !== REGIONS[r.region].storeKey) return { ok: false as const, error: "o pedido precisa ser da loja INK desta região" };
-        if (!ORDER_NUMBER.test(order.number)) return { ok: false as const, error: "número de pedido inválido (3 a 40 letras, números ou hífen)" };
-        if (db.requests.some((x) => x.id !== id && x.order?.number === order.number && x.order.store === order.store)) return { ok: false as const, error: "este pedido já está vinculado a outra solicitação" };
-        r.order = { store: order.store, number: order.number, linkedBy: actor, linkedAt: now() };
-        r.status = "linkedToInkOrder";
-        r.updatedAt = r.order.linkedAt;
-        r.events.push({ at: r.updatedAt, actor, action: "linked", detail: order.number });
-        await write(db);
-        return { ok: true as const, record: r };
+    addNote: (id, actor, note) =>
+      change(id, (r, at) => {
+        if (note.trim() === "") return "escreva a observação";
+        r.events.push({ at, actor, action: "note", detail: note.trim().slice(0, 500) });
+        return null;
+      }),
+    setProductLink: (id, url, actor) =>
+      change(id, (r, at) => {
+        r.productLink = url ? { url, setBy: actor, setAt: at } : null;
+        r.events.push({ at, actor, action: "product-link", detail: url ? "definido" : "removido" });
+        return null;
       }),
     purgeExpired: (at) =>
       withLock(async () => {
         const db = await read();
-        const keep = db.requests.filter((r) => new Date(r.expiresAt) > at || r.status === "linkedToInkOrder" || r.status === "inReview" || r.status === "awaitingOrderLink");
+        // Requests someone is still working on (being made, or ready and not yet told to the customer) are kept whatever their age.
+        const keep = db.requests.filter((r) => new Date(r.expiresAt) > at || ["inCreation", "artReady"].includes(normalizeStatus(r.status)));
         const removed = db.requests.length - keep.length;
         if (removed > 0) await write({ requests: keep });
         return removed;
