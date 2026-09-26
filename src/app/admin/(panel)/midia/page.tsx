@@ -17,7 +17,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Mídia</h1>
-        <p className="a-muted mt-2 max-w-2xl">Banners do projeto (os mesmos da loja) e imagens enviadas. {prod ? <>As imagens enviadas ficam no R2, em vários tamanhos, e uma imagem que faz parte de uma versão publicada nunca é apagada (para o “restaurar” continuar funcionando).</> : <>No desenvolvimento, as imagens enviadas ficam <strong>somente neste computador</strong>; em produção irão para o R2.</>}</p>
+        <p className="a-muted mt-2 max-w-2xl">Banners do projeto (os mesmos da loja) e imagens enviadas. {prod ? <>As imagens enviadas ficam no Bucket do Railway, em vários tamanhos, e uma imagem que faz parte de uma versão publicada nunca é apagada (para o “restaurar” continuar funcionando).</> : <>No desenvolvimento, as imagens enviadas ficam <strong>somente neste computador</strong>; em produção vão para o Bucket do Railway.</>}</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
       {uploads ? (
@@ -29,7 +29,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
           <button type="submit" className="a-btn">Enviar</button>
         </form>
       ) : (
-        <p className="a-flash err">O envio de imagens ainda não está configurado neste ambiente (falta o armazenamento R2). Você pode usar os banners do projeto.</p>
+        <p className="a-flash err">O envio de imagens ainda não está configurado neste ambiente (falta o Bucket do Railway: variáveis BUCKET_*). Você pode usar os banners do projeto.</p>
       )}
       <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Imagens">
         {media.map((m) => {

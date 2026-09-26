@@ -6,6 +6,7 @@ import { after } from "next/server";
 import { cookies, headers } from "next/headers";
 import { requireAdmin, SESSION_COOKIE, SESSION_COOKIE_PATH } from "@/lib/admin/auth/guard";
 import { deleteUpload, saveUpload } from "@/lib/admin/media";
+import { describeUploadFailure } from "@/lib/admin/media/upload-errors";
 import { platform } from "@/lib/admin/platform";
 import { publishRelease, reconcileReleases, type PublishDeps } from "@/lib/admin/publishing";
 import { publishDeps } from "@/lib/admin/ops";
@@ -350,7 +351,11 @@ export async function uploadMediaAction(fd: FormData) {
   const file = fd.get("file");
   if (!(file instanceof File) || file.size === 0) back("/admin/midia", { err: ["Escolha um arquivo."] });
   if (!allow(`upload:${actor.id}`, 30, 10 * 60_000)) back("/admin/midia", { err: ["Muitos envios seguidos. Aguarde alguns minutos."] });
-  const result = await saveUpload(Buffer.from(await file.arrayBuffer()), file.name, actor.id === "dev-local" ? null : actor.id).catch(() => ({ ok: false as const, error: "não foi possível salvar a imagem agora" }));
+  const result = await saveUpload(Buffer.from(await file.arrayBuffer()), file.name, actor.id === "dev-local" ? null : actor.id).catch((error: unknown) => {
+    // The reason is logged (never a secret: the object-store client only reports the HTTP status) and its class shown to the owner.
+    console.error("[admin] media upload failed:", error instanceof Error ? `${error.name}: ${error.message}`.slice(0, 300) : "unknown");
+    return { ok: false as const, error: describeUploadFailure(error) };
+  });
   revalidatePath("/admin", "layout");
   if (!result.ok) back("/admin/midia", { err: [result.error] });
   await audit(actor, "media.upload", "sul", result.choice.assetId);
