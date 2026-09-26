@@ -86,6 +86,8 @@ export type Section = {
    * the code has always shown, the other regions show none. `[]` = customised to show no card.
    */
   featured?: FeaturedProductRef[];
+  /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. */
+  nav?: { label: string };
   appearance: Appearance;
 };
 
@@ -298,6 +300,9 @@ function checkSection(c: Collector, path: string, v: unknown): void {
         seen.add(key);
       });
     }
+  }
+  if (v.nav !== undefined) {
+    if (v.template === "hero" || v.template === "footer" || !isRecord(v.nav) || !isStr(v.nav.label, 24)) c.fail(`${path}.nav`, "not for the hero or footer; label 1..24 characters");
   }
   if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > 8)) c.fail(`${path}.count`, "city styles only, an integer 1..8");
   if (v.template === "product-carousel") {

@@ -3,6 +3,8 @@ import Link from "next/link";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
 import { INSTAGRAM_URL, LEGACY_STORE_URLS } from "@/lib/site";
+import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
+import { hasStatesSection, headerLinks } from "@/lib/site-config/nav";
 
 /** Another region: this site's own page once that region is publicly launched, otherwise the legacy INK store it has always linked to. */
 const otherRegionHref = (slug: RegionSlug, launched: readonly RegionSlug[]): string => (launched.includes(slug) ? `/${slug}` : LEGACY_STORE_URLS[slug]);
@@ -26,12 +28,13 @@ export function AnnouncementBar({ region, cityCount }: { region: RegionSlug; cit
   );
 }
 
+/** The section links of the header, from the region's published home (see site-config/nav.ts); the original three when the config-driven home is off. */
+function headerDoc(region: RegionSlug) {
+  return siteConfigHomeEnabled() ? homeBundle().docs[region] : undefined;
+}
+
 function navItems(region: RegionSlug): NavItem[] {
-  return [
-    { label: "Estilos", href: `/${region}#estilos` },
-    { label: "Fala daqui", href: `/${region}#fala` },
-    { label: "Estados", href: `/${region}#estados` },
-  ];
+  return headerLinks(headerDoc(region)).map((l) => ({ label: l.label, href: `/${region}#${l.anchor}` }));
 }
 
 export function Header({ region }: { region: RegionSlug }) {
@@ -45,11 +48,12 @@ export function Header({ region }: { region: RegionSlug }) {
   // inlined in its flat list (see mobileItems below) since MobileMenu has no nested-dropdown affordance —
   // never a second, conflicting "Regiões" control.
   const stateLinks = ufs.map((uf) => ({ label: STATE_NAMES[uf], href: `/${region}/${uf.toLowerCase()}`, uf }));
+  // The state links go after the first section link (as before: Estilos, states…, Fala daqui, Estados).
+  const stateItems: NavItem[] = stateLinks.map(({ label, href, uf }) => ({ label, href, trackState: { state: uf, region } }));
   const mobileItems: NavItem[] = [
-    { label: "Estilos", href: `/${region}#estilos` },
-    ...stateLinks.map(({ label, href, uf }) => ({ label, href, trackState: { state: uf, region } })),
-    { label: "Fala daqui", href: `/${region}#fala` },
-    { label: "Estados", href: `/${region}#estados` },
+    ...items.slice(0, 1),
+    ...stateItems,
+    ...items.slice(1),
     ...others.map((r) => ({ label: r.name, href: otherRegionHref(r.slug, launched), external: !launched.includes(r.slug) })),
   ];
 
@@ -80,11 +84,13 @@ export function Header({ region }: { region: RegionSlug }) {
                   </TrackedStateLink>
                 </li>
               ))}
-              <li className="border-t border-line">
-                <Link href={`/${region}#estados`} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
-                  Ver estados
-                </Link>
-              </li>
+              {hasStatesSection(headerDoc(region)) && (
+                <li className="border-t border-line">
+                  <Link href={`/${region}#estados`} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
+                    Ver estados
+                  </Link>
+                </li>
+              )}
             </ul>
           </HeaderDropdown>
           {items.map((item) => (

@@ -56,6 +56,14 @@ for (const region of REGIONS) {
     await expect(inHome).toContainText("Rodapé");
     await expect(inHome).not.toContainText("Sul");
 
+    // 3b. Menu do topo: the state chooser goes into the header under an apelido of the editor's choice.
+    await page.locator("table.a-table tbody tr", { hasText: "Escolha o seu estado" }).getByRole("link", { name: "Editar" }).click();
+    await hydrated(page);
+    await page.getByLabel("Mostrar esta seção no menu do topo da loja").check();
+    await page.getByLabel(/Apelido/).fill("Meus estados");
+    await page.getByRole("button", { name: "Salvar rascunho" }).click();
+    await expect(flash(page, /Rascunho salvo/)).toBeVisible();
+
     // 4. The Library is this region's store, never another one; an internal collection is enabled and disabled for this region only.
     await open(page, "/admin/colecoes");
     await expect(page.getByText(new RegExp(`Coleções da loja INK de ${region.store}`))).toBeVisible();
@@ -80,6 +88,10 @@ for (const region of REGIONS) {
     await expect(page.getByRole("link", { name: /Abrir a loja/ })).toHaveAttribute("href", `/${region.slug}`); // follows the selected region once it is public
     // 6. Public: real products, links to the region's OWN INK store, the region shows in the navigation, Sul is untouched.
     await open(page, `/${region.slug}`);
+    // The header links only what the region really has, under the chosen apelido (never a dead "Fala daqui").
+    const menu = page.getByRole("navigation", { name: "Principal" });
+    await expect(menu.getByRole("link", { name: "Meus estados" })).toHaveAttribute("href", `/${region.slug}#estados`);
+    await expect(menu.getByRole("link", { name: "Fala daqui" })).toHaveCount(0);
     expect(await page.locator(`a[href^="https://www.${region.host}/"]`).count(), "real INK products of the region").toBeGreaterThanOrEqual(3);
     expect(await page.locator('a[href^="https://www.usesul.com.br/"]').count(), "never Sul's store").toBe(0);
     await expect(page.getByText(/^0 cidades|\b0 cidades\b/)).toHaveCount(0);

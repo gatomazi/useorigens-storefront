@@ -107,6 +107,10 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     // No button configured = the original "Encontrar minha cidade" search; a label without a destination is dropped, never a dead link.
     patch.cta = parseCta(f);
   }
+  if (section.template !== "hero" && section.template !== "footer" && f.get("nav_present") !== null) {
+    // "Mostrar no menu" + the apelido; unchecked clears it. An empty apelido is not defaulted here: the validator refuses it and says so.
+    patch.nav = f.get("nav_show") !== null ? { label: str(f, "nav_label") } : undefined;
+  }
   if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", 8)), 1, 8);
   return patch;
 }
