@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { setCollectionEnabledAction, setCollectionNavbarAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
+import { moveCollectionNavbarAction, setCollectionEnabledAction, setCollectionNavbarPositionAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { LibrarySearch } from "@/components/admin/LibrarySearch";
 import { libraryEntries, type LibraryEntry } from "@/lib/catalog/collection-source";
@@ -14,8 +14,8 @@ import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { currentScope, storeOf } from "@/lib/admin/scope";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
-import { MAX_NAVBAR_COLLECTIONS } from "@/lib/site-config/schema";
-import { enabledInternalIds, navbarCollectionIds, sectionsUsing } from "@/lib/site-config/collections-enabled";
+import { enabledInternalIds, sectionsUsing } from "@/lib/site-config/collections-enabled";
+import { effectiveNavbarGroups, navbarPositionOf, type NavbarPosition } from "@/lib/site-config/navbar-groups";
 import { numberPt } from "@/lib/format";
 
 const STORES = [
@@ -50,7 +50,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
   const from = sp.from?.startsWith("/admin/") ? sp.from : null;
   const ws = await loadWorkspace(scope);
   const enabled = enabledInternalIds(ws.doc, store.key);
-  const inNavbar = navbarCollectionIds(ws.doc, store.key);
+  const { groups: navGroups, legacy: navLegacy } = effectiveNavbarGroups(ws.doc);
   const file = getCollections();
   const synced = file.stores[store.key];
   const all = libraryEntries(store.key as CommerceStoreKey, enabled);
@@ -151,6 +151,43 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
 
       <div className="a-card p-5"><LibrarySearch q={q} f={f} /></div>
 
+      {synced && (
+        <section className="a-card p-5" aria-label="Navbar da INK" data-testid="navbar-groups">
+          <p className="a-h2">Navbar da INK</p>
+          <p className="a-muted mt-2 max-w-3xl">Duas posições livres: <strong>Topo</strong> (direto na barra) e <strong>Demais categorias</strong> (menu suspenso). Qualquer quantidade em cada uma, na ordem abaixo; uma coleção fica em no máximo uma delas. Nenhuma coleção é especial: “Novidades” é só o nome de uma coleção. Vale depois de <strong>Publicar</strong>. Regiões e Cidades são fixos.</p>
+          {navLegacy && <p className="a-flash mt-3">Seleção antiga (lista única): todas contam como <strong>Topo</strong> até você redistribuí-las; a primeira alteração aqui a converte.</p>}
+          <div className="mt-4 grid gap-6 md:grid-cols-2">
+            {(["top", "more"] as const).map((group) => (
+              <div key={group}>
+                <p className="font-bold">{group === "top" ? "Topo" : "Demais categorias"} <span className="a-muted font-normal">({navGroups[group].length})</span></p>
+                {navGroups[group].length === 0 ? <p className="a-muted mt-2 text-[0.875rem]">{group === "more" ? "Vazio: o botão “Demais categorias” não aparece." : "Nenhuma coleção no topo."}</p> : (
+                  <ol className="mt-2 space-y-1">
+                    {navGroups[group].map((ref, i) => {
+                      const entry = all.find((x) => x.id === ref.collectionId && x.store === ref.store);
+                      const eligible = !!entry && entry.visibility === "public" && entry.matchedCount >= 1;
+                      return (
+                        <li key={`${ref.store}:${ref.collectionId}`} className="flex flex-wrap items-center gap-2">
+                          <span className="a-muted w-5 text-right">{i + 1}.</span>
+                          <span className="font-semibold">{entry?.name ?? `coleção #${ref.collectionId}`}</span>
+                          {!eligible && <span className="a-badge warn" title="Interna, sem produtos ou fora do último sync: não aparece publicamente até regularizar. A escolha fica guardada.">não será publicada</span>}
+                          <form action={moveCollectionNavbarAction} className="ml-auto flex gap-1">
+                            <input type="hidden" name="ref" value={`${ref.store}:${ref.collectionId}`} />
+                            <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                            <input type="hidden" name="scope" value={scope} />
+                            <button type="submit" name="direction" value="up" className="a-btn sm ghost" disabled={i === 0} aria-label={`Subir ${entry?.name ?? ref.collectionId}`}>↑</button>
+                            <button type="submit" name="direction" value="down" className="a-btn sm ghost" disabled={i === navGroups[group].length - 1} aria-label={`Descer ${entry?.name ?? ref.collectionId}`}>↓</button>
+                          </form>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {!synced ? null : (
         <section className="a-card overflow-x-auto" aria-label="Coleções">
           <table className="a-table a-stack">
@@ -178,21 +215,21 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
                     </td>
                     <td data-label="Navbar da INK">
                       {e.visibility === "public" ? (
-                        <form action={setCollectionNavbarAction}>
+                        <form action={setCollectionNavbarPositionAction} role="group" aria-label={`Posição de ${e.name} na navbar da INK`} className="flex flex-wrap gap-1">
                           <input type="hidden" name="ref" value={`${e.store}:${e.id}`} />
                           <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
                           <input type="hidden" name="scope" value={scope} />
                           <input type="hidden" name="q" value={q} />
                           <input type="hidden" name="f" value={f === "all" ? "" : f} />
                           <input type="hidden" name="from" value={from ?? ""} />
-                          {inNavbar.has(e.id) ? (
-                            <>
-                              <span className="a-badge ok">Na navbar</span>{" "}
-                              <button type="submit" name="shown" value="false" className="a-btn sm ghost">Tirar</button>
-                            </>
-                          ) : (
-                            <button type="submit" name="shown" value="true" className="a-btn sm ghost" disabled={e.matchedCount < 1 || inNavbar.size >= MAX_NAVBAR_COLLECTIONS} title={e.matchedCount < 1 ? "Sem produtos no catálogo local." : inNavbar.size >= MAX_NAVBAR_COLLECTIONS ? `A navbar comporta no máximo ${MAX_NAVBAR_COLLECTIONS} coleções.` : undefined}>Mostrar</button>
-                          )}
+                          {(["none", "top", "more"] as NavbarPosition[]).map((pos) => {
+                            const current = navbarPositionOf(navGroups, { store: e.store, collectionId: e.id }) === pos;
+                            return (
+                              <button key={pos} type="submit" name="position" value={pos} aria-pressed={current} className={`a-btn sm ${current ? "" : "ghost"}`} disabled={pos !== "none" && e.matchedCount < 1} title={pos !== "none" && e.matchedCount < 1 ? "Sem produtos no catálogo local." : undefined}>
+                                {pos === "none" ? "Não exibir" : pos === "top" ? "Topo" : "Demais categorias"}
+                              </button>
+                            );
+                          })}
                         </form>
                       ) : <span className="a-muted" title="Coleção interna: não tem página pública na INK.">Indisponível</span>}
                     </td>

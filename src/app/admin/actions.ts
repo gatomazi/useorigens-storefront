@@ -206,30 +206,50 @@ export async function setCollectionEnabledAction(fd: FormData) {
   back(to, { ok: enabledNow ? `“${record.name}” habilitada para uso no CMS (a INK não foi alterada).` : `“${record.name}” desabilitada.` });
 }
 
+const NAVBAR_POSITIONS = new Set(["none", "top", "more"]);
+
 /**
- * Library: show or hide ONE public collection in the navbar the Worker draws on the INK product pages. Independent of "enabled for the home":
- * only PUBLIC collections (a real page on the INK store) with products are offered; internal ones have no public page, so they are refused here.
+ * Library: where ONE public collection appears in the navbar the Worker draws on the INK product pages: "Não exibir", "Topo" or "Demais categorias".
+ * Independent of "enabled for the home". Only PUBLIC collections (a real page on the INK store) with products can be placed; internal ones have no
+ * public page. Any number of collections per group; the position is exclusive (moving to a group removes it from the other), appended at the end of
+ * the target group, where the owner reorders it (`moveCollectionNavbarAction`). Nothing goes public until the draft is published.
  */
-export async function setCollectionNavbarAction(fd: FormData) {
+export async function setCollectionNavbarPositionAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
-  const show = text(fd, "shown") === "true";
+  const position = text(fd, "position");
   const from = text(fd, "from");
   const q = new URLSearchParams();
   for (const k of ["q", "f"]) if (text(fd, k)) q.set(k, text(fd, k));
   if (from.startsWith("/admin/")) q.set("from", from);
   const to = `/admin/colecoes${q.size ? `?${q}` : ""}`;
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: [`Esta coleção pertence a outra loja da INK: a região ${scopeName(scope)} só usa coleções da própria loja.`] });
+  if (!NAVBAR_POSITIONS.has(position)) back(to, { err: ["Posição inválida."] });
   const record = findCollection(ref.store, ref.collectionId);
   if (!record) back(to, { err: ["Coleção não encontrada no snapshot sincronizado."] });
-  if (show) {
+  if (position !== "none") {
     if (!record.isAvailable) back(to, { err: ["Só coleções públicas na INK têm página própria: uma coleção interna não pode aparecer na navbar."] });
     if (record.matchedCount < 1) back(to, { err: ["Esta coleção não tem produtos no catálogo local; ela não apareceria na navbar."] });
   }
-  const outcome = await applyAndSave(scope, { type: "set-collection-navbar", ...ref, shown: show }, revNumber(fd), actor);
+  const outcome = await applyAndSave(scope, { type: "set-collection-navbar-position", ...ref, position: position as "none" | "top" | "more" }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to, { err: outcome.errors });
-  back(to, { ok: show ? `“${record.name}” vai aparecer na navbar da INK depois que você publicar.` : `“${record.name}” sai da navbar da INK depois que você publicar.` });
+  const where = position === "top" ? "vai para o Topo da navbar da INK" : position === "more" ? "vai para Demais categorias da navbar da INK" : "sai da navbar da INK";
+  back(to, { ok: `“${record.name}” ${where} depois que você publicar.` });
+}
+
+/** Library: one step up or down inside the collection's own navbar group. */
+export async function moveCollectionNavbarAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
+  const direction = text(fd, "direction");
+  const to = "/admin/colecoes";
+  if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
+  if (direction !== "up" && direction !== "down") back(to, { err: ["Direção inválida."] });
+  const outcome = await applyAndSave(scope, { type: "move-collection-navbar", ...ref, direction }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  back(to, { ok: "Ordem alterada (vale depois que você publicar)." });
 }
 
 export async function discardDraftAction(fd: FormData) {
