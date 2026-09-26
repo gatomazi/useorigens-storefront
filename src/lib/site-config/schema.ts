@@ -86,6 +86,11 @@ export type Section = {
    * the code has always shown, the other regions show none. `[]` = customised to show no card.
    */
   featured?: FeaturedProductRef[];
+  /**
+   * State chooser only: a cover picture per state (key = UF, e.g. "PA"). A state without one keeps the cover the code has for it (Sul) or shows
+   * none. The images are resolved into the published media table like any section image.
+   */
+  stateCovers?: Record<string, MediaRef>;
   appearance: Appearance;
 };
 
@@ -299,6 +304,13 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       });
     }
   }
+  if (v.stateCovers !== undefined) {
+    if (v.template !== "states" || !isRecord(v.stateCovers) || Object.keys(v.stateCovers).length > 27) c.fail(`${path}.stateCovers`, "state chooser only, at most one cover per state");
+    else for (const [uf, ref] of Object.entries(v.stateCovers)) {
+      if (!/^[A-Z]{2}$/.test(uf)) c.fail(`${path}.stateCovers.${uf}`, "the key must be a UF such as PA");
+      else checkMediaRef(c, `${path}.stateCovers.${uf}`, ref);
+    }
+  }
   if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > 8)) c.fail(`${path}.count`, "city styles only, an integer 1..8");
   if (v.template === "product-carousel") {
     if (!v.layout) c.fail(`${path}.layout`, "required for product-carousel");
@@ -398,6 +410,8 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
           if (isRecord(s.source) && s.source.kind === "ink-category" && s.source.store !== ownStore) c.fail(`doc.home.sections[${i}].source.store`, "belongs to another region's INK store");
           const dest = isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null;
           if (dest && dest.kind === "ink-collection" && dest.store !== ownStore) c.fail(`doc.home.sections[${i}].cta.dest.store`, "belongs to another region's INK store");
+          // A state cover belongs to a state of THIS region.
+          if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(REGIONS[sc as RegionSlug]?.ufs as readonly string[] | undefined)?.includes(uf)) c.fail(`doc.home.sections[${i}].stateCovers.${uf}`, "not a state of this region");
           // The hero's cards are products of THIS region's own INK store (a Norte card can never be a Sul product).
           if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && ref.store !== ownStore) c.fail(`doc.home.sections[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
           // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
@@ -462,7 +476,7 @@ export function validateBundle(input: unknown): ValidationResult<PublishedBundle
       for (const scope of SCOPES) {
         const doc = docs[scope] as ScopeDoc | undefined;
         for (const s of doc?.home?.sections ?? []) {
-          for (const ref of [s.appearance?.image?.mobile, s.appearance?.image?.desktop]) {
+          for (const ref of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {})]) {
             if (ref && !(ref.assetId in media)) errors.push(`bundle.media: "${ref.assetId}" (section ${s.id}) is not in the media table`);
           }
         }

@@ -113,3 +113,16 @@ export function firstImageSectionId(sections: Section[], media: PublishedBundle[
   for (const s of sections) if (hasImage(resolveBackground(s.appearance, media))) return s.id;
   return null;
 }
+
+/** The state chooser's per-state covers as banner assets (one picture for both breakpoints). A cover whose image is not in the media table is skipped. */
+export function resolveStateCovers(section: Section, media: PublishedBundle["media"]): Record<string, { mobile: BannerImageLike; desktop: BannerImageLike; alt: string }> {
+  const out: Record<string, { mobile: BannerImageLike; desktop: BannerImageLike; alt: string }> = {};
+  for (const [uf, ref] of Object.entries(section.stateCovers ?? {})) {
+    const info = media[ref.assetId];
+    if (!info) continue;
+    const image = { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}) };
+    out[uf] = { mobile: image, desktop: image, alt: ref.decorative ? "" : ref.alt };
+  }
+  return out;
+}
+export type BannerImageLike = { src: string; width: number; height: number; variants?: { w: number; src: string }[] };

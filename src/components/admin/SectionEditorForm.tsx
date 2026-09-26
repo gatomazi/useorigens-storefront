@@ -47,8 +47,10 @@ function FocalPad({ label, image, x, y, onChange }: { label: string; image?: Med
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [], featured,
+  section, rev, scope, media, collections, action, notes = [], featured, stateCovers,
 }: {
+  /** State chooser only: the region's states with the cover the code already has for them (Sul), to explain what an empty choice means. */
+  stateCovers?: { uf: string; name: string; legacy: boolean }[];
   /** Hero only: the configured cards as resolved against the region's catalog. */
   featured?: { mode: "edit" | "legacy"; initial: FeaturedSlotView[]; eligible: number; regionName: string; search: (scope: string, query: string) => Promise<{ results: FeaturedCandidate[]; total: number; error?: string }> };
   /** Real-data notes of a structured component (how many styles / states the region's catalog can feed). */
@@ -131,6 +133,31 @@ export function SectionEditorForm({
           </div>
         )}
       </fieldset>
+
+      {section.template === "states" && stateCovers && (
+        <fieldset className="space-y-4">
+          <legend className="a-h2 mb-3">Banner de cada estado</legend>
+          <input type="hidden" name="state_covers_present" value="1" />
+          <p className="a-muted text-[0.875rem]">Uma imagem para cada estado, mostrada no topo do cartão do estado. Escolha entre os banners do projeto e as imagens que você enviou em Mídia. Sem imagem, o cartão fica só com o texto{stateCovers.some((s) => s.legacy) ? " (ou com o banner que o código já tem para o estado)" : ""}.</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {stateCovers.map((st) => {
+              const current = section.stateCovers?.[st.uf];
+              return (
+                <div key={st.uf} className="border border-black/15 bg-white p-3">
+                  <label className="a-label" htmlFor={`state_cover_${st.uf}`}>{st.name} ({st.uf})</label>
+                  <select id={`state_cover_${st.uf}`} name={`state_cover_${st.uf}`} className="a-select" defaultValue={current?.assetId ?? ""}>
+                    <option value="">{st.legacy ? "Banner atual do código" : "Sem imagem"}</option>
+                    <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>
+                    {media.some((m) => m.kind === "upload") && <optgroup label="Enviadas">{media.filter((m) => m.kind === "upload").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
+                  </select>
+                  <label className="a-label mt-2" htmlFor={`state_alt_${st.uf}`}>Descrição da imagem (opcional; vazio = decorativa)</label>
+                  <input id={`state_alt_${st.uf}`} name={`state_alt_${st.uf}`} defaultValue={current?.alt ?? ""} className="a-input" maxLength={200} />
+                </div>
+              );
+            })}
+          </div>
+        </fieldset>
+      )}
 
       {section.template === "hero" && featured && <HeroFeaturedProducts scope={scope} regionName={featured.regionName} mode={featured.mode} initial={featured.initial} eligible={featured.eligible} search={featured.search} />}
 
