@@ -103,6 +103,19 @@ for (const region of REGIONS) {
     expect(await status(page, `/${region.slug}`)).toBe(200);
     expect(sections(await (await page.request.get("/sul", { timeout: 300_000 })).text())).toEqual(sections(sulBefore));
 
+    // 8b. History cleanup: the LIVE release has no delete button; an old one needs the confirmation and then disappears.
+    await open(page, "/admin/publicar");
+    const headRow = page.locator("tbody tr", { hasText: "No ar" });
+    await expect(headRow.getByRole("button", { name: /Apagar a release/ })).toHaveCount(0);
+    const victim = page.locator("tbody tr").filter({ has: page.getByRole("button", { name: /Apagar a release/ }) }).last();
+    const victimId = (await victim.locator("td").first().innerText()).replace("#", "").trim();
+    await victim.getByRole("button", { name: /Apagar a release/ }).click();
+    await expect(flash(page, /Marque a confirmação/)).toBeVisible(); // nothing is deleted without the confirmation
+    await page.locator("tbody tr").filter({ has: page.getByRole("button", { name: `Apagar a release ${victimId}` }) }).getByLabel(/confirmo apagar/).check();
+    await page.getByRole("button", { name: `Apagar a release ${victimId}` }).click();
+    await expect(flash(page, new RegExp(`Release ${victimId} apagada`))).toBeVisible();
+    await expect(page.locator("tbody tr").filter({ hasText: new RegExp(`^#${victimId}\\b`) })).toHaveCount(0);
+
     // 9. Leave it in preview for the next scenario.
     await open(page, "/admin/publicar");
     await page.getByRole("button", { name: new RegExp(`Recolher ${region.name}`) }).click();

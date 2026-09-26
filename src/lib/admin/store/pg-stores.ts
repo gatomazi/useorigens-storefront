@@ -117,16 +117,37 @@ export function pgReleaseStore(db: Db): ReleaseStore {
       return r.rows[0] ? { record: toRecord(r.rows[0]), bundle: r.rows[0].bundle } : null;
     },
 
-    async list(limit) {
-      const r = await db.query<ReleaseRow>(`select ${RELEASE_COLUMNS} from release order by id desc limit $1`, [Math.max(1, Math.min(200, limit))]);
+    async list(limit, offset = 0) {
+      // `release.id` (the column), not `id`: the SELECT aliases `id::text as id`, and a bare `order by id` would sort that TEXT ("9" before "10").
+      const r = await db.query<ReleaseRow>(`select ${RELEASE_COLUMNS} from release order by release.id desc limit $1 offset $2`, [Math.max(1, Math.min(200, limit)), Math.max(0, offset)]);
       return r.rows.map(toView);
+    },
+
+    async count() {
+      return Number((await db.query<{ n: string }>(`select count(*)::text as n from release`)).rows[0].n);
+    },
+
+    async remove(id) {
+      if (!/^\d{1,18}$/.test(id)) return { ok: false, error: "identificador inválido" };
+      const row = await db.query<{ status: string; live: boolean }>(`select status, exists (select 1 from release_head where release_id = release.id) as live from release where id = $1::bigint`, [id]);
+      if (!row.rows[0]) return { ok: false, error: "versão não encontrada" };
+      if (row.rows[0].live) return { ok: false, error: "a versão que está no ar não pode ser apagada" };
+      if (row.rows[0].status === "pending") return { ok: false, error: "há uma publicação em andamento com esta versão" };
+      try {
+        await db.query(`delete from release where id = $1::bigint`, [id]);
+        return { ok: true };
+      } catch (error) {
+        // Databases migrated before 0003 keep the original append-only guard.
+        if (error instanceof Error && /append-only/.test(error.message)) return { ok: false, error: "apagar versões exige a migration 0003 no banco (veja o runbook)" };
+        throw error;
+      }
     },
 
     async reconcileState() {
       const head = await db.query<ReleaseRow & { revalidated: boolean }>(
         `select ${RELEASE_COLUMNS}, (select revalidated from release_head) as revalidated from release where id = (select release_id from release_head)`,
       );
-      const pending = await db.query<ReleaseRow>(`select ${RELEASE_COLUMNS} from release where status = 'pending' order by id`);
+      const pending = await db.query<ReleaseRow>(`select ${RELEASE_COLUMNS} from release where status = 'pending' order by release.id`);
       return { head: head.rows[0] ? toRecord(head.rows[0]) : null, pending: pending.rows.map(toRecord), headRevalidated: head.rows[0]?.revalidated ?? true };
     },
   };

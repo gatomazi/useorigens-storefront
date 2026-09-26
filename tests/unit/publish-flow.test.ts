@@ -271,3 +271,33 @@ describe("reconciliation", () => {
     }
   });
 });
+
+describe("the local ledger's history (sandbox)", () => {
+  test("given a dozen releases, when listed and paged, then the order is numeric, pages do not overlap, and only a non-live release can be deleted", async () => {
+    const { mkdtemp, rm } = await import("node:fs/promises");
+    const { tmpdir } = await import("node:os");
+    const path = await import("node:path");
+    const { fileReleaseStore } = await import("@/lib/admin/publishing");
+    const { buildSeedBundle } = await import("@/lib/site-config/seed");
+    const dir = await mkdtemp(path.join(tmpdir(), "ledger-"));
+    try {
+      const store = fileReleaseStore(path.join(dir, "ledger.json"), path.join(dir, "releases"));
+      const bundle = buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null });
+      for (let i = 0; i < 12; i++) {
+        const { release } = await store.begin({ kind: "publish", note: null, scopesChanged: ["sul"], sections: 1, actorId: null }, async (id) => ({ ...bundle, releaseId: id }));
+        await store.markLive(release.id);
+      }
+      const all = await store.list(50);
+      expect(all.map((r) => r.id)).toEqual(["12", "11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"]);
+      expect(await store.count()).toBe(12);
+      expect((await store.list(5, 5)).map((r) => r.id)).toEqual(["7", "6", "5", "4", "3"]);
+      expect(await store.remove("12")).toEqual({ ok: false, error: "a versão que está no ar não pode ser apagada" });
+      expect(await store.remove("3")).toEqual({ ok: true });
+      expect(await store.count()).toBe(11);
+      expect(await store.restorable("3")).toBeNull();
+      expect(await store.remove("3")).toMatchObject({ ok: false });
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+});

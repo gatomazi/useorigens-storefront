@@ -42,16 +42,16 @@ async function seedUser(email: string, role: "owner" | "editor" = "editor", scop
 describe("migrations", () => {
   test("given a fresh database, when migrated, then every migration is applied once and a second run applies nothing", async () => {
     const fresh = await createPgliteDb();
-    expect(await migrate(fresh, migrations)).toEqual(["0001_init", "0002_auth_sync"]);
+    expect(await migrate(fresh, migrations)).toEqual(["0001_init", "0002_auth_sync", "0003_release_delete"]);
     expect(await migrate(fresh, migrations)).toEqual([]);
-    expect(await migrationStatus(fresh, migrations)).toEqual({ applied: ["0001_init", "0002_auth_sync"], pending: [], unknown: [] });
+    expect(await migrationStatus(fresh, migrations)).toEqual({ applied: ["0001_init", "0002_auth_sync", "0003_release_delete"], pending: [], unknown: [] });
     await fresh.close();
   });
 
   test("given a database that is behind, when its status is read, then the pending versions are reported and nothing is applied", async () => {
     const half = await createPgliteDb();
     await migrate(half, migrations.slice(0, 1));
-    expect((await migrationStatus(half, migrations)).pending).toEqual(["0002_auth_sync"]);
+    expect((await migrationStatus(half, migrations)).pending).toEqual(["0002_auth_sync", "0003_release_delete"]);
     await half.close();
   });
 
@@ -147,10 +147,52 @@ describe("releases, publishing and rollback", () => {
     expect(after.docs.global).toEqual(before.docs.global);
   });
 
-  test("given release rows, when anyone tries to edit or delete one, then the database refuses (append-only history)", async () => {
+  test("given release rows, when anyone tries to edit one or delete the LIVE one, then the database refuses", async () => {
     const id = (await deps.releases.head())!.record.id;
     await expect(db.query(`update release set bundle = '{"x":1}'::jsonb where id = $1::bigint`, [id])).rejects.toThrow(/immutable/);
-    await expect(db.query(`delete from release where id = $1::bigint`, [id])).rejects.toThrow(/append-only/);
+    await expect(db.query(`delete from release where id = $1::bigint`, [id])).rejects.toThrow(/live release cannot be deleted/);
+  });
+
+  test("given more than ten releases, when listed, then they are ordered by NUMERIC id (#11 before #10 before #9) and pages do not overlap", async () => {
+    for (let i = 0; i < 12; i++) await ok(editedDoc(`Ordem ${i}`));
+    const all = await deps.releases.list(200);
+    const ids = all.map((r) => Number(r.id));
+    expect(ids).toEqual([...ids].sort((a, b) => b - a));
+    expect(ids.length).toBeGreaterThan(10);
+    expect(await deps.releases.count()).toBe(ids.length);
+    const first = await deps.releases.list(5, 0);
+    const second = await deps.releases.list(5, 5);
+    expect([...first, ...second].map((r) => r.id)).toEqual(all.slice(0, 10).map((r) => r.id));
+    expect(first[0].id).toBe((await deps.releases.head())!.record.id);
+  });
+
+  test("given the release history, when an old release is deleted, then it disappears, the head and the others are untouched, and the live one is refused", async () => {
+    const head = (await deps.releases.head())!;
+    const all = await deps.releases.list(200);
+    const old = all.filter((r) => r.id !== head.record.id).at(-1)!;
+    const before = await deps.releases.count();
+    expect(await deps.releases.remove(head.record.id)).toEqual({ ok: false, error: "a versão que está no ar não pode ser apagada" });
+    expect(await deps.releases.remove(old.id)).toEqual({ ok: true });
+    expect(await deps.releases.count()).toBe(before - 1);
+    expect((await deps.releases.list(200)).some((r) => r.id === old.id)).toBe(false);
+    expect((await deps.releases.head())!.record.id).toBe(head.record.id);
+    expect(await deps.releases.restorable(old.id)).toBeNull();
+    expect(await deps.releases.remove(old.id)).toMatchObject({ ok: false });
+    expect(await deps.releases.remove("1; drop table release")).toMatchObject({ ok: false });
+  });
+
+  test("given a release that is the parent of a later one, when it is deleted, then the later one keeps its content and only loses the parent pointer", async () => {
+    const all = await deps.releases.list(200);
+    const head = (await deps.releases.head())!;
+    const child = all[1]; // newer than everything else except the head
+    const parent = await db.query<{ parent_id: string | null }>(`select parent_id::text as parent_id from release where id = $1::bigint`, [child.id]);
+    if (parent.rows[0].parent_id && parent.rows[0].parent_id !== head.record.id) {
+      const checksumBefore = child.checksum;
+      expect(await deps.releases.remove(parent.rows[0].parent_id)).toEqual({ ok: true });
+      const after = (await deps.releases.list(200)).find((r) => r.id === child.id)!;
+      expect(after.checksum).toBe(checksumBefore);
+      expect((await db.query<{ parent_id: string | null }>(`select parent_id::text as parent_id from release where id = $1::bigint`, [child.id])).rows[0].parent_id).toBeNull();
+    }
   });
 
   test("given an earlier live release, when it is restored, then a NEW rollback release goes live with its content and history keeps everything", async () => {
