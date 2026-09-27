@@ -572,7 +572,7 @@ test("E · operation: the queue is the workbench: protected contact, manual chan
     if (opts.confirm) await page.getByTestId("confirm-contacted").check();
     await page.getByRole("button", { name: "Atualizar estado" }).click();
   };
-  expect((await page.locator("#status option").allTextContents()).sort()).toEqual(["Cancelada", "Em criação"]);
+  expect((await page.locator("#status option").allTextContents()).sort()).toEqual(["Cancelada", "Em criação", "Encerrada"]); // "Encerrada" is reachable directly: sometimes the whole process happens off-system
   await move("Em criação", { note: "comecei a arte" });
   await expect(flash(page, /Estado atualizado/)).toBeVisible();
   await expect(page.getByTestId("request-status")).toHaveText("Em criação");
@@ -609,6 +609,19 @@ test("E · operation: the queue is the workbench: protected contact, manual chan
   const history = await page.getByTestId("request-history").innerText();
   for (const expected of ["Solicitação recebida", "Estado: Em criação · comecei a arte", "Estado: Arte pronta", "Estado: Cliente contatado · enviei o link no WhatsApp", "Observação: cliente gostou da arte", "Link do produto definido", "Estado: Encerrada"]) expect(history).toContain(expected);
   expect(history).not.toMatch(/pedido|INK-/i);
+
+  // The shortcut this state machine allows on purpose: skip straight from Recebida to Encerrada (the whole creation-and-contact process
+  // sometimes happens off-system; the operator just logs the closing). "Bruno"'s request from scenario C never moved from Recebida.
+  await open(page, "/admin/personalizacao/solicitacoes?q=Bruno");
+  await page.locator("table.a-table tbody tr", { hasText: "Bruno" }).getByRole("link", { name: "Abrir" }).click();
+  await hydrated(page);
+  await expect(page.getByTestId("request-status")).toHaveText("Recebida");
+  await page.locator("#status").selectOption({ label: "Encerrada" });
+  await page.locator("#note").fill("feito fora do sistema, só fechando o registro");
+  await page.getByRole("button", { name: "Atualizar estado" }).click();
+  await expect(flash(page, /Estado atualizado/)).toBeVisible();
+  await expect(page.getByTestId("request-status")).toHaveText("Encerrada");
+  await expect(page.getByTestId("request-history")).toContainText("Estado: Encerrada · feito fora do sistema, só fechando o registro");
 
   // The customer's private reference page: the status in plain words, the contact masked, and no product link or order.
   const privateHtml = await publicHtml(page, model.paiPrivate);

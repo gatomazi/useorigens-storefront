@@ -160,7 +160,7 @@ export function CustomizerForm({
                 </dl>
               </div>
               <p className="t-small border-l-4 border-region-accent pl-3">
-                Isto registra a sua solicitação com a nossa equipe. <strong>Não é uma compra e nada foi enviado à loja da INK.</strong> Quando a estampa estiver pronta, nossa equipe fala com você e orienta como comprar.
+                Isto registra a sua solicitação de criação com a nossa equipe. <strong>Não é uma compra.</strong> Quando a estampa estiver pronta, nossa equipe fala com você e orienta como comprar.
               </p>
               <button type="button" className="btn btn-ghost" onClick={editAgain}>Editar e enviar de novo</button>
             </div>
@@ -251,7 +251,7 @@ export function CustomizerForm({
               <div>
                 <button type="submit" className="btn" disabled={phase === "sending" || (!available && !preview)}>{phase === "sending" ? "Enviando…" : preview ? "Testar o envio (prévia)" : "Enviar solicitação"}</button>
                 <p id={`${uid}-notice`} className="t-small mt-3 max-w-xl text-ink-mute">
-                  Enviar registra a sua solicitação com a nossa equipe, com o resumo acima. <strong>Esta etapa não é uma compra, não reserva um produto e nada é enviado à loja da INK.</strong> Não pedimos endereço, CPF, senha nem dados de pagamento.
+                  Enviar registra a sua solicitação de criação com a nossa equipe, com o resumo acima. <strong>Esta etapa não é uma compra e não reserva um produto.</strong> Não pedimos endereço, CPF, senha nem dados de pagamento.
                 </p>
               </div>
             </form>
