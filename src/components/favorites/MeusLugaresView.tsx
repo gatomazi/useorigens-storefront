@@ -7,11 +7,17 @@ import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
 import { SOURCES } from "@/lib/analytics/sources";
 import { trackGoToInk } from "@/lib/analytics/track";
 import { formatPrice } from "@/lib/format";
+import { withListSession } from "@/lib/favorites/buy-session-url";
 import { getFavorites, removeFavorite, subscribeFavorites } from "@/lib/favorites/store";
 import type { FavoriteItem } from "@/lib/favorites/types";
 import { REGIONS, type CommerceStoreKey, type RegionSlug } from "@/lib/geo/regions";
 
 type Resolved = { available: true; title: string; context: string | null; imageUrl: string; price: number | null; url: string } | { available: false };
+
+// `useSyncExternalStore`'s getServerSnapshot must return the SAME reference every call (React compares by
+// identity) — an inline `() => []` allocates a new array each time and triggers "The result of getServerSnapshot
+// should be cached to avoid an infinite loop" during hydration.
+const EMPTY_FAVORITES: readonly FavoriteItem[] = [];
 
 const storeLabel = (storeKey: CommerceStoreKey): string => Object.values(REGIONS).find((r) => r.storeKey === storeKey)?.name ?? "Use Origens";
 const groupKey = (storeKey: CommerceStoreKey, id: string) => `${storeKey}:${id}`;
@@ -36,11 +42,7 @@ async function resolveGroup(storeKey: CommerceStoreKey, ids: string[], signal: A
 }
 
 export function MeusLugaresView({ region }: { region: RegionSlug }) {
-  const favorites = useSyncExternalStore(
-    subscribeFavorites,
-    getFavorites,
-    () => [] as FavoriteItem[],
-  );
+  const favorites = useSyncExternalStore(subscribeFavorites, getFavorites, () => EMPTY_FAVORITES) as FavoriteItem[];
   const [resolved, setResolved] = useState<Map<string, Resolved>>(new Map());
   const [buying, setBuying] = useState<CommerceStoreKey | null>(null);
 
@@ -73,9 +75,10 @@ export function MeusLugaresView({ region }: { region: RegionSlug }) {
         body: JSON.stringify({ storeKey, inkProductIds: eligible.map((item) => item.inkProductId) }),
       });
       if (response.ok) {
-        const data = (await response.json()) as { firstProductUrl: string };
+        const data = (await response.json()) as { sessionId: string; firstProductUrl: string };
+        const destination = withListSession(data.firstProductUrl, data.sessionId);
         trackGoToInk({ productId: eligible[0].inkProductId, sourceSection: SOURCES.meusLugares, destinationUrl: data.firstProductUrl, value: eligible[0].price ?? undefined });
-        window.location.assign(data.firstProductUrl);
+        window.location.assign(destination);
         return;
       }
     } catch {
