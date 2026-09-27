@@ -1,39 +1,25 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
-import type { CityFamilyEntry, GarmentTabOption } from "@/lib/catalog/repository";
-import { CLASSIC_GARMENT_TYPE_ID } from "@/lib/catalog/garments";
-import { FamilyGrid } from "./FamilyGrid";
+import { useRef, useState, type ReactNode } from "react";
+import type { GarmentTabOption } from "@/lib/catalog/repository";
 
 /**
  * Garment-type selector for the city page (MD "seletor de peças na página da cidade"): tabs directly under
- * "Estilos", the grid below re-rendering with that piece's real image/price/href per family. Local
- * navigation only — never fires GoToInk/select_item itself (that stays on the card click, in `FamilyCard`,
- * which now also carries the piece label — see `garments.ts`/`track.ts`). Selection lives in `?peca=` so a
- * tab is shareable/bookmarkable, without creating a second indexable page: the city URL stays canonical
+ * "Estilos", the panel below switching to that piece's real image/price/href per family. Local navigation
+ * only — never fires GoToInk/select_item itself (that stays on the card click, inside each panel, which
+ * already carries the piece label — see `garments.ts`/`FamilyCard`/`track.ts`). Selection lives in `?peca=`
+ * so a tab is shareable/bookmarkable, without creating a second indexable page: the city URL stays canonical
  * (this component never touches metadata).
  *
- * Reuses `FamilyGrid`/`FamilyCard` completely unchanged for rendering — only the `entries` array passed to it
- * differs per tab (built server-side in `repository.ts#garmentTabsForCity`), so a city with no real
- * garment-type data (this round's common case — see docs/storefront/city-garment-tabs-round.md) never even
- * mounts this component (the page renders the classic `FamilyGrid` directly instead).
+ * `panels` are pre-rendered by the page (a Server Component) using the SAME `FamilyGrid`/`FamilyCard` every
+ * other listing uses, unchanged — a Client Component must never import them directly, since `FamilyCard`
+ * pulls in `commerce.ts` → `ink/config.ts` → `config/env.ts`, which is `server-only`-tainted (confirmed by a
+ * real Turbopack build error during this round). Passing already-rendered Server Component output down as
+ * plain React nodes is the supported RSC pattern for exactly this case. All panels are always mounted (never
+ * remounted on tab switch, so images never re-fetch); only the inactive ones get the `hidden` attribute.
  */
-export function CityGarmentTabs({
-  tabs,
-  entriesByGarment,
-  hrefBase,
-  cityName,
-  stateUf,
-  sourceSection,
-}: {
-  tabs: GarmentTabOption[];
-  entriesByGarment: Record<number, CityFamilyEntry[]>;
-  hrefBase: string;
-  cityName: string;
-  stateUf?: string;
-  sourceSection?: string;
-}) {
+export function CityGarmentTabs({ tabs, panels }: { tabs: GarmentTabOption[]; panels: Record<number, ReactNode> }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -90,17 +76,11 @@ export function CityGarmentTabs({
           </button>
         ))}
       </div>
-      <div role="tabpanel" id={`garment-panel-${selected.slug}`} aria-labelledby={`garment-tab-${selected.slug}`}>
-        <FamilyGrid
-          entries={entriesByGarment[selected.id] ?? []}
-          hrefBase={hrefBase}
-          cityName={cityName}
-          stateUf={stateUf}
-          sourceSection={sourceSection}
-          directToInk
-          pieceLabel={selected.id === CLASSIC_GARMENT_TYPE_ID ? undefined : selected.label}
-        />
-      </div>
+      {tabs.map((tab) => (
+        <div key={tab.id} role="tabpanel" id={`garment-panel-${tab.slug}`} aria-labelledby={`garment-tab-${tab.slug}`} hidden={tab.id !== selected.id}>
+          {panels[tab.id]}
+        </div>
+      ))}
     </div>
   );
 }

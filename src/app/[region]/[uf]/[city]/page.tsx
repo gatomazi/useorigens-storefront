@@ -107,7 +107,24 @@ export default async function CityPage({ params }: { params: Params }) {
         {families.length > 0 ? (
           garment.tabs.length > 0 ? (
             <Suspense fallback={<FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk />}>
-              <CityGarmentTabs tabs={garment.tabs} entriesByGarment={garment.entriesByGarment} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} />
+              <CityGarmentTabs
+                tabs={garment.tabs}
+                panels={Object.fromEntries(
+                  garment.tabs.map((tab) => [
+                    tab.id,
+                    <FamilyGrid
+                      key={tab.id}
+                      entries={garment.entriesByGarment[tab.id] ?? []}
+                      hrefBase={base}
+                      cityName={city.name}
+                      stateUf={city.uf}
+                      sourceSection={SOURCES.cityStyles}
+                      directToInk
+                      pieceLabel={tab.id === garment.tabs[0].id ? undefined : tab.label}
+                    />,
+                  ]),
+                )}
+              />
             </Suspense>
           ) : (
             <FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk />
