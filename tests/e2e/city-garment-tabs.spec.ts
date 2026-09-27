@@ -65,4 +65,14 @@ test.describe("city page: garment-type tabs", () => {
     await expect(page.getByRole("tab", { name: /Algodão Peruano/ })).toHaveAttribute("aria-selected", "true");
     await expect(page).toHaveURL(/\?peca=peruano$/);
   });
+
+  /**
+   * Norte and Centro-Oeste are intentionally NOT launched in this project's default e2e config — `sul.spec.ts`
+   * itself asserts `/norte` 404s here, matching real production today (only Sul's INK catalog is public;
+   * see the CMS rollout notes). Their garment-tab data is real (docs/storefront/city-garment-catalog-rollout.md,
+   * Xambioá/TO and Água Boa/MT both have the full 9-piece batch) but is verified at the data layer instead
+   * (tests/unit/garments.test.ts's `Catalog#garmentTabsForCity` cases), not through an HTTP page load that
+   * would 404 by design — a real HTTP-level check needs `SITE_CONFIG_HOME=on` plus a published bundle
+   * marking those regions launched, outside this round's scope to wire into the e2e harness.
+   */
 });

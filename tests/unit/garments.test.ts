@@ -149,4 +149,16 @@ describe("Catalog#garmentTabsForCity", () => {
     const oversized = tabs.find((t) => t.slug === "oversized")!;
     expect(entriesByGarment[oversized.id][0].primary.commerceStoreKey).toBe("use-norte");
   });
+
+  test("given a real Centro-Oeste city (Água Boa/MT), when read, then it has the full 9-piece batch and every link points to its own Centro store", () => {
+    const { tabs, entriesByGarment } = getCatalog().garmentTabsForCity("5100201");
+    expect(tabs).toHaveLength(10); // classic + all 9 confirmed real garment types (docs/storefront/city-garment-catalog-rollout.md)
+    const oversized = tabs.find((t) => t.slug === "oversized")!;
+    const [entry] = entriesByGarment[oversized.id];
+    expect(entry.primary).toMatchObject({
+      commerceStoreKey: "use-centro",
+      price: 129,
+      storeProductUrl: "https://www.usecentro.com.br/usecentro/product/agua-boa-traco-mt-71ee9f45-8a1b-4278-9c1a-50cf2e1db43d",
+    });
+  });
 });
