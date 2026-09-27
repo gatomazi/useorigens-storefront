@@ -205,3 +205,16 @@ describe("requests made before the manual-contact flow", () => {
     }
   });
 });
+
+describe("Postgres unreachable (a real, closed connection — not a stub)", () => {
+  test("given a store backed by a database nobody is listening on, when create/list/setStatus are called, then each rejects quickly instead of hanging or pretending success", async () => {
+    const { createPgDb } = await import("@/lib/admin/db/pg-db");
+    const db = createPgDb({ connectionString: "postgres://postgres@127.0.0.1:1/postgres", connectionTimeoutMs: 2_000 });
+    const s = pgRequestStore(db);
+    const input = fresh().input;
+    await expect(s.create(input)).rejects.toBeTruthy();
+    await expect(s.list({}, 10, 0)).rejects.toBeTruthy();
+    await expect(s.setStatus("01J00000000000000000000001", "inCreation", "x")).rejects.toBeTruthy();
+    await expect(s.countOpen(["sul"])).rejects.toBeTruthy();
+  }, 15_000);
+});

@@ -95,6 +95,17 @@ describe("submitCustomizationAction: the server re-validates everything", () => 
     expect((await store.list({}, 10, 0)).total).toBe(1);
   });
 
+  test("given a request store whose create() rejects (a Postgres outage), when submitted, then the answer is a generic failure — never a fake success and never the reason echoed to the customer", async () => {
+    const failing: RequestStore = { ...store, create: () => Promise.reject(new Error("connect ECONNREFUSED 127.0.0.1:1")) };
+    store = failing;
+    const r = await submitCustomizationAction(base());
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.message).toMatch(/[Nn]ão foi possível registrar/);
+      expect(r.message).not.toMatch(/ECONNREFUSED|Postgres|pg_|connect/i);
+    }
+  });
+
   test("given an environment without a request store, when submitted, then the answer says so instead of pretending", async () => {
     store = null as unknown as RequestStore;
     const r = await submitCustomizationAction(base());
