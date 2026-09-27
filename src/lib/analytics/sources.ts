@@ -48,6 +48,8 @@ export const SOURCES = {
   cityLocalities: "city_localities",
   pdp: "pdp",
   pdpOtherStyles: "pdp_other_styles",
+  /** "Comprar minha lista" on `/meus-lugares`: the click that opens the first product of a buy session. */
+  meusLugares: "meus_lugares",
 } as const;
 
 export type TrackingSource = (typeof SOURCES)[keyof typeof SOURCES];

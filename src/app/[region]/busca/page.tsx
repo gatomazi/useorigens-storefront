@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { SOURCES } from "@/lib/analytics/sources";
 import { regionSearchDocs } from "@/lib/catalog/search-docs";
 import { formatPrice, numberPt } from "@/lib/format";
@@ -101,11 +102,22 @@ export default async function SearchPage({ params, searchParams }: Props) {
           </p>
           <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
             {result.items.map((item, i) => (
-              <li key={item.id}>
+              <li key={item.id} className="group relative">
+                <FavoriteButton
+                  item={{
+                    inkProductId: item.id,
+                    commerceStoreKey: item.commerceStoreKey,
+                    title: item.title,
+                    context: item.context,
+                    imageUrl: item.imageUrl,
+                    price: item.price,
+                  }}
+                  className="absolute right-2 top-2 z-10"
+                />
                 <TrackedInkLink
                   href={item.href}
                   params={{ productId: item.id, sourceSection: SOURCES.search, state: item.uf ?? undefined, value: item.price ?? undefined, productName: item.title, destinationUrl: item.href }}
-                  className="group block"
+                  className="block"
                 >
                   <ProductPhoto src={item.imageUrl} alt={item.context ? `${item.title}, ${item.context}` : item.title} sizes="(min-width: 1024px) 22vw, (min-width: 768px) 30vw, 46vw" priority={i < 4} />
                   <div className="mt-3">

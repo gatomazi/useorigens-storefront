@@ -3,6 +3,7 @@ import { formatPrice } from "@/lib/format";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import type { CityFamilyEntry } from "@/lib/catalog/repository";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
+import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { SOURCES } from "@/lib/analytics/sources";
 import { ProductPhoto } from "./ProductPhoto";
 
@@ -62,27 +63,45 @@ export function FamilyCard({
   // A plain <a> (via TrackedInkLink), not next/link, for the INK case: it's a real cross-origin navigation,
   // same tab (matches the rest of the site's purchase links — VariantPicker's own CTA is also a same-tab <a>,
   // no new-tab popup).
-  return inkHref ? (
-    <TrackedInkLink
-      href={inkHref}
-      params={{
-        productId: entry.primary.inkProductId,
-        sourceSection: sourceSection ?? SOURCES.cityStyles,
-        city: cityName,
-        state: stateUf,
-        family: entry.family.id,
-        value: entry.primary.price ?? undefined,
-        productName: entry.family.name,
-        destinationUrl: inkHref,
-      }}
-      className="group block"
-      ariaLabel={`Comprar ${entry.family.name} de ${cityName} na loja`}
-    >
-      {content}
-    </TrackedInkLink>
-  ) : (
-    <Link href={finalHref} className="group block">
-      {content}
-    </Link>
+  //
+  // The heart is a SIBLING of the anchor, absolutely positioned on top of the photo — never nested inside it
+  // (a <button> inside an <a> is invalid HTML and would fire both the save and the navigation on one tap).
+  return (
+    <div className="group relative">
+      <FavoriteButton
+        item={{
+          inkProductId: entry.primary.inkProductId,
+          commerceStoreKey: entry.primary.commerceStoreKey,
+          title: entry.family.name,
+          context: `${cityName}${stateUf ? ` · ${stateUf}` : ""}`,
+          imageUrl: entry.primary.imageUrl,
+          price: entry.primary.price,
+        }}
+        className="absolute right-2 top-2 z-10"
+      />
+      {inkHref ? (
+        <TrackedInkLink
+          href={inkHref}
+          params={{
+            productId: entry.primary.inkProductId,
+            sourceSection: sourceSection ?? SOURCES.cityStyles,
+            city: cityName,
+            state: stateUf,
+            family: entry.family.id,
+            value: entry.primary.price ?? undefined,
+            productName: entry.family.name,
+            destinationUrl: inkHref,
+          }}
+          className="block"
+          ariaLabel={`Comprar ${entry.family.name} de ${cityName} na loja`}
+        >
+          {content}
+        </TrackedInkLink>
+      ) : (
+        <Link href={finalHref} className="block">
+          {content}
+        </Link>
+      )}
+    </div>
   );
 }
