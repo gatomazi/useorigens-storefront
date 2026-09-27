@@ -97,11 +97,6 @@ export function pgRequestStore(db: Db): RequestStore {
       const rows = await db.query<Row>(`select ${COLUMNS} from customization_request ${w} order by created_at desc, id desc limit ${Math.max(1, Math.min(200, limit))} offset ${Math.max(0, offset)}`, params);
       return { rows: rows.rows.map((r) => toRecord(r, [])), total };
     },
-    async count(regions) {
-      if (regions.length === 0) return 0;
-      const r = await db.query<{ n: string }>(`select count(*)::text as n from customization_request where region = any($1::text[])`, [[...regions]]);
-      return Number(r.rows[0].n);
-    },
     async countOpen(regions) {
       if (regions.length === 0) return 0;
       const r = await db.query<{ n: string }>(`select count(*)::text as n from customization_request where region = any($1::text[]) and status = any($2::text[])`, [[...regions], [...OPEN_STATUSES]]);

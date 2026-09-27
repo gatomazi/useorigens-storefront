@@ -80,9 +80,6 @@ export function fileRequestStore(file: string = path.join(adminDevDir(), "reques
       const all = (await read()).requests.map(view).filter((r) => matches(r, filter)).sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
       return { rows: all.slice(offset, offset + limit), total: all.length };
     },
-    async count(regions: readonly RegionSlug[]) {
-      return (await read()).requests.filter((r) => regions.includes(r.region)).length;
-    },
     async countOpen(regions: readonly RegionSlug[]) {
       return (await read()).requests.filter((r) => regions.includes(r.region) && OPEN_STATUSES.includes(normalizeStatus(r.status))).length;
     },
