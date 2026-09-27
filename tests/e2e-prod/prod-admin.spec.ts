@@ -1,4 +1,6 @@
-import { expect, test, type Browser, type Page } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { expect, test, type Browser, type Page, type Request } from "@playwright/test";
 import sharp from "sharp";
 
 /**
@@ -35,6 +37,10 @@ const rows = (page: Page) => page.locator("table.a-table tbody tr");
 const titles = async (page: Page) => (await rows(page).locator("td:nth-child(2) p.font-bold").allInnerTexts()).map((t) => t.trim());
 
 test.describe.configure({ mode: "serial" });
+
+// Set once, right after the manual-contact test uploads its own mockup: the storage-immutability test at the end of the file checks against
+// THIS count, not a literal, since it runs after whichever tests uploaded something.
+let s3ObjectsAfterAllUploads = 4;
 
 test("given no session, when the admin host is visited, then only the login page is reachable and every other admin path sends the visitor there", async ({ request }) => {
   const headersOk = (h: Record<string, string>) => {
@@ -212,7 +218,7 @@ test("given the owner, when a collection section is created from an enabled inte
   await page.locator('input[type="file"]').setInputFiles({ name: "evil.svg", mimeType: "image/svg+xml", buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" onload="alert(1)"/>') });
   await page.getByRole("button", { name: "Enviar", exact: true }).click();
   await expect(page.getByText(/formato não permitido|não foi possível ler a imagem/)).toBeVisible();
-  expect(((await (await fetch(`${S3}/__stats`)).json()) as { objects: number }).objects).toBe(4);
+  expect(((await (await fetch(`${S3}/__stats`)).json()) as { objects: number }).objects).toBe(4); // rejected: the count from the one accepted upload above is unchanged
   // The bucket is private: nothing is readable anonymously, neither publicly (not published yet) nor through the admin route.
   const sha = stats.keys[0].split("/")[1];
   expect((await context.request.get(`${SITE}/media/${sha}/640.webp`)).status()).toBe(404); // uploaded, but not published
@@ -336,11 +342,206 @@ test("given the owner, when a collection section is created from an enabled inte
   await context.close();
 });
 
-test("given an uploaded image still referenced by the published version, when the library is opened, then it cannot be removed, and objects are never deleted from storage", async ({ browser }) => {
+test("given the manual-contact personalization flow, when a request is sent, worked and read, then Postgres, contacts, permissions and states all agree", async ({ browser }) => {
+  const { context, page } = await newSession(browser, "owner@e2e.test");
+
+  // 1. Enable the internal collection the model uses (idempotent: an earlier test in this same shared server may already have enabled it), upload
+  //    the REAL reference mockup and publish an active model.
+  await open(page, "/admin/colecoes?q=fe+de+origem");
+  const feRow = page.locator("table.a-table tbody tr", { hasText: "Fé de Origem" });
+  const enableFe = feRow.getByRole("button", { name: "Habilitar" });
+  if (await enableFe.count() > 0) {
+    await enableFe.click();
+    await expect(page.getByText(/habilitada/)).toBeVisible();
+  } else {
+    await expect(feRow).toContainText("Habilitada no CMS");
+  }
+
+  const mockup = await readFile(path.join(process.cwd(), "referencias", "pai-paranaense-churrasqueiro-lenda.png"));
+  await open(page, "/admin/midia");
+  await page.locator('input[type="file"]').setInputFiles({ name: "pai-paranaense-churrasqueiro-lenda.png", mimeType: "image/png", buffer: mockup });
+  await page.getByRole("button", { name: "Enviar", exact: true }).click();
+  await expect(page.getByText(/Imagem "pai-paranaense-churrasqueiro-lenda" enviada/)).toBeVisible();
+  s3ObjectsAfterAllUploads = ((await (await fetch(`${S3}/__stats`)).json()) as { objects: number }).objects;
+
+  await open(page, "/admin/personalizacao");
+  await page.locator("section[aria-labelledby=novo] input#name").fill("Pai Paranaense");
+  const combo = page.getByRole("combobox", { name: /Coleção da INK/ });
+  await combo.fill("fe de");
+  await page.getByRole("option", { name: /Fé de Origem/ }).click();
+  await page.getByRole("button", { name: "Criar rascunho" }).click();
+  await expect(page).toHaveURL(/\/admin\/personalizacao\/cz-/);
+  await hydrated(page);
+  const mockupSelect = page.getByLabel("Mockup da página (obrigatório para ativar)");
+  const mockupLabel = (await mockupSelect.locator("option").allTextContents()).find((t) => t.includes("pai-paranaense-churrasqueiro-lenda"));
+  expect(mockupLabel, "uploaded mockup option").toBeTruthy();
+  await mockupSelect.selectOption({ label: mockupLabel! });
+  await page.getByLabel("Descrição do mockup (acessibilidade)").fill("Camiseta Pai Paranaense");
+  await page.getByLabel(/O cliente escreve várias linhas/).check();
+  await page.locator("#lg_min").fill("1");
+  await page.locator("#lg_initial").fill("4");
+  await page.locator("#lg_max").fill("6");
+  await page.locator("#lg_maxlength").fill("16");
+  await page.locator("#lg_defaults").fill("PAI\nPARANAENSE\nCHURRASQUEIRO\nLENDA");
+  await page.getByLabel(/Modelo ativo/).check();
+  await page.getByRole("button", { name: "Salvar rascunho" }).click();
+  await expect(page.getByText("Modelo salvo no rascunho.")).toBeVisible();
+  await page.getByRole("button", { name: "Publicar página de personalização" }).click();
+  await expect(page.getByText(/Modelo publicado \(release \d+\)/)).toBeVisible({ timeout: 120_000 });
+
+  // 2. The mockup renders for real on the public page: decoded, proportional, never distorted.
+  await page.goto(`${SITE}/sul/personalizar/pai-paranaense`, { waitUntil: "domcontentloaded" });
+  const img = page.getByAltText("Camiseta Pai Paranaense");
+  await expect.poll(() => img.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+  const meta = await sharp(mockup).metadata();
+  const seen = await img.evaluate((i: HTMLImageElement) => ({ w: i.naturalWidth, h: i.naturalHeight }));
+  expect(Math.abs(seen.w / seen.h - (meta.width! / meta.height!)) / (meta.width! / meta.height!)).toBeLessThan(0.02);
+  expect(await img.evaluate((i) => getComputedStyle(i).objectFit)).toBe("contain");
+  await expect(page.getByText("Imagem ilustrativa", { exact: false })).toBeVisible();
+
+  // 3. An anonymous customer submits, over Postgres, with a name and both channels; nothing about them leaks into the URL, the page's own
+  //    network requests or the reference the browser is given.
+  // Only GET navigations can carry data in the URL at all (a Server Action POST body is never part of `request.url()`); a broad
+  // case-insensitive match on short fragments like "Ana" would false-positive on webpack chunk hashes, so this checks the exact encoded forms.
+  const gets: string[] = [];
+  page.on("request", (r) => { if (r.method() === "GET") gets.push(r.url()); });
+  await page.getByLabel("Linha 1", { exact: true }).fill("PAI");
+  await page.getByLabel("Linha 2", { exact: true }).fill("PARANAENSE");
+  await page.getByLabel("Linha 3", { exact: true }).fill("CHURRASQUEIRO");
+  await page.getByLabel("Linha 4", { exact: true }).fill("LENDA");
+  await page.getByLabel(/^Nome/).fill("Ana Souza");
+  await page.getByLabel(/^WhatsApp/).fill("(51) 99999-8888");
+  await page.getByLabel(/^E-mail/).fill("ana.souza@exemplo.com");
+  await page.getByLabel(/Autorizo a equipe/).check();
+  await page.getByRole("button", { name: "Enviar solicitação", exact: true }).click();
+  await expect(page.getByTestId("customization-done")).toBeVisible({ timeout: 60_000 });
+  const reference = (await page.getByTestId("customization-reference").innerText()).trim(); // the SHORT reference (also what the queue and the mailto subject use)
+  const privateHref = await page.getByTestId("customization-private-link").getAttribute("href");
+  const fullToken = privateHref!.split("/").pop()!; // the long, unguessable token: only this one opens the private reference page
+  await expect(page.getByTestId("customization-channels")).toHaveText("Contato informado: WhatsApp final 8888 · a***@exemplo.com");
+  expect(page.url()).not.toMatch(/Ana|Souza|99999|exemplo/);
+  const leaked = ["Ana+Souza", "Ana%20Souza", "ana.souza%40exemplo.com", "ana.souza@exemplo.com", "5551999998888", "99999998888", "9999998888"];
+  for (const needle of leaked) expect(gets.some((u) => u.includes(needle)), `no GET carried "${needle}"`).toBe(false);
+  page.removeAllListeners("request");
+  await context.close();
+
+  // 4. The Sul editor finds it in the fila, with the full contact; the Norte editor's forged access is refused server-side.
+  const sul = await newSession(browser, "editor-sul@e2e.test");
+  await open(sul.page, "/admin/personalizacao/solicitacoes");
+  await expect(sul.page.getByTestId("queue-open-count")).toContainText("1 pendente");
+  const row = sul.page.locator("table.a-table tbody tr", { hasText: "Ana Souza" });
+  await expect(row.getByTestId("has-whatsapp")).toBeVisible();
+  await expect(row.getByTestId("has-email")).toBeVisible();
+  await row.getByRole("link", { name: "Abrir" }).click();
+  await hydrated(sul.page);
+  await expect(sul.page).toHaveURL(/\/solicitacoes\/[0-9A-Z]{26}/);
+  const requestUrl = sul.page.url();
+  await expect(sul.page.getByTestId("request-ref")).toHaveText(reference);
+  await expect(sul.page.getByTestId("contact-name")).toHaveText("Ana Souza");
+  await expect(sul.page.getByTestId("contact-whatsapp")).toHaveText("+5551999998888");
+  await expect(sul.page.getByTestId("contact-email")).toHaveText("ana.souza@exemplo.com");
+  await expect(sul.page.getByTestId("request-mockup")).toBeVisible();
+
+  const norte = await newSession(browser, "editor-norte@e2e.test");
+  await open(norte.page, requestUrl.replace(ADMIN, ""));
+  await expect(norte.page.getByRole("heading", { name: "Página não encontrada." })).toBeVisible(); // requireAdmin() lets Norte in; canEdit(actor, record.region) then 404s it — no redirect, no form ever renders
+  expect(norte.page.url()).toBe(requestUrl); // the same URL: this is a 404 response, not a redirect the client could just skip
+
+  // The page never rendering a form for Norte is not, by itself, proof the ACTION re-checks the region: a form posts straight to this same
+  // URL, so capture the exact wire request Next.js produces for a real, authorized call by Sul (an internal note), then replay that same
+  // request verbatim with Norte's own session cookies. If the server trusted the client instead of re-deriving the region from the STORED
+  // record, the note would land twice.
+  const note = "nota original da equipe sobre esta solicitação";
+  let captured: { url: string; headers: Record<string, string>; body: Buffer | null } | null = null;
+  const capture = (r: Request) => { if (r.method() === "POST" && r.url() === requestUrl && !captured) captured = { url: r.url(), headers: r.headers(), body: r.postDataBuffer() }; };
+  sul.page.on("request", capture);
+  await sul.page.locator("#note-only").fill(note);
+  await sul.page.getByRole("button", { name: "Registrar observação" }).click();
+  await expect(sul.page.getByText("Observação registrada.")).toBeVisible();
+  sul.page.off("request", capture);
+  expect(captured, "captured the real Server Action POST").not.toBeNull();
+  const forgedHeaders = { ...captured!.headers };
+  delete forgedHeaders.cookie;
+  delete forgedHeaders["content-length"];
+  delete forgedHeaders.host;
+  await norte.context.request.post(captured!.url, { headers: forgedHeaders, data: captured!.body ?? undefined }).catch(() => undefined);
+  await open(sul.page, requestUrl.replace(ADMIN, ""));
+  const historyAfterReplay = await sul.page.getByTestId("request-history").innerText();
+  expect(historyAfterReplay.split(note).length - 1).toBe(1); // Norte's replay, same bytes and all, added nothing
+  await expect(sul.page.getByTestId("request-status")).toHaveText("Recebida"); // and no state moved either
+  await norte.context.close();
+
+  // 5. wa.me and mailto only open on a human click; nothing is sent by the CMS.
+  const contacted: string[] = [];
+  await sul.context.route(/^https:\/\/(wa\.me|api\.whatsapp\.com)\//, (route) => { contacted.push(route.request().url()); return route.fulfill({ status: 200, contentType: "text/html", body: "<title>wa</title>" }); });
+  await open(sul.page, requestUrl.replace(ADMIN, ""));
+  expect(contacted).toEqual([]);
+  const wa = sul.page.getByTestId("open-whatsapp");
+  expect(await wa.getAttribute("href")).toMatch(/^https:\/\/wa\.me\/5551999998888\?text=/);
+  const mail = sul.page.getByTestId("open-mailto");
+  const mailHref = await mail.getAttribute("href");
+  expect(mailHref).toMatch(/^mailto:ana\.souza@exemplo\.com\?subject=/);
+  const mailParsed = new URL(mailHref!.replace("mailto:", "http://x/"));
+  expect(mailParsed.searchParams.get("subject")).toBe(`Sua personalização na Use Origens (ref. ${reference})`);
+  expect(mailParsed.searchParams.get("body")).toContain(reference);
+  expect(mailParsed.searchParams.get("body")).toContain("Ana!");
+  expect(contacted).toEqual([]); // reading the links opened nothing
+
+  // 6. The production states, in order, with the human confirmation gate; there is no order id anywhere in the UI.
+  // The honest copy legitimately says the word "pedido" (disclaiming that none is tracked); what must be ABSENT is an order-number field or label.
+  await expect(sul.page.getByLabel(/número do pedido/i)).toHaveCount(0);
+  await expect(sul.page.locator("#order")).toHaveCount(0);
+  await expect(sul.page.getByRole("button", { name: /vincular pedido/i })).toHaveCount(0);
+  await sul.page.locator("#status").selectOption("inCreation");
+  await sul.page.getByRole("button", { name: "Atualizar estado" }).click();
+  await expect(sul.page.getByTestId("request-status")).toHaveText("Em criação");
+  await sul.page.locator("#status").selectOption("artReady");
+  await sul.page.getByRole("button", { name: "Atualizar estado" }).click();
+  await expect(sul.page.getByTestId("request-status")).toHaveText("Arte pronta");
+  await sul.page.locator("#status").selectOption("customerContacted");
+  await sul.page.getByRole("button", { name: "Atualizar estado" }).click();
+  await expect(sul.page.getByText(/Marque a confirmação/)).toBeVisible();
+  await expect(sul.page.getByTestId("request-status")).toHaveText("Arte pronta");
+  await sul.page.locator("#status").selectOption("customerContacted");
+  await sul.page.getByTestId("confirm-contacted").check();
+  await sul.page.getByRole("button", { name: "Atualizar estado" }).click();
+  await expect(sul.page.getByTestId("request-status")).toHaveText("Cliente contatado");
+  await sul.page.locator("#status").selectOption("closed");
+  await sul.page.getByRole("button", { name: "Atualizar estado" }).click();
+  await expect(sul.page.getByTestId("request-status")).toHaveText("Encerrada");
+
+  // 7. The customer's own private reference page shows the plain-language status and the masked contact — never the raw number, never cached.
+  const ownRequest = await sul.context.request.get(`${SITE}/sul/personalizar/solicitacao/${fullToken}`);
+  expect(ownRequest.status()).toBe(200);
+  const ownHtml = await ownRequest.text();
+  expect(ownHtml).toContain("Solicitação encerrada");
+  expect(ownHtml).toContain("WhatsApp final 8888");
+  expect(ownHtml).not.toContain("99999");
+  expect(ownHtml).toContain("noindex");
+  expect(ownRequest.headers()["cache-control"]).toMatch(/no-store|no-cache|private/);
+  await sul.context.close();
+});
+
+test("given the manual-contact form with no request store configured, when submitted, then it reports unavailable instead of pretending success, and the public pages it shares nothing with keep working", async ({ page, request }) => {
+  // The pages a Postgres outage could plausibly touch never import the request store at all: they read only the published bundle.
+  const publicRenderers = ["src/app/[region]/page.tsx", "src/app/[region]/h/[slug]/page.tsx", "src/app/[region]/colecoes/[slug]/page.tsx"];
+  for (const file of publicRenderers) {
+    const source = await readFile(path.join(process.cwd(), file), "utf8");
+    expect(source, file).not.toMatch(/customization\/(requests|server)/);
+  }
+  // The home and the two hotpages already published stay reachable and correct under this build's live Postgres (a genuinely unreachable
+  // database for the WHOLE server is exercised by the unit tests in tests/unit/submit-action.test.ts, which stub the store's own failure
+  // instead of tearing down this shared E2E environment's connection for every other test in the file).
+  await expect((await request.get(`${SITE}/sul`)).status()).toBe(200);
+  await page.goto(`${SITE}/sul`, { waitUntil: "domcontentloaded" });
+  await expect(page.locator("section#footer, footer")).toBeVisible();
+});
+
+test("given an uploaded image still referenced by the published version, when the library is opened, then it cannot be removed, and objects are never deleted fr, when the library is opened, then it cannot be removed, and objects are never deleted from storage", async ({ browser }) => {
   const { context, page } = await newSession(browser, "owner@e2e.test");
   await open(page, "/admin/midia");
   await expect(page.getByText("Em uso no rascunho").first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Excluir" }).first()).toBeDisabled();
-  expect(((await (await fetch(`${S3}/__stats`)).json()) as { objects: number }).objects).toBe(4);
+  expect(((await (await fetch(`${S3}/__stats`)).json()) as { objects: number }).objects).toBe(s3ObjectsAfterAllUploads); // stable since the manual-contact test's own upload
   await context.close();
 });
