@@ -112,6 +112,8 @@ export interface RequestStore {
   get(id: string): Promise<RequestRecord | null>;
   findByTokenHash(hash: string): Promise<RequestRecord | null>;
   list(filter: RequestFilter, limit: number, offset: number): Promise<{ rows: RequestRecord[]; total: number }>;
+  /** How many requests exist in total (every status) in these regions — for a badge that stays visible even once nothing is left open. */
+  count(regions: readonly RegionSlug[]): Promise<number>;
   /** How many requests still wait for someone (see `OPEN_STATUSES`) in these regions. */
   countOpen(regions: readonly RegionSlug[]): Promise<number>;
   /** Moves the request along the allowed transitions. Reaching `customerContacted` records `contactedAt` (a person confirmed it). */
