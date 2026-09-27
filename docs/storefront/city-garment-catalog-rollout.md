@@ -101,6 +101,14 @@ host desconhecido), a peça é omitida — nunca exibida com fallback inventado.
   execução real), `--force-full`. Progresso verificável por página.
 - **`src/lib/ink/normalize.ts`** — `GarmentSourceProduct` ganhou `createdAt` (aditivo), usado só para o
   watermark incremental.
+- **`src/lib/catalog/repository.ts`** — `garmentTabsForCity` ganhou a guarda de cluster obsoleto pedida no
+  §6 da spec ("não exibir peça obsoleta quando um cluster principal sair do catálogo"): uma peça só é
+  incluída quando `garmentBinding.productClusterId` ainda bate com o `productClusterId` **atual** do binding
+  canônico daquela cidade+família — nunca só por eles compartilharem cidade+família. Sem isso, uma futura
+  rotação do produto canônico (novo cluster, ou perda do cluster) numa sync de rotina deixaria uma peça de um
+  desenho que a cidade+família não representa mais visível até o próximo `garments:sync` alcançar aquele
+  cluster. Fail-closed, mesmo espírito do resto do vínculo — coberto por
+  `tests/unit/garment-stale-link.test.ts` (3 casos: cluster bate, cluster mudou, cluster sumiu).
 
 Durante a implementação, os próprios testes desta rodada expuseram e corrigiram **dois bugs reais** antes de
 qualquer commit: (1) o fallback "sem arquivo ainda" de `readGarmentCheckpoint` devolvia o mesmo objeto
@@ -119,7 +127,7 @@ esta rodada pediu para mexer — mas fica registrado como achado real para avali
 ## 6. Testes
 
 - `tsc --noEmit`, `eslint .`, `next build` — todos verdes.
-- **842 testes unitários** (suíte inteira, zero regressão da rodada anterior), incluindo **32 novos**:
+- **845 testes unitários** (suíte inteira, zero regressão da rodada anterior), incluindo **35 novos**:
   - `garment-client.test.ts` (10): sem `visible_in_store`, `begin_date`, corte por `maxRequests` com página
     de retomada correta, retomada a partir de `startPage`, 429 com backoff+jitter, 429 persistente falha
     limpo, produto oculto ainda é retornado (nunca filtrado por status aqui), watermark do `created_at` mais
@@ -138,6 +146,8 @@ esta rodada pediu para mexer — mas fica registrado como achado real para avali
     NaN, múltiplas lojas relatadas independentemente.
   - `garments.test.ts` (+1): Água Boa/MT (Centro-Oeste) — lote completo de 9 peças, link e preço exatos da
     própria loja Centro.
+  - `garment-stale-link.test.ts` (3): cluster do binding de peça ainda bate com o canônico → inclui; canônico
+    rotacionou para outro cluster → exclui; canônico perdeu o cluster de vez → exclui (fail closed).
 - **E2E**: os 6 specs já existentes de `city-garment-tabs.spec.ts` (Sul/Tijucas) seguem verdes. **Não foi
   possível** cobrir Xambioá/TO e Água Boa/MT por HTTP nesta rodada — `sul.spec.ts` já documenta que
   `/norte` retorna 404 no ambiente de e2e padrão (só Sul está publicamente "lançado" hoje, mesmo em
