@@ -98,6 +98,23 @@ describe("favorites store (localStorage)", () => {
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
+  test("given repeated calls with nothing changed, then getFavorites returns the SAME array reference (useSyncExternalStore requires this or React re-renders forever)", async () => {
+    const store = await import("@/lib/favorites/store");
+    store.addFavorite(item());
+    const first = store.getFavorites();
+    const second = store.getFavorites();
+    expect(second).toBe(first);
+    store.addFavorite(item()); // a no-op add (already saved) must not invalidate the cached reference either
+    expect(store.getFavorites()).toBe(first);
+  });
+
+  test("given a write, then getFavorites returns a NEW reference (the snapshot actually changed)", async () => {
+    const store = await import("@/lib/favorites/store");
+    const before = store.getFavorites();
+    store.addFavorite(item());
+    expect(store.getFavorites()).not.toBe(before);
+  });
+
   test("given more than the cap, then the oldest is dropped and order is kept", async () => {
     const store = await import("@/lib/favorites/store");
     const { FAVORITES_MAX_ITEMS } = await import("@/lib/favorites/types");

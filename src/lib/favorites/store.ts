@@ -11,6 +11,10 @@ const STORAGE_KEY = "origens:favorites:v1";
 
 let memorySnapshot: FavoritesSnapshotV1 = { v: 1, items: [] };
 let usingMemory = false;
+// `useSyncExternalStore` requires the same snapshot to be `===`-stable between renders, or it re-renders forever
+// (React error: "The result of getSnapshot should be cached to avoid an infinite loop"). `read()` used to re-parse
+// localStorage — a fresh array — on every call; this cache is invalidated only by `write()`, never by a plain read.
+let cache: FavoritesSnapshotV1 | null = null;
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -46,12 +50,13 @@ function parse(raw: string | null): FavoritesSnapshotV1 {
 }
 
 function read(): FavoritesSnapshotV1 {
+  if (cache) return cache;
   if (typeof window === "undefined") return { v: 1, items: [] };
-  if (usingMemory) return memorySnapshot;
+  if (usingMemory) return (cache = memorySnapshot);
   try {
-    return parse(window.localStorage.getItem(STORAGE_KEY));
+    return (cache = parse(window.localStorage.getItem(STORAGE_KEY)));
   } catch {
-    return memorySnapshot;
+    return (cache = memorySnapshot);
   }
 }
 
@@ -63,6 +68,7 @@ function write(snapshot: FavoritesSnapshotV1): void {
     memorySnapshot = snapshot;
     usingMemory = true;
   }
+  cache = snapshot;
   emit();
 }
 
