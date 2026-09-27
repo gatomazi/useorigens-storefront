@@ -4,9 +4,10 @@ import { allCities, cityById, type City } from "../geo/cities";
 import { REGIONS, REGION_SLUGS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { buildLore, type Lore } from "../editorial/lore";
 import { DESIGN_FAMILIES, type DesignFamily, type DesignFamilyId } from "./families";
+import { CLASSIC_GARMENT_TYPE_ID, GARMENT_TYPES } from "./garments";
 import { compareIds, rankBindings } from "./ranking";
 import { readSnapshotSync, snapshotMtimeMs } from "./snapshot-file";
-import type { CityDesignBinding, MerchProduct, UnrankedBinding } from "./types";
+import type { CityDesignBinding, GarmentBinding, MerchProduct, UnrankedBinding } from "./types";
 
 export type CityFamilyEntry = {
   family: DesignFamily;
@@ -16,12 +17,26 @@ export type CityFamilyEntry = {
   variants: CityDesignBinding[];
 };
 
+export type GarmentTabOption = { id: number; slug: string; label: string; count: number };
+
+export type GarmentTabsForCity = {
+  /** Empty when the city has no real garment-type data beyond the classic piece — the caller hides the
+   * selector entirely (MD §1: "avaliar esconder o seletor de uma opção"), never rendering a single-tab bar. */
+  tabs: GarmentTabOption[];
+  /** Keyed by `GarmentTabOption.id`. Each entry array is shaped exactly like `cityFamilies()`'s output so the
+   * existing `FamilyGrid`/`FamilyCard` render it with zero changes — a family missing this exact piece is
+   * simply absent from the array (MD Caso C: never a fabricated card). */
+  entriesByGarment: Record<number, CityFamilyEntry[]>;
+};
+
 export type Catalog = {
   syncedAt: string | null;
   /** Ordered families available for a city. Empty when nothing is indexed. */
   cityFamilies(cityId: string): CityFamilyEntry[];
   /** Products about localities inside the municipality ("Também de Torres"). */
   cityLocalities(cityId: string): CityDesignBinding[];
+  /** Real, hidden-but-sellable garment-type siblings of this city's families (src/lib/catalog/garments.ts). */
+  garmentTabsForCity(cityId: string): GarmentTabsForCity;
   merch(region: RegionSlug): MerchProduct[];
   /** Real local-voice products (expressions, patron saints, state expressions) of a region. */
   lore(region: RegionSlug): Lore;
@@ -53,6 +68,7 @@ function build(): { catalog: Catalog; mtimeMs: number } {
 
   const byRegion = new Map<RegionSlug, UnrankedBinding[]>();
   const merchByRegion = new Map<RegionSlug, MerchProduct[]>();
+  const garmentByCity = new Map<string, GarmentBinding[]>();
   for (const store of stores) {
     for (const binding of store.bindings) {
       const region = cityById(binding.cityId)?.regionSlug;
@@ -65,6 +81,13 @@ function build(): { catalog: Catalog; mtimeMs: number } {
       const list = merchByRegion.get(item.regionSlug) ?? [];
       list.push(item);
       merchByRegion.set(item.regionSlug, list);
+    }
+    // Additive, never merged into `bindings`/`byRegion` above — the city search index and `cityFamilies`
+    // stay built exclusively from canonical bindings (MD §2's three-way separation).
+    for (const garment of store.garmentBindings ?? []) {
+      const list = garmentByCity.get(garment.cityId) ?? [];
+      list.push(garment);
+      garmentByCity.set(garment.cityId, list);
     }
   }
 
@@ -101,12 +124,68 @@ function build(): { catalog: Catalog; mtimeMs: number } {
     covered.set(region, set);
   }
 
+  const garmentTypesByOrder = [...GARMENT_TYPES].filter((t) => t.id !== CLASSIC_GARMENT_TYPE_ID).sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const garmentTabsForCity = (cityId: string): GarmentTabsForCity => {
+    const classicEntries = cityFamilies(cityId);
+    const bindings = garmentByCity.get(cityId) ?? [];
+    if (classicEntries.length === 0 || bindings.length === 0) return { tabs: [], entriesByGarment: {} };
+
+    const byType = new Map<number, Map<DesignFamilyId, GarmentBinding>>();
+    for (const b of bindings) {
+      const perFamily = byType.get(b.garmentTypeId) ?? new Map<DesignFamilyId, GarmentBinding>();
+      perFamily.set(b.designFamily, b);
+      byType.set(b.garmentTypeId, perFamily);
+    }
+
+    const entriesByGarment: Record<number, CityFamilyEntry[]> = { [CLASSIC_GARMENT_TYPE_ID]: classicEntries };
+    const tabs: GarmentTabOption[] = [{ id: CLASSIC_GARMENT_TYPE_ID, slug: "classica", label: "Camiseta clássica", count: classicEntries.length }];
+
+    for (const type of garmentTypesByOrder) {
+      const perFamily = byType.get(type.id);
+      if (!perFamily) continue;
+      const entries: CityFamilyEntry[] = [];
+      for (const classicEntry of classicEntries) {
+        const garment = perFamily.get(classicEntry.family.id);
+        if (!garment) continue; // MD Caso C: this family simply has no card on this tab, never a fabricated one
+        entries.push({
+          family: classicEntry.family,
+          primary: {
+            cityId: garment.cityId,
+            designFamily: garment.designFamily,
+            designVariant: "garment",
+            variantLabel: type.label,
+            productClusterId: garment.productClusterId,
+            isPrimary: true,
+            priority: 0,
+            commerceStoreKey: garment.commerceStoreKey,
+            inkProductId: garment.inkProductId,
+            slug: garment.slug,
+            storeProductUrl: garment.storeProductUrl,
+            imageUrl: garment.imageUrl,
+            price: garment.price,
+            syncedAt: garment.syncedAt,
+          },
+          variants: [],
+        });
+      }
+      if (entries.length === 0) continue;
+      entriesByGarment[type.id] = entries;
+      tabs.push({ id: type.id, slug: type.slug, label: type.label, count: entries.length });
+    }
+
+    // Only the classic tab has real data: MD §1 says to hide a one-option selector rather than show it empty.
+    if (tabs.length <= 1) return { tabs: [], entriesByGarment: {} };
+    return { tabs, entriesByGarment };
+  };
+
   const productsCache = new Map<CommerceStoreKey, StoreProducts>();
   const loreCache = new Map<RegionSlug, Lore>();
   const syncedTimes = stores.map((s) => s.syncedAt).sort();
   const catalog: Catalog = {
     syncedAt: syncedTimes.at(-1) ?? null,
     cityFamilies,
+    garmentTabsForCity,
     cityLocalities: (cityId) => (ranked.get(cityId) ?? []).filter((b) => b.localityLabel),
     merch: (region) =>
       [...(merchByRegion.get(region) ?? [])].sort(

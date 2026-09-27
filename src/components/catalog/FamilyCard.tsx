@@ -29,6 +29,7 @@ export function FamilyCard({
   sizes,
   priority = false,
   directToInk = false,
+  pieceLabel,
 }: {
   entry: CityFamilyEntry;
   href: string;
@@ -40,20 +41,27 @@ export function FamilyCard({
   sizes: string;
   priority?: boolean;
   directToInk?: boolean;
+  /**
+   * Set only by the city page's garment-type tabs (src/lib/catalog/garments.ts) when the selected piece is
+   * not the classic one — e.g. "Oversized". Absent everywhere else (home, PDP "Outros estilos"), so their
+   * cards, aria-labels and GoToInk payloads are byte-identical to before this round.
+   */
+  pieceLabel?: string;
 }) {
   const price = formatPrice(entry.primary.price);
   const inkHref = directToInk && entry.variants.length === 0 ? purchaseUrl(entry.primary) : null;
   const finalHref = inkHref ?? href;
+  const displayName = pieceLabel ? `${entry.family.name} ${pieceLabel}` : entry.family.name;
 
   const content = (
     <>
-      <ProductPhoto src={entry.primary.imageUrl} alt={`Camiseta ${entry.family.name} de ${cityName}`} sizes={sizes} priority={priority} />
+      <ProductPhoto src={entry.primary.imageUrl} alt={`Camiseta ${displayName} de ${cityName}`} sizes={sizes} priority={priority} />
       <span aria-hidden="true" className="mt-3 block h-[3px] w-6 bg-region-accent transition-colors group-hover:bg-region-primary" />
       <div className="mt-2">
         <h3 className="link-line inline text-[1.0625rem] font-bold leading-tight tracking-tight transition-colors group-hover:text-region-primary sm:text-[1.125rem]">{entry.family.name}</h3>
         {price && <p className="t-small mt-0.5 font-semibold">{price}</p>}
       </div>
-      <p className="t-caption mt-1 hidden max-w-[30ch] sm:block">{entry.family.description}</p>
+      <p className="t-caption mt-1 hidden max-w-[30ch] sm:block">{pieceLabel ?? entry.family.description}</p>
       {entry.variants.length > 0 && (
         <p className="t-caption mt-1 font-semibold text-ink">{entry.variants.length === 1 ? "Mais 1 versão" : `Mais ${entry.variants.length} versões`}</p>
       )}
@@ -89,11 +97,12 @@ export function FamilyCard({
             state: stateUf,
             family: entry.family.id,
             value: entry.primary.price ?? undefined,
-            productName: entry.family.name,
+            productName: displayName,
             destinationUrl: inkHref,
+            garmentType: pieceLabel,
           }}
           className="block"
-          ariaLabel={`Comprar ${entry.family.name} de ${cityName} na loja`}
+          ariaLabel={`Comprar ${displayName} de ${cityName} na loja`}
         >
           {content}
         </TrackedInkLink>
