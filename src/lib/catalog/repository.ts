@@ -148,6 +148,14 @@ function build(): { catalog: Catalog; mtimeMs: number } {
       for (const classicEntry of classicEntries) {
         const garment = perFamily.get(classicEntry.family.id);
         if (!garment) continue; // MD Caso C: this family simply has no card on this tab, never a fabricated one
+        // Stale-link guard (spec §6, next round: "não exibir peça obsoleta quando um cluster principal sair
+        // do catálogo"): a `garmentBinding` is only trustworthy while it still points at the SAME cluster as
+        // the family's current canonical binding. A later main catalog sync can rotate a city+family onto a
+        // different INK product (new cluster, or the cluster disappears entirely) without this round's
+        // garment index having been re-run yet — trusting the old link then would show a piece from a design
+        // this city+family no longer represents. Comparing the stored cluster ids catches that without any
+        // extra I/O; a real re-sync (`garments:sync`) is still what actually refreshes the data.
+        if (garment.productClusterId !== classicEntry.primary.productClusterId) continue;
         entries.push({
           family: classicEntry.family,
           primary: {
