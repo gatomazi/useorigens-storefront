@@ -7,7 +7,8 @@ import { defineConfig } from "@playwright/test";
  * The PRODUCTION-mode admin, end to end, on a real `next start` build, with every external service replaced by a local stand-in:
  * PostgreSQL (PGlite over the wire protocol), Login with Railway (a fake OpenID provider), a Railway Storage Bucket (a fake PRIVATE S3). Nothing outside
  * this machine is contacted and no secret is real. Needs a build first:
- *   NEXT_PUBLIC_META_PIXEL_ID=… NEXT_PUBLIC_GA_MEASUREMENT_ID=… NEXT_PUBLIC_MEASUREMENT_REQUIRES_CONSENT=true npm run build && npm run test:admin:prod
+ *   NEXT_PUBLIC_META_PIXEL_ID=1111111111111111 NEXT_PUBLIC_GA_MEASUREMENT_ID=G-TEST123456 NEXT_PUBLIC_MEASUREMENT_REQUIRES_CONSENT=true npm run build && npm run test:admin:prod
+ * (dummy IDs: the tests stub every tracker request locally, so the build under test never needs the real ones and never contacts them.)
  * The catalog snapshot is COPIED from data/generated into a temp "Volume" (the app writes published.json there, never into the repo).
  */
 const APP = 3400;

@@ -81,7 +81,8 @@ export interface SessionRepository {
 
 export type AuditAction =
   | "login" | "logout" | "draft.save" | "draft.discard" | "publish" | "rollback" | "publish.failed" | "reconcile"
-  | "media.upload" | "media.delete" | "user.create" | "user.update" | "user.deactivate" | "catalog.sync" | "collections.sync" | "access.denied" | "release.delete";
+  | "media.upload" | "media.delete" | "user.create" | "user.update" | "user.deactivate" | "catalog.sync" | "collections.sync" | "access.denied" | "release.delete"
+  | "page.create" | "page.archive" | "customizer.save" | "request.status" | "request.link" | "request.purge" | "request.note" | "request.product";
 export type AuditEntry = { actor: string; action: AuditAction; scope?: string | null; target?: string | null; meta?: Record<string, unknown> | null };
 export type AuditRow = AuditEntry & { id: string; at: string };
 

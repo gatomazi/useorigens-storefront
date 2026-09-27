@@ -9,6 +9,9 @@ import { devMediaStore } from "./media/dev-store";
 import { bucketMediaStore } from "./media/bucket-store";
 import { bucketFromEnv } from "./media/bucket-env";
 import type { MediaStore } from "./media/types";
+import { fileRequestStore } from "../customization/file-store";
+import { pgRequestStore } from "../customization/pg-store";
+import type { RequestStore } from "../customization/requests";
 import { fileReleaseStore, filePublishedStore } from "./publishing";
 import { pgAuditLog, pgDraftRepository, pgReleaseStore, pgSessionRepository, pgSyncRunRepository, pgUserRepository } from "./store/pg-stores";
 import type { AuditEntry, AuditLog, AuditRow, DraftRepository, PublishedFileStore, ReleaseStore, SessionRepository, SyncRunRepository, SyncRunRow, UserRepository } from "./store/ports";
@@ -27,6 +30,8 @@ export type Platform = {
   media: MediaStore;
   audit: AuditLog;
   syncs: SyncRunRepository;
+  /** Personalization requests (Postgres in production, a JSON file in the sandbox). */
+  requests: RequestStore;
   /** Production only. */
   users: UserRepository | null;
   sessions: SessionRepository | null;
@@ -93,6 +98,7 @@ export function platform(): Platform {
       media: devMediaStore(),
       audit: memoryAudit(),
       syncs: memorySyncs(),
+      requests: fileRequestStore(),
       users: null,
       sessions: null,
       db: null,
@@ -108,6 +114,7 @@ export function platform(): Platform {
       media: bucketMediaStore({ db, objects }),
       audit: pgAuditLog(db),
       syncs: pgSyncRunRepository(db),
+      requests: pgRequestStore(db),
       users: pgUserRepository(db),
       sessions: pgSessionRepository(db),
       db,

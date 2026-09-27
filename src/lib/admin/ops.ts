@@ -1,5 +1,5 @@
 import "server-only";
-import { composeBundle, inspectReleases, preflight, type PublishDeps } from "./publishing";
+import { composeBundle, inspectReleases, preflight, REGION_TARGET, type PublishDeps, type PublishTarget } from "./publishing";
 import { platform } from "./platform";
 import type { ScopeDoc } from "../site-config/schema";
 
@@ -21,5 +21,5 @@ export async function historyPage(page: number) {
 /** The most recent releases, for callers that only need the newest few (e.g. "which one touched this region"). */
 export const listHistory = () => platform().releases.list(200);
 export const inspectPublishing = () => inspectReleases(publishDeps());
-export const preflightDoc = (doc: ScopeDoc) => preflight(publishDeps(), doc);
-export const composeForPreview = (doc: ScopeDoc) => composeBundle(publishDeps(), doc, "preview");
+export const preflightDoc = (doc: ScopeDoc, target: PublishTarget = REGION_TARGET) => preflight(publishDeps(), doc, target);
+export const composeForPreview = (doc: ScopeDoc, target: PublishTarget = REGION_TARGET) => composeBundle(publishDeps(), doc, "preview", target);

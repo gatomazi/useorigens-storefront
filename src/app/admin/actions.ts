@@ -24,6 +24,10 @@ import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import type { Scope, TrackingConfig, VendorSetting } from "@/lib/site-config/schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionRef, parseFeaturedFields, parseSectionForm } from "@/lib/admin/section-form";
+import { parseCustomizerForm } from "@/lib/admin/customizer-form";
+import type { PublishTarget } from "@/lib/admin/publishing";
+import { nextStatuses, productLinkFor, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
+import type { PageKind } from "@/lib/site-config/schema";
 import { legacyFeaturedRefs, resolveFeatured, searchFeaturedCandidates, type FeaturedCandidate } from "@/lib/hero-featured";
 import { buildRegionSeed } from "@/lib/admin/region-seed";
 import { STRUCTURED_TEMPLATES, type StructuredTemplate } from "@/lib/site-config/structured";
@@ -66,14 +70,19 @@ function back(path: string, flash: { ok?: string; err?: string[] }): never {
   redirect(`${path}${q.size ? `${path.includes("?") ? "&" : "?"}${q}` : ""}`);
 }
 
+/** `/admin/home[/<id>]` → the same place inside a page (`/admin/paginas/<page>[/secoes/<id>]`): the section actions serve the home and the pages alike. */
+const inPagePath = (pageId: string, p: string): string => p.replace(/^\/admin\/home\/([^/?]+)/, `/admin/paginas/${pageId}/secoes/$1`).replace(/^\/admin\/home(?=$|\?)/, `/admin/paginas/${pageId}`);
+
 async function run(fd: FormData, op: DraftOp, okMessage: string, returnTo: string, focusToEditor = false): Promise<never> {
   const { actor, scope } = await editScope(fd);
-  const outcome: SaveOutcome = await applyAndSave(scope, op, revNumber(fd), actor);
+  const pageId = text(fd, "page");
+  const to = (p: string) => (pageId ? inPagePath(pageId, p) : p);
+  const outcome: SaveOutcome = await applyAndSave(scope, pageId ? { type: "in-page", page: pageId, op } : op, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
-  if (!outcome.ok) back(returnTo, { err: outcome.errors });
+  if (!outcome.ok) back(to(returnTo), { err: outcome.errors });
   await audit(actor, "draft.save", scope, op.type);
-  if (focusToEditor && outcome.focusId) back(`/admin/home/${outcome.focusId}`, { ok: okMessage });
-  back(returnTo, { ok: okMessage });
+  if (focusToEditor && outcome.focusId) back(to(`/admin/home/${outcome.focusId}`), { ok: okMessage });
+  back(to(returnTo), { ok: okMessage });
 }
 
 /** The region switcher: remembers the choice (cookie, admin paths only) and returns to where the person was. */
@@ -96,11 +105,12 @@ export async function setScopeAction(fd: FormData) {
 
 export async function addCollectionSection(fd: FormData) {
   const { scope } = await editScope(fd);
+  const at = text(fd, "page") ? inPagePath(text(fd, "page"), "/admin/home") : "/admin/home";
   const ref = parseCollectionRef(text(fd, "collection"));
-  if (!ref) back("/admin/home", { err: ["Escolha uma coleção nas sugestões (digite parte do nome)."] });
+  if (!ref) back(at, { err: ["Escolha uma coleção nas sugestões (digite parte do nome)."] });
   // Same rule the editor's autocomplete applies, enforced here too: never trust that the form only offered valid choices.
   const problem = sourceProblem({ kind: "ink-category", ...ref, order: "category", limit: 6 }, (await loadWorkspace(scope)).doc);
-  if (problem) back("/admin/home", { err: [problem] });
+  if (problem) back(at, { err: [problem] });
   const limit = Math.min(24, Math.max(3, Math.round(Number(text(fd, "limit")) || 6)));
   return run(fd, { type: "add-carousel", title: text(fd, "title") || findCollection(ref.store, ref.collectionId)?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit } }, "Seção criada no rascunho.", "/admin/home", true);
 }
@@ -134,8 +144,10 @@ export async function saveSection(fd: FormData) {
   const { scope } = await editScope(fd);
   const id = text(fd, "id");
   const ws = await loadWorkspace(scope);
-  const section = ws.doc.home?.sections.find((s) => s.id === id);
-  if (!section) back("/admin/home", { err: ["Seção não encontrada."] });
+  const pageId = text(fd, "page");
+  const container = pageId ? ws.doc.pages?.find((p) => p.id === pageId)?.sections : ws.doc.home?.sections;
+  const section = container?.find((s) => s.id === id);
+  if (!section) back(pageId ? `/admin/paginas/${pageId}` : "/admin/home", { err: ["Seção não encontrada."] });
   const patch = parseSectionForm(fd, section);
   if (section.template === "hero") {
     // The hero's cards: edited as a list of real products of THIS region's store, seeded from the original Sul cards, or reset to the code's default.
@@ -154,7 +166,7 @@ export async function saveSection(fd: FormData) {
     else if (mode === "reset" && scope === "sul") patch.featured = undefined;
   }
   const problem = patch.source ? sourceProblem(patch.source, ws.doc) : null;
-  if (problem) back(`/admin/home/${id}`, { err: [problem] });
+  if (problem) back(pageId ? inPagePath(pageId, `/admin/home/${id}`) : `/admin/home/${id}`, { err: [problem] });
   return run(fd, { type: "update", id, patch }, "Rascunho salvo.", `/admin/home/${id}`);
 }
 
@@ -542,4 +554,211 @@ export async function logoutAction() {
   jar.set(SESSION_COOKIE, "", { httpOnly: true, secure: true, sameSite: "lax", path: SESSION_COOKIE_PATH, maxAge: 0 });
   await platform().audit.record({ actor: actor.id, action: "logout" }).catch(() => undefined);
   redirect("/admin/login");
+}
+
+// ── Pages (hotpages and parent-category landings) ────────────────────────────────────────────────────────────
+
+/** Like `run`, for operations that are not section operations: it may send the person to a place built from the new object's id. */
+async function runRaw(fd: FormData, op: DraftOp, okMessage: string, returnTo: string, focus?: (id: string) => string): Promise<never> {
+  const { actor, scope } = await editScope(fd);
+  const outcome: SaveOutcome = await applyAndSave(scope, op, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(returnTo, { err: outcome.errors });
+  await audit(actor, "draft.save", scope, op.type);
+  back(outcome.focusId && focus ? focus(outcome.focusId) : returnTo, { ok: okMessage });
+}
+
+const pageKindOf = (fd: FormData): PageKind => (text(fd, "kind") === "categoryLanding" ? "categoryLanding" : "hotpage");
+const publishedPage = (base: import("@/lib/site-config/schema").ScopeDoc, id: string) => base.pages?.find((p) => p.id === id);
+
+export async function createPageAction(fd: FormData) {
+  return runRaw(fd, { type: "create-page", kind: pageKindOf(fd), title: text(fd, "title"), slug: text(fd, "slug") || undefined }, "Página criada no rascunho. Nada é público até publicar.", "/admin/paginas", (id) => `/admin/paginas/${id}`);
+}
+
+/** Title, address and SEO. The address of a page that is already published cannot change (its URL is public); only the owner turns indexing on. */
+export async function updatePageAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const id = text(fd, "id");
+  const ws = await loadWorkspace(scope);
+  const page = ws.doc.pages?.find((p) => p.id === id);
+  const here = `/admin/paginas/${id}`;
+  if (!page) back("/admin/paginas", { err: ["Página não encontrada."] });
+  const live = publishedPage(ws.baseDoc, id);
+  const slug = text(fd, "slug") || page.slug;
+  if (live && slug !== live.slug) back(here, { err: [`O endereço "${live.slug}" já é público e não pode mudar. Duplique a página para usar outro endereço.`] });
+  const wantsIndex = text(fd, "indexable") === "on";
+  if (wantsIndex !== page.seo.indexable && actor.role !== "owner") back(here, { err: ["Só o owner liga ou desliga a indexação da página."] });
+  const og = text(fd, "seo_og");
+  const seo = {
+    indexable: wantsIndex,
+    ...(text(fd, "seo_title") ? { title: text(fd, "seo_title") } : {}),
+    ...(text(fd, "seo_description") ? { description: text(fd, "seo_description") } : {}),
+    ...(og ? { ogImage: { assetId: og, alt: text(fd, "seo_og_alt"), decorative: text(fd, "seo_og_alt") === "" } } : {}),
+  };
+  return runRaw(fd, { type: "update-page", id, patch: { title: text(fd, "title"), slug, seo } }, "Rascunho da página salvo.", here);
+}
+
+export async function duplicatePageAction(fd: FormData) {
+  return runRaw(fd, { type: "duplicate-page", id: text(fd, "id") }, "Página duplicada como rascunho.", "/admin/paginas", (id) => `/admin/paginas/${id}`);
+}
+
+export async function removePageAction(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const id = text(fd, "id");
+  if (publishedPage((await loadWorkspace(scope)).baseDoc, id)) back(`/admin/paginas/${id}`, { err: ["Esta página já foi publicada: arquive-a em vez de apagar."] });
+  return runRaw(fd, { type: "remove-page", id }, "Rascunho da página apagado.", "/admin/paginas");
+}
+
+/** Archiving takes effect at once when the page is live (it is published as archived: 404, no link target); a never-published page only changes its draft. */
+export async function archivePageAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const id = text(fd, "id");
+  const archive = text(fd, "archive") !== "false";
+  const before = await loadWorkspace(scope);
+  const saved = await applyAndSave(scope, { type: "set-page-archived", id, archived: archive }, before.record?.rev ?? null, actor);
+  if (!saved.ok) back(`/admin/paginas/${id}`, { err: saved.errors });
+  if (publishedPage(before.baseDoc, id)) {
+    const ws = await loadWorkspace(scope);
+    await reconcileReleases(deps(actor), revalidateStorefront).catch(() => undefined);
+    const result = await publishRelease(deps(actor), { kind: "publish", doc: ws.doc, target: { kind: "page", id }, note: archive ? "Página arquivada" : "Página reativada" }, revalidateStorefront).catch(publishError);
+    revalidatePath("/admin", "layout");
+    if (!result.ok) back(`/admin/paginas/${id}`, { err: result.errors });
+    await audit(actor, "page.archive", scope, id, { archived: archive, release: result.outcome.releaseId });
+  }
+  revalidatePath("/admin", "layout");
+  back(`/admin/paginas/${id}`, { ok: archive ? "Página arquivada: deixou de ser pública." : "Página reativada." });
+}
+
+/** Publishes ONE page or ONE model (the home and everything else stay as published). */
+export async function publishTargetAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const kind = text(fd, "target") === "customizer" ? "customizer" : "page";
+  const id = text(fd, "id");
+  const back_ = kind === "page" ? `/admin/paginas/${id}` : `/admin/personalizacao/${id}`;
+  const ws = await loadWorkspace(scope);
+  const target: PublishTarget = { kind, id };
+  await reconcileReleases(deps(actor), revalidateStorefront).catch(() => undefined);
+  const result = await publishRelease(deps(actor), { kind: "publish", doc: ws.doc, target, note: text(fd, "note").slice(0, 200) || undefined }, revalidateStorefront).catch(publishError);
+  revalidatePath("/admin", "layout");
+  if (!result.ok) back(back_, { err: result.errors });
+  await audit(actor, result.outcome.status === "failed" ? "publish.failed" : "publish", scope, result.outcome.releaseId, { target: kind, id, status: result.outcome.status });
+  if (result.outcome.status === "failed") back(back_, { err: ["A publicação falhou ao gravar o arquivo; a versão anterior continua no ar."] });
+  back(back_, { ok: `${kind === "page" ? "Página publicada" : "Modelo publicado"}${platform().mode === "prod" ? "" : " no sandbox local"} (release ${result.outcome.releaseId}).` });
+}
+
+/** Restores ONE page or ONE model from an earlier release (as a new release); the home and everything else are left exactly as they are. */
+export async function restoreTargetAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const kind = text(fd, "target") === "customizer" ? "customizer" : "page";
+  const id = text(fd, "id");
+  const releaseId = text(fd, "release");
+  const here = kind === "page" ? `/admin/paginas/${id}` : `/admin/personalizacao/${id}`;
+  await reconcileReleases(deps(actor), revalidateStorefront).catch(() => undefined);
+  const result = await publishRelease(deps(actor), { kind: "rollback", toReleaseId: releaseId, scope, target: { kind, id }, note: `Restaurada a versão ${releaseId} (${kind === "page" ? "página" : "modelo"})` }, revalidateStorefront).catch(() => ({ ok: false as const, errors: ["Não foi possível restaurar agora. Nada mudou na loja."] }));
+  revalidatePath("/admin", "layout");
+  if (!result.ok) back(here, { err: result.errors });
+  await audit(actor, "rollback", scope, releaseId, { target: kind, id });
+  back(here, { ok: `Versão ${releaseId} restaurada como nova publicação (só ${kind === "page" ? "esta página" : "este modelo"}). O rascunho continua como estava: descarte-o para voltar ao publicado.` });
+}
+
+// ── Personalization models ───────────────────────────────────────────────────────────────────────────────────
+
+export async function createCustomizerAction(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "collection"));
+  if (!ref) back("/admin/personalizacao", { err: ["Escolha a coleção da INK do modelo nas sugestões."] });
+  if (ref.store !== storeOf(scope)) back("/admin/personalizacao", { err: [`Esta coleção pertence a outra loja da INK: ${scopeName(scope)} usa só as coleções da própria loja.`] });
+  const problem = sourceProblem({ kind: "ink-category", ...ref, order: "category", limit: 6 }, (await loadWorkspace(scope)).doc);
+  if (problem) back("/admin/personalizacao", { err: [problem] });
+  return runRaw(fd, { type: "create-customizer", name: text(fd, "name"), slug: text(fd, "slug") || undefined, source: ref }, "Modelo criado como rascunho (inativo). Configure os campos e a imagem.", "/admin/personalizacao", (id) => `/admin/personalizacao/${id}`);
+}
+
+export async function saveCustomizerAction(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const id = text(fd, "id");
+  const here = `/admin/personalizacao/${id}`;
+  const ws = await loadWorkspace(scope);
+  const current = ws.doc.customizers?.find((m) => m.id === id);
+  if (!current) back("/admin/personalizacao", { err: ["Modelo não encontrado."] });
+  const live = ws.baseDoc.customizers?.find((m) => m.id === id);
+  const { patch, errors } = parseCustomizerForm(fd, current, { store: storeOf(scope) }, { slugLocked: Boolean(live) });
+  if (errors.length > 0) back(here, { err: errors });
+  if (patch.source) {
+    const problem = sourceProblem({ kind: "ink-category", ...patch.source, order: "category", limit: 6 }, ws.doc);
+    if (problem) back(here, { err: [problem] });
+  }
+  return runRaw(fd, { type: "update-customizer", id, patch }, "Modelo salvo no rascunho. Nada é público até publicar.", here);
+}
+
+export async function duplicateCustomizerAction(fd: FormData) {
+  return runRaw(fd, { type: "duplicate-customizer", id: text(fd, "id") }, "Modelo duplicado como rascunho inativo.", "/admin/personalizacao", (id) => `/admin/personalizacao/${id}`);
+}
+
+export async function removeCustomizerAction(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const id = text(fd, "id");
+  if ((await loadWorkspace(scope)).baseDoc.customizers?.some((m) => m.id === id)) back(`/admin/personalizacao/${id}`, { err: ["Este modelo já foi publicado: desative-o e publique em vez de apagar (as solicitações antigas continuam com os dados originais)."] });
+  return runRaw(fd, { type: "remove-customizer", id }, "Rascunho do modelo apagado.", "/admin/personalizacao");
+}
+
+// ── Requests (the operational queue) ─────────────────────────────────────────────────────────────────────────
+
+async function requestFor(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true });
+  const id = text(fd, "id");
+  const record = await platform().requests.get(id);
+  // The server decides, from the stored region: an editor of another region cannot touch this request even with a forged form.
+  if (!record || !canEdit(actor, record.region)) {
+    await audit(actor, "access.denied", record?.region ?? "global", "request");
+    back("/admin/personalizacao/solicitacoes", { err: ["Solicitação não encontrada ou sem permissão para essa região."] });
+  }
+  return { actor, record };
+}
+
+export async function setRequestStatusAction(fd: FormData) {
+  const { actor, record } = await requestFor(fd);
+  const to = text(fd, "status") as RequestStatus;
+  const here = `/admin/personalizacao/solicitacoes/${record.id}`;
+  if (!(REQUEST_STATUSES as readonly string[]).includes(to) || !nextStatuses(record.status).includes(to)) back(here, { err: ["Mudança de estado não permitida a partir do estado atual."] });
+  // "Cliente contatado" is a HUMAN statement (someone wrote to the customer): it is never set by a click on a link, a webhook or silence.
+  if (to === "customerContacted" && text(fd, "confirm") !== "on") back(here, { err: ["Marque a confirmação de que você já falou com o cliente por WhatsApp ou e-mail."] });
+  const result = await platform().requests.setStatus(record.id, to, actor.email || actor.id, text(fd, "note") || undefined);
+  if (!result.ok) back(here, { err: [result.error] });
+  await audit(actor, "request.status", record.region, record.id, { to });
+  revalidatePath("/admin", "layout");
+  back(here, { ok: "Estado atualizado." });
+}
+
+/** An internal note (what was asked of the customer, what they answered). It is history for the team: never shown to the customer. */
+export async function addRequestNoteAction(fd: FormData) {
+  const { actor, record } = await requestFor(fd);
+  const here = `/admin/personalizacao/solicitacoes/${record.id}`;
+  const note = text(fd, "note");
+  if (!note) back(here, { err: ["Escreva a observação."] });
+  const result = await platform().requests.addNote(record.id, actor.email || actor.id, note);
+  if (!result.ok) back(here, { err: [result.error] });
+  await audit(actor, "request.note", record.region, record.id);
+  revalidatePath("/admin", "layout");
+  back(here, { ok: "Observação registrada." });
+}
+
+/**
+ * The INK product page prepared for THIS customer, typed by the team after the print exists. A purchase orientation only: it is not an order, nothing
+ * is verified against INK, and it is only accepted when it is https on the request's own region's INK store (no other host, so no open redirect).
+ */
+export async function setRequestProductLinkAction(fd: FormData) {
+  const { actor, record } = await requestFor(fd);
+  const here = `/admin/personalizacao/solicitacoes/${record.id}`;
+  const raw = text(fd, "product_link");
+  let url: string | null = null;
+  if (raw) {
+    const checked = productLinkFor(record.region, raw);
+    if (!checked.ok) back(here, { err: [checked.error] });
+    else url = checked.url;
+  }
+  const result = await platform().requests.setProductLink(record.id, url, actor.email || actor.id);
+  if (!result.ok) back(here, { err: [result.error] });
+  await audit(actor, "request.product", record.region, record.id, { set: url !== null });
+  revalidatePath("/admin", "layout");
+  back(here, { ok: url ? "Link do produto salvo. Ele entra na mensagem sugerida; nada é enviado sozinho." : "Link do produto removido." });
 }

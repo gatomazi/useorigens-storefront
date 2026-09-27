@@ -23,6 +23,9 @@ export type CarouselItem = {
   href: string;
 };
 
+/** The reserved first card of a section: "personalize yours on this model". A link inside the region (never a checkout); the picture is a CMS upload. */
+export type LeadingCard = { href: string; title: string; description?: string; button: string; image: { src: string; width: number; height: number; variants?: { w: number; src: string }[]; alt: string } };
+
 function Arrow({ direction, disabled, onClick, dark }: { direction: "prev" | "next"; disabled: boolean; onClick: () => void; dark: boolean }) {
   return (
     <button
@@ -57,7 +60,10 @@ export function ProductCarousel({
   viewAllHref,
   viewAllLabel = "Ver todos",
   sourceSection,
+  leading,
 }: {
+  /** When set, this card is ALWAYS the first one; `items` are the ordinary products after it. */
+  leading?: LeadingCard;
   items: CarouselItem[];
   labelledBy: string;
   title: string;
@@ -119,6 +125,31 @@ export function ProductCarousel({
       </div>
       <div ref={viewport} className="-mr-4 overflow-hidden sm:mr-0">
         <ul className="-ml-3 flex touch-pan-y sm:-ml-4 lg:-ml-6">
+          {leading && (
+            <li key="customizer-card" data-customizer-card className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
+              <a href={leading.href} className="group block" draggable={false} aria-label={`${leading.title}. Personalize: você escolhe as palavras (não é uma camiseta pronta da loja).`}>
+                <span className={`photo ${poster ? "photo-poster" : ""}`}>
+                  {/* eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin (never through the image optimizer) */}
+                  <img
+                    src={leading.image.variants?.[Math.min(1, leading.image.variants.length - 1)]?.src ?? leading.image.src}
+                    srcSet={leading.image.variants?.map((v) => `${v.src} ${v.w}w`).join(", ")}
+                    sizes="(min-width: 1280px) 19vw, (min-width: 1024px) 22vw, (min-width: 768px) 27vw, (min-width: 640px) 34vw, 62vw"
+                    width={leading.image.width}
+                    height={leading.image.height}
+                    alt={leading.image.alt}
+                    loading="eager"
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                  <span className="absolute left-2 top-2 bg-ink px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-white">Personalizável</span>
+                </span>
+                <div className="mt-3">
+                  <h3 className="t-h3 link-line inline">{leading.title}</h3>
+                  {leading.description && <p className={`t-place mt-1 text-[0.95rem] ${dark ? "text-white/80" : "text-ink-mute"}`}>{leading.description}</p>}
+                  <p className="t-small mt-1 font-semibold underline decoration-region-accent decoration-2 underline-offset-4">{leading.button} →</p>
+                </div>
+              </a>
+            </li>
+          )}
           {items.map((item, i) => (
             <li key={item.id} className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
               <a

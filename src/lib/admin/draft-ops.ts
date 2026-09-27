@@ -11,9 +11,10 @@
 import { sectionsUsing } from "../site-config/collections-enabled";
 import { effectiveNavbarGroups, movedWithin, withNavbarGroups, withPosition, type NavbarPosition } from "../site-config/navbar-groups";
 import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredTemplate } from "../site-config/structured";
-import { validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { newPage, uniqueSlug } from "../site-config/pages";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type Page, type PageKind, type PageSeo, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard">;
 
 export type DraftOp =
   | { type: "add-carousel"; title: string; source: Source }
@@ -34,11 +35,29 @@ export type DraftOp =
   /** Replaces the tracking configuration of the document (validated: formats, legacy only for Sul, an inactive ID only in global). */
   | { type: "set-tracking"; tracking: TrackingConfig }
   /** Launches / recalls a region publicly (takes effect only when published). */
-  | { type: "set-launched"; launched: boolean };
+  | { type: "set-launched"; launched: boolean }
+  // ── Pages (hotpages and parent-category landings) ──
+  | { type: "create-page"; kind: PageKind; title: string; slug?: string }
+  /** Title, slug and SEO of a page (the slug of an already-published page is refused by the caller: its URL must not change). */
+  | { type: "update-page"; id: string; patch: { title?: string; slug?: string; seo?: PageSeo } }
+  | { type: "duplicate-page"; id: string }
+  | { type: "set-page-archived"; id: string; archived: boolean }
+  | { type: "remove-page"; id: string }
+  /** Applies an ordinary section operation to the sections of ONE page (same rules as the home, minus the footer). */
+  | { type: "in-page"; page: string; op: DraftOp }
+  // ── Personalization models ──
+  | { type: "create-customizer"; name: string; slug?: string; source: { store: CollectionRef["store"]; collectionId: number } }
+  | { type: "update-customizer"; id: string; patch: Partial<Omit<Customizer, "id" | "version">> }
+  | { type: "duplicate-customizer"; id: string }
+  | { type: "remove-customizer"; id: string };
 
 export type OpResult = { ok: true; doc: ScopeDoc; focusId?: string } | { ok: false; errors: string[] };
 
-export type OpContext = { newId: () => string };
+export type OpContext = {
+  newId: () => string;
+  /** `page`: the sections are those of a page (no footer; new sections go at the end). */
+  mode?: "home" | "page";
+};
 
 export const CUSTOM_PREFIX = "custom-";
 
@@ -63,6 +82,8 @@ const fail = (...errors: string[]): OpResult => ({ ok: false, errors });
 
 /** Applies one operation. The input document is never mutated; on any problem nothing changes and the reasons come back. */
 export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
+  if (op.type === "create-page" || op.type === "update-page" || op.type === "duplicate-page" || op.type === "set-page-archived" || op.type === "remove-page" || op.type === "in-page") return pageOp(doc, op, ctx);
+  if (op.type === "create-customizer" || op.type === "update-customizer" || op.type === "duplicate-customizer" || op.type === "remove-customizer") return customizerOp(doc, op, ctx);
   if (op.type === "set-collection-enabled") return setCollectionEnabled(doc, op);
   if (op.type === "set-collection-navbar-position" || op.type === "move-collection-navbar") return editNavbar(doc, op);
   if (op.type === "init-home") {
@@ -102,7 +123,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       const check = validateSection(created);
       if (!check.ok) return { ok: false, errors: check.errors };
       // New sections go right before the closing campaign (the block before the footer), never after the footer.
-      const at = Math.max(1, next.length - 2);
+      const at = ctx.mode === "page" ? next.length : Math.max(1, next.length - 2);
       next.splice(at, 0, created);
       return withSections(next, id);
     }
@@ -115,7 +136,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       const check = validateSection(created);
       if (!check.ok) return { ok: false, errors: check.errors };
       // City styles go right after the hero (as on the Sul home); the state chooser and campaigns go before the footer, campaigns last.
-      const at = op.template === "city-styles" ? 1 : next.length - 1;
+      const at = op.template === "city-styles" ? 1 : ctx.mode === "page" ? next.length : next.length - 1;
       next.splice(at, 0, created);
       return withSections(next, id);
     }
@@ -134,7 +155,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     case "move": {
       if (isLocked(next[index])) return fail("the hero and the footer cannot be moved");
       const target = index + (op.direction === "up" ? -1 : 1);
-      if (target < 1 || target > next.length - 2) return fail("it cannot go past the hero or the footer");
+      if (target < 1 || target > (ctx.mode === "page" ? next.length - 1 : next.length - 2)) return fail(ctx.mode === "page" ? "it cannot go above the page hero" : "it cannot go past the hero or the footer");
       [next[index], next[target]] = [next[target], next[index]];
       return withSections(next, op.id);
     }
@@ -157,7 +178,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       next[index] = merged;
       // Region-level rules (a Norte button cannot lead to /sul, a section cannot use another region's store) live on the whole document:
       // only the problems of THIS section are reported, so an edit is never blocked by something unrelated.
-      const whole = validateScopeDoc({ ...doc, home: { sections: next } });
+      const whole = ctx.mode === "page" ? ({ ok: true } as const) : validateScopeDoc({ ...doc, home: { sections: next } });
       if (!whole.ok) {
         const own = whole.errors.filter((e) => e.startsWith(`doc.home.sections[${index}]`));
         if (own.length > 0) return { ok: false, errors: own };
@@ -206,4 +227,109 @@ function editNavbar(doc: ScopeDoc, op: ({ type: "set-collection-navbar-position"
   const edited = withNavbarGroups(doc, next);
   const check = validateScopeDoc(edited);
   return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
+}
+
+// ── Pages ────────────────────────────────────────────────────────────────────────────────────────────────────
+
+const PAGE_PREFIX = "pg-";
+const withPages = (doc: ScopeDoc, pages: Page[], focusId?: string): OpResult => {
+  const next: ScopeDoc = { ...doc, pages };
+  if (pages.length === 0) delete next.pages;
+  const check = validateScopeDoc(next);
+  return check.ok ? { ok: true, doc: next, focusId } : { ok: false, errors: check.errors };
+};
+
+function pageOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-page" | "update-page" | "duplicate-page" | "set-page-archived" | "remove-page" | "in-page" }>, ctx: OpContext): OpResult {
+  if (doc.scope === "global") return fail("global has no pages");
+  const pages = (doc.pages ?? []).map((p) => structuredClone(p));
+  const taken = (kind: PageKind) => new Set(pages.filter((p) => p.kind === kind).map((p) => p.slug));
+  if (op.type === "create-page") {
+    const title = op.title.trim();
+    if (title.length === 0 || title.length > 120) return fail("the title must have 1 to 120 characters");
+    const slug = op.slug?.trim() ? op.slug.trim() : uniqueSlug(title, taken(op.kind));
+    if (taken(op.kind).has(slug)) return fail(`this region already has a page with the address "${slug}"`);
+    const page = newPage({ id: `${PAGE_PREFIX}${ctx.newId()}`, kind: op.kind, title, slug, heroId: `${CUSTOM_PREFIX}${ctx.newId()}`, subtitle: op.kind === "hotpage" ? undefined : undefined });
+    const check = validatePage(page, doc.scope);
+    if (!check.ok) return { ok: false, errors: check.errors };
+    return withPages(doc, [...pages, page], page.id);
+  }
+  const targetId = op.type === "in-page" ? op.page : op.id;
+  const index = pages.findIndex((p) => p.id === targetId);
+  if (index < 0) return fail("this page does not exist");
+  const page = pages[index];
+  if (op.type === "update-page") {
+    const merged: Page = { ...page, ...(op.patch.title !== undefined ? { title: op.patch.title.trim() } : {}), ...(op.patch.slug !== undefined ? { slug: op.patch.slug.trim() } : {}), ...(op.patch.seo !== undefined ? { seo: op.patch.seo } : {}) };
+    if (op.patch.slug !== undefined && merged.slug !== page.slug && pages.some((p, i) => i !== index && p.kind === merged.kind && p.slug === merged.slug)) return fail(`this region already has a page with the address "${merged.slug}"`);
+    pages[index] = merged;
+    return withPages(doc, pages, merged.id);
+  }
+  if (op.type === "duplicate-page") {
+    const slug = uniqueSlug(`${page.slug}-copia`, taken(page.kind));
+    const copy: Page = { ...structuredClone(page), id: `${PAGE_PREFIX}${ctx.newId()}`, slug, title: `${page.title} (cópia)`.slice(0, 120), archived: undefined, version: 1, seo: { ...page.seo, indexable: false } };
+    delete copy.archived;
+    return withPages(doc, [...pages, copy], copy.id);
+  }
+  if (op.type === "set-page-archived") {
+    pages[index] = { ...page, ...(op.archived ? { archived: true } : {}) };
+    if (!op.archived) delete pages[index].archived;
+    return withPages(doc, pages, page.id);
+  }
+  if (op.type === "remove-page") {
+    pages.splice(index, 1);
+    return withPages(doc, pages);
+  }
+  // in-page: reuse the section operations on the page's sections.
+  const inner = applyOp({ ...doc, home: { sections: page.sections } }, op.op, { ...ctx, mode: "page" });
+  if (!inner.ok) return inner;
+  const updated: Page = { ...page, sections: inner.doc.home!.sections };
+  const check = validatePage(updated, doc.scope);
+  if (!check.ok) return { ok: false, errors: check.errors };
+  pages[index] = updated;
+  return withPages(doc, pages, inner.focusId);
+}
+
+// ── Personalization models ───────────────────────────────────────────────────────────────────────────────────
+
+const withCustomizers = (doc: ScopeDoc, list: Customizer[], focusId?: string): OpResult => {
+  const next: ScopeDoc = { ...doc, customizers: list };
+  if (list.length === 0) delete next.customizers;
+  const check = validateScopeDoc(next);
+  return check.ok ? { ok: true, doc: next, focusId } : { ok: false, errors: check.errors };
+};
+
+function customizerOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-customizer" | "update-customizer" | "duplicate-customizer" | "remove-customizer" }>, ctx: OpContext): OpResult {
+  if (doc.scope === "global") return fail("global has no personalization models");
+  const list = (doc.customizers ?? []).map((m) => structuredClone(m));
+  const taken = new Set(list.map((m) => m.slug));
+  if (op.type === "create-customizer") {
+    const name = op.name.trim();
+    if (name.length === 0 || name.length > 80) return fail("the name must have 1 to 80 characters");
+    const slug = op.slug?.trim() ? op.slug.trim() : uniqueSlug(name, taken);
+    if (taken.has(slug)) return fail(`this region already has a model with the address "${slug}"`);
+    const created: Customizer = { id: `cz-${ctx.newId()}`, slug, name, source: op.source, fields: [], previewMode: "mockupWithTextSummary", active: false, version: 1 };
+    const check = validateCustomizer(created, doc.scope);
+    if (!check.ok) return { ok: false, errors: check.errors };
+    return withCustomizers(doc, [...list, created], created.id);
+  }
+  const index = list.findIndex((m) => m.id === op.id);
+  if (index < 0) return fail("this model does not exist");
+  const model = list[index];
+  if (op.type === "update-customizer") {
+    const merged = { ...model, ...op.patch, id: model.id, version: model.version } as Customizer;
+    for (const key of Object.keys(op.patch) as (keyof typeof op.patch)[]) if (op.patch[key] === undefined) delete (merged as Partial<Customizer>)[key];
+    if (merged.slug !== model.slug && list.some((m, i) => i !== index && m.slug === merged.slug)) return fail(`this region already has a model with the address "${merged.slug}"`);
+    const check = validateCustomizer(merged, doc.scope);
+    if (!check.ok) return { ok: false, errors: check.errors };
+    list[index] = merged;
+    return withCustomizers(doc, list, model.id);
+  }
+  if (op.type === "duplicate-customizer") {
+    const copy: Customizer = { ...structuredClone(model), id: `cz-${ctx.newId()}`, slug: uniqueSlug(`${model.slug}-copia`, taken), name: `${model.name} (cópia)`.slice(0, 80), active: false, version: 1 };
+    return withCustomizers(doc, [...list, copy], copy.id);
+  }
+  // remove: refused while any section still shows it as the first card
+  const users = [...(doc.home?.sections ?? []).map((s) => ({ where: "a home", s })), ...(doc.pages ?? []).flatMap((p) => p.sections.map((s) => ({ where: `a página "${p.title}"`, s })))].filter(({ s }) => s.customizerCard?.customizerId === model.id);
+  if (users.length > 0) return fail(`Este modelo é o primeiro card de "${users[0].s.title ?? users[0].s.id}" em ${users[0].where}. Troque ou remova o card antes.`);
+  list.splice(index, 1);
+  return withCustomizers(doc, list);
 }
