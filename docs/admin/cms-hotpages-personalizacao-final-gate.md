@@ -1,6 +1,34 @@
 # Hotpages e personalização: fechamento final (mockups reais + prova em Postgres)
 
-Rodada de fechamento sobre [`cms-hotpages-personalizacao-release-gate.md`](cms-hotpages-personalizacao-release-gate.md), na branch `feature/hotpages-customizacao`, a partir do commit `42ca1c8`. **Nada foi enviado**: sem merge, push, PR, deploy, migração real, mudança no Railway/DNS/Worker/INK. A implementação funcional já estava aprovada; esta rodada não reabriu escopo de produto, só fechou o que faltava.
+Rodada de fechamento sobre [`cms-hotpages-personalizacao-release-gate.md`](cms-hotpages-personalizacao-release-gate.md), na branch `feature/hotpages-customizacao`, a partir do commit `42ca1c8`. A implementação funcional já estava aprovada; esta rodada não reabriu escopo de produto, só fechou o que faltava.
+
+> **Atualização (2026-09-27): Etapa A executada em produção**, com autorização explícita do owner. Ver §0. Este arquivo passa a ser a fonte da verdade sobre o estado real do rollout; §§1–10 abaixo são o relatório da rodada de fechamento local, anterior ao deploy.
+
+## 0. Etapa A — executada em produção
+
+Autorizado pelo owner ("pode fazer") após o preflight objetivo (SHA da branch, SHA de `origin/main`, SHA publicado no Railway, estado das migrations — todos conferidos, sem divergência, fast-forward limpo).
+
+1. **Push** de `feature/hotpages-customizacao` para `origin` (conta `gatomazi`, confirmada; `gh` trocado de `gtomazi_meli` — corporativa, estava ativa por padrão — para `gatomazi` antes de qualquer chamada à API do GitHub).
+2. **PR #19** aberto (`main` ← `feature/hotpages-customizacao`), `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN`, sem CI configurado no repo (testes já rodados localmente, resultados no corpo do PR).
+3. **Merge feito pelo owner** no GitHub (commit `da245cd`, "Merge pull request #19").
+4. **Deploy automático do Railway**, serviço `useorigens-storefront`, ambiente `production`: `status: SUCCESS`, commit publicado `da245cd403c9c2a24a4ebdae5a5e33534dc3e31a` — confirmado via `railway status --json` (somente leitura).
+5. **Smoke pós-deploy** (via `curl`, sem sessão de owner):
+
+   | Verificação | Resultado |
+   |---|---|
+   | `/api/health`, `/api/ready` | 200 |
+   | `/sul`, `/norte`, `/centro-oeste` | 200, **ids de seção idênticos** à linha de base capturada no preflight (nenhuma home mudou) |
+   | `/admin/login` | 200 |
+   | Busca (`/api/cidades/sul?q=florian`) | funcionando |
+   | Link de produto INK real (`usesul.com.br`) | presente, correto |
+   | `/sul/h/dia-dos-pais`, `/sul/colecoes/pais` (rotas novas, nada publicado) | **404** |
+   | `db:status` em produção (via `railway ssh`) | `applied: 0001_init, 0002_auth_sync, 0003_release_delete` · **`pending: 0004_customization_requests, 0005_customization_contact_workflow`** — o código chegou, nada foi aplicado |
+
+6. **Criação de página de teste pelo painel real**, feita pelo owner (login via Railway OAuth, sessão própria — fora do alcance desta sessão): hotpage "Dia das Crianças" (`/admin/paginas`), endereço `dia-das-criancas`, seção **Identidade e SEO** conferida e explicada (título/descrição para buscadores, imagem de compartilhamento, alt, e a caixa "Permitir que buscadores indexem esta página" — desmarcada por padrão, `noindex` até o owner ligar explicitamente). Rascunho salvo com sucesso; owner confirmou "tudo funcionando".
+
+**Critério da Etapa A: atendido.** Código no ar, as três homes publicadas intactas, painel operacional, hotpages/categorias-pai utilizáveis em rascunho, nenhuma página nova pública sem ação explícita.
+
+**Pendente da Etapa A** (não bloqueia o critério, mas ainda não foi feito): publicar de fato a página de teste (ou qualquer página) publicamente — fica a critério do owner, quando quiser, pelo próprio botão "Publicar" no painel.
 
 ## 1. Mockups reais no fluxo completo
 
