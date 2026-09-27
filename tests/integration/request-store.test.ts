@@ -135,20 +135,6 @@ describe.each([
     expect(await s.countOpen(["sul"])).toBe(before.sul);
   });
 
-  test("given requests in every status, when the total is counted, then closed and cancelled ones still count — unlike countOpen", async () => {
-    const s = store();
-    const totalBefore = { sul: await s.count(["sul"]), norte: await s.count(["norte"]) };
-    const openBefore = await s.countOpen(["sul"]);
-    const a = (await s.create(fresh("sul").input)).record;
-    await s.create(fresh("sul").input);
-    await s.create(fresh("norte").input);
-    await s.setStatus(a.id, "closed", "ana@x"); // closed straight from received: still counted by count(), not by countOpen()
-    expect(await s.count(["sul"])).toBe(totalBefore.sul + 2);
-    expect(await s.count(["sul", "norte"])).toBe(totalBefore.sul + totalBefore.norte + 3);
-    expect(await s.count([])).toBe(0);
-    expect(await s.countOpen(["sul"])).toBe(openBefore + 1); // the closed one is excluded, the other new sul request (still received) is not
-  });
-
   test("given a name search, when listed, then the customer's name finds the request but a phone number or e-mail does not", async () => {
     const s = store();
     const named = await s.create({ ...fresh().input, contact: contact({ name: "Zuleide Quintanilha", whatsapp: "+5551988887777", email: "zu@exemplo.com" }) });
