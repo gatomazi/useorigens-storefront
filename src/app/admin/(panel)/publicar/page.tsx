@@ -9,7 +9,7 @@ import { launchBlockers } from "@/lib/admin/launch";
 import { historyPage, inspectPublishing, preflightDoc, publishDeps } from "@/lib/admin/ops";
 import { platform } from "@/lib/admin/platform";
 import { pendingTrackingChanges } from "@/lib/admin/publishing";
-import { currentScope, scopeName } from "@/lib/admin/scope";
+import { changedLabel, currentScope, scopeName } from "@/lib/admin/scope";
 import { loadWorkspace } from "@/lib/admin/workspace";
 
 const when = (iso: string | number | null) => (iso ? new Date(iso).toLocaleString("pt-BR") : "—");
@@ -120,7 +120,7 @@ export default async function PublishPage({ searchParams }: { searchParams: Prom
                 <tr key={r.id}>
                   <td data-label="Release" className="font-bold">#{r.id}</td>
                   <td data-label="Tipo">{r.kind === "rollback" ? "Restauração" : "Publicação"}</td>
-                  <td data-label="Regiões">{r.scopesChanged.map((x) => (x === "global" ? "Global" : scopeName(x as "sul"))).join(", ") || "—"}</td>
+                  <td data-label="Regiões">{r.scopesChanged.map(changedLabel).join(", ") || "—"}</td>
                   <td data-label="Quando">{when(r.promotedAt ?? r.createdAt)}</td>
                   <td data-label="Nota" className="a-muted">{r.note ?? "—"}</td>
                   <td data-label="Estado">{r.id === headId ? <span className="a-badge ok">No ar</span> : r.status === "live" ? <span className="a-badge">Anterior</span> : r.status === "failed" ? <span className="a-badge bad">Falhou{r.failedReason ? `: ${r.failedReason}` : ""}</span> : <span className="a-badge warn">Pendente</span>}</td>

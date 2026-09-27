@@ -126,3 +126,22 @@ export function resolveStateCovers(section: Section, media: PublishedBundle["med
   return out;
 }
 export type BannerImageLike = { src: string; width: number; height: number; variants?: { w: number; src: string }[] };
+
+/** The first card of a carousel as the storefront draws it, or `null` when the model cannot be shown (missing, inactive, no mockup, no image, foreign region). */
+export type ResolvedCustomizerCard = { href: string; title: string; description?: string; button: string; image: { src: string; width: number; height: number; variants?: { w: number; src: string }[]; alt: string } };
+export function resolveCustomizerCard(section: Section, doc: ScopeDoc | undefined, media: PublishedBundle["media"], region: string): ResolvedCustomizerCard | null {
+  const card = section.customizerCard;
+  if (!card) return null;
+  const model = doc?.customizers?.find((m) => m.id === card.customizerId);
+  if (!model || !model.active || !model.pageMockup || doc?.scope !== region) return null;
+  const ref = card.image ?? model.cardImage ?? model.pageMockup;
+  const info = media[ref.assetId];
+  if (!info) return null;
+  return {
+    href: `/${region}/personalizar/${model.slug}`,
+    title: card.title,
+    ...(card.description ? { description: card.description } : {}),
+    button: card.button,
+    image: { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}), alt: ref.decorative ? "" : ref.alt || card.title },
+  };
+}

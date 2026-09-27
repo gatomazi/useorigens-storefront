@@ -43,6 +43,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
   const prod = platform().mode === "prod";
   const reading = readPublished();
   const custom = sections.filter((s) => s.id.startsWith("custom-")).length;
+  const openRequests = await platform().requests.countOpen([scope]).catch(() => 0);
   const sandboxLive = process.env.SITE_CONFIG_DIR ? publishedFilePath() : null;
 
   return (
@@ -52,6 +53,11 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
         <p className="a-muted mt-2 max-w-2xl">Home de {scopeName(scope)} (troque a região no topo). Tudo abaixo vem do estado real: rascunho, publicação, catálogo e coleções da INK sincronizados.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
+      {openRequests > 0 && (
+        <p className="a-flash ok" data-testid="overview-pending-requests">
+          <strong>{openRequests}</strong> solicitação(ões) de personalização de {scopeName(scope)} esperando a equipe (recebidas, em criação ou com a arte pronta e o cliente ainda sem contato). <Link href="/admin/personalizacao/solicitacoes" className="a-link">Abrir a fila</Link>
+        </p>
+      )}
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Resumo">
         <div className="a-card p-5">

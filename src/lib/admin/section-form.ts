@@ -60,6 +60,12 @@ function parseAppearance(f: Fields, current: Appearance): Appearance {
   };
 }
 
+/** "hotpage/dia-dos-pais" → a page destination, or null. */
+export function parsePageRef(value: string): Destination | null {
+  const m = /^(hotpage|categoryLanding)\/([a-z0-9-]{2,60})$/.exec(value);
+  return m ? { kind: "page", pageKind: m[1] as "hotpage" | "categoryLanding", slug: m[2] } : null;
+}
+
 function parseCta(f: Fields): Section["cta"] | undefined {
   const kind = str(f, "cta_kind");
   const label = str(f, "cta_label");
@@ -69,6 +75,8 @@ function parseCta(f: Fields): Section["cta"] | undefined {
     if (ref) dest = { kind: "ink-collection", ...ref };
   } else if (kind === "external") dest = { kind: "external", url: str(f, "cta_url") };
   else if (kind === "route") dest = { kind: "route", path: str(f, "cta_route") };
+  else if (kind === "page") dest = parsePageRef(str(f, "cta_page"));
+  else if (kind === "anchor") dest = { kind: "anchor", anchor: str(f, "cta_anchor") };
   return dest ? { label: label || "Ver todos", dest } : undefined;
 }
 
@@ -91,7 +99,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
   // A field that is not in the form is left alone; a field that is present and empty clears the value (a carousel's title is then rejected).
   if (f.get("title") !== null) patch.title = str(f, "title") || undefined;
   if (f.get("subtitle") !== null) patch.subtitle = str(f, "subtitle") || undefined;
-  if (section.template === "product-carousel" || section.template === "campaign" || section.template === "hero" || section.template === "city-styles" || section.template === "states") {
+  if (section.template === "product-carousel" || section.template === "campaign" || section.template === "hero" || section.template === "city-styles" || section.template === "states" || section.template === "page-hero") {
     patch.appearance = parseAppearance(f, section.appearance);
   }
   if (section.template === "product-carousel") {
@@ -103,14 +111,34 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     const surface = surfaceRaw === "paper" || surfaceRaw === "region-primary" ? surfaceRaw : "plain";
     patch.layout = { variant, tone, surface };
   }
+  if (section.template === "page-hero") {
+    patch.cta = parseCta(f);
+    patch.layout = { variant: "standard", tone: str(f, "layout_tone") === "light" ? "light" : "dark", surface: "region-primary" };
+  }
+  if (section.template === "product-carousel" && f.get("cc_present") !== null) {
+    // The reserved first card ("personalize yours"). Only the reference and the card's own texts are stored; the model itself is validated on save and on publish.
+    const customizerId = str(f, "cc_customizer");
+    if (f.get("cc_show") !== null && customizerId) {
+      const imageId = str(f, "cc_image");
+      const alt = str(f, "cc_alt");
+      patch.customizerCard = {
+        customizerId,
+        ...(imageId ? { image: { assetId: imageId, alt, decorative: alt === "" } } : {}),
+        title: str(f, "cc_title"),
+        ...(str(f, "cc_description") ? { description: str(f, "cc_description") } : {}),
+        button: str(f, "cc_button"),
+      };
+    } else patch.customizerCard = undefined;
+  }
   if (section.template === "campaign") {
     patch.fallback = str(f, "fallback") === "fill" ? "fill" : "crops";
     // No button configured = the original "Encontrar minha cidade" search; a label without a destination is dropped, never a dead link.
     patch.cta = parseCta(f);
   }
-  if (section.template !== "hero" && section.template !== "footer" && f.get("nav_present") !== null) {
+  if (section.template !== "hero" && section.template !== "footer" && section.template !== "page-hero" && f.get("nav_present") !== null && f.get("page_scope") === null) {
     // "Mostrar no menu" + the apelido; unchecked clears it. An empty apelido is not defaulted here: the validator refuses it and says so.
-    patch.nav = f.get("nav_show") !== null ? { label: str(f, "nav_label") } : undefined;
+    const navDest = str(f, "nav_dest") ? parsePageRef(str(f, "nav_dest")) : null;
+    patch.nav = f.get("nav_show") !== null ? { label: str(f, "nav_label"), ...(navDest ? { dest: navDest } : {}) } : undefined;
   }
   if (section.template === "states" && f.get("state_covers_present") !== null) {
     // One picture per state; an empty choice clears that state's cover (it then keeps the code's own cover, if any).

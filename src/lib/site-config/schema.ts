@@ -12,7 +12,7 @@ import { REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions"
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
 export type Scope = (typeof SCOPES)[number];
 
-export const TEMPLATE_KEYS = ["hero", "city-styles", "product-carousel", "states", "campaign", "footer"] as const;
+export const TEMPLATE_KEYS = ["hero", "page-hero", "city-styles", "product-carousel", "states", "campaign", "footer"] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
 /** Closed list of analytics origins a carousel may report (keys of `SOURCES`); never a free string (would pollute Meta/GA4). */
@@ -46,8 +46,18 @@ export type Appearance = {
   overlay: Overlay;
 };
 
+export type PageKind = "hotpage" | "categoryLanding";
+export const PAGE_KINDS: readonly PageKind[] = ["hotpage", "categoryLanding"];
+/** Public path segment of each page kind under `/<region>/…` (static segments: they never collide with `[uf]`). */
+export const PAGE_SEGMENT: Record<PageKind, string> = { hotpage: "h", categoryLanding: "colecoes" };
+export const CUSTOMIZER_SEGMENT = "personalizar";
+
 export type Destination =
   | { kind: "route"; path: string }
+  /** A published page of this region (resolved to its URL at render time; publishing requires that it exists and is live). */
+  | { kind: "page"; pageKind: PageKind; slug: string }
+  /** An anchor on the page itself (`#anchor`). */
+  | { kind: "anchor"; anchor: string }
   | { kind: "ink-collection"; store: CommerceStoreKey; collectionId: number }
   | { kind: "external"; url: string };
 
@@ -86,8 +96,13 @@ export type Section = {
    * the code has always shown, the other regions show none. `[]` = customised to show no card.
    */
   featured?: FeaturedProductRef[];
-  /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. */
-  nav?: { label: string };
+  /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. `dest` sends the link to a page instead of this section. */
+  nav?: { label: string; dest?: Destination };
+  /**
+   * Product carousels only: the FIRST card is not a product but a "personalize yours on this model" card that leads to the region's own customizer
+   * page. The other cards are ordinary products (the section's total stays what it was: 1 + N-1).
+   */
+  customizerCard?: { customizerId: string; image?: MediaRef; title: string; description?: string; button: string };
   /**
    * State chooser only: a cover picture per state (key = UF, e.g. "PA"). A state without one keeps the cover the code has for it (Sul) or shows
    * none. The images are resolved into the published media table like any section image.
@@ -110,6 +125,53 @@ export type TrackingConfig = { meta: VendorSetting; ga4: VendorSetting };
 
 export type CollectionRef = { store: CommerceStoreKey; collectionId: number };
 
+/**
+ * A page of a region outside the home: an editorial hotpage or a parent-category landing. Made of the SAME sections as the home (rendered by the
+ * same components); the first is always a `page-hero`. Lives in the region's document but is published on its own (see admin/publishing.ts).
+ */
+export type PageSeo = { title?: string; description?: string; ogImage?: MediaRef; indexable: boolean };
+export type Page = {
+  id: string;
+  kind: PageKind;
+  slug: string;
+  title: string;
+  seo: PageSeo;
+  sections: Section[];
+  /** An archived page is not served (404) and cannot be a link target; its content is kept. */
+  archived?: boolean;
+  version: number;
+};
+
+export type CustomField = { key: string; label: string; placeholder?: string; helperText?: string; required: boolean; maxLength: number; defaultValue?: string; position: number; type: "text" };
+/** A repeatable group of text lines (for example the four to six lines of a shirt): the customer sees `initial` lines and may add or remove within min..max. */
+export type LineGroup = { key: string; label: string; helperText?: string; placeholder?: string; lineLabel: string; min: number; initial: number; max: number; maxLength: number; defaults?: string[] };
+export type Customizer = {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  /** The INK collection this model belongs to (same store as the region; an internal collection must be enabled in the Library). */
+  source: { store: CommerceStoreKey; collectionId: number };
+  /** The exact INK product, when the operator picked one; otherwise the model has no linked checkout product. */
+  inkProductId?: string;
+  cardImage?: MediaRef;
+  pageMockup?: MediaRef;
+  fields: CustomField[];
+  lineGroup?: LineGroup;
+  /** V1: the static mockup plus a live text summary. The mockup already carries printed text, so text is never drawn over it. */
+  previewMode: "mockupWithTextSummary";
+  active: boolean;
+  version: number;
+};
+
+export const MAX_CUSTOM_FIELDS = 10;
+export const MAX_LINE_GROUP = 10;
+export const MAX_PAGES = 60;
+export const MAX_CUSTOMIZERS = 40;
+export const PAGE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+/** Segments a page or a customizer may never use as its slug (static routes and words that would read as routes). */
+export const RESERVED_SLUGS: readonly string[] = ["h", "colecoes", "personalizar", "privacidade", "solicitacao", "api", "admin", "media", "novo", "preview"];
+
 export type ScopeDoc = {
   schemaVersion: 1;
   scope: Scope;
@@ -122,6 +184,13 @@ export type ScopeDoc = {
    * the audit trail of every launch and recall.
    */
   launched?: boolean;
+  /**
+   * Hotpages and parent-category landings of this region. Part of the document for storage and rollback, but PUBLISHED ON THEIR OWN: publishing the
+   * home never publishes a draft page, and publishing a page never touches the home (admin/publishing.ts composes the bundle per target).
+   */
+  pages?: Page[];
+  /** Personalization models of this region (published on their own, like the pages). */
+  customizers?: Customizer[];
   /**
    * INK collections this scope's CMS has explicitly ENABLED as section sources. Only meaningful for internal (hidden-on-INK) collections:
    * public ones are usable by default. Part of the document, so a publish and a rollback carry it together with the sections that use it.
@@ -250,6 +319,11 @@ function checkDestination(c: Collector, path: string, v: unknown): void {
   } else if (v.kind === "ink-collection") {
     if (typeof v.store !== "string" || !STORES.includes(v.store)) c.fail(`${path}.store`, "unknown store");
     if (typeof v.collectionId !== "number" || !Number.isInteger(v.collectionId) || v.collectionId <= 0) c.fail(`${path}.collectionId`, "must be a positive integer");
+  } else if (v.kind === "page") {
+    if (!(PAGE_KINDS as readonly unknown[]).includes(v.pageKind)) c.fail(`${path}.pageKind`, "must be hotpage | categoryLanding");
+    if (typeof v.slug !== "string" || !PAGE_SLUG.test(v.slug) || v.slug.length > 60) c.fail(`${path}.slug`, "invalid page slug");
+  } else if (v.kind === "anchor") {
+    if (typeof v.anchor !== "string" || !SLUG.test(v.anchor)) c.fail(`${path}.anchor`, "must match [a-z0-9-]{1,40}");
   } else if (v.kind === "external") {
     let ok = false;
     if (typeof v.url === "string") {
@@ -261,7 +335,7 @@ function checkDestination(c: Collector, path: string, v: unknown): void {
       }
     }
     if (!ok) c.fail(`${path}.url`, "must be https on an allowed store host");
-  } else c.fail(`${path}.kind`, "must be route | ink-collection | external");
+  } else c.fail(`${path}.kind`, "must be route | page | anchor | ink-collection | external");
 }
 
 function checkSource(c: Collector, path: string, v: unknown): void {
@@ -315,7 +389,19 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     }
   }
   if (v.nav !== undefined) {
-    if (v.template === "hero" || v.template === "footer" || !isRecord(v.nav) || !isStr(v.nav.label, 24)) c.fail(`${path}.nav`, "not for the hero or footer; label 1..24 characters");
+    if (v.template === "hero" || v.template === "footer" || v.template === "page-hero" || !isRecord(v.nav) || !isStr(v.nav.label, 24)) c.fail(`${path}.nav`, "not for the hero or footer; label 1..24 characters");
+    else if (v.nav.dest !== undefined) checkDestination(c, `${path}.nav.dest`, v.nav.dest);
+  }
+  if (v.customizerCard !== undefined) {
+    const cc = v.customizerCard;
+    if (v.template !== "product-carousel" || !isRecord(cc)) c.fail(`${path}.customizerCard`, "product carousels only");
+    else {
+      if (typeof cc.customizerId !== "string" || !ID.test(cc.customizerId)) c.fail(`${path}.customizerCard.customizerId`, "invalid customizer id");
+      if (!isStr(cc.title, 60)) c.fail(`${path}.customizerCard.title`, "1..60 chars");
+      if (cc.description !== undefined && !isStr(cc.description, 120)) c.fail(`${path}.customizerCard.description`, "1..120 chars");
+      if (!isStr(cc.button, 24)) c.fail(`${path}.customizerCard.button`, "1..24 chars");
+      if (cc.image !== undefined) checkMediaRef(c, `${path}.customizerCard.image`, cc.image);
+    }
   }
   if (v.stateCovers !== undefined) {
     if (v.template !== "states" || !isRecord(v.stateCovers) || Object.keys(v.stateCovers).length > 27) c.fail(`${path}.stateCovers`, "state chooser only, at most one cover per state");
@@ -325,6 +411,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     }
   }
   if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > 8)) c.fail(`${path}.count`, "city styles only, an integer 1..8");
+  if (v.template === "page-hero" && !v.title) c.fail(`${path}.title`, "required for a page hero");
   if (v.template === "product-carousel") {
     if (!v.layout) c.fail(`${path}.layout`, "required for product-carousel");
     if (!v.source) c.fail(`${path}.source`, "required for product-carousel");
@@ -332,6 +419,135 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     if (!v.title) c.fail(`${path}.title`, "required for product-carousel");
   }
   checkAppearance(c, `${path}.appearance`, v.appearance);
+}
+
+const TEMPLATES_IN_PAGES: readonly string[] = ["page-hero", "product-carousel", "campaign", "states", "city-styles"];
+
+function checkSlug(c: Collector, path: string, v: unknown): void {
+  if (typeof v !== "string" || v.length < 2 || v.length > 60 || !PAGE_SLUG.test(v)) c.fail(path, "2..60 chars: lowercase letters, digits and single hyphens");
+  else if (RESERVED_SLUGS.includes(v)) c.fail(path, `"${v}" is reserved`);
+}
+
+function checkPage(c: Collector, path: string, v: unknown): void {
+  if (!isRecord(v)) return c.fail(path, "must be an object");
+  if (typeof v.id !== "string" || !ID.test(v.id)) c.fail(`${path}.id`, "invalid id");
+  if (!(PAGE_KINDS as readonly unknown[]).includes(v.kind)) c.fail(`${path}.kind`, "must be hotpage | categoryLanding");
+  checkSlug(c, `${path}.slug`, v.slug);
+  if (!isStr(v.title, 120)) c.fail(`${path}.title`, "1..120 chars");
+  if (typeof v.version !== "number" || !Number.isInteger(v.version) || v.version < 1) c.fail(`${path}.version`, "must be a positive integer");
+  if (v.archived !== undefined && typeof v.archived !== "boolean") c.fail(`${path}.archived`, "must be boolean");
+  if (!isRecord(v.seo) || typeof v.seo.indexable !== "boolean") c.fail(`${path}.seo`, "must be { indexable, title?, description?, ogImage? }");
+  else {
+    if (v.seo.title !== undefined && !isStr(v.seo.title, 70)) c.fail(`${path}.seo.title`, "1..70 chars");
+    if (v.seo.description !== undefined && !isStr(v.seo.description, 200)) c.fail(`${path}.seo.description`, "1..200 chars");
+    if (v.seo.ogImage !== undefined) checkMediaRef(c, `${path}.seo.ogImage`, v.seo.ogImage);
+  }
+  const sections = v.sections;
+  if (!Array.isArray(sections) || sections.length < 1 || sections.length > 40) return c.fail(`${path}.sections`, "1..40 sections");
+  sections.forEach((s, i) => {
+    checkSection(c, `${path}.sections[${i}]`, s);
+    if (!isRecord(s)) return;
+    if (typeof s.template === "string" && !TEMPLATES_IN_PAGES.includes(s.template)) c.fail(`${path}.sections[${i}].template`, "not allowed in a page");
+    if (i === 0 && s.template !== "page-hero") c.fail(`${path}.sections[0]`, "the first section must be the page hero");
+    if (i > 0 && s.template === "page-hero") c.fail(`${path}.sections[${i}]`, "the page hero appears once, first");
+  });
+  const anchors = new Set<string>();
+  const ids = new Set<string>();
+  sections.forEach((s, i) => {
+    if (!isRecord(s)) return;
+    if (typeof s.anchor === "string") {
+      if (anchors.has(s.anchor)) c.fail(`${path}.sections[${i}].anchor`, "duplicate anchor");
+      anchors.add(s.anchor);
+    }
+    if (typeof s.id === "string") {
+      if (ids.has(s.id)) c.fail(`${path}.sections[${i}].id`, "duplicate id");
+      ids.add(s.id);
+    }
+  });
+}
+
+function checkTextField(c: Collector, path: string, f: unknown, keyPattern = /^[a-z][a-z0-9_]{0,29}$/): void {
+  if (!isRecord(f)) return c.fail(path, "must be an object");
+  if (typeof f.key !== "string" || !keyPattern.test(f.key)) c.fail(`${path}.key`, "stable key: lowercase letters, digits and _");
+  if (!isStr(f.label, 60)) c.fail(`${path}.label`, "1..60 chars");
+  for (const [name, max] of [["placeholder", 80], ["helperText", 200], ["defaultValue", 120]] as const) if (f[name] !== undefined && (typeof f[name] !== "string" || (f[name] as string).length > max)) c.fail(`${path}.${name}`, `≤ ${max} chars`);
+}
+
+function checkCustomizer(c: Collector, path: string, v: unknown): void {
+  if (!isRecord(v)) return c.fail(path, "must be an object");
+  if (typeof v.id !== "string" || !ID.test(v.id)) c.fail(`${path}.id`, "invalid id");
+  checkSlug(c, `${path}.slug`, v.slug);
+  if (!isStr(v.name, 80)) c.fail(`${path}.name`, "1..80 chars");
+  if (v.description !== undefined && !isStr(v.description, 300)) c.fail(`${path}.description`, "1..300 chars");
+  if (!isRecord(v.source) || typeof v.source.store !== "string" || !STORES.includes(v.source.store) || typeof v.source.collectionId !== "number" || !Number.isInteger(v.source.collectionId) || v.source.collectionId <= 0) c.fail(`${path}.source`, "must be { store, collectionId }");
+  if (v.inkProductId !== undefined && (typeof v.inkProductId !== "string" || !/^\d{1,20}$/.test(v.inkProductId))) c.fail(`${path}.inkProductId`, "numeric INK id");
+  if (v.cardImage !== undefined) checkMediaRef(c, `${path}.cardImage`, v.cardImage);
+  if (v.pageMockup !== undefined) checkMediaRef(c, `${path}.pageMockup`, v.pageMockup);
+  if (v.previewMode !== "mockupWithTextSummary") c.fail(`${path}.previewMode`, "must be mockupWithTextSummary");
+  if (typeof v.active !== "boolean") c.fail(`${path}.active`, "must be boolean");
+  else if (v.active && !v.pageMockup) c.fail(`${path}.pageMockup`, "an active model needs its page mockup");
+  if (typeof v.version !== "number" || !Number.isInteger(v.version) || v.version < 1) c.fail(`${path}.version`, "must be a positive integer");
+  const keys = new Set<string>();
+  if (!Array.isArray(v.fields) || v.fields.length > MAX_CUSTOM_FIELDS) c.fail(`${path}.fields`, `at most ${MAX_CUSTOM_FIELDS} fields`);
+  else v.fields.forEach((f, i) => {
+    checkTextField(c, `${path}.fields[${i}]`, f);
+    if (!isRecord(f)) return;
+    if (typeof f.required !== "boolean") c.fail(`${path}.fields[${i}].required`, "must be boolean");
+    if (typeof f.maxLength !== "number" || !Number.isInteger(f.maxLength) || f.maxLength < 1 || f.maxLength > 200) c.fail(`${path}.fields[${i}].maxLength`, "integer 1..200");
+    if (f.type !== "text") c.fail(`${path}.fields[${i}].type`, "V1 supports text only");
+    if (typeof f.position !== "number" || !Number.isInteger(f.position)) c.fail(`${path}.fields[${i}].position`, "must be an integer");
+    if (typeof f.defaultValue === "string" && typeof f.maxLength === "number" && f.defaultValue.length > f.maxLength) c.fail(`${path}.fields[${i}].defaultValue`, "longer than maxLength");
+    if (typeof f.key === "string") {
+      if (keys.has(f.key)) c.fail(`${path}.fields[${i}].key`, "duplicate key");
+      keys.add(f.key);
+    }
+  });
+  if (v.lineGroup !== undefined) {
+    const g = v.lineGroup;
+    checkTextField(c, `${path}.lineGroup`, g);
+    if (isRecord(g)) {
+      if (!isStr(g.lineLabel, 40)) c.fail(`${path}.lineGroup.lineLabel`, "1..40 chars (use {n} for the line number)");
+      const int = (x: unknown, lo: number, hi: number) => typeof x === "number" && Number.isInteger(x) && x >= lo && x <= hi;
+      if (!int(g.min, 0, MAX_LINE_GROUP) || !int(g.max, 1, MAX_LINE_GROUP) || !int(g.initial, 0, MAX_LINE_GROUP)) c.fail(`${path}.lineGroup`, `min, initial and max are integers up to ${MAX_LINE_GROUP}`);
+      else if ((g.min as number) > (g.max as number) || (g.initial as number) < (g.min as number) || (g.initial as number) > (g.max as number)) c.fail(`${path}.lineGroup`, "must satisfy min ≤ initial ≤ max");
+      if (!int(g.maxLength, 1, 200)) c.fail(`${path}.lineGroup.maxLength`, "integer 1..200");
+      if (typeof g.key === "string" && keys.has(g.key)) c.fail(`${path}.lineGroup.key`, "duplicate key");
+      if (g.defaults !== undefined && (!Array.isArray(g.defaults) || g.defaults.length > MAX_LINE_GROUP || g.defaults.some((d) => typeof d !== "string" || d.length > 200))) c.fail(`${path}.lineGroup.defaults`, "a list of short texts");
+    }
+  }
+}
+
+/** Validates ONE page (used by the editor and by the tolerant published reader); `scope` adds the region rules (own store, own routes). */
+export function validatePage(input: unknown, scope: Scope, path = "page"): ValidationResult<Page> {
+  const c = new Collector();
+  checkPage(c, path, input);
+  if (isRecord(input) && Array.isArray(input.sections)) checkRegionRules(c, path, input.sections, scope);
+  return c.errors.length === 0 ? { ok: true, value: input as Page } : { ok: false, errors: c.errors };
+}
+export function validateCustomizer(input: unknown, scope: Scope, path = "customizer"): ValidationResult<Customizer> {
+  const c = new Collector();
+  checkCustomizer(c, path, input);
+  const own = REGIONS[scope as RegionSlug]?.storeKey;
+  if (isRecord(input) && isRecord(input.source) && own && input.source.store !== own) c.fail(`${path}.source.store`, "belongs to another region's INK store");
+  return c.errors.length === 0 ? { ok: true, value: input as Customizer } : { ok: false, errors: c.errors };
+}
+
+/** The region rules shared by the home and the pages: a section's sources, buttons and cards stay inside THIS region. */
+function checkRegionRules(c: Collector, base: string, sections: unknown[], sc: Scope): void {
+  const region = REGIONS[sc as RegionSlug];
+  if (!region) return;
+  sections.forEach((s, i) => {
+    if (!isRecord(s)) return;
+    const at = `${base}.sections[${i}]`;
+    if (isRecord(s.source) && s.source.kind === "ink-category" && s.source.store !== region.storeKey) c.fail(`${at}.source.store`, "belongs to another region's INK store");
+    for (const [name, dest] of [["cta", isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null], ["nav", isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null]] as const) {
+      if (!dest) continue;
+      if (dest.kind === "ink-collection" && dest.store !== region.storeKey) c.fail(`${at}.${name}.dest.store`, "belongs to another region's INK store");
+      if (dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`${at}.${name}.dest.path`, "must be a page of this region");
+    }
+    if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(region.ufs as readonly string[]).includes(uf)) c.fail(`${at}.stateCovers.${uf}`, "not a state of this region");
+    if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && ref.store !== region.storeKey) c.fail(`${at}.featured[${j}].store`, "belongs to another region's INK store"); });
+  });
 }
 
 function checkVendor(c: Collector, path: string, v: unknown, pattern: RegExp, scope: Scope): void {
@@ -436,6 +652,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
           if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(REGIONS[sc as RegionSlug]?.ufs as readonly string[] | undefined)?.includes(uf)) c.fail(`doc.home.sections[${i}].stateCovers.${uf}`, "not a state of this region");
           // The hero's cards are products of THIS region's own INK store (a Norte card can never be a Sul product).
           if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && ref.store !== ownStore) c.fail(`doc.home.sections[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
+          const navDest = isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null;
+          if (navDest && navDest.kind === "ink-collection" && navDest.store !== ownStore) c.fail(`doc.home.sections[${i}].nav.dest.store`, "belongs to another region's INK store");
+          if (navDest && navDest.kind === "route" && typeof navDest.path === "string" && navDest.path !== `/${sc}` && !navDest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].nav.dest.path`, "must be a page of this region");
+          if (s.template === "page-hero") c.fail(`doc.home.sections[${i}].template`, "the page hero belongs to pages, not to the home");
           // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
           if (dest && dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].cta.dest.path`, "must be a page of this region");
         });
@@ -460,7 +680,72 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
       if (sections.filter((s) => isRecord(s) && (s.template === "hero" || s.template === "footer")).length > 2) c.fail("doc.home.sections", "hero and footer appear once");
     }
   }
+  if (input.pages !== undefined) {
+    if (sc === "global") c.fail("doc.pages", "global has no pages");
+    else if (!Array.isArray(input.pages) || input.pages.length > MAX_PAGES) c.fail("doc.pages", `a list of at most ${MAX_PAGES} pages`);
+    else {
+      const ids = new Set<string>();
+      const slugs = new Set<string>();
+      input.pages.forEach((p, i) => {
+        checkPage(c, `doc.pages[${i}]`, p);
+        if (!isRecord(p)) return;
+        if (Array.isArray(p.sections)) checkRegionRules(c, `doc.pages[${i}]`, p.sections, sc);
+        if (typeof p.id === "string") {
+          if (ids.has(p.id)) c.fail(`doc.pages[${i}].id`, "duplicate id");
+          ids.add(p.id);
+        }
+        // One slug per region AND kind: /h/x and /colecoes/x may coexist, two /h/x may not.
+        const key = `${String(p.kind)}:${String(p.slug)}`;
+        if (slugs.has(key)) c.fail(`doc.pages[${i}].slug`, "duplicate slug for this kind of page");
+        slugs.add(key);
+      });
+    }
+  }
+  if (input.customizers !== undefined) {
+    if (sc === "global") c.fail("doc.customizers", "global has no customizers");
+    else if (!Array.isArray(input.customizers) || input.customizers.length > MAX_CUSTOMIZERS) c.fail("doc.customizers", `a list of at most ${MAX_CUSTOMIZERS} models`);
+    else {
+      const ids = new Set<string>();
+      const slugs = new Set<string>();
+      const own = REGIONS[sc as RegionSlug]?.storeKey;
+      input.customizers.forEach((m, i) => {
+        checkCustomizer(c, `doc.customizers[${i}]`, m);
+        if (!isRecord(m)) return;
+        if (isRecord(m.source) && own && m.source.store !== own) c.fail(`doc.customizers[${i}].source.store`, "belongs to another region's INK store");
+        if (typeof m.id === "string") {
+          if (ids.has(m.id)) c.fail(`doc.customizers[${i}].id`, "duplicate id");
+          ids.add(m.id);
+        }
+        if (typeof m.slug === "string") {
+          if (slugs.has(m.slug)) c.fail(`doc.customizers[${i}].slug`, "duplicate slug");
+          slugs.add(m.slug);
+        }
+      });
+    }
+  }
+  // A carousel's first card refers to a model of THIS document.
+  {
+    const known = new Set(Array.isArray(input.customizers) ? input.customizers.flatMap((m) => (isRecord(m) && typeof m.id === "string" ? [m.id] : [])) : []);
+    const sectionLists = [isRecord(input.home) && Array.isArray(input.home.sections) ? input.home.sections : [], ...(Array.isArray(input.pages) ? input.pages.map((p) => (isRecord(p) && Array.isArray(p.sections) ? p.sections : [])) : [])];
+    for (const list of sectionLists) for (const s of list) if (isRecord(s) && isRecord(s.customizerCard) && !known.has(s.customizerCard.customizerId as string)) c.fail(`doc.customizerCard(${String(s.id)})`, "refers to a model that does not exist in this region");
+  }
   return c.errors.length === 0 ? { ok: true, value: input as unknown as ScopeDoc } : { ok: false, errors: c.errors };
+}
+
+/** Every media reference of a document (sections of the home and of the pages, covers, cards, SEO image, models): what a publish must resolve into the media table. */
+export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
+  if (!doc) return [];
+  const out: MediaRef[] = [];
+  const ofSection = (s: Section) => {
+    for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), s.customizerCard?.image]) if (r) out.push(r);
+  };
+  for (const s of doc.home?.sections ?? []) ofSection(s);
+  for (const p of doc.pages ?? []) {
+    if (p.seo.ogImage) out.push(p.seo.ogImage);
+    for (const s of p.sections) ofSection(s);
+  }
+  for (const m of doc.customizers ?? []) for (const r of [m.cardImage, m.pageMockup]) if (r) out.push(r);
+  return out;
 }
 
 const validVariants = (v: unknown): boolean =>
@@ -497,11 +782,7 @@ export function validateBundle(input: unknown): ValidationResult<PublishedBundle
     if (isRecord(docs)) {
       for (const scope of SCOPES) {
         const doc = docs[scope] as ScopeDoc | undefined;
-        for (const s of doc?.home?.sections ?? []) {
-          for (const ref of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {})]) {
-            if (ref && !(ref.assetId in media)) errors.push(`bundle.media: "${ref.assetId}" (section ${s.id}) is not in the media table`);
-          }
-        }
+        for (const ref of mediaRefsOfDoc(doc)) if (!(ref.assetId in media)) errors.push(`bundle.media: "${ref.assetId}" (${scope}) is not in the media table`);
       }
     }
   }

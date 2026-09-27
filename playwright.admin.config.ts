@@ -4,13 +4,28 @@ import path from "node:path";
 import { defineConfig } from "@playwright/test";
 
 /**
- * The LOCAL CMS round trip (docs/admin/cms-local-usage.md). Separate from the storefront suite on purpose: it needs a development server with
- * ADMIN_DEV_MODE, and it writes drafts and sandbox publications — into a throw-away temp directory, never into data/admin-dev or any Volume.
+ * The LOCAL CMS round trip (docs/admin/cms-local-usage.md). One `next dev` server, one sandbox, shared by every spec — as before.
  *   npm run test:admin
+ *
+ * Two things a spec creates are irreversible for the rest of this sandbox's lifetime, so the specs that assume the PRISTINE state are pinned to run
+ * FIRST via project `dependencies` (Playwright always finishes a dependency project before starting the one that depends on it, and stops that chain
+ * on its first failure — this is not parallelism, it is an explicit order):
+ *   - `roundtrip.spec.ts` needs the internal collection "Fé de Origem" to start disabled (it proves the section-adder does not offer it yet) AND
+ *     needs to be the sandbox's very first publish, since it asserts "release 1" by name — so it goes first, before anything else publishes.
+ *   - `scopes.spec.ts` needs Norte AND Centro-Oeste to have no home yet ("Esta região ainda não tem home"); `hero.spec.ts` and `structured.spec.ts`
+ *     create one for both regions, and there is no "delete this region's home outright" action, only recall (back to preview) — so scopes runs right
+ *     after roundtrip (its own file comment already said as much: "Runs AFTER roundtrip.spec.ts, which counts sandbox releases from 1."), before
+ *     hero or structured ever touch Norte or Centro-Oeste. `hotpages.spec.ts` enables that same "Fé de Origem" collection (idempotently, so it works
+ *     whether or not roundtrip ran first) and can run anywhere after roundtrip.
+ * `hotpages.spec.ts` and the production-mode suite (`tests/e2e-prod`) additionally treat "already enabled" as fine on their own (see the idempotent
+ * enable step in both), so this order is a documented convenience, not the only thing standing between the suite and a false failure.
+ * `docs/admin/cms-hotpages-personalizacao-final-gate.md` §C has the failures this replaced and the reproduction command for the old, unordered run.
  */
 const port = 3320;
 const sandbox = process.env.CMS_TEST_SANDBOX ?? mkdtempSync(path.join(tmpdir(), "cms-e2e-"));
 process.env.CMS_TEST_SANDBOX = sandbox;
+
+const ORDER = ["roundtrip.spec.ts", "scopes.spec.ts", "hero.spec.ts", "hotpages.spec.ts", "navbar.spec.ts", "structured.spec.ts"] as const;
 
 export default defineConfig({
   testDir: "tests/e2e-admin",
@@ -34,4 +49,9 @@ export default defineConfig({
       NEXT_DIST_DIR_HINT: "cms-e2e", // documentation only
     },
   },
+  projects: ORDER.map((file, i) => ({
+    name: file,
+    testMatch: file,
+    ...(i > 0 ? { dependencies: [ORDER[i - 1]] } : {}),
+  })),
 });

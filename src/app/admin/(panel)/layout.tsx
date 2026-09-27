@@ -18,6 +18,8 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const scope = await currentScope(actor);
   const editable = editableScopes(actor);
   const published = await platform().files.read();
+  // Requests still waiting for someone, in the regions this person may act on. A missing table (migration not applied yet) must never break the panel.
+  const openRequests = await platform().requests.countOpen(editable).catch(() => 0);
   const launchedIn = (r: string) => r === "sul" || (published?.docs[r as "norte"]?.launched ?? seedForEnv().docs[r as "norte"]?.launched) === true;
   return (
     <div className="lg:grid lg:grid-cols-[15rem_1fr]" style={regionThemeStyle(scope)}>
@@ -26,7 +28,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <span className="block text-[1.6rem] font-extrabold uppercase leading-none tracking-wide [font-family:var(--font-display-stack)]">Use Origens</span>
           <span className="mt-1 block text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/70">{prod ? "Painel" : "Painel · local"}</span>
         </Link>
-        <SidebarNav owner={prod && actor.role === "owner"} storeHref={launchedIn(scope) ? (prod ? `${siteUrl().replace(/\/$/, "")}/${scope}` : `/${scope}`) : null} storeLabel={prod ? "Abrir a loja ↗" : "Abrir a loja local ↗"} />
+        <SidebarNav pendingRequests={openRequests} owner={prod && actor.role === "owner"} storeHref={launchedIn(scope) ? (prod ? `${siteUrl().replace(/\/$/, "")}/${scope}` : `/${scope}`) : null} storeLabel={prod ? "Abrir a loja ↗" : "Abrir a loja local ↗"} />
         <div className="mt-auto hidden text-[0.75rem] leading-snug text-white/70 lg:block">
           {prod ? (
             <>

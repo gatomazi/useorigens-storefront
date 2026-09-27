@@ -5,10 +5,11 @@
  *   - a scope whose document is unusable      ⇒ that scope falls back to the seed's document;
  *   - an invalid OPTIONAL section             ⇒ that section is dropped, with a diagnostic;
  *   - an image the media table does not know  ⇒ the image is dropped (the section keeps its fill), with a diagnostic;
+ *   - an invalid page or customizer model ⇒ only that page / model is dropped (a card that pointed at a dropped model is removed too);
  *   - an invalid hero or footer               ⇒ the whole scope falls back to the seed (the home cannot exist without them).
  * Pure: no I/O, so it is unit-tested with hand-made objects.
  */
-import { parseMediaInfo, SCOPES, validateScopeDoc, validateSection, type MediaAssetInfo, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
+import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
 export type SanitizeResult = { bundle: PublishedBundle | null; diagnostics: string[] };
 
@@ -26,6 +27,58 @@ function sanitizeMedia(raw: unknown, diagnostics: string[]): Record<string, Medi
     else diagnostics.push(`media "${id}" is invalid and was ignored`);
   }
   return out;
+}
+
+/** A first-card whose model is gone (dropped as invalid, or never published) is removed; the carousel simply renders its products. */
+function withoutOrphanCards(sections: Section[], customizers: Customizer[] | undefined, scope: Scope, diagnostics: string[]): Section[] {
+  const known = new Set((customizers ?? []).map((m) => m.id));
+  return sections.map((s) => {
+    if (!s.customizerCard || known.has(s.customizerCard.customizerId)) return s;
+    diagnostics.push(`${scope}: "${s.id}" first card refers to a model that is not published and was dropped`);
+    const rest = { ...s };
+    delete rest.customizerCard;
+    return rest;
+  });
+}
+
+function sanitizePagesAndModels(scope: Scope, raw: Record<string, unknown>, media: Record<string, MediaAssetInfo>, diagnostics: string[]): { pages?: Page[]; customizers?: Customizer[] } {
+  const known = (ref: { assetId: string } | undefined) => !ref || ref.assetId in media;
+  let pages: Page[] | undefined;
+  if (Array.isArray(raw.pages)) {
+    pages = [];
+    const slugs = new Set<string>();
+    const ids = new Set<string>();
+    for (const [i, candidate] of raw.pages.entries()) {
+      const r = validatePage(candidate, scope, `${scope}.pages[${i}]`);
+      if (!r.ok) { diagnostics.push(`${scope}: page #${i + 1} dropped (${r.errors[0]})`); continue; }
+      const key = `${r.value.kind}/${r.value.slug}`;
+      if (slugs.has(key) || ids.has(r.value.id)) { diagnostics.push(`${scope}: page "${key}" dropped (duplicate slug or id)`); continue; }
+      const missing = r.value.sections.some((s) => !known(s.appearance.image?.mobile) || !known(s.appearance.image?.desktop));
+      if (missing) diagnostics.push(`${scope}: page "${key}" has images missing from the media table (they render without them)`);
+      slugs.add(key);
+      ids.add(r.value.id);
+      pages.push(r.value);
+    }
+  }
+  let customizers: Customizer[] | undefined;
+  if (Array.isArray(raw.customizers)) {
+    customizers = [];
+    const slugs = new Set<string>();
+    const ids = new Set<string>();
+    for (const [i, candidate] of raw.customizers.entries()) {
+      const r = validateCustomizer(candidate, scope, `${scope}.customizers[${i}]`);
+      if (!r.ok) { diagnostics.push(`${scope}: model #${i + 1} dropped (${r.errors[0]})`); continue; }
+      if (slugs.has(r.value.slug) || ids.has(r.value.id)) { diagnostics.push(`${scope}: model "${r.value.slug}" dropped (duplicate slug or id)`); continue; }
+      if (r.value.pageMockup && !known(r.value.pageMockup)) {
+        diagnostics.push(`${scope}: model "${r.value.slug}" dropped (mockup is not in the media table)`);
+        continue;
+      }
+      slugs.add(r.value.slug);
+      ids.add(r.value.id);
+      customizers.push(r.value);
+    }
+  }
+  return { pages, customizers };
 }
 
 function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Record<string, MediaAssetInfo>, diagnostics: string[]): ScopeDoc {
@@ -86,7 +139,11 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
       return fallback;
     }
   }
-  const candidate = { ...raw, home: sections ? { sections } : undefined } as unknown as ScopeDoc;
+  const { pages, customizers } = sanitizePagesAndModels(scope, raw, media, diagnostics);
+  if (sections) sections = withoutOrphanCards(sections, customizers, scope, diagnostics);
+  const candidate = { ...raw, home: sections ? { sections } : undefined, pages, customizers } as unknown as ScopeDoc;
+  if (!pages) delete (candidate as { pages?: unknown }).pages;
+  if (!customizers) delete (candidate as { customizers?: unknown }).customizers;
   if (candidate.collections !== undefined && !validateScopeDoc({ ...candidate, home: undefined, collections: candidate.collections }).ok) {
     // A malformed enablement list must not take the home down: without it, sections on internal collections are simply not rendered.
     diagnostics.push(`${scope}: collections list is invalid and was ignored`);

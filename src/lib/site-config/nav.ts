@@ -6,9 +6,11 @@
  *   a region whose home has no "Fala daqui" no longer gets a dead link to it.
  * - No document (config-driven home off) = the original hard-coded home: the historical three, as always.
  */
+import { livePage } from "./pages";
 import type { ScopeDoc, Section } from "./schema";
 
-export type HeaderLink = { label: string; anchor: string };
+/** `href` is set when the link leads to a PAGE instead of a section of the home. */
+export type HeaderLink = { label: string; anchor: string; href?: (region: string) => string };
 
 const HISTORICAL: readonly HeaderLink[] = [
   { label: "Estilos", anchor: "estilos" },
@@ -31,7 +33,15 @@ export function headerLinks(doc: ScopeDoc | undefined): HeaderLink[] {
   if (!doc) return [...HISTORICAL];
   const sections = (doc.home?.sections ?? []).filter(shown);
   const configured = sections.filter((s) => s.nav);
-  if (configured.length > 0) return configured.map((s) => ({ label: s.nav!.label, anchor: s.anchor }));
+  if (configured.length > 0) {
+    return configured.flatMap((s): HeaderLink[] => {
+      const dest = s.nav!.dest;
+      if (dest?.kind !== "page") return [{ label: s.nav!.label, anchor: s.anchor }];
+      // A link to a page appears only while that page is live (published and not archived): never a dead link.
+      const page = livePage(doc, dest.pageKind, dest.slug);
+      return page ? [{ label: s.nav!.label, anchor: s.anchor, href: (region) => `/${region}/${dest.pageKind === "hotpage" ? "h" : "colecoes"}/${page.slug}` }] : [];
+    });
+  }
   return HISTORICAL.filter((h) => sections.some((s) => s.anchor === h.anchor));
 }
 

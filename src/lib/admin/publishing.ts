@@ -4,10 +4,11 @@ import path from "node:path";
 import { bundleChecksum } from "../site-config/checksum";
 import { publish, reconcile, type FileState, type PublishOutcome, type PublishPorts, type ReleaseRecord } from "../site-config/publish-flow";
 import { resolveTracking, type TrackingOrigin } from "../site-config/resolve";
-import { validateBundle, type MediaAssetInfo, type PublishedBundle, type Scope, type ScopeDoc } from "../site-config/schema";
+import { mediaRefsOfDoc, validateBundle, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "../site-config/schema";
+import { pageAsHomeDoc } from "../site-config/pages";
 import { buildSeedBundle } from "../site-config/seed";
 import { readJson, withLock, writeJsonAtomic } from "./local-store";
-import { collectionProblems, readabilityProblems } from "./validate-draft";
+import { collectionProblems, customizerProblems, readabilityProblems } from "./validate-draft";
 import type { BeginRequest, PublishedFileStore, ReleaseStore, ReleaseView } from "./store/ports";
 
 /**
@@ -26,13 +27,58 @@ export const seedForEnv = (): PublishedBundle => buildSeedBundle(envTracking());
  * The bundle for the draft: what is live now (or the seed) for every scope except the edited one, plus the media the draft references.
  * Other scopes are carried over from the live head, never regenerated, so editing Sul cannot alter another region's published state.
  */
-export async function composeBundle(deps: Pick<PublishDeps, "releases" | "media">, doc: ScopeDoc, releaseId: string): Promise<PublishedBundle> {
+/**
+ * What a publish publishes. Pages and personalization models live in the region's document but are published on their own:
+ *   region     the home, tracking, launch flag and collection settings; pages and models stay exactly as they are PUBLISHED now;
+ *   page       ONE page (and the collection settings its sections need); the home, the other pages and the models stay as published;
+ *   customizer ONE model; everything else stays as published.
+ */
+export type PublishTarget = { kind: "region" } | { kind: "page"; id: string } | { kind: "customizer"; id: string };
+export const REGION_TARGET: PublishTarget = { kind: "region" };
+
+const without = <T extends object, K extends string>(o: T, ...keys: K[]): Omit<T, K> => {
+  const copy = { ...o } as Record<string, unknown>;
+  for (const k of keys) delete copy[k];
+  return copy as Omit<T, K>;
+};
+const upsert = <T extends { id: string }>(list: T[] | undefined, item: T): T[] => {
+  const rest = list ?? [];
+  return rest.some((x) => x.id === item.id) ? rest.map((x) => (x.id === item.id ? item : x)) : [...rest, item];
+};
+
+/** The region document a publish of `target` produces: the PUBLISHED document with only the target's part replaced by the draft's. Pure. */
+export function composeDoc(published: ScopeDoc, draft: ScopeDoc, target: PublishTarget): ScopeDoc {
+  if (target.kind === "region") {
+    const rest = without(draft, "pages", "customizers");
+    return { ...rest, ...(published.pages ? { pages: published.pages } : {}), ...(published.customizers ? { customizers: published.customizers } : {}) };
+  }
+  const withCollections = (doc: ScopeDoc): ScopeDoc => (draft.collections ? { ...doc, collections: draft.collections } : doc);
+  if (target.kind === "page") {
+    const page = draft.pages?.find((p) => p.id === target.id);
+    if (!page) throw new Error("a página não existe no rascunho");
+    const live = published.pages?.find((p) => p.id === target.id);
+    const next: Page = { ...page, version: (live?.version ?? 0) + 1 };
+    return withCollections({ ...published, pages: upsert(published.pages, next) });
+  }
+  const model = draft.customizers?.find((m) => m.id === target.id);
+  if (!model) throw new Error("o modelo não existe no rascunho");
+  const live = published.customizers?.find((m) => m.id === target.id);
+  const next: Customizer = { ...model, version: (live?.version ?? 0) + 1 };
+  return withCollections({ ...published, customizers: upsert(published.customizers, next) });
+}
+
+/**
+ * The bundle for the draft: what is live now (or the seed) for every scope except the edited one, plus the media the draft references.
+ * Other scopes are carried over from the live head, never regenerated, so editing Sul cannot alter another region's published state.
+ */
+export async function composeBundle(deps: Pick<PublishDeps, "releases" | "media">, doc: ScopeDoc, releaseId: string, target: PublishTarget = REGION_TARGET): Promise<PublishedBundle> {
   const seed = seedForEnv();
   const head = await deps.releases.head();
   const base = head?.bundle ?? seed;
-  const ids = new Set<string>();
-  for (const s of doc.home?.sections ?? []) for (const ref of [s.appearance.image?.mobile, s.appearance.image?.desktop, ...Object.values(s.stateCovers ?? {})]) if (ref) ids.add(ref.assetId);
-  return { schemaVersion: 1, releaseId, docs: { ...base.docs, [doc.scope]: doc }, media: { ...seed.media, ...base.media, ...(await deps.media(ids)) } };
+  const published = (base.docs[doc.scope] ?? seed.docs[doc.scope]) as ScopeDoc;
+  const out = composeDoc(published, doc, target);
+  const ids = new Set(mediaRefsOfDoc(out).map((r) => r.assetId));
+  return { schemaVersion: 1, releaseId, docs: { ...base.docs, [doc.scope]: out }, media: { ...seed.media, ...base.media, ...(await deps.media(ids)) } };
 }
 
 const TOOL_LABEL = { meta: "Meta Pixel", ga4: "GA4" } as const;
@@ -67,21 +113,70 @@ export function trackingChanges(before: PublishedBundle | null, after: Published
   });
 }
 
-/** Publish pre-flight: strict bundle validation, every INK collection section still resolves, readable text. (Tracking is confirmed separately.) */
-export async function preflight(deps: Pick<PublishDeps, "releases" | "media">, doc: ScopeDoc): Promise<string[]> {
-  const bundle = await composeBundle(deps, doc, "preflight");
+/** Links and cards of these sections must point at things that are LIVE in the composed document (never at a draft, an archived page or a missing model). */
+export function linkProblems(composed: ScopeDoc, sections: Section[]): string[] {
+  const out: string[] = [];
+  for (const s of sections) {
+    if (!s.active) continue;
+    const name = `"${s.title ?? s.id}"`;
+    for (const dest of [s.cta?.dest, s.nav?.dest]) {
+      if (dest?.kind !== "page") continue;
+      const page = composed.pages?.find((p) => p.kind === dest.pageKind && p.slug === dest.slug);
+      if (!page) out.push(`${name}: o botão leva à página "${dest.slug}", que não existe ou ainda não foi publicada. Publique a página antes.`);
+      else if (page.archived) out.push(`${name}: o botão leva à página "${dest.slug}", que está arquivada.`);
+    }
+    if (s.customizerCard) {
+      const model = composed.customizers?.find((m) => m.id === s.customizerCard!.customizerId);
+      if (!model) out.push(`${name}: o modelo de personalização do primeiro card ainda não foi publicado. Publique o modelo antes.`);
+      else if (!model.active) out.push(`${name}: o modelo "${model.name}" do primeiro card está desativado.`);
+      else if (!model.pageMockup) out.push(`${name}: o modelo "${model.name}" não tem a imagem (mockup) da página.`);
+    }
+  }
+  return out;
+}
+
+/** Publish pre-flight: strict bundle validation, every INK collection section still resolves, readable text, live links. (Tracking is confirmed separately.) */
+export async function preflight(deps: Pick<PublishDeps, "releases" | "media">, doc: ScopeDoc, target: PublishTarget = REGION_TARGET): Promise<string[]> {
+  let bundle: PublishedBundle;
+  try {
+    bundle = await composeBundle(deps, doc, "preflight", target);
+  } catch (error) {
+    return [error instanceof Error ? error.message : "não foi possível montar a publicação"];
+  }
   const strict = validateBundle(bundle);
-  return [...(strict.ok ? [] : strict.errors), ...collectionProblems(doc), ...readabilityProblems(doc)];
+  const composed = bundle.docs[doc.scope];
+  const problems = strict.ok ? [] : strict.errors;
+  if (target.kind === "region") return [...problems, ...collectionProblems(doc), ...readabilityProblems(doc), ...linkProblems(composed, doc.home?.sections ?? [])];
+  if (target.kind === "page") {
+    const page = composed.pages!.find((p) => p.id === target.id)!;
+    const asHome = pageAsHomeDoc(composed, page);
+    return [...problems, ...collectionProblems(asHome), ...readabilityProblems(asHome), ...linkProblems(composed, page.sections)];
+  }
+  const model = composed.customizers!.find((m) => m.id === target.id)!;
+  return [...problems, ...customizerProblems(composed, model)];
 }
 
 /** The tracking lines this draft would change, versus what is live now (or nothing published yet). */
-export async function pendingTrackingChanges(deps: Pick<PublishDeps, "releases" | "media">, doc: ScopeDoc): Promise<string[]> {
+export async function pendingTrackingChanges(deps: Pick<PublishDeps, "releases" | "media">, doc: ScopeDoc, target: PublishTarget = REGION_TARGET): Promise<string[]> {
   const head = await deps.releases.head();
-  return trackingChanges(head?.bundle ?? null, await composeBundle(deps, doc, "preflight"));
+  return trackingChanges(head?.bundle ?? null, await composeBundle(deps, doc, "preflight", target));
+}
+
+/** The history marker of a page / model publish (`page:hotpage/dia-dos-pais`, `customizer:pai-paranaense`): what lets the screens list "the versions of THIS page". */
+export function targetMarker(doc: ScopeDoc, target: PublishTarget): string[] {
+  if (target.kind === "page") {
+    const p = doc.pages?.find((x) => x.id === target.id);
+    return p ? [`page:${p.kind}/${p.slug}`] : [];
+  }
+  if (target.kind === "customizer") {
+    const m = doc.customizers?.find((x) => x.id === target.id);
+    return m ? [`customizer:${m.slug}`] : [];
+  }
+  return [];
 }
 
 /** `confirmTracking`: the person confirmed the effective tracking IDs listed by `pendingTrackingChanges` (required only when there are changes). */
-export type PublishRequest = { kind: "publish"; doc: ScopeDoc; note?: string; confirmTracking?: boolean } | { kind: "rollback"; toReleaseId: string; scope?: Scope; note?: string; confirmTracking?: boolean };
+export type PublishRequest = { kind: "publish"; doc: ScopeDoc; note?: string; confirmTracking?: boolean; target?: PublishTarget } | { kind: "rollback"; toReleaseId: string; scope?: Scope; note?: string; confirmTracking?: boolean; target?: PublishTarget };
 export type PublishResult = { ok: true; outcome: PublishOutcome } | { ok: false; errors: string[] };
 
 export async function publishRelease(deps: PublishDeps, request: PublishRequest, revalidate: () => Promise<void>): Promise<PublishResult> {
@@ -89,24 +184,38 @@ export async function publishRelease(deps: PublishDeps, request: PublishRequest,
   let sections = 0;
   let scopesChanged: string[];
   if (request.kind === "publish") {
-    const errors = await preflight(deps, request.doc);
+    const target = request.target ?? REGION_TARGET;
+    const errors = await preflight(deps, request.doc, target);
     if (errors.length > 0) return { ok: false, errors };
-    const changes = await pendingTrackingChanges(deps, request.doc);
+    const changes = await pendingTrackingChanges(deps, request.doc, target);
     if (changes.length > 0 && !request.confirmTracking) return { ok: false, errors: ["Esta publicação muda o rastreamento efetivo. Confirme os IDs listados na tela Publicar antes de publicar.", ...changes] };
-    compose = (id) => composeBundle(deps, request.doc, id);
-    sections = request.doc.home?.sections.filter((s) => s.active).length ?? 0;
-    scopesChanged = [request.doc.scope];
+    compose = (id) => composeBundle(deps, request.doc, id, target);
+    sections = target.kind === "page" ? (request.doc.pages?.find((p) => p.id === target.id)?.sections.filter((s) => s.active).length ?? 0) : request.doc.home?.sections.filter((s) => s.active).length ?? 0;
+    scopesChanged = [request.doc.scope, ...targetMarker(request.doc, target)];
   } else {
     const old = await deps.releases.restorable(request.toReleaseId);
     if (!old) return { ok: false, errors: [`a versão ${request.toReleaseId} não existe ou nunca esteve no ar`] };
     const head = await deps.releases.head();
     const scope = request.scope;
+    const target = request.target ?? REGION_TARGET;
+    if (scope && target.kind !== "region") {
+      const oldDoc = old.docs[scope];
+      if (target.kind === "page" && !oldDoc?.pages?.some((p) => p.id === target.id)) return { ok: false, errors: ["essa versão não continha esta página"] };
+      if (target.kind === "customizer" && !oldDoc?.customizers?.some((m) => m.id === target.id)) return { ok: false, errors: ["essa versão não continha este modelo"] };
+    }
     // Per region: only that region's document (and the media it needs) comes back from the old release; every other region keeps the
-    // state it has NOW. Without a scope the whole old bundle is restored (kept for old callers).
+    // state it has NOW. Without a scope the whole old bundle is restored (kept for old callers). Within a region the home, each page and each
+    // model are restored separately: restoring the home never touches the pages or the models, and restoring a page never touches the home.
     const restored = (id: string): PublishedBundle => {
       if (!scope) return { ...old, releaseId: id };
       const base = head?.bundle ?? seedForEnv();
-      return { ...base, releaseId: id, docs: { ...base.docs, [scope]: old.docs[scope] }, media: { ...base.media, ...old.media } };
+      const current = base.docs[scope];
+      const oldDoc = old.docs[scope];
+      let doc: ScopeDoc;
+      if (target.kind === "region") doc = composeDoc(current, { ...oldDoc, pages: undefined, customizers: undefined } as ScopeDoc, REGION_TARGET);
+      else if (target.kind === "page") doc = { ...current, pages: upsert(current.pages, { ...oldDoc.pages!.find((p) => p.id === target.id)!, version: (current.pages?.find((p) => p.id === target.id)?.version ?? 0) + 1 }) };
+      else doc = { ...current, customizers: upsert(current.customizers, { ...oldDoc.customizers!.find((m) => m.id === target.id)!, version: (current.customizers?.find((m) => m.id === target.id)?.version ?? 0) + 1 }) };
+      return { ...base, releaseId: id, docs: { ...base.docs, [scope]: doc }, media: { ...base.media, ...old.media } };
     };
     const composed = restored(request.toReleaseId);
     const strict = validateBundle(composed);
@@ -115,7 +224,7 @@ export async function publishRelease(deps: PublishDeps, request: PublishRequest,
     if (changes.length > 0 && !request.confirmTracking) return { ok: false, errors: ["Restaurar esta versão muda o rastreamento efetivo. Confirme os IDs listados antes de restaurar.", ...changes] };
     compose = async (id) => restored(id);
     sections = (scope ? old.docs[scope] : old.docs.sul)?.home?.sections.filter((s) => s.active).length ?? 0;
-    scopesChanged = [scope ?? "sul"];
+    scopesChanged = [scope ?? "sul", ...(scope ? targetMarker(old.docs[scope], target) : [])];
   }
   const begin: BeginRequest = { kind: request.kind, note: request.note ?? null, scopesChanged, sections, actorId: deps.actorId };
 

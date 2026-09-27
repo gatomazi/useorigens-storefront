@@ -5,7 +5,7 @@ import { getCatalog } from "../catalog/repository";
 import { getRegionHome } from "../home";
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import { enabledInternalIds } from "../site-config/collections-enabled";
-import type { ScopeDoc, Section, Source } from "../site-config/schema";
+import type { Customizer, ScopeDoc, Section, Source } from "../site-config/schema";
 import { readability, type ReadabilityIssue } from "./contrast";
 
 /**
@@ -106,4 +106,27 @@ export function sectionReadability(section: Section): ReadabilityIssue[] {
 /** Blocking readability problems of the ACTIVE sections (warnings are shown in the editor but never stop a publish). */
 export function readabilityProblems(doc: ScopeDoc): string[] {
   return (doc.home?.sections ?? []).filter((s) => s.active).flatMap((s) => sectionReadability(s).filter((i) => i.level === "blocking").map((i) => `"${s.title ?? s.id}": ${i.message}`));
+}
+
+/** Why a personalization model cannot be published (empty = it can): its collection must be real, in the region's own store and, when internal, enabled. */
+export function customizerProblems(doc: ScopeDoc, model: Customizer): string[] {
+  const out: string[] = [];
+  const name = `"${model.name}"`;
+  if (doc.scope === "global") return [`${name}: modelos pertencem a uma região`];
+  const store = REGIONS[doc.scope as RegionSlug].storeKey;
+  if (model.source.store !== store) out.push(`${name}: a coleção pertence a outra loja da INK`);
+  else {
+    const entry = libraryEntries(model.source.store, enabledInternalIds(doc, model.source.store)).find((e) => e.id === model.source.collectionId);
+    const record = findCollection(model.source.store, model.source.collectionId);
+    if (!entry || !record) out.push(`${name}: a coleção ${model.source.collectionId} não existe no snapshot sincronizado`);
+    else if (!entry.selectable && entry.visibility === "internal" && !entry.enabled) out.push(`${name}: a coleção é interna; habilite-a na Biblioteca antes de publicar o modelo`);
+    if (model.inkProductId) {
+      const products = getCatalog().productsOfStore(model.source.store);
+      if (!products.merch.has(model.inkProductId) && !products.cityDesigns.has(model.inkProductId)) out.push(`${name}: o produto de destino ${model.inkProductId} não está no catálogo desta loja`);
+      else if (record && !record.memberIds.includes(model.inkProductId)) out.push(`${name}: o produto de destino não pertence à coleção escolhida`);
+    }
+  }
+  if (model.active && !model.pageMockup) out.push(`${name}: falta a imagem (mockup) da página de personalização`);
+  if (model.fields.length === 0 && !model.lineGroup) out.push(`${name}: cadastre ao menos um campo ou um grupo de linhas`);
+  return out;
 }
