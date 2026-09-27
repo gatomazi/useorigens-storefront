@@ -37,6 +37,7 @@ function sibling(overrides: Partial<GarmentSourceProduct> = {}): GarmentSourcePr
     price: 139.9,
     clusterId: "441506",
     garmentTypeId: 72,
+    createdAt: NOW,
     ...overrides,
   };
 }

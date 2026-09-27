@@ -66,6 +66,8 @@ export type GarmentSourceProduct = {
   price: number | null;
   clusterId: string | null;
   garmentTypeId: number | null;
+  /** ISO 8601, when INK provided one. Drives the incremental sync's `begin_date` watermark (garment-client.ts). */
+  createdAt: string | null;
 };
 
 /**
@@ -100,5 +102,6 @@ export function normalizeGarmentSourceProduct(raw: unknown, storeKey: CommerceSt
     price: asPrice(p.price),
     clusterId: typeof p.product_cluster_id === "number" ? String(p.product_cluster_id) : null,
     garmentTypeId: productType && typeof productType.id === "number" ? productType.id : null,
+    createdAt: asString(p.created_at),
   };
 }
