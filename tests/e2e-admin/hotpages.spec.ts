@@ -147,10 +147,17 @@ test("A · hotpage: create, compose, style, reorder, preview, publish, restore �
 const landing: { id: string } = { id: "" };
 
 test("B · category landing: three subthemes from real collections, an internal one without a false 'Ver todos', the wrong region refused, drafts 404, and a showcase link that goes to it", async ({ page }) => {
-  // The internal collection must be enabled in the Library first (this does not touch INK).
+  // The internal collection must be enabled in the Library first (this does not touch INK). Idempotent: another spec sharing this sandbox
+  // (playwright.admin.config.ts pins roundtrip.spec.ts before this file for exactly this reason) may already have enabled it.
   await open(page, "/admin/colecoes?q=fe+de+origem");
-  await page.locator("table.a-table tbody tr", { hasText: "Fé de Origem" }).getByRole("button", { name: "Habilitar" }).click();
-  await expect(flash(page, /habilitada para uso no CMS/)).toBeVisible();
+  const feRow = page.locator("table.a-table tbody tr", { hasText: "Fé de Origem" });
+  const enableFe = feRow.getByRole("button", { name: "Habilitar" });
+  if (await enableFe.count() > 0) {
+    await enableFe.click();
+    await expect(flash(page, /habilitada para uso no CMS/)).toBeVisible();
+  } else {
+    await expect(feRow).toContainText("Habilitada no CMS");
+  }
 
   await open(page, "/admin/paginas");
   await page.getByLabel("Tipo", { exact: true }).first().selectOption("categoryLanding");
