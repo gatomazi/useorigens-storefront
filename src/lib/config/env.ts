@@ -131,6 +131,18 @@ export function allowFixtureSync(): boolean {
 }
 
 /**
+ * Signing key for the "buy session" identifier (`/meus-lugares` → "Comprar minha lista" → INK, see
+ * docs/buy-session-consumer.md; authoritative contract in use-origens-workers' docs/buy-session-contract.md).
+ * Server-only, never shared with the `use-origens-workers` repo:
+ * that Worker only relays the opaque id to `GET /api/buy-session/<id>`, which is the sole verifier. Unset means
+ * the feature stays disabled (the routes answer `not_configured`) rather than minting an unsigned session.
+ */
+export function listSessionSecret(): string | null {
+  const value = process.env.LIST_SESSION_SECRET;
+  return value && value.length >= 32 ? value : null;
+}
+
+/**
  * Directory holding the catalog snapshot — where a Railway Volume must be mounted. Defaults to
  * `data/generated` under `process.cwd()`, which is what `docs/deploy/railway.md` tells an operator to mount
  * on. Overridable via `CATALOG_SNAPSHOT_DIR` for two real reasons: (1) `process.cwd()` at runtime is an

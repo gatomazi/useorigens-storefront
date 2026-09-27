@@ -1,3 +1,4 @@
+import type { CommerceStoreKey } from "../geo/regions";
 import { normalizeText } from "../geo/text";
 
 /**
@@ -17,6 +18,8 @@ export type SearchDoc = {
   /** INK product id (unique per product). */
   id: string;
   kind: "city-design" | "merch";
+  /** The store the product is actually sold by — needed to save it as a favorite (identity is id + store, never id alone). */
+  commerceStoreKey: CommerceStoreKey;
   /** Card title. */
   title: string;
   /** Second line ("Curitiba · PR"), when the product is tied to a place. */

@@ -42,6 +42,7 @@ function cityDoc(binding: CityDesignBinding, tier: number, collections: Map<stri
   return {
     id: binding.inkProductId,
     kind: "city-design",
+    commerceStoreKey: binding.commerceStoreKey,
     title: label ? `${family.name} · ${label}` : family.name,
     context: `${binding.localityLabel ?? city.name} · ${city.uf}`,
     imageUrl: binding.imageUrl,
@@ -86,6 +87,7 @@ export function buildSearchDocs(catalog: Catalog, region: RegionSlug, collection
     push({
       id: product.inkProductId,
       kind: "merch",
+      commerceStoreKey: product.commerceStoreKey,
       title,
       context: null,
       imageUrl: product.imageUrl,

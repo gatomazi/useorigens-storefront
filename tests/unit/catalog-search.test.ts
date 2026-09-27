@@ -4,7 +4,7 @@ import { cleanQuery, parsePage, prepareDocs, queryTerms, searchDocs, type Search
 let seq = 1;
 function doc(overrides: Partial<SearchDoc> & Pick<SearchDoc, "title" | "strong">): SearchDoc {
   const id = String(seq++);
-  return { id, kind: "merch", context: null, imageUrl: `https://img/${id}.jpg`, price: 109.9, href: `https://www.usesul.com.br/usesul/product/${id}`, uf: null, sales: 0, order: 0, weak: [], ...overrides };
+  return { id, kind: "merch", commerceStoreKey: "use-sul", context: null, imageUrl: `https://img/${id}.jpg`, price: 109.9, href: `https://www.usesul.com.br/usesul/product/${id}`, uf: null, sales: 0, order: 0, weak: [], ...overrides };
 }
 const city = (name: string, uf: string, stateName: string, extra: Partial<SearchDoc> = {}) =>
   doc({ kind: "city-design", title: "Ponto de Origem", context: `${name} · ${uf}`, uf, strong: ["Ponto de Origem", name], weak: [stateName, uf], ...extra });
