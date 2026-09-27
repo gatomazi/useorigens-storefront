@@ -33,10 +33,13 @@ export const PUBLIC_STATUS_LABEL: Record<RequestStatus, string> = {
 export const OPEN_STATUSES: readonly RequestStatus[] = ["received", "inCreation", "artReady"];
 
 /** Manual status changes an operator may make. `closed` and `cancelled` are administrative: neither says anything about a purchase. */
+// "closed" is reachable directly from any open state: the whole creation-and-contact process sometimes happens off-system (the operator makes
+// the art, talks to the customer, and only then opens the panel), so nothing forces a click through every intermediate step first. "closed" makes
+// no factual claim about having contacted anyone (unlike "customerContacted", which still needs its own confirmation to be reached at all).
 const NEXT: Record<RequestStatus, RequestStatus[]> = {
-  received: ["inCreation", "cancelled"],
-  inCreation: ["artReady", "received", "cancelled"],
-  artReady: ["customerContacted", "inCreation", "cancelled"],
+  received: ["inCreation", "closed", "cancelled"],
+  inCreation: ["artReady", "closed", "received", "cancelled"],
+  artReady: ["customerContacted", "closed", "inCreation", "cancelled"],
   customerContacted: ["closed", "artReady", "cancelled"],
   closed: ["inCreation"],
   cancelled: ["received"],
