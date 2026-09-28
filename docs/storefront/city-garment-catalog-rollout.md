@@ -1,8 +1,9 @@
 # Cobertura integral do índice de peças — relatório de cobertura e execução
 
-> **Estado final desta execução (2026-09-27/28):** coleta **completa em Norte e Centro-Oeste**; **Sul parcial**
-> (749 de 1.068 páginas, ~70%; o teto de 1.100 GETs foi consumido, ver §8). Recurso pronto para revisão, **não
-> publicado**. Faltam ~319 páginas do Sul e uma nova autorização (§11).
+> **Estado final (2026-09-28):** coleta **completa nas três lojas** (Sul 1.073/1.073 páginas, Norte 309/309,
+> Centro-Oeste 385/385). Revalidação de cache implementada e provada em modo produção. Recurso pronto para
+> revisão de release, **não publicado**: nenhum push, merge, PR, deploy ou ação no Railway foi feito, e nada foi
+> alterado na INK. Procedimento de publicação e rollback nas §11 e §12.
 
 Continuação de `feature/city-garment-tabs` (piloto aprovado, commits `8a1fead`, `3c8d376`, `9d01623`).
 Mesma worktree/branch (`.claude/worktrees/city-garment-tabs`), `origin/main` não avançou desde a rodada
@@ -125,184 +126,257 @@ podia chamar de completo um cluster parcial).
 `window.history.replaceState` em vez de `router.replace` (a troca de aba já era local e instantânea; a URL agora
 também, e o servidor deixa de receber uma requisição por clique de aba).
 
+**Revalidação de cache** — ver §10 (rota autenticada + passo final do CLI).
+
 **Comandos**
 - `npm run catalog:sync -- --cap use-sul=110 --cap use-norte=45 --cap use-centro=50`
 - `npm run garments:sync -- --plan` (zero requisições; estimativa, checkpoint, cobertura, pré-requisitos)
 - `npm run garments:sync -- [--store <loja>] --max-requests-per-store <N> [--force-full]`
 - `npm run garments:coverage` (leitura local, zero requisições; mesma resolução da página da cidade)
 - `npm run garments:migrate-index` (uma vez: move peças de um snapshot antigo para o índice, com backup)
+- `npm run garments:revalidate [-- --store <loja>]` (marca as cidades afetadas para revalidação no servidor em execução; zero requisições à INK)
+- `npm run verify:garment-revalidation` (prova em modo produção que o ISR pega o índice novo e que índice ausente/corrompido cai na grade clássica)
 
 ## 6. Execução autorizada — GETs efetivos por loja
 
-Autorização: `catalog:sync` até 110/45/50; `garments:sync` até 1.100/350/420 (Sul/Norte/Centro-Oeste), GET
-apenas, snapshots **locais** (nenhuma escrita no Volume de produção; `CATALOG_SNAPSHOT_DIR` não estava definido).
-Backup prévio dos snapshots e do checkpoint em `data/generated/backups/`.
+Duas autorizações, GET apenas, snapshots **locais** (`CATALOG_SNAPSHOT_DIR` não definido: o Volume de produção nunca
+foi tocado). Backups prévios em `data/generated/backups/` (antes de cada etapa).
 
 | Etapa | Sul | Norte | Centro-Oeste |
 |---|---:|---:|---:|
 | `catalog:sync` (teto 110/45/50) | 99 | 37 | 40 |
-| Cobertura de `productClusterId` nos canônicos (gate ≥50%) | **85,7%** (8.166/9.531) | **87,4%** (3.132/3.584) | **97,3%** (3.725/3.829) |
-| `garments:sync` (teto 1.100/350/420) | **≤ 1.090** (750 salvos + bloco perdido, ver abaixo) | **309** | **385** |
-| Retries por 429 observados | 1 (bloco 1) + desconhecido no bloco perdido | 0 | 0 |
-| Passada | **incompleta** (pág. 749 de 1.068) | **completa** (309/309) | **completa** (385/385) |
+| Gate de `productClusterId` nos canônicos (≥50%) | 85,7% (8.166/9.531) | 87,4% (3.132/3.584) | 97,3% (3.725/3.829) |
+| `garments:sync`, 1ª autorização (teto 1.100/350/420) | ≤ 1.090 (750 salvos + 1 bloco perdido) | 309 | 385 |
+| `garments:sync`, 2ª autorização (teto 340, só Sul) | **325** | — | — |
+| Passada final | **completa, 1.073/1.073** | completa, 309/309 | completa, 385/385 |
+| Retries observados (429/rede) | 1 (2ª autorização) | 0 | 0 |
 
-Blocos de 250 GETs (cada invocação grava snapshot/índice/checkpoint só ao final, então blocos menores limitam
-a perda numa interrupção): bloco 1 com `--force-full` (o checkpoint anterior tinha 4 páginas cujos irmãos foram
-descartados quando os canônicos ainda não tinham cluster); bloco 2 encerrou Norte (59) e Centro (135) sozinhos,
-sem tocar o teto; blocos 3 e 4 só do Sul.
+**1ª autorização (resumo):** blocos de 250 GETs; o 4º bloco do Sul caiu com `TypeError: terminated` e foi descartado
+(o cliente de então não repetia erro de rede nem gravava páginas parciais); o teto foi respeitado e parei o Sul.
+Depois disso o cliente passou a repetir erros de rede/5xx contando no teto e a salvar as páginas já lidas (§5).
 
-**Incidente — bloco 4 do Sul.** Com teto de 340 (folga calculada: 350), o processo terminou com
-`TypeError: terminated` (conexão derrubada) perto do fim das 319 páginas restantes. Como o cliente de então só
-repetia 429 e só gravava ao final, **todas as páginas do bloco foram descartadas**; snapshot e checkpoint
-anteriores ficaram íntegros (a proteção funcionou). Pela duração (15,5 min a ~2,8 s/GET medidos no bloco
-anterior) estimo ~330 GETs consumidos (limite rígido do teto: 340), então o Sul gastou **≤ 1.090 de 1.100** e a
-folga restante é ≤ 10 GETs — **parei o Sul aqui** e não elevei o teto. Erro meu de operação: filtrei as linhas de
-progresso na saída, então não tenho a contagem exata. Correções feitas depois (não reexecutei nada no Sul):
-retry de erro de rede/5xx contando no teto, salvamento das páginas lidas em falha persistente, contadores de
-exclusão e sobreposição de 1 dia no watermark (§5).
+**2ª autorização (esta execução):** `npm run garments:sync -- --store use-sul --max-requests-per-store 340`, retomando
+do checkpoint (página 749).
+- **Páginas lidas:** 750 → 1.073 = **324 páginas**; **325 GETs** (1 retry); teto de 340 **não** atingido, sem queda de
+  conexão; 15 min 49 s (09:38:25 → 09:54:14), ~2,9 s por GET com a máquina em load ~180–360.
+- `total_pages` do Sul subiu de 1.068 para 1.073 entre as duas execuções (catálogo cresceu); as ~5 páginas de
+  sobreposição foram absorvidas pelo upsert por `inkProductId`: 47.105 peças anteriores + 25.001 vinculadas −
+  71.674 no índice final = 432 duplicatas sobrescritas, não somadas.
+- **Contabilidade do checkpoint:** Sul `requestsUsedAllTime` = 1.079 (inclui 4 GETs de verificação da rodada
+  anterior), fora o bloco perdido (≤ 340). Norte 313 e Centro-Oeste 389 (mesmo critério; 309 e 385 nesta autorização).
+- **Fora da leitura:** produtos criados depois do início do crawl (watermark `2026-09-27T21:39:05-03:00`, ~5 páginas
+  no topo da listagem) não foram lidos. Eles só têm peça ligável depois de um novo `catalog:sync` (o canônico precisa
+  existir) e entram no próximo `garments:sync` incremental (§11, passo 7).
 
-## 7. Cobertura efetivamente alcançada (saída de `npm run garments:coverage`, sem requisições)
+## 7. Cobertura final (saída de `npm run garments:coverage`, sem requisições)
 
-**Por loja** (canônicas = camisetas principais indexadas; "completo" = 9 tipos de peça no cluster):
+**Camisetas principais (canônicas) por loja** — "completo" = as 9 peças no cluster:
 
-| Loja | Canônicas | Com cluster | Sem cluster | Completos | Parciais | Sem variantes | Peças indexadas |
+| Loja | Canônicas | Com cluster | Sem cluster | **9 peças** | **Parciais** | **Sem peças** | Peças indexadas |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| Sul (**parcial**, pág. 749/1.068) | 9.531 | 8.166 | 1.365 | 5.232 | 3 | 2.931 | 47.105 |
-| Norte (completa) | 3.584 | 3.132 | 452 | 2.993 | 19 | 120 | 27.006 |
-| Centro-Oeste (completa) | 3.829 | 3.725 | 104 | 3.672 | 42 | 11 | 33.327 |
+| Sul | 9.531 | 8.166 | 1.365 (14,3%) | **7.921 (97,0%)** | 78 (1,0%) | 167 (2,0%) | 71.674 |
+| Norte | 3.584 | 3.132 | 452 (12,6%) | 2.993 (95,6%) | 19 (0,6%) | 120 (3,8%) | 27.006 |
+| Centro-Oeste | 3.829 | 3.725 | 104 (2,7%) | 3.672 (98,6%) | 42 (1,1%) | 11 (0,3%) | 33.327 |
 
-Leitura honesta:
-- **Norte e Centro-Oeste** (passada completa): entre os canônicos com cluster, 95,6% (Norte) e 98,6% (Centro)
-  têm as 9 peças; 3,8% e 0,3% não têm nenhuma; 0,6% e 1,1% são parciais. Isto é medido, não estimado.
-- **Sem cluster** (Sul 14,3%, Norte 12,6%, Centro 2,7% dos canônicos): a INK não devolve cluster para esses
-  produtos (confirmado na amostra de 24 do §3: `product_clusters?product_id=` responde vazio). Pela regra
-  "associação só por `product_cluster_id`" eles ficam **só com a camiseta clássica** — lacuna real, que só a
-  INK (criando/agrupando clusters) fecha; nenhuma heurística foi usada para contorná-la.
-- **Sul**: os 2.931 "sem variantes" **não devem ser lidos como ausência de peças**. O crawl é do mais novo para
-  o mais antigo e parou na página 749 de 1.068; os ~32% mais antigos (desenhos antigos) ainda não foram lidos.
-  Com base em Norte/Centro (0,3–3,8% de vazios reais), quase todos os 2.931 são "ainda não coletados". Sul
-  precisa terminar antes de ser tratado como coberto.
-
-**Peças por tipo** (todas as 9 categorias estão presentes nas 3 lojas, em quantidades próximas — por
-exemplo Sul ~5,23 mil de cada; Norte ~3,0 mil; Centro ~3,7 mil): Algodão Peruano, Oversized, Regata, Cropped,
-Cropped Moletom, Moletom (capuz), Moletom (careca), Infantil e Body Infantil.
+(Percentuais de completo/parcial/sem peças sobre as canônicas **com cluster**.) Total: **132.007 peças** nas três
+lojas, distribuídas quase por igual entre os 9 tipos (Sul ~7,96 mil de cada; Norte ~3,0 mil; Centro ~3,7 mil).
 
 **Cidades — o que a página da cidade realmente mostra:**
 
-| Região | Cidades com catálogo | Com ≥1 aba de peça | Com peças em **todas** as famílias | Famílias com peças (média por cidade) |
+| Região | Cidades com catálogo | Com ≥1 aba de peça | Peças em **todas** as famílias | Famílias com peças (média por cidade) |
 |---|---:|---:|---:|---:|
-| Sul (parcial) | 1.191 | 1.191 (100%) | 0 | 55,0% |
+| Sul | 1.191 | 1.191 (100%) | 7 (0,6%) | **83,8%** (era 55,0% com a passada parcial) |
 | Norte | 450 | 450 (100%) | 4 (0,9%) | 84,1% |
 | Centro-Oeste | 468 | 468 (100%) | 437 (93,4%) | 98,7% |
 
-"Todas as famílias" é raro no Norte por causa dos 12,6% de canônicos sem cluster. Em uma cidade, uma família
-sem peça simplesmente não tem card naquela aba (nunca um card falso); a contagem da aba (`Oversized · N`) é
-sempre o número real de famílias com aquela peça.
+"Todas as famílias" é raro em Sul/Norte por causa dos canônicos **sem cluster** (Sul 14,3%, Norte 12,6%; no Sul quase
+sempre Traço e Tipografia): a INK não devolve cluster para eles e, pela regra "associação só por
+`product_cluster_id`", ficam só com a camiseta clássica. É a lacuna que só a INK fecha; nenhuma heurística foi usada.
+Cidade com uma família sem peça mostra essa família apenas na aba clássica, nunca um card falso nas outras.
 
-**Exclusões (links/imagens/preços inválidos):** **não foram medidas nesta passada** — a instrumentação foi
-adicionada depois (as passadas seguintes gravam `exclusions` no checkpoint). Evidência indireta: no Norte, 2.993
-clusters × 9 = 26.937 das 27.006 peças; ou seja, praticamente toda peça de um cluster completo foi vinculada, e
-qualquer descarte por imagem/preço/URL só pode estar nos 61 clusters parciais (19 Norte + 42 Centro) e nos 131
-vazios (120 + 11) — sem como separar "não existe" de "excluída". Na migração para o índice, 0 das 107.438 peças
-falharam na regra de forma de URL.
+**Exclusões — Sul, páginas 750–1.073 (passada que já registra as causas no checkpoint):**
 
-## 8. Testes
+| Causa | Produtos |
+|---|---:|
+| Candidatos lidos | 32.322 |
+| **Vinculados** | **25.001** |
+| Camiseta clássica (já é o canônico; descarte legítimo) | 3.140 |
+| Sem `product_cluster_id` | 2.661 |
+| Cluster sem canônico na loja Sul (rascunhos/desenhos que a loja não vende, produtos novos ainda sem `catalog:sync`) | 1.520 |
+| Tipo de peça desconhecido | 0 |
+| Sem preço | 0 |
+| URL fora do host permitido | 0 |
+| URL fora do formato `<base>/<slug>` | 0 |
+| Rejeitados na validação de campos (sem imagem/URL https) | 17 |
 
-- `tsc --noEmit`: limpo. `eslint .`: 0 erros (8 warnings pré-existentes em `db/validate-migrations.mjs`).
-- **Unitários: 881/881** (suíte completa). Novos nesta execução: teto e contagem de GETs do `catalog:sync`;
-  trava de pré-requisito; determinismo da escolha da peça; cobertura por cluster; retry de erro de rede,
-  salvamento parcial, teto contando retries; causas de exclusão do linker; watermark com sobreposição; índice
-  compacto (ida e volta, ausente, corrompido, `urlShape`, idempotência, loja que falha, poda) e migração.
-  Os testes que liam o snapshot real (dados que mudam a cada sync) viraram fixtures determinísticas.
-- **E2E do seletor — Sul (`tests/e2e/city-garment-tabs.spec.ts`, 12 passaram, 1 pulado)**: piloto (Tijucas/SC) e
-  uma cidade fora dele, esperados derivados de um oráculo independente que lê os arquivos de dados
-  (`tests/e2e/garment-oracle.ts`), não do resolvedor da app: aba clássica por padrão, aba Peruano com **href e
-  preço exatos por família** e nenhum card inventado, `?peca=` restaurável, mobile 375 sem overflow, teclado, e
-  **clique no card indo direto à URL exata da INK** (só a página da cidade antes, sem PDP nem modal). O 1
-  pulado é "cidade sem nenhuma peça": não existe uma nos dados atuais do Sul.
-- **E2E das 3 regiões (`playwright.regions.config.ts`, 9/9)**: Abatiá/PR (Sul), Abaetetuba/PA (Norte) e Abadia
-  de Goiás/GO (Centro-Oeste), todas **fora do piloto**; href/preço exatos, todo link da página na loja da
-  própria região (Norte nunca aponta para Sul), mobile sem overflow, clique direto na INK. Norte/Centro-Oeste
-  só existem publicamente com o CMS ligado; o servidor de teste os lança com um `published.json` local
-  (`tests/e2e-regions/fixtures/`), sem alterar a configuração padrão (que continua Sul-only).
-- **`GoToInk` com `garment_type`** (`tracking-and-nav.spec.ts`): exatamente um evento por clique real, com
-  `garment_type`, sem Purchase/AddToCart/ViewContent.
-- **Índice ausente** (`garment-index-missing.spec.ts`, opt-in): página da cidade renderiza a grade clássica, sem
-  abas e sem erro (comando no arquivo).
-- **Suíte E2E padrão completa (161 testes), duas execuções com a máquina em load ~300** (outras sessões usando a
-  CPU; o `uptime` do host chegou a 325):
-  - antes da correção do `replaceState`: 152 passaram, 7 falharam, 2 pulados;
-  - depois dela e com o código final: **155 passaram, 4 falharam, 2 pulados** (13,5 min).
-  As falhas foram todas `toHaveURL`/`toHaveText` estourando 5 s. Investigação, sem rótulo apressado de "flaky":
-  - **Meus testes de aba** (2 falhas na 1ª execução): causa real — `router.replace` só atualizava a URL depois de
-    uma ida ao servidor. Corrigido com `window.history.replaceState` (API nativa documentada em
-    `node_modules/next/dist/docs/01-app/02-guides/single-page-applications.md`, integrada a `useSearchParams`):
-    o spec do seletor passou **24/24** (12 testes × 2 repetições), regiões 9/9 e `GoToInk` 1/1, e não falhou mais
-    na suíte completa.
-  - `sul.spec.ts:17` (busca por mouse → página da cidade): falhou nas duas suítes completas, mas rodando só esse
-    teste 4 vezes seguidas, a **1ª falhou a frio (19,5 s) e as 3 seguintes passaram em ~3–4 s** — compilação da
-    rota da cidade em dev sob carga, não regressão. `sul.spec.ts:163`, `cart-mirror.spec.ts:378` e o resto dos
-    arquivos `sul.spec.ts` + `cart-mirror.spec.ts` rodando juntos: 89 passaram, 2 falharam (`sul:17` a frio e
-    `cart-mirror:334`).
-  - `cart-mirror.spec.ts:334` ("Atualizado há poucos segundos", depende do relógio): 15 passes em 16
-    repetições; a falha isolada foi `toHaveText` sob load.
-  - **O que não provei:** não rodei a suíte num checkout limpo de `origin/main` para comparar com a baseline sob a
-    mesma carga; a conclusão "não é regressão" vem das repetições acima e de nenhuma dessas falhas tocar o
-    código alterado (busca, cart-mirror e consentimento não foram editados). Vale uma rodada com a máquina
-    ociosa antes da release.
-- **Gates finais:** `tsc --noEmit` limpo, `eslint .` 0 erros, unitários 881/881, **`next build` com código de saída
-  0**. Um `tsc`/`build` intermediário falhou por `.next/dev/types/routes.d.ts` truncado (o Playwright encerrou o
-  servidor de dev no meio da escrita); é artefato gerado e ignorado pelo git, removido, e os dois voltaram a
-  passar.
-- **Capturas** (375 px e 1280 px, cidades reais fora do piloto, aba Algodão Peruano aberta, geradas com
-  `EVIDENCE=1` por `tests/e2e-regions/capture-evidence.spec.ts`): `docs/screenshots/city-garment-tabs-full/`
-  (Abatiá/PR, Abaetetuba/PA, Abadia de Goiás/GO). O preço exibido é o da peça (ex.: R$ 119,00 e R$ 139,90 no
-  Norte), não o da camiseta clássica.
+Ou seja: entre os produtos com cluster ligável, **nenhuma exclusão por link, preço ou tipo inválido**. Para as páginas 1–749
+do Sul e para Norte/Centro-Oeste (passadas anteriores à instrumentação) as causas não foram registradas; a evidência
+indireta continua sendo que os clusters completos têm exatamente 9 peças.
 
-## 9. Limitações e riscos conhecidos
+## 8. Validação dirigida de cidades do Sul em pontos diferentes do crawl
 
-1. **Sul incompleto** (§7): ~319 páginas dos produtos mais antigos. Publicar o Sul assim mostraria abas
-   corretas porém com contagens menores que a realidade (55% das famílias por cidade). Recomendo não publicar o
-   Sul antes de terminar a passada.
-2. **Canônicos sem cluster** (12,6–14,3% em Sul/Norte): só clássica. Depende da INK.
-3. **Incremental não vê peça nova de cluster antigo**: `begin_date` filtra por `created_at`; uma peça criada
-   depois para um cluster já coletado só aparece numa passada completa. Sugiro uma passada completa periódica.
-   Sempre rodar `catalog:sync` **antes** do `garments:sync` (o vínculo precisa dos canônicos atuais).
-4. **Vendabilidade**: HTTP 200 + "Adicionar" observado em 5 peças (3 lojas, 5 tipos), mas não é garantia
-   futura; a INK documenta `not_published` como fora do ar. Não há checagem em tempo real na página (a
-   renderização lê só o snapshot/índice local, nunca a INK). Se a INK passar a tirar peças do ar, o link levará
-   a uma página de erro da INK até o próximo sync; um sync incremental não remove peças, só a passada completa
-   com poda de clusters.
-5. **Memória/latência**: o índice adiciona ~75 MB de RSS por processo e a primeira renderização de uma
-   cidade por processo paga ~0,2 s. Medido em máquina carregada; vale reconferir no Railway.
-6. **O índice não chega sozinho à produção**: ele vive no Volume, ao lado do snapshot. O botão de sync do admin
-   não o atualiza e nenhuma rota faz `revalidatePath` depois dele (ver §10, passo 3).
-7. **Exclusões não medidas** nesta passada (§7).
-8. O crawl grava snapshot/índice/checkpoint só no fim de cada invocação; por isso os blocos de 250 GETs.
+**Agudos do Sul/PR** reúne todos os casos numa cidade (classificação feita comparando o índice **anterior** a esta
+execução, guardado em `backups/pre-sul-finish-*`, com o índice final):
 
-## 10. Roteiro de publicação (nada disto foi feito; tudo exige sua autorização)
+| Família | Cluster | Peças | Ponto do crawl |
+|---|---|---:|---|
+| Gentílico, Feito em, Legado, Território | com | 9 cada | já coberta **antes** desta execução |
+| Ponto de Origem | com | 9 | estava na parte **ainda não coletada**, coletada nesta execução |
+| Coordenadas | com, **incompleto** | 8 (falta Moletom careca) | coletada nesta execução |
+| Traço, Tipografia | **sem cluster** | 0 | nunca ligável |
 
-1. **Terminar o Sul** (§11): `npm run garments:sync -- --store use-sul --max-requests-per-store 340` (retoma da
-   página 750). Depois `npm run garments:coverage` e conferir os "sem variantes" do Sul contra a faixa de
-   Norte/Centro (0,3–3,8%).
-2. **Decidir por região**: Norte e Centro-Oeste já têm dados completos, mas seguem **fora do ar** (dependem do
-   lançamento por região no CMS e de o catálogo dessas lojas estar publicado; nada disso mudou aqui).
-3. **Levar o índice à produção**: (a) rodar `catalog:sync` e `garments:sync` dentro do container (Railway, com
-   os tokens INK de lá) — cerca de 176 + 1.760 GETs —, ou (b) copiar `garment-index.json` (15,6 MB) para o Volume.
-   Em ambos falta **revalidar as páginas de cidade** (ISR de 1 h, cache por mtime do índice); hoje só o sync do
-   admin dispara `revalidatePath`. Implementar essa revalidação (ou aceitar até 1 h de defasagem) antes de
-   publicar.
-4. **Habilitar**: a presença do arquivo é o interruptor — sem variável de ambiente nova.
-5. **Rollback**: apagar `garment-index.json` do Volume (e revalidar): todas as cidades voltam à grade clássica,
-   sem deploy e sem tocar o snapshot base. Nenhum outro componente muda.
-6. **Manter atualizado (sem agendamento ativado)**: `catalog:sync` → `garments:sync --max-requests-per-store 40`
-   (incremental por `begin_date`, ~7 páginas/semana no Sul) e uma passada completa periódica (§9.3).
-   Estimativa: incremental ≈ 10–50 GETs por loja; completa ≈ 1.100/350/420.
+`tests/e2e/garment-crawl-points.spec.ts` (esperados derivados dos arquivos de dados, não da app) abre cada aba dessa
+cidade e confere: contagem da aba = famílias com aquela peça (`Moletom (careca) · 5`, demais `· 6`), href e preço
+exatos de cada card, nenhum card para as famílias sem peça (nem em aba alguma) e, na aba clássica, Traço e
+Tipografia ainda apontando direto para a INK. **Passou.** Observação da análise: 1.167 das 1.191 cidades do Sul misturam
+famílias coletadas antes e depois desta execução, por isso o teste usa uma cidade que cobre todos os casos de uma vez.
 
-## 11. Pedido de autorização (uma, objetiva)
+## 9. Tamanho e memória com o índice carregado
 
-Para **terminar o Sul**: `npm run garments:sync -- --store use-sul --max-requests-per-store 340`, GET apenas,
-snapshots locais, retomando da página 750 (restam ~319 páginas + crescimento do catálogo). Teto proposto:
-**340 GETs** (em vez do resto do teto anterior, que se esgotou pelo incidente do §6). O comando agora salva as
-páginas lidas mesmo se a conexão cair, então uma falha não repete o gasto. Nenhuma outra loja, nenhuma escrita
-na INK, nenhuma ação em produção. Rodo `garments:coverage` ao final e atualizo este relatório.
+| | Valor |
+|---|---:|
+| `garment-index.json` final | **20.062.869 B (19,1 MiB)** — era 16,3 MB antes desta execução |
+| `catalog-snapshot.json` (base) | 8.806.152 B (8,4 MiB), inalterado |
+| RSS antes de `getCatalog()` | 58–69 MB |
+| RSS depois de `getCatalog()` (só o snapshot base) | 122–132 MB (heap 26–32 MB) |
+| **RSS com o índice carregado** | **169–184 MB** (heap 62 MB) → **+~50 MB** |
+| 1ª chamada de `garmentTabsForCity` por processo (parse do índice) | 0,35–1,3 s (máquina carregada) |
+| Chamadas seguintes | 0,1–0,2 ms |
+
+Comparação com o desenho anterior (peças embutidas no snapshot base): 345 MB de RSS. A 1ª renderização de cidade por
+processo (e após cada promoção do índice) paga o parse único de ~20 MB de forma síncrona; se isso incomodar em
+produção, o índice pode ser pré-carregado no boot do servidor (não implementado).
+
+## 10. Revalidação de cache após promover o índice
+
+**Problema (reproduzido em modo produção):** promover um `garment-index.json` novo não muda as páginas de cidade já
+geradas pelo ISR (`revalidate = 3600`); o `revalidatePath` do `catalog-sync` do admin roda dentro do servidor, e o CLI
+(`railway ssh`/shell local) é outro processo e não alcança o cache do servidor.
+
+**Ordem do fluxo** (regra pedida): 1) baixar/atualizar dados, 2) validar, 3) **promover o índice** (escrita atômica
+`tmp + rename`, já existente), 4) **avisar o servidor para invalidar o cache**. A falha do passo 4 nunca toca o índice
+promovido.
+
+- **Rota:** `POST /api/admin/garment-index/revalidate`, `Authorization: Bearer $ADMIN_SYNC_TOKEN` (o mesmo token do
+  `catalog-sync`; sem token configurado → 503, token errado → 401). Corpo opcional `{"storeKeys":["use-sul"]}`
+  (vazio = todas). Ela **não lê nem escreve o índice**; só chama `revalidatePath` para as cidades afetadas.
+- **Granularidade:** somente as cidades cujo produto principal vem da(s) loja(s) sincronizada(s) — 1.191 caminhos
+  literais (`/sul/sc/tijucas`…) para o Sul, 0 para lojas sem cidades. É exata mesmo depois de uma consolidação de lojas
+  (não depende do mapa região→loja). Numa Route Handler o `revalidatePath` só **marca**; a página é refeita na próxima
+  visita (sem rajada de renderizações). O `catalog-sync` continua invalidando as árvores de região como antes.
+- **CLI:** `garments:sync` chama a rota ao final quando `GARMENT_REVALIDATE_URL` e `ADMIN_SYNC_TOKEN` existem
+  (só para lojas cujo índice mudou); sem eles, diz que não pediu. Falha de revalidação → mensagem, **código de saída 3**,
+  índice intacto, e o retry é `npm run garments:revalidate`. O token só é enviado por https ou por http para o próprio
+  host local. `--no-revalidate` pula o passo.
+- **Prova em modo produção** (`npm run verify:garment-revalidation`, `next build` + `next start` sobre um fixture, nunca
+  dados da INK): sem índice → grade clássica, sem dados de aba; índice promovido em disco → **a página em cache continua
+  igual** (reproduz o problema); `POST /revalidate` → **na 1ª visita seguinte** a página traz as abas e o link exato da
+  peça; índice **corrompido** e depois **removido** + revalidação → 200 com a grade clássica; promover de novo →
+  abas de volta; rota sem token / token errado → 401. **Todas as verificações passaram.**
+- **Achado ao escrever a prova (importante):** a barra de abas é um client component que lê `?peca=` com
+  `useSearchParams`; no HTML de servidor do ISR ela **não existe** (há um marcador `BAILOUT_TO_CLIENT_SIDE_RENDERING`) e
+  o que vem é a **grade clássica** (fallback do Suspense) — crawlers e usuários sem JS recebem a página como antes, sem
+  regressão de SEO; as abas e os painéis aparecem após a hidratação. Efeito colateral: a barra empurra a grade para
+  baixo na hidratação (deslocamento de layout); reservar a altura da barra é uma melhoria possível, não feita.
+- **Testes unitários** (`tests/unit/garment-revalidate.test.ts`, 14): cidades afetadas por loja, rota 503/401/400/200,
+  falha de `revalidatePath` → 500 com o índice byte a byte idêntico, https-only para o token, falha de rede sem
+  lançar, "nada mudou → não pede", e falha de revalidação → índice intacto.
+
+## 11. Procedimento exato para gerar e promover `garment-index.json` no Railway (NÃO executado)
+
+Nada abaixo foi executado; exige deploy deste branch e sua autorização explícita. Os nomes vêm de
+`docs/deploy/railway.md` e `docs/admin/production-runbook.md` (serviço `useorigens-storefront`, Volume único, instância
+única). Comandos marcados com (*) não puderam ser testados fora do Railway.
+
+0. **Pré-condições.** Este branch implantado (a rota nova precisa existir). Variáveis do serviço: `INK_TOKEN_SUL`,
+   `ADMIN_SYNC_TOKEN` (já existem). Norte/Centro-Oeste só depois de lançados (`INK_TOKEN_NORTE/CENTRO`). Backup do
+   Volume pela aba Backups. `PORT` é injetada pelo Railway, nunca fixada.
+1. **Ambiente (*).** `railway ssh --service useorigens-storefront` e, no shell: `echo "$PORT"; echo "${CATALOG_SNAPSHOT_DIR:-$PWD/data/generated}"`
+   (confirmar o diretório do Volume) e `node --import tsx -e "console.log('tsx ok')"` (`tsx` é devDependency; se falhar,
+   este procedimento precisa de outra forma de execução). **Não use `npm run garments:*` no container:** esses scripts
+   passam `--env-file=.env.local`, que não existe lá; use `node --conditions=react-server --import tsx scripts/...`.
+2. **Atualizar o catálogo base com clusters** (o `productClusterId` só vem do sync de rotina). Pela rota existente:
+   `curl -X POST -H "Authorization: Bearer $ADMIN_SYNC_TOKEN" -H 'content-type: application/json' -d '{"storeKeys":["use-sul"]}' https://<url>/api/admin/catalog-sync`
+   e acompanhar com `GET` até `succeeded` (~99 GETs no Sul). Sem clusters suficientes o sync de peças se recusa a
+   iniciar (`--plan` mostra `PREREQUISITE NOT MET`).
+3. **Montar uma área de staging no próprio Volume** (assim a cobertura parcial nunca fica pública e o `mv` final é
+   atômico, mesmo filesystem): `D=<diretório do Volume>; mkdir -p $D/staging && cp $D/catalog-snapshot.json $D/staging/`.
+4. **Coletar em blocos de 250 GETs** (cada invocação grava checkpoint no fim; uma queda perde no máximo um bloco). No
+   primeiro bloco, `--force-full`; nos seguintes, sem ele, repetindo até `COMPLETE pass` (Sul ≈ 1.073 páginas, 5
+   blocos; Norte ≈ 309 e Centro-Oeste ≈ 385, 2 blocos):
+   `CATALOG_SNAPSHOT_DIR=$D/staging node --conditions=react-server --import tsx scripts/sync-garments.mts --store use-sul --max-requests-per-store 250 --no-revalidate [--force-full]`
+   (o índice de staging não é o que as páginas leem, por isso `--no-revalidate`). O teto é por invocação e conta
+   retries; **não o aumente sem autorização**.
+5. **Validar antes de promover:** `CATALOG_SNAPSHOT_DIR=$D/staging node --conditions=react-server --import tsx scripts/garment-coverage-report.mts`.
+   Esperado para o Sul (mesma base de hoje): ~97% dos canônicos com cluster completos, e o checkpoint da loja em
+   `complete`. Se a passada não está `complete`, **não promova**.
+6. **Promover e revalidar:** `cp -p $D/garment-index.json $D/garment-index.json.prev 2>/dev/null; mv $D/staging/garment-index.json $D/garment-index.json`
+   (rename atômico) e depois
+   `GARMENT_REVALIDATE_URL=http://127.0.0.1:$PORT node --conditions=react-server --import tsx scripts/revalidate-garments.mts --store use-sul`
+   (usa `ADMIN_SYNC_TOKEN` do próprio serviço; saída 3 = revalidação falhou, índice intacto, repetir o comando).
+7. **Conferir:** `curl -s https://<url>/sul/pr/agudos-do-sul | grep -c "Algodão Peruano"` (> 0 depois da revalidação) e a
+   cidade no navegador (aba "Algodão Peruano" com preço próprio). Atualizações futuras: `catalog:sync` (rota) e depois
+   `sync-garments.mts --max-requests-per-store 40` **sem** `--force-full` (incremental por `begin_date`, ~7 páginas/semana no
+   Sul), com `GARMENT_REVALIDATE_URL` definido no comando; uma passada completa periódica (§14, item 3). **Nenhum agendamento
+   foi ativado.**
+8. **Alternativa não recomendada:** copiar o `garment-index.json` local (20 MB) para o Volume. Só funciona se o snapshot
+   de produção tiver os mesmos `productClusterId` (passo 2) e o método de transferência para o Volume não foi testado.
+
+## 12. Rollback
+
+- **Imediato, sem deploy e sem tocar o snapshot base:** `mv $D/garment-index.json $D/garment-index.json.off` e depois
+  `revalidate-garments.mts` (passo 6). Todas as cidades voltam à grade clássica; sem a revalidação, o ISR normal faz o
+  mesmo em até 1 h. Reativar: `mv` de volta + revalidar. Voltar à versão anterior do índice: `cp $D/garment-index.json.prev`.
+- Comprovado em modo produção (`verify:garment-revalidation`, passos 4 e 5: índice corrompido e removido → 200 com a
+  grade clássica) e em E2E (`garment-index-missing.spec.ts`).
+- Não há variável de ambiente para desligar o recurso: **a presença do arquivo é o interruptor**.
+
+## 13. Testes e gate de release
+
+**Gate final (uma execução completa, máquina com load ~130–210, bem abaixo dos ~300 de antes):**
+
+| Verificação | Resultado |
+|---|---|
+| `tsc --noEmit` | limpo |
+| `eslint .` | 0 erros (8 warnings pré-existentes em `db/validate-migrations.mjs`) |
+| Unitários (suíte inteira) | **895/895** (69 arquivos) |
+| `next build` | **exit 0** |
+| E2E padrão completo (162 testes) | **158 passaram, 2 falharam, 2 pulados** (8,1 min) |
+| E2E do seletor (Sul: piloto + cidade fora do piloto) | passou (12 testes; 1 pulado: não existe cidade Sul sem nenhuma peça) |
+| E2E da validação dirigida do Sul (Agudos do Sul/PR, §8) | passou |
+| E2E das 3 regiões (`playwright.regions.config.ts`, cidades fora do piloto) | **9/9** |
+| E2E `GoToInk` com `garment_type` (1 evento, sem Purchase/AddToCart/ViewContent) | passou |
+| E2E índice ausente (`garment-index-missing.spec.ts`, opt-in) | passou (execução anterior; sem mudança de código desde então) |
+| Prova de ISR em produção (`verify:garment-revalidation`) | **todas as verificações passaram** (§10) |
+
+**As 2 falhas do E2E completo** — `sul.spec.ts:17` (busca por mouse) e `:26` (busca por teclado), ambas
+`toHaveURL` com a página ainda em `/sul` depois de 5 s. Investigação, sem repetir cegamente:
+- **Não reproduzem isoladas:** 8/8 passes (2,1–7,1 s) rodando os dois testes 4 vezes seguidas.
+- **A/B em servidor de dev novo** (1ª navegação a frio, mesmo teste, com e sem o índice de peças): com índice 19,9 s e
+  12,2 s de teste; **sem índice 9,7 s e 8,9 s**. Ou seja, o parse único do índice de 20 MB (§9) soma à compilação a frio do
+  dev server e aproxima a 1ª navegação do limite de 5 s do teste sob carga. Todas passaram.
+- **Ressalva honesta:** `sul:17` falhou nas quatro execuções completas desta rodada e `:26` em duas; não consegui provar
+  a causa além da evidência acima (não rodei a suíte inteira num `main` limpo para comparar). Não alterei os testes
+  (são contrato). Em produção não há compilação a frio: só o parse único (~0,35–1,3 s) na 1ª renderização de cidade por
+  processo; se quiser eliminar até isso, o caminho é pré-carregar o índice no boot (não implementado).
+- Outras falhas de execuções anteriores desta rodada (`cart-mirror:334`, `sul:163`, `cart-mirror:378`) não voltaram.
+
+**Falhas que já haviam sido resolvidas nesta rodada:** a flakiness do seletor era real (`router.replace` esperava uma ida
+ao servidor) e foi corrigida com `history.replaceState`; `tsc`/build já falharam uma vez por `.next/dev/types/routes.d.ts`
+truncado (servidor de dev encerrado no meio da escrita), artefato gerado e ignorado pelo git, removido.
+
+
+## 14. Limitações e riscos conhecidos
+
+1. **Canônicos sem cluster** (Sul 14,3%, Norte 12,6%, Centro-Oeste 2,7%): só a camiseta clássica; depende da INK.
+2. **Produtos criados depois de 27/09 21:39** não foram lidos (§6): novo `catalog:sync` + `garments:sync` incremental.
+3. **Incremental não vê peça nova de cluster antigo** (`begin_date` filtra por `created_at`): fazer uma passada completa
+   periódica, sempre precedida de `catalog:sync`.
+4. **Vendabilidade:** HTTP 200 + "Adicionar" observado em 5 peças (3 lojas, 5 tipos); a INK documenta `not_published` como
+   fora do ar. A página nunca consulta a INK; se a INK tirar peças do ar, o link cai numa página de erro dela até o
+   próximo sync completo com poda.
+5. **Primeira renderização por processo** paga ~0,35–1,3 s de parse do índice (§9); +~50 MB de RSS.
+6. **A barra de abas só existe no cliente** (§10): sem regressão de SEO, mas há deslocamento de layout na hidratação.
+7. **Procedimento Railway não testado** em produção (§11, itens marcados) e `tsx` no container não confirmado.
+8. **Norte e Centro-Oeste seguem fora do ar** (dependem do lançamento por região no CMS); os dados estão prontos.
+9. O crawl grava snapshot/índice/checkpoint só ao final de cada invocação; por isso os blocos de 250 GETs.
