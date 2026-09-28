@@ -4,6 +4,8 @@ import { allCities, cityById, type City } from "../geo/cities";
 import { REGIONS, REGION_SLUGS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { buildLore, type Lore } from "../editorial/lore";
 import { DESIGN_FAMILIES, type DesignFamily, type DesignFamilyId } from "./families";
+import { CLASSIC_GARMENT_TYPE_ID, GARMENT_TYPES, garmentTypeById } from "./garments";
+import { emptyGarmentIndex, expandTuple, garmentIndexMtimeMs, readGarmentIndexSync, type ExpandedPiece, type GarmentIndex } from "./garment-index-file";
 import { compareIds, rankBindings } from "./ranking";
 import { readSnapshotSync, snapshotMtimeMs } from "./snapshot-file";
 import type { CityDesignBinding, MerchProduct, UnrankedBinding } from "./types";
@@ -16,12 +18,26 @@ export type CityFamilyEntry = {
   variants: CityDesignBinding[];
 };
 
+export type GarmentTabOption = { id: number; slug: string; label: string; count: number };
+
+export type GarmentTabsForCity = {
+  /** Empty when the city has no real garment-type data beyond the classic piece — the caller hides the
+   * selector entirely (MD §1: "avaliar esconder o seletor de uma opção"), never rendering a single-tab bar. */
+  tabs: GarmentTabOption[];
+  /** Keyed by `GarmentTabOption.id`. Each entry array is shaped exactly like `cityFamilies()`'s output so the
+   * existing `FamilyGrid`/`FamilyCard` render it with zero changes — a family missing this exact piece is
+   * simply absent from the array (MD Caso C: never a fabricated card). */
+  entriesByGarment: Record<number, CityFamilyEntry[]>;
+};
+
 export type Catalog = {
   syncedAt: string | null;
   /** Ordered families available for a city. Empty when nothing is indexed. */
   cityFamilies(cityId: string): CityFamilyEntry[];
   /** Products about localities inside the municipality ("Também de Torres"). */
   cityLocalities(cityId: string): CityDesignBinding[];
+  /** Real, hidden-but-sellable garment-type siblings of this city's families (src/lib/catalog/garments.ts). */
+  garmentTabsForCity(cityId: string): GarmentTabsForCity;
   merch(region: RegionSlug): MerchProduct[];
   /** Real local-voice products (expressions, patron saints, state expressions) of a region. */
   lore(region: RegionSlug): Lore;
@@ -46,6 +62,21 @@ function storeOrderFor(region: RegionSlug): CommerceStoreKey[] {
 }
 
 let cache: { mtimeMs: number; catalog: Catalog } | null = null;
+
+/**
+ * The garment-piece index has its own mtime-keyed cache, independent of the base snapshot's: a re-sync of
+ * pieces never forces a catalog rebuild, and a missing/corrupt file is just an empty index (no tabs), so the
+ * optional index can never take the storefront down.
+ */
+let garmentIndexCache: { mtimeMs: number; index: GarmentIndex } | null = null;
+
+function getGarmentIndex(): GarmentIndex {
+  const mtimeMs = garmentIndexMtimeMs();
+  if (garmentIndexCache && garmentIndexCache.mtimeMs === mtimeMs) return garmentIndexCache.index;
+  const { index } = mtimeMs === 0 ? { index: emptyGarmentIndex() } : readGarmentIndexSync();
+  garmentIndexCache = { mtimeMs, index };
+  return index;
+}
 
 function build(): { catalog: Catalog; mtimeMs: number } {
   const { snapshot, mtimeMs } = readSnapshotSync();
@@ -101,12 +132,80 @@ function build(): { catalog: Catalog; mtimeMs: number } {
     covered.set(region, set);
   }
 
+  const garmentTypesByOrder = [...GARMENT_TYPES].filter((t) => t.id !== CLASSIC_GARMENT_TYPE_ID).sort((a, b) => a.sortOrder - b.sortOrder);
+
+  const garmentTabsForCity = (cityId: string): GarmentTabsForCity => {
+    const classicEntries = cityFamilies(cityId);
+    if (classicEntries.length === 0) return { tabs: [], entriesByGarment: {} };
+    const garmentIndex = getGarmentIndex();
+
+    // Association is EXCLUSIVELY by the primary's own `product_cluster_id`, inside the primary's own store: a
+    // primary without a cluster id has no pieces (fail closed), and a cluster the base catalog has since
+    // rotated away from simply is not found here, so a stale piece can never be shown.
+    const entriesByType = new Map<number, CityFamilyEntry[]>();
+    for (const classicEntry of classicEntries) {
+      const primary = classicEntry.primary;
+      if (!primary.productClusterId) continue;
+      const tuples = garmentIndex.stores[primary.commerceStoreKey]?.clusters[primary.productClusterId];
+      if (!Array.isArray(tuples)) continue;
+
+      // Two products of one cluster and type: deterministic tie-break, lowest INK id (same rule as `rankBindings`).
+      const best = new Map<number, ExpandedPiece>();
+      for (const tuple of tuples) {
+        const piece = expandTuple(primary.commerceStoreKey, tuple);
+        if (!piece || piece.garmentTypeId === CLASSIC_GARMENT_TYPE_ID || !garmentTypeById(piece.garmentTypeId)) continue;
+        const current = best.get(piece.garmentTypeId);
+        if (!current || compareIds(piece.inkProductId, current.inkProductId) < 0) best.set(piece.garmentTypeId, piece);
+      }
+
+      for (const [typeId, piece] of best) {
+        const type = garmentTypeById(typeId)!;
+        const list = entriesByType.get(typeId) ?? [];
+        list.push({
+          family: classicEntry.family,
+          primary: {
+            cityId: primary.cityId,
+            designFamily: primary.designFamily,
+            designVariant: "garment",
+            variantLabel: type.label,
+            productClusterId: primary.productClusterId,
+            isPrimary: true,
+            priority: 0,
+            commerceStoreKey: primary.commerceStoreKey,
+            inkProductId: piece.inkProductId,
+            slug: piece.slug,
+            storeProductUrl: piece.storeProductUrl,
+            imageUrl: piece.imageUrl,
+            price: piece.price,
+            syncedAt: garmentIndex.stores[primary.commerceStoreKey]?.syncedAt ?? "",
+          },
+          variants: [],
+        });
+        entriesByType.set(typeId, list);
+      }
+    }
+
+    const entriesByGarment: Record<number, CityFamilyEntry[]> = { [CLASSIC_GARMENT_TYPE_ID]: classicEntries };
+    const tabs: GarmentTabOption[] = [{ id: CLASSIC_GARMENT_TYPE_ID, slug: "classica", label: "Camiseta clássica", count: classicEntries.length }];
+    for (const type of garmentTypesByOrder) {
+      const entries = entriesByType.get(type.id);
+      if (!entries || entries.length === 0) continue; // MD Caso C: never a fabricated card or empty tab
+      entriesByGarment[type.id] = entries;
+      tabs.push({ id: type.id, slug: type.slug, label: type.label, count: entries.length });
+    }
+
+    // Only the classic tab has real data: MD §1 says to hide a one-option selector rather than show it empty.
+    if (tabs.length <= 1) return { tabs: [], entriesByGarment: {} };
+    return { tabs, entriesByGarment };
+  };
+
   const productsCache = new Map<CommerceStoreKey, StoreProducts>();
   const loreCache = new Map<RegionSlug, Lore>();
   const syncedTimes = stores.map((s) => s.syncedAt).sort();
   const catalog: Catalog = {
     syncedAt: syncedTimes.at(-1) ?? null,
     cityFamilies,
+    garmentTabsForCity,
     cityLocalities: (cityId) => (ranked.get(cityId) ?? []).filter((b) => b.localityLabel),
     merch: (region) =>
       [...(merchByRegion.get(region) ?? [])].sort(

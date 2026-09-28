@@ -35,6 +35,18 @@ export const ALLOWED_COMMERCE_HOSTS: ReadonlySet<string> = new Set([
   "loja.useorigens.com.br",
 ]);
 
+/**
+ * Public product-URL prefix of each store: `<base>/<slug>` is exactly INK's `store_product_url` (verified
+ * against every stored piece). The compact garment index keeps only the slug and rebuilds the URL from this
+ * map; a piece whose real URL does not have that shape is excluded at write time (never guessed).
+ * Every host here must also be in `ALLOWED_COMMERCE_HOSTS` (unit-tested).
+ */
+export const STORE_PRODUCT_URL_BASE: Readonly<Partial<Record<CommerceStoreKey, string>>> = {
+  "use-sul": "https://www.usesul.com.br/usesul/product",
+  "use-norte": "https://www.usenorte.com.br/usenorte/product",
+  "use-centro": "https://www.usecentro.com.br/usecentro/product",
+};
+
 export function tokenFor(storeKey: CommerceStoreKey): string | null {
   const env = INK_STORES[storeKey]?.tokenEnv;
   const token = env ? process.env[env] : undefined;

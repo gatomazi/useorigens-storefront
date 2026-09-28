@@ -54,3 +54,54 @@ export function normalizeInkProduct(raw: unknown, storeKey: CommerceStoreKey): I
     createdAt: asString(p.created_at),
   };
 }
+
+/** One real INK product as returned by `GET /v1/stores/products(/:id)`, reduced to what garment linking needs. */
+export type GarmentSourceProduct = {
+  id: string;
+  storeKey: CommerceStoreKey;
+  name: string;
+  slug: string;
+  storeProductUrl: string;
+  imageUrl: string;
+  price: number | null;
+  clusterId: string | null;
+  garmentTypeId: number | null;
+  /** ISO 8601, when INK provided one. Drives the incremental sync's `begin_date` watermark (garment-client.ts). */
+  createdAt: string | null;
+};
+
+/**
+ * Same field-level validation as `normalizeInkProduct` (id/name/slug/https image/https store URL all
+ * required), but deliberately WITHOUT the `status`/`visible_in_store` gate: a garment-type sibling is
+ * expected to be `not_published`/hidden in INK's own admin while still being genuinely sellable by direct
+ * link (see `GarmentBinding` in catalog/types.ts and docs/storefront/city-garment-tabs-round.md for the live
+ * verification). Actual sellability is decided later, by `commerce.ts`'s own https+host allowlist check —
+ * never by any status/visibility flag here. Used only by the garment-fixture fetch path
+ * (scripts/fetch-garment-fixtures.mts), never by the main `fetchStoreProducts` sync.
+ */
+export function normalizeGarmentSourceProduct(raw: unknown, storeKey: CommerceStoreKey): GarmentSourceProduct | null {
+  if (typeof raw !== "object" || raw === null) return null;
+  const p = raw as Record<string, unknown>;
+
+  const id = typeof p.id === "number" ? String(p.id) : asString(p.id);
+  const name = asString(p.name);
+  const slug = asString(p.slug);
+  const storeProductUrl = asHttpsUrl(p.store_product_url);
+  const imageUrl = asHttpsUrl(p.main_image_url);
+  if (!id || !name || !slug || !storeProductUrl || !imageUrl) return null;
+
+  const productType = typeof p.product_type === "object" && p.product_type !== null ? (p.product_type as Record<string, unknown>) : null;
+
+  return {
+    id,
+    storeKey,
+    name,
+    slug,
+    storeProductUrl,
+    imageUrl,
+    price: asPrice(p.price),
+    clusterId: typeof p.product_cluster_id === "number" ? String(p.product_cluster_id) : null,
+    garmentTypeId: productType && typeof productType.id === "number" ? productType.id : null,
+    createdAt: asString(p.created_at),
+  };
+}
