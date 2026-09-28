@@ -6,9 +6,9 @@
 // docs/storefront/df-administrative-regions-round.md and as a regression check when a new snapshot arrives.
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { allAdministrativeRegions, DF_MUNICIPALITY_ID } from "../src/lib/geo/administrative-regions.ts";
-import { withLocality } from "../src/lib/catalog/locality-binding.ts";
-import type { CatalogSnapshot } from "../src/lib/catalog/types.ts";
+import { allAdministrativeRegions, DF_MUNICIPALITY_ID } from "../src/lib/geo/administrative-regions";
+import { withLocality } from "../src/lib/catalog/locality-binding";
+import type { CatalogSnapshot } from "../src/lib/catalog/types";
 
 const file = process.argv[2] ?? path.join(process.cwd(), "data", "generated", "catalog-snapshot.json");
 const snapshot = JSON.parse(readFileSync(file, "utf8")) as CatalogSnapshot;
