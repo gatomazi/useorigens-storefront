@@ -53,6 +53,30 @@ test.describe("infra: health, readiness, no external calls", () => {
     expect(res.headers()["x-robots-tag"]).toBe("noindex");
   });
 
+  test("given the canonical production Host, when a public page is requested, then it carries NO noindex header", async ({ page }) => {
+    // Regression: behind Railway/Cloudflare the comparison used nextUrl.hostname (the bind host), so the real domain was noindexed too.
+    const res = await page.request.get("/sul/sc/tijucas", { headers: { Host: "www.useorigens.com.br" } });
+    expect(res.status()).toBe(200);
+    expect(res.headers()["x-robots-tag"]).toBeUndefined();
+  });
+
+  test("given the canonical Host only in X-Forwarded-Host, when a public page is requested, then it still carries noindex (a client-supplied header proves nothing)", async ({ page }) => {
+    const res = await page.request.get("/sul/sc/tijucas", { headers: { "X-Forwarded-Host": "www.useorigens.com.br" } });
+    expect(res.headers()["x-robots-tag"]).toBe("noindex");
+  });
+
+  test("given the bare domain or a Railway address as Host, when a public page is requested, then it carries noindex", async ({ page }) => {
+    for (const host of ["useorigens.com.br", "useorigens-storefront-production.up.railway.app"]) {
+      const res = await page.request.get("/sul/sc/tijucas", { headers: { Host: host } });
+      expect(res.headers()["x-robots-tag"], host).toBe("noindex");
+    }
+  });
+
+  test("given the canonical Host, when a non-indexable page (search) is requested, then it is still noindex through its own robots meta", async ({ page }) => {
+    const res = await page.request.get("/sul/busca?q=teste", { headers: { Host: "www.useorigens.com.br" } });
+    expect(await res.text()).toContain('name="robots" content="noindex');
+  });
+
   for (const route of ["/sul", "/sul/sc", "/sul/sc/tijucas", "/sul/pr/pato-branco/ponto-de-origem"]) {
     test(`given ${route}, when the network is observed, then nothing is requested from INK or IBGE domains`, async ({ page }) => {
       const externalCalls: string[] = [];
