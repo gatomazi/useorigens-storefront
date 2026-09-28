@@ -28,7 +28,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
   const tracking = publishedTracking(region);
   return (
     <ConsentProvider>
-      <CartRefCapture />
+      <CartRefCapture region={region} />
       <div data-region={region} style={regionThemeStyle(region)} className="relative">
         <AnnouncementBar region={region} cityCount={catalog.coveredCityIds(region).size} />
         <Header region={region} />

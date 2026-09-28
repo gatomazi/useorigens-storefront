@@ -53,9 +53,9 @@ export function VariantPicker({
 
   return (
     <div className="grid items-start gap-x-16 gap-y-6 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-      <div className="lg:hidden">{intro}</div>
-
-      <div className="relative mx-auto w-[74%] sm:w-[84%] lg:col-start-1 lg:w-full">
+      {/* The title exists ONCE in the DOM (one <h1>). On phones the sticky wrapper below is `display: contents`, so its children join this grid and
+          `order` puts the title above the photo; from `lg` the wrapper is a real box and holds the title at the top of the right column. */}
+      <div className="relative order-2 mx-auto w-[74%] sm:w-[84%] lg:order-none lg:col-start-1 lg:w-full">
         {options.map((option) => (
           <div key={option.id} className={`transition-opacity duration-300 ${option.id === selected.id ? "relative opacity-100" : "pointer-events-none absolute inset-0 opacity-0"}`} aria-hidden={option.id !== selected.id}>
             <ProductPhoto src={option.imageUrl} alt={option.id === selected.id ? alt : ""} sizes="(min-width: 1024px) 56vw, 100vw" priority={option.id === options[0].id} />
@@ -64,52 +64,54 @@ export function VariantPicker({
       </div>
 
       {/* One continuous decision block: title, versions, price, CTA — all together, sticky as a unit. */}
-      <div className="lg:sticky lg:top-24">
-        <div className="hidden lg:block">{intro}</div>
+      <div className="contents lg:sticky lg:top-24 lg:block">
+        <div className="order-1 lg:order-none">{intro}</div>
 
-        {options.length > 1 && (
-          <fieldset className="mt-5 lg:mt-6">
-            <legend className="t-label mb-3">Versões deste estilo</legend>
-            <div className="flex flex-wrap gap-2">
-              {options.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  aria-pressed={option.id === selected.id}
-                  onClick={() => setSelectedId(option.id)}
-                  className="min-h-11 border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors aria-pressed:border-region-primary aria-pressed:bg-region-primary aria-pressed:text-white"
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-        )}
+        <div className="order-3 lg:order-none">
+          {options.length > 1 && (
+            <fieldset className="mt-5 lg:mt-6">
+              <legend className="t-label mb-3">Versões deste estilo</legend>
+              <div className="flex flex-wrap gap-2">
+                {options.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    aria-pressed={option.id === selected.id}
+                    onClick={() => setSelectedId(option.id)}
+                    className="min-h-11 border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors aria-pressed:border-region-primary aria-pressed:bg-region-primary aria-pressed:text-white"
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
-        <div className="mt-5 lg:mt-6">
-          {selected.detail && <p className="t-place mb-1">{selected.detail}</p>}
-          <p className="t-h2" aria-live="polite">
-            {selected.price ?? "Consulte na loja"}
-          </p>
-        </div>
-
-        {selected.href ? (
-          <a
-            href={selected.href}
-            onClick={() => trackGoToInk({ productId: selected.id, sourceSection, city, state: stateUf, family: familyId, value: selected.rawPrice ?? undefined, productName, destinationUrl: selected.href ?? undefined })}
-            className="btn mt-4 w-full sm:w-auto sm:min-w-72"
-          >
-            Escolher tamanho na loja
-          </a>
-        ) : (
-          <div className="mt-4">
-            <span className="btn w-full sm:w-auto sm:min-w-72" aria-disabled="true">
-              Indisponível no momento
-            </span>
-            <p className="t-caption mt-3">Não conseguimos abrir este produto na loja agora. Tente novamente em instantes.</p>
+          <div className="mt-5 lg:mt-6">
+            {selected.detail && <p className="t-place mb-1">{selected.detail}</p>}
+            <p className="t-h2" aria-live="polite">
+              {selected.price ?? "Consulte na loja"}
+            </p>
           </div>
-        )}
-        <p className="t-caption mt-3 max-w-sm">Tamanho, cor, frete e pagamento você define na loja {storeName}.</p>
+
+          {selected.href ? (
+            <a
+              href={selected.href}
+              onClick={() => trackGoToInk({ productId: selected.id, sourceSection, city, state: stateUf, family: familyId, value: selected.rawPrice ?? undefined, productName, destinationUrl: selected.href ?? undefined })}
+              className="btn mt-4 w-full sm:w-auto sm:min-w-72"
+            >
+              Escolher tamanho na loja
+            </a>
+          ) : (
+            <div className="mt-4">
+              <span className="btn w-full sm:w-auto sm:min-w-72" aria-disabled="true">
+                Indisponível no momento
+              </span>
+              <p className="t-caption mt-3">Não conseguimos abrir este produto na loja agora. Tente novamente em instantes.</p>
+            </div>
+          )}
+          <p className="t-caption mt-3 max-w-sm">Tamanho, cor, frete e pagamento você define na loja {storeName}.</p>
+        </div>
       </div>
     </div>
   );

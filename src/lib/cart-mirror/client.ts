@@ -1,3 +1,4 @@
+import type { RegionSlug } from "../geo/regions";
 import { MAX_SNAPSHOT_AGE_SECONDS } from "./constants";
 import type { CartMirrorSnapshot } from "./types";
 
@@ -11,9 +12,9 @@ export type MirrorResult =
 const CLIENT_TIMEOUT_MS = 8_000;
 
 /** Browser → OUR route only. The snapshot is returned to the caller's memory; nothing is written to any storage. */
-export async function fetchMirror(ref: string, signal: AbortSignal): Promise<MirrorResult> {
+export async function fetchMirror(ref: string, signal: AbortSignal, region: RegionSlug = "sul"): Promise<MirrorResult> {
   try {
-    const response = await fetch(`/api/cart-mirror?ref=${encodeURIComponent(ref)}`, {
+    const response = await fetch(`/api/cart-mirror?ref=${encodeURIComponent(ref)}&region=${encodeURIComponent(region)}`, {
       cache: "no-store",
       credentials: "omit",
       signal: AbortSignal.any([signal, AbortSignal.timeout(CLIENT_TIMEOUT_MS)]),

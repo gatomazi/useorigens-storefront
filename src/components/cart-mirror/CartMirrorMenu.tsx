@@ -5,7 +5,8 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { cartItemsBucket, mirrorAgeBucket } from "@/lib/analytics/origens-events";
 import { trackCartMirrorView, trackGoToCartClick } from "@/lib/analytics/track";
 import { ageLabel } from "@/lib/cart-mirror/age";
-import { INK_CART_URL, MAX_SNAPSHOT_AGE_SECONDS } from "@/lib/cart-mirror/constants";
+import { inkCartUrlFor, MAX_SNAPSHOT_AGE_SECONDS } from "@/lib/cart-mirror/constants";
+import type { RegionSlug } from "@/lib/geo/regions";
 import { fetchMirror, type MirrorResult } from "@/lib/cart-mirror/client";
 import { clearToken, getToken, subscribeToken } from "@/lib/cart-mirror/token-store";
 import type { CartMirrorItem, CartMirrorSnapshot } from "@/lib/cart-mirror/types";
@@ -63,8 +64,10 @@ function Line({ item }: { item: CartMirrorItem }) {
  * → nothing is rendered and nothing is fetched. It never edits, never computes a price and never checkouts: the official cart is
  * INK's, reached through "Ir para meu carrinho". The snapshot lives in memory only (never in browser storage).
  */
-export function CartMirrorMenu() {
-  const token = useSyncExternalStore(subscribeToken, getToken, () => null);
+export function CartMirrorMenu({ region }: { region: RegionSlug }) {
+  // The snapshot getters close over the region: each region's INK cart (and Worker) is its own.
+  const readToken = useCallback(() => getToken(region), [region]);
+  const token = useSyncExternalStore(subscribeToken, readToken, () => null);
   const [state, setState] = useState<State>({ status: "idle" });
   const [now, setNow] = useState(() => Date.now());
   const [open, setOpen] = useState(false);
@@ -73,7 +76,7 @@ export function CartMirrorMenu() {
 
   const apply = useCallback((result: MirrorResult, keepOnFailure: boolean) => {
     if (result.kind === "expired") {
-      clearToken(); // expired or unknown: neutral state, and no more requests for a dead token
+      clearToken(region); // expired or unknown: neutral state, and no more requests for a dead token
       return;
     }
     if (result.kind === "ok") {
@@ -84,17 +87,17 @@ export function CartMirrorMenu() {
     }
     // A failed refresh never wipes what the panel already shows.
     setState((previous) => (keepOnFailure && previous.status !== "idle" ? previous : { status: "error" }));
-  }, []);
+  }, [region]);
 
   useEffect(() => {
     if (!token) return; // nothing is rendered without a token, so stale state below is never shown
     const controller = new AbortController();
     abortRef.current = controller;
-    void fetchMirror(token, controller.signal).then((result) => {
+    void fetchMirror(token, controller.signal, region).then((result) => {
       if (!controller.signal.aborted) apply(result, false);
     });
     return () => controller.abort();
-  }, [token, apply]);
+  }, [token, apply, region]);
 
   // While the panel is open the age label keeps counting; a snapshot that outlives its TTL turns neutral.
   useEffect(() => {
@@ -105,8 +108,8 @@ export function CartMirrorMenu() {
 
   const ageSeconds = state.status === "ok" ? state.snapshot.ageSeconds + Math.max(0, Math.round((now - state.fetchedAt) / 1000)) : 0;
   useEffect(() => {
-    if (state.status === "ok" && ageSeconds > MAX_SNAPSHOT_AGE_SECONDS) clearToken();
-  }, [state.status, ageSeconds]);
+    if (state.status === "ok" && ageSeconds > MAX_SNAPSHOT_AGE_SECONDS) clearToken(region);
+  }, [state.status, ageSeconds, region]);
 
   // "Meu carrinho" view: ONE `origens_cart_mirror_view` per opening of the panel, only while a valid snapshot is on screen (never the
   // neutral/error state, never a re-render or a background refresh: `reported` latches until the panel closes).
@@ -133,7 +136,7 @@ export function CartMirrorMenu() {
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
-      void fetchMirror(token, controller.signal).then((result) => {
+      void fetchMirror(token, controller.signal, region).then((result) => {
         if (!controller.signal.aborted) apply(result, true); // the panel never blinks out while retrying
       });
     }
@@ -220,7 +223,7 @@ export function CartMirrorMenu() {
 
         <div className="grid gap-3 border-t border-line bg-ground px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 sm:px-6">
           <a
-            href={INK_CART_URL}
+            href={inkCartUrlFor(region)}
             className="btn"
             data-testid="cart-mirror-go"
             // Best-effort measurement only: the navigation is the anchor's own and never waits for, or depends on, analytics.

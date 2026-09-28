@@ -24,12 +24,14 @@ import { adminConfig, adminHostOf } from "@/lib/admin/config";
 import { devAdminEnabled } from "@/lib/admin/dev-guard";
 import { decideRoute } from "@/lib/admin/routing";
 import { siteUrl } from "@/lib/config/env";
+import { isCanonicalHost } from "@/lib/seo/canonical-host";
 import { ENABLED_REGIONS } from "@/lib/site";
 
-function isCanonicalHost(request: NextRequest): boolean {
+function isCanonical(request: NextRequest): boolean {
   try {
-    return request.nextUrl.hostname === new URL(siteUrl()).hostname;
+    return isCanonicalHost(request.headers.get("host"), siteUrl());
   } catch {
+    // siteUrl() throws on a malformed NEXT_PUBLIC_SITE_URL: fail closed (noindex).
     return false;
   }
 }
@@ -85,7 +87,7 @@ export function proxy(request: NextRequest) {
   }
 
   const response = NextResponse.next();
-  if (!isCanonicalHost(request)) response.headers.set("X-Robots-Tag", "noindex");
+  if (!isCanonical(request)) response.headers.set("X-Robots-Tag", "noindex");
   return response;
 }
 

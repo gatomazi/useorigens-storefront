@@ -18,6 +18,11 @@ import { formatPrice } from "@/lib/format";
 import { citiesOfSameMeso } from "@/lib/geo/cities";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { cityDescription, cityIntro, cityTitle } from "@/lib/seo/copy";
+import { breadcrumbList } from "@/lib/seo/jsonld";
+import { pageOpenGraph } from "@/lib/seo/open-graph";
+import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 3600;
 
@@ -32,11 +37,14 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { region, uf, city } = await params;
   const resolved = resolveCity(region, uf, city);
   if (!resolved) return {};
-  const { name } = resolved.city;
+  const title = cityTitle(resolved.city);
+  const description = cityDescription(resolved.city, resolved.families.map((entry) => entry.family.name));
+  const path = `/${region}/${uf}/${city}`;
   return {
-    title: `Camisetas de ${name}, ${resolved.city.uf}`,
-    description: `Escolha como vestir ${name} (${resolved.stateName}): camisetas com o nome, o mapa e as coordenadas da cidade.`,
-    alternates: { canonical: `/${region}/${uf}/${city}` },
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: pageOpenGraph({ title: `${title} | Use Origens`, description, path, imageUrl: resolved.families[0]?.primary.imageUrl }),
   };
 }
 
@@ -70,8 +78,17 @@ export default async function CityPage({ params }: { params: Params }) {
   // instead of sitting as its own banner slice between the header and "Estilos" (docs/decisions/0003).
   const cityPhoto = usableBannerAsset("city", bannerFor(city.regionSlug, "city"));
 
+  const intro = cityIntro(city, city.regionSlug, families.map((entry) => entry.family.name));
+
   return (
     <>
+      <JsonLd
+        data={breadcrumbList(SITE_URL, [
+          { name: resolved.region.name, path: `/${region}` },
+          { name: stateName, path: `/${region}/${uf}` },
+          { name: city.name, path: base },
+        ])}
+      />
       <section className="relative isolate">
         {cityPhoto && <RegionalPhotoSection asset={cityPhoto} priority />}
         <div className={`wrap pb-8 pt-5 lg:pb-12 lg:pt-6 ${cityPhoto ? "pb-14 lg:pb-20" : ""}`}>
@@ -132,6 +149,8 @@ export default async function CityPage({ params }: { params: Params }) {
         ) : (
           <p className="t-body max-w-xl">Ainda não temos camisetas de {city.name} na loja. Volte em breve ou escolha outra cidade da região.</p>
         )}
+        {/* Short, real text UNDER the products (never above them): the styles this page actually lists, nothing else. */}
+        {intro && <p className="t-body mt-8 max-w-2xl text-ink-soft lg:mt-12">{intro}</p>}
       </section>
 
       {lore.length > 0 && (
