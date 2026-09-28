@@ -33,8 +33,8 @@ desenho de cidade é criado na INK como um **lote de produtos, todos com o mesmo
 | 8 | Regata | Regata |
 | 23 | Cropped | Cropped |
 | 28 | Cropped Moletom | Cropped Moletom |
-| 119 | Hoodie Moletom | Moletom (capuz) |
-| 120 | Suéter Moletom | Moletom (careca) |
+| 119 | Hoodie Moletom | Moletom Capuz |
+| 120 | Suéter Moletom | Moletom Suéter |
 | 2 | Camiseta Infantil | Infantil |
 | 165 | Body Infantil | Body Infantil |
 
