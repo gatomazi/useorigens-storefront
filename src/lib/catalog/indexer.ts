@@ -76,6 +76,7 @@ export function buildStoreIndex(
       variantLabel: variantLabel(parsed.variant),
       ...(localityLabel ? { parentCityId: city.id, localityLabel } : {}),
       ...(localityId ? { localityId } : {}),
+      ...(product.clusterId ? { productClusterId: product.clusterId } : {}),
       commerceStoreKey: storeKey,
       inkProductId: product.id,
       slug: product.slug,

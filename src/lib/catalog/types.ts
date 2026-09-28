@@ -40,6 +40,15 @@ export type CityDesignBinding = {
   /** Lower wins. Deterministic: variant rank, then store priority, then INK id. */
   priority: number;
 
+  /**
+   * INK's own `product_cluster_id` for this exact product, when INK returned one (ADR 0001: roughly a
+   * sixth to a seventh of visible products across the three stores don't have one). This is the ONLY
+   * authorized way to link a city+family's classic product to its other garment-type siblings
+   * (src/lib/catalog/garments.ts) — never by approximate name/city text. Missing here means the family
+   * has zero garment-type tabs beyond the classic one: fail closed, never guessed.
+   */
+  productClusterId?: string;
+
   commerceStoreKey: CommerceStoreKey;
 
   inkProductId: string;
@@ -91,6 +100,31 @@ export type ExcludedProduct = {
   name: string;
   reason: ExclusionReason;
   detail?: string;
+};
+
+/**
+ * One real INK product that is the SAME design as a city+family's classic `CityDesignBinding`, but a
+ * different physical piece (INK's `product_type`) — e.g. Oversized, Algodão Peruano, Body Infantil. Hidden
+ * from INK's own search (`visible_in_store: false`, `status: "not_published"`) but genuinely purchasable by
+ * direct link (verified against the live storefront, docs/storefront/city-garment-tabs-round.md). Linked to
+ * its classic sibling by `product_cluster_id` only — see `CityDesignBinding.productClusterId` and
+ * `src/lib/catalog/garments.ts`. Never a synonym for "public"/"active": sellability here is decided purely by
+ * having a valid https image, a numeric price and a validated purchase-URL host, exactly like `commerce.ts`
+ * already does for classic bindings.
+ */
+export type GarmentBinding = {
+  cityId: string;
+  designFamily: DesignFamilyId;
+  /** INK's stable, global `product_type.id` (src/lib/catalog/garments.ts owns the id → label map). */
+  garmentTypeId: number;
+  commerceStoreKey: CommerceStoreKey;
+  inkProductId: string;
+  slug: string;
+  storeProductUrl: string;
+  imageUrl: string;
+  price: number | null;
+  productClusterId: string;
+  syncedAt: string;
 };
 
 export type StoreIndex = {

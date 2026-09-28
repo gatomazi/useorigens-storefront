@@ -14,6 +14,7 @@ export function FamilyGrid({
   stateUf,
   sourceSection,
   directToInk = false,
+  pieceLabel,
 }: {
   entries: CityFamilyEntry[];
   hrefBase: string;
@@ -21,6 +22,8 @@ export function FamilyGrid({
   stateUf?: string;
   sourceSection?: string;
   directToInk?: boolean;
+  /** Forwarded to every `FamilyCard` — set only by the city page's garment-type tabs. */
+  pieceLabel?: string;
 }) {
   if (entries.length === 0) return null;
 
@@ -37,6 +40,7 @@ export function FamilyGrid({
             priority={i < 2}
             sizes="(min-width: 1024px) 23vw, (min-width: 768px) 30vw, 46vw"
             directToInk={directToInk}
+            pieceLabel={pieceLabel}
           />
         </li>
       ))}

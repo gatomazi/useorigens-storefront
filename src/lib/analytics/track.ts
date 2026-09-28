@@ -147,6 +147,9 @@ export type GoToInkParams = {
   value?: number;
   /** GA4-only additions below — never sent to Meta's GoToInk payload, whose shape is unchanged from before. */
   productName?: string;
+  /** The garment type label (Oversized, Algodão Peruano...) when the click came from a non-classic piece tab
+   * on the city page (src/lib/catalog/garments.ts) — absent for the classic piece, exactly like before. */
+  garmentType?: string;
   /** The real, verified INK URL the click is about to open. */
   destinationUrl?: string;
 };
@@ -167,6 +170,7 @@ export function trackGoToInk(params: GoToInkParams): void {
       ...(params.state ? { state: params.state } : {}),
       ...(params.family ? { family: params.family } : {}),
       ...(params.value !== undefined ? { value: params.value } : {}),
+      ...(params.garmentType ? { garment_type: params.garmentType } : {}),
     });
   }
   if (gtagReady()) {
@@ -190,6 +194,7 @@ export function trackGoToInk(params: GoToInkParams): void {
       ...(params.family ? { family: params.family } : {}),
       ...(params.value !== undefined ? { value: params.value, currency: "BRL" } : {}),
       ...(params.destinationUrl ? { destination_url: params.destinationUrl } : {}),
+      ...(params.garmentType ? { garment_type: params.garmentType } : {}),
     });
   }
 }

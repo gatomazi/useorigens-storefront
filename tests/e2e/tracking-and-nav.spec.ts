@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { expect, normalizeFbq, normalizeGtag, test } from "./fixtures";
+import { citiesWithPeruano, oracleAvailable } from "./garment-oracle";
 
 /** Injects a capturing `window.fbq` mock before any page script runs — the same approach
  * CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md §3 asks for ("Usar fbq mockado"), and it lets the calling
@@ -253,6 +254,23 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
     expect(goToInk).toHaveLength(1);
     expect(goToInk[0][2]).toMatchObject({ source_section: "city_styles", city: "Tijucas", state: "SC" });
     expect(href).toMatch(/^https:\/\/www\.usesul\.com\.br\//);
+  });
+
+  test("given a garment-type card on a city page, when clicked, then exactly one GoToInk fires carrying garment_type, and never Purchase/AddToCart/ViewContent", async ({ page }) => {
+    const subject = oracleAvailable ? citiesWithPeruano("sul", 1)[0] : undefined;
+    test.skip(!subject, "local garment index not present");
+    const piece = subject!.pieces.find((p) => p.typeSlug === "peruano")!;
+    await grantConsent(page);
+    const calls = await withFbqMock(page);
+    await blockInkNavigation(page);
+    await page.goto(`/sul/${subject!.city.uf.toLowerCase()}/${subject!.city.slug}?peca=peruano`);
+    const card = page.getByRole("link", { name: `Comprar ${piece.familyName} Algodão Peruano de ${subject!.city.name} na loja` });
+    await expect(card).toHaveAttribute("href", piece.href);
+    await card.click();
+    const goToInk = fbqCalls(calls, "GoToInk");
+    expect(goToInk).toHaveLength(1);
+    expect(goToInk[0][2]).toMatchObject({ source_section: "city_styles", garment_type: "Algodão Peruano", city: subject!.city.name });
+    for (const forbidden of ["Purchase", "AddToCart", "ViewContent"]) expect(fbqCalls(calls, forbidden)).toEqual([]);
   });
 
   test("given the home's '8 jeitos' example city, when a style with no variants is clicked, then it opens the INK product directly (no storefront PDP step) and fires one GoToInk from home_styles", async ({ page }) => {
