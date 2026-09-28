@@ -7,7 +7,8 @@ import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { ConsentProvider } from "@/lib/consent/ConsentProvider";
 import { AnnouncementBar, Footer, Header } from "@/components/layout/SiteChrome";
 import { getCatalog } from "@/lib/catalog/repository";
-import { isRegionSlug } from "@/lib/geo/regions";
+import type { Metadata } from "next";
+import { isRegionSlug, type RegionSlug } from "@/lib/geo/regions";
 import { regionThemeStyle } from "@/lib/theme/region-theme";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { publishedTracking } from "@/lib/site-config/tracking";
@@ -18,6 +19,24 @@ import { publishedTracking } from "@/lib/site-config/tracking";
 // first request (then ISR-cached) is the same pattern the state, city and PDP routes already use.
 export function generateStaticParams() {
   return [];
+}
+
+/** Each store shows its own logo as the tab icon (`icons` replaces the root layout's generic one; pages that set other metadata keep it). */
+const ICON_FILE: Record<RegionSlug, string> = { sul: "sul", norte: "norte", "centro-oeste": "centro" };
+
+export async function generateMetadata({ params }: { params: Promise<{ region: string }> }): Promise<Metadata> {
+  const { region } = await params;
+  if (!isRegionSlug(region)) return {};
+  const file = ICON_FILE[region];
+  return {
+    icons: {
+      icon: [
+        { url: `/brand/icon-${file}-32.png`, sizes: "32x32", type: "image/png" },
+        { url: `/brand/logo-${file}.png`, sizes: "192x192", type: "image/png" },
+      ],
+      apple: [{ url: `/brand/apple-touch-${file}.png`, sizes: "180x180", type: "image/png" }],
+    },
+  };
 }
 
 export default async function RegionLayout({ children, params }: { children: React.ReactNode; params: Promise<{ region: string }> }) {
