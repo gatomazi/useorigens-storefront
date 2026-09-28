@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
 import type { GarmentTabOption } from "@/lib/catalog/repository";
 
@@ -22,7 +22,6 @@ import type { GarmentTabOption } from "@/lib/catalog/repository";
 export function CityGarmentTabs({ tabs, panels }: { tabs: GarmentTabOption[]; panels: Record<number, ReactNode> }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const router = useRouter();
   const listRef = useRef<HTMLDivElement>(null);
 
   const bySlug = new Map(tabs.map((t) => [t.slug, t.id]));
@@ -36,7 +35,9 @@ export function CityGarmentTabs({ tabs, panels }: { tabs: GarmentTabOption[]; pa
     if (tab.id === tabs[0].id) params.delete("peca");
     else params.set("peca", tab.slug);
     const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    // Native History API (documented as integrated with useSearchParams): the URL updates at once and the
+    // server is never asked for anything, unlike `router.replace`, which waits for a round trip per tab click.
+    window.history.replaceState(null, "", qs ? `${pathname}?${qs}` : pathname);
   }
 
   function onKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
