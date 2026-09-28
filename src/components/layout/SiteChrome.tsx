@@ -121,7 +121,7 @@ export function Header({ region }: { region: RegionSlug }) {
             </ul>
           </HeaderDropdown>
           <FavoritesMenu region={region} />
-          <CartMirrorMenu />
+          <CartMirrorMenu region={region} />
           <SearchDialog region={region} />
         </div>
       </div>
