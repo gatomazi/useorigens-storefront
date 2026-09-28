@@ -35,6 +35,8 @@ import { launchBlockers } from "@/lib/admin/launch";
 import { isRegionScope, REGION_SCOPES, SCOPE_COOKIE, scopeName, scopeOf, storeOf } from "@/lib/admin/scope";
 import { applyAndSave, discardDraft, loadWorkspace, type SaveOutcome } from "@/lib/admin/workspace";
 import type { DraftOp } from "@/lib/admin/draft-ops";
+import { parseNavigationForm, parseThemeForm, readableNavigationError } from "@/lib/admin/navigation-form";
+import { themeProblems } from "@/lib/site-config/navigation";
 
 /**
  * Every server action of the CMS. Each one authenticates and authorises on its own (`requireAdmin`: development guard or Railway session,
@@ -414,6 +416,75 @@ export async function discardGlobalTrackingAction() {
   await audit(actor, "draft.discard", "global");
   revalidatePath("/admin", "layout");
   back("/admin/tracking", { ok: "Rascunho do tracking global descartado." });
+}
+
+// ── Navegação e Aparência (menu por região; paleta global ou por região) ─────────────────────────────────────────
+
+/** Saves the navigation of a region as a DRAFT (nothing reaches the store until it is published from "Publicar"). */
+export async function saveNavigationAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const parsed = parseNavigationForm(fd, scope);
+  if (!parsed.ok) back("/admin/navegacao", { err: parsed.errors });
+  const outcome = await applyAndSave(scope, { type: "set-navigation", navigation: parsed.value }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/navegacao", { err: outcome.errors.map(readableNavigationError) });
+  await audit(actor, "draft.save", scope, "set-navigation");
+  back("/admin/navegacao", { ok: `Rascunho da navegação de ${scopeName(scope)} salvo. Nada muda na loja até você publicar.` });
+}
+
+/** Back to the default menu (default labels, order and visibility) as a draft. */
+export async function resetNavigationAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const outcome = await applyAndSave(scope, { type: "set-navigation", navigation: null }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/navegacao", { err: outcome.errors });
+  await audit(actor, "draft.save", scope, "set-navigation");
+  back("/admin/navegacao", { ok: "Navegação padrão restaurada no rascunho. Publique para valer na loja." });
+}
+
+/** Saves a palette as a DRAFT: the global one (owner only) or a region's. Contrast under AA is reported, never silently accepted; under 3:1 it cannot be published. */
+export async function saveThemeAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true });
+  const target = text(fd, "scope");
+  const scope: Scope | null = target === "global" ? "global" : isRegionScope(target) ? target : null;
+  if (!scope) back("/admin/aparencia", { err: ["Paleta inválida."] });
+  if (scope === "global" ? actor.role !== "owner" : !canEdit(actor, scope)) {
+    await audit(actor, "access.denied", scope, "theme");
+    back("/admin/aparencia", { err: [scope === "global" ? "Só o owner altera a paleta da Use Origens." : "Você não tem permissão para essa região."] });
+  }
+  const parsed = parseThemeForm(fd, scope);
+  if (!parsed.ok) back("/admin/aparencia", { err: parsed.errors });
+  const outcome = await applyAndSave(scope, { type: "set-theme", theme: parsed.value }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/aparencia", { err: outcome.errors });
+  await audit(actor, "draft.save", scope, "set-theme");
+  const saved = (await loadWorkspace(scope)).doc;
+  const problems = saved.theme ? themeProblems(scope, saved, (await loadWorkspace("global")).doc) : { blocking: [], warnings: [] };
+  const what = scope === "global" ? "da Use Origens" : `de ${scopeName(scope)}`;
+  if (problems.blocking.length > 0) back("/admin/aparencia", { err: [`Rascunho ${what} salvo, mas NÃO poderá ser publicado assim:`, ...problems.blocking] });
+  if (problems.warnings.length > 0) back("/admin/aparencia", { ok: `Rascunho ${what} salvo. Atenção ao contraste: ${problems.warnings.join(" · ")}` });
+  back("/admin/aparencia", { ok: `Rascunho da aparência ${what} salvo. Nada muda na loja até você publicar.` });
+}
+
+/** Publishes the GLOBAL document (owner only): the "Use Origens" palette, together with the global tracking draft if there is one. Regions that inherit it change together. */
+export async function publishGlobalThemeAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const ws = await loadWorkspace("global");
+  await reconcileReleases(deps(actor), revalidateStorefront).catch(() => undefined);
+  const result = await publishRelease(deps(actor), { kind: "publish", doc: ws.doc, note: text(fd, "note").slice(0, 200) || "Paleta global", confirmTracking: text(fd, "confirmTracking") === "on" }, revalidateStorefront).catch(publishError);
+  revalidatePath("/admin", "layout");
+  if (!result.ok) back("/admin/aparencia", { err: result.errors });
+  await audit(actor, result.outcome.status === "failed" ? "publish.failed" : "publish", "global", result.outcome.releaseId, { status: result.outcome.status });
+  if (result.outcome.status === "failed") back("/admin/aparencia", { err: ["A publicação falhou ao gravar o arquivo; a versão anterior continua no ar."] });
+  back("/admin/aparencia", { ok: `Paleta global publicada (release ${result.outcome.releaseId}).` });
+}
+
+export async function discardGlobalThemeAction() {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  await discardDraft("global");
+  await audit(actor, "draft.discard", "global");
+  revalidatePath("/admin", "layout");
+  back("/admin/aparencia", { ok: "Rascunho da paleta global descartado." });
 }
 
 /**
