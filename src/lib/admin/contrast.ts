@@ -6,26 +6,14 @@
  *   - with an image, white text needs a dark-ish overlay (opacity ≥ 0.35 of a dark colour, or a dark preset) and dark text needs a light one.
  * A `blocking` result stops a publish (unreadable text is a bug); a `warning` is shown but allowed.
  */
+import { contrastRatio, relativeLuminance as luminance } from "../site-config/color";
 import type { Appearance, Color, Fill, Overlay } from "../site-config/schema";
 
 const TOKEN_HEX: Record<string, string> = { "token:ground": "#e5e5e5", "token:region-primary": "#4d543d", "token:near-black": "#0a0c0a" };
 
-function luminance(hex: string): number {
-  const n = Number.parseInt(hex.slice(1), 16);
-  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
-    const c = v / 255;
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
 const hexOf = (c: Color): string => TOKEN_HEX[c] ?? c;
 
-/** WCAG contrast ratio between two colours (1..21). */
-export function contrastRatio(a: string, b: string): number {
-  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (hi + 0.05) / (lo + 0.05);
-}
+export { contrastRatio };
 
 const PRESET_DARKNESS: Record<string, "dark" | "light" | "none"> = { none: "none", "regional-wash": "light", "regional-wash-primary": "dark", "regional-wash-dark": "dark" };
 
