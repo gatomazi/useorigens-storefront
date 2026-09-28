@@ -316,7 +316,7 @@ redirecionamentos e `VAR=valor cmd` funcionam dentro dele; (c) não dá para env
 6. **Promover e revalidar** (depois da promoção, nesta ordem): `railway ssh ... -- "GARMENT_REVALIDATE_URL=http://127.0.0.1:8080 node --conditions=react-server --import tsx scripts/promote-garment-index.mts --from /app/data/generated/garment-index.incoming.json --expect-stores use-sul,use-norte,use-centro --revalidate"`.
    O script valida de novo, guarda o índice anterior como `garment-index.json.prev` (se houver), faz o `rename` atômico e
    chama a rota autenticada. Saída 1 = não promoveu (índice vivo intocado); **saída 3 = promoveu, revalidação falhou:
-   mantenha o arquivo e repita só `scripts/revalidate-garments.mts --store use-sul`**.
+   mantenha o arquivo e repita só `scripts/revalidate-garments.mts`**.
 7. **Conferir:** `curl -s https://<url>/sul/pr/agudos-do-sul | grep -c "Algodão Peruano"` (> 0) e a cidade no navegador.
    Atualizações futuras: `catalog-sync` (rota) e depois `sync-garments.mts --max-requests-per-store 40` sem `--force-full`
    (incremental por `begin_date`), com `GARMENT_REVALIDATE_URL` no comando. Nenhum agendamento foi ativado.
