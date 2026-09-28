@@ -153,11 +153,13 @@ test.describe("/sul critical flows", () => {
     await expect(navLink).toHaveCSS("color", "rgb(255, 255, 255)");
     const announcement = page.locator(".on-ink").first();
     await expect(announcement).toHaveCSS("background-color", "rgb(0, 0, 0)");
-    // The region switcher panel is its own white surface: it must reset to dark text, not inherit the header's white.
-    await header.getByText("Sul", { exact: true }).click();
-    const panelLink = header.getByRole("link", { name: "Norte" });
+    // A dropdown panel is its own white surface: it must reset to dark text, not inherit the header's white. (The region switcher only lists LAUNCHED regions,
+    // and this server has only Sul launched, so the panel checked here is the states one; the switcher is covered in tests/e2e-admin/navigation-theme.spec.ts.)
+    await header.getByText("Regiões", { exact: true }).click();
+    const panelLink = header.getByRole("link", { name: "Paraná" });
     await expect(panelLink).toBeVisible();
     await expect(panelLink).toHaveCSS("color", "rgb(0, 0, 0)");
+    await expect(header.getByText("Sul", { exact: true })).toHaveCount(0); // no other region is launched: no switcher pointing at nothing
   });
 
   test("given the mobile header search, when opened, then it fills the screen and results are keyboard reachable", async ({ page }) => {

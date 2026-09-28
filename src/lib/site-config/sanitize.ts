@@ -9,6 +9,7 @@
  *   - an invalid hero or footer               ⇒ the whole scope falls back to the seed (the home cannot exist without them).
  * Pure: no I/O, so it is unit-tested with hand-made objects.
  */
+import { validateNavigation, validateTheme } from "./navigation-schema";
 import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
 export type SanitizeResult = { bundle: PublishedBundle | null; diagnostics: string[] };
@@ -142,6 +143,15 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   const { pages, customizers } = sanitizePagesAndModels(scope, raw, media, diagnostics);
   if (sections) sections = withoutOrphanCards(sections, customizers, scope, diagnostics);
   const candidate = { ...raw, home: sections ? { sections } : undefined, pages, customizers } as unknown as ScopeDoc;
+  // Navigation and theme are optional and cosmetic: an invalid one is dropped (the region keeps its current look and the default menu), never the region.
+  for (const key of ["navigation", "theme"] as const) {
+    if (candidate[key] === undefined) continue;
+    const r = key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`) : validateTheme(candidate[key], scope, `${scope}.theme`);
+    if (!r.ok) {
+      diagnostics.push(`${scope}: ${key} is invalid and was ignored (${r.errors[0]})`);
+      delete candidate[key];
+    }
+  }
   if (!pages) delete (candidate as { pages?: unknown }).pages;
   if (!customizers) delete (candidate as { customizers?: unknown }).customizers;
   if (candidate.collections !== undefined && !validateScopeDoc({ ...candidate, home: undefined, collections: candidate.collections }).ok) {

@@ -7,6 +7,7 @@
  * final URL and dimensions, so rendering never needs the database or the storage API).
  */
 import { isAllowedMediaSrc } from "./media-hosts";
+import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
@@ -184,6 +185,16 @@ export type ScopeDoc = {
    * the audit trail of every launch and recall.
    */
   launched?: boolean;
+  /**
+   * Header / mobile-menu navigation of this REGION (labels, order and visibility of a few blocks and of the known primary links; the states and
+   * the other regions are never listed here: they come from real data). Absent = the default hierarchy with the default labels. Published with the region.
+   */
+  navigation?: NavigationConfig;
+  /**
+   * Palette of the storefront chrome. On a region: `inherit` (the global palette) or `override` (its own); absent = the look the region has today.
+   * On `global`: the "Use Origens" palette regions may inherit (always `override`). Published with its scope.
+   */
+  theme?: ThemeConfig;
   /**
    * Hotpages and parent-category landings of this region. Part of the document for storage and rollback, but PUBLISHED ON THEIR OWN: publishing the
    * home never publishes a draft page, and publishing a page never touches the home (admin/publishing.ts composes the bundle per target).
@@ -616,6 +627,14 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   if (input.launched !== undefined) {
     if (typeof input.launched !== "boolean") c.fail("doc.launched", "must be boolean");
     else if (sc === "global") c.fail("doc.launched", "global is not a region");
+  }
+  if (input.navigation !== undefined) {
+    const r = validateNavigation(input.navigation, sc, "doc.navigation");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.theme !== undefined) {
+    const r = validateTheme(input.theme, sc, "doc.theme");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.collections !== undefined) {
     if (sc === "global") c.fail("doc.collections", "global has no collections in V1");

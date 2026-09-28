@@ -17,6 +17,8 @@ import { defineConfig } from "@playwright/test";
  *     after roundtrip (its own file comment already said as much: "Runs AFTER roundtrip.spec.ts, which counts sandbox releases from 1."), before
  *     hero or structured ever touch Norte or Centro-Oeste. `hotpages.spec.ts` enables that same "Fé de Origem" collection (idempotently, so it works
  *     whether or not roundtrip ran first) and can run anywhere after roundtrip.
+ *   - `navigation-theme.spec.ts` launches Norte and Centro-Oeste by itself (idempotently), publishes navigation and palettes for the three regions and leaves
+ *     Sul with its own palette, so it goes last; it can also run alone on a fresh sandbox (`--no-deps`).
  * `hotpages.spec.ts` and the production-mode suite (`tests/e2e-prod`) additionally treat "already enabled" as fine on their own (see the idempotent
  * enable step in both), so this order is a documented convenience, not the only thing standing between the suite and a false failure.
  * `docs/admin/cms-hotpages-personalizacao-final-gate.md` §C has the failures this replaced and the reproduction command for the old, unordered run.
@@ -25,7 +27,7 @@ const port = 3320;
 const sandbox = process.env.CMS_TEST_SANDBOX ?? mkdtempSync(path.join(tmpdir(), "cms-e2e-"));
 process.env.CMS_TEST_SANDBOX = sandbox;
 
-const ORDER = ["roundtrip.spec.ts", "scopes.spec.ts", "hero.spec.ts", "hotpages.spec.ts", "navbar.spec.ts", "structured.spec.ts"] as const;
+const ORDER = ["roundtrip.spec.ts", "scopes.spec.ts", "hero.spec.ts", "hotpages.spec.ts", "navbar.spec.ts", "structured.spec.ts", "navigation-theme.spec.ts"] as const;
 
 export default defineConfig({
   testDir: "tests/e2e-admin",

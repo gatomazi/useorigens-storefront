@@ -5,6 +5,8 @@ import { bundleChecksum } from "../site-config/checksum";
 import { publish, reconcile, type FileState, type PublishOutcome, type PublishPorts, type ReleaseRecord } from "../site-config/publish-flow";
 import { resolveTracking, type TrackingOrigin } from "../site-config/resolve";
 import { mediaRefsOfDoc, validateBundle, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "../site-config/schema";
+import { REGION_SLUGS } from "../geo/regions";
+import { themeProblems } from "../site-config/navigation";
 import { pageAsHomeDoc } from "../site-config/pages";
 import { buildSeedBundle } from "../site-config/seed";
 import { readJson, withLock, writeJsonAtomic } from "./local-store";
@@ -135,6 +137,14 @@ export function linkProblems(composed: ScopeDoc, sections: Section[]): string[] 
   return out;
 }
 
+/** A palette whose text is practically unreadable (under 3:1) never ships; under AA it only warns in the editor. For the global scope, every region that inherits it is checked. */
+export function themeBlockers(bundle: PublishedBundle, scope: Scope): string[] {
+  const doc = bundle.docs[scope];
+  if (!doc?.theme) return [];
+  const inheriting = REGION_SLUGS.filter((r) => bundle.docs[r]?.theme?.mode === "inherit");
+  return themeProblems(scope, doc, bundle.docs.global, inheriting).blocking.map((m) => `Aparência: ${m}`);
+}
+
 /** Publish pre-flight: strict bundle validation, every INK collection section still resolves, readable text, live links. (Tracking is confirmed separately.) */
 export async function preflight(deps: Pick<PublishDeps, "releases" | "media">, doc: ScopeDoc, target: PublishTarget = REGION_TARGET): Promise<string[]> {
   let bundle: PublishedBundle;
@@ -146,7 +156,7 @@ export async function preflight(deps: Pick<PublishDeps, "releases" | "media">, d
   const strict = validateBundle(bundle);
   const composed = bundle.docs[doc.scope];
   const problems = strict.ok ? [] : strict.errors;
-  if (target.kind === "region") return [...problems, ...collectionProblems(doc), ...readabilityProblems(doc), ...linkProblems(composed, doc.home?.sections ?? [])];
+  if (target.kind === "region") return [...problems, ...collectionProblems(doc), ...readabilityProblems(doc), ...linkProblems(composed, doc.home?.sections ?? []), ...themeBlockers(bundle, doc.scope)];
   if (target.kind === "page") {
     const page = composed.pages!.find((p) => p.id === target.id)!;
     const asHome = pageAsHomeDoc(composed, page);

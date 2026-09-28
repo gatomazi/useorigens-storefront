@@ -9,6 +9,8 @@ const ITEMS = [
   { href: "/admin/paginas", label: "Páginas" },
   { href: "/admin/personalizacao", label: "Personalização" },
   { href: "/admin/colecoes", label: "Coleções" },
+  { href: "/admin/navegacao", label: "Navegação" },
+  { href: "/admin/aparencia", label: "Aparência" },
   { href: "/admin/tracking", label: "Tracking" },
   { href: "/admin/publicar", label: "Publicar" },
   { href: "/admin/midia", label: "Mídia" },

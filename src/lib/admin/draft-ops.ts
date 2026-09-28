@@ -12,6 +12,7 @@ import { sectionsUsing } from "../site-config/collections-enabled";
 import { effectiveNavbarGroups, movedWithin, withNavbarGroups, withPosition, type NavbarPosition } from "../site-config/navbar-groups";
 import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredTemplate } from "../site-config/structured";
 import { newPage, uniqueSlug } from "../site-config/pages";
+import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type Page, type PageKind, type PageSeo, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard">;
@@ -34,6 +35,10 @@ export type DraftOp =
   | { type: "init-home"; sections: Section[] }
   /** Replaces the tracking configuration of the document (validated: formats, legacy only for Sul, an inactive ID only in global). */
   | { type: "set-tracking"; tracking: TrackingConfig }
+  /** Replaces the navigation configuration of a region (`null` = back to the default menu). Strictly validated. */
+  | { type: "set-navigation"; navigation: NavigationConfig | null }
+  /** Replaces the palette of a region (`inherit` / `override`) or of the global scope; `null` = no theme (the region keeps its current look). */
+  | { type: "set-theme"; theme: ThemeConfig | null }
   /** Launches / recalls a region publicly (takes effect only when published). */
   | { type: "set-launched"; launched: boolean }
   // ── Pages (hotpages and parent-category landings) ──
@@ -95,6 +100,15 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   }
   if (op.type === "set-tracking") {
     const next: ScopeDoc = { ...doc, tracking: op.tracking };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-navigation" || op.type === "set-theme") {
+    const key = op.type === "set-navigation" ? "navigation" : "theme";
+    const value = op.type === "set-navigation" ? op.navigation : op.theme;
+    const { [key]: _dropped, ...rest } = doc;
+    void _dropped;
+    const next = (value === null ? rest : { ...rest, [key]: value }) as ScopeDoc;
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }

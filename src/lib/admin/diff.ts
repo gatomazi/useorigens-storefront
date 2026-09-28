@@ -1,8 +1,9 @@
 import { effectiveNavbarGroups } from "../site-config/navbar-groups";
+import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlockConfig } from "../site-config/navigation";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
@@ -41,6 +42,8 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   }
   // The INK navbar groups are part of the document but not of any section: without this, changing only the navbar would read "nothing to publish".
   changes.push(...navbarChanges(published, draft, nameOf));
+  // Same reason for the menu and the palette: they belong to the document, not to a section.
+  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft));
   return changes;
 }
 
@@ -68,6 +71,42 @@ function navbarChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionN
     const a = stay(before, after);
     const b = stay(after, before);
     if (a.join() !== b.join()) out.push({ kind: "navbar-moved", sectionId: `navbar:order:${group}`, text: `A ordem ${GROUP_LABEL[group]} mudou` });
+  }
+  return out;
+}
+
+const BLOCK_NAME = { primaryBlock: "Comprar", statesBlock: "Estados da região", regionsBlock: "Outras regiões" } as const;
+const blockText = (b: NavBlockConfig | undefined) => (b ? `"${b.label}", posição ${b.order}, ${b.visible ? "visível" : "oculto"}` : "padrão");
+
+/** What changed in the region's menu configuration (blocks and known links). Pure. */
+function navigationChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const before = published.navigation;
+  const after = draft.navigation;
+  if (json(before) === json(after)) return [];
+  const out: Change[] = [];
+  for (const key of ["primaryBlock", "statesBlock", "regionsBlock"] as const) {
+    if (json(before?.[key]) !== json(after?.[key])) out.push({ kind: "navigation", sectionId: `navigation:${key}`, text: `Navegação, bloco ${BLOCK_NAME[key]}: ${blockText(before?.[key])} → ${blockText(after?.[key])}` });
+  }
+  for (const destination of ["styles", "speech", "states"] as const) {
+    const was = before?.primaryLinks?.find((l) => l.destination === destination);
+    const now = after?.primaryLinks?.find((l) => l.destination === destination);
+    if (json(was) !== json(now)) out.push({ kind: "navigation", sectionId: `navigation:link:${destination}`, text: `Navegação, link ${NAV_DESTINATION_LABEL[destination]}: ${blockText(was)} → ${blockText(now)}` });
+  }
+  return out;
+}
+
+const modeText = (doc: ScopeDoc): string => (doc.theme ? (doc.theme.mode === "inherit" ? "herda a paleta da Use Origens" : "paleta própria") : "visual atual (sem configuração)");
+
+/** What changed in the palette: the mode, and each colour that was set, changed or cleared. Pure. */
+function themeChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  if (json(published.theme) === json(draft.theme)) return [];
+  const who = draft.scope === "global" ? "Aparência global (Use Origens)" : "Aparência";
+  const out: Change[] = [];
+  if (draft.scope !== "global" && published.theme?.mode !== draft.theme?.mode) out.push({ kind: "theme", sectionId: "theme:mode", text: `${who}: ${modeText(published)} → ${modeText(draft)}` });
+  for (const key of THEME_COLOR_KEYS) {
+    const was = published.theme?.colors[key];
+    const now = draft.theme?.colors[key];
+    if (was !== now) out.push({ kind: "theme", sectionId: `theme:${key}`, text: `${who}, ${THEME_COLOR_LABEL[key].toLowerCase()}: ${was ?? "padrão"} → ${now ?? "padrão"}` });
   }
   return out;
 }
