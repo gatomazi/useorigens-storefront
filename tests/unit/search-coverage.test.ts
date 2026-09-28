@@ -15,7 +15,7 @@ const merch = (n: number): MerchProduct => ({
   storeProductUrl: `https://www.usesul.com.br/usesul/product/estampa-${n}`, imageUrl: `https://img/${n}.jpg`, price: 109.9, totalSalesCount: 0, syncedAt: "2026-09-21T00:00:00Z",
 });
 const ALL = Array.from({ length: 140 }, (_, i) => merch(i + 1));
-const catalog = { syncedAt: null, cityFamilies: () => [], cityLocalities: () => [], merch: () => ALL, coveredCityIds: () => new Set<string>() } as unknown as Catalog;
+const catalog = { syncedAt: null, cityFamilies: () => [], cityLocalities: () => [], merch: () => ALL, coveredCityIds: () => new Set<string>(), coveredLocalityIds: () => new Set<string>() } as unknown as Catalog;
 const match = matcherForStore({ bindings: [], merch: ALL });
 const inkItem = (id: number, name: string, ids: number[], available = true) => ({ id, name, slug: name.toLowerCase().replace(/ /g, "-"), description: null, is_available: available, position: id, product_ids: ids, kit_ids: [] });
 const range = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => from + i);
