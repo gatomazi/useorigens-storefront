@@ -3,13 +3,13 @@ import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import { enabledInternalIds } from "../site-config/collections-enabled";
 import type { ScopeDoc } from "../site-config/schema";
 import type { CategoryLookup } from "../site-config/sources";
-import { cityById } from "../geo/cities";
 import { formatPrice } from "../format";
 import type { CommerceStoreKey } from "../geo/regions";
 import { purchaseUrl } from "./commerce";
 import { collectionState, MIN_USABLE_PRODUCTS, type CollectionReason } from "./collections";
 import { findCollection, getStoreCollections } from "./collections-file";
 import { DESIGN_FAMILIES } from "./families";
+import { localityOfBinding } from "./locality-binding";
 import type { StoreProducts } from "./repository";
 import type { MerchProduct, UnrankedBinding } from "./types";
 
@@ -62,7 +62,8 @@ function merchItem(product: MerchProduct): CarouselItem | null {
 /** A city design has no display name of its own: its family and city are the label ("Ponto de Origem" · "Tijucas · SC"). */
 function cityDesignItem(design: UnrankedBinding): CarouselItem | null {
   const href = purchaseUrl(design);
-  const city = cityById(design.cityId);
+  // A Federal District administrative region's product reads as ITS region ("Taguatinga · DF"), never as Brasília.
+  const city = localityOfBinding(design);
   const family = DESIGN_FAMILIES.find((f) => f.id === design.designFamily);
   if (!href || !city || !family) return null;
   return { id: design.inkProductId, name: family.name, context: `${city.name} · ${city.uf}`, price: formatPrice(design.price), rawPrice: design.price, state: city.uf, imageUrl: design.imageUrl, href };

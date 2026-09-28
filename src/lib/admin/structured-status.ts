@@ -30,7 +30,8 @@ export function statesStatus(region: RegionSlug): StructuredStatus {
   const states = getRegionHome(region).states;
   const ready = states.filter((s) => s.cityCount > 0);
   const pending = states.filter((s) => s.cityCount === 0);
-  const notes = [`Estados com cidades e produtos reais: ${ready.map((s) => `${s.name} (${s.cityCount})`).join(", ") || "nenhum"}.`];
+  // A state whose places are not all cities (Federal District: Brasília + administrative regions) says so instead of "(1)".
+  const notes = [`Estados com cidades e produtos reais: ${ready.map((s) => `${s.name} (${s.administrativeRegionCount > 0 ? s.localityLabel : s.cityCount})`).join(", ") || "nenhum"}.`];
   if (pending.length > 0) notes.push(`Sem cidades com produtos nesta loja e por isso omitidos: ${pending.map((s) => s.name).join(", ")}.`);
   if (ready.length === 0) return { ok: false, summary: "Nenhum estado com produtos", notes: [...notes, "A seção não aparece na loja até o catálogo cobrir cidades de algum estado."] };
   return { ok: true, summary: `${ready.length} de ${states.length} estado(s) serão mostrados`, notes };
