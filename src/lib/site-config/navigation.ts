@@ -47,7 +47,7 @@ export function themeDefaults(region: RegionSlug, brandPrimary?: string): ThemeC
     brandPrimary: brand,
     headerBackground: brand, // the header is always the region's primary colour today
     headerText: "#ffffff",
-    mobileMenuBackground: "#000000", // the drawer is black today
+    mobileMenuBackground: brand, // the drawer follows the region's primary colour, like the header
     mobileMenuText: "#ffffff",
     accent: t.accent,
     pageBackground: "#e5e5e5", // --ground: the flat grey behind every INK product photo

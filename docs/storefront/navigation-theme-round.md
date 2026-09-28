@@ -16,7 +16,7 @@ theme: { mode: "inherit"|"override", colors: Partial<{brandPrimary, headerBackgr
 Global é sempre `override`. Campos desconhecidos, cores fora de `#rrggbb`, labels vazios/>40/com quebra de linha e destinos fora da lista são recusados.
 
 ## Fallback
-- Sem `navigation`: hierarquia padrão com rótulos padrão. Sem `theme`: nenhuma variável CSS emitida (visual atual; testado nas 3 regiões). Global publicado não altera região sem config.
+- Sem `navigation`: hierarquia padrão com rótulos padrão. Sem `theme`: nenhuma variável CSS emitida; o menu mobile usa por padrão a cor principal da região (header e menu iguais, ambos com texto branco AA). Global publicado não altera região sem config.
 - Documento antigo continua válido; `navigation`/`theme` inválidos no arquivo publicado são descartados com diagnóstico, sem derrubar a região.
 - CSS: `--nav-header-bg/text`, `--nav-menu-bg/text` com fallback (região / preto e branco); `brandPrimary`, `accent`, `pageBackground`, `pageText` sobrescrevem `--region-primary`, `--region-accent`, `--ground`, `--ink`. `.on-ink` passou a `#000` fixo para a faixa de anúncio não seguir o texto principal.
 

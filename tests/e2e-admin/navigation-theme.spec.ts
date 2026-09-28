@@ -98,10 +98,10 @@ test("given Norte and Centro-Oeste are launched, when each mobile menu opens, th
   }
 });
 
-test("given no palette is configured, when the three regions render, then each keeps today's colours (own primary header, black menu)", async ({ page }) => {
+test("given no palette is configured, when the three regions render, then each keeps today's colours (own primary colour on header and menu)", async ({ page }) => {
   for (const region of REGIONS) {
     const dialog = await openPublicMenu(page, region.slug);
-    await expect(dialog).toHaveCSS("background-color", "rgb(0, 0, 0)");
+    await expect(dialog).toHaveCSS("background-color", region.primary);
     await expect(dialog).toHaveCSS("color", "rgb(255, 255, 255)");
     await expect(page.locator("header.site-header")).toHaveCSS("background-color", region.primary);
     expect(await page.locator(`[data-region='${region.slug}']`).evaluate((el) => el.getAttribute("style"))).not.toContain("--nav-");
@@ -226,7 +226,7 @@ test("given Aparência, when a region picks its own palette with an unreadable p
   await expect(page.locator("header.site-header")).toHaveCSS("background-color", "rgb(77, 84, 61)"); // the header keeps the region's own colour: only the menu was set
   for (const other of ["norte", "centro-oeste"]) {
     const d = await openPublicMenu(page, other);
-    await expect(d, `${other} unchanged`).toHaveCSS("background-color", "rgb(0, 0, 0)");
+    await expect(d, `${other} unchanged`).toHaveCSS("background-color", other === "norte" ? "rgb(35, 75, 80)" : "rgb(140, 59, 31)");
   }
 });
 
@@ -243,7 +243,7 @@ test("given the global palette, when a region inherits it, then the region shows
   await expect(flash(page, /Paleta global publicada/)).toBeVisible({ timeout: 300_000 });
 
   // 2. Nobody changed by themselves: Norte has no config, Centro-Oeste neither, Sul has its own.
-  for (const [slug, bg] of [["norte", "rgb(0, 0, 0)"], ["centro-oeste", "rgb(0, 0, 0)"], ["sul", "rgb(31, 42, 68)"]] as const) {
+  for (const [slug, bg] of [["norte", "rgb(35, 75, 80)"], ["centro-oeste", "rgb(140, 59, 31)"], ["sul", "rgb(31, 42, 68)"]] as const) {
     await expect(await openPublicMenu(page, slug), `${slug} before inheriting`).toHaveCSS("background-color", bg);
   }
 
@@ -271,7 +271,7 @@ test("given the global palette, when a region inherits it, then the region shows
   await expect(flash(page, /Paleta global publicada/)).toBeVisible({ timeout: 300_000 });
   await expect(await openPublicMenu(page, "norte"), "followed the global").toHaveCSS("background-color", "rgb(11, 61, 46)");
   await expect(await openPublicMenu(page, "sul"), "own palette still its own").toHaveCSS("background-color", "rgb(31, 42, 68)");
-  await expect(await openPublicMenu(page, "centro-oeste"), "no config still today's look").toHaveCSS("background-color", "rgb(0, 0, 0)");
+  await expect(await openPublicMenu(page, "centro-oeste"), "no config still today's look").toHaveCSS("background-color", "rgb(140, 59, 31)");
 });
 
 test("given a region that inherits, when an older release is restored, then it goes back to that release's look and the others stay as they are", async ({ page }) => {
@@ -281,7 +281,7 @@ test("given a region that inherits, when an older release is restored, then it g
   const history = page.locator("tbody tr").filter({ has: page.getByRole("button", { name: "Restaurar Norte" }) });
   await history.last().getByRole("button", { name: "Restaurar Norte" }).click();
   await expect(flash(page, /Norte: versão \d+ restaurada/)).toBeVisible({ timeout: 300_000 });
-  await expect(await openPublicMenu(page, "norte"), "back to today's look").toHaveCSS("background-color", "rgb(0, 0, 0)");
+  await expect(await openPublicMenu(page, "norte"), "back to today's look").toHaveCSS("background-color", "rgb(35, 75, 80)");
   expect(await headings(page.getByRole("dialog", { name: "Menu" }))).toEqual(["Comprar", "Estados do Norte", "Explorar outras regiões"]);
   await expect(await openPublicMenu(page, "sul"), "Sul untouched").toHaveCSS("background-color", "rgb(31, 42, 68)");
 });

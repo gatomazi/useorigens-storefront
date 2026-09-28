@@ -125,10 +125,10 @@ test.describe("mobile menu accessibility", () => {
     await expect(page.getByRole("dialog", { name: "Menu" })).toBeHidden();
   });
 
-  test("given the menu, when its contrast is measured, then text on the panel passes WCAG AA (default black and white: 21:1)", async ({ page }) => {
+  test("given the menu, when its contrast is measured, then text on the panel passes WCAG AA (default: the region's olive with white text)", async ({ page }) => {
     const dialog = await openMenu(page, 375);
     const colors = await dialog.evaluate((el) => ({ bg: getComputedStyle(el).backgroundColor, fg: getComputedStyle(el).color }));
-    expect(colors).toEqual({ bg: "rgb(0, 0, 0)", fg: "rgb(255, 255, 255)" });
+    expect(colors).toEqual({ bg: "rgb(77, 84, 61)", fg: "rgb(255, 255, 255)" });
   });
 });
 

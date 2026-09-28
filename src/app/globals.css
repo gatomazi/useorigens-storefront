@@ -377,9 +377,9 @@ a:hover > .photo img,
   }
 }
 
-/* Mobile menu (MobileMenu.tsx): black with white text unless the CMS palette sets --nav-menu-bg / --nav-menu-text. */
+/* Mobile menu (MobileMenu.tsx): the region's primary colour with white text unless the CMS palette sets --nav-menu-bg / --nav-menu-text. */
 .nav-menu {
-  background: var(--nav-menu-bg, #000);
+  background: var(--nav-menu-bg, var(--region-primary));
   color: var(--nav-menu-text, #fff);
 }
 .nav-menu :focus-visible {
