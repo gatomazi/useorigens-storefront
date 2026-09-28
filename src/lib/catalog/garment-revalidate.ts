@@ -36,3 +36,25 @@ export function revalidateGarmentCityPages(storeKeys: readonly CommerceStoreKey[
   for (const path of paths) revalidate(path);
   return paths.length;
 }
+
+/**
+ * City pages that show at least one of the given clusters: the same lookup `Catalog#garmentTabsForCity` performs
+ * (primary's store + `product_cluster_id`), so a daily pass that touched a handful of clusters marks a handful of
+ * pages instead of every city of the store.
+ */
+export function garmentRevalidationPathsForClusters(affected: Partial<Record<CommerceStoreKey, ReadonlySet<string>>>): string[] {
+  const catalog = getCatalog();
+  const covered = new Set<string>();
+  for (const region of REGION_SLUGS) for (const id of catalog.coveredCityIds(region)) covered.add(id);
+
+  const paths: string[] = [];
+  for (const city of allCities()) {
+    if (!covered.has(city.id)) continue;
+    const shows = catalog.cityFamilies(city.id).some((entry) => {
+      const cluster = entry.primary.productClusterId;
+      return cluster !== undefined && affected[entry.primary.commerceStoreKey]?.has(cluster) === true;
+    });
+    if (shows) paths.push(`/${city.regionSlug}/${city.uf.toLowerCase()}/${city.slug}`);
+  }
+  return paths;
+}

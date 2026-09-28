@@ -470,3 +470,19 @@ teste de causalidade (remover o índice) previsto para esse caso.
 
 **Resíduos no Volume:** `catalog-snapshot.json.pre-garment-20260928` (cópia de segurança do snapshot anterior). Nenhum candidato ou
 bloco temporário restou.
+
+## 16. Operação diária definitiva (sync incremental automático)
+
+Substitui a operação manual das seções 11 e 15 no dia a dia (elas seguem valendo para uma passada **completa**, que
+agora é exceção). Detalhes, falhas, logs e limites: [`garments-daily-sync-runbook.md`](./garments-daily-sync-runbook.md).
+
+- **Gatilho:** serviço Railway `garments-sync-cron`, `30 6 * * *` (UTC) = **03:30 em Brasília**. Só faz
+  `POST /api/admin/garments-sync` no storefront pela rede privada; não monta o Volume e não tem segredo próprio
+  (referência a `ADMIN_SYNC_TOKEN`).
+- **Job (no storefront):** catalog sync das 3 lojas (~176 GETs, escreve só se mudou) → passe incremental de peças por
+  loja (`begin_date` = cursor com 2 dias de sobreposição, ~1 GET por loja num dia normal) → validar → rename atômico →
+  revalidar só as cidades dos clusters alterados → cursor.
+- **Volume:** `catalog-snapshot.json`, `garment-index.json`, `garment-index.json.prev` (uma versão),
+  `garment-sync-state.json`; `garment-sync-checkpoint.json`/`.lock`/`.tmp` só durante uma execução ou após interrupção.
+- **Limite por desenho da INK:** preço/imagem/agrupamento de produtos **antigos** não aparecem no incremental (§14 item 3).
+- O `garments:sync` (CLI) continua existindo só para recuperação/passada completa; **não** roda no cron.
