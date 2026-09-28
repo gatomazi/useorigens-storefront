@@ -18,6 +18,20 @@ function isSellableUrl(rawUrl: string): boolean {
   }
 }
 
+/** Why candidate products did or did not become a garment binding, for the rollout coverage report. */
+export type GarmentLinkStats = {
+  candidates: number;
+  linked: number;
+  /** Legitimately skipped: the classic piece is already the canonical binding. */
+  classicType: number;
+  noClusterId: number;
+  unknownType: number;
+  /** Cluster matches no canonical binding of the same store (drafts of cities the store does not sell, etc.). */
+  noCanonicalForCluster: number;
+  noPrice: number;
+  unsellableUrl: number;
+};
+
 /**
  * Links garment-type siblings to their already-trusted classic bindings, purely by `product_cluster_id`
  * (INK's own foreign key) — never by city/family name text, never by id proximity (confirmed live: sibling
@@ -33,11 +47,12 @@ function isSellableUrl(rawUrl: string): boolean {
  * Pure and synchronous — no I/O — so it is fully unit-testable against hand-built fixtures. Deliberately kept
  * in its own `server-only` file, separate from `garments.ts`'s client-safe constants — see that file's header.
  */
-export function buildGarmentBindings(
+export function linkGarmentBindings(
   rawCandidates: readonly GarmentSourceProduct[],
   canonicalBindings: readonly CanonicalBindingLike[],
   syncedAt: string,
-): GarmentBinding[] {
+): { bindings: GarmentBinding[]; stats: GarmentLinkStats } {
+  const stats: GarmentLinkStats = { candidates: rawCandidates.length, linked: 0, classicType: 0, noClusterId: 0, unknownType: 0, noCanonicalForCluster: 0, noPrice: 0, unsellableUrl: 0 };
   const canonicalByCluster = new Map<string, CanonicalBindingLike>();
   for (const binding of canonicalBindings) {
     if (!binding.productClusterId) continue;
@@ -49,13 +64,32 @@ export function buildGarmentBindings(
 
   const out: GarmentBinding[] = [];
   for (const raw of rawCandidates) {
-    if (!raw.clusterId || raw.garmentTypeId === null) continue;
-    if (raw.garmentTypeId === CLASSIC_GARMENT_TYPE_ID) continue; // the classic piece is the canonical binding itself
-    if (!garmentTypeById(raw.garmentTypeId)) continue; // unrecognized product_type: exclude, never guess a label
+    if (!raw.clusterId || raw.garmentTypeId === null) {
+      stats.noClusterId++;
+      continue;
+    }
+    if (raw.garmentTypeId === CLASSIC_GARMENT_TYPE_ID) {
+      stats.classicType++; // the classic piece is the canonical binding itself
+      continue;
+    }
+    if (!garmentTypeById(raw.garmentTypeId)) {
+      stats.unknownType++; // unrecognized product_type: exclude, never guess a label
+      continue;
+    }
 
     const canonical = canonicalByCluster.get(`${raw.storeKey}:${raw.clusterId}`);
-    if (!canonical) continue;
-    if (raw.price === null || !isSellableUrl(raw.storeProductUrl)) continue;
+    if (!canonical) {
+      stats.noCanonicalForCluster++;
+      continue;
+    }
+    if (raw.price === null) {
+      stats.noPrice++;
+      continue;
+    }
+    if (!isSellableUrl(raw.storeProductUrl)) {
+      stats.unsellableUrl++;
+      continue;
+    }
 
     out.push({
       cityId: canonical.cityId,
@@ -70,6 +104,15 @@ export function buildGarmentBindings(
       productClusterId: raw.clusterId,
       syncedAt,
     });
+    stats.linked++;
   }
-  return out;
+  return { bindings: out, stats };
+}
+
+export function buildGarmentBindings(
+  rawCandidates: readonly GarmentSourceProduct[],
+  canonicalBindings: readonly CanonicalBindingLike[],
+  syncedAt: string,
+): GarmentBinding[] {
+  return linkGarmentBindings(rawCandidates, canonicalBindings, syncedAt).bindings;
 }

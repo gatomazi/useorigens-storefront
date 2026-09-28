@@ -144,7 +144,7 @@ describe("runGarmentSync (fake paginated INK, no network)", () => {
     expect((result.outcomes[0] as { error: string }).error).toMatch(/no base catalog synced/);
   });
 
-  test("given a previously completed full pass, when synced again, then it runs incrementally with begin_date at the stored watermark, not a full re-crawl", async () => {
+  test("given a previously completed full pass, when synced again, then it runs incrementally with begin_date one day before the stored watermark (timezone-safe overlap), not a full re-crawl", async () => {
     const fetchImpl1 = (async () => json(page([product(), sibling()], { page: 1, total_pages: 1 }))) as unknown as typeof fetch;
     await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, deps: { fetchImpl: fetchImpl1, sleep: noSleep } });
 
@@ -154,7 +154,7 @@ describe("runGarmentSync (fake paginated INK, no network)", () => {
       return json(page([]));
     }) as unknown as typeof fetch;
     const second = await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, deps: { fetchImpl: fetchImpl2, sleep: noSleep } });
-    expect(seenUrl).toContain("begin_date=2026-05-06");
+    expect(seenUrl).toContain("begin_date=2026-05-05");
     expect(second.outcomes[0]).toMatchObject({ mode: "incremental" });
   });
 

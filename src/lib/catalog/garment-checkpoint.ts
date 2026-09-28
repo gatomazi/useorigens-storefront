@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { catalogSnapshotDir } from "../config/env";
 import type { CommerceStoreKey } from "../geo/regions";
+import type { GarmentLinkStats } from "./garments-link";
 
 export type GarmentSyncStoreCheckpoint = {
   storeKey: CommerceStoreKey;
@@ -19,7 +20,15 @@ export type GarmentSyncStoreCheckpoint = {
   /** Newest `created_at` observed so far — becomes the next run's `sinceCreatedAt` once `status` is "complete". */
   maxCreatedAtSeen: string | null;
   requestsUsedAllTime: number;
+  /** Cumulative over the current pass (reset by a fresh full pass): why crawled products were not linked.
+   * Absent on checkpoints written before this was tracked — never assume zero for those. */
+  exclusions?: GarmentExclusionTotals;
   updatedAt: string;
+};
+
+export type GarmentExclusionTotals = GarmentLinkStats & {
+  /** Dropped by field validation before linking (no https image/URL, missing id/name/slug). */
+  rejectedByValidation: number;
 };
 
 export type GarmentSyncCheckpoint = {

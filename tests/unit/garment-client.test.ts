@@ -118,4 +118,46 @@ describe("fetchGarmentSourceProducts (no visible_in_store filter, resumable, inc
     const fetchImpl = (async () => json({ nope: true })) as unknown as typeof fetch;
     await expect(fetchGarmentSourceProducts("use-sul", { deps: { fetchImpl, sleep: noSleep } })).rejects.toThrow(/unexpected/);
   });
+  test("given a network error once (connection terminated), when fetched, then it retries the same page and succeeds", async () => {
+    let calls = 0;
+    const fetchImpl = (async (u: string | URL | Request) => {
+      calls++;
+      if (calls === 1) throw new TypeError("terminated");
+      return json(page([product({ id: pageOf(u) })]));
+    }) as unknown as typeof fetch;
+    const result = await fetchGarmentSourceProducts("use-sul", { deps: { fetchImpl, sleep: noSleep, jitter: () => 0 } });
+    expect(result.products.map((p) => p.id)).toEqual(["1"]);
+    expect(result.requestsUsedThisCall).toBe(2);
+    expect(result.truncated).toBe(false);
+  });
+
+  test("given persistent failure after pages were read, when fetched, then the pages already read are returned as a resumable truncation", async () => {
+    const fetchImpl = (async (u: string | URL | Request) => {
+      if (pageOf(u) >= 3) throw new TypeError("terminated");
+      return json(page([product({ id: pageOf(u) })], { page: pageOf(u), total_pages: 6 }));
+    }) as unknown as typeof fetch;
+    const result = await fetchGarmentSourceProducts("use-sul", { deps: { fetchImpl, sleep: noSleep, jitter: () => 0, backoffMs: [1, 1] } });
+    expect(result.products.map((p) => p.id)).toEqual(["1", "2"]);
+    expect(result.lastPageCompleted).toBe(2);
+    expect(result.truncated).toBe(true);
+    expect(result.interruptedBy).toContain("terminated");
+  });
+
+  test("given persistent failure before any page was read, when fetched, then it throws so the previous snapshot is kept", async () => {
+    const fetchImpl = (async () => {
+      throw new TypeError("terminated");
+    }) as unknown as typeof fetch;
+    await expect(fetchGarmentSourceProducts("use-sul", { deps: { fetchImpl, sleep: noSleep, jitter: () => 0, backoffMs: [1] } })).rejects.toBeInstanceOf(InkApiError);
+  });
+
+  test("given retries near the cap, when fetched, then the cap counts every attempt and is never exceeded", async () => {
+    const fetchImpl = (async () => new Response("", { status: 429 })) as unknown as typeof fetch;
+    let requests = -1;
+    try {
+      await fetchGarmentSourceProducts("use-sul", { maxRequests: 3, deps: { fetchImpl: (async (...a: Parameters<typeof fetch>) => { requests++; return fetchImpl(...a); }) as typeof fetch, sleep: noSleep, jitter: () => 0, backoffMs: [1, 1, 1, 1, 1, 1] } });
+    } catch {
+      /* first page never succeeds: nothing to salvage */
+    }
+    expect(requests + 1).toBeLessThanOrEqual(3);
+  });
 });

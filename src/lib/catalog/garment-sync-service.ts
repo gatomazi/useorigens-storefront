@@ -3,8 +3,8 @@ import type { CommerceStoreKey } from "../geo/regions";
 import { fetchGarmentSourceProducts, type GarmentFetchDeps, type GarmentPageProgress } from "../ink/garment-client";
 import { requireAtLeastOneInkToken } from "../config/env";
 import { INK_STORES, tokenFor } from "../ink/config";
-import { buildGarmentBindings } from "./garments-link";
-import { readGarmentCheckpoint, writeGarmentCheckpoint, type GarmentSyncStoreCheckpoint } from "./garment-checkpoint";
+import { linkGarmentBindings, type GarmentLinkStats } from "./garments-link";
+import { readGarmentCheckpoint, writeGarmentCheckpoint, type GarmentExclusionTotals, type GarmentSyncStoreCheckpoint } from "./garment-checkpoint";
 import { readSnapshot, writeSnapshot } from "./snapshot-file";
 
 export type GarmentSyncOutcome =
@@ -16,6 +16,8 @@ export type GarmentSyncOutcome =
       pagesThisRun: number;
       totalPages: number;
       truncated: boolean;
+      /** Set when a transient failure cut the run short after some pages were already saved. */
+      interruptedBy?: string;
       /** True only when this run reached the store's own last page without being capped — the one condition
        * that allows `status: "complete"` in the checkpoint (MD §6/§8: never claim full coverage otherwise). */
       completedFullPass: boolean;
@@ -66,7 +68,7 @@ function nextRunParams(checkpoint: GarmentSyncStoreCheckpoint | undefined, force
   }
   // Previous pass completed in full: the next one is incremental, watermarked at the newest `created_at` seen.
   if (checkpoint.maxCreatedAtSeen) {
-    return { startPage: 1, sinceCreatedAt: checkpoint.maxCreatedAtSeen.slice(0, 10), mode: "incremental" };
+    return { startPage: 1, sinceCreatedAt: dayBefore(checkpoint.maxCreatedAtSeen), mode: "incremental" };
   }
   return { startPage: 1, sinceCreatedAt: undefined, mode: "full" };
 }
@@ -108,7 +110,7 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
         deps: options.deps,
       });
 
-      const linked = buildGarmentBindings(result.products, storeIndex.bindings, new Date().toISOString());
+      const { bindings: linked, stats } = linkGarmentBindings(result.products, storeIndex.bindings, new Date().toISOString());
       // Upsert by `inkProductId` (the real product identity) — NEVER wholesale-replace by (city, family):
       // a resumed run only ever crawls a SUBSET of pages, so a pair whose siblings are split across two
       // separate calls (page N this run, page N+1 next run) must accumulate, not have its first half
@@ -128,6 +130,7 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
         sinceCreatedAt: sinceCreatedAt ?? null,
         maxCreatedAtSeen: pickNewerIso(previousCheckpoint?.maxCreatedAtSeen ?? null, result.maxCreatedAtSeen),
         requestsUsedAllTime: (previousCheckpoint?.requestsUsedAllTime ?? 0) + result.requestsUsedThisCall,
+        exclusions: addExclusions(mode === "full" && startPage === 1 ? undefined : previousCheckpoint?.exclusions, stats, result.rejected),
         updatedAt: new Date().toISOString(),
       };
 
@@ -144,6 +147,7 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
           pagesThisRun: Math.max(0, result.lastPageCompleted - (startPage - 1)),
           totalPages: result.totalPages,
           truncated: result.truncated,
+          ...(result.interruptedBy ? { interruptedBy: result.interruptedBy } : {}),
           completedFullPass,
           newGarmentBindings: linked.length,
           totalGarmentBindingsForStore: merged.length,
@@ -172,6 +176,29 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
   await writeGarmentCheckpoint(checkpointDoc);
 
   return { startedAt, finishedAt: new Date().toISOString(), outcomes };
+}
+
+/** `begin_date` is a plain date whose timezone INK does not document; one day of overlap costs a page or two
+ * (re-seen products are upserted by id, so it is idempotent) and removes any off-by-a-day gap. */
+function dayBefore(iso: string): string {
+  const day = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() - 1);
+  return day.toISOString().slice(0, 10);
+}
+
+function addExclusions(previous: GarmentExclusionTotals | undefined, stats: GarmentLinkStats, rejected: number): GarmentExclusionTotals {
+  const base: GarmentExclusionTotals = previous ?? { candidates: 0, linked: 0, classicType: 0, noClusterId: 0, unknownType: 0, noCanonicalForCluster: 0, noPrice: 0, unsellableUrl: 0, rejectedByValidation: 0 };
+  return {
+    candidates: base.candidates + stats.candidates,
+    linked: base.linked + stats.linked,
+    classicType: base.classicType + stats.classicType,
+    noClusterId: base.noClusterId + stats.noClusterId,
+    unknownType: base.unknownType + stats.unknownType,
+    noCanonicalForCluster: base.noCanonicalForCluster + stats.noCanonicalForCluster,
+    noPrice: base.noPrice + stats.noPrice,
+    unsellableUrl: base.unsellableUrl + stats.unsellableUrl,
+    rejectedByValidation: base.rejectedByValidation + rejected,
+  };
 }
 
 function pickNewerIso(a: string | null, b: string | null): string | null {

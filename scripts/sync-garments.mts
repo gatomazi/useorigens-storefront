@@ -91,7 +91,7 @@ for (const outcome of result.outcomes) {
     console.error(`${outcome.storeKey}: FAILED, previous snapshot/checkpoint untouched (${outcome.error})`);
     continue;
   }
-  const status = outcome.completedFullPass ? "COMPLETE pass" : outcome.truncated ? "capped (resumable — run again to continue)" : "reached end of current data";
+  const status = outcome.completedFullPass ? "COMPLETE pass" : outcome.interruptedBy ? `INTERRUPTED (${outcome.interruptedBy}) — pages already read were saved, run again to resume` : outcome.truncated ? "capped (resumable — run again to continue)" : "reached end of current data";
   console.log(
     `${outcome.storeKey}: ${status} — ${outcome.requestsUsedThisRun} requests, ${outcome.pagesThisRun} pages this run ` +
       `(${outcome.mode}), ${outcome.newGarmentBindings} new garment bindings linked, ${outcome.totalGarmentBindingsForStore} total for this store now.`,

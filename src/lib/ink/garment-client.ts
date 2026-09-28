@@ -63,6 +63,11 @@ export type GarmentFetchResult = {
   truncated: boolean;
   /** Newest `created_at` seen this call, ISO 8601 — the watermark for the next incremental `sinceCreatedAt`. */
   maxCreatedAtSeen: string | null;
+  /** Raw products dropped by field validation (no https image/URL, missing id/name/slug) before linking. */
+  rejected: number;
+  /** Set when a transient failure outlived its retries AFTER at least one page was read: the pages already
+   * read are returned (`truncated` is true) so the caller can checkpoint them instead of losing the run. */
+  interruptedBy?: string;
 };
 
 /**
@@ -88,6 +93,8 @@ export async function fetchGarmentSourceProducts(storeKey: CommerceStoreKey, opt
   let lastPageCompleted = page - 1;
   let maxCreatedAtSeen: string | null = null;
   let truncated = false;
+  let rejected = 0;
+  let interruptedBy: string | undefined;
 
   while (page <= totalPages) {
     if (options.maxRequests !== undefined && requestsUsedThisCall >= options.maxRequests) {
@@ -100,15 +107,41 @@ export async function fetchGarmentSourceProducts(storeKey: CommerceStoreKey, opt
     const url = `${INK_API_BASE_URL}/v1/stores/products?${qs.toString()}`;
 
     let body: unknown;
+    let interrupted: string | undefined;
     for (let attempt = 0; ; attempt++) {
+      // The cap counts every HTTP attempt, retries included: a retry must not push past it.
+      if (options.maxRequests !== undefined && requestsUsedThisCall >= options.maxRequests) {
+        truncated = true;
+        break;
+      }
       requestsUsedThisCall++;
-      const res = await doFetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
-      if (res.status === 429 && attempt < backoff.length) {
+      let status: number;
+      try {
+        const res = await doFetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+        status = res.status;
+        if (res.ok) {
+          body = await res.json();
+          break;
+        }
+      } catch (err) {
+        // Network-level failure (connection reset/terminated, timeout, body cut short): transient by nature.
+        status = 0;
+        interrupted = String(err);
+      }
+      const transient = status === 0 || status === 429 || status >= 500;
+      if (transient && attempt < backoff.length) {
         await sleep(backoff[attempt] + jitter(backoff[attempt]));
         continue;
       }
-      if (!res.ok) throw new InkApiError(`INK responded ${res.status}`, res.status);
-      body = await res.json();
+      if (transient && lastPageCompleted >= (options.startPage ?? 1)) {
+        truncated = true; // salvage: hand back the pages already read instead of losing the whole run
+        interrupted = interrupted ?? `INK responded ${status}`;
+        break;
+      }
+      throw new InkApiError(status === 0 ? `INK request failed: ${interrupted}` : `INK responded ${status}`, status);
+    }
+    if (truncated) {
+      if (interrupted) interruptedBy = interrupted;
       break;
     }
 
@@ -120,7 +153,10 @@ export async function fetchGarmentSourceProducts(storeKey: CommerceStoreKey, opt
 
     for (const raw of parsed.products) {
       const product = normalizeGarmentSourceProduct(raw, storeKey);
-      if (!product) continue;
+      if (!product) {
+        rejected++;
+        continue;
+      }
       products.push(product);
       if (product.createdAt && (!maxCreatedAtSeen || product.createdAt > maxCreatedAtSeen)) maxCreatedAtSeen = product.createdAt;
     }
@@ -132,5 +168,5 @@ export async function fetchGarmentSourceProducts(storeKey: CommerceStoreKey, opt
     if (moreToDo) await sleep(pace);
   }
 
-  return { products, requestsUsedThisCall, lastPageCompleted, totalPages, truncated, maxCreatedAtSeen };
+  return { products, requestsUsedThisCall, lastPageCompleted, totalPages, truncated, maxCreatedAtSeen, rejected, ...(interruptedBy ? { interruptedBy } : {}) };
 }
