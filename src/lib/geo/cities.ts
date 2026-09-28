@@ -1,6 +1,6 @@
 import municipiosData from "../../../data/geo/municipios.json";
 import { ALIASES } from "./aliases";
-import { UF_TO_REGION, type RegionSlug } from "./regions";
+import { STATE_NAMES, UF_TO_REGION, type RegionSlug } from "./regions";
 import { normalizeText, slugify } from "./text";
 
 /**
@@ -16,13 +16,23 @@ import { normalizeText, slugify } from "./text";
  * Both come from the same IBGE municipalities endpoint (scripts/build-geo.mts), deterministic per municipality,
  * never guessed or inferred from proximity.
  */
-export type City = {
-  /** IBGE municipality code, as a string. */
+export type LocalityType = "municipality" | "administrative_region";
+
+export type Locality = {
+  /** Municipality: the IBGE code, as a string. Administrative region: `df-ra:<slug>` (see administrative-regions.ts). */
   id: string;
   slug: string;
   name: string;
   uf: string;
   regionSlug: RegionSlug;
+  /** What the place IS. The UI says "cidade" only for a municipality; an administrative region is "Região Administrativa". */
+  type: LocalityType;
+  /** The place it belongs to, as shown under its name: the state for a municipality, "Distrito Federal" for an administrative region. */
+  parentLabel: string;
+  /** Administrative region only: the IBGE id of the municipality that legally contains it (Brasília for every DF RA). */
+  parentCityId?: string;
+  /** Administrative region only: its official number ("XX"). */
+  officialCode?: string;
   /** Current administrative fact (IBGE Região Geográfica Intermediária, 2017): "Região de Chapecó". Not used in navigation today. "" when IBGE has not placed the municipality yet. */
   area: string;
   areaSlug: string;
@@ -33,9 +43,12 @@ export type City = {
   aliases: readonly string[];
 };
 
+/** A municipality (IBGE). Kept as the name existing municipality-only code uses; a `Locality` may also be an administrative region. */
+export type City = Locality;
+
 const rows = municipiosData as unknown as [number, string, string, string, string][];
 
-const cities: City[] = rows.map(([id, name, uf, intermediate, meso]) => {
+const cities: Locality[] = rows.map(([id, name, uf, intermediate, meso]) => {
   const slug = slugify(name);
   const area = intermediate ? `Região de ${intermediate}` : "";
   return {
@@ -44,6 +57,8 @@ const cities: City[] = rows.map(([id, name, uf, intermediate, meso]) => {
     name,
     uf,
     regionSlug: UF_TO_REGION[uf],
+    type: "municipality",
+    parentLabel: STATE_NAMES[uf] ?? uf,
     area,
     areaSlug: area ? slugify(area) : "",
     meso,

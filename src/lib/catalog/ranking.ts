@@ -1,4 +1,5 @@
 import { variantRank } from "./families";
+import { isSubLocality, localityKeyOf, withLocality } from "./locality-binding";
 import type { CityDesignBinding, UnrankedBinding } from "./types";
 import type { CommerceStoreKey } from "../geo/regions";
 
@@ -21,10 +22,11 @@ export function compareIds(a: string, b: string): number {
 }
 
 /**
- * Ranks bindings deterministically. For each (city, family) the primary is the lowest by:
+ * Ranks bindings deterministically. For each (locality, family) the primary is the lowest by:
  *   1. variant rank (base > regional > ...), 2. store priority, 3. INK product id (numeric).
- * API order never matters. Locality-bound products are never primary: they are alternatives
- * shown as "Também de <cidade>", not the card that represents a municipality.
+ * API order never matters. A locality is a municipality or a Federal District administrative region (`localityKeyOf`): an RA's products
+ * rank among themselves, never against Brasília's. Products about a place INSIDE a municipality are never primary: they are
+ * alternatives shown as "Lugares de <cidade>", not the card that represents a municipality.
  */
 export function rankBindings(
   bindings: readonly UnrankedBinding[],
@@ -35,9 +37,9 @@ export function rankBindings(
     return index === -1 ? storeOrder.length : index;
   };
 
-  const sorted = [...bindings].sort(
+  const sorted = bindings.map(withLocality).sort(
     (a, b) =>
-      Number(Boolean(a.localityLabel)) - Number(Boolean(b.localityLabel)) ||
+      Number(isSubLocality(a)) - Number(isSubLocality(b)) ||
       variantRank(a.designFamily, a.designVariant) - variantRank(b.designFamily, b.designVariant) ||
       storeRank(a.commerceStoreKey) - storeRank(b.commerceStoreKey) ||
       compareIds(a.inkProductId, b.inkProductId),
@@ -45,8 +47,8 @@ export function rankBindings(
 
   const primaryTaken = new Set<string>();
   return sorted.map((binding, priority) => {
-    const key = `${binding.cityId}:${binding.designFamily}`;
-    const isPrimary = !binding.localityLabel && !primaryTaken.has(key);
+    const key = `${localityKeyOf(binding)}:${binding.designFamily}`;
+    const isPrimary = !isSubLocality(binding) && !primaryTaken.has(key);
     if (isPrimary) primaryTaken.add(key);
     return { ...binding, isPrimary, priority };
   });

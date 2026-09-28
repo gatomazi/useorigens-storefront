@@ -1,8 +1,8 @@
 import "server-only";
 import type { CommerceStoreKey } from "../geo/regions";
-import { cityById } from "../geo/cities";
 import { purchaseUrl } from "./commerce";
 import { familyById, variantLabel } from "./families";
+import { isSubLocality, localityOfBinding } from "./locality-binding";
 import { getCatalog } from "./repository";
 
 export type ProductDisplay = {
@@ -27,17 +27,19 @@ export function resolveProductDisplay(storeKey: CommerceStoreKey, inkProductId: 
 
   const binding = cityDesigns.get(inkProductId);
   if (binding) {
-    const city = cityById(binding.cityId);
+    // The place a product is about: its administrative region (Taguatinga), else its municipality. Never Brasília for an RA product.
+    const place = localityOfBinding(binding);
     const family = familyById(binding.designFamily);
-    if (!city || !family) return null;
+    if (!place || !family) return null;
+    const inside = isSubLocality(binding) ? binding.localityLabel : undefined;
     // `productsOfStore` returns UNRANKED bindings (no `isPrimary`: that is only computed across stores at rank
     // time). "base" is every family's default variant (see families.ts#VARIANT_ORDER), so it doubles as "this is
     // the plain representation, no extra label" here — good enough for a secondary display context like this.
-    const label = binding.localityLabel ?? (binding.designVariant === "base" ? null : (binding.variantLabel ?? variantLabel(binding.designVariant)));
+    const label = inside ?? (binding.designVariant === "base" ? null : (binding.variantLabel ?? variantLabel(binding.designVariant)));
     return {
       inkProductId,
       title: label ? `${family.name} · ${label}` : family.name,
-      context: `${binding.localityLabel ?? city.name} · ${city.uf}`,
+      context: `${inside ?? place.name} · ${place.uf}`,
       imageUrl: binding.imageUrl,
       price: binding.price,
       url: purchaseUrl(binding),

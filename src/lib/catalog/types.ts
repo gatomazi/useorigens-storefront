@@ -28,6 +28,13 @@ export type CityDesignBinding = {
   /** Set when the product is about a locality inside a municipality (never a canonical city). */
   parentCityId?: string;
   localityLabel?: string;
+  /**
+   * Set when the product belongs to a Federal District administrative region (`geo/administrative-regions.ts`): the RA's locality id. Such a
+   * product is that RA's own product (its primary for the family, like a municipality's), NOT a Brasília product, even though `cityId` still names
+   * the municipality that legally contains it. Absent on snapshots written before RAs existed: `withLocality` (repository.ts) derives it from
+   * `localityLabel` with the same exact-match rule, so no resync is needed.
+   */
+  localityId?: string;
 
   isPrimary: boolean;
   /** Lower wins. Deterministic: variant rank, then store priority, then INK id. */

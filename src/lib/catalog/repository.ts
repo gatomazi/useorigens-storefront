@@ -1,9 +1,11 @@
 import "server-only";
 import { commerceStorePriorityOverride } from "../config/env";
 import { allCities, cityById, type City } from "../geo/cities";
+import { localityById } from "../geo/localities";
 import { REGIONS, REGION_SLUGS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { buildLore, type Lore } from "../editorial/lore";
 import { DESIGN_FAMILIES, type DesignFamily, type DesignFamilyId } from "./families";
+import { isSubLocality, localityKeyOf, withLocality } from "./locality-binding";
 import { compareIds, rankBindings } from "./ranking";
 import { readSnapshotSync, snapshotMtimeMs } from "./snapshot-file";
 import type { CityDesignBinding, MerchProduct, UnrankedBinding } from "./types";
@@ -18,15 +20,19 @@ export type CityFamilyEntry = {
 
 export type Catalog = {
   syncedAt: string | null;
-  /** Ordered families available for a city. Empty when nothing is indexed. */
-  cityFamilies(cityId: string): CityFamilyEntry[];
-  /** Products about localities inside the municipality ("Também de Torres"). */
+  /** Ordered families available for a locality (a municipality id or an administrative region's locality id). Empty when nothing is indexed. */
+  cityFamilies(localityId: string): CityFamilyEntry[];
+  /** Products about places INSIDE the municipality ("Lugares de Torres"). Never a Federal District administrative region: those are localities of their own. */
   cityLocalities(cityId: string): CityDesignBinding[];
   merch(region: RegionSlug): MerchProduct[];
   /** Real local-voice products (expressions, patron saints, state expressions) of a region. */
   lore(region: RegionSlug): Lore;
-  /** Number of cities with at least one family, per region. */
+  /** Municipalities with at least one family, per region. Administrative regions are NOT cities and are never in here. */
   coveredCityIds(region: RegionSlug): Set<string>;
+  /** Every locality with at least one family: municipalities AND administrative regions with real products. */
+  coveredLocalityIds(region: RegionSlug): Set<string>;
+  /** Every real product bound to the locality, variants included (0 when it has none). */
+  localityProductCount(localityId: string): number;
   /** Every product of ONE store's snapshot, by INK product id (merch and city designs). Used to resolve INK collection members. */
   productsOfStore(store: CommerceStoreKey): StoreProducts;
 };
@@ -68,23 +74,26 @@ function build(): { catalog: Catalog; mtimeMs: number } {
     }
   }
 
+  // Keyed by locality: a municipality id, or an administrative region's own id (its products never mix with Brasília's).
   const ranked = new Map<string, CityDesignBinding[]>();
   for (const region of REGION_SLUGS) {
     for (const binding of rankBindings(byRegion.get(region) ?? [], storeOrderFor(region))) {
-      const list = ranked.get(binding.cityId) ?? [];
+      const key = localityKeyOf(binding);
+      const list = ranked.get(key) ?? [];
       list.push(binding);
-      ranked.set(binding.cityId, list);
+      ranked.set(key, list);
     }
   }
 
   const familyOrder = new Map<DesignFamilyId, DesignFamily>(DESIGN_FAMILIES.map((f) => [f.id, f]));
-  const covered = new Map<RegionSlug, Set<string>>();
+  const coveredCities = new Map<RegionSlug, Set<string>>();
+  const coveredLocalities = new Map<RegionSlug, Set<string>>();
 
-  const cityFamilies = (cityId: string): CityFamilyEntry[] => {
-    const all = ranked.get(cityId) ?? [];
+  const cityFamilies = (localityId: string): CityFamilyEntry[] => {
+    const all = ranked.get(localityId) ?? [];
     const entries: CityFamilyEntry[] = [];
     for (const family of DESIGN_FAMILIES) {
-      const ofFamily = all.filter((b) => b.designFamily === family.id && !b.localityLabel);
+      const ofFamily = all.filter((b) => b.designFamily === family.id && !isSubLocality(b));
       const primary = ofFamily.find((b) => b.isPrimary);
       if (!primary) continue;
       entries.push({ family: familyOrder.get(family.id)!, primary, variants: ofFamily.filter((b) => !b.isPrimary) });
@@ -92,13 +101,16 @@ function build(): { catalog: Catalog; mtimeMs: number } {
     return entries;
   };
 
-  for (const [cityId, list] of ranked) {
+  for (const [key, list] of ranked) {
     if (!list.some((b) => b.isPrimary)) continue;
-    const region = cityById(cityId)?.regionSlug;
-    if (!region) continue;
-    const set = covered.get(region) ?? new Set<string>();
-    set.add(cityId);
-    covered.set(region, set);
+    const locality = localityById(key);
+    if (!locality) continue;
+    const into = locality.type === "municipality" ? [coveredCities, coveredLocalities] : [coveredLocalities];
+    for (const target of into) {
+      const set = target.get(locality.regionSlug) ?? new Set<string>();
+      set.add(key);
+      target.set(locality.regionSlug, set);
+    }
   }
 
   const productsCache = new Map<CommerceStoreKey, StoreProducts>();
@@ -107,7 +119,7 @@ function build(): { catalog: Catalog; mtimeMs: number } {
   const catalog: Catalog = {
     syncedAt: syncedTimes.at(-1) ?? null,
     cityFamilies,
-    cityLocalities: (cityId) => (ranked.get(cityId) ?? []).filter((b) => b.localityLabel),
+    cityLocalities: (cityId) => (ranked.get(cityId) ?? []).filter(isSubLocality),
     merch: (region) =>
       [...(merchByRegion.get(region) ?? [])].sort(
         (a, b) => b.totalSalesCount - a.totalSalesCount || compareIds(b.inkProductId, a.inkProductId),
@@ -119,14 +131,17 @@ function build(): { catalog: Catalog; mtimeMs: number } {
       loreCache.set(region, built);
       return built;
     },
-    coveredCityIds: (region) => covered.get(region) ?? new Set(),
+    coveredCityIds: (region) => coveredCities.get(region) ?? new Set(),
+    coveredLocalityIds: (region) => coveredLocalities.get(region) ?? new Set(),
+    localityProductCount: (localityId) => ranked.get(localityId)?.length ?? 0,
     productsOfStore: (store) => {
       const cached = productsCache.get(store);
       if (cached) return cached;
       const index = snapshot.stores[store];
       const built: StoreProducts = {
         merch: new Map((index?.merch ?? []).map((m) => [m.inkProductId, m])),
-        cityDesigns: new Map((index?.bindings ?? []).map((b) => [b.inkProductId, b])),
+        // `withLocality`: an older snapshot carries a DF administrative region only as `localityLabel`; the id is derived here, once.
+        cityDesigns: new Map((index?.bindings ?? []).map((b) => [b.inkProductId, withLocality(b)])),
       };
       productsCache.set(store, built);
       return built;

@@ -68,13 +68,14 @@ export function buildStoreIndex(
       continue;
     }
 
-    const { city, localityLabel } = resolution;
+    const { city, localityLabel, localityId } = resolution;
     bindings.push({
       cityId: city.id,
       designFamily: parsed.family,
       designVariant: parsed.variant,
       variantLabel: variantLabel(parsed.variant),
       ...(localityLabel ? { parentCityId: city.id, localityLabel } : {}),
+      ...(localityId ? { localityId } : {}),
       commerceStoreKey: storeKey,
       inkProductId: product.id,
       slug: product.slug,
