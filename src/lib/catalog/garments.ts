@@ -22,8 +22,8 @@ export const GARMENT_TYPES: ReadonlyArray<{ id: number; slug: string; label: str
   { id: 8, slug: "regata", label: "Regata", sortOrder: 3 },
   { id: 23, slug: "cropped", label: "Cropped", sortOrder: 4 },
   { id: 28, slug: "cropped-moletom", label: "Cropped Moletom", sortOrder: 5 },
-  { id: 119, slug: "moletom-capuz", label: "Moletom (capuz)", sortOrder: 6 },
-  { id: 120, slug: "moletom-careca", label: "Moletom (careca)", sortOrder: 7 },
+  { id: 119, slug: "moletom-capuz", label: "Moletom Capuz", sortOrder: 6 },
+  { id: 120, slug: "moletom-sueter", label: "Moletom Suéter", sortOrder: 7 },
   { id: 2, slug: "infantil", label: "Infantil", sortOrder: 8 },
   { id: 165, slug: "body-infantil", label: "Body Infantil", sortOrder: 9 },
 ];

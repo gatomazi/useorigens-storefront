@@ -222,11 +222,11 @@ execução, guardado em `backups/pre-sul-finish-*`, com o índice final):
 |---|---|---:|---|
 | Gentílico, Feito em, Legado, Território | com | 9 cada | já coberta **antes** desta execução |
 | Ponto de Origem | com | 9 | estava na parte **ainda não coletada**, coletada nesta execução |
-| Coordenadas | com, **incompleto** | 8 (falta Moletom careca) | coletada nesta execução |
+| Coordenadas | com, **incompleto** | 8 (falta Moletom Suéter) | coletada nesta execução |
 | Traço, Tipografia | **sem cluster** | 0 | nunca ligável |
 
 `tests/e2e/garment-crawl-points.spec.ts` (esperados derivados dos arquivos de dados, não da app) abre cada aba dessa
-cidade e confere: contagem da aba = famílias com aquela peça (`Moletom (careca) · 5`, demais `· 6`), href e preço
+cidade e confere: contagem da aba = famílias com aquela peça (`Moletom Suéter · 5`, demais `· 6`), href e preço
 exatos de cada card, nenhum card para as famílias sem peça (nem em aba alguma) e, na aba clássica, Traço e
 Tipografia ainda apontando direto para a INK. **Passou.** Observação da análise: 1.167 das 1.191 cidades do Sul misturam
 famílias coletadas antes e depois desta execução, por isso o teste usa uma cidade que cobre todos os casos de uma vez.
