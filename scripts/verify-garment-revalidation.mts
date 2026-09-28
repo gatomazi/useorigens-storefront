@@ -7,7 +7,7 @@
 // replaces the current .next. With --skip-build the existing production build must already contain the route.
 //
 // Steps (Tijucas/SC as the city, one family with a cluster):
-//   1. no garment index            -> city page renders, classic grid, NO tab bar
+//   1. no garment index            -> city page renders, classic grid, no tabs data
 //   2. index promoted on disk      -> the cached page still has no tabs (this is the problem being fixed)
 //   3. POST /api/admin/garment-index/revalidate -> the same page now has the tabs and the exact piece link
 //   4. index corrupted + revalidate -> classic grid again, page still 200
@@ -15,7 +15,7 @@
 //   6. valid index promoted again + revalidate -> tabs again
 //   7. the route rejects a missing/wrong token (401)
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { mkdir, mkdtemp, rename, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
@@ -68,7 +68,10 @@ async function waitForHealth(timeoutMs: number) {
   throw new Error("server did not become healthy in time");
 }
 
-const hasTabs = (html: string) => html.includes('aria-label="Tipo de peça"');
+// The tab bar itself renders on the client (it reads ?peca= with useSearchParams, so the server HTML carries the classic
+// grid as the Suspense fallback and a BAILOUT_TO_CLIENT_SIDE_RENDERING marker). What proves the SERVER built the page
+// with the tabs is their data in the page payload: the piece's slug and the tab label exist only when the index had it.
+const hasTabs = (html: string) => html.includes("fixture-peruano") && html.includes("Algodão Peruano");
 const hasClassicGrid = (html: string) => html.includes("Comprar Ponto de Origem de Tijucas na loja");
 
 async function page() {
@@ -102,6 +105,13 @@ async function visitsUntil(predicate: (html: string) => boolean, max = 4) {
   return null;
 }
 
+/** A production build persists ISR pages on disk; a page cached by an earlier run would leak into step 1. Only the city page under test is removed. */
+async function forgetCachedCityPage() {
+  const dir = path.join(process.cwd(), ".next", "server", "app", "sul", "sc");
+  if (!existsSync(dir)) return;
+  for (const file of readdirSync(dir)) if (file.startsWith("tijucas.")) await rm(path.join(dir, file), { recursive: true, force: true });
+}
+
 async function main() {
   const skipBuild = process.argv.includes("--skip-build");
   const volumeDir = await mkdtemp(path.join(tmpdir(), "verify-garment-revalidation-volume-"));
@@ -118,6 +128,7 @@ async function main() {
     throw new Error("--skip-build needs an existing production build (.next/BUILD_ID)");
   }
 
+  await forgetCachedCityPage();
   const snapshot = fixtureSnapshot(109.9, 0.6) as { stores: Record<string, { bindings: Record<string, unknown>[] }> };
   const tijucas = snapshot.stores["use-sul"].bindings.find((b) => b.cityId === TIJUCAS_ID)!;
   tijucas.productClusterId = CLUSTER;
@@ -144,19 +155,19 @@ async function main() {
   server.stderr?.on("data", (d) => (serverLog += d.toString()));
   await waitForHealth(60000);
 
-  console.log("\n=== Step 1: no garment index -> classic grid, no tab bar ===");
+  console.log("\n=== Step 1: no garment index -> classic grid, no tabs data ===");
   {
     const { status, html } = await page();
     check("city page -> 200", status === 200, status);
     check("classic grid is rendered", hasClassicGrid(html));
-    check("no tab bar", !hasTabs(html));
+    check("no tabs data in the page", !hasTabs(html));
   }
 
   console.log("\n=== Step 2: index promoted on disk, page already cached -> still the old grid ===");
   await promote(volumeDir, validIndex);
   {
     const { html } = await page();
-    check("the cached page has NOT changed yet (this is what the revalidation fixes)", !hasTabs(html));
+    check("the cached page has NOT changed yet (this is what the revalidation fixes)", !hasTabs(html) && hasClassicGrid(html));
   }
 
   console.log("\n=== Step 3: revalidation -> the same city shows the tabs, without waiting for ISR ===");
@@ -166,7 +177,7 @@ async function main() {
     check("POST revalidate -> 200", res.status === 200 && body.revalidated === true, { status: res.status, body });
     check("at least the fixture city was marked", (body.cities ?? 0) >= 1, body);
     const visits = await visitsUntil(hasTabs);
-    check("tab bar appears (within 2 visits after revalidation)", visits !== null && visits <= 2, visits);
+    check("tabs data appears (within 2 visits after revalidation)", visits !== null && visits <= 2, visits);
     const { html } = await page();
     check("the exact piece link is on the page", html.includes(PIECE_URL));
     check("classic cards are still there", hasClassicGrid(html));
@@ -178,7 +189,7 @@ async function main() {
   await revalidate();
   {
     const visits = await visitsUntil((html) => !hasTabs(html) && hasClassicGrid(html));
-    check("page is 200 with the classic grid and no tab bar", visits !== null && visits <= 2, visits);
+    check("page is 200 with the classic grid and no tabs data", visits !== null && visits <= 2, visits);
   }
 
   console.log("\n=== Step 5: index removed (rollback) + revalidation -> classic grid ===");
@@ -186,7 +197,7 @@ async function main() {
   await revalidate();
   {
     const visits = await visitsUntil((html) => !hasTabs(html) && hasClassicGrid(html));
-    check("page is 200 with the classic grid and no tab bar", visits !== null && visits <= 2, visits);
+    check("page is 200 with the classic grid and no tabs data", visits !== null && visits <= 2, visits);
   }
 
   console.log("\n=== Step 6: valid index promoted again + revalidation -> tabs again ===");
@@ -194,7 +205,7 @@ async function main() {
   await revalidate();
   {
     const visits = await visitsUntil(hasTabs);
-    check("tab bar is back", visits !== null && visits <= 2, visits);
+    check("tabs data is back", visits !== null && visits <= 2, visits);
   }
 
   console.log("\n=== Step 7: the route is not open ===");
