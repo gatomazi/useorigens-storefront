@@ -20,6 +20,8 @@ export type GarmentRunMetrics = {
   retries: number;
   throttled: number;
   productsSeen: number;
+  /** Pieces (non-classic siblings) that linked to a canonical cluster in this window, changed or not. */
+  piecesLinked: number;
   productsChanged: number;
   clustersChanged: number;
   durationMs: number;

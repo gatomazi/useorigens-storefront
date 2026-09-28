@@ -486,3 +486,17 @@ agora é exceção). Detalhes, falhas, logs e limites: [`garments-daily-sync-run
   `garment-sync-state.json`; `garment-sync-checkpoint.json`/`.lock`/`.tmp` só durante uma execução ou após interrupção.
 - **Limite por desenho da INK:** preço/imagem/agrupamento de produtos **antigos** não aparecem no incremental (§14 item 3).
 - O `garments:sync` (CLI) continua existindo só para recuperação/passada completa; **não** roda no cron.
+
+### 16.1 Validação em produção (2026-09-28)
+
+- PR #35, merge `932b761`, deploy Railway `87d0e0ab`. Serviço `garments-sync-cron` (imagem `curlimages/curl`, sem Volume,
+  `ADMIN_SYNC_TOKEN` por referência ao storefront) chamando `http://useorigens-storefront.railway.internal:8080/api/admin/garments-sync`.
+- Fuso comprovado: cron marcado `55 19 * * *` disparou às **19:55:04 UTC** (log do serviço) e recebeu `202` do storefront.
+- **Execução 1 (via cron, 19:55 UTC):** 207 GETs (catálogo 176 + peças Sul 29, Norte 1, Centro-Oeste 1), 5 min 45 s, 0 retries/429.
+  Catálogo mudou (regravado, revalidou o layout); Sul releu 2.869 produtos criados desde 26/09 com **0 peças alteradas**;
+  índice não foi promovido (sha256 continuou `7276bdb5…`), sem `.prev`, 0 cidades revalidadas; `garment-sync-state.json` criado
+  (cursor 2026-09-26 nas 3 lojas, derivado do `syncedAt` do índice − 2 dias).
+- **Execução 2 (mesma rota, 20:07 UTC):** 208 GETs, 5 min 44 s; catálogo `changed=false` (snapshot **não** regravado, layout
+  **não** revalidado); peças 0 alteradas; nada escrito além do estado. O custo fixo é o catalog sync completo (~176 GETs).
+- Produção não exercitou ainda a ramificação "promover" (não havia peça nova); ela é coberta por testes (promoção atômica,
+  único `.prev`, retomada, concorrência) e usa o mesmo `promoteGarmentIndex` já validado em produção na §15.

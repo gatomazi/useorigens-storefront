@@ -144,7 +144,7 @@ describe("daily incremental garment sync (fake INK, temp Volume)", () => {
     const second = await runIncrementalGarmentSync(opts({ storeKeys: ["use-sul"] }));
 
     expect(second.indexPromoted).toBe(false);
-    expect(second.stores[0]).toMatchObject({ ok: true, status: "unchanged", metrics: { productsChanged: 0, clustersChanged: 0 } });
+    expect(second.stores[0]).toMatchObject({ ok: true, status: "unchanged", metrics: { piecesLinked: 1, productsChanged: 0, clustersChanged: 0 } });
     expect(await readFile(indexFile())).toEqual(before.bytes);
     expect((await stat(indexFile())).mtimeMs).toBe(before.mtime);
     expect(await readFile(`${indexFile()}.prev`)).toEqual(before.prev);
