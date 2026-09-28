@@ -1,5 +1,6 @@
 import "server-only";
-import { CART_REF_PATTERN, MAX_SNAPSHOT_AGE_SECONDS, UPSTREAM_CART_REF_URL, UPSTREAM_MAX_BODY_BYTES, UPSTREAM_TIMEOUT_MS } from "./constants";
+import type { RegionSlug } from "../geo/regions";
+import { CART_REF_PATTERN, MAX_SNAPSHOT_AGE_SECONDS, UPSTREAM_MAX_BODY_BYTES, UPSTREAM_TIMEOUT_MS, upstreamCartRefUrlFor } from "./constants";
 import { parseSnapshot } from "./schema";
 import type { CartMirrorSnapshot } from "./types";
 
@@ -37,12 +38,13 @@ async function readCapped(response: Response): Promise<string | null> {
 /**
  * Server-side lookup of a cart reference at the Worker. The request carries nothing from the visitor: no cookies, no
  * Authorization, no forwarded headers. The `ref` is never logged, and nothing about the failure reaches the caller.
+ * `region` picks the Worker that minted the token (each region's INK store has its own Worker and KV; the default keeps the original Sul behavior).
  * `fetchImpl` exists for tests only.
  */
-export async function resolveCartRef(ref: string, fetchImpl: typeof fetch = fetch): Promise<ResolveResult> {
+export async function resolveCartRef(ref: string, fetchImpl: typeof fetch = fetch, region: RegionSlug = "sul"): Promise<ResolveResult> {
   if (!isValidRef(ref)) return { status: "not_found" };
   try {
-    const response = await fetchImpl(UPSTREAM_CART_REF_URL + ref, {
+    const response = await fetchImpl(upstreamCartRefUrlFor(region) + ref, {
       method: "GET",
       cache: "no-store",
       credentials: "omit",

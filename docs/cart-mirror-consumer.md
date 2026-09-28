@@ -41,3 +41,13 @@ A remoção do parâmetro usa `window.history.replaceState` (integrado ao rotead
 - Falhas preexistentes/instáveis do e2e em modo dev sob carga (banner de consentimento em `tracking-and-nav.spec.ts`) também ocorrem sem estas mudanças.
 - Sem limitador de taxa próprio na rota (o token tem 128 bits e a rota só repassa 1 GET com timeout de 2 s).
 - O `ref` aparece na URL do `GET /api/cart-mirror?ref=` (requisito do briefing); logs de acesso do Railway/Cloudflare podem registrá-lo. Ele vale 30 min e o snapshot não tem dado pessoal.
+
+## Espelho REGIONAL (Norte e Centro-Oeste)
+
+Cada loja regional da INK tem o SEU Worker e o SEU KV (`use-sul-widget`, `use-norte-widget`, `use-centro-widget`): o token gerado pelo Worker de uma região só existe no KV dela. Por isso o consumidor é regional:
+
+- `GET /api/cart-mirror?ref=<token>&region=sul|norte|centro-oeste` (sem `region` = `sul`, o comportamento original). O servidor consulta `https://www.use<região>.com.br/__origens/cart-ref/<token>` da MESMA região; `region` desconhecida é 404 puro (nenhuma consulta em outro lugar, nenhum fallback para o Worker da Sul).
+- O token fica em `sessionStorage` por região: `origens:cart_ref` (Sul, chave original) e `origens:cart_ref:<região>`. `CartRefCapture` grava o token na região da página (`/norte/...`) e só conta a chegada se o `document.referrer` for a INK dessa região.
+- "Ir para meu carrinho" volta à INK da região (`https://www.usenorte.com.br/usenorte/product/…?origens_open_cart=1`; a página precisa estar coberta pelo Worker da região). Em fase de allowlist do release, o produto de `CART_MIRROR_STORES[região].cartPath` está na allowlist.
+- Fonte única: `CART_MIRROR_STORES` em `src/lib/cart-mirror/constants.ts`. Testes: `tests/unit/cart-mirror-regional.test.ts`.
+- Pré-requisito do release dos Workers Norte/Centro (repositório `use-origens-workers`, `docs/norte-centro-workers.md`): sem este consumidor regional o "Meu carrinho" de /norte e /centro-oeste consultaria o Worker da Sul (404) e mostraria o estado neutro.
