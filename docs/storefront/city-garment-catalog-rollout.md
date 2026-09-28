@@ -288,7 +288,7 @@ Verificado no container real (serviço `useorigens-storefront`, 2026-09-28, ante
 npm 11.19.0, diretório de trabalho `/app`, **Volume em `/app/data/generated`** (4,6 GB, 4,5 GB livres; `CATALOG_SNAPSHOT_DIR`
 não definido, então vale o padrão), `PORT=8080`, **`tsx` v4.23.15 presente em `node_modules/.bin`** (runner garantido: não
 precisa de `npx` nem de redeploy só por isso), `gzip`/`gunzip`/`base64`/`sha256sum`/`mv`/`cp` presentes,
-`ADMIN_SYNC_TOKEN` e `INK_TOKEN_SUL` definidos (só a presença foi verificada) e **nenhum** `garment-index.json` no Volume.
+`ADMIN_SYNC_TOKEN` e `INK_TOKEN_SUL/NORTE/CENTRO` definidos (só a presença foi verificada), as **três regiões no ar** e as três lojas no snapshot de produção (`/api/ready`) e **nenhum** `garment-index.json` no Volume.
 
 **Como o `railway ssh` se comporta (verificado):** `railway ssh --service useorigens-storefront -- <comando>` junta os
 argumentos numa única string de shell **sem preservar aspas** e **não encaminha stdin**. Portanto: (a) `sh -c '...'` quebra
@@ -300,21 +300,20 @@ redirecionamentos e `VAR=valor cmd` funcionam dentro dele; (c) não dá para env
    existir); backup do Volume (Backups do Railway); confirmar que não há índice:
    `railway ssh --service useorigens-storefront -- ls -la data/generated`.
 2. **Atualizar o catálogo base com clusters** (o snapshot antigo não tem `productClusterId`; sem ele o índice não acha
-   nenhum cluster e as abas ficam ocultas): `curl -X POST -H "Authorization: Bearer $ADMIN_SYNC_TOKEN" -H 'content-type: application/json' -d '{"storeKeys":["use-sul"]}' https://<url>/api/admin/catalog-sync`
-   e acompanhar por `GET` até `succeeded` (~99 GETs de leitura no Sul; a rota já revalida o catálogo). Conferir os clusters:
+   nenhum cluster e as abas ficam ocultas): `curl -X POST -H "Authorization: Bearer $ADMIN_SYNC_TOKEN" https://<url>/api/admin/catalog-sync` (sem corpo = as três lojas)
+   e acompanhar por `GET` até `succeeded` (~176 GETs de leitura: 99 Sul, 37 Norte, 40 Centro-Oeste; a rota já revalida o catálogo). Conferir os clusters:
    `railway ssh --service useorigens-storefront -- node --conditions=react-server --import tsx scripts/garment-coverage-report.mts`
-   (coluna "Com cluster" do Sul ≈ 8.166).
-3. **Artefato.** Usar o índice local aprovado **projetado para a loja Sul** (produção só tem o catálogo Sul; enviar Norte e
-   Centro-Oeste só custaria memória): 10.877.375 B, 7.999 clusters, 71.674 peças, sha256
-   `3c9727739c15c272557bc2993bd98caacd20dbb169294604ed665e497273c874`. Norte/Centro-Oeste entram quando forem lançados.
-4. **Transporte para o Volume** (sem stdin: blocos base64 por argumento). Localmente: `gzip -9 -c garment-index.sul.json | base64 | tr -d '\n' | split -b 90000 - chunk_`.
+   (coluna "Com cluster" ≈ 8.166 / 3.132 / 3.725).
+3. **Artefato.** O índice local aprovado, inteiro (as três lojas estão no ar): 20.062.869 B (6,8 MB comprimido), 132.007 peças,
+   sha256 `7276bdb58fd5571031d768e5e89b79919cb86990b8d15b26a1d36747d139919d`.
+4. **Transporte para o Volume** (sem stdin: blocos base64 por argumento). Localmente: `gzip -9 -c garment-index.json | base64 | tr -d '\n' | split -b 90000 - chunk_`.
    Para cada bloco: `railway ssh --service useorigens-storefront -- "printf %s <bloco> >> /app/data/generated/.garment-index.b64"`.
    Depois: `railway ssh ... -- "base64 -d /app/data/generated/.garment-index.b64 | gunzip > /app/data/generated/garment-index.incoming.json"`,
    conferir `sha256sum` do resultado contra o valor acima e `rm /app/data/generated/.garment-index.b64`. O candidato fica no
    **mesmo Volume** que o índice vivo (requisito do `rename` atômico).
-5. **Validar sem promover:** `railway ssh ... -- "node --conditions=react-server --import tsx scripts/promote-garment-index.mts --from /app/data/generated/garment-index.incoming.json --expect-stores use-sul --check-only"`
-   (JSON, versão 1, só a loja esperada, formato de cada peça, tamanho plausível).
-6. **Promover e revalidar** (depois da promoção, nesta ordem): `railway ssh ... -- "GARMENT_REVALIDATE_URL=http://127.0.0.1:8080 node --conditions=react-server --import tsx scripts/promote-garment-index.mts --from /app/data/generated/garment-index.incoming.json --expect-stores use-sul --revalidate"`.
+5. **Validar sem promover:** `railway ssh ... -- "node --conditions=react-server --import tsx scripts/promote-garment-index.mts --from /app/data/generated/garment-index.incoming.json --expect-stores use-sul,use-norte,use-centro --check-only"`
+   (JSON, versão 1, só as lojas esperadas, formato de cada peça, tamanho plausível).
+6. **Promover e revalidar** (depois da promoção, nesta ordem): `railway ssh ... -- "GARMENT_REVALIDATE_URL=http://127.0.0.1:8080 node --conditions=react-server --import tsx scripts/promote-garment-index.mts --from /app/data/generated/garment-index.incoming.json --expect-stores use-sul,use-norte,use-centro --revalidate"`.
    O script valida de novo, guarda o índice anterior como `garment-index.json.prev` (se houver), faz o `rename` atômico e
    chama a rota autenticada. Saída 1 = não promoveu (índice vivo intocado); **saída 3 = promoveu, revalidação falhou:
    mantenha o arquivo e repita só `scripts/revalidate-garments.mts --store use-sul`**.
@@ -328,7 +327,7 @@ redirecionamentos e `VAR=valor cmd` funcionam dentro dele; (c) não dá para env
 ## 12. Rollback
 
 - **Imediato, sem deploy e sem tocar o snapshot base:** `railway ssh ... -- "mv /app/data/generated/garment-index.json /app/data/generated/garment-index.json.off"`
-  e depois `railway ssh ... -- "GARMENT_REVALIDATE_URL=http://127.0.0.1:8080 node --conditions=react-server --import tsx scripts/revalidate-garments.mts --store use-sul"`.
+  e depois `railway ssh ... -- "GARMENT_REVALIDATE_URL=http://127.0.0.1:8080 node --conditions=react-server --import tsx scripts/revalidate-garments.mts"` (sem `--store` = todas as lojas).
   Todas as cidades voltam à grade clássica; sem a revalidação, o ISR normal faz o mesmo em até 1 h. Reativar: `mv` de volta
   + revalidar. Voltar à versão anterior: usar o `garment-index.json.prev`.
 - Comprovado em modo produção (`verify:garment-revalidation`, passos 4 e 5: índice corrompido e removido → 200 com a
