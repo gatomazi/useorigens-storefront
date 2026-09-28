@@ -11,7 +11,18 @@ export type SyncOutcome =
   | { storeKey: CommerceStoreKey; ok: true; productCount: number; bindingCount: number; merchCount: number; excludedCount: number; rejected: number; requests?: number }
   | { storeKey: CommerceStoreKey; ok: false; error: string };
 
-export type SyncResult = { startedAt: string; finishedAt: string; outcomes: SyncOutcome[] };
+export type SyncResult = {
+  startedAt: string;
+  finishedAt: string;
+  outcomes: SyncOutcome[];
+  /** Only set when `skipWriteWhenUnchanged` was requested: false means the snapshot file was left untouched. */
+  changed?: boolean;
+};
+
+/** Content fingerprint of a store index that ignores every `syncedAt` stamp (they change on every run without the catalog changing). */
+function contentKey(index: StoreIndex | undefined): string {
+  return index ? JSON.stringify(index, (key, value: unknown) => (key === "syncedAt" ? undefined : value)) : "";
+}
 
 /** A store's fetch "succeeded" technically but returned suspiciously little — likely a partial/broken INK response, not a real catalog shrink. */
 const REGRESSION_THRESHOLD = 0.5; // new count below 50% of the previous one is refused, unless the previous count was trivial
@@ -66,6 +77,7 @@ export async function syncCatalog(
   requestedStoreKeys: readonly CommerceStoreKey[] = [],
   onProgress?: FetchProgress,
   maxRequestsPerStore: Partial<Record<CommerceStoreKey, number>> = {},
+  options: { skipWriteWhenUnchanged?: boolean } = {},
 ): Promise<SyncResult> {
   requireAtLeastOneInkToken();
   const startedAt = new Date().toISOString();
@@ -83,6 +95,7 @@ export async function syncCatalog(
     }),
   );
 
+  let changed = false;
   const outcomes: SyncOutcome[] = settled.map((result, i) => {
     const storeKey = keys[i];
     if (result.status === "rejected") {
@@ -93,6 +106,7 @@ export async function syncCatalog(
     if (!decision.promote) {
       return { storeKey, ok: false, error: decision.reason };
     }
+    if (contentKey(snapshot.stores[storeKey]) !== contentKey(index)) changed = true;
     snapshot.stores[storeKey] = index;
     return {
       storeKey,
@@ -106,6 +120,10 @@ export async function syncCatalog(
     };
   });
 
+  if (options.skipWriteWhenUnchanged && !changed) {
+    // Nothing changed in any store: keep the file (and its mtime, which keys the page caches) exactly as it is.
+    return { startedAt, finishedAt: new Date().toISOString(), outcomes, changed: false };
+  }
   await promoteSnapshot(snapshot);
-  return { startedAt, finishedAt: new Date().toISOString(), outcomes };
+  return { startedAt, finishedAt: new Date().toISOString(), outcomes, ...(options.skipWriteWhenUnchanged ? { changed: true } : {}) };
 }

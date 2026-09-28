@@ -68,6 +68,9 @@ export type GarmentFetchResult = {
   /** Set when a transient failure outlived its retries AFTER at least one page was read: the pages already
    * read are returned (`truncated` is true) so the caller can checkpoint them instead of losing the run. */
   interruptedBy?: string;
+  /** Retries after a transient failure (429, 5xx, network), and how many of those were HTTP 429 — for run diagnostics only. */
+  retries: number;
+  throttled: number;
 };
 
 /**
@@ -95,6 +98,8 @@ export async function fetchGarmentSourceProducts(storeKey: CommerceStoreKey, opt
   let truncated = false;
   let rejected = 0;
   let interruptedBy: string | undefined;
+  let retries = 0;
+  let throttled = 0;
 
   while (page <= totalPages) {
     if (options.maxRequests !== undefined && requestsUsedThisCall >= options.maxRequests) {
@@ -130,6 +135,8 @@ export async function fetchGarmentSourceProducts(storeKey: CommerceStoreKey, opt
       }
       const transient = status === 0 || status === 429 || status >= 500;
       if (transient && attempt < backoff.length) {
+        retries++;
+        if (status === 429) throttled++;
         await sleep(backoff[attempt] + jitter(backoff[attempt]));
         continue;
       }
@@ -168,5 +175,5 @@ export async function fetchGarmentSourceProducts(storeKey: CommerceStoreKey, opt
     if (moreToDo) await sleep(pace);
   }
 
-  return { products, requestsUsedThisCall, lastPageCompleted, totalPages, truncated, maxCreatedAtSeen, rejected, ...(interruptedBy ? { interruptedBy } : {}) };
+  return { products, requestsUsedThisCall, lastPageCompleted, totalPages, truncated, maxCreatedAtSeen, rejected, retries, throttled, ...(interruptedBy ? { interruptedBy } : {}) };
 }
