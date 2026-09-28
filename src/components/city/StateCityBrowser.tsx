@@ -35,7 +35,10 @@ export function StateCityBrowser({
   variant?: "cities" | "localities";
 }) {
   const places = variant === "localities" ? "localidades" : "cidades";
-  const [mode, setMode] = useState<"regiao" | "az">("regiao");
+  // A state whose places are administrative regions (Federal District) has no grouping: they are listed A–Z, like the cities of any state.
+  const grouped = groups.length > 0;
+  const [chosen, setMode] = useState<"regiao" | "az">("regiao");
+  const mode = grouped ? chosen : "az";
   const list = mode === "regiao" ? groups : letters;
 
   useEffect(() => {
@@ -56,10 +59,11 @@ export function StateCityBrowser({
   return (
     <section aria-label={variant === "localities" ? "Localidades do estado" : "Cidades do estado"} className="wrap pb-16 lg:pb-24">
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
+        {grouped ? (
         <div role="group" aria-label={`Organizar as ${places}`} className="inline-flex">
           {(
             [
-              ["regiao", variant === "localities" ? "Por tipo" : "Por região"],
+              ["regiao", "Por região"],
               ["az", "A–Z"],
             ] as const
           ).map(([key, label]) => (
@@ -74,10 +78,13 @@ export function StateCityBrowser({
             </button>
           ))}
         </div>
-        <p className="t-caption">{mode === "regiao" ? (variant === "localities" ? "Cidade e Regiões Administrativas" : "Agrupamento regional usado para facilitar a navegação") : "Ordem alfabética"}</p>
+        ) : (
+          <span />
+        )}
+        <p className="t-caption">{mode === "regiao" ? "Agrupamento regional usado para facilitar a navegação" : "Ordem alfabética"}</p>
       </div>
 
-      <ul className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-label={mode === "regiao" ? (variant === "localities" ? "Ir para o grupo" : "Ir para a região") : "Ir para a letra"}>
+      <ul className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-label={mode === "regiao" ? "Ir para a região" : "Ir para a letra"}>
         {list.map((g) => (
           <li key={g.slug} className="shrink-0">
             <a href={`#${g.slug}`} className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.875rem] font-medium transition-colors hover:border-region-primary hover:bg-region-primary hover:text-white focus-visible:border-region-primary">

@@ -143,7 +143,7 @@ test.describe("public search", () => {
     await input.fill("sol nascente");
     await expect(page.getByRole("option", { name: /Sol Nascente\/Pôr do Sol/ })).toContainText("Região Administrativa");
     await input.fill("distrito");
-    await expect(page.getByRole("option", { name: /Distrito Federal/ })).toContainText("Ver Brasília e as Regiões Administrativas");
+    await expect(page.getByRole("option", { name: /Distrito Federal/ })).toContainText("Ver as localidades do estado");
   });
 
   test("given the product search, when an RA is searched, then only its own products come back, and Brasília's search does not list them", async ({ page }) => {
@@ -167,20 +167,29 @@ test.describe("public search", () => {
 });
 
 test.describe("DF pages", () => {
-  test("given the DF state page, when opened, then it speaks of Brasília and Regiões Administrativas and never of municipalities or 'N cidades'", async ({ page }) => {
+  test("given the DF state page, when opened, then the RAs are its places and its products, listed A–Z like a state's cities, never 'municípios' or 'N cidades'", async ({ page }) => {
     await open(page, "/centro-oeste/df");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Distrito Federal");
-    await expect(page.locator("main")).toContainText("Brasília e 35 Regiões Administrativas");
+    await expect(page.locator("main")).toContainText("36 localidades");
     const text = await page.locator("main").innerText();
     expect(text).not.toMatch(/munic[ií]pio/i);
     expect(text).not.toMatch(/\d+\s+cidades/i);
     await expect(page.getByRole("region", { name: "Localidades do estado" })).toBeVisible();
-    await expect(page.locator("details#regioes-administrativas summary")).toContainText("35 Regiões Administrativas");
-    await page.locator("details#regioes-administrativas summary").click();
-    await expect(page.locator("details#regioes-administrativas").getByRole("link", { name: "Águas Claras", exact: true })).toBeVisible();
-    await expect(page.locator("details#regioes-administrativas").getByRole("link")).toHaveCount(35);
+    // Like GO: no "by region" grouping, just the places A–Z. 36 in all (35 RAs + Brasília), each opening its own page.
+    await expect(page.getByRole("button", { name: "Por região" })).toHaveCount(0);
+    await expect(page.locator("main details ul li a")).toHaveCount(36);
+    await expect(page.locator("details#letra-a summary")).toContainText("4 localidades");
+    await page.locator("details#letra-a summary").click();
+    await expect(page.locator("details#letra-a").getByRole("link", { name: "Águas Claras", exact: true })).toHaveAttribute("href", "/centro-oeste/df/aguas-claras");
+    // "Destaques do Distrito Federal" are the RAs' products (one per RA), none of Brasília's.
+    const showcase = page.locator('section[aria-labelledby="showcase-title"]');
+    await expect(showcase).toBeVisible();
+    const items = await showcase.locator('a[href^="https://www.usecentro.com.br/"]').evaluateAll((els) => els.map((e) => e.textContent ?? ""));
+    expect(items.length).toBeGreaterThanOrEqual(4);
+    for (const text of items) expect(text).not.toContain("Brasília");
     await shot(page, "pagina-df.png", { fullPage: true });
-    await page.locator("details#regioes-administrativas").getByRole("link", { name: "Taguatinga", exact: true }).click();
+    await page.locator("details#letra-t").click();
+    await page.locator("details#letra-t").getByRole("link", { name: "Taguatinga", exact: true }).click();
     await page.waitForURL(/\/centro-oeste\/df\/taguatinga$/);
   });
 
@@ -251,14 +260,16 @@ test.describe("DF pages", () => {
 });
 
 test.describe("home and regions", () => {
-  test("given the Centro-Oeste home, when the states are shown, then the DF is Brasília + its RAs while GO, MT and MS keep 'N cidades'", async ({ page }) => {
+  test("given the Centro-Oeste home, when the states are shown, then the DF offers its RAs as its places while GO, MT and MS keep 'N cidades'", async ({ page }) => {
     await open(page, "/centro-oeste");
     const states = page.locator("section#estados ul.md\\:grid > li");
     await expect(states).toHaveCount(4);
     const cardOf = (name: string) => states.filter({ has: page.getByRole("heading", { name, exact: true }) });
-    await expect(cardOf("Distrito Federal")).toContainText("Brasília e 35 Regiões Administrativas");
+    await expect(cardOf("Distrito Federal")).toContainText("36 localidades");
     await expect(cardOf("Distrito Federal")).not.toContainText(/\bcidades?\b/);
-    await expect(cardOf("Distrito Federal").getByRole("link", { name: /Regiões Administrativas 35/ })).toHaveAttribute("href", "/centro-oeste/df#regioes-administrativas");
+    // Its shortcuts are the RAs themselves (most products first), each linking to its own page; not a "Regiões Administrativas" bucket.
+    await expect(cardOf("Distrito Federal").getByRole("link", { name: "Taguatinga", exact: true })).toHaveAttribute("href", "/centro-oeste/df/taguatinga");
+    await expect(cardOf("Distrito Federal").getByRole("link", { name: /Regiões Administrativas \d+/ })).toHaveCount(0);
     for (const name of ["Goiás", "Mato Grosso", "Mato Grosso do Sul"]) await expect(cardOf(name)).toContainText(/\d[\d.]* cidades/);
     await page.locator("section#estados").scrollIntoViewIfNeeded();
     await page.getByRole("button", { name: "Rejeitar" }).click({ timeout: 5_000 }).catch(() => undefined); // the consent banner would sit on top of the capture

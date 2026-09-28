@@ -25,7 +25,7 @@ function StateLine({ line }: { line: NonNullable<StateCard["line"]> }) {
   );
 }
 
-function RegionChips({ region, uf, shown, more, title = "Regiões" }: { region: RegionSlug; uf: string; shown: { name: string; slug: string; count: number }[]; more: number; title?: string }) {
+function RegionChips({ region, uf, shown, more, title = "Regiões" }: { region: RegionSlug; uf: string; shown: StateCard["regions"]; more: number; title?: string }) {
   if (shown.length === 0) return null;
   return (
     <div className="mt-5">
@@ -33,16 +33,16 @@ function RegionChips({ region, uf, shown, more, title = "Regiões" }: { region: 
       <ul className="mt-2 flex flex-wrap gap-2">
         {shown.map((g) => (
           <li key={g.slug}>
-            <Link href={`/${region}/${uf.toLowerCase()}#${g.slug}`} className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.875rem] font-medium transition-colors hover:border-region-primary hover:bg-region-primary hover:text-white focus-visible:border-region-primary">
+            <Link href={g.href ?? `/${region}/${uf.toLowerCase()}#${g.slug}`} className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.875rem] font-medium transition-colors hover:border-region-primary hover:bg-region-primary hover:text-white focus-visible:border-region-primary">
               {g.name}
-              <span className="t-caption ml-2">{g.count}</span>
+              {g.count !== undefined && <span className="t-caption ml-2">{g.count}</span>}
             </Link>
           </li>
         ))}
         {more > 0 && (
           <li>
             <Link href={`/${region}/${uf.toLowerCase()}`} className="inline-flex min-h-11 items-center px-2 text-[0.875rem] font-semibold link-static">
-              +{more} regiões
+              +{more} {title === "Localidades" ? "localidades" : "regiões"}
             </Link>
           </li>
         )}

@@ -284,10 +284,10 @@ describe("state-level counts and copy", () => {
   const ra = { type: "administrative_region" as const };
   const city = { type: "municipality" as const };
 
-  test("given Brasília and 33 RAs, when the state is labelled, then it says Brasília and RAs, never 'cidades'", () => {
+  test("given Brasília and 33 RAs, when the state is labelled, then it counts 'localidades', never 'cidades'", () => {
     const counts = stateLocalityCounts([city, ...Array.from({ length: 33 }, () => ra)]);
     expect(counts).toEqual({ cities: 1, administrativeRegions: 33 });
-    expect(stateLocalityLabel(counts)).toBe("Brasília e 33 Regiões Administrativas");
+    expect(stateLocalityLabel(counts)).toBe("34 localidades");
     expect(stateLocalityLabel(counts)).not.toMatch(/cidade/i);
     expect(stateBrowseLabel(counts, "Distrito Federal")).toBe("Ver as localidades de Distrito Federal");
   });
@@ -299,14 +299,12 @@ describe("state-level counts and copy", () => {
   });
 
   test("given one RA, when labelled, then the singular is right", () => {
-    expect(stateLocalityLabel({ cities: 1, administrativeRegions: 1 })).toBe("Brasília e 1 Região Administrativa");
+    expect(stateLocalityLabel({ cities: 1, administrativeRegions: 1 })).toBe("2 localidades");
   });
 
-  test("given the DF's places, when grouped, then Brasília and the RAs are apart; Goiás keeps its mesoregions", () => {
+  test("given the DF's places, when grouped, then there is no grouping (the RAs are the places, like a state's cities); Goiás keeps its mesoregions", () => {
     const places = [localityBySlug("df", "brasilia")!, localityBySlug("df", "taguatinga")!, localityBySlug("df", "aguas-claras")!];
-    const groups = stateLocalityGroups("DF", places);
-    expect(groups.map((g) => g.name)).toEqual(["Brasília", "Regiões Administrativas"]);
-    expect(groups[1].localities.map((l) => l.name)).toEqual(["Águas Claras", "Taguatinga"]);
+    expect(stateLocalityGroups("DF", places)).toEqual([]);
     const goias = stateLocalityGroups("GO", [localityBySlug("go", "goiania")!]);
     expect(goias.map((g) => g.name)).toEqual([localityBySlug("go", "goiania")!.meso]);
   });
@@ -315,7 +313,7 @@ describe("state-level counts and copy", () => {
     const texts = [stateTitle("DF", 33), stateDescription("DF", 1, 33), stateIntro("DF", 1, 33)];
     for (const text of texts) expect(text).not.toMatch(/munic[ií]pio|cidades/i);
     expect(stateTitle("DF", 33)).toBe("Camisetas de Brasília e Regiões Administrativas do DF");
-    expect(stateIntro("DF", 1, 33)).toContain("33 Regiões Administrativas");
+    expect(stateIntro("DF", 1, 33)).toContain("34 localidades");
   });
 
   test("given a state without administrative regions, when its copy is built, then it is exactly the original wording", () => {

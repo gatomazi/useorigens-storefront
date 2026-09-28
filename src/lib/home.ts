@@ -12,7 +12,7 @@ import { terraProducts } from "./editorial/terra";
 import { HERO_FAMILIES, STATE_ORDER } from "./editorial/sul";
 import { formatPrice } from "./format";
 import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, type RegionSlug } from "./geo/regions";
-import { localitiesOfRegion, stateBrowseLabel, stateLocalityCounts, stateLocalityGroups, stateLocalityLabel } from "./geo/localities";
+import { localitiesOfRegion, stateBrowseLabel, stateLocalityCounts, stateLocalityGroups, stateLocalityLabel, stateLocalityShortcuts } from "./geo/localities";
 import { SHOWCASE } from "./site";
 
 /** One hero shirt: a real product of a commercial family, linking to its storefront page. */
@@ -24,12 +24,16 @@ export type StateCard = {
   /** Municipalities with products. Administrative regions (Federal District) are NOT cities and are counted apart. */
   cityCount: number;
   administrativeRegionCount: number;
-  /** How the state counts its places: "12 cidades", or "Brasília e 33 Regiões Administrativas" where some places are not cities. */
+  /** How the state counts its places: "12 cidades", or "36 localidades" where some places are administrative regions, not cities. */
   localityLabel: string;
   /** The link that opens the state's places ("Ver todas as cidades de X" / "Ver as localidades de X"). */
   browseLabel: string;
-  /** Editorial mesoregions as shortcuts, largest first (E3) — navigation grouping, not the current IBGE division (ADR 0004). */
-  regions: { name: string; slug: string; count: number }[];
+  /**
+   * Editorial mesoregions as shortcuts, largest first (E3) — navigation grouping, not the current IBGE division (ADR 0004). In a state whose
+   * places are administrative regions (Federal District) the shortcuts are those places themselves (`href` = their own page), like a
+   * state's cities, and there is no count.
+   */
+  regions: { name: string; slug: string; count?: number; href?: string }[];
   /** The state's own clean line (Clean, Minimal, Escritas, Atlas), or null when the state has none (E1). */
   line: { label: string; name: string; imageUrl: string; price: string | null; href: string | null } | null;
 };
@@ -115,6 +119,10 @@ export function getRegionHome(region: RegionSlug): RegionHome {
       const counts = stateLocalityCounts(stateLocalities);
       const groups = stateLocalityGroups(uf, stateLocalities);
       const found = stateLineProduct(merch, uf);
+      // Federal District: the administrative regions are the places, so they (not "Brasília" + a bucket) are the shortcuts, each opening its products.
+      const shortcuts = counts.administrativeRegions > 0
+        ? stateLocalityShortcuts(stateLocalities, (place) => catalog.localityProductCount(place.id)).map((place) => ({ name: place.name, slug: place.slug, href: `/${region}/${uf.toLowerCase()}/${place.slug}` }))
+        : null;
       return {
         uf,
         name: STATE_NAMES[uf],
@@ -123,7 +131,7 @@ export function getRegionHome(region: RegionSlug): RegionHome {
         localityLabel: stateLocalityLabel(counts),
         browseLabel: stateBrowseLabel(counts, STATE_NAMES[uf]),
         // The capital's group first (editorial choice, ADR 0004), then the largest ones.
-        regions: [...groups]
+        regions: shortcuts ?? [...groups]
           .sort((a, b) => Number(b.localities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])) - Number(a.localities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])))
           .map((g) => ({ name: g.name, slug: g.slug, count: g.localities.length })),
         line: found
