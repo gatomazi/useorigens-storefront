@@ -500,3 +500,16 @@ agora é exceção). Detalhes, falhas, logs e limites: [`garments-daily-sync-run
   **não** revalidado); peças 0 alteradas; nada escrito além do estado. O custo fixo é o catalog sync completo (~176 GETs).
 - Produção não exercitou ainda a ramificação "promover" (não havia peça nova); ela é coberta por testes (promoção atômica,
   único `.prev`, retomada, concorrência) e usa o mesmo `promoteGarmentIndex` já validado em produção na §15.
+- **Execução 3 (mesma rota, 20:41 UTC, já com a métrica `piecesLinked`):** Sul 31 GETs / 3.013 produtos vistos / 0 vinculados,
+  Norte 1, Centro-Oeste 1; 0 alterações; nada além de `garment-sync-state.json` foi escrito.
+  **Por que 0 vinculados:** replay somente-leitura da mesma janela mostrou que os 3.057 produtos do Sul criados em 27–28/09
+  são todos tipo 1 (camiseta) **sem `product_cluster_id`** ainda — as peças-irmãs nascem depois, quando o produto é agrupado/copiado,
+  e aí entram na janela pela própria data de criação.
+- **Prova do vínculo em dados reais (replay somente-leitura, ~2 GETs):** Norte desde 01/09: 9 vistos, 9 vinculados, **0 diferenças**
+  contra o `garment-index.json` de produção; Centro-Oeste desde 25/08: 10 vistos, 9 `noCanonicalForCluster` (rascunhos cujo principal
+  ainda não está visível) — o limite já documentado no runbook.
+- Limpeza: `catalog-snapshot.json.pre-garment-20260928` removido do Volume. Volume final: `catalog-snapshot.json`,
+  `garment-index.json`, `garment-sync-state.json` (+ `collections-snapshot.json` e `site-config/`, de outras features).
+- **Agendamento final:** `30 6 * * *` (06:30 UTC = 03:30 Brasília), `restartPolicyType=NEVER`, painel Railway: "Last run succeeded".
+- Custo diário esperado: ~176 GETs de catálogo + ~30 do Sul (janela de 3 dias com ~1.000–2.000 produtos novos/dia) + 1 por loja
+  pequena ≈ 210 GETs, ~6 min, bem abaixo de 100 req/min por loja (ritmo de 1,5 s/página).

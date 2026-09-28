@@ -88,6 +88,9 @@ node -e "fetch('http://127.0.0.1:8080/api/admin/garments-sync',{headers:{authori
 
 ## Limites conhecidos (por desenho da INK)
 
+0. Produtos recém-criados chegam como camiseta **sem cluster**; as peças-irmãs só existem depois. Um dia com `piecesLinked=0`
+   é normal. Se `piecesLinked` ficar 0 por muitos dias com `productsSeen` alto, investigar (replay de uma janela com o linker).
+
 1. `begin_date` só vê produtos **criados** na janela. Mudança de preço/imagem de um produto antigo, ou reagrupamento de
    cluster, **não** aparece no incremental — só numa passada completa (`npm run garments:sync`, precedida de catalog sync).
    O preço do card da aba é o do último momento em que a peça foi lida; o link leva à página da INK com o preço real.
