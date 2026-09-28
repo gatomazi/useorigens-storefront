@@ -27,14 +27,16 @@ test("given a city with families at different points of the crawl, when each tab
 
   for (const type of GARMENT_TYPES.filter((t) => t.id !== 1)) {
     const expected = pieces.filter((p) => p.typeId === type.id);
-    const tab = page.getByRole("tab", { name: new RegExp(type.label.replace(/[()]/g, "\\$&")) });
+    // Accessible name is "<label> · <count>"; anchoring on it keeps "Cropped" from also matching "Cropped Moletom".
+    const named = new RegExp(`^${type.label.replace(/[()]/g, "\\$&")}\\s*·`);
+    const tab = page.getByRole("tab", { name: named });
     if (expected.length === 0) {
       await expect(tab).toHaveCount(0);
       continue;
     }
     await expect(tab).toContainText(`· ${expected.length}`);
     await tab.click();
-    const panel = page.getByRole("tabpanel", { name: new RegExp(type.label.replace(/[()]/g, "\\$&")) });
+    const panel = page.getByRole("tabpanel", { name: named });
     await expect(panel.getByRole("link")).toHaveCount(expected.length);
     for (const piece of expected) {
       const card = panel.getByRole("link", { name: `Comprar ${piece.familyName} ${type.label} de ${city!.name} na loja` });
