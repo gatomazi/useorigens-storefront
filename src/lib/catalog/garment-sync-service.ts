@@ -38,6 +38,26 @@ export type GarmentSyncRunOptions = {
 
 export type GarmentSyncRunResult = { startedAt: string; finishedAt: string; outcomes: GarmentSyncOutcome[] };
 
+/** Below this many canonical bindings a store is too small for the coverage guard to mean anything. */
+const CLUSTER_GUARD_MIN_BINDINGS = 50;
+const CLUSTER_GUARD_MIN_RATIO = 0.5;
+
+/**
+ * `buildGarmentBindings` can only link a piece to a canonical binding that already carries its
+ * `productClusterId`, and only the routine catalog sync (`indexer.ts`) writes that field. Crawling ~1,000 pages
+ * against a snapshot that lacks it would spend the whole budget and link almost nothing, so refuse up front,
+ * before a single request is made.
+ */
+export function assertCanonicalClusterCoverage(storeKey: CommerceStoreKey, bindings: readonly { productClusterId?: string }[]): void {
+  if (bindings.length < CLUSTER_GUARD_MIN_BINDINGS) return;
+  const withCluster = bindings.filter((b) => b.productClusterId).length;
+  if (withCluster / bindings.length >= CLUSTER_GUARD_MIN_RATIO) return;
+  throw new Error(
+    `only ${withCluster} of ${bindings.length} canonical bindings in ${storeKey} carry a product_cluster_id — ` +
+      `run the routine catalog sync first (npm run catalog:sync ${storeKey}) so pieces can be linked; no INK request was made`,
+  );
+}
+
 function nextRunParams(checkpoint: GarmentSyncStoreCheckpoint | undefined, forceFull: boolean): { startPage: number; sinceCreatedAt: string | undefined; mode: "full" | "incremental" } {
   if (!checkpoint || forceFull) return { startPage: 1, sinceCreatedAt: undefined, mode: "full" };
   if (checkpoint.status === "in_progress") {
@@ -75,6 +95,7 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
     keys.map(async (storeKey) => {
       const storeIndex = snapshot.stores[storeKey];
       if (!storeIndex) throw new Error(`no base catalog synced yet for ${storeKey} — run the main catalog sync first`);
+      assertCanonicalClusterCoverage(storeKey, storeIndex.bindings);
 
       const previousCheckpoint = checkpointDoc.stores[storeKey];
       const { startPage, sinceCreatedAt, mode } = nextRunParams(previousCheckpoint, options.forceFull ?? false);

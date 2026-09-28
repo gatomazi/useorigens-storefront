@@ -176,8 +176,10 @@ Os únicos 3 bindings com `product_cluster_id` conhecido nesta rodada são exata
 fetchados manualmente na rodada anterior — o crawl completo desta rodada **não foi executado** (autorização
 pendente, item §8). Por isso **"sem cluster" aqui não significa "este produto de fato não tem cluster na
 INK"** — significa, para 9.530/3.583/3.828 bindings, **"ainda não olhamos"**: `productClusterId` só é
-persistido quando o produto é lido via o crawl sem filtro desta rodada (ou o sync de rotina que já captura
-esse campo para produtos visíveis, mas que também não rodou aqui por orçamento). A amostra real de 24
+persistido nos bindings canônicos pelo sync de rotina (`npm run catalog:sync`, `indexer.ts`), que não rodou
+aqui por orçamento. O crawl de peças **não** grava esse campo nos canônicos: depende dele já estar lá, e por
+isso `garments:sync` recusa iniciar (zero requisições) enquanto menos de 50% dos canônicos de uma loja tiverem
+cluster (`assertCanonicalClusterCoverage`). A amostra real de 24
 clusters do §3 é a única fonte confiável, hoje, sobre qual fração do catálogo real cai em cada categoria —
 e ela sugere ~87,5% completo, ~8,3% sem cluster de fato, ~4,2% sem variantes de fato, mas com margem de erro
 de amostra pequena (24 pontos). **Não afirmamos cobertura de X% do catálogo inteiro** até o crawl completo
@@ -186,14 +188,19 @@ nunca reivindicar mais cobertura do que o crawl realmente alcançou.
 
 ## 8. Pedido de autorização — item final obrigatório
 
-**Peço autorização explícita para uma única execução da coleta completa**, nos seguintes termos exatos:
+**Peço autorização explícita para uma única execução da coleta completa, em DOIS passos sequenciais** (o passo 2
+não funciona sem o 1 — o código recusa iniciar), nos seguintes termos exatos:
 
-- **Teto proposto**: até **1.100 requisições para Sul**, **350 para Norte**, **420 para Centro** (margem de
-  ~3% sobre a estimativa atual de 1.066/309/385 páginas, para absorver o crescimento do catálogo entre agora
-  e a execução real).
-- **Execução**: `npm run garments:sync -- --max-requests-per-store <teto por loja>`, uma vez por loja, as
-  três em paralelo (mesmo padrão do sync principal existente).
-- **Duração estimada**: ~27 minutos de parede (Sul é o gargalo; Norte e Centro terminam bem antes).
+1. **Sync de rotina (pré-requisito)**: `npm run catalog:sync` — leitura visível-apenas, ~176 requisições no total
+   (99 Sul / 37 Norte / 40 Centro, conforme ADR 0001), ~2,5 min. Preenche `productClusterId` em todos os
+   bindings canônicos e também refresca o catálogo base. Teto proposto: **110 / 45 / 50** requisições.
+2. **Coleta de peças**:
+   - **Teto proposto**: até **1.100 requisições para Sul**, **350 para Norte**, **420 para Centro** (margem de
+     ~3% sobre a estimativa atual de 1.066/309/385 páginas, para absorver o crescimento do catálogo entre agora
+     e a execução real).
+   - **Execução**: `npm run garments:sync -- --max-requests-per-store <teto por loja>`, as três lojas em
+     paralelo (mesmo padrão do sync principal existente).
+- **Duração estimada (passo 2)**: ~27 minutos de parede (Sul é o gargalo; Norte e Centro terminam bem antes).
 - **Interrupção/retomada**: se eu precisar parar no meio (ou se cair), o checkpoint já grava o progresso por
   página — rodar o mesmo comando de novo continua exatamente de onde parou, sem perder trabalho nem repetir
   requisições já feitas.

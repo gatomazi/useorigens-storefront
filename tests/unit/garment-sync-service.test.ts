@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { runGarmentSync } from "@/lib/catalog/garment-sync-service";
+import { assertCanonicalClusterCoverage, runGarmentSync } from "@/lib/catalog/garment-sync-service";
 import { readGarmentCheckpoint } from "@/lib/catalog/garment-checkpoint";
 import type { CatalogSnapshot } from "@/lib/catalog/types";
 
@@ -170,5 +170,23 @@ describe("runGarmentSync (fake paginated INK, no network)", () => {
     const second = await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, forceFull: true, deps: { fetchImpl: fetchImpl2, sleep: noSleep } });
     expect(seenUrl).not.toContain("begin_date");
     expect(second.outcomes[0]).toMatchObject({ mode: "full" });
+  });
+});
+
+describe("assertCanonicalClusterCoverage", () => {
+  const binding = (withCluster: boolean) => (withCluster ? { productClusterId: "1" } : {});
+
+  test("given a large store where almost no canonical binding has a cluster id, when checked, then it refuses before any request", () => {
+    const bindings = [...Array.from({ length: 99 }, () => binding(false)), binding(true)];
+    expect(() => assertCanonicalClusterCoverage("use-sul", bindings)).toThrow(/catalog:sync/);
+  });
+
+  test("given a large store where most canonical bindings have a cluster id, when checked, then it passes", () => {
+    const bindings = [...Array.from({ length: 60 }, () => binding(true)), ...Array.from({ length: 40 }, () => binding(false))];
+    expect(() => assertCanonicalClusterCoverage("use-sul", bindings)).not.toThrow();
+  });
+
+  test("given a tiny store, when checked, then the guard does not apply", () => {
+    expect(() => assertCanonicalClusterCoverage("use-sul", [binding(false), binding(false)])).not.toThrow();
   });
 });

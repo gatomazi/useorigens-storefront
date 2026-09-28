@@ -62,6 +62,13 @@ if (args.plan) {
       console.log(`  ${c.storeKey}: ${c.complete} complete, ${c.partial} partial, ${c.noVariants} no-variants, ${c.noCluster} no-cluster, of ${c.totalCanonicalBindings} canonical bindings`);
     }
   }
+  for (const [storeKey, index] of Object.entries(snapshot.stores)) {
+    const withCluster = index.bindings.filter((b) => b.productClusterId).length;
+    if (index.bindings.length >= 50 && withCluster / index.bindings.length < 0.5) {
+      console.log(`\nPREREQUISITE NOT MET for ${storeKey}: only ${withCluster} of ${index.bindings.length} canonical bindings carry a product_cluster_id.`);
+      console.log(`Run \`npm run catalog:sync ${storeKey}\` (routine visible-only sync) first; the garment sync refuses to start until then.`);
+    }
+  }
   process.exit(0);
 }
 
