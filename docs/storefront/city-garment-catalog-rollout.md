@@ -450,14 +450,23 @@ e sem Purchase/AddToCart/ViewContent.
 índice; **1ª renderização depois da promoção (índice ainda não carregado no processo) 0,57 s**, a seguinte 0,39 s, depois ~0,34 s.
 Tamanho do HTML+payload de uma cidade (bruto, sem compressão): **~102 KB → ~255 KB** (os painéis das 9 peças vêm renderizados do
 servidor). **Memória do processo web** (`/proc`): RSS **808 MB → 1.043 MB** (pico 853 → 1.072 MB) entre antes da promoção e depois do
-smoke; localmente o índice sozinho soma ~50 MB, e o resto inclui a regeneração das páginas e o otimizador de imagens exercitado pelas
-~560 imagens do smoke, então **não atribuo o delta ao índice sem prova** — vale acompanhar o consumo. Não houve teste de causalidade
-com remoção do índice porque não houve degradação.
+smoke (processo que já vinha de dias de uptime, mais o `catalog-sync` e a revalidação); localmente o índice sozinho soma ~50 MB, e o
+processo reiniciado depois ficou em 753 MB (ver o cold start abaixo), então esse delta não era custo estável do índice.
+
+**Cold start real (segundo deploy, `31183d1`, PR #30 só de documentação — reinício do processo com o índice já no Volume, sem
+revalidação):** build 15:49–15:50:33Z, troca às 15:50:51Z (**1 amostra de `/api/health` sem resposta, ~15–30 s de indisponibilidade** da
+instância única com Volume) e `SUCCESS` às 15:51:07Z. O índice **persistiu** ao redeploy (`garment-index.json`, 20.062.869 B, ainda no
+Volume) e o cache de ISR do build novo já serviu as abas sem nenhuma revalidação. Primeiras requisições ao processo novo (~10 min de
+uptime): `/sul/pr/agudos-do-sul` 0,25 s, `/norte/to/xambioa` 0,41 s, `/centro-oeste/mt/agua-boa` 0,39 s, `/sul/sc/tijucas` 0,37 s de TTFB, todas
+com os dados das abas; smoke completo idêntico à linha de base (tudo 200, `/admin` 307). **Busca real no processo novo, todas verdes:**
+desktop mouse Sul 1.867 ms, Norte 1.294 ms, Centro-Oeste 1.659 ms, teclado 1.165 ms, mobile 390 px 1.469 ms (mesma faixa da linha de base sem
+índice, 1.155–2.618 ms). **Memória do processo web novo (`/proc`): RSS 753 MB, pico 845 MB**, depois do smoke e das buscas — abaixo dos
+808 MB do processo anterior; portanto o 1.043 MB medido antes era acúmulo (catalog-sync, revalidação de 2.109 páginas e o otimizador de
+imagens exercitado pelo smoke), não custo estável do índice.
 
 **Não executado em produção:** o rollback por renomeação (`mv … .off` + revalidar) — não foi autorizado nesta release; foi provado em
-modo produção local (`verify:garment-revalidation`, passos 4–6) e o comando exato está na §12. Não houve reinício de processo só para
-medir cold start; o custo do parse do índice foi observado na 1ª renderização após a promoção (acima) e o cold start de processo é
-coberto pelo deploy do commit de documentação que registra esta seção.
+modo produção local (`verify:garment-revalidation`, passos 4–6) e o comando exato está na §12. Como não houve degradação, não houve o
+teste de causalidade (remover o índice) previsto para esse caso.
 
 **Resíduos no Volume:** `catalog-snapshot.json.pre-garment-20260928` (cópia de segurança do snapshot anterior). Nenhum candidato ou
 bloco temporário restou.
