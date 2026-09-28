@@ -171,6 +171,7 @@ export async function runIncrementalGarmentSync(options: IncrementalOptions): Pr
         retries: (resume?.retries ?? 0) + fetched.retries,
         throttled: (resume?.throttled ?? 0) + fetched.throttled,
         productsSeen: (resume?.productsSeen ?? 0) + fetched.products.length,
+        piecesLinked: pieces.length,
         productsChanged: 0,
         clustersChanged: 0,
         durationMs: 0,
