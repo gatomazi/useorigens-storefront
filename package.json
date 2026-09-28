@@ -12,6 +12,7 @@
     "catalog:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-catalog.mts",
     "garments:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-garments.mts",
     "garments:migrate-index": "node --conditions=react-server --import tsx scripts/migrate-garment-index.mts",
+    "garments:promote": "node --conditions=react-server --import tsx scripts/promote-garment-index.mts",
     "garments:revalidate": "node --env-file=.env.local --conditions=react-server --import tsx scripts/revalidate-garments.mts",
     "garments:coverage": "node --conditions=react-server --import tsx scripts/garment-coverage-report.mts",
     "collections:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-collections.mts",
