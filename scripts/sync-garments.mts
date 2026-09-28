@@ -8,12 +8,19 @@
 //   npm run garments:sync -- --max-requests-per-store 40          # all 3 stores, in parallel
 //   npm run garments:sync -- --max-requests-per-store 40 --force-full
 //
+// Order of a real run: download/update -> validate -> promote garment-index.json (atomic) -> ask the running
+// storefront to revalidate the affected city pages (POST /api/admin/garment-index/revalidate). The last step
+// needs GARMENT_REVALIDATE_URL (e.g. http://127.0.0.1:$PORT inside the Railway container) and ADMIN_SYNC_TOKEN;
+// without them it only says so. A revalidation failure never touches the promoted index (exit code 3; retry with
+// `npm run garments:revalidate`). --no-revalidate skips the step.
+//
 // See docs/storefront/city-garment-catalog-rollout.md for the full-crawl request/time estimate and the
 // authorization this script's real (non---plan) use requires before a full unbounded pass is ever run.
 import { garmentCoverageByStore } from "../src/lib/catalog/garment-coverage";
 import { readGarmentIndex } from "../src/lib/catalog/garment-index-file";
 import { runGarmentSync } from "../src/lib/catalog/garment-sync-service";
 import { readGarmentCheckpoint } from "../src/lib/catalog/garment-checkpoint";
+import { revalidateAfterPromotion } from "../src/lib/catalog/garment-revalidate-client";
 import { readSnapshot } from "../src/lib/catalog/snapshot-file";
 import type { CommerceStoreKey } from "../src/lib/geo/regions";
 
@@ -29,13 +36,14 @@ const KNOWN_TOTAL_PAGES_2026_09_27: Partial<Record<CommerceStoreKey, number>> = 
 const PACE_S = 1.5;
 
 function parseArgs(argv: string[]) {
-  const args = { plan: false, store: undefined as CommerceStoreKey | undefined, maxRequestsPerStore: undefined as number | undefined, forceFull: false };
+  const args = { plan: false, store: undefined as CommerceStoreKey | undefined, maxRequestsPerStore: undefined as number | undefined, forceFull: false, noRevalidate: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--plan") args.plan = true;
     else if (a === "--store") args.store = argv[++i] as CommerceStoreKey;
     else if (a === "--max-requests-per-store") args.maxRequestsPerStore = Number(argv[++i]);
     else if (a === "--force-full") args.forceFull = true;
+    else if (a === "--no-revalidate") args.noRevalidate = true;
   }
   return args;
 }
@@ -98,4 +106,18 @@ for (const outcome of result.outcomes) {
       `(${outcome.mode}), ${outcome.newGarmentBindings} new garment bindings linked, ${outcome.totalGarmentBindingsForStore} total for this store now.`,
   );
 }
-console.log("\nsnapshot + checkpoint written.");
+console.log("\nsnapshot + index + checkpoint written.");
+
+if (args.noRevalidate) {
+  console.log("revalidation skipped (--no-revalidate).");
+} else {
+  const post = await revalidateAfterPromotion(result, { baseUrl: process.env.GARMENT_REVALIDATE_URL, token: process.env.ADMIN_SYNC_TOKEN });
+  if (!post.requested) {
+    console.log(`revalidation not requested: ${post.reason}. City pages already in the ISR cache update when their normal revalidate window expires.`);
+  } else if (post.result.ok) {
+    console.log(`revalidation requested for ${post.stores.join(", ")}: ${post.result.cities} city pages marked for revalidation.`);
+  } else {
+    console.error(`revalidation FAILED (${post.result.error}). The promoted index is intact. Retry: npm run garments:revalidate -- --store ${post.stores.join(" --store ")}`);
+    process.exitCode = 3;
+  }
+}
