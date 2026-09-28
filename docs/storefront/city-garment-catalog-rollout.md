@@ -282,54 +282,59 @@ promovido.
   falha de `revalidatePath` → 500 com o índice byte a byte idêntico, https-only para o token, falha de rede sem
   lançar, "nada mudou → não pede", e falha de revalidação → índice intacto.
 
-## 11. Procedimento exato para gerar e promover `garment-index.json` no Railway (NÃO executado)
+## 11. Procedimento para gerar e promover `garment-index.json` no Railway
 
-Nada abaixo foi executado; exige deploy deste branch e sua autorização explícita. Os nomes vêm de
-`docs/deploy/railway.md` e `docs/admin/production-runbook.md` (serviço `useorigens-storefront`, Volume único, instância
-única). Comandos marcados com (*) não puderam ser testados fora do Railway.
+Verificado no container real (serviço `useorigens-storefront`, 2026-09-28, antes de qualquer promoção): Node v24.21.0,
+npm 11.19.0, diretório de trabalho `/app`, **Volume em `/app/data/generated`** (4,6 GB, 4,5 GB livres; `CATALOG_SNAPSHOT_DIR`
+não definido, então vale o padrão), `PORT=8080`, **`tsx` v4.23.15 presente em `node_modules/.bin`** (runner garantido: não
+precisa de `npx` nem de redeploy só por isso), `gzip`/`gunzip`/`base64`/`sha256sum`/`mv`/`cp` presentes,
+`ADMIN_SYNC_TOKEN` e `INK_TOKEN_SUL` definidos (só a presença foi verificada) e **nenhum** `garment-index.json` no Volume.
 
-0. **Pré-condições.** Este branch implantado (a rota nova precisa existir). Variáveis do serviço: `INK_TOKEN_SUL`,
-   `ADMIN_SYNC_TOKEN` (já existem). Norte/Centro-Oeste só depois de lançados (`INK_TOKEN_NORTE/CENTRO`). Backup do
-   Volume pela aba Backups. `PORT` é injetada pelo Railway, nunca fixada.
-1. **Ambiente (*).** `railway ssh --service useorigens-storefront` e, no shell: `echo "$PORT"; echo "${CATALOG_SNAPSHOT_DIR:-$PWD/data/generated}"`
-   (confirmar o diretório do Volume) e `node --import tsx -e "console.log('tsx ok')"` (`tsx` é devDependency; se falhar,
-   este procedimento precisa de outra forma de execução). **Não use `npm run garments:*` no container:** esses scripts
-   passam `--env-file=.env.local`, que não existe lá; use `node --conditions=react-server --import tsx scripts/...`.
-2. **Atualizar o catálogo base com clusters** (o `productClusterId` só vem do sync de rotina). Pela rota existente:
-   `curl -X POST -H "Authorization: Bearer $ADMIN_SYNC_TOKEN" -H 'content-type: application/json' -d '{"storeKeys":["use-sul"]}' https://<url>/api/admin/catalog-sync`
-   e acompanhar com `GET` até `succeeded` (~99 GETs no Sul). Sem clusters suficientes o sync de peças se recusa a
-   iniciar (`--plan` mostra `PREREQUISITE NOT MET`).
-3. **Montar uma área de staging no próprio Volume** (assim a cobertura parcial nunca fica pública e o `mv` final é
-   atômico, mesmo filesystem): `D=<diretório do Volume>; mkdir -p $D/staging && cp $D/catalog-snapshot.json $D/staging/`.
-4. **Coletar em blocos de 250 GETs** (cada invocação grava checkpoint no fim; uma queda perde no máximo um bloco). No
-   primeiro bloco, `--force-full`; nos seguintes, sem ele, repetindo até `COMPLETE pass` (Sul ≈ 1.073 páginas, 5
-   blocos; Norte ≈ 309 e Centro-Oeste ≈ 385, 2 blocos):
-   `CATALOG_SNAPSHOT_DIR=$D/staging node --conditions=react-server --import tsx scripts/sync-garments.mts --store use-sul --max-requests-per-store 250 --no-revalidate [--force-full]`
-   (o índice de staging não é o que as páginas leem, por isso `--no-revalidate`). O teto é por invocação e conta
-   retries; **não o aumente sem autorização**.
-5. **Validar antes de promover:** `CATALOG_SNAPSHOT_DIR=$D/staging node --conditions=react-server --import tsx scripts/garment-coverage-report.mts`.
-   Esperado para o Sul (mesma base de hoje): ~97% dos canônicos com cluster completos, e o checkpoint da loja em
-   `complete`. Se a passada não está `complete`, **não promova**.
-6. **Promover e revalidar:** `cp -p $D/garment-index.json $D/garment-index.json.prev 2>/dev/null; mv $D/staging/garment-index.json $D/garment-index.json`
-   (rename atômico) e depois
-   `GARMENT_REVALIDATE_URL=http://127.0.0.1:$PORT node --conditions=react-server --import tsx scripts/revalidate-garments.mts --store use-sul`
-   (usa `ADMIN_SYNC_TOKEN` do próprio serviço; saída 3 = revalidação falhou, índice intacto, repetir o comando).
-7. **Conferir:** `curl -s https://<url>/sul/pr/agudos-do-sul | grep -c "Algodão Peruano"` (> 0 depois da revalidação) e a
-   cidade no navegador (aba "Algodão Peruano" com preço próprio). Atualizações futuras: `catalog:sync` (rota) e depois
-   `sync-garments.mts --max-requests-per-store 40` **sem** `--force-full` (incremental por `begin_date`, ~7 páginas/semana no
-   Sul), com `GARMENT_REVALIDATE_URL` definido no comando; uma passada completa periódica (§14, item 3). **Nenhum agendamento
-   foi ativado.**
-8. **Alternativa não recomendada:** copiar o `garment-index.json` local (20 MB) para o Volume. Só funciona se o snapshot
-   de produção tiver os mesmos `productClusterId` (passo 2) e o método de transferência para o Volume não foi testado.
+**Como o `railway ssh` se comporta (verificado):** `railway ssh --service useorigens-storefront -- <comando>` junta os
+argumentos numa única string de shell **sem preservar aspas** e **não encaminha stdin**. Portanto: (a) `sh -c '...'` quebra
+(o `sh -c` recebe só a primeira palavra); (b) passe o comando como **um único argumento** entre aspas duplas, e pipes,
+redirecionamentos e `VAR=valor cmd` funcionam dentro dele; (c) não dá para enviar arquivo por stdin. Os scripts npm
+`garments:*` usam `--env-file=.env.local`, que não existe no container: use `node --conditions=react-server --import tsx scripts/<x>.mts`.
+
+1. **Pré-condições.** Código deste branch implantado (a rota `/api/admin/garment-index/revalidate` e os scripts precisam
+   existir); backup do Volume (Backups do Railway); confirmar que não há índice:
+   `railway ssh --service useorigens-storefront -- ls -la data/generated`.
+2. **Atualizar o catálogo base com clusters** (o snapshot antigo não tem `productClusterId`; sem ele o índice não acha
+   nenhum cluster e as abas ficam ocultas): `curl -X POST -H "Authorization: Bearer $ADMIN_SYNC_TOKEN" -H 'content-type: application/json' -d '{"storeKeys":["use-sul"]}' https://<url>/api/admin/catalog-sync`
+   e acompanhar por `GET` até `succeeded` (~99 GETs de leitura no Sul; a rota já revalida o catálogo). Conferir os clusters:
+   `railway ssh --service useorigens-storefront -- node --conditions=react-server --import tsx scripts/garment-coverage-report.mts`
+   (coluna "Com cluster" do Sul ≈ 8.166).
+3. **Artefato.** Usar o índice local aprovado **projetado para a loja Sul** (produção só tem o catálogo Sul; enviar Norte e
+   Centro-Oeste só custaria memória): 10.877.375 B, 7.999 clusters, 71.674 peças, sha256
+   `3c9727739c15c272557bc2993bd98caacd20dbb169294604ed665e497273c874`. Norte/Centro-Oeste entram quando forem lançados.
+4. **Transporte para o Volume** (sem stdin: blocos base64 por argumento). Localmente: `gzip -9 -c garment-index.sul.json | base64 | tr -d '\n' | split -b 90000 - chunk_`.
+   Para cada bloco: `railway ssh --service useorigens-storefront -- "printf %s <bloco> >> /app/data/generated/.garment-index.b64"`.
+   Depois: `railway ssh ... -- "base64 -d /app/data/generated/.garment-index.b64 | gunzip > /app/data/generated/garment-index.incoming.json"`,
+   conferir `sha256sum` do resultado contra o valor acima e `rm /app/data/generated/.garment-index.b64`. O candidato fica no
+   **mesmo Volume** que o índice vivo (requisito do `rename` atômico).
+5. **Validar sem promover:** `railway ssh ... -- "node --conditions=react-server --import tsx scripts/promote-garment-index.mts --from /app/data/generated/garment-index.incoming.json --expect-stores use-sul --check-only"`
+   (JSON, versão 1, só a loja esperada, formato de cada peça, tamanho plausível).
+6. **Promover e revalidar** (depois da promoção, nesta ordem): `railway ssh ... -- "GARMENT_REVALIDATE_URL=http://127.0.0.1:8080 node --conditions=react-server --import tsx scripts/promote-garment-index.mts --from /app/data/generated/garment-index.incoming.json --expect-stores use-sul --revalidate"`.
+   O script valida de novo, guarda o índice anterior como `garment-index.json.prev` (se houver), faz o `rename` atômico e
+   chama a rota autenticada. Saída 1 = não promoveu (índice vivo intocado); **saída 3 = promoveu, revalidação falhou:
+   mantenha o arquivo e repita só `scripts/revalidate-garments.mts --store use-sul`**.
+7. **Conferir:** `curl -s https://<url>/sul/pr/agudos-do-sul | grep -c "Algodão Peruano"` (> 0) e a cidade no navegador.
+   Atualizações futuras: `catalog-sync` (rota) e depois `sync-garments.mts --max-requests-per-store 40` sem `--force-full`
+   (incremental por `begin_date`), com `GARMENT_REVALIDATE_URL` no comando. Nenhum agendamento foi ativado.
+8. **Alternativa não usada:** gerar o índice dentro do container com `sync-garments.mts` (~1.073 GETs no Sul, em blocos de 250,
+   com `CATALOG_SNAPSHOT_DIR` apontando para um subdiretório de staging no Volume). Só se o artefato aprovado não puder
+   ser transportado.
 
 ## 12. Rollback
 
-- **Imediato, sem deploy e sem tocar o snapshot base:** `mv $D/garment-index.json $D/garment-index.json.off` e depois
-  `revalidate-garments.mts` (passo 6). Todas as cidades voltam à grade clássica; sem a revalidação, o ISR normal faz o
-  mesmo em até 1 h. Reativar: `mv` de volta + revalidar. Voltar à versão anterior do índice: `cp $D/garment-index.json.prev`.
+- **Imediato, sem deploy e sem tocar o snapshot base:** `railway ssh ... -- "mv /app/data/generated/garment-index.json /app/data/generated/garment-index.json.off"`
+  e depois `railway ssh ... -- "GARMENT_REVALIDATE_URL=http://127.0.0.1:8080 node --conditions=react-server --import tsx scripts/revalidate-garments.mts --store use-sul"`.
+  Todas as cidades voltam à grade clássica; sem a revalidação, o ISR normal faz o mesmo em até 1 h. Reativar: `mv` de volta
+  + revalidar. Voltar à versão anterior: usar o `garment-index.json.prev`.
 - Comprovado em modo produção (`verify:garment-revalidation`, passos 4 e 5: índice corrompido e removido → 200 com a
   grade clássica) e em E2E (`garment-index-missing.spec.ts`).
 - Não há variável de ambiente para desligar o recurso: **a presença do arquivo é o interruptor**.
+- **Problema no código, mesmo sem índice:** reverter o merge/deploy pelo fluxo normal.
 
 ## 13. Testes e gate de release
 
