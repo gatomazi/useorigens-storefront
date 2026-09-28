@@ -12,9 +12,15 @@ import { stateShowcase } from "@/lib/editorial/state-showcase";
 import { SOURCES } from "@/lib/analytics/sources";
 import { numberPt } from "@/lib/format";
 import { citiesOfRegion, mesoGroupsOfState } from "@/lib/geo/cities";
-import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, UF_TO_REGION, isRegionSlug } from "@/lib/geo/regions";
+import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, UF_TO_REGION, isRegionSlug, type RegionSlug } from "@/lib/geo/regions";
 import { normalizeText, slugify } from "@/lib/geo/text";
 import { isRegionLaunched } from "@/lib/regions/launched";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { stateDescription, stateIntro, stateTitle } from "@/lib/seo/copy";
+import { stateOf } from "@/lib/seo/state-copy";
+import { breadcrumbList } from "@/lib/seo/jsonld";
+import { pageOpenGraph } from "@/lib/seo/open-graph";
+import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 3600;
 
@@ -29,14 +35,36 @@ function resolveState(regionSlug: string, ufParam: string) {
   return UF_TO_REGION[uf] === regionSlug ? uf : null;
 }
 
+/** The state's cities that really have products (the same set the page lists), in the catalog's order. */
+function coveredCitiesOfState(region: RegionSlug, uf: string) {
+  const covered = getCatalog().coveredCityIds(region);
+  return citiesOfRegion(region).filter((c) => c.uf === uf && covered.has(c.id));
+}
+
+/** One real product photo for sharing: the capital's first style, else the first covered city that has one. */
+function shareImage(region: RegionSlug, uf: string, cities: ReturnType<typeof coveredCitiesOfState>): string | undefined {
+  const catalog = getCatalog();
+  const capital = cities.find((c) => c.slug === STATE_CAPITAL_SLUG[uf]);
+  for (const city of capital ? [capital, ...cities] : cities.slice(0, 5)) {
+    const image = catalog.cityFamilies(city.id)[0]?.primary.imageUrl;
+    if (image) return image;
+  }
+  return undefined;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ region: string; uf: string }> }): Promise<Metadata> {
   const { region, uf: ufParam } = await params;
   const uf = resolveState(region, ufParam);
-  if (!uf) return {};
+  if (!uf || !isRegionSlug(region)) return {};
+  const cities = coveredCitiesOfState(region, uf);
+  const title = stateTitle(uf);
+  const description = stateDescription(uf, cities.length);
+  const path = `/${region}/${uf.toLowerCase()}`;
   return {
-    title: `Camisetas de ${STATE_NAMES[uf]}`,
-    description: `Encontre a camiseta da sua cidade em ${STATE_NAMES[uf]}, por região ou em ordem alfabética.`,
-    alternates: { canonical: `/${region}/${uf.toLowerCase()}` },
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: pageOpenGraph({ title: `${title} | Use Origens`, description, path, imageUrl: shareImage(region, uf, cities) }),
   };
 }
 
@@ -46,8 +74,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   if (!uf || !isRegionSlug(region)) notFound();
 
   const catalog = getCatalog();
-  const covered = catalog.coveredCityIds(region);
-  const cities = citiesOfRegion(region).filter((c) => c.uf === uf && covered.has(c.id));
+  const cities = coveredCitiesOfState(region, uf);
   const toBrowser = (list: { name: string; slug: string }[]) => list.map((c) => ({ n: c.name, s: c.slug }));
 
   // "Destaques de {estado}": real products only, never "Mais vendidas" (no verified period on INK's sales
@@ -72,9 +99,11 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   // A real state photo ambients the identity header (name, count, map) — never the search below it: an open
   // results list needs a plain ground to stay legible, so it lives in its own quiet strip (docs/decisions/0003).
   const statePhoto = usableBannerAsset("state", bannerFor(region, "state", uf));
+  const capital = cities.find((c) => c.slug === STATE_CAPITAL_SLUG[uf]);
 
   return (
     <>
+      <JsonLd data={breadcrumbList(SITE_URL, [{ name: REGIONS[region].name, path: `/${region}` }, { name: STATE_NAMES[uf], path: `/${region}/${uf.toLowerCase()}` }])} />
       <section className="relative isolate">
         {statePhoto && <RegionalPhotoSection asset={statePhoto} priority />}
         <div className={`wrap pb-6 pt-5 lg:pb-8 lg:pt-6 ${statePhoto ? "pb-12 lg:pb-16" : ""}`}>
@@ -122,6 +151,27 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
           />
         </section>
       )}
+
+      {/* Short, real context right where the region/A–Z selection starts, with plain links (the region home and the capital when it has products). */}
+      <section className="wrap pb-6 lg:pb-8" aria-label={`Sobre as camisetas ${stateOf(uf)}`}>
+        <p className="t-body max-w-2xl text-ink-soft">
+          {stateIntro(uf, cities.length)}
+          {capital && (
+            <>
+              {" "}
+              Comece por{" "}
+              <Link href={`/${region}/${uf.toLowerCase()}/${capital.slug}`} className="link-line">
+                {capital.name}
+              </Link>
+              , ou volte ao{" "}
+              <Link href={`/${region}`} className="link-line">
+                início do {REGIONS[region].name}
+              </Link>
+              .
+            </>
+          )}
+        </p>
+      </section>
 
       <StateCityBrowser region={region} uf={uf.toLowerCase()} groups={groups} letters={letters} />
     </>

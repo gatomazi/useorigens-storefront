@@ -11,24 +11,41 @@ import { SOURCES } from "@/lib/analytics/sources";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { REAL_COLLECTIONS } from "@/lib/editorial/collections";
 import { getRegionHome } from "@/lib/home";
-import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
+import { REGIONS, isRegionSlug, type RegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { categoryProps } from "@/lib/catalog/collection-source";
 import { getCatalog } from "@/lib/catalog/repository";
 import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { regionDescription, regionTitle } from "@/lib/seo/copy";
+import { organization, webSite } from "@/lib/seo/jsonld";
+import { pageOpenGraph } from "@/lib/seo/open-graph";
+import { INSTAGRAM_URLS, SITE_URL } from "@/lib/site";
 
 export const revalidate = 3600;
 
 export async function generateMetadata({ params }: { params: Promise<{ region: string }> }): Promise<Metadata> {
   const { region } = await params;
-  if (!isRegionSlug(region)) return {};
-  const name = REGIONS[region].name;
+  if (!isRegionSlug(region) || !isRegionLaunched(region)) return {};
+  const title = regionTitle(region);
+  const description = regionDescription(region);
   return {
-    title: `Camisetas da sua cidade no ${name}`,
-    description: `Camisetas com o nome, o mapa, o DDD e o jeito de falar da sua cidade no ${name}. Busque a sua.`,
+    title,
+    description,
     alternates: { canonical: `/${region}` },
-    openGraph: { title: `Use Origens ${name}`, url: `/${region}` },
+    openGraph: pageOpenGraph({ title: `Use Origens ${REGIONS[region].name}`, description, path: `/${region}`, imageUrl: getRegionHome(region).heroFamilies[0]?.imageUrl }),
   };
+}
+
+/** Site + organisation structured data: only facts that are verifiable (the name, the domain, the region's logo and its own Instagram). */
+function RegionStructuredData({ region }: { region: RegionSlug }) {
+  const logo = region === "centro-oeste" ? "centro" : region;
+  return (
+    <>
+      <JsonLd data={webSite(SITE_URL)} />
+      <JsonLd data={organization(SITE_URL, { logoPath: `/brand/logo-${logo}.png`, sameAs: [INSTAGRAM_URLS[region]] })} />
+    </>
+  );
 }
 
 /**
@@ -47,7 +64,12 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
     // Collections come from the local collections snapshot only when a section asks for one (none does in the seed) — never from INK.
     const bundle = homeBundle();
     const catalog = getCatalog();
-    return <HomeSections region={region} home={home} bundle={bundle} {...categoryProps((store) => catalog.productsOfStore(store), bundle.docs[region])} />;
+    return (
+      <>
+        <RegionStructuredData region={region} />
+        <HomeSections region={region} home={home} bundle={bundle} {...categoryProps((store) => catalog.productsOfStore(store), bundle.docs[region])} />
+      </>
+    );
   }
 
   const { showcase } = home;
@@ -56,6 +78,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
 
   return (
     <>
+      <RegionStructuredData region={region} />
       <RegionHero region={region} cityCount={home.cityCount} trio={home.heroFamilies} config={bannerFor(region, "hero")} />
 
       {/* The product idea, shown on one real city. Only styles that exist for it. */}
