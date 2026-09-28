@@ -9,6 +9,11 @@ import { resolveCity, resolveCityProduct } from "@/lib/catalog/resolver";
 import { formatPrice } from "@/lib/format";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { familyDescription, familyTitle } from "@/lib/seo/copy";
+import { breadcrumbList } from "@/lib/seo/jsonld";
+import { pageOpenGraph } from "@/lib/seo/open-graph";
+import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 3600;
 
@@ -23,11 +28,14 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { region, uf, city, family } = await params;
   const resolved = resolveCityProduct(region, uf, city, family);
   if (!resolved) return {};
+  const title = familyTitle(resolved.family, resolved.city);
+  const description = familyDescription(resolved.family, resolved.city);
+  const path = `/${region}/${uf}/${city}/${family}`;
   return {
-    title: `${resolved.family.name} de ${resolved.city.name}`,
-    description: `Camiseta ${resolved.family.name} de ${resolved.city.name} (${resolved.stateName}). ${resolved.family.description}`,
-    alternates: { canonical: `/${region}/${uf}/${city}/${family}` },
-    openGraph: { images: [resolved.primary.imageUrl] },
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: pageOpenGraph({ title: `${title} | Use Origens`, description, path, imageUrl: resolved.primary.imageUrl }),
   };
 }
 
@@ -55,6 +63,14 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbList(SITE_URL, [
+          { name: resolved.region.name, path: `/${region}` },
+          { name: stateName, path: `/${region}/${uf}` },
+          { name: city.name, path: base },
+          { name: family.name, path: `${base}/${family.id}` },
+        ])}
+      />
       <section className="wrap pb-16 pt-5 lg:pb-24 lg:pt-6" aria-label={`Camiseta ${family.name} de ${city.name}`}>
         <nav aria-label="Você está em" className="t-caption mb-5 lg:mb-8">
           <Link href={`/${region}`} className="link-static">
