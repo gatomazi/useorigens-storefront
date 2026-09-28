@@ -4,7 +4,9 @@ import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
 import { INSTAGRAM_URLS, LEGACY_STORE_URLS } from "@/lib/site";
 import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
-import { hasStatesSection, headerLinks } from "@/lib/site-config/nav";
+import { regionChrome } from "@/lib/site-config/chrome";
+import { hasStatesSection } from "@/lib/site-config/nav";
+import { regionPath } from "@/lib/site-config/navigation";
 
 /** Another region: this site's own page once that region is publicly launched, otherwise the legacy INK store it has always linked to. */
 const otherRegionHref = (slug: RegionSlug, launched: readonly RegionSlug[]): string => (launched.includes(slug) ? `/${slug}` : LEGACY_STORE_URLS[slug]);
@@ -14,7 +16,7 @@ import { PrivacyPreferencesLink } from "../consent/PrivacyPreferencesLink";
 import { TrackedStateLink } from "../analytics/TrackedStateLink";
 import { HeaderDropdown } from "./HeaderDropdown";
 import { HeaderShell } from "./HeaderShell";
-import { MobileMenu, type NavItem } from "./MobileMenu";
+import { MobileMenu } from "./MobileMenu";
 import { CartMirrorMenu } from "../cart-mirror/CartMirrorMenu";
 import { FavoritesMenu } from "../favorites/FavoritesMenu";
 import { SearchDialog } from "../search/SearchDialog";
@@ -34,66 +36,52 @@ function headerDoc(region: RegionSlug) {
   return siteConfigHomeEnabled() ? homeBundle().docs[region] : undefined;
 }
 
-function navItems(region: RegionSlug): NavItem[] {
-  return headerLinks(headerDoc(region)).map((l) => ({ label: l.label, href: l.href ? l.href(region) : `/${region}#${l.anchor}` }));
-}
-
 export function Header({ region }: { region: RegionSlug }) {
-  const items = navItems(region);
-  const ufs = REGIONS[region].ufs;
-  const others = (Object.values(REGIONS) as (typeof REGIONS)[RegionSlug][]).filter((r) => r.slug !== region);
-  const launched = launchedRegions();
-  // "Regiões" used to point at a product category (#geografia, the DDD carousel) — semantically wrong: it
-  // reads as geographic navigation, so it must actually be one. Real navigation, not a category shortcut: a
-  // direct link per state plus "Ver estados" (the home's own chooser). Mobile gets the same three state links
-  // inlined in its flat list (see mobileItems below) since MobileMenu has no nested-dropdown affordance —
-  // never a second, conflicting "Regiões" control.
-  const stateLinks = ufs.map((uf) => ({ label: STATE_NAMES[uf], href: `/${region}/${uf.toLowerCase()}`, uf }));
-  // The state links go after the first section link (as before: Estilos, states…, Fala daqui, Estados).
-  const stateItems: NavItem[] = stateLinks.map(({ label, href, uf }) => ({ label, href, trackState: { state: uf, region } }));
-  const mobileItems: NavItem[] = [
-    ...items.slice(0, 1),
-    ...stateItems,
-    ...items.slice(1),
-    ...others.map((r) => ({ label: r.name, href: otherRegionHref(r.slug, launched), external: !launched.includes(r.slug) })),
-  ];
+  // One source for mobile and desktop (site-config/navigation.ts): the region's links, its launched states and the other LAUNCHED regions, with the
+  // labels / order / visibility the CMS published. Nothing here lists a state or a region by hand.
+  const { navigation } = regionChrome(region);
+  const items = navigation.primary;
+  const states = navigation.states;
+  const others = navigation.regions;
 
   return (
     <HeaderShell>
       <div className="wrap site-header-row flex items-center justify-between gap-3">
         <div className="flex items-center gap-1">
-          <MobileMenu items={mobileItems} />
-          <Link href={`/${region}`} className="flex min-h-11 items-center gap-2.5" aria-label={`Use Origens ${REGIONS[region].name}, página inicial`}>
+          <MobileMenu blocks={navigation.blocks} />
+          <Link href={regionPath(region)} className="flex min-h-11 items-center gap-2.5" aria-label={`Use Origens ${REGIONS[region].name}, página inicial`}>
             <Image src={`/brand/logo-${region === "centro-oeste" ? "centro" : region}.png`} alt="" width={40} height={40} className="h-9 w-9" priority unoptimized />
             <span translate="no" className="font-display text-[1.6rem] font-black uppercase leading-none tracking-[0.02em]">Use Origens</span>
           </Link>
         </div>
 
         <nav aria-label="Principal" className="hidden items-center gap-8 lg:flex">
-          <HeaderDropdown className="relative">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 py-1 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden">
-              Regiões
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </summary>
-            <ul className="absolute left-0 top-full z-50 mt-1 min-w-52 border-2 border-ink bg-white py-1 text-ink">
-              {stateLinks.map((s) => (
-                <li key={s.href}>
-                  <TrackedStateLink href={s.href} params={{ state: s.uf, region, source: SOURCES.stateSelector }} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
-                    {s.label}
-                  </TrackedStateLink>
-                </li>
-              ))}
-              {hasStatesSection(headerDoc(region)) && (
-                <li className="border-t border-line">
-                  <Link href={`/${region}#estados`} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
-                    Ver estados
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </HeaderDropdown>
+          {states.length > 0 && (
+            <HeaderDropdown className="relative">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 py-1 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden">
+                Regiões
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <ul className="absolute left-0 top-full z-50 mt-1 min-w-52 border-2 border-ink bg-white py-1 text-ink">
+                {states.map((s) => (
+                  <li key={s.href}>
+                    <TrackedStateLink href={s.href} params={{ state: s.trackState!.state, region, source: SOURCES.stateSelector }} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
+                      {s.label}
+                    </TrackedStateLink>
+                  </li>
+                ))}
+                {hasStatesSection(headerDoc(region)) && (
+                  <li className="border-t border-line">
+                    <Link href={`${regionPath(region)}#estados`} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
+                      Ver estados
+                    </Link>
+                  </li>
+                )}
+              </ul>
+            </HeaderDropdown>
+          )}
           {items.map((item) => (
             <Link key={item.href} href={item.href} className="link-line py-1 text-[0.9375rem] font-semibold">
               {item.label}
@@ -102,24 +90,26 @@ export function Header({ region }: { region: RegionSlug }) {
         </nav>
 
         <div className="flex items-center gap-1 sm:gap-3">
-          <HeaderDropdown className="relative hidden lg:block">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-2 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden">
-              {REGIONS[region].name}
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </summary>
-            {/* Its own white surface: reset text colour explicitly, the header above it is on a coloured background. */}
-            <ul className="absolute right-0 top-full z-50 mt-1 min-w-52 border-2 border-ink bg-white py-1 text-ink">
-              {others.map((r) => (
-                <li key={r.slug}>
-                  <a href={otherRegionHref(r.slug, launched)} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
-                    {r.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </HeaderDropdown>
+          {others.length > 0 && (
+            <HeaderDropdown className="relative hidden lg:block">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-2 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden">
+                {REGIONS[region].name}
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              {/* Its own white surface: reset text colour explicitly, the header above it is on a coloured background. */}
+              <ul className="absolute right-0 top-full z-50 mt-1 min-w-52 border-2 border-ink bg-white py-1 text-ink">
+                {others.map((r) => (
+                  <li key={r.href}>
+                    <Link href={r.href} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
+                      {r.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </HeaderDropdown>
+          )}
           <FavoritesMenu region={region} />
           <CartMirrorMenu region={region} />
           <SearchDialog region={region} />

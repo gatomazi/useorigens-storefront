@@ -169,8 +169,9 @@ body {
   outline-offset: 3px;
 }
 
+/* Fixed black on purpose: the "Texto principal" colour of the CMS palette overrides --ink and must not repaint the announcement strip. */
 .on-ink {
-  background: var(--ink);
+  background: #000;
   color: #fff;
 }
 .on-ink .t-caption {
@@ -351,6 +352,8 @@ a:hover > .photo img,
 /* Header: always the region's primary colour (bg-region-primary, set in HeaderShell.tsx); a touch shorter and
    with a hairline once the page scrolls, quiet (no rule) at the top. */
 .site-header {
+  background: var(--nav-header-bg, var(--region-primary));
+  color: var(--nav-header-text, #fff);
   border-bottom: 1px solid transparent;
   transition: border-color 280ms var(--ease-out), box-shadow 280ms var(--ease-out);
 }
@@ -372,6 +375,16 @@ a:hover > .photo img,
   .site-header[data-scrolled="true"] .site-header-row {
     height: 3.75rem;
   }
+}
+
+/* Mobile menu (MobileMenu.tsx): black with white text unless the CMS palette sets --nav-menu-bg / --nav-menu-text. */
+.nav-menu {
+  background: var(--nav-menu-bg, #000);
+  color: var(--nav-menu-text, #fff);
+}
+.nav-menu :focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
 }
 
 .paper {
