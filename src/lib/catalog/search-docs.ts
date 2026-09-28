@@ -1,11 +1,11 @@
 import "server-only";
-import { cityById } from "../geo/cities";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
 import { prepareDocs, type PreparedDoc, type SearchDoc } from "../search/catalog-search";
 import { purchaseUrl } from "./commerce";
 import { searchMembers, type CollectionRecord } from "./collections";
 import { getStoreCollections } from "./collections-file";
 import { DESIGN_FAMILIES, variantLabel } from "./families";
+import { isSubLocality, localityOfBinding } from "./locality-binding";
 import { getCatalog, type Catalog } from "./repository";
 import type { CityDesignBinding } from "./types";
 
@@ -34,17 +34,19 @@ export function collectionNamesByProduct(records: readonly CollectionRecord[]): 
 
 function cityDoc(binding: CityDesignBinding, tier: number, collections: Map<string, string[]>): SearchDoc | null {
   const href = purchaseUrl(binding);
-  const city = cityById(binding.cityId);
+  // The place the product is about: a Federal District administrative region (Taguatinga) is its own place, never "Brasília".
+  const city = localityOfBinding(binding);
   const family = familyById.get(binding.designFamily);
   if (!href || !city || !family) return null;
-  const label = binding.localityLabel ?? (binding.isPrimary ? null : binding.variantLabel ?? variantLabel(binding.designVariant));
+  const inside = isSubLocality(binding) ? binding.localityLabel : undefined;
+  const label = inside ?? (binding.isPrimary ? null : binding.variantLabel ?? variantLabel(binding.designVariant));
   const stateName = STATE_NAMES[city.uf] ?? "";
   return {
     id: binding.inkProductId,
     kind: "city-design",
     commerceStoreKey: binding.commerceStoreKey,
     title: label ? `${family.name} · ${label}` : family.name,
-    context: `${binding.localityLabel ?? city.name} · ${city.uf}`,
+    context: `${inside ?? city.name} · ${city.uf}`,
     imageUrl: binding.imageUrl,
     price: binding.price,
     href,
@@ -52,7 +54,7 @@ function cityDoc(binding: CityDesignBinding, tier: number, collections: Map<stri
     sales: binding.totalSalesCount ?? 0,
     // Tier first (primary, then variants, then localities), then the families in the storefront's own commercial order.
     order: tier * 10 + family.sortOrder,
-    strong: [family.name, `${family.name} ${city.name}`, city.name, ...city.aliases, ...(binding.localityLabel ? [binding.localityLabel] : []), ...(label ? [label] : []), ...(collections.get(binding.inkProductId) ?? [])],
+    strong: [family.name, `${family.name} ${city.name}`, city.name, ...city.aliases, ...(inside ? [inside] : []), ...(label ? [label] : []), ...(collections.get(binding.inkProductId) ?? [])],
     // State only: the mesoregion ("Grande Florianópolis") and the family blurb are editorial text, not product facts; matching them would list
     // every neighbouring city's design under a search for one city.
     weak: [stateName, city.uf],
@@ -71,7 +73,8 @@ export function buildSearchDocs(catalog: Catalog, region: RegionSlug, collection
     }
   };
 
-  for (const cityId of catalog.coveredCityIds(region)) {
+  // Municipalities and administrative regions alike: every locality that has products has them searchable.
+  for (const cityId of catalog.coveredLocalityIds(region)) {
     for (const entry of catalog.cityFamilies(cityId)) {
       // Every real product stays searchable: the primary first, the variants right after it and labelled, never hidden.
       push(cityDoc(entry.primary, 0, collections));

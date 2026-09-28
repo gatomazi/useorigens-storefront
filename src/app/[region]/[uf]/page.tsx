@@ -4,14 +4,14 @@ import { notFound } from "next/navigation";
 import { StateOutline } from "@/components/brand/StateOutline";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
-import { StateCityBrowser, type BrowserGroup } from "@/components/city/StateCityBrowser";
+import { StateCityBrowser, type BrowserCity, type BrowserGroup } from "@/components/city/StateCityBrowser";
 import { CitySearch } from "@/components/search/CitySearch";
 import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { stateShowcase } from "@/lib/editorial/state-showcase";
 import { SOURCES } from "@/lib/analytics/sources";
 import { numberPt } from "@/lib/format";
-import { citiesOfRegion, mesoGroupsOfState } from "@/lib/geo/cities";
+import { localitiesOfRegion, pluralRegioesAdministrativas, stateLocalityCounts, stateLocalityGroups, stateLocalityLabel } from "@/lib/geo/localities";
 import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, UF_TO_REGION, isRegionSlug, type RegionSlug } from "@/lib/geo/regions";
 import { normalizeText, slugify } from "@/lib/geo/text";
 import { isRegionLaunched } from "@/lib/regions/launched";
@@ -35,10 +35,13 @@ function resolveState(regionSlug: string, ufParam: string) {
   return UF_TO_REGION[uf] === regionSlug ? uf : null;
 }
 
-/** The state's cities that really have products (the same set the page lists), in the catalog's order. */
+/**
+ * The state's places that really have products (the same set the page lists): municipalities AND, in the Federal District, administrative
+ * regions. The name `cities` in this file is historic: an administrative region is never called a city in what the page shows.
+ */
 function coveredCitiesOfState(region: RegionSlug, uf: string) {
-  const covered = getCatalog().coveredCityIds(region);
-  return citiesOfRegion(region).filter((c) => c.uf === uf && covered.has(c.id));
+  const covered = getCatalog().coveredLocalityIds(region);
+  return localitiesOfRegion(region).filter((c) => c.uf === uf && covered.has(c.id));
 }
 
 /** One real product photo for sharing: the capital's first style, else the first covered city that has one. */
@@ -57,8 +60,9 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
   const uf = resolveState(region, ufParam);
   if (!uf || !isRegionSlug(region)) return {};
   const cities = coveredCitiesOfState(region, uf);
-  const title = stateTitle(uf);
-  const description = stateDescription(uf, cities.length);
+  const counts = stateLocalityCounts(cities);
+  const title = stateTitle(uf, counts.administrativeRegions);
+  const description = stateDescription(uf, counts.cities, counts.administrativeRegions);
   const path = `/${region}/${uf.toLowerCase()}`;
   return {
     title,
@@ -75,21 +79,25 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
 
   const catalog = getCatalog();
   const cities = coveredCitiesOfState(region, uf);
-  const toBrowser = (list: { name: string; slug: string }[]) => list.map((c) => ({ n: c.name, s: c.slug }));
+  const counts = stateLocalityCounts(cities);
+  const hasRegions = counts.administrativeRegions > 0;
+  const toBrowser = (list: { name: string; slug: string; type: "municipality" | "administrative_region" }[]): BrowserCity[] =>
+    list.map((c) => ({ n: c.name, s: c.slug, ...(c.type === "administrative_region" ? { t: "administrative_region" as const } : {}) }));
 
   // "Destaques de {estado}": real products only, never "Mais vendidas" (no verified period on INK's sales
   // count — see state-showcase.ts). Hidden entirely when there's nothing real to show, never a placeholder.
   const showcase = stateShowcase({ uf, cities, catalog, merch: catalog.merch(region), capitalSlug: STATE_CAPITAL_SLUG[uf] });
 
   // Editorial mesoregion grouping (ADR 0004), navigation only — not the current IBGE division. Cities
-  // without one still appear in A–Z.
-  const groups: BrowserGroup[] = mesoGroupsOfState(uf, new Set(cities.map((c) => c.id))).map((g) => ({
+  // without one still appear in A–Z. A state with administrative regions groups them apart from its municipality.
+  const groups: BrowserGroup[] = stateLocalityGroups(uf, cities).map((g) => ({
     name: g.name,
     slug: g.slug,
-    cities: toBrowser(g.cities.sort((a, b) => normalizeText(a.name).localeCompare(normalizeText(b.name)))),
+    cities: toBrowser(g.localities.sort((a, b) => normalizeText(a.name).localeCompare(normalizeText(b.name)))),
+    ...(hasRegions && g.slug === "regioes-administrativas" ? { countLabel: pluralRegioesAdministrativas(g.localities.length) } : {}),
   }));
 
-  const byLetter = new Map<string, { name: string; slug: string }[]>();
+  const byLetter = new Map<string, { name: string; slug: string; type: "municipality" | "administrative_region" }[]>();
   for (const city of [...cities].sort((a, b) => normalizeText(a.name).localeCompare(normalizeText(b.name)))) {
     const letter = normalizeText(city.name).charAt(0).toUpperCase();
     byLetter.set(letter, [...(byLetter.get(letter) ?? []), city]);
@@ -120,7 +128,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
                 <div>
                   <h1 className="t-h1">{STATE_NAMES[uf]}</h1>
                   <p className="t-place mt-3 text-[1.125rem]">
-                    {numberPt.format(cities.length)} cidades · {groups.length} regiões
+                    {hasRegions ? stateLocalityLabel(counts) : `${numberPt.format(cities.length)} cidades · ${groups.length} regiões`}
                   </p>
                 </div>
                 <StateOutline uf={uf} className="h-20 w-24 shrink-0 text-ink md:hidden" strokeWidth={2} />
@@ -146,7 +154,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
             items={showcase}
             labelledBy="showcase-title"
             title={`Destaques de ${STATE_NAMES[uf]}`}
-            intro="Camisetas reais de cidades e da identidade do estado — a compra sempre continua na loja."
+            intro={hasRegions ? "Camisetas reais de Brasília, das Regiões Administrativas e da identidade do estado — a compra sempre continua na loja." : "Camisetas reais de cidades e da identidade do estado — a compra sempre continua na loja."}
             sourceSection={SOURCES.stateShowcase}
           />
         </section>
@@ -155,7 +163,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
       {/* Short, real context right where the region/A–Z selection starts, with plain links (the region home and the capital when it has products). */}
       <section className="wrap pb-6 lg:pb-8" aria-label={`Sobre as camisetas ${stateOf(uf)}`}>
         <p className="t-body max-w-2xl text-ink-soft">
-          {stateIntro(uf, cities.length)}
+          {stateIntro(uf, counts.cities, counts.administrativeRegions)}
           {capital && (
             <>
               {" "}
@@ -173,7 +181,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
         </p>
       </section>
 
-      <StateCityBrowser region={region} uf={uf.toLowerCase()} groups={groups} letters={letters} />
+      <StateCityBrowser region={region} uf={uf.toLowerCase()} groups={groups} letters={letters} variant={hasRegions ? "localities" : "cities"} />
     </>
   );
 }

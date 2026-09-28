@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
+import { placeSearchCopy } from "@/lib/search/copy";
 import { prepareCities, searchCities, type PreparedCity, type SearchCity, type SearchResult } from "@/lib/search/rank";
 import { trackSearch, trackSelectCity } from "@/lib/analytics/track";
 
@@ -67,10 +68,11 @@ export function CitySearch({
   region,
   autoFocus = false,
   onNavigate,
-  label = "Busque sua cidade",
-  placeholder = "Busque sua cidade…",
+  label,
+  placeholder,
   source,
 }: Props) {
+  const copy = placeSearchCopy(region);
   const router = useRouter();
   const uid = useId();
   const listId = `${uid}-list`;
@@ -82,6 +84,8 @@ export function CitySearch({
   const [failed, setFailed] = useState(false);
 
   const ufs = REGIONS[region].ufs;
+  // UFs whose places are not all cities (the Federal District): their state result must not promise "cidades".
+  const ufsWithRegions = useMemo(() => new Set((index ?? []).filter((p) => p.city.t === "ra").map((p) => p.city.u)), [index]);
 
   const ensureIndex = () => {
     if (index) return;
@@ -107,7 +111,7 @@ export function CitySearch({
     if (!result) return;
     trackSearch(searchLabelFor(result), { region, resultsCount: results.length });
     if (result.type === "city") {
-      trackSelectCity({ city: result.city.n, state: result.city.u, region, source });
+      trackSelectCity({ city: result.city.n, state: result.city.u, region, source, ...(result.city.t === "ra" ? { localityType: "administrative_region" as const } : {}) });
     }
     router.push(hrefFor(region, result));
     onNavigate?.();
@@ -134,7 +138,7 @@ export function CitySearch({
   return (
     <div className="w-full">
       <label htmlFor={`${uid}-input`} className="sr-only">
-        {label}
+        {label ?? copy.label}
       </label>
       <input
         id={`${uid}-input`}
@@ -151,7 +155,7 @@ export function CitySearch({
         spellCheck={false}
         enterKeyHint="go"
         inputMode="search"
-        placeholder={placeholder}
+        placeholder={placeholder ?? copy.placeholder}
         value={query}
         onFocus={ensureIndex}
         onChange={(event) => {
@@ -167,7 +171,14 @@ export function CitySearch({
         {results.map((result, i) => {
           const isState = result.type === "state";
           const title = isState ? result.name : result.city.n;
-          const subtitle = isState ? "Ver as cidades do estado" : `${STATE_NAMES[result.city.u]} · ${result.city.m ?? REGIONS[region].name}`;
+          // An administrative region says what it is; it is never presented as a city.
+          const subtitle = isState
+            ? ufsWithRegions.has(result.uf)
+              ? "Ver Brasília e as Regiões Administrativas"
+              : "Ver as cidades do estado"
+            : result.city.t === "ra"
+              ? `${STATE_NAMES[result.city.u]} · Região Administrativa`
+              : `${STATE_NAMES[result.city.u]} · ${result.city.m ?? REGIONS[region].name}`;
           const isActive = i === activeIndex;
           return (
             <div
@@ -191,13 +202,13 @@ export function CitySearch({
         })}
       </div>
 
-      {index === null && trimmed.length > 0 && !failed && <p className={`mt-4 text-[0.9375rem] ${muted}`}>Carregando cidades…</p>}
-      {failed && <p className="mt-4 text-[0.9375rem]">Não conseguimos carregar as cidades agora. Tente de novo em instantes.</p>}
+      {index === null && trimmed.length > 0 && !failed && <p className={`mt-4 text-[0.9375rem] ${muted}`}>{copy.loading}</p>}
+      {failed && <p className="mt-4 text-[0.9375rem]">{copy.failed}</p>}
 
       {showEmpty && (
         <div className="mt-5">
-          <p className="font-semibold">Ainda não encontramos essa cidade.</p>
-          <p className={`mt-1 text-[0.9375rem] ${muted}`}>Tente buscar pelo nome completo ou escolha o estado.</p>
+          <p className="font-semibold">{copy.empty}</p>
+          <p className={`mt-1 text-[0.9375rem] ${muted}`}>{copy.emptyHint}</p>
           <ul className="mt-4 flex flex-wrap gap-2">
             {ufs.map((uf) => (
               <li key={uf}>

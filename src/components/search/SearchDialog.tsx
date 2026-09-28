@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { SOURCES } from "@/lib/analytics/sources";
+import { placeSearchCopy } from "@/lib/search/copy";
 import { CitySearch } from "./CitySearch";
 
 function SearchIcon({ className }: { className: string }) {
@@ -20,6 +21,7 @@ function SearchIcon({ className }: { className: string }) {
  */
 export function SearchDialog({ region, variant = "header" }: { region: RegionSlug; variant?: "header" | "hero" | "cta" | "link" }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const copy = placeSearchCopy(region);
   // The search only mounts while the dialog is open: its input autofocuses on mount.
   const [isOpen, setIsOpen] = useState(false);
 
@@ -39,7 +41,7 @@ export function SearchDialog({ region, variant = "header" }: { region: RegionSlu
           className="group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper sm:min-h-[4.5rem] sm:px-5"
         >
           <SearchIcon className="h-6 w-6 shrink-0" />
-          <span className="flex-1 text-[1.0625rem] font-medium text-ink-mute sm:text-[1.1875rem]">Busque sua cidade…</span>
+          <span className="flex-1 text-[1.0625rem] font-medium text-ink-mute sm:text-[1.1875rem]">{copy.hero}</span>
           <span className="hidden text-[0.9375rem] font-semibold sm:inline">Buscar</span>
         </button>
       ) : variant === "cta" ? (
@@ -53,14 +55,14 @@ export function SearchDialog({ region, variant = "header" }: { region: RegionSlu
       ) : (
         <button type="button" onClick={open} className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 px-2 font-semibold sm:px-3" aria-haspopup="dialog">
           <SearchIcon className="h-5 w-5" />
-          <span className="hidden sm:inline">Buscar cidade</span>
-          <span className="sr-only sm:hidden">Buscar cidade</span>
+          <span className="hidden sm:inline">{copy.trigger}</span>
+          <span className="sr-only sm:hidden">{copy.trigger}</span>
         </button>
       )}
 
       <dialog
         ref={ref}
-        aria-label="Buscar cidade"
+        aria-label={copy.trigger}
         onClose={() => setIsOpen(false)}
         onClick={(event) => event.target === ref.current && close()}
         className="search-sheet m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-ground p-0 text-ink backdrop:bg-black/60 sm:mx-auto sm:mt-0 sm:h-auto sm:max-h-[86dvh] sm:max-w-4xl"

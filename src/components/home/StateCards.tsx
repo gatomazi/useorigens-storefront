@@ -7,7 +7,6 @@ import { TrackedStateLink } from "@/components/analytics/TrackedStateLink";
 import { SOURCES } from "@/lib/analytics/sources";
 import { bannerFor, usableBannerAsset, type BannerAsset } from "@/lib/editorial/banners";
 import type { StateCard } from "@/lib/home";
-import { pluralCidades } from "@/lib/format";
 import type { RegionSlug } from "@/lib/geo/regions";
 
 function StateLine({ line }: { line: NonNullable<StateCard["line"]> }) {
@@ -26,11 +25,11 @@ function StateLine({ line }: { line: NonNullable<StateCard["line"]> }) {
   );
 }
 
-function RegionChips({ region, uf, shown, more }: { region: RegionSlug; uf: string; shown: { name: string; slug: string; count: number }[]; more: number }) {
+function RegionChips({ region, uf, shown, more, title = "Regiões" }: { region: RegionSlug; uf: string; shown: { name: string; slug: string; count: number }[]; more: number; title?: string }) {
   if (shown.length === 0) return null;
   return (
     <div className="mt-5">
-      <p className="t-label">Regiões</p>
+      <p className="t-label">{title}</p>
       <ul className="mt-2 flex flex-wrap gap-2">
         {shown.map((g) => (
           <li key={g.slug}>
@@ -108,11 +107,11 @@ export function StateCards({
                   <TrackedStateLink href={`/${region}/${state.uf.toLowerCase()}`} params={{ state: state.uf, region, source: SOURCES.stateSelector }} className="group flex items-end justify-between gap-4">
                     <div>
                       <h3 className="link-line inline text-[1.75rem] font-extrabold leading-tight tracking-tight transition-colors group-hover:text-region-primary">{state.name}</h3>
-                      <p className="t-place mt-1 text-[1rem] text-ink-mute">{pluralCidades(state.cityCount)}</p>
+                      <p className="t-place mt-1 text-[1rem] text-ink-mute">{state.localityLabel}</p>
                     </div>
                     <StateOutline uf={state.uf} className="h-20 w-24 shrink-0 text-ink" strokeWidth={1.75} />
                   </TrackedStateLink>
-                  <RegionChips region={region} uf={state.uf} shown={shown} more={more} />
+                  <RegionChips region={region} uf={state.uf} shown={shown} more={more} title={state.administrativeRegionCount > 0 ? "Localidades" : "Regiões"} />
                   {state.line && <StateLine line={state.line} />}
                 </div>
               </article>
@@ -132,7 +131,7 @@ export function StateCards({
               <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 [&::-webkit-details-marker]:hidden">
                 <span>
                   <span className="block text-[1.1875rem] font-extrabold leading-tight tracking-tight transition-colors group-open:text-region-primary">{state.name}</span>
-                  <span className="t-place mt-0.5 block text-[0.9375rem] text-ink-mute">{pluralCidades(state.cityCount)}</span>
+                  <span className="t-place mt-0.5 block text-[0.9375rem] text-ink-mute">{state.localityLabel}</span>
                 </span>
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m6 9 6 6 6-6" />
@@ -144,10 +143,10 @@ export function StateCards({
                     <BannerBackground asset={cover} />
                   </div>
                 )}
-                <RegionChips region={region} uf={state.uf} shown={shown} more={more} />
+                <RegionChips region={region} uf={state.uf} shown={shown} more={more} title={state.administrativeRegionCount > 0 ? "Localidades" : "Regiões"} />
                 {state.line && <StateLine line={state.line} />}
                 <TrackedStateLink href={`/${region}/${state.uf.toLowerCase()}`} params={{ state: state.uf, region, source: SOURCES.stateSelector }} className="mt-5 inline-flex min-h-11 items-center text-[0.9375rem] font-semibold link-static">
-                  Ver todas as cidades de {state.name}
+                  {state.browseLabel}
                 </TrackedStateLink>
               </div>
             </details>

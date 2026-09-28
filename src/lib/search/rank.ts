@@ -13,6 +13,8 @@ export type SearchCity = {
   a?: string[];
   /** Editorial mesoregion ("Grande Florianópolis"), used as microcontext in results (ADR 0004). Omitted when IBGE has none. */
   m?: string;
+  /** Present only for a Federal District administrative region ("ra"): a place that is NOT a city, and never labelled as one. */
+  t?: "ra";
 };
 
 export type SearchResult =

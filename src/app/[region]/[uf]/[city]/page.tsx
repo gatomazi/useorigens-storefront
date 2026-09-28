@@ -14,11 +14,13 @@ import { resolveCity } from "@/lib/catalog/resolver";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { formatPrice } from "@/lib/format";
 import { citiesOfSameMeso } from "@/lib/geo/cities";
+import { compareLocalityNames, localitiesOfRegion, localityById, localitySubtitle } from "@/lib/geo/localities";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { cityDescription, cityIntro, cityTitle } from "@/lib/seo/copy";
 import { breadcrumbList } from "@/lib/seo/jsonld";
+import { stateOf } from "@/lib/seo/state-copy";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { SITE_URL } from "@/lib/site";
 
@@ -71,6 +73,18 @@ export default async function CityPage({ params }: { params: Params }) {
   const start = Math.max(0, (at === -1 ? sameMeso.length : at) - 5);
   const neighbours = sameMeso.slice(start, start + 10);
 
+  // Federal District: Brasília and every administrative region link to the OTHER administrative regions that really have products (an RA is a
+  // place of its own, not a "city of the same region"). Empty everywhere else, so no other page changes.
+  const isRegion = city.type === "administrative_region";
+  const coveredPlaces = catalog.coveredLocalityIds(city.regionSlug);
+  const regionsOfState = localitiesOfRegion(city.regionSlug)
+    .filter((l) => l.uf === city.uf && l.type === "administrative_region" && l.id !== city.id && coveredPlaces.has(l.id))
+    .sort(compareLocalityNames);
+  const ownsRegions = isRegion || regionsOfState.some((r) => r.parentCityId === city.id);
+  const otherRegions = ownsRegions ? (isRegion ? regionsOfState.slice(0, 12) : regionsOfState) : [];
+  // The municipality that contains this administrative region (Brasília), when it has a page of its own.
+  const parentPlace = isRegion && city.parentCityId && coveredPlaces.has(city.parentCityId) ? localityById(city.parentCityId) : undefined;
+
   // A real city photo (never one that names the city — the H1 already does that) ambients the header itself,
   // instead of sitting as its own banner slice between the header and "Estilos" (docs/decisions/0003).
   const cityPhoto = usableBannerAsset("city", bannerFor(city.regionSlug, "city"));
@@ -104,10 +118,7 @@ export default async function CityPage({ params }: { params: Params }) {
           <div className="mt-6 flex items-end justify-between gap-6">
             <div className="min-w-0">
               <h1 className="t-city">{city.name}</h1>
-              <p className="t-place mt-4 text-[1.125rem] sm:text-[1.5rem]">
-                {stateName}
-                {city.meso ? ` · ${city.meso}` : ""}
-              </p>
+              <p className="t-place mt-4 text-[1.125rem] sm:text-[1.5rem]">{localitySubtitle(city)}</p>
             </div>
             <StateOutline uf={city.uf} className="hidden h-44 w-56 shrink-0 text-ink lg:block" strokeWidth={2} />
           </div>
@@ -206,6 +217,45 @@ export default async function CityPage({ params }: { params: Params }) {
               );
             })}
           </ul>
+        </section>
+      )}
+
+      {otherRegions.length > 0 && (
+        <section aria-labelledby="regions-title" className="wrap pb-10 pt-4 lg:pb-14">
+          <div className="border-t border-line pt-8">
+            <h2 id="regions-title" className="text-[1.25rem] font-extrabold tracking-tight">
+              {isRegion ? "Outras Regiões Administrativas" : `Regiões Administrativas ${stateOf(city.uf)}`}
+            </h2>
+            <ul className="mt-4 flex flex-wrap gap-2">
+              {parentPlace && (
+                <li>
+                  <TrackedCityLink
+                    href={`/${region}/${uf}/${parentPlace.slug}`}
+                    params={{ city: parentPlace.name, state: parentPlace.uf, region, source: SOURCES.cityNeighbours }}
+                    className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.9375rem] font-medium transition-colors hover:border-ink hover:bg-ink hover:text-white"
+                  >
+                    {parentPlace.name}
+                  </TrackedCityLink>
+                </li>
+              )}
+              {otherRegions.map((c) => (
+                <li key={c.id}>
+                  <TrackedCityLink
+                    href={`/${region}/${uf}/${c.slug}`}
+                    params={{ city: c.name, state: c.uf, region, source: SOURCES.cityNeighbours, localityType: "administrative_region" }}
+                    className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.9375rem] font-medium transition-colors hover:border-ink hover:bg-ink hover:text-white"
+                  >
+                    {c.name}
+                  </TrackedCityLink>
+                </li>
+              ))}
+              <li>
+                <Link href={`/${region}/${uf}#regioes-administrativas`} className="link-static inline-flex min-h-11 items-center px-2 text-[0.9375rem] font-semibold">
+                  Ver todas as Regiões Administrativas
+                </Link>
+              </li>
+            </ul>
+          </div>
         </section>
       )}
 

@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { getCatalog } from "@/lib/catalog/repository";
-import { cityById } from "@/lib/geo/cities";
+import { localityById } from "@/lib/geo/localities";
 import { STATE_NAMES } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
 import { SITE_URL } from "@/lib/site";
@@ -12,8 +12,9 @@ import { pageHref } from "@/lib/site-config/pages";
 export const dynamic = "force-dynamic";
 
 /**
- * Only URLs that answer 200 and are meant to rank: launched regions, states and cities with real products, the design-family pages that
- * exist for a city, and CMS pages the owner marked indexable. Left out on purpose: /busca and /personalizar (noindex), request tokens,
+ * Only URLs that answer 200 and are meant to rank: launched regions, states and places with real products (cities, and the Federal District's
+ * administrative regions that have products — an RA with none answers 404, so it is never listed), the design-family pages that
+ * exist for a place, and CMS pages the owner marked indexable. Left out on purpose: /busca and /personalizar (noindex), request tokens,
  * /admin and /api, and `/` (redirects to /sul).
  */
 export default function sitemap(): MetadataRoute.Sitemap {
@@ -27,8 +28,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
   for (const region of launchedRegions()) {
     entries.push(entry(`/${region}`), entry(`/${region}/privacidade`));
 
-    const cities = [...catalog.coveredCityIds(region)].flatMap((id) => {
-      const city = cityById(id);
+    const cities = [...catalog.coveredLocalityIds(region)].flatMap((id) => {
+      const city = localityById(id);
       return city ? [city] : [];
     });
 
