@@ -11,6 +11,7 @@
 // See docs/storefront/city-garment-catalog-rollout.md for the full-crawl request/time estimate and the
 // authorization this script's real (non---plan) use requires before a full unbounded pass is ever run.
 import { garmentCoverageByStore } from "../src/lib/catalog/garment-coverage";
+import { readGarmentIndex } from "../src/lib/catalog/garment-index-file";
 import { runGarmentSync } from "../src/lib/catalog/garment-sync-service";
 import { readGarmentCheckpoint } from "../src/lib/catalog/garment-checkpoint";
 import { readSnapshot } from "../src/lib/catalog/snapshot-file";
@@ -55,9 +56,9 @@ if (args.plan) {
   console.log("stores run in parallel). This script never runs that unbounded — pass --max-requests-per-store to cap");
   console.log("any real invocation; resumability means a small capped run today and another capped run tomorrow add up");
   console.log("to the same result as one big run, just spread out and checkpointed.\n");
-  const coverage = garmentCoverageByStore(snapshot);
+  const coverage = garmentCoverageByStore(snapshot, await readGarmentIndex());
   if (coverage.length > 0) {
-    console.log("Current coverage (from whatever garmentBindings already exist in the snapshot):");
+    console.log("Current coverage (from the garment index file):");
     for (const c of coverage) {
       console.log(`  ${c.storeKey}: ${c.complete} complete, ${c.partial} partial, ${c.noVariants} no-variants, ${c.noCluster} no-cluster, of ${c.totalCanonicalBindings} canonical bindings`);
     }

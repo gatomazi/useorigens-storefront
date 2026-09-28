@@ -2,6 +2,7 @@
 // resolution the city page uses (`Catalog#garmentTabsForCity`). Prints Markdown.
 // Usage: npm run garments:coverage
 import { garmentCoverageByStore } from "../src/lib/catalog/garment-coverage";
+import { readGarmentIndexSync } from "../src/lib/catalog/garment-index-file";
 import { readGarmentCheckpoint } from "../src/lib/catalog/garment-checkpoint";
 import { GARMENT_TYPES } from "../src/lib/catalog/garments";
 import { getCatalog } from "../src/lib/catalog/repository";
@@ -11,15 +12,17 @@ import { REGIONS, REGION_SLUGS } from "../src/lib/geo/regions";
 
 const snapshot = await readSnapshot();
 const checkpoint = await readGarmentCheckpoint();
+const { index: garmentIndex } = readGarmentIndexSync();
+const piecesOf = (store: string) => Object.values(garmentIndex.stores[store as keyof typeof garmentIndex.stores]?.clusters ?? {}).flat();
 const catalog = getCatalog();
 const typeLabel = new Map(GARMENT_TYPES.map((t) => [t.id, t.label]));
 
 console.log("## Por loja\n");
 console.log("| Loja | Canônicas | Com cluster | Sem cluster | Completos | Parciais | Sem variantes | Peças indexadas | Passada | Páginas | GETs (crawl) |");
 console.log("|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|");
-for (const c of garmentCoverageByStore(snapshot)) {
+for (const c of garmentCoverageByStore(snapshot, garmentIndex)) {
   const cp = checkpoint.stores[c.storeKey];
-  const pieces = snapshot.stores[c.storeKey]?.garmentBindings?.length ?? 0;
+  const pieces = piecesOf(c.storeKey).length;
   console.log(
     `| ${c.storeKey} | ${c.totalCanonicalBindings} | ${c.totalCanonicalBindings - c.noCluster} | ${c.noCluster} | ${c.complete} | ${c.partial} | ${c.noVariants} | ${pieces} | ${cp?.status ?? "—"} | ${cp ? `${cp.lastPageCompleted}/${cp.totalPages}` : "—"} | ${cp?.requestsUsedAllTime ?? "—"} |`,
   );
@@ -30,36 +33,42 @@ const stores = Object.keys(snapshot.stores) as (keyof typeof snapshot.stores)[];
 console.log(`| Tipo | ${stores.join(" | ")} |`);
 console.log(`|---|${stores.map(() => "---:").join("|")}|`);
 for (const type of GARMENT_TYPES.filter((t) => t.id !== 1)) {
-  const cells = stores.map((s) => snapshot.stores[s]?.garmentBindings?.filter((g) => g.garmentTypeId === type.id).length ?? 0);
+  const cells = stores.map((s) => piecesOf(s).filter((t) => t[0] === type.id).length);
   console.log(`| ${typeLabel.get(type.id)} | ${cells.join(" | ")} |`);
 }
 
 console.log("\n## Cidades (o que a página da cidade realmente mostra)\n");
-console.log("| Região | Cidades com catálogo | Com ao menos 1 aba de peça | % | Abas por cidade (mín/média/máx) |");
-console.log("|---|---:|---:|---:|---|");
+console.log("| Região | Cidades com catálogo | Com ao menos 1 aba de peça | % | Com peças em TODAS as famílias | Famílias com peças (média por cidade) |");
+console.log("|---|---:|---:|---:|---:|---:|");
 for (const region of REGION_SLUGS) {
   const covered = catalog.coveredCityIds(region);
   const cities = allCities().filter((c) => c.regionSlug === region && covered.has(c.id));
-  const tabCounts = cities.map((c) => Math.max(0, catalog.garmentTabsForCity(c.id).tabs.length - 1));
-  const withPieces = tabCounts.filter((n) => n > 0).length;
-  const avg = tabCounts.length ? (tabCounts.reduce((a, b) => a + b, 0) / tabCounts.length).toFixed(1) : "0";
-  console.log(`| ${REGIONS[region].name} | ${cities.length} | ${withPieces} | ${cities.length ? ((100 * withPieces) / cities.length).toFixed(1) : "0"}% | ${Math.min(...tabCounts, 0)}/${avg}/${Math.max(...tabCounts, 0)} |`);
+  let withTabs = 0;
+  let allFamilies = 0;
+  let familyShareSum = 0;
+  for (const city of cities) {
+    const families = catalog.cityFamilies(city.id).length;
+    const { tabs, entriesByGarment } = catalog.garmentTabsForCity(city.id);
+    if (tabs.length <= 1) continue;
+    withTabs++;
+    const withPieces = new Set<string>();
+    for (const tab of tabs.filter((t) => t.id !== 1)) for (const e of entriesByGarment[tab.id] ?? []) withPieces.add(e.family.id);
+    familyShareSum += withPieces.size / families;
+    if (withPieces.size === families) allFamilies++;
+  }
+  const pct = (n: number) => (cities.length ? ((100 * n) / cities.length).toFixed(1) : "0");
+  console.log(`| ${REGIONS[region].name} | ${cities.length} | ${withTabs} | ${pct(withTabs)}% | ${allFamilies} (${pct(allFamilies)}%) | ${cities.length ? ((100 * familyShareSum) / cities.length).toFixed(1) : "0"}% |`);
 }
 
 console.log("\n## Distribuição de tipos distintos por cluster canônico (com cluster)\n");
 console.log("| Loja | " + Array.from({ length: 10 }, (_, i) => i).join(" | ") + " |");
 console.log("|---|" + Array.from({ length: 10 }, () => "---:").join("|") + "|");
 for (const [key, index] of Object.entries(snapshot.stores)) {
-  const typesByCluster = new Map<string, Set<number>>();
-  for (const g of index?.garmentBindings ?? []) {
-    const set = typesByCluster.get(g.productClusterId) ?? new Set<number>();
-    set.add(g.garmentTypeId);
-    typesByCluster.set(g.productClusterId, set);
-  }
+  const clusters = garmentIndex.stores[key as keyof typeof garmentIndex.stores]?.clusters ?? {};
   const hist = Array.from({ length: 10 }, () => 0);
   for (const b of index?.bindings ?? []) {
     if (!b.productClusterId) continue;
-    hist[Math.min(9, typesByCluster.get(b.productClusterId)?.size ?? 0)]++;
+    hist[Math.min(9, new Set((clusters[b.productClusterId] ?? []).map((t) => t[0])).size)]++;
   }
   console.log(`| ${key} | ${hist.join(" | ")} |`);
 }

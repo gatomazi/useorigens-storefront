@@ -2,6 +2,7 @@ import "server-only";
 import { ALLOWED_COMMERCE_HOSTS } from "../ink/config";
 import type { GarmentSourceProduct } from "../ink/normalize";
 import { CLASSIC_GARMENT_TYPE_ID, garmentTypeById } from "./garments";
+import { urlMatchesShape } from "./garment-index-file";
 import type { CityDesignBinding, GarmentBinding } from "./types";
 
 /** Only the fields the linker needs — accepts both a ranked `CityDesignBinding` and the pre-rank `UnrankedBinding`. */
@@ -9,7 +10,7 @@ type CanonicalBindingLike = Pick<CityDesignBinding, "cityId" | "designFamily" | 
 
 /** Same https + allowed-host rule as `commerce.ts`'s `purchaseUrl` — duplicated here (not imported) only
  * because it runs against a raw `GarmentSourceProduct`, not a `CityDesignBinding`/`MerchProduct`. */
-function isSellableUrl(rawUrl: string): boolean {
+export function isSellableUrl(rawUrl: string): boolean {
   try {
     const url = new URL(rawUrl);
     return url.protocol === "https:" && ALLOWED_COMMERCE_HOSTS.has(url.host);
@@ -30,6 +31,8 @@ export type GarmentLinkStats = {
   noCanonicalForCluster: number;
   noPrice: number;
   unsellableUrl: number;
+  /** Allowed host, but the URL is not `<store base>/<slug>`: the compact index cannot store it faithfully. */
+  urlShape: number;
 };
 
 /**
@@ -52,7 +55,7 @@ export function linkGarmentBindings(
   canonicalBindings: readonly CanonicalBindingLike[],
   syncedAt: string,
 ): { bindings: GarmentBinding[]; stats: GarmentLinkStats } {
-  const stats: GarmentLinkStats = { candidates: rawCandidates.length, linked: 0, classicType: 0, noClusterId: 0, unknownType: 0, noCanonicalForCluster: 0, noPrice: 0, unsellableUrl: 0 };
+  const stats: GarmentLinkStats = { candidates: rawCandidates.length, linked: 0, classicType: 0, noClusterId: 0, unknownType: 0, noCanonicalForCluster: 0, noPrice: 0, unsellableUrl: 0, urlShape: 0 };
   const canonicalByCluster = new Map<string, CanonicalBindingLike>();
   for (const binding of canonicalBindings) {
     if (!binding.productClusterId) continue;
@@ -88,6 +91,10 @@ export function linkGarmentBindings(
     }
     if (!isSellableUrl(raw.storeProductUrl)) {
       stats.unsellableUrl++;
+      continue;
+    }
+    if (!urlMatchesShape(raw.storeKey, raw.slug, raw.storeProductUrl)) {
+      stats.urlShape++;
       continue;
     }
 

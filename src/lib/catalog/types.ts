@@ -127,13 +127,6 @@ export type StoreIndex = {
   bindings: UnrankedBinding[];
   merch: MerchProduct[];
   excluded: ExcludedProduct[];
-  /**
-   * Additive, separate from `bindings` on purpose (MD §2's three-way split: city search index / internal
-   * sellable-piece catalog / resolved region+city+family+garment index). Never read by the city search index
-   * or by `cityFamilies` — only by `garmentTabsForCity` (repository.ts). Absent or empty on snapshots written
-   * before this round; every reader must treat that as "no garment tabs for this store", never as an error.
-   */
-  garmentBindings?: GarmentBinding[];
 };
 
 export type CatalogSnapshot = {

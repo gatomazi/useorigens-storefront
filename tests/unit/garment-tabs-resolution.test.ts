@@ -3,7 +3,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { GARMENT_TYPES } from "@/lib/catalog/garments";
-import type { CatalogSnapshot, GarmentBinding, StoreIndex, UnrankedBinding } from "@/lib/catalog/types";
+import type { GarmentIndex } from "@/lib/catalog/garment-index-file";
+import type { CatalogSnapshot, StoreIndex, UnrankedBinding } from "@/lib/catalog/types";
+import { indexOf, tuple, writeIndexFile } from "./garment-index-fixture";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 
 const NOW = "2026-09-27T00:00:00.000Z";
@@ -31,28 +33,16 @@ const classic = (store: CommerceStoreKey, cityId: string, inkProductId: string, 
   ...(cluster ? { productClusterId: cluster } : {}),
 });
 
-const piece = (store: CommerceStoreKey, cityId: string, cluster: string, garmentTypeId: number, price: number): GarmentBinding => ({
-  cityId,
-  designFamily: "traco",
-  garmentTypeId,
-  commerceStoreKey: store,
-  inkProductId: `${cluster}${garmentTypeId}`,
-  slug: `piece-${cluster}-${garmentTypeId}`,
-  storeProductUrl: `${HOST[store]}/piece-${cluster}-${garmentTypeId}`,
-  imageUrl: `https://gcp-images.majestic.ink.rsvcloud.com/piece-${garmentTypeId}.jpg`,
-  price,
-  productClusterId: cluster,
-  syncedAt: NOW,
-});
+const slugOf = (cluster: string, typeId: number) => `piece-${cluster}-${typeId}`;
+const piece = (cluster: string, garmentTypeId: number, price: number) => tuple(garmentTypeId, `${cluster}${garmentTypeId}`, slugOf(cluster, garmentTypeId), price);
 
-const store = (key: CommerceStoreKey, bindings: UnrankedBinding[], garmentBindings: GarmentBinding[]): StoreIndex => ({
+const store = (key: CommerceStoreKey, bindings: UnrankedBinding[]): StoreIndex => ({
   commerceStoreKey: key,
   syncedAt: NOW,
   productCount: bindings.length,
   bindings,
   merch: [],
   excluded: [],
-  garmentBindings,
 });
 
 const NON_CLASSIC_TYPE_IDS = GARMENT_TYPES.filter((t) => t.id !== 1).map((t) => t.id);
@@ -62,19 +52,17 @@ const snapshot: CatalogSnapshot = {
   stores: {
     // Tijucas: real shape from the pilot — Peruano and Body Infantil exist, Oversized does not. Torres has a
     // classic product whose cluster has no pieces at all.
-    "use-sul": store(
-      "use-sul",
-      [classic("use-sul", TIJUCAS_SC, "1", "100"), classic("use-sul", TORRES_RS, "2", "200")],
-      [piece("use-sul", TIJUCAS_SC, "100", 72, 139.9), piece("use-sul", TIJUCAS_SC, "100", 165, 96)],
-    ),
-    "use-norte": store("use-norte", [classic("use-norte", XAMBIOA_TO, "3", "300")], [piece("use-norte", XAMBIOA_TO, "300", 178, 129)]),
-    "use-centro": store(
-      "use-centro",
-      [classic("use-centro", AGUA_BOA_MT, "4", "400")],
-      NON_CLASSIC_TYPE_IDS.map((id) => piece("use-centro", AGUA_BOA_MT, "400", id, 100 + id)),
-    ),
+    "use-sul": store("use-sul", [classic("use-sul", TIJUCAS_SC, "1", "100"), classic("use-sul", TORRES_RS, "2", "200")]),
+    "use-norte": store("use-norte", [classic("use-norte", XAMBIOA_TO, "3", "300")]),
+    "use-centro": store("use-centro", [classic("use-centro", AGUA_BOA_MT, "4", "400")]),
   },
 };
+
+const garmentIndex: GarmentIndex = indexOf({
+  "use-sul": { "100": [piece("100", 72, 139.9), piece("100", 165, 96)] },
+  "use-norte": { "300": [piece("300", 178, 129)] },
+  "use-centro": { "400": NON_CLASSIC_TYPE_IDS.map((id) => piece("400", id, 100 + id)) },
+});
 
 describe("Catalog#garmentTabsForCity (fixture snapshot, one city per region)", () => {
   let dir: string;
@@ -83,6 +71,7 @@ describe("Catalog#garmentTabsForCity (fixture snapshot, one city per region)", (
     dir = await mkdtemp(path.join(tmpdir(), "garment-tabs-"));
     process.env = { ...env, CATALOG_SNAPSHOT_DIR: dir };
     await writeFile(path.join(dir, "catalog-snapshot.json"), JSON.stringify(snapshot));
+    await writeIndexFile(dir, garmentIndex);
   });
   afterEach(async () => {
     process.env = env;

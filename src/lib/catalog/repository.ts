@@ -4,10 +4,11 @@ import { allCities, cityById, type City } from "../geo/cities";
 import { REGIONS, REGION_SLUGS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { buildLore, type Lore } from "../editorial/lore";
 import { DESIGN_FAMILIES, type DesignFamily, type DesignFamilyId } from "./families";
-import { CLASSIC_GARMENT_TYPE_ID, GARMENT_TYPES } from "./garments";
+import { CLASSIC_GARMENT_TYPE_ID, GARMENT_TYPES, garmentTypeById } from "./garments";
+import { emptyGarmentIndex, expandTuple, garmentIndexMtimeMs, readGarmentIndexSync, type ExpandedPiece, type GarmentIndex } from "./garment-index-file";
 import { compareIds, rankBindings } from "./ranking";
 import { readSnapshotSync, snapshotMtimeMs } from "./snapshot-file";
-import type { CityDesignBinding, GarmentBinding, MerchProduct, UnrankedBinding } from "./types";
+import type { CityDesignBinding, MerchProduct, UnrankedBinding } from "./types";
 
 export type CityFamilyEntry = {
   family: DesignFamily;
@@ -62,13 +63,27 @@ function storeOrderFor(region: RegionSlug): CommerceStoreKey[] {
 
 let cache: { mtimeMs: number; catalog: Catalog } | null = null;
 
+/**
+ * The garment-piece index has its own mtime-keyed cache, independent of the base snapshot's: a re-sync of
+ * pieces never forces a catalog rebuild, and a missing/corrupt file is just an empty index (no tabs), so the
+ * optional index can never take the storefront down.
+ */
+let garmentIndexCache: { mtimeMs: number; index: GarmentIndex } | null = null;
+
+function getGarmentIndex(): GarmentIndex {
+  const mtimeMs = garmentIndexMtimeMs();
+  if (garmentIndexCache && garmentIndexCache.mtimeMs === mtimeMs) return garmentIndexCache.index;
+  const { index } = mtimeMs === 0 ? { index: emptyGarmentIndex() } : readGarmentIndexSync();
+  garmentIndexCache = { mtimeMs, index };
+  return index;
+}
+
 function build(): { catalog: Catalog; mtimeMs: number } {
   const { snapshot, mtimeMs } = readSnapshotSync();
   const stores = Object.values(snapshot.stores);
 
   const byRegion = new Map<RegionSlug, UnrankedBinding[]>();
   const merchByRegion = new Map<RegionSlug, MerchProduct[]>();
-  const garmentByCity = new Map<string, GarmentBinding[]>();
   for (const store of stores) {
     for (const binding of store.bindings) {
       const region = cityById(binding.cityId)?.regionSlug;
@@ -81,13 +96,6 @@ function build(): { catalog: Catalog; mtimeMs: number } {
       const list = merchByRegion.get(item.regionSlug) ?? [];
       list.push(item);
       merchByRegion.set(item.regionSlug, list);
-    }
-    // Additive, never merged into `bindings`/`byRegion` above — the city search index and `cityFamilies`
-    // stay built exclusively from canonical bindings (MD §2's three-way separation).
-    for (const garment of store.garmentBindings ?? []) {
-      const list = garmentByCity.get(garment.cityId) ?? [];
-      list.push(garment);
-      garmentByCity.set(garment.cityId, list);
     }
   }
 
@@ -128,64 +136,60 @@ function build(): { catalog: Catalog; mtimeMs: number } {
 
   const garmentTabsForCity = (cityId: string): GarmentTabsForCity => {
     const classicEntries = cityFamilies(cityId);
-    const bindings = garmentByCity.get(cityId) ?? [];
-    if (classicEntries.length === 0 || bindings.length === 0) return { tabs: [], entriesByGarment: {} };
+    if (classicEntries.length === 0) return { tabs: [], entriesByGarment: {} };
+    const garmentIndex = getGarmentIndex();
 
-    const primaryClusterByFamily = new Map(classicEntries.map((entry) => [entry.family.id, entry.primary.productClusterId]));
-    const byType = new Map<number, Map<DesignFamilyId, GarmentBinding>>();
-    for (const b of bindings) {
-      // Only pieces of the cluster the family's current primary belongs to are candidates: a city can hold
-      // several canonical products per family (regional/localidade variants), each with its own cluster, and
-      // their pieces share this (city, family) key. Never let arrival order decide which one is shown.
-      const primaryCluster = primaryClusterByFamily.get(b.designFamily);
-      if (!primaryCluster || b.productClusterId !== primaryCluster) continue;
-      const perFamily = byType.get(b.garmentTypeId) ?? new Map<DesignFamilyId, GarmentBinding>();
-      const current = perFamily.get(b.designFamily);
+    // Association is EXCLUSIVELY by the primary's own `product_cluster_id`, inside the primary's own store: a
+    // primary without a cluster id has no pieces (fail closed), and a cluster the base catalog has since
+    // rotated away from simply is not found here, so a stale piece can never be shown.
+    const entriesByType = new Map<number, CityFamilyEntry[]>();
+    for (const classicEntry of classicEntries) {
+      const primary = classicEntry.primary;
+      if (!primary.productClusterId) continue;
+      const tuples = garmentIndex.stores[primary.commerceStoreKey]?.clusters[primary.productClusterId];
+      if (!Array.isArray(tuples)) continue;
+
       // Two products of one cluster and type: deterministic tie-break, lowest INK id (same rule as `rankBindings`).
-      if (!current || compareIds(b.inkProductId, current.inkProductId) < 0) perFamily.set(b.designFamily, b);
-      byType.set(b.garmentTypeId, perFamily);
+      const best = new Map<number, ExpandedPiece>();
+      for (const tuple of tuples) {
+        const piece = expandTuple(primary.commerceStoreKey, tuple);
+        if (!piece || piece.garmentTypeId === CLASSIC_GARMENT_TYPE_ID || !garmentTypeById(piece.garmentTypeId)) continue;
+        const current = best.get(piece.garmentTypeId);
+        if (!current || compareIds(piece.inkProductId, current.inkProductId) < 0) best.set(piece.garmentTypeId, piece);
+      }
+
+      for (const [typeId, piece] of best) {
+        const type = garmentTypeById(typeId)!;
+        const list = entriesByType.get(typeId) ?? [];
+        list.push({
+          family: classicEntry.family,
+          primary: {
+            cityId: primary.cityId,
+            designFamily: primary.designFamily,
+            designVariant: "garment",
+            variantLabel: type.label,
+            productClusterId: primary.productClusterId,
+            isPrimary: true,
+            priority: 0,
+            commerceStoreKey: primary.commerceStoreKey,
+            inkProductId: piece.inkProductId,
+            slug: piece.slug,
+            storeProductUrl: piece.storeProductUrl,
+            imageUrl: piece.imageUrl,
+            price: piece.price,
+            syncedAt: garmentIndex.stores[primary.commerceStoreKey]?.syncedAt ?? "",
+          },
+          variants: [],
+        });
+        entriesByType.set(typeId, list);
+      }
     }
 
     const entriesByGarment: Record<number, CityFamilyEntry[]> = { [CLASSIC_GARMENT_TYPE_ID]: classicEntries };
     const tabs: GarmentTabOption[] = [{ id: CLASSIC_GARMENT_TYPE_ID, slug: "classica", label: "Camiseta clássica", count: classicEntries.length }];
-
     for (const type of garmentTypesByOrder) {
-      const perFamily = byType.get(type.id);
-      if (!perFamily) continue;
-      const entries: CityFamilyEntry[] = [];
-      for (const classicEntry of classicEntries) {
-        const garment = perFamily.get(classicEntry.family.id);
-        if (!garment) continue; // MD Caso C: this family simply has no card on this tab, never a fabricated one
-        // Stale-link guard (spec §6, next round: "não exibir peça obsoleta quando um cluster principal sair
-        // do catálogo"): a `garmentBinding` is only trustworthy while it still points at the SAME cluster as
-        // the family's current canonical binding. A later main catalog sync can rotate a city+family onto a
-        // different INK product (new cluster, or the cluster disappears entirely) without this round's
-        // garment index having been re-run yet — trusting the old link then would show a piece from a design
-        // this city+family no longer represents. Comparing the stored cluster ids catches that without any
-        // extra I/O; a real re-sync (`garments:sync`) is still what actually refreshes the data.
-        if (garment.productClusterId !== classicEntry.primary.productClusterId) continue;
-        entries.push({
-          family: classicEntry.family,
-          primary: {
-            cityId: garment.cityId,
-            designFamily: garment.designFamily,
-            designVariant: "garment",
-            variantLabel: type.label,
-            productClusterId: garment.productClusterId,
-            isPrimary: true,
-            priority: 0,
-            commerceStoreKey: garment.commerceStoreKey,
-            inkProductId: garment.inkProductId,
-            slug: garment.slug,
-            storeProductUrl: garment.storeProductUrl,
-            imageUrl: garment.imageUrl,
-            price: garment.price,
-            syncedAt: garment.syncedAt,
-          },
-          variants: [],
-        });
-      }
-      if (entries.length === 0) continue;
+      const entries = entriesByType.get(type.id);
+      if (!entries || entries.length === 0) continue; // MD Caso C: never a fabricated card or empty tab
       entriesByGarment[type.id] = entries;
       tabs.push({ id: type.id, slug: type.slug, label: type.label, count: entries.length });
     }

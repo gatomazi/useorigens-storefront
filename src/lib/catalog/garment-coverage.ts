@@ -1,5 +1,6 @@
 import type { CommerceStoreKey } from "../geo/regions";
 import { CLASSIC_GARMENT_TYPE_ID, GARMENT_TYPES } from "./garments";
+import type { GarmentIndex } from "./garment-index-file";
 import type { CatalogSnapshot } from "./types";
 
 /** How many non-classic garment types a fully-covered (city, family) pair could have — the ceiling used to
@@ -29,18 +30,11 @@ export type StoreGarmentCoverage = {
  * hand-built snapshot fixtures. Never claims "complete" coverage for the whole store; only for individual
  * (city, family) pairs that actually have `MAX_NON_CLASSIC_TYPES` linked siblings.
  */
-export function garmentCoverageByStore(snapshot: CatalogSnapshot): StoreGarmentCoverage[] {
+export function garmentCoverageByStore(snapshot: CatalogSnapshot, garmentIndex: GarmentIndex): StoreGarmentCoverage[] {
   const out: StoreGarmentCoverage[] = [];
   for (const [storeKey, index] of Object.entries(snapshot.stores)) {
     if (!index) continue;
-    // Distinct garment types per cluster (the only link the index trusts). Counting rows per (city, family)
-    // would add up the pieces of several canonical products of one family and could call a partial cluster complete.
-    const typesByCluster = new Map<string, Set<number>>();
-    for (const g of index.garmentBindings ?? []) {
-      const types = typesByCluster.get(g.productClusterId) ?? new Set<number>();
-      types.add(g.garmentTypeId);
-      typesByCluster.set(g.productClusterId, types);
-    }
+    const clusters = garmentIndex.stores[storeKey as CommerceStoreKey]?.clusters ?? {};
 
     let complete = 0;
     let partial = 0;
@@ -53,7 +47,9 @@ export function garmentCoverageByStore(snapshot: CatalogSnapshot): StoreGarmentC
         noCluster++;
         continue;
       }
-      const count = typesByCluster.get(binding.productClusterId)?.size ?? 0;
+      // Distinct types per cluster (the only link the index trusts): counting rows could add up duplicates.
+      const tuples = clusters[binding.productClusterId];
+      const count = Array.isArray(tuples) ? new Set(tuples.map((t) => t[0])).size : 0;
       if (count === 0) noVariants++;
       else if (count >= MAX_NON_CLASSIC_TYPES) complete++;
       else partial++;

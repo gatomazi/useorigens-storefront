@@ -98,7 +98,7 @@ describe("buildGarmentBindings", () => {
   test("given two stores that coincidentally reuse the same numeric cluster id, when linked, then a candidate never crosses into the other store's city (homonym-UF isolation)", () => {
     const sulCanonical = canonical({ commerceStoreKey: "use-sul", cityId: "4218004", productClusterId: "999" });
     const norteCanonical = canonical({ commerceStoreKey: "use-norte", cityId: "1722107", productClusterId: "999", inkProductId: "9999999" });
-    const norteCandidate = sibling({ storeKey: "use-norte", clusterId: "999", storeProductUrl: "https://www.usenorte.com.br/usenorte/product/x" });
+    const norteCandidate = sibling({ storeKey: "use-norte", clusterId: "999", slug: "x", storeProductUrl: "https://www.usenorte.com.br/usenorte/product/x" });
 
     const result = buildGarmentBindings([norteCandidate], [sulCanonical, norteCanonical], NOW);
     expect(result).toHaveLength(1);
@@ -127,11 +127,12 @@ describe("linkGarmentBindings stats", () => {
         sibling({ id: "5", clusterId: "no-such-cluster" }), // no canonical for the cluster
         sibling({ id: "6", price: null }), // no price
         sibling({ id: "7", storeProductUrl: "https://evil.example.com/x" }), // host not allowed
+        sibling({ id: "8", storeProductUrl: "https://www.usesul.com.br/usesul/product/not-the-slug" }), // allowed host, wrong shape
       ],
       [canonical()],
       NOW,
     );
     expect(bindings.map((b) => b.inkProductId)).toEqual(["1"]);
-    expect(stats).toEqual({ candidates: 7, linked: 1, classicType: 1, noClusterId: 1, unknownType: 1, noCanonicalForCluster: 1, noPrice: 1, unsellableUrl: 1 });
+    expect(stats).toEqual({ candidates: 8, linked: 1, classicType: 1, noClusterId: 1, unknownType: 1, noCanonicalForCluster: 1, noPrice: 1, unsellableUrl: 1, urlShape: 1 });
   });
 });

@@ -5,7 +5,8 @@ import { requireAtLeastOneInkToken } from "../config/env";
 import { INK_STORES, tokenFor } from "../ink/config";
 import { linkGarmentBindings, type GarmentLinkStats } from "./garments-link";
 import { readGarmentCheckpoint, writeGarmentCheckpoint, type GarmentExclusionTotals, type GarmentSyncStoreCheckpoint } from "./garment-checkpoint";
-import { readSnapshot, writeSnapshot } from "./snapshot-file";
+import { countPieces, readGarmentIndex, upsertPieces, writeGarmentIndex, type GarmentTuple } from "./garment-index-file";
+import { readSnapshot } from "./snapshot-file";
 
 export type GarmentSyncOutcome =
   | {
@@ -76,12 +77,12 @@ function nextRunParams(checkpoint: GarmentSyncStoreCheckpoint | undefined, force
 /**
  * Runs one bounded, resumable garment-sync pass per requested store: fetches up to `maxRequestsPerStore`
  * pages (continuing from the checkpoint, if any), links results to the already-trusted canonical bindings
- * via `buildGarmentBindings` (unchanged from the previous round — only the data SOURCE changes here, from 3
- * manual fixtures to the real paginated crawl), and merges them additively into the snapshot's
- * `garmentBindings` for that store. Never widens scope beyond what the caller authorized: `maxRequestsPerStore`
- * is a hard ceiling, not a target. Stores run in parallel with each other (never within one store), same as
- * the main `syncCatalog`. A store whose fetch throws is reported as a failure and leaves the snapshot AND
- * checkpoint for that store completely untouched — last-known-good, exactly like `shouldPromoteStore`.
+ * via `linkGarmentBindings` (by `product_cluster_id` only), and upserts them into the compact garment index
+ * file (`garment-index-file.ts`) — the base snapshot is only READ (for the canonical bindings), never
+ * rewritten. Never widens scope beyond what the caller authorized: `maxRequestsPerStore` is a hard ceiling,
+ * not a target. Stores run in parallel with each other (never within one store), same as the main
+ * `syncCatalog`. A store whose fetch throws is reported as a failure and leaves its index entry AND
+ * checkpoint completely untouched — last-known-good, exactly like `shouldPromoteStore`.
  */
 export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<GarmentSyncRunResult> {
   requireAtLeastOneInkToken();
@@ -92,6 +93,7 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
 
   const snapshot = await readSnapshot();
   const checkpointDoc = await readGarmentCheckpoint();
+  const garmentIndex = await readGarmentIndex();
 
   const settled = await Promise.allSettled(
     keys.map(async (storeKey) => {
@@ -111,16 +113,21 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
       });
 
       const { bindings: linked, stats } = linkGarmentBindings(result.products, storeIndex.bindings, new Date().toISOString());
-      // Upsert by `inkProductId` (the real product identity) — NEVER wholesale-replace by (city, family):
-      // a resumed run only ever crawls a SUBSET of pages, so a pair whose siblings are split across two
-      // separate calls (page N this run, page N+1 next run) must accumulate, not have its first half
-      // discarded when the second half links. A product re-seen with fresher data simply overwrites its own
-      // single entry; every other product's entry, from this run or an earlier one, is left untouched.
-      const byId = new Map((storeIndex.garmentBindings ?? []).map((g) => [g.inkProductId, g]));
-      for (const g of linked) byId.set(g.inkProductId, g);
-      const merged = [...byId.values()];
+      // Upsert by INK product id inside the piece's cluster — NEVER wholesale-replace a cluster: a resumed
+      // run only ever crawls a SUBSET of pages, so a cluster whose pieces are split across two separate calls
+      // (page N this run, page N+1 next run) must accumulate, not have its first half discarded. A product
+      // re-seen with fresher data overwrites only its own tuple. The store's clusters are copied shallowly
+      // (arrays are copied on write) so a failed store never mutates what is written back for it.
+      const clusters: Record<string, GarmentTuple[]> = { ...(garmentIndex.stores[storeKey]?.clusters ?? {}) };
+      upsertPieces(clusters, linked);
 
       const completedFullPass = !result.truncated && result.lastPageCompleted >= result.totalPages;
+      // A finished pass may drop clusters whose canonical product is gone (the base catalog rotated them);
+      // a partial pass never deletes anything.
+      if (completedFullPass) {
+        const live = new Set(storeIndex.bindings.flatMap((b) => (b.productClusterId ? [b.productClusterId] : [])));
+        for (const clusterId of Object.keys(clusters)) if (!live.has(clusterId)) delete clusters[clusterId];
+      }
       const newCheckpoint: GarmentSyncStoreCheckpoint = {
         storeKey,
         status: completedFullPass ? "complete" : "in_progress",
@@ -137,7 +144,7 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
       return {
         storeKey,
         mode,
-        merged,
+        clusters,
         newCheckpoint,
         outcome: {
           storeKey,
@@ -150,7 +157,7 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
           ...(result.interruptedBy ? { interruptedBy: result.interruptedBy } : {}),
           completedFullPass,
           newGarmentBindings: linked.length,
-          totalGarmentBindingsForStore: merged.length,
+          totalGarmentBindingsForStore: countPieces({ syncedAt: "", clusters }),
         } satisfies GarmentSyncOutcome,
       };
     }),
@@ -164,16 +171,19 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
       outcomes.push({ storeKey, ok: false, error: String(result.reason) });
       continue;
     }
-    const { merged, newCheckpoint, outcome } = result.value;
-    snapshot.stores[storeKey] = { ...snapshot.stores[storeKey]!, garmentBindings: merged };
+    const { clusters, newCheckpoint, outcome } = result.value;
+    garmentIndex.stores[storeKey] = { syncedAt: new Date().toISOString(), clusters };
     checkpointDoc.stores[storeKey] = newCheckpoint;
     outcomes.push(outcome);
   }
 
-  // One atomic write for everything that succeeded this run; a store that failed was never mutated above,
-  // so its prior snapshot/checkpoint entries are written back completely unchanged.
-  await writeSnapshot(snapshot);
-  await writeGarmentCheckpoint(checkpointDoc);
+  // One atomic write per file for everything that succeeded this run; a store that failed was never mutated
+  // above, so its prior index/checkpoint entries are written back completely unchanged. Index first: a crash
+  // between the two leaves the checkpoint behind the index, and re-reading a few pages is idempotent.
+  if (outcomes.some((o) => o.ok)) {
+    await writeGarmentIndex(garmentIndex);
+    await writeGarmentCheckpoint(checkpointDoc);
+  }
 
   return { startedAt, finishedAt: new Date().toISOString(), outcomes };
 }
@@ -187,7 +197,7 @@ function dayBefore(iso: string): string {
 }
 
 function addExclusions(previous: GarmentExclusionTotals | undefined, stats: GarmentLinkStats, rejected: number): GarmentExclusionTotals {
-  const base: GarmentExclusionTotals = previous ?? { candidates: 0, linked: 0, classicType: 0, noClusterId: 0, unknownType: 0, noCanonicalForCluster: 0, noPrice: 0, unsellableUrl: 0, rejectedByValidation: 0 };
+  const base: GarmentExclusionTotals = previous ?? { candidates: 0, linked: 0, classicType: 0, noClusterId: 0, unknownType: 0, noCanonicalForCluster: 0, noPrice: 0, unsellableUrl: 0, urlShape: 0, rejectedByValidation: 0 };
   return {
     candidates: base.candidates + stats.candidates,
     linked: base.linked + stats.linked,
@@ -197,6 +207,7 @@ function addExclusions(previous: GarmentExclusionTotals | undefined, stats: Garm
     noCanonicalForCluster: base.noCanonicalForCluster + stats.noCanonicalForCluster,
     noPrice: base.noPrice + stats.noPrice,
     unsellableUrl: base.unsellableUrl + stats.unsellableUrl,
+    urlShape: (base.urlShape ?? 0) + stats.urlShape,
     rejectedByValidation: base.rejectedByValidation + rejected,
   };
 }

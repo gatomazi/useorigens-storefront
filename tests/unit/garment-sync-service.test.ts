@@ -4,6 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { assertCanonicalClusterCoverage, runGarmentSync } from "@/lib/catalog/garment-sync-service";
 import { readGarmentCheckpoint } from "@/lib/catalog/garment-checkpoint";
+import { readGarmentIndex } from "@/lib/catalog/garment-index-file";
 import type { CatalogSnapshot } from "@/lib/catalog/types";
 
 const pageOf = (u: string | URL | Request): number => Number(new URL(String(u)).searchParams.get("page"));
@@ -78,7 +79,9 @@ describe("runGarmentSync (fake paginated INK, no network)", () => {
   });
 
   const snapshotFile = () => path.join(dir, "catalog-snapshot.json");
-  const readSnap = async (): Promise<CatalogSnapshot> => JSON.parse(await readFile(snapshotFile(), "utf8"));
+  const indexFile = () => path.join(dir, "garment-index.json");
+  const readIndex = () => readGarmentIndex(indexFile());
+  const sulPieces = async () => Object.values((await readIndex()).stores["use-sul"]?.clusters ?? {}).flat();
 
   test("given a single-page store with a real sibling, when synced, then the garment binding is linked and the pass is marked complete", async () => {
     const fetchImpl = (async () => json(page([product(), sibling()]))) as unknown as typeof fetch;
@@ -87,9 +90,10 @@ describe("runGarmentSync (fake paginated INK, no network)", () => {
     expect(result.outcomes).toEqual([
       expect.objectContaining({ storeKey: "use-sul", ok: true, completedFullPass: true, newGarmentBindings: 1, totalGarmentBindingsForStore: 1 }),
     ]);
-    const snap = await readSnap();
-    expect(snap.stores["use-sul"]?.garmentBindings).toHaveLength(1);
-    expect(snap.stores["use-sul"]?.garmentBindings?.[0]).toMatchObject({ garmentTypeId: 72, price: 139.9 });
+    const pieces = await sulPieces();
+    expect(pieces).toHaveLength(1);
+    expect(pieces[0]).toEqual([72, "4381470", "tijucas-traco-sc", "https://img/peruano.jpg", 139.9]);
+    expect(Object.keys((await readIndex()).stores["use-sul"]!.clusters)).toEqual(["441506"]);
 
     const checkpoint = await readGarmentCheckpoint(path.join(dir, "garment-sync-checkpoint.json"));
     expect(checkpoint.stores["use-sul"]).toMatchObject({ status: "complete", lastPageCompleted: 1, totalPages: 1 });
@@ -114,8 +118,7 @@ describe("runGarmentSync (fake paginated INK, no network)", () => {
     expect(second.outcomes[0]).toMatchObject({ ok: true, completedFullPass: true, newGarmentBindings: 1 });
     expect(seenPages).toEqual([1, 2]); // page 1 was never re-fetched on resume
 
-    const snap = await readSnap();
-    expect(snap.stores["use-sul"]?.garmentBindings?.map((g) => g.garmentTypeId).sort((a, b) => a - b)).toEqual([72, 178]);
+    expect((await sulPieces()).map((t) => t[0]).sort((a, b) => a - b)).toEqual([72, 178]);
     checkpoint = await readGarmentCheckpoint(path.join(dir, "garment-sync-checkpoint.json"));
     expect(checkpoint.stores["use-sul"]).toMatchObject({ status: "complete" });
   });
@@ -127,12 +130,15 @@ describe("runGarmentSync (fake paginated INK, no network)", () => {
     expect(result.outcomes[0]).toMatchObject({ ok: true, completedFullPass: true, requestsUsedThisRun: 2 });
   });
 
-  test("given INK fails outright, when synced, then the previous snapshot and checkpoint are left completely untouched (last-known-good)", async () => {
+  test("given INK fails outright, when synced, then the previous snapshot, index entry and checkpoint are left completely untouched (last-known-good)", async () => {
     const before = await readFile(snapshotFile(), "utf8");
+    await writeFile(indexFile(), JSON.stringify({ version: 1, stores: { "use-sul": { syncedAt: "2026-09-01T00:00:00.000Z", clusters: { "441506": [[72, "1", "old", "old.jpg", 1]] } } } }));
+    const indexBefore = await readFile(indexFile(), "utf8");
     const fetchImpl = (async () => json({}, 500)) as unknown as typeof fetch;
     const result = await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, deps: { fetchImpl, sleep: noSleep, backoffMs: [], jitter: () => 0 } });
     expect(result.outcomes[0]).toMatchObject({ ok: false });
     expect(await readFile(snapshotFile(), "utf8")).toBe(before);
+    expect(await readFile(indexFile(), "utf8")).toBe(indexBefore); // the failed store's index entry is untouched
     const checkpoint = await readGarmentCheckpoint(path.join(dir, "garment-sync-checkpoint.json"));
     expect(checkpoint.stores["use-sul"]).toBeUndefined();
   });
@@ -170,6 +176,59 @@ describe("runGarmentSync (fake paginated INK, no network)", () => {
     const second = await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, forceFull: true, deps: { fetchImpl: fetchImpl2, sleep: noSleep } });
     expect(seenUrl).not.toContain("begin_date");
     expect(second.outcomes[0]).toMatchObject({ mode: "full" });
+  });
+});
+
+describe("runGarmentSync — compact index behavior", () => {
+  let dir: string;
+  const env = process.env;
+  beforeEach(async () => {
+    dir = await mkdtemp(path.join(tmpdir(), "garment-sync-index-"));
+    process.env = { ...env, CATALOG_SNAPSHOT_DIR: dir, INK_TOKEN_SUL: "t" };
+    await writeFile(path.join(dir, "catalog-snapshot.json"), JSON.stringify(baseSnapshot));
+  });
+  afterEach(async () => {
+    process.env = env;
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  test("given the same run twice, when synced with --force-full, then the index file is byte-identical (idempotent upsert)", async () => {
+    const fetchImpl = (async () => json(page([product(), sibling()]))) as unknown as typeof fetch;
+    await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, deps: { fetchImpl, sleep: noSleep } });
+    const first = await readFile(path.join(dir, "garment-index.json"), "utf8");
+    await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, forceFull: true, deps: { fetchImpl, sleep: noSleep } });
+    const second = await readFile(path.join(dir, "garment-index.json"), "utf8");
+    expect(JSON.parse(second).stores["use-sul"].clusters).toEqual(JSON.parse(first).stores["use-sul"].clusters);
+    expect(JSON.parse(second).stores["use-sul"].clusters["441506"]).toHaveLength(1);
+  });
+
+  test("given a sync, when it finishes, then the base snapshot file is not rewritten", async () => {
+    const before = await readFile(path.join(dir, "catalog-snapshot.json"), "utf8");
+    const fetchImpl = (async () => json(page([product(), sibling()]))) as unknown as typeof fetch;
+    await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, deps: { fetchImpl, sleep: noSleep } });
+    expect(await readFile(path.join(dir, "catalog-snapshot.json"), "utf8")).toBe(before);
+  });
+
+  test("given a piece whose URL is not <store base>/<slug>, when synced, then it is excluded and counted as urlShape", async () => {
+    const odd = sibling({ store_product_url: "https://www.usesul.com.br/usesul/product/other-slug" });
+    const fetchImpl = (async () => json(page([product(), odd]))) as unknown as typeof fetch;
+    const result = await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, deps: { fetchImpl, sleep: noSleep } });
+    expect(result.outcomes[0]).toMatchObject({ ok: true, newGarmentBindings: 0 });
+    const checkpoint = await readGarmentCheckpoint(path.join(dir, "garment-sync-checkpoint.json"));
+    expect(checkpoint.stores["use-sul"]?.exclusions).toMatchObject({ urlShape: 1, linked: 0 });
+  });
+
+  test("given a completed pass, when a stale cluster has no canonical product, then it is pruned; a partial pass never prunes", async () => {
+    const stale = { version: 1, stores: { "use-sul": { syncedAt: "x", clusters: { "999": [[72, "9", "stale", "stale.jpg", 1]] } } } };
+    await writeFile(path.join(dir, "garment-index.json"), JSON.stringify(stale));
+    const partial = (async (u: string | URL | Request) => json(page([product()], { page: pageOf(u), total_pages: 3 }))) as unknown as typeof fetch;
+    await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 1, deps: { fetchImpl: partial, sleep: noSleep } });
+    expect(Object.keys(JSON.parse(await readFile(path.join(dir, "garment-index.json"), "utf8")).stores["use-sul"].clusters)).toContain("999");
+
+    const full = (async () => json(page([product(), sibling()]))) as unknown as typeof fetch;
+    await runGarmentSync({ storeKeys: ["use-sul"], maxRequestsPerStore: 10, forceFull: true, deps: { fetchImpl: full, sleep: noSleep } });
+    const clusters = JSON.parse(await readFile(path.join(dir, "garment-index.json"), "utf8")).stores["use-sul"].clusters;
+    expect(Object.keys(clusters)).toEqual(["441506"]);
   });
 });
 

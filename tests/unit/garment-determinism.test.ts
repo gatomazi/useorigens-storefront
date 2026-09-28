@@ -2,7 +2,9 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import type { CatalogSnapshot, GarmentBinding, UnrankedBinding } from "@/lib/catalog/types";
+import type { GarmentTuple } from "@/lib/catalog/garment-index-file";
+import type { CatalogSnapshot, UnrankedBinding } from "@/lib/catalog/types";
+import { indexOf, tuple, writeIndexFile } from "./garment-index-fixture";
 
 const NOW = "2026-09-27T00:00:00.000Z";
 const CITY_ID = "4218004"; // Tijucas/SC
@@ -22,24 +24,9 @@ const canonical = (over: Partial<UnrankedBinding>): UnrankedBinding => ({
   ...over,
 });
 
-const piece = (over: Partial<GarmentBinding>): GarmentBinding => ({
-  cityId: CITY_ID,
-  designFamily: "traco",
-  garmentTypeId: 72,
-  commerceStoreKey: "use-sul",
-  inkProductId: "11",
-  slug: "peruano",
-  storeProductUrl: "https://www.usesul.com.br/usesul/product/peruano",
-  imageUrl: "https://img/peruano.jpg",
-  price: 139.9,
-  productClusterId: "100",
-  syncedAt: NOW,
-  ...over,
-});
-
-const snapshot = (bindings: UnrankedBinding[], garmentBindings: GarmentBinding[]): CatalogSnapshot => ({
+const snapshotOf = (bindings: UnrankedBinding[]): CatalogSnapshot => ({
   version: 1,
-  stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: NOW, productCount: bindings.length, bindings, merch: [], excluded: [], garmentBindings } },
+  stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: NOW, productCount: bindings.length, bindings, merch: [], excluded: [] } },
 });
 
 describe("garmentTabsForCity — deterministic choice of the piece", () => {
@@ -53,30 +40,31 @@ describe("garmentTabsForCity — deterministic choice of the piece", () => {
     await rm(dir, { recursive: true, force: true });
   });
 
-  async function pieceInPeruanoTab(snap: CatalogSnapshot) {
+  async function pieceInPeruanoTab(bindings: UnrankedBinding[], clusters: Record<string, GarmentTuple[]>) {
     process.env = { ...env, CATALOG_SNAPSHOT_DIR: dir };
-    await writeFile(path.join(dir, "catalog-snapshot.json"), JSON.stringify(snap));
+    await writeFile(path.join(dir, "catalog-snapshot.json"), JSON.stringify(snapshotOf(bindings)));
+    await writeIndexFile(dir, indexOf({ "use-sul": clusters }));
     const { getCatalog } = await import("@/lib/catalog/repository");
     const { entriesByGarment } = getCatalog().garmentTabsForCity(CITY_ID);
     return entriesByGarment[72]?.map((e) => e.primary.inkProductId);
   }
 
-  test("given a family with a regional variant whose pieces arrive first, when read, then only the primary's cluster piece is shown", async () => {
-    const bindings = [canonical({}), canonical({ designVariant: "regional", inkProductId: "20", productClusterId: "200" })];
-    const pieces = [piece({ inkProductId: "21", productClusterId: "200" }), piece({ inkProductId: "11", productClusterId: "100" })];
-    expect(await pieceInPeruanoTab(snapshot(bindings, pieces))).toEqual(["11"]);
+  const withRegional = [canonical({}), canonical({ designVariant: "regional", inkProductId: "20", productClusterId: "200" })];
+
+  test("given a family with a regional variant, when read, then only the primary's cluster piece is shown", async () => {
+    const clusters = { "200": [tuple(72, "21", "regional-peruano", 139.9)], "100": [tuple(72, "11", "peruano", 139.9)] };
+    expect(await pieceInPeruanoTab(withRegional, clusters)).toEqual(["11"]);
   });
 
-  test("given the same pieces in the opposite arrival order, when read, then the result is identical", async () => {
-    const bindings = [canonical({}), canonical({ designVariant: "regional", inkProductId: "20", productClusterId: "200" })];
-    const pieces = [piece({ inkProductId: "11", productClusterId: "100" }), piece({ inkProductId: "21", productClusterId: "200" })];
-    expect(await pieceInPeruanoTab(snapshot(bindings, pieces))).toEqual(["11"]);
+  test("given the same clusters listed in the opposite order, when read, then the result is identical", async () => {
+    const clusters = { "100": [tuple(72, "11", "peruano", 139.9)], "200": [tuple(72, "21", "regional-peruano", 139.9)] };
+    expect(await pieceInPeruanoTab(withRegional, clusters)).toEqual(["11"]);
   });
 
   test("given two products of one cluster and one type, when read, then the lowest INK id wins regardless of order", async () => {
-    const a = piece({ inkProductId: "15" });
-    const b = piece({ inkProductId: "12" });
-    expect(await pieceInPeruanoTab(snapshot([canonical({})], [a, b]))).toEqual(["12"]);
-    expect(await pieceInPeruanoTab(snapshot([canonical({})], [b, a]))).toEqual(["12"]);
+    const a = tuple(72, "15", "peruano-a", 139.9);
+    const b = tuple(72, "12", "peruano-b", 139.9);
+    expect(await pieceInPeruanoTab([canonical({})], { "100": [a, b] })).toEqual(["12"]);
+    expect(await pieceInPeruanoTab([canonical({})], { "100": [b, a] })).toEqual(["12"]);
   });
 });
