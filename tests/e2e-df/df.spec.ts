@@ -192,8 +192,10 @@ test.describe("DF pages", () => {
     await expect(page.getByRole("heading", { name: "Estilos" })).toBeVisible();
     // Real Águas Claras products only: 3 styles, each linking to the RA's own INK product and to its own page.
     const inkLinks = await page.locator('main a[href^="https://www.usecentro.com.br/"]').evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
-    expect(inkLinks.length).toBe(3);
+    // The RA also gets the garment-type tabs (linked by the product's own INK cluster): 3 classic styles + one piece per other type, every one of them Águas Claras'.
+    expect(inkLinks.length).toBeGreaterThanOrEqual(3);
     for (const href of inkLinks) expect(href).toContain("aguas-claras");
+    await expect(page.getByRole("tab", { name: /Camiseta clássica/ })).toBeVisible();
     // Other RAs' and Brasília's products never leak in.
     const all = await page.locator("main").innerHTML();
     for (const other of ["taguatinga", "ceilandia", "gama", "brasilia-origem", "sobradinho"]) expect(all).not.toContain(`/product/${other}`);
@@ -217,7 +219,11 @@ test.describe("DF pages", () => {
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Brasília");
     const inkLinks = await page.locator('main a[href^="https://www.usecentro.com.br/"]').evaluateAll((els) => els.map((e) => e.getAttribute("href")!));
     expect(inkLinks.length).toBeGreaterThan(0);
-    expect(inkLinks.length).toBeLessThanOrEqual(2);
+    // Brasília's own two styles (and their garment pieces, by cluster): every link is Brasília's, none is an RA's.
+    for (const href of inkLinks) {
+      expect(href).toContain("brasil");
+      expect(href).not.toMatch(/taguatinga|aguas-claras|ceilandia|gama|sobradinho/);
+    }
     await expect(page.getByRole("heading", { name: /Regiões Administrativas do Distrito Federal/ })).toBeVisible();
     await expect(page.locator("#regions-title").locator("xpath=../ul/li/a")).toHaveCount(36); // 35 RAs + "Ver todas"
   });
