@@ -2,7 +2,7 @@ import "server-only";
 import { findCollection } from "../catalog/collections-file";
 import { getCatalog } from "../catalog/repository";
 import { familyById } from "../catalog/families";
-import { cityById } from "../geo/cities";
+import { localityOfBinding } from "../catalog/locality-binding";
 import type { CommerceStoreKey } from "../geo/regions";
 
 export type CollectionProduct = { id: string; label: string };
@@ -25,7 +25,7 @@ export function collectionProducts(store: CommerceStoreKey, collectionId: number
     }
     const design = products.cityDesigns.get(id);
     if (design) {
-      const city = cityById(design.cityId);
+      const city = localityOfBinding(design);
       all.push({ id, label: `${familyById(design.designFamily)?.name ?? design.designFamily} · ${city ? `${city.name}/${city.uf}` : design.cityId} · #${id}` });
     }
   }

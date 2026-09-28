@@ -21,6 +21,8 @@
     "verify:garment-revalidation": "tsx scripts/verify-garment-revalidation.mts",
     "test": "vitest run",
     "test:admin": "playwright test -c playwright.admin.config.ts",
+    "test:df": "playwright test -c playwright.df.config.ts",
+    "audit:df": "tsx scripts/audit-df-localities.mts",
     "typecheck": "tsc --noEmit",
     "db:status": "node --env-file-if-exists=.env.local db/db-cli.mjs status",
     "db:migrate": "node --env-file-if-exists=.env.local db/db-cli.mjs migrate",

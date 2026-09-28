@@ -121,6 +121,20 @@ describe("track.ts — gtag loaded (fbq absent)", () => {
     expect(calls).toEqual([["event", "view_search_results", { search_term: "Bagé - RS", region: "sul", results_count: 3 }]]);
   });
 
+  test("given a Federal District administrative region, when trackSelectCity runs, then GA4 also gets locality_type/locality_name and a plain city sends exactly what it always did", () => {
+    trackSelectCity({ city: "Águas Claras", state: "DF", region: "centro-oeste", source: "search_dialog", localityType: "administrative_region" });
+    trackSelectCity({ city: "Goiânia", state: "GO", region: "centro-oeste", source: "search_dialog" });
+    expect(calls[0]).toEqual(["event", "select_city", { city: "Águas Claras", state: "DF", region: "centro-oeste", source: "search_dialog", locality_type: "administrative_region", locality_name: "Águas Claras" }]);
+    expect(calls[1]).toEqual(["event", "select_city", { city: "Goiânia", state: "GO", region: "centro-oeste", source: "search_dialog" }]);
+  });
+
+  test("given an administrative region, when trackSelectCity runs with fbq loaded, then Meta's SelectCity contract is untouched", () => {
+    const meta: unknown[][] = [];
+    vi.stubGlobal("window", { fbq: fbqSink(meta) });
+    trackSelectCity({ city: "Águas Claras", state: "DF", region: "centro-oeste", localityType: "administrative_region" });
+    expect(meta).toEqual([["trackCustom", "SelectCity", { city: "Águas Claras", state: "DF", region: "centro-oeste" }]]);
+  });
+
   test("given no extras, when trackSearch runs, then region/results_count are omitted rather than invented", () => {
     trackSearch("Bagé - RS");
     const params = calls[0][2] as Record<string, unknown>;

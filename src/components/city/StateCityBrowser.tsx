@@ -6,15 +6,35 @@ import { pluralCidades } from "@/lib/format";
 import { trackSelectCity } from "@/lib/analytics/track";
 import { SOURCES } from "@/lib/analytics/sources";
 
-export type BrowserCity = { n: string; s: string };
-export type BrowserGroup = { name: string; slug: string; cities: BrowserCity[] };
+export type BrowserCity = { n: string; s: string; /** GA4 only: what the place is (an administrative region is not a city). */ t?: "administrative_region" };
+export type BrowserGroup = {
+  name: string;
+  slug: string;
+  cities: BrowserCity[];
+  /** What the group's count says ("34 Regiões Administrativas"); defaults to "N cidades". */
+  countLabel?: string;
+};
 
 /**
  * Cities of a state, by the editorial mesoregion grouping (default, ADR 0004 — navigation only, never presented
  * as the current IBGE division) or A–Z. Groups are collapsed <details> so a state with 500 cities is a short
  * page on a phone; the chips jump to (and open) a group, and a `#group-slug` link from the home opens it too.
  */
-export function StateCityBrowser({ region, uf, groups, letters }: { region: string; uf: string; groups: BrowserGroup[]; letters: BrowserGroup[] }) {
+export function StateCityBrowser({
+  region,
+  uf,
+  groups,
+  letters,
+  variant = "cities",
+}: {
+  region: string;
+  uf: string;
+  groups: BrowserGroup[];
+  letters: BrowserGroup[];
+  /** "localities": the state has administrative regions, so its places are not all cities (Federal District). */
+  variant?: "cities" | "localities";
+}) {
+  const places = variant === "localities" ? "localidades" : "cidades";
   const [mode, setMode] = useState<"regiao" | "az">("regiao");
   const list = mode === "regiao" ? groups : letters;
 
@@ -34,12 +54,12 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
   }, [mode]);
 
   return (
-    <section aria-label="Cidades do estado" className="wrap pb-16 lg:pb-24">
+    <section aria-label={variant === "localities" ? "Localidades do estado" : "Cidades do estado"} className="wrap pb-16 lg:pb-24">
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6">
-        <div role="group" aria-label="Organizar as cidades" className="inline-flex">
+        <div role="group" aria-label={`Organizar as ${places}`} className="inline-flex">
           {(
             [
-              ["regiao", "Por região"],
+              ["regiao", variant === "localities" ? "Por tipo" : "Por região"],
               ["az", "A–Z"],
             ] as const
           ).map(([key, label]) => (
@@ -54,10 +74,10 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
             </button>
           ))}
         </div>
-        <p className="t-caption">{mode === "regiao" ? "Agrupamento regional usado para facilitar a navegação" : "Ordem alfabética"}</p>
+        <p className="t-caption">{mode === "regiao" ? (variant === "localities" ? "Cidade e Regiões Administrativas" : "Agrupamento regional usado para facilitar a navegação") : "Ordem alfabética"}</p>
       </div>
 
-      <ul className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-label={mode === "regiao" ? "Ir para a região" : "Ir para a letra"}>
+      <ul className="-mx-4 mt-5 flex gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-label={mode === "regiao" ? (variant === "localities" ? "Ir para o grupo" : "Ir para a região") : "Ir para a letra"}>
         {list.map((g) => (
           <li key={g.slug} className="shrink-0">
             <a href={`#${g.slug}`} className="inline-flex min-h-11 items-center border border-ink/40 px-3 text-[0.875rem] font-medium transition-colors hover:border-region-primary hover:bg-region-primary hover:text-white focus-visible:border-region-primary">
@@ -74,7 +94,7 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
             <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 [&::-webkit-details-marker]:hidden">
               <span className="text-[1.125rem] font-extrabold tracking-tight transition-colors group-open:text-region-primary sm:text-[1.25rem]">{g.name}</span>
               <span className="flex items-center gap-3">
-                <span className="t-place text-[0.95rem] text-ink-mute">{pluralCidades(g.cities.length)}</span>
+                <span className="t-place text-[0.95rem] text-ink-mute">{g.countLabel ?? pluralCidades(g.cities.length)}</span>
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m6 9 6 6 6-6" />
                 </svg>
@@ -85,7 +105,7 @@ export function StateCityBrowser({ region, uf, groups, letters }: { region: stri
                 <li key={c.s}>
                   <Link
                     href={`/${region}/${uf}/${c.s}`}
-                    onClick={() => trackSelectCity({ city: c.n, state: uf, region, source: mode === "regiao" ? SOURCES.stateMesoregion : SOURCES.stateAZ })}
+                    onClick={() => trackSelectCity({ city: c.n, state: uf, region, source: mode === "regiao" ? SOURCES.stateMesoregion : SOURCES.stateAZ, ...(c.t ? { localityType: c.t } : {}) })}
                     className="link-line flex min-h-11 items-center text-[0.9375rem]"
                   >
                     {c.n}

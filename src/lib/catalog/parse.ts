@@ -1,3 +1,4 @@
+import { administrativeRegionByLabel, DF_UF } from "../geo/administrative-regions";
 import { citiesByName, type City } from "../geo/cities";
 import { REGIONS, STATE_NAMES, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { normalizeText } from "../geo/text";
@@ -60,7 +61,7 @@ export function parseProductName(name: string): ParsedName {
 }
 
 export type CityResolution =
-  | { ok: true; city: City; localityLabel?: string }
+  | { ok: true; city: City; localityLabel?: string; localityId?: string }
   | { ok: false; reason: ExclusionReason; detail?: string };
 
 /** UFs a product may belong to: its own UF when the name states one, else the store's UFs. */
@@ -100,11 +101,14 @@ export function resolveCity(
   const direct = uniqueCity(parsed.title, ufs);
   if (direct.ok || direct.reason === "ambiguous-city") return direct;
 
-  // The Federal District has a single municipality (Brasília): every named place inside it
-  // (Taguatinga, Ceilândia...) is an administrative region, i.e. a locality, never a city.
-  if (ufs.length === 1 && ufs[0] === "DF") {
-    const [brasilia] = citiesByName("Brasília", ["DF"]);
-    return brasilia ? { ok: true, city: brasilia, localityLabel: parsed.title } : direct;
+  // The Federal District has a single municipality (Brasília): every named place inside it (Taguatinga, Ceilândia...) is an
+  // administrative region, i.e. a locality, never a city. A title in the official RA index is bound to that RA (`localityId`); any
+  // other DF title keeps the old shape (a place inside Brasília, no RA) instead of being guessed into one.
+  if (ufs.length === 1 && ufs[0] === DF_UF) {
+    const [brasilia] = citiesByName("Brasília", [DF_UF]);
+    if (!brasilia) return direct;
+    const region = administrativeRegionByLabel(parsed.title);
+    return { ok: true, city: brasilia, localityLabel: parsed.title, ...(region ? { localityId: region.id } : {}) };
   }
 
   if (parsed.family === "ponto-de-origem") {

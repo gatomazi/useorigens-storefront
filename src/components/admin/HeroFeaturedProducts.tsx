@@ -112,8 +112,8 @@ export function HeroFeaturedProducts({
             <div className="mt-2">{slot ? <SlotCard slot={slot} /> : <p className="a-muted text-[0.875rem]">Vazia.</p>}</div>
             {openSlot === i && (
               <div className="mt-3 border-t border-black/15 pt-3">
-                <label className="a-label" htmlFor={`hero-search-${i}`}>Buscar por cidade, UF, estilo ou ID do produto</label>
-                <input id={`hero-search-${i}`} className="a-input" value={query} onChange={(e) => run(e.target.value)} placeholder="Ex.: belém coordenadas · pa · 123456" autoComplete="off" />
+                <label className="a-label" htmlFor={`hero-search-${i}`}>{scope === "centro-oeste" ? "Buscar por cidade, Região Administrativa, UF, estilo ou ID do produto" : "Buscar por cidade, UF, estilo ou ID do produto"}</label>
+                <input id={`hero-search-${i}`} className="a-input" value={query} onChange={(e) => run(e.target.value)} placeholder={scope === "centro-oeste" ? "Ex.: taguatinga · águas claras coordenadas · df · 123456" : "Ex.: belém coordenadas · pa · 123456"} autoComplete="off" />
                 {pending && <p className="a-muted mt-2 text-[0.8125rem]">Buscando…</p>}
                 {found?.error && <p className="a-flash err mt-2">{found.error}</p>}
                 {found && !found.error && found.results.length === 0 && <p className="a-muted mt-2 text-[0.875rem]">Nenhum produto elegível encontrado na loja {regionName}.</p>}
@@ -127,7 +127,7 @@ export function HeroFeaturedProducts({
                           <li key={c.productId} className="flex items-start gap-3 border border-black/15 p-2">
                             <Thumb src={c.imageUrl} />
                             <div className="min-w-0 flex-1 text-[0.8125rem]">
-                              <p className="font-bold">{c.familyName} · {c.cityName} · {c.uf}</p>
+                              <p className="font-bold">{c.familyName} · {c.cityName} · {c.uf}{c.localityType === "administrative_region" ? " · Região Administrativa" : ""}</p>
                               <p className="a-muted">{c.price ?? "Sem preço"} · {c.primary ? "produto principal" : "outra versão"} · #{c.productId}</p>
                               <a href={c.buyUrl} target="_blank" rel="noreferrer" className="a-link">Ver na loja ↗</a>
                               <div className="mt-1"><button type="button" className="a-btn sm" disabled={already} onClick={() => { const next = [...slots]; next[i] = fromCandidate(c); setOpenSlot(null); submit(next); }}>{already ? "Já escolhido" : "Usar aqui"}</button></div>

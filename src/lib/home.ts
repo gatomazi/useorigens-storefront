@@ -12,7 +12,7 @@ import { terraProducts } from "./editorial/terra";
 import { HERO_FAMILIES, STATE_ORDER } from "./editorial/sul";
 import { formatPrice } from "./format";
 import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, type RegionSlug } from "./geo/regions";
-import { citiesOfRegion, mesoGroupsOfState } from "./geo/cities";
+import { localitiesOfRegion, stateBrowseLabel, stateLocalityCounts, stateLocalityGroups, stateLocalityLabel } from "./geo/localities";
 import { SHOWCASE } from "./site";
 
 /** One hero shirt: a real product of a commercial family, linking to its storefront page. */
@@ -21,7 +21,13 @@ export type HeroFamilyCard = { familyId: string; familyName: string; cityName: s
 export type StateCard = {
   uf: string;
   name: string;
+  /** Municipalities with products. Administrative regions (Federal District) are NOT cities and are counted apart. */
   cityCount: number;
+  administrativeRegionCount: number;
+  /** How the state counts its places: "12 cidades", or "Brasília e 33 Regiões Administrativas" where some places are not cities. */
+  localityLabel: string;
+  /** The link that opens the state's places ("Ver todas as cidades de X" / "Ver as localidades de X"). */
+  browseLabel: string;
   /** Editorial mesoregions as shortcuts, largest first (E3) — navigation grouping, not the current IBGE division (ADR 0004). */
   regions: { name: string; slug: string; count: number }[];
   /** The state's own clean line (Clean, Minimal, Escritas, Atlas), or null when the state has none (E1). */
@@ -59,7 +65,8 @@ function interleaveByState<T extends { uf: string }>(items: T[], order: readonly
 export function getRegionHome(region: RegionSlug): RegionHome {
   const catalog = getCatalog();
   const covered = catalog.coveredCityIds(region);
-  const cities = citiesOfRegion(region);
+  const coveredLocalities = catalog.coveredLocalityIds(region);
+  const localities = localitiesOfRegion(region);
   const merch = catalog.merch(region);
   const ufs = REGIONS[region].ufs;
 
@@ -103,23 +110,28 @@ export function getRegionHome(region: RegionSlug): RegionHome {
 
   const states: StateCard[] = ufs
     .map((uf) => {
-      const stateCities = cities.filter((c) => c.uf === uf && covered.has(c.id));
-      const groups = mesoGroupsOfState(uf, new Set(stateCities.map((c) => c.id)));
+      // Municipalities AND administrative regions that really have products: the Federal District is not "1 city".
+      const stateLocalities = localities.filter((c) => c.uf === uf && coveredLocalities.has(c.id));
+      const counts = stateLocalityCounts(stateLocalities);
+      const groups = stateLocalityGroups(uf, stateLocalities);
       const found = stateLineProduct(merch, uf);
       return {
         uf,
         name: STATE_NAMES[uf],
-        cityCount: stateCities.length,
-        // The capital's mesoregion first (editorial choice, ADR 0004), then the largest ones.
+        cityCount: counts.cities,
+        administrativeRegionCount: counts.administrativeRegions,
+        localityLabel: stateLocalityLabel(counts),
+        browseLabel: stateBrowseLabel(counts, STATE_NAMES[uf]),
+        // The capital's group first (editorial choice, ADR 0004), then the largest ones.
         regions: [...groups]
-          .sort((a, b) => Number(b.cities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])) - Number(a.cities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])))
-          .map((g) => ({ name: g.name, slug: g.slug, count: g.cities.length })),
+          .sort((a, b) => Number(b.localities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])) - Number(a.localities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])))
+          .map((g) => ({ name: g.name, slug: g.slug, count: g.localities.length })),
         line: found
           ? { label: found.line, name: found.product.name.replace(/\s+/g, " ").trim(), imageUrl: found.product.imageUrl, price: formatPrice(found.product.price), href: purchaseUrl(found.product) }
           : null,
       };
     })
-    .sort((a, b) => b.cityCount - a.cityCount);
+    .sort((a, b) => b.cityCount + b.administrativeRegionCount - (a.cityCount + a.administrativeRegionCount));
 
   const campaignCrops = (showcase?.families ?? [])
     .filter((f) => f.family.id === "territorio" || f.family.id === "feito-em")

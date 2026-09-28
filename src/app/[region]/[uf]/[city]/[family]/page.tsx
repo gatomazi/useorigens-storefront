@@ -101,8 +101,8 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
               <h1 className="text-[2.25rem] font-extrabold leading-[1.02] tracking-tight [text-wrap:balance] sm:text-[3.25rem] lg:text-[4rem]">{family.name}</h1>
               <p className="t-place mt-3 text-[1.125rem] sm:text-[1.5rem]">
                 {city.name}, {stateName}
-                {/* Editorial mesoregion (ADR 0004), same microcontext as the city page — never the current IBGE division. */}
-                {city.meso ? ` · ${city.meso}` : ""}
+                {/* Editorial mesoregion (ADR 0004), same microcontext as the city page — never the current IBGE division. An administrative region says what it is. */}
+                {city.type === "administrative_region" ? " · Região Administrativa" : city.meso ? ` · ${city.meso}` : ""}
               </p>
               <p className="t-body mt-4 hidden max-w-md text-ink-soft sm:block">{family.description}</p>
             </>

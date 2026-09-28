@@ -1,6 +1,6 @@
 import { getCatalog } from "@/lib/catalog/repository";
 import { catalogReadiness } from "@/lib/catalog/readiness";
-import { citiesOfRegion } from "@/lib/geo/cities";
+import { localitiesOfRegion } from "@/lib/geo/localities";
 import { isRegionSlug } from "@/lib/geo/regions";
 import type { SearchCity } from "@/lib/search/rank";
 import { isRegionLaunched } from "@/lib/regions/launched";
@@ -16,8 +16,8 @@ export function generateStaticParams() {
 }
 
 /**
- * Compact search index for one region: only cities that have at least one purchasable design,
- * so a search result never leads to an empty page. Static and CDN-cacheable (no per-request work).
+ * Compact search index for one region: only places (cities and Federal District administrative regions) that have at least one
+ * purchasable design, so a search result never leads to an empty page. Static and CDN-cacheable (no per-request work).
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
@@ -32,15 +32,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ reg
     return new Response(null, { status: 503, headers: { "Cache-Control": "no-store", "Retry-After": "60" } });
   }
 
-  const covered = getCatalog().coveredCityIds(region);
-  const index: SearchCity[] = citiesOfRegion(region)
-    .filter((city) => covered.has(city.id))
-    .map((city) => ({
-      n: city.name,
-      u: city.uf,
-      s: city.slug,
-      ...(city.aliases.length ? { a: [...city.aliases] } : {}),
-      ...(city.meso ? { m: city.meso } : {}),
+  const covered = getCatalog().coveredLocalityIds(region);
+  const index: SearchCity[] = localitiesOfRegion(region)
+    .filter((place) => covered.has(place.id))
+    .map((place) => ({
+      n: place.name,
+      u: place.uf,
+      s: place.slug,
+      ...(place.aliases.length ? { a: [...place.aliases] } : {}),
+      ...(place.meso ? { m: place.meso } : {}),
+      ...(place.type === "administrative_region" ? { t: "ra" as const } : {}),
     }));
 
   return Response.json(index, {

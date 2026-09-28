@@ -1,0 +1,44 @@
+snapshot: /Users/gtomazi/projects/useorigens/.claude/worktrees/df-administrative-regions/data/generated/catalog-snapshot.json
+use-centro products: 3914; bindings bound to Brasília (5300108): 104
+  Brasília's own (no locality label): 2
+  bound to an administrative region: 102 product(s) in 35 region(s)
+  DF locality titles NOT in the official RA index: 0
+  DF collection ("df", id 139672) is by state, not by RA: no per-RA collection exists in the snapshot
+
+XXXV   Água Quente                 1 product(s)  families: feito-em×1   titles: Agua Quente
+XX     Águas Claras                3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Aguas Claras | Águas Claras
+XXXIV  Arapoanga                   1 product(s)  families: feito-em×1   titles: Arapoanga
+XXXIII Arniqueira                  3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Arniqueira
+IV     Brazlândia                  3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Brazlandia | Brazlândia
+XIX    Candangolândia              3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Candangolandia | Candangolândia
+IX     Ceilândia                   3 product(s)  families: feito-em×1, coordenadas×1, ponto-de-origem×1   titles: Ceilandia | Ceilândia
+XI     Cruzeiro                    3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Cruzeiro
+XXXI   Fercal                      3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Fercal
+II     Gama                        3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Gama
+X      Guará                       3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Guara | Guará
+XXVIII Itapoã                      3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Itapoa | Itapoã
+XXVII  Jardim Botânico             3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Jardim Botanico | Jardim Botânico
+XVIII  Lago Norte                  3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Lago Norte
+XVI    Lago Sul                    3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Lago Sul
+VIII   Núcleo Bandeirante          3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Nucleo Bandeirante | Núcleo Bandeirante
+VII    Paranoá                     3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Paranoa | Paranoá
+XXIV   Park Way                    3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Park Way
+VI     Planaltina                  3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Planaltina
+I      Plano Piloto                3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Plano Piloto
+XV     Recanto das Emas            3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Recanto das Emas
+XVII   Riacho Fundo                3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Riacho Fundo
+XXI    Riacho Fundo II             3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Riacho Fundo Ii | Riacho Fundo II
+XII    Samambaia                   3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Samambaia
+XIII   Santa Maria                 3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Santa Maria
+XIV    São Sebastião               3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Sao Sebastiao | São Sebastião
+XXV    SCIA/Estrutural             3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Estrutural | SCIA
+XXIX   SIA                         3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Sia | SIA
+V      Sobradinho                  3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Sobradinho
+XXVI   Sobradinho II               3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Sobradinho Ii | Sobradinho II
+XXXII  Sol Nascente/Pôr do Sol     3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Sol Nascente Por do Sol | Sol Nascente Pôr do Sol
+XXII   Sudoeste/Octogonal          3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Sudoeste Octogonal
+III    Taguatinga                  4 product(s)  families: feito-em×1, ponto-de-origem×2, coordenadas×1   titles: Taguatinga
+XXIII  Varjão                      3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Varjao | Varjão
+XXX    Vicente Pires               3 product(s)  families: feito-em×1, ponto-de-origem×1, coordenadas×1   titles: Vicente Pires
+
+official RAs WITHOUT products (never a page): none

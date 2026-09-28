@@ -86,6 +86,9 @@ export type SelectCityParams = {
   /** GA4-only: a standardized source (src/lib/analytics/sources.ts) — never sent to Meta, whose SelectCity
    * contract (CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md) doesn't carry it. */
   source?: string;
+  /** GA4-only, optional: set ONLY for a place that is not a municipality (a Federal District administrative region), so the existing
+   * `city`/`state` fields keep their meaning and a plain city choice sends exactly what it always did. Never sent to Meta. */
+  localityType?: "administrative_region";
 };
 
 /** SelectCity (Meta custom event) + `select_city` (GA4 custom event) — an explicit city choice: search/
@@ -107,6 +110,7 @@ export function trackSelectCity(params: SelectCityParams): void {
       region: params.region,
       ...(params.cityId ? { city_id: params.cityId } : {}),
       ...(params.source ? { source: params.source } : {}),
+      ...(params.localityType ? { locality_type: params.localityType, locality_name: params.city } : {}),
     });
   }
 }
