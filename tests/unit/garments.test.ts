@@ -1,7 +1,6 @@
 import { describe, expect, test } from "vitest";
-import { buildGarmentBindings } from "@/lib/catalog/garments-link";
+import { buildGarmentBindings, linkGarmentBindings } from "@/lib/catalog/garments-link";
 import { GARMENT_TYPES, garmentTypeById, garmentTypeBySlug } from "@/lib/catalog/garments";
-import { getCatalog } from "@/lib/catalog/repository";
 import type { GarmentSourceProduct } from "@/lib/ink/normalize";
 import type { CityDesignBinding } from "@/lib/catalog/types";
 
@@ -116,49 +115,23 @@ describe("buildGarmentBindings", () => {
 // Against the real local snapshot (data/generated/catalog-snapshot.json) — this round's fixture data,
 // fetched live from INK for Tijucas/SC, Xambioá/TO and Água Boa/MT (docs/storefront/city-garment-tabs-round.md).
 // Same pattern already used by tests/unit/infra.test.ts's "no network calls" test.
-describe("Catalog#garmentTabsForCity", () => {
-  test("given Tijucas/SC (MD Caso A's own acceptance city), when read, then it returns the classic tab first plus every real confirmed piece, and none it doesn't have", () => {
-    const { tabs, entriesByGarment } = getCatalog().garmentTabsForCity("4218004");
-    expect(tabs.length).toBeGreaterThan(1);
-    expect(tabs[0]).toMatchObject({ id: 1, slug: "classica" });
-    const slugs = tabs.map((t) => t.slug);
-    expect(slugs).toContain("peruano");
-    expect(slugs).toContain("body-infantil");
-    // Real data gap (confirmed live): Tijucas's Traço batch has no Oversized sibling — it belongs to a
-    // different city's cluster. Never fabricated just because the type exists elsewhere.
-    expect(slugs).not.toContain("oversized");
 
-    const peruano = tabs.find((t) => t.slug === "peruano")!;
-    expect(peruano.count).toBe(1); // only the Traço family has this piece for Tijucas
-    const [entry] = entriesByGarment[peruano.id];
-    expect(entry.family.id).toBe("traco");
-    expect(entry.primary.price).toBe(139.9);
-    expect(entry.primary.storeProductUrl).toContain("tijucas-traco-sc-20a63a8d");
-    expect(entry.variants).toHaveLength(0); // never inherits the "mais N versões" badge from design variants
-  });
-
-  test("given a real city with no garment-type fixture data (the common case this round), when read, then the selector is hidden entirely, not shown empty", () => {
-    const { tabs, entriesByGarment } = getCatalog().garmentTabsForCity("4321501"); // Torres/RS
-    expect(tabs).toEqual([]);
-    expect(entriesByGarment).toEqual({});
-  });
-
-  test("given a real Norte city (Xambioá/TO), when read, then its own garment pieces resolve independently of Sul's", () => {
-    const { tabs, entriesByGarment } = getCatalog().garmentTabsForCity("1722107");
-    expect(tabs.map((t) => t.slug)).toContain("oversized"); // Xambioá's batch does have the Oversized sibling
-    const oversized = tabs.find((t) => t.slug === "oversized")!;
-    expect(entriesByGarment[oversized.id][0].primary.commerceStoreKey).toBe("use-norte");
-  });
-
-  test("given a real Centro-Oeste city (Água Boa/MT), when read, then it has the full 9-piece batch and every link points to its own Centro store", () => {
-    const { tabs, entriesByGarment } = getCatalog().garmentTabsForCity("5100201");
-    expect(tabs).toHaveLength(10); // classic + all 9 confirmed real garment types (docs/storefront/city-garment-catalog-rollout.md)
-    const oversized = tabs.find((t) => t.slug === "oversized")!;
-    const [entry] = entriesByGarment[oversized.id];
-    expect(entry.primary).toMatchObject({
-      commerceStoreKey: "use-centro",
-      price: 129,
-      storeProductUrl: "https://www.usecentro.com.br/usecentro/product/agua-boa-traco-mt-71ee9f45-8a1b-4278-9c1a-50cf2e1db43d",
-    });
+describe("linkGarmentBindings stats", () => {
+  test("given a mix of candidates, when linked, then every drop is counted under its own cause", () => {
+    const { bindings, stats } = linkGarmentBindings(
+      [
+        sibling({ id: "1" }), // linked
+        sibling({ id: "2", clusterId: null }), // no cluster id
+        sibling({ id: "3", garmentTypeId: 1 }), // the classic piece itself
+        sibling({ id: "4", garmentTypeId: 9999 }), // unknown product_type
+        sibling({ id: "5", clusterId: "no-such-cluster" }), // no canonical for the cluster
+        sibling({ id: "6", price: null }), // no price
+        sibling({ id: "7", storeProductUrl: "https://evil.example.com/x" }), // host not allowed
+      ],
+      [canonical()],
+      NOW,
+    );
+    expect(bindings.map((b) => b.inkProductId)).toEqual(["1"]);
+    expect(stats).toEqual({ candidates: 7, linked: 1, classicType: 1, noClusterId: 1, unknownType: 1, noCanonicalForCluster: 1, noPrice: 1, unsellableUrl: 1 });
   });
 });

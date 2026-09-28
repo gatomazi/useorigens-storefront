@@ -131,10 +131,18 @@ function build(): { catalog: Catalog; mtimeMs: number } {
     const bindings = garmentByCity.get(cityId) ?? [];
     if (classicEntries.length === 0 || bindings.length === 0) return { tabs: [], entriesByGarment: {} };
 
+    const primaryClusterByFamily = new Map(classicEntries.map((entry) => [entry.family.id, entry.primary.productClusterId]));
     const byType = new Map<number, Map<DesignFamilyId, GarmentBinding>>();
     for (const b of bindings) {
+      // Only pieces of the cluster the family's current primary belongs to are candidates: a city can hold
+      // several canonical products per family (regional/localidade variants), each with its own cluster, and
+      // their pieces share this (city, family) key. Never let arrival order decide which one is shown.
+      const primaryCluster = primaryClusterByFamily.get(b.designFamily);
+      if (!primaryCluster || b.productClusterId !== primaryCluster) continue;
       const perFamily = byType.get(b.garmentTypeId) ?? new Map<DesignFamilyId, GarmentBinding>();
-      perFamily.set(b.designFamily, b);
+      const current = perFamily.get(b.designFamily);
+      // Two products of one cluster and type: deterministic tie-break, lowest INK id (same rule as `rankBindings`).
+      if (!current || compareIds(b.inkProductId, current.inkProductId) < 0) perFamily.set(b.designFamily, b);
       byType.set(b.garmentTypeId, perFamily);
     }
 

@@ -33,10 +33,13 @@ export function garmentCoverageByStore(snapshot: CatalogSnapshot): StoreGarmentC
   const out: StoreGarmentCoverage[] = [];
   for (const [storeKey, index] of Object.entries(snapshot.stores)) {
     if (!index) continue;
-    const garmentCountByPair = new Map<string, number>();
+    // Distinct garment types per cluster (the only link the index trusts). Counting rows per (city, family)
+    // would add up the pieces of several canonical products of one family and could call a partial cluster complete.
+    const typesByCluster = new Map<string, Set<number>>();
     for (const g of index.garmentBindings ?? []) {
-      const key = `${g.cityId}:${g.designFamily}`;
-      garmentCountByPair.set(key, (garmentCountByPair.get(key) ?? 0) + 1);
+      const types = typesByCluster.get(g.productClusterId) ?? new Set<number>();
+      types.add(g.garmentTypeId);
+      typesByCluster.set(g.productClusterId, types);
     }
 
     let complete = 0;
@@ -50,7 +53,7 @@ export function garmentCoverageByStore(snapshot: CatalogSnapshot): StoreGarmentC
         noCluster++;
         continue;
       }
-      const count = garmentCountByPair.get(`${binding.cityId}:${binding.designFamily}`) ?? 0;
+      const count = typesByCluster.get(binding.productClusterId)?.size ?? 0;
       if (count === 0) noVariants++;
       else if (count >= MAX_NON_CLASSIC_TYPES) complete++;
       else partial++;

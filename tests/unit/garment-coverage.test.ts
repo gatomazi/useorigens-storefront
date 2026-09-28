@@ -108,3 +108,18 @@ describe("garmentCoverageByStore", () => {
     expect(coverage.find((c) => c.storeKey === "use-norte")).toMatchObject({ noCluster: 1 });
   });
 });
+
+describe("garmentCoverageByStore — one family, two canonical clusters", () => {
+  test("given a family whose second cluster is partial, when categorized, then pieces of another cluster are never added to it", () => {
+    const types = [72, 178, 8, 23, 28, 119, 120, 2, 165];
+    const fullCluster = types.map((garmentTypeId, i) => garment({ garmentTypeId, inkProductId: String(200 + i), productClusterId: "A" }));
+    const partialCluster = [garment({ garmentTypeId: 72, inkProductId: "300", productClusterId: "B" })];
+    const [result] = garmentCoverageByStore(
+      snapshot(
+        [binding({ inkProductId: "1", productClusterId: "A" }), binding({ inkProductId: "2", designVariant: "regional", productClusterId: "B" })],
+        [...fullCluster, ...partialCluster],
+      ),
+    );
+    expect(result).toMatchObject({ complete: 1, partial: 1, noVariants: 0, noCluster: 0 });
+  });
+});
