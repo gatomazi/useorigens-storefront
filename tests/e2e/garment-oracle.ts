@@ -50,6 +50,11 @@ function primaryOf(cityId: string, familyId: string): Binding | undefined {
     .sort((a, b) => cmpId(a.inkProductId, b.inkProductId))[0];
 }
 
+/** Families that have a primary (classic) product in this city — what the classic tab lists. */
+export function classicFamilies(cityId: string): { id: DesignFamilyId; name: string }[] {
+  return DESIGN_FAMILIES.filter((f) => primaryOf(cityId, f.id) !== undefined).map((f) => ({ id: f.id, name: f.name }));
+}
+
 export function piecesOfCity(cityId: string): ExpectedPiece[] {
   const { index } = load();
   const out: ExpectedPiece[] = [];
