@@ -3,7 +3,7 @@
  * state, the families that exist for it). Nothing here invents a claim: styles are listed only if the catalog has them, counts come from the
  * catalog, and there is no demonym for a city (none is validated). Pure on purpose, so uniqueness, escaping-safe text and length are unit-tested.
  */
-import { pluralRegioesAdministrativas } from "../geo/localities";
+import { pluralLocalidades, pluralRegioesAdministrativas } from "../geo/localities";
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import { joinStatesOf, stateDemonym, stateIn, stateOf } from "./state-copy";
 
@@ -58,7 +58,7 @@ export function stateTitle(uf: string, administrativeRegions = 0): string {
 
 export function stateDescription(uf: string, cityCount: number, administrativeRegions = 0): string {
   if (administrativeRegions > 0) {
-    return fitDescription(`Explore camisetas de Brasília e de ${pluralRegioesAdministrativas(administrativeRegions)} ${stateOf(uf)}, com estampas de nome, mapa e coordenadas. Busque a sua localidade.`);
+    return fitDescription(`Explore camisetas ${stateOf(uf)}: ${pluralLocalidades(cityCount + administrativeRegions)}, das Regiões Administrativas a Brasília, com estampas de nome, mapa e coordenadas. Busque a sua.`);
   }
   const count = cityCount > 0 ? `${cityCount} cidades com estampas de nome, mapa e coordenadas` : "estampas de nome, mapa e coordenadas";
   return fitDescription(`Explore camisetas de cidades ${stateOf(uf)}: ${count}. Busque a sua ou navegue por região.`);
@@ -67,7 +67,7 @@ export function stateDescription(uf: string, cityCount: number, administrativeRe
 /** The short visible paragraph of the state page (the count is the number of cities that really have products). */
 export function stateIntro(uf: string, cityCount: number, administrativeRegions = 0): string {
   if (administrativeRegions > 0) {
-    return `Camisetas ${stateOf(uf)}: estampas de nome, mapa e coordenadas de Brasília e de ${pluralRegioesAdministrativas(administrativeRegions)}. Busque a sua localidade ou navegue por Brasília e pelas Regiões Administrativas.`;
+    return `Camisetas ${stateOf(uf)}: ${pluralLocalidades(cityCount + administrativeRegions)} com estampas de nome, mapa e coordenadas, das ${pluralRegioesAdministrativas(administrativeRegions)} a Brasília. Busque a sua localidade ou escolha em ordem alfabética.`;
   }
   const demonym = stateDemonym(uf);
   const lead = demonym ? `Camisetas ${demonym} e de cidades ${stateOf(uf)}` : `Camisetas de cidades ${stateOf(uf)}`;

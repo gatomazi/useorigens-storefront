@@ -174,7 +174,7 @@ export function CitySearch({
           // An administrative region says what it is; it is never presented as a city.
           const subtitle = isState
             ? ufsWithRegions.has(result.uf)
-              ? "Ver Brasília e as Regiões Administrativas"
+              ? "Ver as localidades do estado"
               : "Ver as cidades do estado"
             : result.city.t === "ra"
               ? `${STATE_NAMES[result.city.u]} · Região Administrativa`

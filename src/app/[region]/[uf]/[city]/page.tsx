@@ -276,8 +276,8 @@ export default async function CityPage({ params }: { params: Params }) {
                 </li>
               ))}
               <li>
-                <Link href={`/${region}/${uf}#regioes-administrativas`} className="link-static inline-flex min-h-11 items-center px-2 text-[0.9375rem] font-semibold">
-                  Ver todas as Regiões Administrativas
+                <Link href={`/${region}/${uf}`} className="link-static inline-flex min-h-11 items-center px-2 text-[0.9375rem] font-semibold">
+                  Ver todas as localidades
                 </Link>
               </li>
             </ul>

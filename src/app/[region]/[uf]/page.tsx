@@ -11,7 +11,7 @@ import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { stateShowcase } from "@/lib/editorial/state-showcase";
 import { SOURCES } from "@/lib/analytics/sources";
 import { numberPt } from "@/lib/format";
-import { localitiesOfRegion, pluralRegioesAdministrativas, stateLocalityCounts, stateLocalityGroups, stateLocalityLabel } from "@/lib/geo/localities";
+import { localitiesOfRegion, pluralLocalidades, stateLocalityCounts, stateLocalityGroups, stateLocalityLabel } from "@/lib/geo/localities";
 import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, UF_TO_REGION, isRegionSlug, type RegionSlug } from "@/lib/geo/regions";
 import { normalizeText, slugify } from "@/lib/geo/text";
 import { isRegionLaunched } from "@/lib/regions/launched";
@@ -47,7 +47,8 @@ function coveredCitiesOfState(region: RegionSlug, uf: string) {
 /** One real product photo for sharing: the capital's first style, else the first covered city that has one. */
 function shareImage(region: RegionSlug, uf: string, cities: ReturnType<typeof coveredCitiesOfState>): string | undefined {
   const catalog = getCatalog();
-  const capital = cities.find((c) => c.slug === STATE_CAPITAL_SLUG[uf]);
+  // Federal District: the administrative regions are the places, so no place (Brasília) is put first.
+  const capital = cities.some((c) => c.type === "administrative_region") ? undefined : cities.find((c) => c.slug === STATE_CAPITAL_SLUG[uf]);
   for (const city of capital ? [capital, ...cities] : cities.slice(0, 5)) {
     const image = catalog.cityFamilies(city.id)[0]?.primary.imageUrl;
     if (image) return image;
@@ -86,7 +87,15 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
 
   // "Destaques de {estado}": real products only, never "Mais vendidas" (no verified period on INK's sales
   // count — see state-showcase.ts). Hidden entirely when there's nothing real to show, never a placeholder.
-  const showcase = stateShowcase({ uf, cities, catalog, merch: catalog.merch(region), capitalSlug: STATE_CAPITAL_SLUG[uf] });
+  // In the Federal District the administrative regions are the places: the showcase is THEIR products (one per region, by real sales signal
+  // then A–Z), with no "capital" put first and no product of the municipality of Brasília among them.
+  const showcase = stateShowcase({
+    uf,
+    cities: hasRegions ? cities.filter((c) => c.type === "administrative_region") : cities,
+    catalog,
+    merch: catalog.merch(region),
+    capitalSlug: hasRegions ? undefined : STATE_CAPITAL_SLUG[uf],
+  });
 
   // Editorial mesoregion grouping (ADR 0004), navigation only — not the current IBGE division. Cities
   // without one still appear in A–Z. A state with administrative regions groups them apart from its municipality.
@@ -94,7 +103,6 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
     name: g.name,
     slug: g.slug,
     cities: toBrowser(g.localities.sort((a, b) => normalizeText(a.name).localeCompare(normalizeText(b.name)))),
-    ...(hasRegions && g.slug === "regioes-administrativas" ? { countLabel: pluralRegioesAdministrativas(g.localities.length) } : {}),
   }));
 
   const byLetter = new Map<string, { name: string; slug: string; type: "municipality" | "administrative_region" }[]>();
@@ -102,12 +110,17 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
     const letter = normalizeText(city.name).charAt(0).toUpperCase();
     byLetter.set(letter, [...(byLetter.get(letter) ?? []), city]);
   }
-  const letters: BrowserGroup[] = [...byLetter.entries()].map(([letter, list]) => ({ name: letter, slug: `letra-${slugify(letter)}`, cities: toBrowser(list) }));
+  const letters: BrowserGroup[] = [...byLetter.entries()].map(([letter, list]) => ({
+    name: letter,
+    slug: `letra-${slugify(letter)}`,
+    cities: toBrowser(list),
+    ...(hasRegions ? { countLabel: pluralLocalidades(list.length) } : {}),
+  }));
 
   // A real state photo ambients the identity header (name, count, map) — never the search below it: an open
   // results list needs a plain ground to stay legible, so it lives in its own quiet strip (docs/decisions/0003).
   const statePhoto = usableBannerAsset("state", bannerFor(region, "state", uf));
-  const capital = cities.find((c) => c.slug === STATE_CAPITAL_SLUG[uf]);
+  const capital = hasRegions ? undefined : cities.find((c) => c.slug === STATE_CAPITAL_SLUG[uf]);
 
   return (
     <>
@@ -154,7 +167,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
             items={showcase}
             labelledBy="showcase-title"
             title={`Destaques de ${STATE_NAMES[uf]}`}
-            intro={hasRegions ? "Camisetas reais de Brasília, das Regiões Administrativas e da identidade do estado — a compra sempre continua na loja." : "Camisetas reais de cidades e da identidade do estado — a compra sempre continua na loja."}
+            intro={hasRegions ? "Camisetas reais das localidades do Distrito Federal e da identidade do estado — a compra sempre continua na loja." : "Camisetas reais de cidades e da identidade do estado — a compra sempre continua na loja."}
             sourceSection={SOURCES.stateShowcase}
           />
         </section>
