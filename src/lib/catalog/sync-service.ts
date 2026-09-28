@@ -8,7 +8,7 @@ import { readSnapshot, writeSnapshot } from "./snapshot-file";
 import type { CatalogSnapshot, StoreIndex } from "./types";
 
 export type SyncOutcome =
-  | { storeKey: CommerceStoreKey; ok: true; productCount: number; bindingCount: number; merchCount: number; excludedCount: number; rejected: number }
+  | { storeKey: CommerceStoreKey; ok: true; productCount: number; bindingCount: number; merchCount: number; excludedCount: number; rejected: number; requests?: number }
   | { storeKey: CommerceStoreKey; ok: false; error: string };
 
 export type SyncResult = { startedAt: string; finishedAt: string; outcomes: SyncOutcome[] };
@@ -62,7 +62,11 @@ export async function promoteSnapshot(snapshot: CatalogSnapshot, filePath?: stri
  * Next.js Route Handler concern, done by the caller (the admin route) right after this resolves, since it
  * can only run inside an actual request (see that route for why).
  */
-export async function syncCatalog(requestedStoreKeys: readonly CommerceStoreKey[] = [], onProgress?: FetchProgress): Promise<SyncResult> {
+export async function syncCatalog(
+  requestedStoreKeys: readonly CommerceStoreKey[] = [],
+  onProgress?: FetchProgress,
+  maxRequestsPerStore: Partial<Record<CommerceStoreKey, number>> = {},
+): Promise<SyncResult> {
   requireAtLeastOneInkToken();
   const startedAt = new Date().toISOString();
 
@@ -73,9 +77,9 @@ export async function syncCatalog(requestedStoreKeys: readonly CommerceStoreKey[
   const snapshot = await readSnapshot();
   const settled = await Promise.allSettled(
     keys.map(async (storeKey) => {
-      const { products, rejected } = await fetchStoreProducts(storeKey, onProgress);
+      const { products, rejected, requests } = await fetchStoreProducts(storeKey, onProgress, maxRequestsPerStore[storeKey]);
       const index = buildStoreIndex(storeKey, products, new Date().toISOString());
-      return { storeKey, index, rejected };
+      return { storeKey, index, rejected, requests };
     }),
   );
 
@@ -84,7 +88,7 @@ export async function syncCatalog(requestedStoreKeys: readonly CommerceStoreKey[
     if (result.status === "rejected") {
       return { storeKey, ok: false, error: String(result.reason) };
     }
-    const { index, rejected } = result.value;
+    const { index, rejected, requests } = result.value;
     const decision = shouldPromoteStore(snapshot.stores[storeKey], index);
     if (!decision.promote) {
       return { storeKey, ok: false, error: decision.reason };
@@ -98,6 +102,7 @@ export async function syncCatalog(requestedStoreKeys: readonly CommerceStoreKey[
       merchCount: index.merch.length,
       excludedCount: index.excluded.length,
       rejected,
+      requests,
     };
   });
 

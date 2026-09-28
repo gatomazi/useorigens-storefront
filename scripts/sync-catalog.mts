@@ -5,11 +5,26 @@
 import type { CommerceStoreKey } from "../src/lib/geo/regions";
 import { syncCatalog } from "../src/lib/catalog/sync-service";
 
-const requested = process.argv.slice(2) as CommerceStoreKey[];
+// Optional hard cap on real GETs per store: `--cap use-sul=110 --cap use-norte=45`. A store that would exceed
+// its cap fails and keeps its previous snapshot (a truncated catalog is never promoted).
+const argv = process.argv.slice(2);
+const requested: CommerceStoreKey[] = [];
+const caps: Partial<Record<CommerceStoreKey, number>> = {};
+for (let i = 0; i < argv.length; i++) {
+  if (argv[i] === "--cap") {
+    const [store, n] = (argv[++i] ?? "").split("=");
+    if (!store || !Number.isInteger(Number(n)) || Number(n) <= 0) throw new Error(`--cap expects <store>=<positive integer>, got "${argv[i]}"`);
+    caps[store as CommerceStoreKey] = Number(n);
+  } else requested.push(argv[i] as CommerceStoreKey);
+}
 
-const result = await syncCatalog(requested, ({ storeKey, page, totalPages }) => {
-  if (page % 10 === 0 || page === totalPages) console.log(`${storeKey}: page ${page}/${totalPages}`);
-});
+const result = await syncCatalog(
+  requested,
+  ({ storeKey, page, totalPages }) => {
+    if (page % 10 === 0 || page === totalPages) console.log(`${storeKey}: page ${page}/${totalPages}`);
+  },
+  caps,
+);
 
 for (const outcome of result.outcomes) {
   if (!outcome.ok) {
@@ -19,7 +34,7 @@ for (const outcome of result.outcomes) {
   }
   console.log(
     `${outcome.storeKey}: ${outcome.productCount} products, ${outcome.bindingCount} bindings, ` +
-      `${outcome.merchCount} merch, ${outcome.excludedCount} excluded, ${outcome.rejected} rejected by validation`,
+      `${outcome.merchCount} merch, ${outcome.excludedCount} excluded, ${outcome.rejected} rejected by validation, ${outcome.requests} GETs`,
   );
 }
 console.log("snapshot written");

@@ -24,8 +24,15 @@ export class InkApiError extends Error {
   }
 }
 
-async function getJson(url: string, token: string): Promise<unknown> {
+type RequestBudget = { readonly max: number | undefined; used: number };
+
+async function getJson(url: string, token: string, budget?: RequestBudget): Promise<unknown> {
   for (let attempt = 0; ; attempt++) {
+    // Every HTTP attempt counts, retries after a 429 included: the cap is a cap on real GETs against INK.
+    if (budget && budget.max !== undefined && budget.used >= budget.max) {
+      throw new InkApiError(`request cap of ${budget.max} reached before the fetch finished`, 0);
+    }
+    if (budget) budget.used++;
     // Read-only integration: GET only. Credentials travel only in the Authorization header.
     const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
     if (res.status === 429 && attempt < BACKOFF_MS.length) {
@@ -39,11 +46,16 @@ async function getJson(url: string, token: string): Promise<unknown> {
 
 export type FetchProgress = (info: { storeKey: CommerceStoreKey; page: number; totalPages: number }) => void;
 
-/** Fetches every visible, published product of one store. Throws on any non-recoverable failure. */
+/**
+ * Fetches every visible, published product of one store. Throws on any non-recoverable failure, including
+ * hitting `maxRequests` (a truncated catalog is never returned as if it were complete).
+ */
 export async function fetchStoreProducts(
   storeKey: CommerceStoreKey,
   onProgress?: FetchProgress,
-): Promise<{ products: InkProductNormalized[]; rejected: number }> {
+  maxRequests?: number,
+): Promise<{ products: InkProductNormalized[]; rejected: number; requests: number }> {
+  const budget: RequestBudget = { max: maxRequests, used: 0 };
   const token = tokenFor(storeKey);
   if (!token) throw new InkApiError(`missing credential for ${storeKey}`, 0);
 
@@ -53,7 +65,7 @@ export async function fetchStoreProducts(
 
   for (let page = 1; page <= totalPages; page++) {
     const url = `${INK_API_BASE_URL}/v1/stores/products?visible_in_store=true&per_page=${PER_PAGE}&page=${page}`;
-    const body = (await getJson(url, token)) as { products?: unknown; total_pages?: unknown };
+    const body = (await getJson(url, token, budget)) as { products?: unknown; total_pages?: unknown };
     if (!Array.isArray(body.products) || typeof body.total_pages !== "number") {
       throw new InkApiError("unexpected INK response shape", 200);
     }
@@ -67,5 +79,5 @@ export async function fetchStoreProducts(
     onProgress?.({ storeKey, page, totalPages });
     if (page < totalPages) await sleep(PACE_MS);
   }
-  return { products, rejected };
+  return { products, rejected, requests: budget.used };
 }
