@@ -1,9 +1,9 @@
 # Cobertura integral do índice de peças — relatório de cobertura e execução
 
 > **Estado final (2026-09-28):** coleta **completa nas três lojas** (Sul 1.073/1.073 páginas, Norte 309/309,
-> Centro-Oeste 385/385). Revalidação de cache implementada e provada em modo produção. Recurso pronto para
-> revisão de release, **não publicado**: nenhum push, merge, PR, deploy ou ação no Railway foi feito, e nada foi
-> alterado na INK. Procedimento de publicação e rollback nas §11 e §12.
+> Centro-Oeste 385/385). Revalidação de cache implementada e provada em modo produção. **Publicado em produção
+> em 2026-09-28** (PR #29, merge `9c55076`, deploy `df9a2503`); índice promovido às 15:42:58Z. O que foi realmente
+> executado no Railway está na **§15**; procedimento e rollback nas §11 e §12.
 
 Continuação de `feature/city-garment-tabs` (piloto aprovado, commits `8a1fead`, `3c8d376`, `9d01623`).
 Mesma worktree/branch (`.claude/worktrees/city-garment-tabs`), `origin/main` não avançou desde a rodada
@@ -381,6 +381,83 @@ truncado (servidor de dev encerrado no meio da escrita), artefato gerado e ignor
    próximo sync completo com poda.
 5. **Primeira renderização por processo** paga ~0,35–1,3 s de parse do índice (§9); +~50 MB de RSS.
 6. **A barra de abas só existe no cliente** (§10): sem regressão de SEO, mas há deslocamento de layout na hidratação.
-7. **Procedimento Railway não testado** em produção (§11, itens marcados) e `tsx` no container não confirmado.
+7. **Procedimento Railway executado em 2026-09-28** (§15); o rollback por renomeação **não foi exercitado em produção** (só em modo produção local).
 8. **Norte e Centro-Oeste seguem fora do ar** (dependem do lançamento por região no CMS); os dados estão prontos.
 9. O crawl grava snapshot/índice/checkpoint só ao final de cada invocação; por isso os blocos de 250 GETs.
+
+## 15. Execução real em produção (2026-09-28)
+
+**Código:** PR #29 (`feature/city-garment-tabs`, head `ff8f27b`) integrada com a `main` de então (`cdea08e`, SEO Estágio B e
+cart-mirror regional, sem conflitos) e mesclada como **`9c55076`**. O Railway faz auto-deploy a cada merge na `main`:
+deploy **`df9a2503`** (`SUCCESS`, 15:21:59Z). Nenhum arquivo de `data/generated/` entrou no Git. Antes do merge, o Volume foi
+reconfirmado **sem** `garment-index.json`.
+
+**Falha pré-existente da `main`, não causada por esta release:** `tests/e2e/sul.spec.ts:332` (altura de `/sul/sc` no celular,
+2.629 px contra o limite de 2.600) falha idêntica num checkout limpo de `origin/main`; vem do commit de SEO `34f4ac7` (texto de
+introdução na página de estado). Não alterado.
+
+**Etapa A — código sem índice (smoke antes/depois):** `/api/health`, `/api/ready`, `/sul`, `/norte`, `/centro-oeste`, cidades,
+`/api/cidades/sul`, `/sitemap.xml`, `/robots.txt` todos 200 e `/admin` 307 (igual à linha de base); cidades com **grade
+clássica e nenhum dado de aba**; a rota nova `POST /api/admin/garment-index/revalidate` respondeu **401 sem token** (GET → 405);
+logs sem erros novos. Busca real (Playwright headless com Pixel/GA bloqueados) verde em desktop por mouse (Sul/Norte/Centro-Oeste),
+teclado e mobile 390 px.
+
+**Etapa B — container real (`useorigens-storefront`):** Node v24.21.0, npm 11.19.0, cwd `/app`, `PORT=8080`; **Volume
+`/app/data/generated`** (4,6 GB, 4,5 GB livres; `CATALOG_SNAPSHOT_DIR` não definido); **runner: `tsx` v4.23.15 presente em
+`node_modules/.bin`** e o script de promoção executa no container com `--conditions=react-server` (imprimiu o uso, saída 1) —
+**não foi preciso `npx` nem redeploy por causa do runner**. `gzip`/`base64`/`sha256sum` existem; `ps` e `curl` não (uso `/proc` e
+`node fetch`). `ADMIN_SYNC_TOKEN` e `INK_TOKEN_SUL/NORTE/CENTRO` definidos (só presença verificada, valores nunca impressos).
+Comportamento do `railway ssh` (§11): sem preservar aspas, sem stdin. **As três regiões já estavam no ar**, com as três lojas no
+snapshot de produção.
+
+**Etapa C — como o índice foi realmente colocado no Volume:**
+1. **Catálogo base com clusters.** O snapshot de produção (25/09) tinha **0** canônicos com `productClusterId`. Rodei o
+   `POST /api/admin/catalog-sync` (as três lojas) **de dentro do container** (`node fetch` com o token lido de `process.env`):
+   4 min 31 s, **99 / 37 / 40 GETs** de leitura (Sul/Norte/Centro-Oeste), contagens idênticas às anteriores
+   (9.834 / 3.646 / 3.914 produtos) e agora 8.166 / 3.132 / 3.725 canônicos com cluster, igual ao local. Antes, copiei o snapshot para
+   `catalog-snapshot.json.pre-garment-20260928` no próprio Volume (8,4 MB, **ainda lá**; pode ser apagado).
+2. **Transporte (não houve nova coleta na INK).** O artefato aprovado (o `garment-index.json` local, 20.062.869 B, sha256
+   `7276bdb5…139919d`) foi comprimido (6.787.690 B), codificado em base64 e enviado em **101 blocos de 90.000 B** por
+   `printf %s <bloco> > /app/data/generated/.gi/part-NNN`; o sha256 de **cada bloco** foi conferido contra o local (101/101
+   idênticos), o arquivo foi remontado no container (`cat part-* | base64 -d | gunzip`) e o sha256 e o tamanho batem **exatamente** com o
+   aprovado; os blocos foram removidos.
+3. **Validação sem promover:** `promote-garment-index.mts --check-only --expect-stores use-sul,use-norte,use-centro` → ok
+   (7.999 / 3.012 / 3.714 clusters; 71.674 / 27.006 / 33.327 peças).
+4. **Promoção atômica + revalidação** (15:42:54–15:42:58Z), num único comando dentro do container:
+   `GARMENT_REVALIDATE_URL=http://127.0.0.1:8080 node --conditions=react-server --import tsx scripts/promote-garment-index.mts --from /app/data/generated/garment-index.incoming.json --expect-stores use-sul,use-norte,use-centro --revalidate`.
+   Resultado: `promoted … 20062869 bytes`, "no previous index existed" (portanto sem `.prev`) e **`revalidation requested: 2109 city pages marked
+   for revalidation`**, saída 0. Tamanho do índice em produção: **20.062.869 B** (`/app/data/generated/garment-index.json`).
+
+**Etapa D — smoke com abas ativas (produção, Playwright, esperados derivados dos arquivos de dados; Pixel/GA bloqueados, `fbq`/`gtag`
+simulados; a INK foi substituída por um stub na navegação):** **14/14 passaram**, em 7 cidades:
+Sul — Tijucas/SC, Agudos do Sul/PR, Porto Alegre/RS; Norte — Xambioá/TO, Abaetetuba/PA; Centro-Oeste — Água Boa/MT, Abadia de Goiás/GO. Em cada uma:
+abas só com peças elegíveis; Camiseta clássica como padrão; troca de aba com **imagem, preço e href exatos** do produto certo, na loja
+da própria região (Norte nunca aponta para Sul); nenhum card em família sem peça; **`?peca=` muda sem nenhuma requisição ao servidor**;
+clique abre direto o produto INK correto (só a página da cidade antes, sem PDP nem modal); **`GoToInk` exatamente 1 vez com `garment_type`**
+e sem Purchase/AddToCart/ViewContent.
+
+**Etapa E — busca e desempenho (mesmo script antes e depois):**
+
+| Fluxo (ms até a página da cidade) | Sem índice | Com índice (3 rodadas) |
+|---|---:|---:|
+| desktop mouse Sul | 2.618 (1ª, navegador frio) | 1.662 · 1.515 · 1.447 |
+| desktop mouse Norte | 1.264 | 1.236 · 1.218 · 1.116 |
+| desktop mouse Centro-Oeste | 1.276 | 1.559 · 1.211 · 1.136 |
+| desktop teclado Sul ("floripa") | 1.155 | 1.167 · 1.070 · 1.059 |
+| mobile 390 px | 1.167 | 1.643 · 1.277 · 1.240 |
+
+**Sem degradação da busca** (todas verdes; variação dentro do ruído). Página de cidade (curl, TTFB): `/sul/sc/tijucas` 0,25–0,39 s sem
+índice; **1ª renderização depois da promoção (índice ainda não carregado no processo) 0,57 s**, a seguinte 0,39 s, depois ~0,34 s.
+Tamanho do HTML+payload de uma cidade (bruto, sem compressão): **~102 KB → ~255 KB** (os painéis das 9 peças vêm renderizados do
+servidor). **Memória do processo web** (`/proc`): RSS **808 MB → 1.043 MB** (pico 853 → 1.072 MB) entre antes da promoção e depois do
+smoke; localmente o índice sozinho soma ~50 MB, e o resto inclui a regeneração das páginas e o otimizador de imagens exercitado pelas
+~560 imagens do smoke, então **não atribuo o delta ao índice sem prova** — vale acompanhar o consumo. Não houve teste de causalidade
+com remoção do índice porque não houve degradação.
+
+**Não executado em produção:** o rollback por renomeação (`mv … .off` + revalidar) — não foi autorizado nesta release; foi provado em
+modo produção local (`verify:garment-revalidation`, passos 4–6) e o comando exato está na §12. Não houve reinício de processo só para
+medir cold start; o custo do parse do índice foi observado na 1ª renderização após a promoção (acima) e o cold start de processo é
+coberto pelo deploy do commit de documentação que registra esta seção.
+
+**Resíduos no Volume:** `catalog-snapshot.json.pre-garment-20260928` (cópia de segurança do snapshot anterior). Nenhum candidato ou
+bloco temporário restou.

@@ -22,7 +22,7 @@ const STORE_BASE: Record<string, string> = {
   "use-centro": "https://www.usecentro.com.br/usecentro/product",
 };
 
-export type ExpectedPiece = { typeId: number; typeSlug: string; typeLabel: string; familyId: DesignFamilyId; familyName: string; href: string; priceText: string };
+export type ExpectedPiece = { typeId: number; typeSlug: string; typeLabel: string; familyId: DesignFamilyId; familyName: string; href: string; priceText: string; imageKey: string };
 
 const dir = process.env.CATALOG_SNAPSHOT_DIR ?? path.join(process.cwd(), "data", "generated");
 const snapshotFile = path.join(dir, "catalog-snapshot.json");
@@ -73,6 +73,7 @@ export function piecesOfCity(cityId: string): ExpectedPiece[] {
         familyName: family.name,
         href: `${STORE_BASE[primary.commerceStoreKey]}/${best[2]}`,
         priceText: formatPrice(best[4]) ?? "",
+        imageKey: best[3],
       });
     }
   }
