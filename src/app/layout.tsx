@@ -31,6 +31,8 @@ export const metadata: Metadata = {
   title: { default: "Use Origens", template: "%s | Use Origens" },
   description: "Camisetas com o nome, o mapa e as coordenadas da sua cidade.",
   openGraph: { siteName: "Use Origens", locale: "pt_BR", type: "website" },
+  // Outside a region (root, 404): the generic icon. Each region layout replaces this with its own store logo (see [region]/layout.tsx).
+  icons: { icon: "/favicon.ico" },
 };
 
 export const viewport: Viewport = { themeColor: "#e5e5e5", width: "device-width", initialScale: 1 };
