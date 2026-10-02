@@ -37,6 +37,7 @@ import { applyAndSave, discardDraft, loadWorkspace, type SaveOutcome } from "@/l
 import type { DraftOp } from "@/lib/admin/draft-ops";
 import { parseNavigationForm, parseThemeForm, readableNavigationError } from "@/lib/admin/navigation-form";
 import { themeProblems } from "@/lib/site-config/navigation";
+import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-form";
 
 /**
  * Every server action of the CMS. Each one authenticates and authorises on its own (`requireAdmin`: development guard or Railway session,
@@ -485,6 +486,26 @@ export async function discardGlobalThemeAction() {
   await audit(actor, "draft.discard", "global");
   revalidatePath("/admin", "layout");
   back("/admin/aparencia", { ok: "Rascunho da paleta global descartado." });
+}
+
+// ── Cupons e promoções (por região) ─────────────────────────────────────────────────────────────────────────────
+
+/** Saves the coupons and promotions of a region as a DRAFT (nothing reaches the store or the INK until it is published from "Publicar"). */
+export async function savePromotionsAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  let rows: unknown;
+  try {
+    rows = JSON.parse(text(fd, "items") || "[]");
+  } catch {
+    back("/admin/promocoes", { err: ["Não foi possível ler a lista. Recarregue a página e tente de novo."] });
+  }
+  const parsed = rowsToConfig(rows, scope);
+  if (!parsed.ok) back("/admin/promocoes", { err: parsed.errors });
+  const outcome = await applyAndSave(scope, { type: "set-promotions", promotions: parsed.value }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/promocoes", { err: outcome.errors.map((e) => readablePromotionError(e, parsed.value.items)) });
+  await audit(actor, "draft.save", scope, "set-promotions");
+  back("/admin/promocoes", { ok: `Rascunho dos cupons e promoções de ${scopeName(scope)} salvo. Nada muda na loja nem na INK até você publicar.` });
 }
 
 /**

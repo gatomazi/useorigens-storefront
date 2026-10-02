@@ -260,3 +260,13 @@ export function whenAnalyticsReady(send: () => void, intervalMs = 250, maxAttemp
   tick();
   return () => timer && clearTimeout(timer);
 }
+
+/**
+ * "Cupons e promoções" button (GA4 only; no Meta event, its contract stays the four events above). Never the coupon code, never any text of the card:
+ * only the item id the CMS gave it. `surface` tells the storefront button from the one the Worker draws on the INK (which sends its own events).
+ */
+export type PromoEvent = "promo_fab_open" | "promo_coupon_copy" | "promo_panel_close";
+export function trackPromo(event: PromoEvent, params: { region: string; promoId?: string }): void {
+  if (!gtagReady()) return;
+  sendGtag("event", event, { region: params.region, surface: "storefront", ...(params.promoId ? { promo_id: params.promoId } : {}) });
+}

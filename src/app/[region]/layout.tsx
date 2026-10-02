@@ -4,6 +4,7 @@ import { CartRefCapture } from "@/components/cart-mirror/CartRefCapture";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
+import { PromoFab } from "@/components/promotions/PromoFab";
 import { ConsentProvider } from "@/lib/consent/ConsentProvider";
 import { AnnouncementBar, Footer, Header } from "@/components/layout/SiteChrome";
 import { getCatalog } from "@/lib/catalog/repository";
@@ -63,6 +64,8 @@ export default async function RegionLayout({ children, params }: { children: Rea
         <GoogleAnalytics measurementId={tracking?.ga4MeasurementId} />
       </Suspense>
       <ConsentBanner region={region} />
+      {/* Coupons and promotions of THIS region (CMS, published only); renders nothing when there are none or anything fails. */}
+      <PromoFab key={region} region={region} />
     </ConsentProvider>
   );
 }
