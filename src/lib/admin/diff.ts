@@ -1,9 +1,10 @@
 import { effectiveNavbarGroups } from "../site-config/navbar-groups";
 import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlockConfig } from "../site-config/navigation";
+import type { PromotionItem } from "../site-config/promotions-schema";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
@@ -43,7 +44,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The INK navbar groups are part of the document but not of any section: without this, changing only the navbar would read "nothing to publish".
   changes.push(...navbarChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft));
   return changes;
 }
 
@@ -108,5 +109,33 @@ function themeChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
     const now = draft.theme?.colors[key];
     if (was !== now) out.push({ kind: "theme", sectionId: `theme:${key}`, text: `${who}, ${THEME_COLOR_LABEL[key].toLowerCase()}: ${was ?? "padrão"} → ${now ?? "padrão"}` });
   }
+  return out;
+}
+
+const promoName = (p: PromotionItem) => `${p.type === "coupon" ? "cupom" : "promoção"} "${p.title}"`;
+
+/** What changed in "Cupons e promoções": items added, removed, switched on/off, edited, and a new order. Pure. */
+function promotionChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const before = published.promotions?.items ?? [];
+  const after = draft.promotions?.items ?? [];
+  if (json(before) === json(after)) return [];
+  const out: Change[] = [];
+  const was = new Map(before.map((p) => [p.id, p]));
+  const now = new Map(after.map((p) => [p.id, p]));
+  for (const p of after) {
+    const old = was.get(p.id);
+    const id = `promotions:${p.id}`;
+    if (!old) out.push({ kind: "promotions", sectionId: id, text: `Cupons e promoções: ${promoName(p)} adicionado${p.enabled ? "" : " (desativado)"}` });
+    else {
+      if (old.enabled !== p.enabled) out.push({ kind: "promotions", sectionId: id, text: `Cupons e promoções: ${promoName(p)} ${p.enabled ? "ativado" : "desativado"}` });
+      const { enabled: _a, order: _b, ...restOld } = old;
+      const { enabled: _c, order: _d, ...restNew } = p;
+      void _a; void _b; void _c; void _d;
+      if (json(restOld) !== json(restNew)) out.push({ kind: "promotions", sectionId: id, text: `Cupons e promoções: ${promoName(p)} editado` });
+    }
+  }
+  for (const p of before) if (!now.has(p.id)) out.push({ kind: "promotions", sectionId: `promotions:${p.id}`, text: `Cupons e promoções: ${promoName(p)} removido` });
+  const order = (list: PromotionItem[]) => json([...list].sort((a, b) => a.order - b.order).map((p) => p.id).filter((id) => was.has(id) && now.has(id)));
+  if (order(before) !== order(after)) out.push({ kind: "promotions", sectionId: "promotions:order", text: "Cupons e promoções: nova ordem" });
   return out;
 }

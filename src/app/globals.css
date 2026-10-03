@@ -411,3 +411,33 @@ dialog::backdrop {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Coupon button: one short, small wiggle now and then (components/promotions/attention.ts decides when; never continuous). Two quick oscillations,
+   a few degrees, back to rest. Nothing at all with reduced motion: the script never adds the class, and this rule removes it anyway. */
+@keyframes promo-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  18% {
+    transform: rotate(-9deg);
+  }
+  40% {
+    transform: rotate(7deg);
+  }
+  62% {
+    transform: rotate(-4deg);
+  }
+  82% {
+    transform: rotate(2deg);
+  }
+}
+.promo-wiggle {
+  animation: promo-wiggle 560ms cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  transform-origin: 50% 60%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .promo-wiggle {
+    animation: none !important;
+  }
+}

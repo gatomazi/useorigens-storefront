@@ -11,6 +11,7 @@ const ITEMS = [
   { href: "/admin/colecoes", label: "Coleções" },
   { href: "/admin/navegacao", label: "Navegação" },
   { href: "/admin/aparencia", label: "Aparência" },
+  { href: "/admin/promocoes", label: "Cupons e promoções" },
   { href: "/admin/tracking", label: "Tracking" },
   { href: "/admin/publicar", label: "Publicar" },
   { href: "/admin/midia", label: "Mídia" },

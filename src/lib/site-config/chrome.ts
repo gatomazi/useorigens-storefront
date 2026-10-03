@@ -39,3 +39,9 @@ export function regionChrome(region: RegionSlug): RegionChrome {
     cssVars: themeCssVars(theme.configured),
   };
 }
+
+/** The region's resolved palette alone (published configuration, same rules as the chrome): what the promotions button wears on both surfaces. */
+export function regionPalette(region: RegionSlug): ResolvedTheme["effective"] {
+  const { doc, global } = publishedDocs(region);
+  return resolveTheme(region, doc, global).effective;
+}

@@ -67,7 +67,8 @@ export function VariantPicker({
       <div className="contents lg:sticky lg:top-24 lg:block">
         <div className="order-1 lg:order-none">{intro}</div>
 
-        <div className="order-3 lg:order-none">
+        {/* data-purchase-controls: the coupon button (components/promotions) steps aside instead of covering these versions or the CTA. */}
+        <div className="order-3 lg:order-none" data-purchase-controls>
           {options.length > 1 && (
             <fieldset className="mt-5 lg:mt-6">
               <legend className="t-label mb-3">Versões deste estilo</legend>

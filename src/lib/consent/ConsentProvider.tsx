@@ -35,6 +35,11 @@ export function ConsentProvider({ children }: { children: React.ReactNode }) {
   return <ConsentContext.Provider value={value}>{children}</ConsentContext.Provider>;
 }
 
+/** Same as `useConsent`, but `null` outside the provider (components that also render in the CMS preview, where there is no consent). */
+export function useOptionalConsent(): ConsentContextValue | null {
+  return useContext(ConsentContext);
+}
+
 export function useConsent(): ConsentContextValue {
   const ctx = useContext(ConsentContext);
   if (!ctx) throw new Error("useConsent must be used within ConsentProvider");

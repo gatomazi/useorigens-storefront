@@ -8,6 +8,7 @@
  */
 import { isAllowedMediaSrc } from "./media-hosts";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
+import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
 import { REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
@@ -195,6 +196,11 @@ export type ScopeDoc = {
    * On `global`: the "Use Origens" palette regions may inherit (always `override`). Published with its scope.
    */
   theme?: ThemeConfig;
+  /**
+   * "Cupons e promoções" of this REGION: copyable coupons and announcements without a code, each with its own texts, order and optional window.
+   * Absent or empty = no button anywhere. Published with the region (never with a page); the public reads only live items (site-config/promotions.ts).
+   */
+  promotions?: PromotionsConfig;
   /**
    * Hotpages and parent-category landings of this region. Part of the document for storage and rollback, but PUBLISHED ON THEIR OWN: publishing the
    * home never publishes a draft page, and publishing a page never touches the home (admin/publishing.ts composes the bundle per target).
@@ -634,6 +640,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.theme !== undefined) {
     const r = validateTheme(input.theme, sc, "doc.theme");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.promotions !== undefined) {
+    const r = validatePromotions(input.promotions, sc, "doc.promotions");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.collections !== undefined) {

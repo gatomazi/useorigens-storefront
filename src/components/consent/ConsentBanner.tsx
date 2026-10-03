@@ -22,6 +22,7 @@ export function ConsentBanner({ region }: { region: RegionSlug }) {
     <div
       role="region"
       aria-label="Preferências de cookies"
+      data-consent-banner
       className="on-ink fixed inset-x-0 bottom-0 z-40 border-t border-white/15 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3"
     >
       <div className="wrap flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
