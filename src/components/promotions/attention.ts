@@ -1,7 +1,8 @@
 /**
  * When the coupon button may give its small "wiggle". Pure, so the rhythm is unit-tested; the component only supplies the clock, the randomness and
  * what the page looks like right now. The button wants to be DISCOVERED, never to pull the visitor away from buying:
- *   - never continuous: the first nudge after ~4–6 s on the page, then at most one per ~12–18 s of inactivity, and at most three per page view;
+ *   - never continuous: the first nudge after ~4–6 s on the page, then at most one per ~12–18 s without a click/tap or typing
+ *     (scrolling does not postpone it), and at most three per page view;
  *   - never while the panel, a menu, a drawer or a dialog is open, while the visitor types, while the tab is hidden or the button is not shown;
  *   - never at all with `prefers-reduced-motion: reduce`, nor for the rest of the session once the visitor opened the panel, copied or closed it.
  */

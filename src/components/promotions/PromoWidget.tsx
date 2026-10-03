@@ -246,15 +246,16 @@ export function PromoWidget({ region, items, theme = FALLBACK_THEME, mode = "liv
       if (calm) { wiggle(); done += 1; }
       schedule(calm ? nudgeDelay(done, Math.random()) : REPEAT_NUDGE_MS[0]);
     };
-    // Activity pushes the NEXT nudge back (only after the first one: that one counts time on the page, not inactivity).
+    // A click/tap or typing pushes the NEXT nudge back (only after the first one: that one counts time on the page). Scrolling does NOT: a visitor
+    // browsing the page still gets the occasional nudge. `click` (not pointerdown/touchstart) because a touch scroll fires those but never a click.
     const activity = () => { if (done > 0 && timer) schedule(nudgeDelay(done, Math.random())); };
     const opts = { passive: true, capture: true } as const;
-    for (const name of ["pointerdown", "keydown", "scroll", "touchstart"]) window.addEventListener(name, activity, opts);
+    for (const name of ["click", "keydown"]) window.addEventListener(name, activity, opts);
     schedule(nudgeDelay(0, Math.random()));
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);
-      for (const name of ["pointerdown", "keydown", "scroll", "touchstart"]) window.removeEventListener(name, activity, opts);
+      for (const name of ["click", "keydown"]) window.removeEventListener(name, activity, opts);
     };
   }, [live, wiggle]);
 
