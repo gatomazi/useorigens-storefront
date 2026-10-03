@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { applyOp } from "@/lib/admin/draft-ops";
 import { diffDocs } from "@/lib/admin/diff";
 import { promotionId, readablePromotionError, rowsToConfig, type PromotionRow } from "@/lib/admin/promotions-form";
-import { nudgeDelay, mayNudge, MAX_NUDGES, type PageCalm } from "@/components/promotions/attention";
+import { nudgeDelay, mayNudge, type PageCalm } from "@/components/promotions/attention";
 import {
   activePromotions,
   couponBadgeText,
@@ -302,12 +302,12 @@ describe("publicPromotions (the API, from the published file only)", () => {
 describe("attention (the occasional wiggle)", () => {
   const calm: PageCalm = { panelOpen: false, overlayOpen: false, typing: false, hidden: false, buttonHidden: false, reducedMotion: false, quiet: false };
 
-  test("given the page view, when nudges are scheduled, then the first comes after 4–6 s, the next after 12–18 s, and never more than three", () => {
-    expect(nudgeDelay(0, 0)).toBe(4000);
-    expect(nudgeDelay(0, 0.999)).toBeLessThanOrEqual(6000);
-    expect(nudgeDelay(1, 0)).toBe(12000);
-    expect(nudgeDelay(2, 1)).toBe(18000);
-    expect(nudgeDelay(MAX_NUDGES, 0.5)).toBeNull();
+  test("given the page view, when nudges are scheduled, then every one comes 6–8 s after the previous, with no limit per page", () => {
+    expect(nudgeDelay(0)).toBe(6000);
+    expect(nudgeDelay(0.5)).toBe(7000);
+    expect(nudgeDelay(1)).toBe(8000);
+    expect(nudgeDelay(-1)).toBe(6000);
+    expect(nudgeDelay(2)).toBe(8000);
   });
 
   test.each(Object.keys({ panelOpen: 1, overlayOpen: 1, typing: 1, hidden: 1, buttonHidden: 1, reducedMotion: 1, quiet: 1 }))("given %s, when the moment comes, then the button stays still", (key) => {

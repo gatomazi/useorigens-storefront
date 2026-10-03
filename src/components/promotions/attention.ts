@@ -1,23 +1,19 @@
 /**
  * When the coupon button may give its small "wiggle". Pure, so the rhythm is unit-tested; the component only supplies the clock, the randomness and
  * what the page looks like right now. The button wants to be DISCOVERED, never to pull the visitor away from buying:
- *   - never continuous: the first nudge after ~4–6 s on the page, then at most one per ~12–18 s without a click/tap or typing
- *     (scrolling does not postpone it), and at most three per page view;
- *   - never while the panel, a menu, a drawer or a dialog is open, while the visitor types, while the tab is hidden or the button is not shown;
- *   - never at all with `prefers-reduced-motion: reduce`, nor for the rest of the session once the visitor opened the panel, copied or closed it.
+ *   - one short wiggle every ~6–8 s (owner's choice), whatever the visitor is doing on the page (scrolling, clicking, typing do not postpone it);
+ *   - skipped while the panel, a menu, a drawer or a dialog is open, while the visitor types, while the tab is hidden or the button is not shown;
+ *   - never at all with `prefers-reduced-motion: reduce`, and never again in the session once the visitor OPENED the panel.
  */
-export const FIRST_NUDGE_MS = [4000, 6000] as const;
-export const REPEAT_NUDGE_MS = [12000, 18000] as const;
-export const MAX_NUDGES = 3;
+export const NUDGE_EVERY_MS = [6000, 8000] as const;
 /** Total length of one wiggle (two quick oscillations), the CSS animation in globals.css. */
 export const NUDGE_DURATION_MS = 560;
-/** sessionStorage key: set once the visitor interacted, the button stays still for the rest of the session. */
+/** sessionStorage key: set once the visitor opened the panel, the button stays still for the rest of the session. */
 export const QUIET_KEY = "origens:promo:quiet";
 
-/** Delay before the next nudge, or `null` when this page view already had its share. `random` is in [0, 1). */
-export function nudgeDelay(done: number, random: number): number | null {
-  if (done >= MAX_NUDGES) return null;
-  const [min, max] = done === 0 ? FIRST_NUDGE_MS : REPEAT_NUDGE_MS;
+/** Delay before the next nudge (6–8 s; a little jitter so it never feels mechanical). `random` is in [0, 1). */
+export function nudgeDelay(random: number): number {
+  const [min, max] = NUDGE_EVERY_MS;
   return Math.round(min + Math.min(Math.max(random, 0), 1) * (max - min));
 }
 

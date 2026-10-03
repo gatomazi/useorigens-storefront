@@ -239,7 +239,7 @@ test("given a product page on a phone, when the buy CTA scrolls under the button
   await expect(fab).toBeVisible();
 });
 
-test("given reduced motion, when the visitor stays on the page, then the button never wiggles; without it, it wiggles once after ~4–6 s", async ({ browser }) => {
+test("given reduced motion, when the visitor stays on the page, then the button never wiggles; without it, it wiggles every ~6–8 s until the panel is opened", async ({ browser }) => {
   const still = await browser.newPage({ reducedMotion: "reduce", viewport: { width: 1280, height: 800 } });
   await open(still, "/sul");
   await expect(still.getByTestId("promo-fab")).toBeVisible({ timeout: 30_000 });
@@ -253,7 +253,8 @@ test("given reduced motion, when the visitor stays on the page, then the button 
   await expect(moving.getByTestId("promo-fab")).toBeVisible({ timeout: 30_000 });
   await expect(moving.locator(".promo-wiggle")).toHaveCount(1, { timeout: 12_000 });
   await expect(moving.locator(".promo-wiggle")).toHaveCount(0, { timeout: 2_000 }); // back to rest
-  // After an interaction, quiet for the rest of the session.
+  await expect(moving.locator(".promo-wiggle")).toHaveCount(1, { timeout: 12_000 }); // and again, without any limit
+  // Once the panel was opened, quiet for the rest of the session.
   await moving.getByTestId("promo-fab").click();
   await moving.getByTestId("promo-close").click();
   expect(await moving.evaluate(() => sessionStorage.getItem("origens:promo:quiet"))).toBe("1");

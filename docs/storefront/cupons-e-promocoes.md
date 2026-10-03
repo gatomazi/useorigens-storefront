@@ -72,9 +72,10 @@ sem nova tentativa). Busca, `cart_ref` e links não dependem dele. Não aparece 
 - **Copiar**: `navigator.clipboard` → `execCommand` → código selecionado + aviso para copiar à mão. "Copiado" por 2 s; anúncio em `aria-live`.
 - **Espaço**: sobe acima da barra de cookies (medida); some com o menu mobile, diálogos modais e o teclado virtual (campo de texto focado em toque) e
   enquanto o seu canto ficaria sobre as versões ou o CTA "Escolher tamanho na loja" da página de produto (`data-purchase-controls`); volta ao rolar.
-- **Microanimação** (`components/promotions/attention.ts`, testado): rotação de poucos graus, 2 oscilações, 560 ms; 1ª após 4–6 s, depois no máximo
-  a cada 12–18 s **sem clique/toque ou digitação** (rolar não adia), no máximo 3 por página; nunca com painel/menu/diálogo/popover aberto, digitando, aba oculta, botão escondido ou
-  `prefers-reduced-motion: reduce` (o script não anima e o CSS anula). Abrir, copiar ou fechar ⇒ parada pelo resto da sessão (`sessionStorage`).
+- **Microanimação** (`components/promotions/attention.ts`, testado): rotação de poucos graus, 2 oscilações, 560 ms, **a cada 6–8 s** (decisão do
+  proprietário), sem limite por página e sem ser adiada por rolagem, clique ou digitação; pulada enquanto painel/menu/diálogo/popover está aberto, digitando,
+  aba oculta ou botão escondido; nunca com `prefers-reduced-motion: reduce` (o script não anima e o CSS anula). **Abrir o painel** ⇒ parada pelo resto da
+  sessão (`sessionStorage`).
 - **Analytics** (GA4, só com consentimento; nenhum evento Meta): `promo_fab_open`, `promo_coupon_copy`, `promo_panel_close` com `region`, `promo_id`,
   `surface=storefront`. Nunca o código nem textos.
 

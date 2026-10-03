@@ -4,7 +4,7 @@ import { useCallback, useEffect, useId, useRef, useState, type CSSProperties } f
 import { trackPromo, type PromoEvent } from "@/lib/analytics/track";
 import { useOptionalConsent } from "@/lib/consent/ConsentProvider";
 import { couponBadgeText, type PromoTheme, type PublicPromotion } from "@/lib/site-config/promotions";
-import { isTypingTarget, mayNudge, nudgeDelay, NUDGE_DURATION_MS, QUIET_KEY, REPEAT_NUDGE_MS } from "./attention";
+import { isTypingTarget, mayNudge, nudgeDelay, NUDGE_DURATION_MS, QUIET_KEY } from "./attention";
 import { copyText, selectText } from "./copy";
 import { PromoList, TicketIcon, type CopyState } from "./PromoCards";
 
@@ -95,10 +95,9 @@ export function PromoWidget({ region, items, theme = FALLBACK_THEME, mode = "liv
     if (!openRef.current) return;
     openRef.current = false;
     setOpen(false);
-    if (live) writeQuiet();
     track("promo_panel_close");
     if (reason !== "outside") fabRef.current?.focus({ preventScroll: true });
-  }, [live, track]);
+  }, [track]);
 
   const toggle = () => {
     if (open) return close("button");
@@ -112,7 +111,6 @@ export function PromoWidget({ region, items, theme = FALLBACK_THEME, mode = "liv
     if (!item.code) return;
     if (copyTimer.current) clearTimeout(copyTimer.current);
     const ok = mode === "preview" ? true : await copyText(item.code);
-    if (live) writeQuiet();
     if (ok) {
       setCopy({ id: item.id, status: "copied" });
       setAnnounce(`Código ${item.code} copiado.`);
@@ -222,10 +220,9 @@ export function PromoWidget({ region, items, theme = FALLBACK_THEME, mode = "liv
     setTimeout(() => el.classList.remove("promo-wiggle"), NUDGE_DURATION_MS + 40);
   }, []);
 
-  // The occasional nudge (attention.ts): first after ~4–6 s on the page, then after ~12–18 s without any activity, three at most, never when unwelcome.
+  // The nudge (attention.ts): every ~6–8 s, skipped when unwelcome, over for the session once the panel was opened.
   useEffect(() => {
     if (!live || readQuiet() || reducedMotion()) return;
-    let done = 0;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let stopped = false;
     const schedule = (delay: number | null) => {
@@ -243,19 +240,13 @@ export function PromoWidget({ region, items, theme = FALLBACK_THEME, mode = "liv
         quiet: readQuiet(),
       });
       if (readQuiet()) { stopped = true; return; }
-      if (calm) { wiggle(); done += 1; }
-      schedule(calm ? nudgeDelay(done, Math.random()) : REPEAT_NUDGE_MS[0]);
+      if (calm) wiggle();
+      schedule(nudgeDelay(Math.random()));
     };
-    // A click/tap or typing pushes the NEXT nudge back (only after the first one: that one counts time on the page). Scrolling does NOT: a visitor
-    // browsing the page still gets the occasional nudge. `click` (not pointerdown/touchstart) because a touch scroll fires those but never a click.
-    const activity = () => { if (done > 0 && timer) schedule(nudgeDelay(done, Math.random())); };
-    const opts = { passive: true, capture: true } as const;
-    for (const name of ["click", "keydown"]) window.addEventListener(name, activity, opts);
-    schedule(nudgeDelay(0, Math.random()));
+    schedule(nudgeDelay(Math.random()));
     return () => {
       stopped = true;
       if (timer) clearTimeout(timer);
-      for (const name of ["click", "keydown"]) window.removeEventListener(name, activity, opts);
     };
   }, [live, wiggle]);
 
