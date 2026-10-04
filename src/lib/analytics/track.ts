@@ -17,6 +17,7 @@
 
 import { hasAnalyticsConsent } from "@/lib/consent/store";
 import { activeGa4, activeMetaPixel } from "./active-ids";
+import { SOURCES } from "./sources";
 import type { CartItemsBucket, MirrorAgeBucket, OrigensEntryPoint } from "./origens-events";
 
 declare global {
@@ -259,6 +260,27 @@ export function whenAnalyticsReady(send: () => void, intervalMs = 250, maxAttemp
   };
   tick();
   return () => timer && clearTimeout(timer);
+}
+
+/**
+ * A click on an Uma Penca article ("Outros artigos": canecas, ecobags) — GA4 only (`select_item` + `go_to_umapenca`). Meta's
+ * contract stays the four events above: an Uma Penca click is not an INK click, so it never becomes a GoToInk.
+ */
+export type GoToUmaPencaParams = { productId: string; productName: string; kind: string; region: string; value?: number; destinationUrl: string };
+export function trackGoToUmaPenca(params: GoToUmaPencaParams): void {
+  if (!gtagReady()) return;
+  sendGtag("event", "select_item", {
+    item_list_name: SOURCES.outrosArtigos,
+    items: [{ item_id: params.productId, item_name: params.productName, item_category: params.kind, ...(params.value !== undefined ? { price: params.value, currency: "BRL" } : {}) }],
+  });
+  sendGtag("event", "go_to_umapenca", {
+    product_id: params.productId,
+    product_name: params.productName,
+    article_kind: params.kind,
+    region: params.region,
+    destination_url: params.destinationUrl,
+    ...(params.value !== undefined ? { value: params.value, currency: "BRL" } : {}),
+  });
 }
 
 /**

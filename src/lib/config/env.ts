@@ -119,6 +119,19 @@ export function adminSyncToken(): string | null {
 }
 
 /**
+ * Product feed of the Uma Penca store (canecas, ecobags) — the Meta one (`.../feed/facebook.xml`), which carries g:category, read by `npm run umapenca:sync` and
+ * `POST /api/admin/umapenca-sync`. Unset means the sync reports "not configured"; pages never read it.
+ */
+export function umaPencaFeedUrl(): string | null {
+  const raw = process.env.UMAPENCA_FEED_URL?.trim();
+  if (!raw) return null;
+  if (!isAbsoluteUrl(raw) || !raw.startsWith("https://")) {
+    throw new ConfigError("UMAPENCA_FEED_URL", "must be an https URL, e.g. https://umapenca.com/<loja>/<id>/feed/facebook.xml");
+  }
+  return raw;
+}
+
+/**
  * Testing-only escape hatch: when `true`, `POST /api/admin/catalog-sync` accepts a `fixtureSnapshot` body
  * field and promotes it directly instead of fetching from INK — the only way to exercise the real
  * promote-and-revalidate path (including the actual `revalidatePath` call) without calling INK, as required

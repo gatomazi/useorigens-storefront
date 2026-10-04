@@ -5,7 +5,7 @@ import { getCatalog } from "../catalog/repository";
 import { getRegionHome } from "../home";
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import { enabledInternalIds } from "../site-config/collections-enabled";
-import type { Customizer, ScopeDoc, Section, Source } from "../site-config/schema";
+import { isUmaPencaSource, type Customizer, type ScopeDoc, type Section, type Source } from "../site-config/schema";
 import { readability, type ReadabilityIssue } from "./contrast";
 
 /**
@@ -114,14 +114,18 @@ export function customizerProblems(doc: ScopeDoc, model: Customizer): string[] {
   const name = `"${model.name}"`;
   if (doc.scope === "global") return [`${name}: modelos pertencem a uma região`];
   const store = REGIONS[doc.scope as RegionSlug].storeKey;
-  if (model.source.store !== store) out.push(`${name}: a coleção pertence a outra loja da INK`);
+  const source = model.source;
+  // An Uma Penca model ("Crie a sua" caneca/ecobag) has no INK collection or product to check: only the page requirements below apply.
+  if (isUmaPencaSource(source)) {
+    if (model.inkProductId) out.push(`${name}: um modelo da Uma Penca não tem produto da INK`);
+  } else if (source.store !== store) out.push(`${name}: a coleção pertence a outra loja da INK`);
   else {
-    const entry = libraryEntries(model.source.store, enabledInternalIds(doc, model.source.store)).find((e) => e.id === model.source.collectionId);
-    const record = findCollection(model.source.store, model.source.collectionId);
-    if (!entry || !record) out.push(`${name}: a coleção ${model.source.collectionId} não existe no snapshot sincronizado`);
+    const entry = libraryEntries(source.store, enabledInternalIds(doc, source.store)).find((e) => e.id === source.collectionId);
+    const record = findCollection(source.store, source.collectionId);
+    if (!entry || !record) out.push(`${name}: a coleção ${source.collectionId} não existe no snapshot sincronizado`);
     else if (!entry.selectable && entry.visibility === "internal" && !entry.enabled) out.push(`${name}: a coleção é interna; habilite-a na Biblioteca antes de publicar o modelo`);
     if (model.inkProductId) {
-      const products = getCatalog().productsOfStore(model.source.store);
+      const products = getCatalog().productsOfStore(source.store);
       if (!products.merch.has(model.inkProductId) && !products.cityDesigns.has(model.inkProductId)) out.push(`${name}: o produto de destino ${model.inkProductId} não está no catálogo desta loja`);
       else if (record && !record.memberIds.includes(model.inkProductId)) out.push(`${name}: o produto de destino não pertence à coleção escolhida`);
     }

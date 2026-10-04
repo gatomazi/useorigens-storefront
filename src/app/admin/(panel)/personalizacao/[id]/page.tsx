@@ -17,7 +17,9 @@ import { libraryEntries } from "@/lib/catalog/collection-source";
 import { findCollection } from "@/lib/catalog/collections-file";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { customizerHref } from "@/lib/site-config/pages";
-import { MAX_CUSTOM_FIELDS } from "@/lib/site-config/schema";
+import { MAX_CUSTOM_FIELDS, customizerProductLabel, isUmaPencaSource } from "@/lib/site-config/schema";
+import { ARTICLE_KIND_LABELS } from "@/lib/umapenca/types";
+import { OriginSelect } from "@/components/admin/OriginSelect";
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("pt-BR") : "—");
 
@@ -37,10 +39,12 @@ export default async function CustomizerEditor({ params, searchParams }: { param
   const media = await listMedia();
   const blockers = await preflightDoc(ws.doc, { kind: "customizer", id });
   const history = (await listHistory()).filter((r) => r.status === "live" && r.scopesChanged.includes(`customizer:${live?.slug ?? model.slug}`));
-  const collection = findCollection(model.source.store, model.source.collectionId);
+  const source = model.source;
+  const umaPenca = isUmaPencaSource(source);
+  const collection = umaPenca ? null : findCollection(source.store, source.collectionId);
   const g = model.lineGroup;
   const hidden = <><input type="hidden" name="rev" value={rev ?? "null"} /><input type="hidden" name="scope" value={scope} /></>;
-  const currentRef = `${model.source.store}:${model.source.collectionId}`;
+  const currentRef = umaPenca ? "" : `${source.store}:${source.collectionId}`;
 
   return (
     <div className="space-y-6">
@@ -72,9 +76,14 @@ export default async function CustomizerEditor({ params, searchParams }: { param
             </fieldset>
 
             <fieldset className="space-y-4">
-              <legend className="a-h2 mb-3">Coleção da INK</legend>
-              <CollectionCombobox name="source_collection" label="Coleção da INK (desta loja)" entries={entries} defaultValue={currentRef} libraryFrom={`/admin/personalizacao/${model.id}`} hint="Pública, ou interna habilitada na Biblioteca. Isto não altera a coleção na INK." />
-              {!collection && <p className="a-flash err">Esta coleção não existe no snapshot sincronizado.</p>}
+              <legend className="a-h2 mb-3">Origem do produto</legend>
+              <OriginSelect id="source_origin" name="source_origin" defaultValue={umaPenca ? `umapenca:${source.articleKind}` : "ink"} />
+              <CollectionCombobox name="source_collection" label="Coleção da INK (só para camisetas, desta loja)" entries={entries} defaultValue={currentRef} libraryFrom={`/admin/personalizacao/${model.id}`} hint="Pública, ou interna habilitada na Biblioteca. Isto não altera a coleção na INK. Ignorada quando a origem é a Uma Penca." />
+              {umaPenca ? (
+                <p className="a-muted text-[0.8125rem]">Publicado e ativo, este modelo aparece como o primeiro card (“Crie a sua”) de {ARTICLE_KIND_LABELS[source.articleKind].plural} em <code>/{scope}/outros-artigos</code>. O link do produto pronto, em cada solicitação, precisa ser da Uma Penca.</p>
+              ) : (
+                !collection && <p className="a-flash err">Esta coleção não existe no snapshot sincronizado.</p>
+              )}
             </fieldset>
 
             <fieldset className="space-y-4">
@@ -88,7 +97,7 @@ export default async function CustomizerEditor({ params, searchParams }: { param
                     <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label}</option>)}</optgroup>
                   </select>
                   <label className="a-label mt-2" htmlFor="mockup_alt">Descrição do mockup (acessibilidade)</label>
-                  <input id="mockup_alt" name="mockup_alt" defaultValue={model.pageMockup?.alt ?? ""} className="a-input" maxLength={200} placeholder={`Camiseta ${model.name}`} />
+                  <input id="mockup_alt" name="mockup_alt" defaultValue={model.pageMockup?.alt ?? ""} className="a-input" maxLength={200} placeholder={`${customizerProductLabel(source)} ${model.name}`} />
                 </div>
                 <div>
                   <label className="a-label" htmlFor="card_image">Imagem do card (opcional; usa o mockup se vazia)</label>

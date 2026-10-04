@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import { REGIONS } from "../geo/regions";
+import { isUmaPencaProductUrl, UMAPENCA_STORE_HOST } from "../umapenca/hosts";
 import type { ModelSnapshot, Values } from "./validate";
 
 /**
@@ -129,9 +130,10 @@ const STORE_HOST: Record<CommerceStoreKey, string> = { "use-sul": "www.usesul.co
 
 /**
  * Validates the "product ready to buy" link an operator typed: https, no credentials or port, the host EXACTLY the region's INK store (so it can never
- * be a redirect to another site) and a sane length. Returns the normalised URL, or why it was refused.
+ * be a redirect to another site) and a sane length. Returns the normalised URL, or why it was refused. For a request of an Uma Penca model
+ * (`store: "umapenca"` in its snapshot) the host must be the Uma Penca store instead (artigos.useorigens.com.br or umapenca.com) — never the INK store, and never the other way round.
  */
-export function productLinkFor(region: RegionSlug, raw: string): { ok: true; url: string } | { ok: false; error: string } {
+export function productLinkFor(region: RegionSlug, raw: string, store?: ModelSnapshot["store"]): { ok: true; url: string } | { ok: false; error: string } {
   const text = raw.trim();
   if (text.length === 0 || text.length > 500 || /[\s<>"'\p{C}]/u.test(text)) return { ok: false, error: "Link inválido: cole o endereço completo da página do produto, sem espaços." };
   let url: URL;
@@ -143,7 +145,9 @@ export function productLinkFor(region: RegionSlug, raw: string): { ok: true; url
   const host = STORE_HOST[REGIONS[region].storeKey];
   if (url.protocol !== "https:") return { ok: false, error: "O link precisa começar com https://." };
   if (url.username || url.password || url.port) return { ok: false, error: "O link não pode ter usuário, senha nem porta." };
-  if (url.hostname !== host) return { ok: false, error: `O link precisa ser da loja INK de ${REGIONS[region].name} (${host}).` };
+  if (store === "umapenca") {
+    if (!isUmaPencaProductUrl(url.toString())) return { ok: false, error: `O link precisa ser da loja da Uma Penca (${UMAPENCA_STORE_HOST}).` };
+  } else if (url.hostname !== host) return { ok: false, error: `O link precisa ser da loja INK de ${REGIONS[region].name} (${host}).` };
   url.hash = "";
   return { ok: true, url: url.toString() };
 }

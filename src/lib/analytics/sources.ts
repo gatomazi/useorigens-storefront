@@ -50,6 +50,8 @@ export const SOURCES = {
   pdpOtherStyles: "pdp_other_styles",
   /** "Comprar minha lista" on `/meus-lugares`: the click that opens the first product of a buy session. */
   meusLugares: "meus_lugares",
+  /** `/<region>/outros-artigos`: an Uma Penca article (caneca, ecobag) — GA4 only, see `trackGoToUmaPenca`. */
+  outrosArtigos: "outros_artigos",
 } as const;
 
 export type TrackingSource = (typeof SOURCES)[keyof typeof SOURCES];

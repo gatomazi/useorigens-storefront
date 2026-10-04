@@ -37,6 +37,8 @@ export default async function RequestDetail({ params, searchParams }: { params: 
   const lines = summaryOf(record.snapshot, record.values);
   const transitions = nextStatuses(record.status);
   const ref = shortRef(record.id);
+  const umaPenca = record.snapshot.store === "umapenca";
+  const shop = umaPenca ? "loja da Uma Penca" : "loja da INK";
   const published = await platform().files.read();
   const model = published?.docs[record.region]?.customizers?.find((m) => m.id === record.customizerId);
   const mockup = model?.pageMockup ? published?.media[model.pageMockup.assetId] : undefined;
@@ -53,7 +55,7 @@ export default async function RequestDetail({ params, searchParams }: { params: 
 
       <div className="a-flash ok">
         <p className="font-extrabold">Como esta fila funciona</p>
-        <p className="mt-1">Você cria a estampa <strong>manualmente</strong>, fala com o cliente pelo contato abaixo quando ela estiver pronta e o orienta a comprar na loja da INK. O CMS acompanha a <strong>solicitação e o contato</strong>: não recebe pedido, pagamento nem envia nada à INK ou ao cliente.</p>
+        <p className="mt-1">Você cria a estampa <strong>manualmente</strong>, fala com o cliente pelo contato abaixo quando ela estiver pronta e o orienta a comprar na {shop}. O CMS acompanha a <strong>solicitação e o contato</strong>: não recebe pedido, pagamento nem envia nada à loja ou ao cliente.</p>
       </div>
 
       <section className="a-card p-5" aria-labelledby="contato">
@@ -102,10 +104,10 @@ export default async function RequestDetail({ params, searchParams }: { params: 
 
       <section className="a-card p-5" aria-labelledby="produto">
         <h2 id="produto" className="a-h2">Link do produto pronto para compra</h2>
-        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Opcional. Depois de preparar a estampa e o produto na loja INK de {scopeName(record.region)}, cole aqui o endereço da página. Ele entra na mensagem sugerida. É uma <strong>orientação de compra</strong>, não um vínculo com pedido: nada é verificado na INK. Só aceitamos https da loja desta região.</p>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Opcional. Depois de preparar a estampa e o produto na {umaPenca ? "loja da Uma Penca" : `loja INK de ${scopeName(record.region)}`}, cole aqui o endereço da página. Ele entra na mensagem sugerida. É uma <strong>orientação de compra</strong>, não um vínculo com pedido: nada é verificado na loja. {umaPenca ? "Só aceitamos https da loja da Uma Penca (artigos.useorigens.com.br), porque este modelo é da Uma Penca." : "Só aceitamos https da loja desta região."}</p>
         <form action={setRequestProductLinkAction} className="mt-3 flex flex-wrap items-end gap-3">
           <input type="hidden" name="id" value={record.id} />
-          <div className="grow"><label className="a-label" htmlFor="product_link">Endereço da página do produto</label><input id="product_link" name="product_link" type="url" defaultValue={record.productLink?.url ?? ""} className="a-input" maxLength={500} placeholder="https://www.usesul.com.br/usesul/product/…" /></div>
+          <div className="grow"><label className="a-label" htmlFor="product_link">Endereço da página do produto</label><input id="product_link" name="product_link" type="url" defaultValue={record.productLink?.url ?? ""} className="a-input" maxLength={500} placeholder={umaPenca ? "https://artigos.useorigens.com.br/caneca/…" : "https://www.usesul.com.br/usesul/product/…"} /></div>
           <button type="submit" className="a-btn ghost">{record.productLink ? "Atualizar link" : "Salvar link"}</button>
         </form>
         {record.productLink && <p className="a-muted mt-2 text-[0.8125rem]" data-testid="product-link-saved">Salvo por {record.productLink.setBy} em {when(record.productLink.setAt)}. Deixe o campo vazio e salve para remover.</p>}

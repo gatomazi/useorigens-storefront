@@ -3,7 +3,8 @@
  * shape of the contract (the schema validates it again when the op is applied and when the model is published).
  */
 import type { CommerceStoreKey } from "../geo/regions";
-import { MAX_CUSTOM_FIELDS, type CustomField, type Customizer, type LineGroup, type MediaRef } from "../site-config/schema";
+import { MAX_CUSTOM_FIELDS, customizerProductLabel, isUmaPencaSource, type CustomField, type Customizer, type LineGroup, type MediaRef } from "../site-config/schema";
+import { ARTICLE_KINDS, type ArticleKind } from "../umapenca/types";
 
 type Fields = { get(name: string): FormDataEntryValue | null };
 const str = (f: Fields, name: string): string => {
@@ -23,6 +24,15 @@ export function fieldKeyOf(label: string): string {
 
 const media = (id: string, alt: string): MediaRef | undefined => (id ? { assetId: id, alt, decorative: alt === "" } : undefined);
 
+/**
+ * The model's "Origem" select: `ink` (a shirt sold on the region's INK store, the default — also when the field is absent) or `umapenca:<kind>`
+ * (a "Crie a sua" caneca/ecobag sold on Uma Penca). Anything else falls back to INK, the shape every existing model already has.
+ */
+export function parseOrigin(raw: string): { kind: "ink" } | { kind: "umapenca"; articleKind: ArticleKind } {
+  const m = /^umapenca:([a-z]+)$/.exec(raw);
+  return m && (ARTICLE_KINDS as readonly string[]).includes(m[1]) ? { kind: "umapenca", articleKind: m[1] as ArticleKind } : { kind: "ink" };
+}
+
 export type ParsedCustomizer = { patch: Partial<Omit<Customizer, "id" | "version">>; errors: string[] };
 
 export function parseCustomizerForm(f: Fields, current: Customizer, region: { store: CommerceStoreKey }, opts: { slugLocked: boolean }): ParsedCustomizer {
@@ -32,15 +42,21 @@ export function parseCustomizerForm(f: Fields, current: Customizer, region: { st
   if (!opts.slugLocked && str(f, "slug")) patch.slug = str(f, "slug");
   patch.description = str(f, "description") || undefined;
 
-  const src = /^(use-sul|use-norte|use-centro):(\d{1,12})$/.exec(str(f, "source_collection"));
-  if (src) {
-    if (src[1] !== region.store) errors.push("Esta coleção pertence a outra loja da INK: cada região usa só as coleções da própria loja.");
-    else patch.source = { store: src[1] as CommerceStoreKey, collectionId: Number(src[2]) };
+  const origin = parseOrigin(str(f, "source_origin"));
+  if (origin.kind === "umapenca") {
+    patch.source = { kind: "umapenca", articleKind: origin.articleKind };
+    if (current.inkProductId) patch.inkProductId = undefined;
+  } else {
+    const src = /^(use-sul|use-norte|use-centro):(\d{1,12})$/.exec(str(f, "source_collection"));
+    if (src) {
+      if (src[1] !== region.store) errors.push("Esta coleção pertence a outra loja da INK: cada região usa só as coleções da própria loja.");
+      else patch.source = { store: src[1] as CommerceStoreKey, collectionId: Number(src[2]) };
+    } else if (isUmaPencaSource(current.source)) errors.push("Para vender pela INK, escolha a coleção da INK do modelo nas sugestões.");
   }
 
   patch.cardImage = media(str(f, "card_image"), str(f, "card_alt"));
   const mockupId = str(f, "mockup_image");
-  const mockupAlt = str(f, "mockup_alt") || (mockupId ? `Camiseta ${patch.name || current.name}` : "");
+  const mockupAlt = str(f, "mockup_alt") || (mockupId ? `${customizerProductLabel(patch.source ?? current.source)} ${patch.name || current.name}` : "");
   patch.pageMockup = mockupId ? { assetId: mockupId, alt: mockupAlt, decorative: false } : undefined;
   patch.active = f.get("active") !== null;
 
