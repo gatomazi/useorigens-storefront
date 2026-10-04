@@ -4,8 +4,8 @@ Data: 2026-10-04. Estado: **implementado e validado localmente; nada publicado.*
 
 | Repositório | Worktree local | Branch | Commits |
 |---|---|---|---|
-| storefront (`gatomazi/useorigens`) | `/Users/izamoti/projects/useorigens-recommendations` (a partir de `main` `cccfa6d`) | `feature/ink-auto-recommendations` | `37cea48` catálogo · `8b46e8f` índice + rota · (este relatório, amostra e capturas no commit de docs) |
-| Worker (`gatomazi/worker-lojas`) | `/Users/izamoti/projects/use-origens-workers-recommendations` (a partir de `origin/main` `0acb74e`) | `feature/ink-auto-recommendations` | `f6f34b6` gateway + loader 4.9 · (QA em navegador real + doc no commit seguinte) |
+| storefront (`gatomazi/useorigens-storefront`) | `/Users/izamoti/projects/useorigens-recommendations` (rebaseada sobre `main` `11ede6c`, depois da busca global e do Pódio) | `feature/ink-auto-recommendations` | `08c893c` catálogo (`product_type` no merch; o `productClusterId` já tinha entrado com a busca global) · `7c76608` índice + rota · commits de docs (relatório, amostra, capturas) |
+| Worker (`gatomazi/worker-lojas`) | `/Users/izamoti/projects/use-origens-workers-recommendations` (a partir de `origin/main` `0acb74e`) | `feature/ink-auto-recommendations` | `f6f34b6` gateway + loader 4.9 · `3767574` QA em navegador real + doc · `149093e` desktop: bloco abaixo da imagem |
 
 Worktrees separados de propósito: o diretório `useorigens` principal está em uso por outra sessão (`feature/storefront-global-search`, com alterações não commitadas, que ficaram intactas). Nenhuma branch citada no MD (`city-garment-tabs`, `navigation-theme`, `df-administrative-regions`, CMS/hotpages) foi tocada.
 
@@ -118,7 +118,9 @@ Escrita (MD §14): candidato temporário no mesmo diretório → validação (`v
   - **Produto atual:** o `form#form-product-<id>` **nativo**. Na PDP real há um segundo `form-product-<id>` dentro do modal do "Compre Junto" (auditado na página de Florianópolis); ele e quick-add/carrinho ficam excluídos. Se houver ambiguidade, nada é desenhado.
   - **Pedido:** um por página (`credentials: 'omit'`, timeout de 3 s), com cache em memória por produto para o vaivém do Turbo. A lista é revalidada no cliente.
   - **Renderização:** só com ≥ 2 itens, usando apenas `textContent`/atributos.
-  - **Posição (DOM auditado):** logo **depois do `section.buy-together` nativo**, quando existe; senão depois do nosso "Continue explorando"; senão depois do formulário. Sempre fora do `<form>` e do turbo-frame, e antes da Descrição.
+  - **Posição (DOM auditado):**
+    - **Desktop** (PDP em duas colunas, medido pela geometria real e não pela largura da janela): **logo abaixo da imagem do produto**, no vão da coluna da galeria. Em 1280 a galeria termina em ~738 px e a coluna de compra em ~1760 px, então sobram ~1000 px em branco. O bloco fica dentro de `section.section-product-v2` com `position:absolute; top:100%`, para **não mudar a altura da seção**: a INK posiciona o selo "Clique para dar zoom" pela base dela, e na 1ª versão o selo descia para cima dos cards. Só entra ali se couber no vão (altura do bloco + 32 px ≤ espaço livre); senão, usa a posição em fluxo. Um `ResizeObserver` nas duas colunas e o `resize` da janela reavaliam a posição, e o mesmo nó é movido, sem novo pedido.
+    - **Empilhado** (mobile/tablet): logo **depois do `section.buy-together` nativo**, quando existe; senão depois do nosso "Continue explorando"; senão depois do formulário. Sempre fora do `<form>` e do turbo-frame, e antes da Descrição.
   - **Card:** imagem com proporção fixa (sem layout shift), título com até 2 linhas, preço em BRL e "Ver produto". O card inteiro é o link, com alvo ≥ 44 px. Não tem botão de carrinho. O clique abre a PDP real na mesma aba.
   - **Layout:** no mobile, carrossel com `scroll-snap` e ~1,3 card visível (1,31 a 1,33 medidos em 320 e 390). No desktop (≥ 768 px), grid de 4.
   - **Intocados:** formulário, variantes, CTA, sticky mobile, POST, CSRF e checkout. O "Compre Junto" nativo **continua visível**.
@@ -153,9 +155,9 @@ Escrita (MD §14): candidato temporário no mesmo diretório → validação (`v
 
 | Arquivo | O que mostra |
 |---|---|
-| `pdp-city-mobile.png` / `pdp-city-desktop.png` | Florianópolis · Origem, carrossel (390) e grid de 4 (1280) |
-| `pdp-editorial-mobile.png` / `pdp-editorial-desktop.png` | Bah \| Dizeres (sem "Compre Junto" nativo: o bloco vem depois do "Continue explorando") |
-| `pdp-native-bundle-plus-recommendations.png` (+ `-mobile`) | "Compre Junto" nativo (Florianópolis \| Coordenadas) mantido e, logo abaixo, o nosso bloco, antes da Descrição |
+| `pdp-city-mobile.png` / `pdp-city-desktop.png` | Florianópolis · Origem: carrossel (390) e grid de 4 logo abaixo da imagem, no vão da coluna da galeria (1280) |
+| `pdp-editorial-mobile.png` / `pdp-editorial-desktop.png` | Bah \| Dizeres (no mobile não há "Compre Junto" nativo, então o bloco vem depois do "Continue explorando"; no desktop, abaixo da imagem) |
+| `pdp-native-bundle-plus-recommendations.png` (+ `-mobile`) | desktop: a grade inteira, com o nosso bloco sob a imagem e o "Compre Junto" nativo (Florianópolis \| Coordenadas) mantido na coluna de compra; mobile: o nativo e, logo abaixo, o nosso bloco |
 
 As capturas são da INK real passando pelo Worker local. Só nessas capturas o aviso de cookies foi aceito numa sessão anônima descartável.
 
@@ -163,10 +165,10 @@ As capturas são da INK real passando pelo Worker local. Só nessas capturas o a
 
 | Suíte | Resultado |
 |---|---|
-| storefront `npm test` (Vitest) | **1200/1200** (89 arquivos). Novos: `tests/unit/recommendations.test.ts` (19) cobrem os 14 casos do MD §25 e mais sinais, variante, peça oculta via garment index, CMS só publicado, promoção com `.prev` e validação que recusa lista apontando para o próprio produto |
+| storefront `npm test` (Vitest) | **1237/1237** (91 arquivos, já sobre a `main` com busca global e Pódio). Novos: `tests/unit/recommendations.test.ts` (19) cobrem os 14 casos do MD §25 e mais sinais, variante, peça oculta via garment index, CMS só publicado, promoção com `.prev` e validação que recusa lista apontando para o próprio produto |
 | storefront `tsc --noEmit`, ESLint nos arquivos novos | limpos |
-| Worker `npm test` | **460/460** (baseline 438). Novos: `recommendations.unit` (10: segurança de link/imagem/preço/loja, payload, timeout, cabeçalhos), `recommendations.workerd` (4: Miniflare real, flag on/off, health 4.9, lista de features inválida), `recommendations.dom` (8: posição após o "Compre Junto", produto atual ≠ form do modal, form/CSRF intactos, falhas sem DOM, flag off, clique + GA4 com consentimento, Turbo, `textContent`) |
-| **E2E em navegador real** `scripts/qa-recommendations.mjs` | **245/245**. INK real → Worker local (Miniflare, mesmo HTMLRewriter/loader) → rota real do storefront local lendo o índice gerado. São 9 PDPs (3 cidades Sul, 4 editoriais incluindo uma peça Oversized, 1 sem contexto, Goiânia no Centro-Oeste) × 1280/390/320. Também cobre o clique (mesma aba, a nova PDP pede e desenha a sua lista), o storefront fora (sem bloco, CTA intacto) e a flag off (nenhum pedido, nenhum DOM). Nenhum POST de carrinho/checkout; sem overflow horizontal atribuível ao bloco (em 320 a própria INK já transborda: 340 a 382 px com e sem o bloco) |
+| Worker `npm test` | **463/463** (baseline 438). Novos: `recommendations.unit` (10: segurança de link/imagem/preço/loja, payload, timeout, cabeçalhos), `recommendations.workerd` (4: Miniflare real, flag on/off, health 4.9, lista de features inválida), `recommendations.dom` (11: posição após o "Compre Junto" no empilhado e sob a imagem no desktop, troca ao redimensionar sem novo pedido, recuo para o fluxo quando não cabe no vão, produto atual ≠ form do modal, form/CSRF intactos, falhas sem DOM, flag off, clique + GA4 com consentimento, Turbo, `textContent`) |
+| **E2E em navegador real** `scripts/qa-recommendations.mjs` | **253/253**. No desktop, cada PDP confere: bloco na coluna da galeria, abaixo da imagem e dentro do vão; galeria com a mesma altura, com e sem o bloco (selo de zoom no lugar); coluna de compra e CTA no mesmo lugar. INK real → Worker local (Miniflare, mesmo HTMLRewriter/loader) → rota real do storefront local lendo o índice gerado. São 9 PDPs (3 cidades Sul, 4 editoriais incluindo uma peça Oversized, 1 sem contexto, Goiânia no Centro-Oeste) × 1280/390/320. Também cobre o clique (mesma aba, a nova PDP pede e desenha a sua lista), o storefront fora (sem bloco, CTA intacto) e a flag off (nenhum pedido, nenhum DOM). Nenhum POST de carrinho/checkout; sem overflow horizontal atribuível ao bloco (em 320 a própria INK já transborda: 340 a 382 px com e sem o bloco) |
 
 Para rodar o E2E:
 
