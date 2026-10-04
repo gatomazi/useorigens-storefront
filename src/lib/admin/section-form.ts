@@ -6,6 +6,7 @@
 import { EDITORIAL_MODULE_KEYS, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type Overlay, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
+import { ARTICLE_KINDS } from "../umapenca/types";
 
 type Fields = { get(name: string): FormDataEntryValue | null };
 
@@ -90,6 +91,12 @@ function parseSource(f: Fields, current: Source | undefined): Source | undefined
     const ref = parseCollectionRef(str(f, "source_collection"));
     if (!ref) return current;
     return { kind: "ink-category", ...ref, order: "category", limit: clamp(Math.round(num(f, "source_limit", 6)), 3, 24) };
+  }
+  if (kind === "umapenca") {
+    // Checkboxes `source_up_<kind>`: none ticked keeps the current source (the schema refuses an empty list anyway).
+    const articleKinds = ARTICLE_KINDS.filter((k) => f.get(`source_up_${k}`) !== null);
+    if (articleKinds.length === 0) return current;
+    return { kind: "umapenca", articleKinds, limit: clamp(Math.round(num(f, "source_limit", 8)), 3, 24) };
   }
   return current;
 }

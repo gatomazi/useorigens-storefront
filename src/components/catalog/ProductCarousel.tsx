@@ -2,7 +2,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useSyncExternalStore } from "react";
-import { trackGoToInk } from "@/lib/analytics/track";
+import { trackGoToInk, trackGoToUmaPenca } from "@/lib/analytics/track";
 import { ProductPhoto } from "./ProductPhoto";
 
 export type CarouselItem = {
@@ -19,8 +19,10 @@ export type CarouselItem = {
   /** UF, when this item is genuinely tied to one state — the GoToInk `state` param. Never guessed. */
   state?: string;
   imageUrl: string;
-  /** Verified INK purchase URL. */
+  /** Verified purchase URL: the INK store, or the Uma Penca store when `umaPenca` is set. */
   href: string;
+  /** Set only for an Uma Penca article (canecas, ecobags): the click then fires GoToPenca / go_to_umapenca instead of GoToInk. */
+  umaPenca?: { kind: string; region: string };
 };
 
 /** The reserved first card of a section: "personalize yours on this model". A link inside the region (never a checkout); the picture is a CMS upload. */
@@ -156,7 +158,11 @@ export function ProductCarousel({
                 href={item.href}
                 className="group block"
                 draggable={false}
-                onClick={() => trackGoToInk({ productId: item.id, sourceSection, state: item.state, value: item.rawPrice ?? undefined, productName: item.name, destinationUrl: item.href })}
+                onClick={() =>
+                  item.umaPenca
+                    ? trackGoToUmaPenca({ productId: item.id, productName: item.name, kind: item.umaPenca.kind, region: item.umaPenca.region, sourceSection, value: item.rawPrice ?? undefined, destinationUrl: item.href })
+                    : trackGoToInk({ productId: item.id, sourceSection, state: item.state, value: item.rawPrice ?? undefined, productName: item.name, destinationUrl: item.href })
+                }
               >
                 <ProductPhoto
                   poster={poster}

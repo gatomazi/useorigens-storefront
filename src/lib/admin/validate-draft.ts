@@ -7,6 +7,8 @@ import { REGIONS, type RegionSlug } from "../geo/regions";
 import { enabledInternalIds } from "../site-config/collections-enabled";
 import { isUmaPencaSource, type Customizer, type ScopeDoc, type Section, type Source } from "../site-config/schema";
 import { readability, type ReadabilityIssue } from "./contrast";
+import { readUmaPencaSnapshot } from "../umapenca/snapshot";
+import { ARTICLE_KIND_LABELS } from "../umapenca/types";
 
 /**
  * What the editor shows next to each section, and what blocks a publish. Real data only: editorial-module counts come from the same
@@ -48,6 +50,14 @@ export function sourceStatus(section: Section, doc: ScopeDoc): SourceStatus | nu
     const internal = entry?.visibility === "internal";
     if (lookup.status !== "ok") return { label, products: null, internal, problem: REASONS[lookup.reason] ?? lookup.reason };
     return { label, products: lookup.items.length, internal, problem: entry && entry.matchedCount < MIN_USABLE_PRODUCTS ? `só ${entry.matchedCount} produto(s) elegíveis (mínimo ${MIN_USABLE_PRODUCTS})` : null };
+  }
+  if (src.kind === "umapenca") {
+    // Same rule as an INK collection: a carousel that would render empty is not published. The count is what the synced feed has now.
+    const label = `Uma Penca · ${src.articleKinds.map((k) => ARTICLE_KIND_LABELS[k].plural).join(" e ")}`;
+    const snapshot = readUmaPencaSnapshot();
+    if (!snapshot) return { label, products: null, problem: "o feed da Uma Penca ainda não foi sincronizado (npm run umapenca:sync ou o cron)" };
+    const products = snapshot.articles.filter((a) => src.articleKinds.includes(a.kind)).length;
+    return { label, products: Math.min(products, src.limit), problem: products === 0 ? "o feed da Uma Penca não tem produtos desse tipo agora" : null };
   }
   return { label: "Curadoria manual", products: null, problem: REASONS["manual-source-not-implemented"] };
 }

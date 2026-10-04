@@ -12,6 +12,7 @@ import { DESIGN_FAMILIES } from "./families";
 import { localityOfBinding } from "./locality-binding";
 import type { StoreProducts } from "./repository";
 import type { MerchProduct, UnrankedBinding } from "./types";
+import { umaPencaLookup } from "../umapenca/carousel";
 
 export { MIN_USABLE_PRODUCTS };
 
@@ -100,10 +101,11 @@ export function publicCollectionSlug(store: CommerceStoreKey, collectionId: numb
   return c?.isAvailable ? c.slug : null;
 }
 
-/** The two things `HomeSections` needs to render collection-backed sections for a document (the published one, or a draft in the preview). */
+/** What `HomeSections` needs to render collection-backed (and Uma Penca) sections for a document (the published one, or a draft in the preview). */
 export function categoryProps(productsOf: (store: CommerceStoreKey) => StoreProducts, doc: ScopeDoc | undefined) {
   return {
     categories: categoryLookup(productsOf, (store) => enabledInternalIds(doc, store)),
     slugOf: (store: CommerceStoreKey, collectionId: number) => publicCollectionSlug(store, collectionId),
+    umapenca: umaPencaLookup(doc?.scope ?? ""),
   };
 }
