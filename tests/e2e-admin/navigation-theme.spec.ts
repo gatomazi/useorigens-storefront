@@ -122,7 +122,7 @@ test("given the desktop header of a region with launched neighbours, when read, 
   await expect(others.getByRole("link", { name: "Sul", exact: true })).toHaveCSS("color", "rgb(0, 0, 0)");
   await expect(others.getByRole("link", { name: "Sul", exact: true })).toHaveAttribute("href", "/sul");
   await expect(header.getByRole("link", { name: /Meus Lugares/ })).toBeVisible();
-  await expect(header.getByRole("button", { name: "Buscar cidade" })).toBeVisible();
+  await expect(header.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
 });
 
 test("given Navegação, when the labels, order and visibility are edited, then the preview follows live, the store only changes after publishing, and the states stay automatic", async ({ page }) => {

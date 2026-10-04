@@ -39,6 +39,7 @@ export function buildStoreIndex(
           imageUrl: product.imageUrl,
           price: product.price,
           totalSalesCount: product.totalSalesCount,
+          ...(product.clusterId ? { productClusterId: product.clusterId } : {}),
           syncedAt,
         });
       }

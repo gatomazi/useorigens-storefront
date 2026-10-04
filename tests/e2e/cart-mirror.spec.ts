@@ -426,7 +426,7 @@ test.describe("Cart mirror consumer: evidence and layout by viewport", () => {
         const header = document.querySelector("header")!;
         return {
           trigger: rect(document.querySelector('[data-testid="cart-mirror-trigger"]')),
-          search: rect([...header.querySelectorAll("button")].find((b) => /Buscar cidade/.test(b.textContent ?? ""))!),
+          search: rect([...header.querySelectorAll("button")].find((b) => /^\s*Buscar/.test(b.textContent ?? ""))!),
           menu: rect([...header.querySelectorAll("button")].find((b) => /menu/i.test((b.getAttribute("aria-label") ?? "") + b.textContent)) ?? null),
           logo: rect(header.querySelector("a")),
           vw: window.innerWidth,

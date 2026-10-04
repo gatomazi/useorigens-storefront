@@ -2,12 +2,15 @@ import { allAdministrativeRegions } from "../geo/administrative-regions";
 import type { RegionSlug } from "../geo/regions";
 
 /**
- * Wording of the place search. A region whose places are not all cities (the Centro-Oeste has the Federal District's administrative regions)
- * says "cidade ou região"; every other region keeps the original "cidade" copy, character for character.
+ * Wording of the storefront search, which finds places, designs and editorial pages (src/lib/search/global.ts). A region whose places are not
+ * all cities (the Centro-Oeste has the Federal District's administrative regions) names "região" too; the hero keeps the place first, since
+ * finding one's own place is still the main way in.
  */
 export type PlaceSearchCopy = {
-  /** Header trigger and dialog name. */
+  /** Header trigger (visible text and accessible name). */
   trigger: string;
+  /** Dialog name. */
+  dialog: string;
   /** Hero field. */
   hero: string;
   label: string;
@@ -16,31 +19,26 @@ export type PlaceSearchCopy = {
   failed: string;
   empty: string;
   emptyHint: string;
+  /** Heading of the places group. */
+  placesGroup: string;
 };
 
 const hasAdministrativeRegions = (region: RegionSlug): boolean => allAdministrativeRegions().some((r) => r.regionSlug === region);
 
 export function placeSearchCopy(region: RegionSlug): PlaceSearchCopy {
-  if (hasAdministrativeRegions(region)) {
-    return {
-      trigger: "Buscar cidade ou região",
-      hero: "Busque sua cidade ou região…",
-      label: "Busque sua cidade ou região",
-      placeholder: "Busque sua cidade ou região…",
-      loading: "Carregando cidades e regiões…",
-      failed: "Não conseguimos carregar as cidades e regiões agora. Tente de novo em instantes.",
-      empty: "Ainda não encontramos essa cidade ou região.",
-      emptyHint: "Tente buscar pelo nome completo ou escolha o estado.",
-    };
-  }
+  const ra = hasAdministrativeRegions(region);
   return {
-    trigger: "Buscar cidade",
-    hero: "Busque sua cidade…",
-    label: "Busque sua cidade",
-    placeholder: "Busque sua cidade…",
-    loading: "Carregando cidades…",
-    failed: "Não conseguimos carregar as cidades agora. Tente de novo em instantes.",
-    empty: "Ainda não encontramos essa cidade.",
-    emptyHint: "Tente buscar pelo nome completo ou escolha o estado.",
+    trigger: "Buscar",
+    dialog: "Buscar na Use Origens",
+    hero: ra ? "Busque sua cidade, região ou estampa…" : "Busque sua cidade, estampa ou coleção…",
+    label: ra ? "Busque uma cidade, região, estampa ou coleção" : "Busque uma cidade, estampa ou coleção",
+    placeholder: ra ? "Busque uma cidade, região ou estampa…" : "Busque uma cidade, estampa ou coleção…",
+    loading: "Buscando…",
+    failed: "Não conseguimos buscar agora. Tente de novo em instantes.",
+    empty: "Não encontramos nada com esse nome.",
+    emptyHint: ra
+      ? "Tente o nome de uma cidade, de uma região ou de uma estampa, ou escolha o estado."
+      : "Tente o nome de uma cidade, de uma estampa ou de uma coleção, ou escolha o estado.",
+    placesGroup: ra ? "Cidades, regiões e localidades" : "Cidades e localidades",
   };
 }

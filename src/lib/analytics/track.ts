@@ -64,7 +64,7 @@ function sendGtag(command: "event", name: string, params: Record<string, unknown
  * search gesture, never a keystroke. `region`/`resultsCount` are GA4-only extras (§5: "se esses dados já
  * estiverem disponíveis sem criar custo ou acoplamento desnecessário"); Meta's own Search payload is
  * unchanged by their presence. */
-export function trackSearch(searchTerm: string, extra?: { region?: string; resultsCount?: number }): void {
+export function trackSearch(searchTerm: string, extra?: { region?: string; resultsCount?: number; selectedResultType?: string }): void {
   if (fbqReady()) {
     sendFbq("track", "Search", { search_string: searchTerm });
   }
@@ -73,6 +73,8 @@ export function trackSearch(searchTerm: string, extra?: { region?: string; resul
       search_term: searchTerm,
       ...(extra?.region ? { region: extra.region } : {}),
       ...(extra?.resultsCount !== undefined ? { results_count: extra.resultsCount } : {}),
+      // Global search: what kind of result was chosen (state, locality, design, page). The typed text itself is never sent.
+      ...(extra?.selectedResultType ? { selected_result_type: extra.selectedResultType } : {}),
     });
   }
 }

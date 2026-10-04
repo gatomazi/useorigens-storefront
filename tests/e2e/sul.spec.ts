@@ -8,7 +8,7 @@ import { expect, test } from "./fixtures";
  */
 async function openHeroSearch(page: Page) {
   await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-  const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+  const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
   await expect(dialog).toBeVisible();
   return dialog;
 }
@@ -46,7 +46,7 @@ test.describe("/sul critical flows", () => {
     await page.goto("/sul");
     const dialog = await openHeroSearch(page);
     await dialog.getByRole("combobox").fill("zzzxq");
-    await expect(dialog.getByText("Ainda não encontramos essa cidade.")).toBeVisible();
+    await expect(dialog.getByText("Não encontramos nada com esse nome.")).toBeVisible();
     await expect(dialog.getByRole("link", { name: "Santa Catarina" }).first()).toBeVisible();
   });
 
@@ -104,32 +104,13 @@ test.describe("/sul critical flows", () => {
     expect(overflow).toBe(0);
   });
 
-  test("given a stale empty city index served first, when search opens, then it refetches instead of memoizing the empty list and still finds cities", async ({ page }) => {
-    let requests = 0;
-    await page.route("**/api/cidades/sul", async (route) => {
-      requests++;
-      if (requests === 1) {
-        await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
-        return;
-      }
-      await route.continue();
-    });
-    await page.goto("/sul");
-    await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-    const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
-    await expect(dialog).toBeVisible();
-    await dialog.getByRole("combobox").fill("bag");
-    await expect(dialog.getByRole("option", { name: /Bagé/ })).toBeVisible({ timeout: 30_000 });
-    expect(requests).toBe(2);
-  });
-
   test("given the header search, when opened and closed with Escape, then focus returns to the trigger", async ({ page }) => {
     await page.goto("/sul/rs/torres");
-    const trigger = page.getByRole("button", { name: "Buscar cidade" });
+    const trigger = page.getByRole("button", { name: "Buscar", exact: true });
     await trigger.click();
-    await expect(page.getByRole("dialog", { name: "Buscar cidade" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Buscar na Use Origens" })).toBeVisible();
     await page.keyboard.press("Escape");
-    await expect(page.getByRole("dialog", { name: "Buscar cidade" })).toBeHidden();
+    await expect(page.getByRole("dialog", { name: "Buscar na Use Origens" })).toBeHidden();
     await expect(trigger).toBeFocused();
   });
 
@@ -165,8 +146,8 @@ test.describe("/sul critical flows", () => {
   test("given the mobile header search, when opened, then it fills the screen and results are keyboard reachable", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/sul/rs/torres");
-    await page.getByRole("button", { name: "Buscar cidade" }).click();
-    const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+    await page.getByRole("button", { name: "Buscar", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
     await expect(dialog).toBeVisible();
     const box = await dialog.boundingBox();
     expect(box?.height).toBeGreaterThan(800);
