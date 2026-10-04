@@ -76,7 +76,8 @@ let cache: { mtimeMs: number; catalog: Catalog } | null = null;
  */
 let garmentIndexCache: { mtimeMs: number; index: GarmentIndex } | null = null;
 
-function getGarmentIndex(): GarmentIndex {
+/** The garment-piece index, cached by file mtime (shared with the global search, so the 20 MB file is parsed once per change). */
+export function getGarmentIndex(): GarmentIndex {
   const mtimeMs = garmentIndexMtimeMs();
   if (garmentIndexCache && garmentIndexCache.mtimeMs === mtimeMs) return garmentIndexCache.index;
   const { index } = mtimeMs === 0 ? { index: emptyGarmentIndex() } : readGarmentIndexSync();
