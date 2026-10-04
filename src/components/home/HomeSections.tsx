@@ -4,7 +4,10 @@ import { ProductCarousel } from "@/components/catalog/ProductCarousel";
 import { Campaign } from "@/components/home/Campaign";
 import { PageHero } from "@/components/home/PageHero";
 import { RegionHero } from "@/components/home/RegionHero";
+import { Fragment } from "react";
 import { StateCards } from "@/components/home/StateCards";
+import { PodioTeaser } from "@/components/podio/PodioTeaser";
+import { getPodiumLeaders } from "@/lib/podio/server";
 import { SOURCES } from "@/lib/analytics/sources";
 import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
@@ -96,17 +99,20 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
             if (states.length === 0) return null;
             const visual = hasImage(bg) || bg.fill.kind !== "none";
             return (
-              <StateCards
-                key={s.id}
-                region={region}
-                states={states}
-                title={s.title}
-                subtitle={s.subtitle}
-                anchor={s.anchor}
-                headingId={s.headingId}
-                backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
-                covers={resolveStateCovers(s, media)}
-              />
+              <Fragment key={s.id}>
+                <StateCards
+                  region={region}
+                  states={states}
+                  title={s.title}
+                  subtitle={s.subtitle}
+                  anchor={s.anchor}
+                  headingId={s.headingId}
+                  backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
+                  covers={resolveStateCovers(s, media)}
+                />
+                {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage) — docs/storefront/podio.md. */}
+                {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf))} />}
+              </Fragment>
             );
           }
 

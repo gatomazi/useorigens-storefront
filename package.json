@@ -17,6 +17,7 @@
     "garments:coverage": "node --conditions=react-server --import tsx scripts/garment-coverage-report.mts",
     "collections:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-collections.mts",
     "umapenca:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-umapenca.mts",
+    "podio:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-podio.mts",
     "verify:bootstrap": "tsx scripts/verify-bootstrap.mts",
     "verify:prerender": "tsx scripts/verify-prerender.mts",
     "verify:garment-revalidation": "tsx scripts/verify-garment-revalidation.mts",

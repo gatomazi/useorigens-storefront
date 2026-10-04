@@ -119,6 +119,14 @@ export function adminSyncToken(): string | null {
 }
 
 /**
+ * Kill switch of the public "Pódio" (state page block + home teaser). On unless the literal string "off": with no snapshot on the Volume
+ * nothing is shown anyway, so the switch only matters to take a live podium down quickly. Read at render time, never inlined at build.
+ */
+export function podioPublicEnabled(): boolean {
+  return process.env.PODIO_PUBLIC !== "off";
+}
+
+/**
  * Product feed of the Uma Penca store (canecas, ecobags) — the Meta one (`.../feed/facebook.xml`), which carries g:category, read by `npm run umapenca:sync` and
  * `POST /api/admin/umapenca-sync`. Unset means the sync reports "not configured"; pages never read it.
  */
