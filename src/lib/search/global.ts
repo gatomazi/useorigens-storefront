@@ -32,6 +32,8 @@ export type GlobalDoc = {
   /** Design only: real pieces of the same `product_cluster_id` (classic tee + garment types), and the lowest real price among them. */
   pieces?: number;
   minPrice?: number;
+  /** Merchandise design only: the INK product the result opens (GoToInk on click, like every other INK product link of the storefront). */
+  inkProductId?: string;
   /** Small type tag shown on the row ("Região Administrativa", "Coleção", "Hotpage"…). */
   tag: string;
   /** Analytics context: the place (SelectCity), the UF, an administrative region. Never anything personal. */

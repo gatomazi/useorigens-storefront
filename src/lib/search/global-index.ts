@@ -7,7 +7,9 @@ import { getStoreCollections } from "../catalog/collections-file";
 import { enabledInternalIds } from "../site-config/collections-enabled";
 import { expandTuple, garmentIndexMtimeMs, type GarmentIndex } from "../catalog/garment-index-file";
 import { garmentTypeById, CLASSIC_GARMENT_TYPE_ID } from "../catalog/garments";
+import { compareIds } from "../catalog/ranking";
 import { getCatalog, getGarmentIndex, type Catalog } from "../catalog/repository";
+import type { MerchProduct } from "../catalog/types";
 import { formatPrice } from "../format";
 import { localitiesOfRegion, localityKindLabel, localitySubtitle } from "../geo/localities";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
@@ -30,8 +32,8 @@ import { prepareGlobalDocs, type GlobalDoc, type PreparedGlobalDoc } from "./glo
  *    `product_cluster_id` (the same association the city page's garment tabs use) — the 9 pieces of a design are never 9 results;
  *  - editorial: published, live pages (hotpages, category landings), active personalization models, the home's own carousels (an anchor on
  *    the home, only when the carousel really renders), public INK collections with a verified public page, and "Outros artigos".
- * Only LAUNCHED regions are indexed. Merchandise (expressions, pockets…) is not: the catalog snapshot carries no `product_cluster_id` for it, so
- * its pieces could only be grouped by name, which is forbidden — it stays reachable through "Ver todos os produtos" (`/busca`).
+ *  - merchandise designs ("Made in …", "| Essência" lines, expressions): one result per `product_cluster_id` (see `merchDocs`).
+ * Only LAUNCHED regions are indexed.
  */
 export type GlobalIndexInputs = {
   region: RegionSlug;
@@ -112,6 +114,8 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
     }
   }
 
+  docs.push(...merchDocs(region, catalog.merch(region)));
+
   const doc = input.doc;
   if (doc && doc.scope === region) {
     for (const page of doc.pages ?? []) {
@@ -176,6 +180,35 @@ function dedupeEditorial(docs: GlobalDoc[]): GlobalDoc[] {
     if (!current || d.rank < current.rank) best.set(k, d);
   }
   return docs.filter((d) => d.kind !== "page" || best.get(normalizeText(d.title)) === d);
+}
+
+/**
+ * Merchandise designs (expressions, "Made in …", lines like "Paranaense | Essência"): ONE result per INK `product_cluster_id` within its store — the
+ * pieces of one design share it — and one per product when INK gave no cluster (never grouped by name). Title: the shortest name of the group
+ * (the base piece); every piece's name stays searchable. Merchandise has no storefront page, so the result opens the verified INK product page.
+ */
+export function merchDocs(region: RegionSlug, products: readonly MerchProduct[]): GlobalDoc[] {
+  const groups = new Map<string, MerchProduct[]>();
+  for (const p of products) {
+    if (!purchaseUrl(p)) continue;
+    const key = p.productClusterId ? `${p.commerceStoreKey}:c${p.productClusterId}` : `${p.commerceStoreKey}:p${p.inkProductId}`;
+    groups.set(key, [...(groups.get(key) ?? []), p]);
+  }
+  const docs: GlobalDoc[] = [];
+  for (const [key, members] of groups) {
+    const rep = [...members].sort((a, b) => a.name.length - b.name.length || b.totalSalesCount - a.totalSalesCount || compareIds(a.inkProductId, b.inkProductId))[0];
+    const prices = members.map((m) => m.price).filter((x): x is number => typeof x === "number" && x > 0);
+    const minPrice = prices.length > 0 ? Math.min(...prices) : undefined;
+    const price = minPrice !== undefined ? formatPrice(minPrice) : null;
+    docs.push({
+      key: `merch:${key}`, kind: "design", region, title: rep.name,
+      subtitle: members.length > 1 ? [plural(members.length, "peça disponível", "peças disponíveis"), price ? `a partir de ${price}` : null].filter(Boolean).join(" · ") : price ?? "Na loja",
+      href: purchaseUrl(rep)!, external: true, inkProductId: rep.inkProductId, image: rep.imageUrl, pieces: members.length, ...(minPrice !== undefined ? { minPrice } : {}),
+      tag: "Estampa", rank: 9, sales: members.reduce((n, m) => n + m.totalSalesCount, 0),
+      names: [rep.name], strong: members.map((m) => m.name), weak: [],
+    });
+  }
+  return docs;
 }
 
 export type GlobalIndexStats = { regions: RegionSlug[]; documents: number; byKind: Record<string, number>; approxBytes: number; buildMs: number; builtAt: string };

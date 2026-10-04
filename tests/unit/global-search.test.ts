@@ -41,6 +41,7 @@ function catalogOf(entries: Record<string, CityFamilyEntry[]>): Catalog {
     syncedAt: "2026-10-01T00:00:00Z",
     cityFamilies: (id: string) => entries[id] ?? [],
     coveredLocalityIds: () => ids,
+    merch: () => [],
   } as unknown as Catalog;
 }
 const entry = (b: CityDesignBinding): CityFamilyEntry => ({ family: family(b.designFamily), primary: b, variants: [] });
@@ -205,5 +206,31 @@ describe("global search: missing sources", () => {
       process.env = env;
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe("global search: merchandise designs", () => {
+  const merch = (id: string, name: string, cluster: string | null, price = 99, sales = 1) =>
+    ({ inkProductId: id, commerceStoreKey: "use-sul", regionSlug: "sul", name, slug: `m-${id}`, storeProductUrl: `https://www.usesul.com.br/usesul/product/m-${id}`, imageUrl: `https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/m${id}.jpg`, price, totalSalesCount: sales, syncedAt: "x", ...(cluster ? { productClusterId: cluster } : {}) }) as const;
+  const products = [
+    merch("1", "Made in Santa Catarina", "c1", 99),
+    merch("2", "Mate Bom Demais", "c2", 99, 5),
+    merch("3", "Mate Bom Demais - Menina", "c2", 89),
+    merch("4", "Paranaense | Essência", null),
+    merch("5", "Catarinense | Essência", null),
+  ];
+  const idx = () => new Map([["sul" as RegionSlug, prepareGlobalDocs([...buildGlobalDocs({ region: "sul", catalog: { ...catalogOf({}), merch: () => products } as unknown as Catalog, garmentIndex, collections: [], umaPencaArticles: 0 })])]]);
+
+  test("the pieces of one product_cluster_id are ONE result, titled by the base piece, every piece's name still searchable", () => {
+    const r = searchGlobal(idx(), "sul", "mate bom demais");
+    expect(r.groups.flatMap((g) => g.items)).toEqual([
+      expect.objectContaining({ kind: "design", title: "Mate Bom Demais", pieces: 2, minPrice: 89, external: true, inkProductId: "2", href: "https://www.usesul.com.br/usesul/product/m-2" }),
+    ]);
+    expect(searchGlobal(idx(), "sul", "menina").groups[0].items[0].title).toBe("Mate Bom Demais");
+  });
+
+  test("without a cluster each product is its own result (never grouped by name); 'essência' and 'made in' are found in the region itself", () => {
+    expect(titles(searchGlobal(idx(), "sul", "essência"), "designs").sort()).toEqual(["Catarinense | Essência", "Paranaense | Essência"]);
+    expect(titles(searchGlobal(idx(), "sul", "made in"), "designs")).toEqual(["Made in Santa Catarina"]);
   });
 });

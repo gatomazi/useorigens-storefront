@@ -7,7 +7,8 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { placeSearchCopy } from "@/lib/search/copy";
 import type { GlobalGroup, GlobalResult, GlobalSearchResponse } from "@/lib/search/global";
-import { trackSearch, trackSelectCity } from "@/lib/analytics/track";
+import { SOURCES } from "@/lib/analytics/sources";
+import { trackGoToInk, trackSearch, trackSelectCity } from "@/lib/analytics/track";
 
 type Props = {
   region: RegionSlug;
@@ -139,6 +140,10 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
     trackSearch(searchLabel(r), { region, resultsCount: current?.total ?? 0, selectedResultType: r.kind });
     if (r.kind === "locality" && r.city && r.uf) {
       trackSelectCity({ city: r.city, state: r.uf, region: r.region, source, ...(r.administrativeRegion ? { localityType: "administrative_region" as const } : {}) });
+    }
+    // A merchandise design opens its INK product page: the same GoToInk (Meta) / select_item + go_to_ink (GA4) as any INK product link.
+    if (r.inkProductId) {
+      trackGoToInk({ productId: r.inkProductId, sourceSection: SOURCES.search, productName: r.title, destinationUrl: r.href, ...(r.minPrice !== undefined ? { value: r.minPrice } : {}) });
     }
     onNavigate?.();
     if (r.external) window.location.assign(r.href);

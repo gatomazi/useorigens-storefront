@@ -62,7 +62,7 @@ Uma estampa é **um resultado por lugar × família** (`cityFamilies`), nunca um
 
 Nos dados reais todo cluster tem as 9 peças além da clássica: `Bagé · Traço — 10 peças disponíveis · a partir de R$ 94,00`. O preço inicial é o menor preço real entre o primary e as peças do cluster.
 
-**Merch** (expressões, pockets, linhas de estado) **não** entra na busca global: o snapshot do catálogo não guarda `product_cluster_id` para merch, e nenhum produto merch aparece no índice de peças — as variações ("Mate Bom Demais" e "Mate Bom Demais - Menina") só poderiam ser agrupadas por nome, o que é proibido. Continuam encontráveis pelo link "Ver todos os produtos para “…”" (página `/busca`, que já existia). Para incluí-las, o indexador precisa passar a gravar o `clusterId` do merch (`InkProductNormalized.clusterId` já existe) e um catalog sync.
+**Merch** (expressões, "Made in …", linhas como "Paranaense | Essência") entra como estampa, **um resultado por `product_cluster_id`** dentro da loja. O indexador do catálogo passou a guardar o cluster do merch (`MerchProduct.productClusterId`, vindo do `product_cluster_id` que a INK já devolvia e era descartado); o valor aparece no snapshot na próxima sincronização do catálogo. Merch sem cluster vira um resultado por produto (nunca agrupado por nome). Título = o nome mais curto do grupo (a peça base); o nome de cada peça continua pesquisável ("menina" encontra "Mate Bom Demais"). Merch não tem página no storefront: o resultado abre a página verificada do produto na INK e dispara `GoToInk`, como qualquer link de produto INK. Num catalog sync real (somente leitura) de 04/10: Sul 230 de 261 merch com cluster, 7 estampas com 2 peças cada passaram a ser um resultado só ("Gaúcho | Gaudério", "Paranaense | Bicho do Paraná"…). Dois "Made in Santa Catarina" continuam separados porque são produtos INK distintos (clusters e imagens diferentes).
 
 **Destino da estampa:** a página da estampa no storefront (`/{região}/{uf}/{lugar}/{família}`), que mostra as versões e leva à compra. A escolha da peça (oversized, regata…) continua nas abas da página do lugar; a página da estampa ainda não lista as peças. Decisão para revisão: se preferir, o destino pode ser a página do lugar (perde-se o foco na estampa).
 
@@ -121,7 +121,7 @@ Não foi adicionado campo de busca ao CMS nesta rodada. Título, descrição SEO
 
 ## Limitações
 
-- Merch fora da busca global (ver Agrupamento).
+- Até a próxima sincronização do catálogo em produção, o merch aparece sem agrupamento (o snapshot atual ainda não tem o cluster dele).
 - A peça é escolhida na página do lugar, não na página da estampa.
 - Os exemplos `pais` e `churrasco` não retornam nada em produção hoje: não há hotpage viva nem coleção com esses nomes (a única hotpage, "Dia das Crianças", está arquivada). A busca encontra a página assim que ela for publicada.
 - Primeira busca após um deploy ou mudança de snapshot paga a montagem do índice (~0,5–0,9 s); depois é cache.
