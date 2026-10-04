@@ -272,11 +272,11 @@ describe("place search index", () => {
     expect(hit?.type === "city" && hit.city.t).toBeFalsy();
   });
 
-  test("given the copy of a region with administrative regions, then it says 'cidade ou região'; the other regions keep 'cidade' verbatim", () => {
-    expect(placeSearchCopy("centro-oeste").placeholder).toBe("Busque sua cidade ou região…");
-    expect(placeSearchCopy("sul").placeholder).toBe("Busque sua cidade…");
-    expect(placeSearchCopy("sul").trigger).toBe("Buscar cidade");
-    expect(placeSearchCopy("norte").hero).toBe("Busque sua cidade…");
+  test("given the copy of a region with administrative regions, then it names 'região'; the other regions say 'cidade, estampa ou coleção'", () => {
+    expect(placeSearchCopy("centro-oeste").placeholder).toBe("Busque uma cidade, região ou estampa…");
+    expect(placeSearchCopy("sul").placeholder).toBe("Busque uma cidade, estampa ou coleção…");
+    expect(placeSearchCopy("sul").trigger).toBe("Buscar");
+    expect(placeSearchCopy("norte").hero).toBe("Busque sua cidade, estampa ou coleção…");
   });
 });
 

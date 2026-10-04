@@ -85,6 +85,8 @@ export type MerchProduct = {
   imageUrl: string;
   price: number | null;
   totalSalesCount: number;
+  /** INK's `product_cluster_id`, when it returned one: the pieces of ONE design share it (the global search groups merchandise by it). */
+  productClusterId?: string;
   syncedAt: string;
 };
 

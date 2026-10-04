@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { SOURCES } from "@/lib/analytics/sources";
 import { placeSearchCopy } from "@/lib/search/copy";
-import { CitySearch } from "./CitySearch";
+import { GlobalSearch } from "./GlobalSearch";
 
 function SearchIcon({ className }: { className: string }) {
   return (
@@ -16,7 +16,7 @@ function SearchIcon({ className }: { className: string }) {
 }
 
 /**
- * City search as a native modal <dialog> (focus trap and Esc come from the platform): a full-screen sheet
+ * The global search (places, designs, collections) as a native modal <dialog> (focus trap and Esc come from the platform): a full-screen sheet
  * on phones, a wide sheet on larger screens. Two triggers share it: the header icon and the hero field.
  */
 export function SearchDialog({ region, variant = "header" }: { region: RegionSlug; variant?: "header" | "hero" | "cta" | "link" }) {
@@ -62,7 +62,7 @@ export function SearchDialog({ region, variant = "header" }: { region: RegionSlu
 
       <dialog
         ref={ref}
-        aria-label={copy.trigger}
+        aria-label={copy.dialog}
         onClose={() => setIsOpen(false)}
         onClick={(event) => event.target === ref.current && close()}
         className="search-sheet m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-ground p-0 text-ink backdrop:bg-black/60 sm:mx-auto sm:mt-0 sm:h-auto sm:max-h-[86dvh] sm:max-w-4xl"
@@ -78,7 +78,7 @@ export function SearchDialog({ region, variant = "header" }: { region: RegionSlu
               </svg>
             </button>
           </div>
-          {isOpen && <CitySearch region={region} autoFocus onNavigate={close} source={variant === "hero" ? SOURCES.heroSearch : SOURCES.searchDialog} />}
+          {isOpen && <GlobalSearch region={region} autoFocus sticky onNavigate={close} source={variant === "hero" ? SOURCES.heroSearch : SOURCES.searchDialog} />}
         </div>
       </dialog>
     </>

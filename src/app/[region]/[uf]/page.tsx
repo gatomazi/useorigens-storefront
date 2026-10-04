@@ -5,7 +5,7 @@ import { StateOutline } from "@/components/brand/StateOutline";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
 import { StateCityBrowser, type BrowserCity, type BrowserGroup } from "@/components/city/StateCityBrowser";
-import { CitySearch } from "@/components/search/CitySearch";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { StatePodium } from "@/components/podio/StatePodium";
 import { getStatePodium } from "@/lib/podio/server";
 import { getCatalog } from "@/lib/catalog/repository";
@@ -157,7 +157,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
 
       <section className="wrap pb-8 pt-6 lg:pb-12">
         <div className="max-w-2xl">
-          <CitySearch region={region} source={SOURCES.stateSearch} />
+          <GlobalSearch region={region} source={SOURCES.stateSearch} />
         </div>
       </section>
 

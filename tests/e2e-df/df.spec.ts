@@ -118,11 +118,12 @@ test.describe("CMS", () => {
 test.describe("public search", () => {
   test("given the header search, when an RA is typed, then it is listed as a Região Administrativa (not a city) and the click opens its route", async ({ page }) => {
     await open(page, "/centro-oeste");
-    await page.getByRole("button", { name: /Busque sua cidade ou região/ }).first().click();
-    const dialog = page.getByRole("dialog", { name: "Buscar cidade ou região" });
-    await expect(dialog.getByRole("combobox")).toHaveAttribute("placeholder", "Busque sua cidade ou região…");
+    await page.getByRole("button", { name: /Busque sua cidade, região ou estampa/ }).first().click();
+    const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
+    await expect(dialog.getByRole("combobox")).toHaveAttribute("placeholder", "Busque uma cidade, região ou estampa…");
     await dialog.getByRole("combobox").fill("aguas claras");
-    const option = dialog.getByRole("option", { name: /Águas Claras/ });
+    // The place itself (its designs, "Águas Claras · Traço"…, are listed after it in their own group).
+    const option = dialog.locator('[data-result-kind="locality"]', { hasText: "Águas Claras" });
     await expect(option).toBeVisible();
     await expect(option).toContainText("Distrito Federal · Região Administrativa");
     await expect(option).not.toContainText(/cidade|município/i);
@@ -141,9 +142,9 @@ test.describe("public search", () => {
     await expect(page.getByRole("option", { name: /^Brasília/ }).first()).toBeVisible();
     await expect(page.getByRole("option", { name: /^Brasília/ }).first()).not.toContainText("Região Administrativa");
     await input.fill("sol nascente");
-    await expect(page.getByRole("option", { name: /Sol Nascente\/Pôr do Sol/ })).toContainText("Região Administrativa");
+    await expect(page.locator('[data-result-kind="locality"]', { hasText: "Sol Nascente/Pôr do Sol" })).toContainText("Região Administrativa");
     await input.fill("distrito");
-    await expect(page.getByRole("option", { name: /Distrito Federal/ })).toContainText("Ver as localidades do estado");
+    await expect(page.locator('[data-result-kind="state"]', { hasText: "Distrito Federal" })).toContainText("Ver as localidades do estado");
   });
 
   test("given the product search, when an RA is searched, then only its own products come back, and Brasília's search does not list them", async ({ page }) => {
@@ -243,7 +244,7 @@ test.describe("DF pages", () => {
       await open(page, url);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, `${url} must not scroll sideways`).toBeLessThanOrEqual(0);
-      await expect(page.getByRole("button", { name: "Buscar cidade ou região" })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
     }
     await open(page, "/centro-oeste/df/aguas-claras");
     await shot(page, "pagina-ra-aguas-claras-375.png");
@@ -274,7 +275,7 @@ test.describe("home and regions", () => {
     await page.locator("section#estados").scrollIntoViewIfNeeded();
     await page.getByRole("button", { name: "Rejeitar" }).click({ timeout: 5_000 }).catch(() => undefined); // the consent banner would sit on top of the capture
     await page.locator("section#estados").screenshot({ path: path.join(CAPTURE, "home-centro-oeste-estados.png"), animations: "disabled" });
-    await page.getByRole("button", { name: /Busque sua cidade ou região/ }).first().waitFor();
+    await page.getByRole("button", { name: /Busque sua cidade, região ou estampa/ }).first().waitFor();
   });
 
   test("given Goiás, Mato Grosso and Mato Grosso do Sul, when their pages are opened, then they still count cities and group by mesoregion", async ({ page }) => {
@@ -291,7 +292,7 @@ test.describe("home and regions", () => {
 
   test("given Sul and Norte, when their home, state and city pages are opened, then they are unchanged", async ({ page }) => {
     await open(page, "/sul");
-    await expect(page.getByRole("button", { name: /Busque sua cidade…/ }).first()).toBeVisible(); // the original copy, no "ou região"
+    await expect(page.getByRole("button", { name: /Busque sua cidade, estampa ou coleção…/ }).first()).toBeVisible(); // no "região" outside the DF's region
     await expect(page.locator("section#estados")).toContainText(/\d[\d.]* cidades/);
     await open(page, "/sul/sc");
     await expect(page.locator("main")).toContainText(/\d[\d.]* cidades · \d+ regiões/);
@@ -300,7 +301,7 @@ test.describe("home and regions", () => {
     await open(page, "/sul/rs/torres");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Torres");
     await open(page, "/norte");
-    await expect(page.getByRole("button", { name: /Busque sua cidade…/ }).first()).toBeVisible();
+    await expect(page.getByRole("button", { name: /Busque sua cidade, estampa ou coleção…/ }).first()).toBeVisible();
     await open(page, "/norte/pa/belem");
     await expect(page.locator("section").first()).toContainText("Pará");
     await expect(page.locator("section").first()).not.toContainText("Região Administrativa");
