@@ -12,6 +12,8 @@ export type InkProductNormalized = {
   price: number | null;
   tags: string[];
   clusterId: string | null;
+  /** INK's global `product_type.id` (1 = classic T-shirt, see garments.ts). Optional: test fixtures and old callers may omit it. */
+  garmentTypeId?: number | null;
   totalSalesCount: number;
   createdAt: string | null;
 };
@@ -85,8 +87,13 @@ export type MerchProduct = {
   imageUrl: string;
   price: number | null;
   totalSalesCount: number;
-  /** INK's `product_cluster_id`, when it returned one: the pieces of ONE design share it (the global search groups merchandise by it). */
+  /**
+   * INK's `product_cluster_id`, when it returned one: the pieces of ONE design share it (the global search groups merchandise by it; the
+   * recommender (src/lib/recommendations) uses it ONLY to never show two pieces of one design as separate suggestions, never as affinity).
+   */
   productClusterId?: string;
+  /** INK's `product_type.id` when known: picks the classic T-shirt as a design's representative (src/lib/recommendations). */
+  garmentTypeId?: number;
   syncedAt: string;
 };
 
