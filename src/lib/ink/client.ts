@@ -8,11 +8,11 @@ import { normalizeInkProduct } from "./normalize";
  * INK allows 100 req/min per store, shared by every integration on that store.
  * Stay far below it: one request every 1.5 s (~40/min), never parallel within a store.
  */
-const PACE_MS = 1500;
+export const PACE_MS = 1500;
 const BACKOFF_MS = [15_000, 30_000, 60_000, 60_000] as const;
 const PER_PAGE = 100;
 
-const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+export const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 export class InkApiError extends Error {
   constructor(
@@ -24,9 +24,9 @@ export class InkApiError extends Error {
   }
 }
 
-type RequestBudget = { readonly max: number | undefined; used: number };
+export type RequestBudget = { readonly max: number | undefined; used: number };
 
-async function getJson(url: string, token: string, budget?: RequestBudget): Promise<unknown> {
+export async function getJson(url: string, token: string, budget?: RequestBudget): Promise<unknown> {
   for (let attempt = 0; ; attempt++) {
     // Every HTTP attempt counts, retries after a 429 included: the cap is a cap on real GETs against INK.
     if (budget && budget.max !== undefined && budget.used >= budget.max) {

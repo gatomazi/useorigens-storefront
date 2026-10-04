@@ -54,6 +54,9 @@ export const SOURCES = {
   meusLugares: "meus_lugares",
   /** `/<region>/outros-artigos`: an Uma Penca article (caneca, ecobag) — GA4 only, see `trackGoToUmaPenca`. */
   outrosArtigos: "outros_artigos",
+  /** "Pódio": the home teaser ("Quem está no pódio?") and the full podium on a state page — `podio_click` (GA4 only, see trackPodioClick). */
+  podioHome: "podio_home",
+  podioState: "podio_state",
 } as const;
 
 export type TrackingSource = (typeof SOURCES)[keyof typeof SOURCES];

@@ -309,3 +309,28 @@ export function trackPromo(event: PromoEvent, params: { region: string; promoId?
   if (!gtagReady()) return;
   sendGtag("event", event, { region: params.region, surface: "storefront", ...(params.promoId ? { promo_id: params.promoId } : {}) });
 }
+
+/**
+ * A click inside the "Pódio" (GA4 only — no Meta event; its contract stays the events above). Low-cardinality dimensions only: region, UF,
+ * which ranking, the podium position and where the block was (home teaser or state page). Measures interest in the block; it NEVER feeds
+ * the ranking, which comes from paid INK orders only (docs/storefront/podio.md).
+ */
+export type PodioClickParams = {
+  region: string;
+  state: string;
+  rankingType: "locality" | "family" | "cta" | "leader";
+  /** 1–3 for an entry or a home leader card; absent for the CTA. */
+  position?: number;
+  /** SOURCES.podioHome or SOURCES.podioState. */
+  source: string;
+};
+export function trackPodioClick(params: PodioClickParams): void {
+  if (!gtagReady()) return;
+  sendGtag("event", "podio_click", {
+    region: params.region,
+    state: params.state,
+    ranking_type: params.rankingType,
+    source: params.source,
+    ...(params.position !== undefined ? { position: params.position } : {}),
+  });
+}

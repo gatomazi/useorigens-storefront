@@ -6,6 +6,8 @@ import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection"
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
 import { StateCityBrowser, type BrowserCity, type BrowserGroup } from "@/components/city/StateCityBrowser";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { StatePodium } from "@/components/podio/StatePodium";
+import { getStatePodium } from "@/lib/podio/server";
 import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { stateShowcase } from "@/lib/editorial/state-showcase";
@@ -121,6 +123,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   // results list needs a plain ground to stay legible, so it lives in its own quiet strip (docs/decisions/0003).
   const statePhoto = usableBannerAsset("state", bannerFor(region, "state", uf));
   const capital = hasRegions ? undefined : cities.find((c) => c.slug === STATE_CAPITAL_SLUG[uf]);
+  const podium = getStatePodium(region, uf);
 
   return (
     <>
@@ -162,7 +165,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
           Lives between the search (still the first thing anyone lands on) and the mesoregion browser below,
           so neither the search task nor "find my city" gets buried under a tall product strip. */}
       {showcase.length > 0 && (
-        <section className="wrap pb-10 lg:pb-14" aria-labelledby="showcase-title">
+        <section id="camisetas" className="wrap pb-10 lg:pb-14" aria-labelledby="showcase-title">
           <ProductCarousel
             items={showcase}
             labelledBy="showcase-title"
@@ -172,6 +175,10 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
           />
         </section>
       )}
+
+      {/* "O Pódio": right after the first product showcase, before the editorial context (docs/storefront/podio.md). Absent when there is
+          no fresh snapshot or no eligible sale in this UF. Its CTA goes back up to the showcase, or down to the places list without one. */}
+      {podium && <StatePodium podium={podium} productsAnchor={showcase.length > 0 ? "camisetas" : "lugares"} />}
 
       {/* Short, real context right where the region/A–Z selection starts, with plain links (the region home and the capital when it has products). */}
       <section className="wrap pb-6 lg:pb-8" aria-label={`Sobre as camisetas ${stateOf(uf)}`}>
@@ -194,6 +201,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
         </p>
       </section>
 
+      <div id="lugares" />
       <StateCityBrowser region={region} uf={uf.toLowerCase()} groups={groups} letters={letters} variant={hasRegions ? "localities" : "cities"} />
     </>
   );
