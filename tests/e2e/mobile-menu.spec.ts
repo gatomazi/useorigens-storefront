@@ -138,7 +138,7 @@ test.describe("the rest of the header is untouched", () => {
     await page.goto("/sul");
     const header = page.locator("header.site-header");
     await expect(header.getByRole("button", { name: "Abrir menu" })).toBeVisible();
-    await expect(header.getByRole("button", { name: "Buscar cidade" })).toBeVisible();
+    await expect(header.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
     await expect(header.getByRole("link", { name: /Meus Lugares/ })).toBeVisible();
     await expect(header.getByRole("link", { name: /Use Origens Sul, página inicial/ })).toBeVisible();
   });
@@ -155,7 +155,7 @@ test.describe("the rest of the header is untouched", () => {
       await expect(nav.getByRole("link", { name: "Santa Catarina" })).toHaveAttribute("href", "/sul/sc");
       await expect(nav.getByRole("link", { name: "Ver estados" })).toBeVisible();
       await page.keyboard.press("Escape");
-      await expect(header.getByRole("button", { name: "Buscar cidade" })).toBeVisible();
+      await expect(header.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
       await expect(header.getByRole("link", { name: /Meus Lugares/ })).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
     });

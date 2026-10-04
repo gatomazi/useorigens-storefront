@@ -111,7 +111,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
     await page.goto("/sul");
     const openDialog = async () => {
       await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-      const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+      const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
       await expect(dialog).toBeVisible();
       return dialog;
     };
@@ -165,7 +165,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
     expect(fbqCalls(calls, "PageView")).toHaveLength(1);
     // Opening the search dialog is not a navigation — must not add a PageView.
     await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-    await expect(page.getByRole("dialog", { name: "Buscar cidade" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Buscar na Use Origens" })).toBeVisible();
     await page.keyboard.press("Escape");
     await page.waitForTimeout(200);
     expect(fbqCalls(calls, "PageView")).toHaveLength(1);
@@ -197,7 +197,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
     const calls = await withFbqMock(page);
     await page.goto("/sul");
     await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-    const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+    const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
     await expect(dialog).toBeVisible();
     await dialog.getByRole("combobox").fill("florianopol");
     await page.waitForTimeout(300);
@@ -208,7 +208,7 @@ test.describe("Meta tracking: Search, SelectCity, GoToInk semantics (fbq mocked,
     await grantConsent(page);
     const calls = await withFbqMock(page);
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
-    const dialog = await page.getByRole("button", { name: /Busque sua cidade/ }).first().click().then(() => page.getByRole("dialog", { name: "Buscar cidade" }));
+    const dialog = await page.getByRole("button", { name: /Busque sua cidade/ }).first().click().then(() => page.getByRole("dialog", { name: "Buscar na Use Origens" }));
     await dialog.getByRole("combobox").fill("tij");
     await dialog.getByRole("option", { name: /Tijucas/ }).first().click();
     await page.waitForURL(/\/sul\/sc\/tijucas$/);
@@ -330,7 +330,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
     await page.goto("/sul");
     const openDialog = async () => {
       await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-      const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+      const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
       await expect(dialog).toBeVisible();
       return dialog;
     };
@@ -383,7 +383,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
     await page.waitForTimeout(300);
     expect(gaCalls(calls, "page_view")).toHaveLength(1);
     await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-    await expect(page.getByRole("dialog", { name: "Buscar cidade" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "Buscar na Use Origens" })).toBeVisible();
     await page.keyboard.press("Escape");
     await page.waitForTimeout(200);
     expect(gaCalls(calls, "page_view")).toHaveLength(1);
@@ -414,7 +414,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
     const calls = await withGtagMock(page);
     await page.goto("/sul");
     await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-    const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+    const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
     await expect(dialog).toBeVisible();
     await dialog.getByRole("combobox").fill("florianopol");
     await page.waitForTimeout(300);
@@ -425,7 +425,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
     await grantConsent(page);
     const calls = await withGtagMock(page);
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
-    const dialog = await page.getByRole("button", { name: /Busque sua cidade/ }).first().click().then(() => page.getByRole("dialog", { name: "Buscar cidade" }));
+    const dialog = await page.getByRole("button", { name: /Busque sua cidade/ }).first().click().then(() => page.getByRole("dialog", { name: "Buscar na Use Origens" }));
     await dialog.getByRole("combobox").fill("tij");
     await dialog.getByRole("option", { name: /Tijucas/ }).first().click();
     await page.waitForURL(/\/sul\/sc\/tijucas$/);
@@ -650,7 +650,7 @@ test.describe("Shared consent (Meta + GA4): vendor-neutral banner, revocation st
     // A conclusive search + city selection, the events most likely to slip through if only the loaders were gated.
     const openDialog = async () => {
       await page.getByRole("button", { name: /Busque sua cidade/ }).first().click();
-      const dialog = page.getByRole("dialog", { name: "Buscar cidade" });
+      const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
       await expect(dialog).toBeVisible();
       return dialog;
     };
