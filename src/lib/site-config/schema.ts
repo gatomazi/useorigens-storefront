@@ -10,6 +10,7 @@ import { isAllowedMediaSrc } from "./media-hosts";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
 import { REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { ARTICLE_KIND_LABELS, ARTICLE_KINDS, type ArticleKind } from "../umapenca/types";
 
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
 export type Scope = (typeof SCOPES)[number];
@@ -147,14 +148,23 @@ export type Page = {
 export type CustomField = { key: string; label: string; placeholder?: string; helperText?: string; required: boolean; maxLength: number; defaultValue?: string; position: number; type: "text" };
 /** A repeatable group of text lines (for example the four to six lines of a shirt): the customer sees `initial` lines and may add or remove within min..max. */
 export type LineGroup = { key: string; label: string; helperText?: string; placeholder?: string; lineLabel: string; min: number; initial: number; max: number; maxLength: number; defaults?: string[] };
+/** A model of a shirt: the INK collection it belongs to (same store as the region; an internal collection must be enabled in the Library). */
+export type InkCustomizerSource = { store: CommerceStoreKey; collectionId: number };
+/** A model of an Uma Penca article ("Crie a sua" caneca or ecobag): no INK collection, the team prepares the product in the Uma Penca store. */
+export type UmaPencaCustomizerSource = { kind: "umapenca"; articleKind: ArticleKind };
+export type CustomizerSource = InkCustomizerSource | UmaPencaCustomizerSource;
+export const isUmaPencaSource = (source: CustomizerSource): source is UmaPencaCustomizerSource => "kind" in source && source.kind === "umapenca";
+/** "Camiseta" / "Caneca" / "Ecobag": the product a model makes, for default alt texts and labels. */
+export const customizerProductLabel = (source: CustomizerSource): string => (isUmaPencaSource(source) ? ARTICLE_KIND_LABELS[source.articleKind].singular : "Camiseta");
+
 export type Customizer = {
   id: string;
   slug: string;
   name: string;
   description?: string;
-  /** The INK collection this model belongs to (same store as the region; an internal collection must be enabled in the Library). */
-  source: { store: CommerceStoreKey; collectionId: number };
-  /** The exact INK product, when the operator picked one; otherwise the model has no linked checkout product. */
+  /** Where the product is sold: an INK collection (shirts, the original shape, kept as-is) or Uma Penca (canecas, ecobags). */
+  source: CustomizerSource;
+  /** The exact INK product, when the operator picked one; otherwise the model has no linked checkout product. Never on an Uma Penca model. */
   inkProductId?: string;
   cardImage?: MediaRef;
   pageMockup?: MediaRef;
@@ -496,8 +506,13 @@ function checkCustomizer(c: Collector, path: string, v: unknown): void {
   checkSlug(c, `${path}.slug`, v.slug);
   if (!isStr(v.name, 80)) c.fail(`${path}.name`, "1..80 chars");
   if (v.description !== undefined && !isStr(v.description, 300)) c.fail(`${path}.description`, "1..300 chars");
-  if (!isRecord(v.source) || typeof v.source.store !== "string" || !STORES.includes(v.source.store) || typeof v.source.collectionId !== "number" || !Number.isInteger(v.source.collectionId) || v.source.collectionId <= 0) c.fail(`${path}.source`, "must be { store, collectionId }");
-  if (v.inkProductId !== undefined && (typeof v.inkProductId !== "string" || !/^\d{1,20}$/.test(v.inkProductId))) c.fail(`${path}.inkProductId`, "numeric INK id");
+  if (isRecord(v.source) && v.source.kind === "umapenca") {
+    if (typeof v.source.articleKind !== "string" || !(ARTICLE_KINDS as readonly string[]).includes(v.source.articleKind)) c.fail(`${path}.source.articleKind`, `one of ${ARTICLE_KINDS.join(", ")}`);
+    if (v.inkProductId !== undefined) c.fail(`${path}.inkProductId`, "an Uma Penca model has no INK product");
+  } else {
+    if (!isRecord(v.source) || typeof v.source.store !== "string" || !STORES.includes(v.source.store) || typeof v.source.collectionId !== "number" || !Number.isInteger(v.source.collectionId) || v.source.collectionId <= 0) c.fail(`${path}.source`, "must be { store, collectionId } or { kind: \"umapenca\", articleKind }");
+    if (v.inkProductId !== undefined && (typeof v.inkProductId !== "string" || !/^\d{1,20}$/.test(v.inkProductId))) c.fail(`${path}.inkProductId`, "numeric INK id");
+  }
   if (v.cardImage !== undefined) checkMediaRef(c, `${path}.cardImage`, v.cardImage);
   if (v.pageMockup !== undefined) checkMediaRef(c, `${path}.pageMockup`, v.pageMockup);
   if (v.previewMode !== "mockupWithTextSummary") c.fail(`${path}.previewMode`, "must be mockupWithTextSummary");
@@ -545,7 +560,7 @@ export function validateCustomizer(input: unknown, scope: Scope, path = "customi
   const c = new Collector();
   checkCustomizer(c, path, input);
   const own = REGIONS[scope as RegionSlug]?.storeKey;
-  if (isRecord(input) && isRecord(input.source) && own && input.source.store !== own) c.fail(`${path}.source.store`, "belongs to another region's INK store");
+  if (isRecord(input) && isRecord(input.source) && input.source.kind !== "umapenca" && own && input.source.store !== own) c.fail(`${path}.source.store`, "belongs to another region's INK store");
   return c.errors.length === 0 ? { ok: true, value: input as Customizer } : { ok: false, errors: c.errors };
 }
 
@@ -740,7 +755,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
       input.customizers.forEach((m, i) => {
         checkCustomizer(c, `doc.customizers[${i}]`, m);
         if (!isRecord(m)) return;
-        if (isRecord(m.source) && own && m.source.store !== own) c.fail(`doc.customizers[${i}].source.store`, "belongs to another region's INK store");
+        if (isRecord(m.source) && m.source.kind !== "umapenca" && own && m.source.store !== own) c.fail(`doc.customizers[${i}].source.store`, "belongs to another region's INK store");
         if (typeof m.id === "string") {
           if (ids.has(m.id)) c.fail(`doc.customizers[${i}].id`, "duplicate id");
           ids.add(m.id);

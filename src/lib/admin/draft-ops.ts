@@ -14,7 +14,7 @@ import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredT
 import { newPage, uniqueSlug } from "../site-config/pages";
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import type { PromotionsConfig } from "../site-config/promotions-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type Page, type PageKind, type PageSeo, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageKind, type PageSeo, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard">;
 
@@ -54,7 +54,7 @@ export type DraftOp =
   /** Applies an ordinary section operation to the sections of ONE page (same rules as the home, minus the footer). */
   | { type: "in-page"; page: string; op: DraftOp }
   // ── Personalization models ──
-  | { type: "create-customizer"; name: string; slug?: string; source: { store: CollectionRef["store"]; collectionId: number } }
+  | { type: "create-customizer"; name: string; slug?: string; source: CustomizerSource }
   | { type: "update-customizer"; id: string; patch: Partial<Omit<Customizer, "id" | "version">> }
   | { type: "duplicate-customizer"; id: string }
   | { type: "remove-customizer"; id: string };

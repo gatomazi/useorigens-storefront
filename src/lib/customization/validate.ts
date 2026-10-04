@@ -3,7 +3,7 @@
  * the live summary and inline errors, and the server runs the SAME function again on submit (the browser is never trusted). Everything a model
  * defines (labels, limits, required, the repeatable line group) is DATA: nothing here knows about "PAI" or a city.
  */
-import type { Customizer } from "../site-config/schema";
+import { isUmaPencaSource, type Customizer } from "../site-config/schema";
 
 export type FieldError = { key: string; message: string };
 export type SummaryLine = { label: string; value: string };
@@ -99,8 +99,10 @@ export type ModelSnapshot = {
   version: number;
   fields: Customizer["fields"];
   lineGroup?: Customizer["lineGroup"];
+  /** Set only for an Uma Penca model ("Crie a sua" caneca/ecobag): the product link must then be an Uma Penca page. Absent = INK, as every older request. */
+  store?: "umapenca";
 };
-export const snapshotOf = (m: Customizer): ModelSnapshot => ({ id: m.id, slug: m.slug, name: m.name, version: m.version, fields: structuredClone(m.fields), ...(m.lineGroup ? { lineGroup: structuredClone(m.lineGroup) } : {}) });
+export const snapshotOf = (m: Customizer): ModelSnapshot => ({ id: m.id, slug: m.slug, name: m.name, version: m.version, fields: structuredClone(m.fields), ...(m.lineGroup ? { lineGroup: structuredClone(m.lineGroup) } : {}), ...(isUmaPencaSource(m.source) ? { store: "umapenca" as const } : {}) });
 
 /** The summary of stored values against the frozen snapshot (labels come from the snapshot, never from the current model). */
 export function summaryOf(snapshot: ModelSnapshot, values: Values): SummaryLine[] {

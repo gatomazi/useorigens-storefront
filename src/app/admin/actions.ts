@@ -21,10 +21,10 @@ import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
-import type { Scope, TrackingConfig, VendorSetting } from "@/lib/site-config/schema";
+import { isUmaPencaSource, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionRef, parseFeaturedFields, parseSectionForm } from "@/lib/admin/section-form";
-import { parseCustomizerForm } from "@/lib/admin/customizer-form";
+import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
 import { nextStatuses, productLinkFor, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
 import type { PageKind } from "@/lib/site-config/schema";
@@ -757,6 +757,10 @@ export async function restoreTargetAction(fd: FormData) {
 
 export async function createCustomizerAction(fd: FormData) {
   const { scope } = await editScope(fd);
+  const origin = parseOrigin(text(fd, "origin"));
+  if (origin.kind === "umapenca") {
+    return runRaw(fd, { type: "create-customizer", name: text(fd, "name"), slug: text(fd, "slug") || undefined, source: { kind: "umapenca", articleKind: origin.articleKind } }, "Modelo criado como rascunho (inativo). Configure os campos e a imagem.", "/admin/personalizacao", (id) => `/admin/personalizacao/${id}`);
+  }
   const ref = parseCollectionRef(text(fd, "collection"));
   if (!ref) back("/admin/personalizacao", { err: ["Escolha a coleção da INK do modelo nas sugestões."] });
   if (ref.store !== storeOf(scope)) back("/admin/personalizacao", { err: [`Esta coleção pertence a outra loja da INK: ${scopeName(scope)} usa só as coleções da própria loja.`] });
@@ -775,7 +779,7 @@ export async function saveCustomizerAction(fd: FormData) {
   const live = ws.baseDoc.customizers?.find((m) => m.id === id);
   const { patch, errors } = parseCustomizerForm(fd, current, { store: storeOf(scope) }, { slugLocked: Boolean(live) });
   if (errors.length > 0) back(here, { err: errors });
-  if (patch.source) {
+  if (patch.source && !isUmaPencaSource(patch.source)) {
     const problem = sourceProblem({ kind: "ink-category", ...patch.source, order: "category", limit: 6 }, ws.doc);
     if (problem) back(here, { err: [problem] });
   }
@@ -844,7 +848,7 @@ export async function setRequestProductLinkAction(fd: FormData) {
   const raw = text(fd, "product_link");
   let url: string | null = null;
   if (raw) {
-    const checked = productLinkFor(record.region, raw);
+    const checked = productLinkFor(record.region, raw, record.snapshot.store);
     if (!checked.ok) back(here, { err: [checked.error] });
     else url = checked.url;
   }

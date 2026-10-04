@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { UMAPENCA_IMAGE_HOSTS } from "./src/lib/umapenca/hosts";
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -12,6 +13,8 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "gcp-images.majestic.ink.rsvcloud.com", pathname: "/images/product_v2/**" },
       // The cart mirror ("Meu carrinho") shows INK cart thumbnails, which live under product_art. Nothing broader is opened.
       { protocol: "https", hostname: "gcp-images.majestic.ink.rsvcloud.com", pathname: "/images/product_art/**" },
+      // "Outros artigos" (canecas, ecobags) come from the Uma Penca feed; their photos are on its imgix hosts (src/lib/umapenca/hosts.ts).
+      ...UMAPENCA_IMAGE_HOSTS.map((hostname) => ({ protocol: "https" as const, hostname, pathname: "/**" })),
     ],
     qualities: [70, 80],
     formats: ["image/avif", "image/webp"],
