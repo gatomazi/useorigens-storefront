@@ -50,9 +50,15 @@ export function normalizeInkProduct(raw: unknown, storeKey: CommerceStoreKey): I
     price: asPrice(p.price),
     tags: Array.isArray(p.tags) ? p.tags.filter((t): t is string => typeof t === "string") : [],
     clusterId: typeof p.product_cluster_id === "number" ? String(p.product_cluster_id) : null,
+    garmentTypeId: productTypeId(p.product_type),
     totalSalesCount: typeof p.total_sales_count === "number" ? p.total_sales_count : 0,
     createdAt: asString(p.created_at),
   };
+}
+
+function productTypeId(value: unknown): number | null {
+  const id = typeof value === "object" && value !== null ? (value as Record<string, unknown>).id : undefined;
+  return typeof id === "number" && Number.isInteger(id) ? id : null;
 }
 
 /** One real INK product as returned by `GET /v1/stores/products(/:id)`, reduced to what garment linking needs. */

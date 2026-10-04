@@ -40,6 +40,7 @@ export function buildStoreIndex(
           price: product.price,
           totalSalesCount: product.totalSalesCount,
           ...(product.clusterId ? { productClusterId: product.clusterId } : {}),
+          ...(typeof product.garmentTypeId === "number" ? { garmentTypeId: product.garmentTypeId } : {}),
           syncedAt,
         });
       }
