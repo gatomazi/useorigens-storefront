@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { applyOp } from "@/lib/admin/draft-ops";
-import { parseCollectionRef, parseSectionForm } from "@/lib/admin/section-form";
+import { customizerCardFieldDefaults, parseCollectionRef, parseSectionForm } from "@/lib/admin/section-form";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 
 const seed = () => structuredClone(buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null }).docs.sul);
@@ -68,5 +68,13 @@ describe("section form parsing", () => {
     const r = apply({ fill_kind: "gradient", grad_from: "#112233", grad_to: "token:near-black", grad_angle: "45" });
     if (!r.ok) throw new Error(r.errors.join());
     expect(r.doc.home!.sections.find((s) => s.id === "seed-terra")!.appearance.fill).toEqual({ kind: "gradient", from: "#112233", to: "token:near-black", angle: 45 });
+  });
+});
+
+describe("customizer card fields in the editor", () => {
+  test("a new card gets the suggested texts; a saved card shows exactly what was saved, so an optional description saved empty stays empty", () => {
+    expect(customizerCardFieldDefaults(undefined)).toEqual({ title: "Personalize a sua nesse modelo", button: "Personalizar", description: "Escolha as palavras que contam sua história" });
+    expect(customizerCardFieldDefaults({ customizerId: "cz-1", title: "Crie a sua caneca", button: "Criar" })).toEqual({ title: "Crie a sua caneca", button: "Criar", description: "" });
+    expect(customizerCardFieldDefaults({ customizerId: "cz-1", title: "T", button: "B", description: "Sua frase" }).description).toBe("Sua frase");
   });
 });

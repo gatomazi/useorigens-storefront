@@ -7,6 +7,7 @@ import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
 import type { Appearance, Section } from "@/lib/site-config/schema";
+import { customizerCardFieldDefaults } from "@/lib/admin/section-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
 export type MediaOption = { assetId: string; label: string; src: string; width: number; height: number; kind: "banner" | "upload" };
@@ -127,6 +128,7 @@ export function SectionEditorForm({
   const [navShow, setNavShow] = useState(Boolean(section.nav));
   const [navLabel, setNavLabel] = useState(section.nav?.label ?? suggestedNavLabel(section));
   const [ccShow, setCcShow] = useState(Boolean(section.customizerCard));
+  const ccDefaults = customizerCardFieldDefaults(section.customizerCard);
   const byId = useMemo(() => new Map(media.map((m) => [m.assetId, m])), [media]);
   const hasImage = Boolean(imgM || imgD);
 
@@ -226,10 +228,10 @@ export function SectionEditorForm({
                 {customizers.length === 0 && <p className="a-flash err mt-2 text-[0.875rem]">Esta região ainda não tem modelos. Cadastre em Personalização.</p>}
               </div>
               <div className="grid gap-4 md:grid-cols-2">
-                <div><label className="a-label" htmlFor="cc_title">Título do card</label><input id="cc_title" name="cc_title" defaultValue={section.customizerCard?.title ?? "Personalize a sua nesse modelo"} className="a-input" maxLength={60} required /></div>
-                <div><label className="a-label" htmlFor="cc_button">Texto do botão</label><input id="cc_button" name="cc_button" defaultValue={section.customizerCard?.button ?? "Personalizar"} className="a-input" maxLength={24} required /></div>
+                <div><label className="a-label" htmlFor="cc_title">Título do card</label><input id="cc_title" name="cc_title" defaultValue={ccDefaults.title} className="a-input" maxLength={60} required /></div>
+                <div><label className="a-label" htmlFor="cc_button">Texto do botão</label><input id="cc_button" name="cc_button" defaultValue={ccDefaults.button} className="a-input" maxLength={24} required /></div>
               </div>
-              <div><label className="a-label" htmlFor="cc_description">Descrição curta (opcional)</label><input id="cc_description" name="cc_description" defaultValue={section.customizerCard?.description ?? "Escolha as palavras que contam sua história"} className="a-input" maxLength={120} /></div>
+              <div><label className="a-label" htmlFor="cc_description">Descrição curta (opcional)</label><input id="cc_description" name="cc_description" defaultValue={ccDefaults.description} className="a-input" maxLength={120} /></div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="a-label" htmlFor="cc_image">Imagem do card (mockup próprio da estampa)</label>

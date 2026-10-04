@@ -101,6 +101,15 @@ function parseSource(f: Fields, current: Source | undefined): Source | undefined
   return current;
 }
 
+/**
+ * Initial values of the customizer-card fields in the section editor. The suggested texts only fill a card that does not exist yet: once the card
+ * is saved, what was saved is shown as-is — an optional description saved empty stays empty instead of coming back on the next save.
+ */
+export function customizerCardFieldDefaults(card: Section["customizerCard"]): { title: string; button: string; description: string } {
+  if (!card) return { title: "Personalize a sua nesse modelo", button: "Personalizar", description: "Escolha as palavras que contam sua história" };
+  return { title: card.title, button: card.button, description: card.description ?? "" };
+}
+
 export function parseSectionForm(f: Fields, section: Section): Partial<Editable> {
   const patch: Partial<Editable> = {};
   // A field that is not in the form is left alone; a field that is present and empty clears the value (a carousel's title is then rejected).
