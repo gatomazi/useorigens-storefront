@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { isRegionSlug } from "@/lib/geo/regions";
-import { isRegionLaunched } from "@/lib/regions/launched";
 import { lookupRecommendations } from "@/lib/recommendations/build";
 import { readRecommendationsIndex } from "@/lib/recommendations/index-file";
 
@@ -11,10 +10,12 @@ const PRODUCT_ID = /^[1-9][0-9]{0,15}$/;
  * INK product page (it calls this server-side and re-serves it same-origin after validating every item, so no CORS is configured here).
  * Reads only the local `recommendations-index.json` (never INK, never the database). No cookies, no identity, no personal data.
  * A missing index or an unknown product is an empty list (200), so the product page simply stays as INK draws it.
+ * Deliberately NOT gated on the storefront's region launch (unlike /api/navbar): every item is an INK product page of that region's own INK
+ * store, never a storefront page, and the Worker's `auto-recommendations` flag is what turns the block on per store.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ region: string; productId: string }> }) {
   const { region, productId } = await params;
-  if (!isRegionSlug(region) || !isRegionLaunched(region) || !PRODUCT_ID.test(productId)) return new NextResponse(null, { status: 404 });
+  if (!isRegionSlug(region) || !PRODUCT_ID.test(productId)) return new NextResponse(null, { status: 404 });
   const index = readRecommendationsIndex();
   const items = lookupRecommendations(index, region, productId);
   return NextResponse.json(
