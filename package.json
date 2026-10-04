@@ -15,6 +15,7 @@
     "garments:promote": "node --conditions=react-server --import tsx scripts/promote-garment-index.mts",
     "garments:revalidate": "node --env-file=.env.local --conditions=react-server --import tsx scripts/revalidate-garments.mts",
     "garments:coverage": "node --conditions=react-server --import tsx scripts/garment-coverage-report.mts",
+    "recommendations:build": "node --conditions=react-server --import tsx scripts/build-recommendations.mts",
     "collections:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-collections.mts",
     "umapenca:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-umapenca.mts",
     "podio:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-podio.mts",
