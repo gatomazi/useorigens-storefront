@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { addCollectionSection, addStructuredSection, duplicateSection, initRegionHomeAction, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
+import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
 import { campaignStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
 import { SINGLETON_TEMPLATES, STRUCTURED_MODELS } from "@/lib/site-config/structured";
@@ -14,6 +14,8 @@ import { toComboEntries } from "@/lib/admin/combo";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import type { Section } from "@/lib/site-config/schema";
+import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
+import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
 const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", footer: "Rodapé" };
 
@@ -38,6 +40,9 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const rev = ws.record?.rev ?? null;
   const sections = ws.doc.home?.sections ?? [];
   const entries = toComboEntries(libraryEntries(store, enabledInternalIds(ws.doc, store)));
+  const umaPenca = readUmaPencaSnapshot();
+  const umaPencaSyncedAt = umaPenca?.syncedAt ?? null;
+  const umaPencaCounts = Object.fromEntries(ARTICLE_KINDS.map((k) => [k, umaPenca?.articles.filter((a) => a.kind === k).length ?? 0])) as Record<(typeof ARTICLE_KINDS)[number], number>;
   const anySelectable = entries.some((e) => e.selectable);
   const problems = collectionProblems(ws.doc);
 
@@ -156,6 +161,31 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         )}
         <p className="a-muted mt-3 text-[0.8125rem]">Precisa de uma coleção interna? <Link className="a-link" href="/admin/colecoes?from=/admin/home">Habilite-a na Biblioteca</Link>.</p>
         <p className="a-muted mt-3 text-[0.8125rem]">A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A ordem dos cards é a devolvida pela INK; não é “mais vendidos” nem “mais recentes”. A seção nova entra só no rascunho, antes da campanha.</p>
+
+        <h3 className="mt-8 font-extrabold">Produtos: canecas e ecobags da Uma Penca</h3>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os produtos vêm do feed da loja da Uma Penca (sincronizado a cada 6 horas), sem coleção da INK. O botão “Ver todos” já leva para <code>/{scope}/outros-artigos</code>. Para pôr o seu modelo “Crie a sua” como primeiro card, edite a seção depois de criada e marque “Destacar um produto personalizável”.</p>
+        <p className="a-muted mt-1 text-[0.8125rem]" data-testid="umapenca-feed-count">No feed agora: {ARTICLE_KINDS.map((k) => `${umaPencaCounts[k]} ${umaPencaCounts[k] === 1 ? ARTICLE_KIND_LABELS[k].singular.toLowerCase() : ARTICLE_KIND_LABELS[k].plural.toLowerCase()}`).join(" · ")}{umaPencaSyncedAt ? "" : " (o feed ainda não foi sincronizado)"}</p>
+        <form action={addUmaPencaSection} className="mt-3 grid gap-4 md:grid-cols-[2fr_2fr_1fr_auto] md:items-start">
+          <input type="hidden" name="rev" value={rev ?? "null"} />
+          <input type="hidden" name="scope" value={scope} />
+          <fieldset>
+            <legend className="a-label">Tipos</legend>
+            <div className="mt-2 flex flex-wrap gap-4">
+              {ARTICLE_KINDS.map((k) => (
+                <label key={k} className="flex items-center gap-2 font-bold"><input type="checkbox" name={`kind_${k}`} defaultChecked={k === "caneca"} /> {ARTICLE_KIND_LABELS[k].plural}</label>
+              ))}
+            </div>
+          </fieldset>
+          <div>
+            <label className="a-label" htmlFor="up_title">Título (opcional)</label>
+            <input id="up_title" name="title" className="a-input" maxLength={120} placeholder="Canecas, Ecobags ou Outros artigos" />
+          </div>
+          <div>
+            <label className="a-label" htmlFor="up_limit">Cards</label>
+            <input id="up_limit" name="limit" type="number" min={3} max={24} defaultValue={8} className="a-input" />
+          </div>
+          <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
+        </form>
 
         <h3 className="mt-8 font-extrabold">Componentes da home</h3>
         <ul className="mt-3 grid gap-4 md:grid-cols-3" aria-label="Componentes da home">

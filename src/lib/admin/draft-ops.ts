@@ -19,7 +19,7 @@ import { validateCustomizer, validatePage, validateScopeDoc, validateSection, ty
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard">;
 
 export type DraftOp =
-  | { type: "add-carousel"; title: string; source: Source }
+  | { type: "add-carousel"; title: string; source: Source; cta?: Section["cta"] }
   /** Adds one of the structured home components (city styles, state chooser, regional campaign) with the defaults of THIS region. */
   | { type: "add-structured"; template: StructuredTemplate }
   | { type: "duplicate"; id: string }
@@ -141,7 +141,8 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       const created: Section = {
         id, anchor, headingId: `${anchor}-title`, template: "product-carousel", active: true, title,
         layout: { variant: "standard", tone: "light", surface: "plain" },
-        source: op.source, analyticsSource: "homeCollection", appearance: defaultAppearance(),
+        source: op.source, analyticsSource: op.source.kind === "umapenca" ? "homeUmaPenca" : "homeCollection", appearance: defaultAppearance(),
+        ...(op.cta ? { cta: op.cta } : {}),
       };
       const check = validateSection(created);
       if (!check.ok) return { ok: false, errors: check.errors };

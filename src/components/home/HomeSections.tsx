@@ -12,7 +12,7 @@ import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { firstImageSectionId, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
 import type { Fill, Page, PublishedBundle, Section } from "@/lib/site-config/schema";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
-import { destinationHref, resolveSource, type CategoryLookup } from "@/lib/site-config/sources";
+import { destinationHref, resolveSource, type CategoryLookup, type UmaPencaLookup } from "@/lib/site-config/sources";
 
 const NATIVE_FILL: Record<"paper" | "plain" | "region-primary", Fill> = {
   paper: { kind: "none" },
@@ -29,7 +29,7 @@ const NATIVE_FILL: Record<"paper" | "plain" | "region-primary", Fill> = {
  */
 type SlugLookup = (store: CommerceStoreKey, collectionId: number) => string | null;
 
-export function HomeSections({ region, home, bundle, categories, slugOf, page }: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; slugOf?: SlugLookup; page?: Page }) {
+export function HomeSections({ region, home, bundle, categories, slugOf, umapenca, page }: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; slugOf?: SlugLookup; umapenca?: UmaPencaLookup; page?: Page }) {
   const doc = bundle.docs[region];
   // A page (hotpage / landing) is drawn by the very same renderer: its sections instead of the home's.
   const sections = page ? page.sections.filter((s) => s.active && s.template !== "footer") : renderableSections(doc);
@@ -128,7 +128,7 @@ export function HomeSections({ region, home, bundle, categories, slugOf, page }:
           }
 
           case "product-carousel":
-            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} slugOf={slugOf} region={region} card={resolveCustomizerCard(s, doc, media, region)} />;
+            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} umapenca={umapenca} slugOf={slugOf} region={region} card={resolveCustomizerCard(s, doc, media, region)} />;
 
           case "campaign": {
             const image = hasImage(bg);
@@ -167,6 +167,7 @@ function CarouselSection({
   priority,
   editorial,
   categories,
+  umapenca,
   slugOf,
   region,
   card,
@@ -179,10 +180,11 @@ function CarouselSection({
   priority: boolean;
   editorial: Parameters<typeof resolveSource>[1];
   categories?: CategoryLookup;
+  umapenca?: UmaPencaLookup;
   slugOf?: SlugLookup;
 }) {
   if (!s.layout || !s.source || !s.analyticsSource || !s.title) return null;
-  const result = resolveSource(s.source, editorial, categories);
+  const result = resolveSource(s.source, editorial, categories, umapenca);
   // Empty or unavailable: the section is omitted, exactly as the original home does for a carousel with no items.
   if (result.status !== "ok" || result.items.length === 0) return null;
   // With a first card the section keeps its total: 1 customizer card + (total − 1) products, never one more.

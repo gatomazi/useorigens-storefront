@@ -38,6 +38,7 @@ import type { DraftOp } from "@/lib/admin/draft-ops";
 import { parseNavigationForm, parseThemeForm, readableNavigationError } from "@/lib/admin/navigation-form";
 import { themeProblems } from "@/lib/site-config/navigation";
 import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-form";
+import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
 /**
  * Every server action of the CMS. Each one authenticates and authorises on its own (`requireAdmin`: development guard or Railway session,
@@ -116,6 +117,20 @@ export async function addCollectionSection(fd: FormData) {
   if (problem) back(at, { err: [problem] });
   const limit = Math.min(24, Math.max(3, Math.round(Number(text(fd, "limit")) || 6)));
   return run(fd, { type: "add-carousel", title: text(fd, "title") || findCollection(ref.store, ref.collectionId)?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit } }, "Seção criada no rascunho.", "/admin/home", true);
+}
+
+/**
+ * A carousel of Uma Penca articles (canecas, ecobags from the synced feed): no INK collection involved. Its "Ver todos" points at the region's
+ * own `/outros-artigos` page. The "Crie a sua" first card is set afterwards in the section editor (same as any carousel).
+ */
+export async function addUmaPencaSection(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const at = text(fd, "page") ? inPagePath(text(fd, "page"), "/admin/home") : "/admin/home";
+  const kinds = ARTICLE_KINDS.filter((k) => fd.get(`kind_${k}`) !== null);
+  if (kinds.length === 0) back(at, { err: ["Escolha ao menos um tipo: Canecas ou Ecobags."] });
+  const limit = Math.min(24, Math.max(3, Math.round(Number(text(fd, "limit")) || 8)));
+  const title = text(fd, "title") || (kinds.length === 1 ? ARTICLE_KIND_LABELS[kinds[0]].plural : "Outros artigos");
+  return run(fd, { type: "add-carousel", title, source: { kind: "umapenca", articleKinds: kinds, limit }, cta: { label: "Ver todos", dest: { kind: "route", path: `/${scope}/outros-artigos` } } }, "Seção da Uma Penca criada no rascunho.", "/admin/home", true);
 }
 
 export async function moveSection(fd: FormData) {

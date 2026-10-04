@@ -7,6 +7,7 @@ import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
 import type { Appearance, Section } from "@/lib/site-config/schema";
+import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
 export type MediaOption = { assetId: string; label: string; src: string; width: number; height: number; kind: "banner" | "upload" };
 
@@ -116,7 +117,7 @@ export function SectionEditorForm({
   const [preset, setPreset] = useState("preset" in a.overlay ? a.overlay.preset : "none");
   const [ovColor, setOvColor] = useState<string>("color" in a.overlay ? a.overlay.color : "#000000");
   const [ovOpacity, setOvOpacity] = useState("color" in a.overlay ? a.overlay.opacity : 0.45);
-  const [sourceKind, setSourceKind] = useState<"editorial-module" | "ink-category">(section.source?.kind === "ink-category" ? "ink-category" : "editorial-module");
+  const [sourceKind, setSourceKind] = useState<"editorial-module" | "ink-category" | "umapenca">(section.source?.kind === "ink-category" || section.source?.kind === "umapenca" ? section.source.kind : "editorial-module");
   const currentRef = section.source?.kind === "ink-category" ? `${section.source.store}:${section.source.collectionId}` : undefined;
   const [srcEntry, setSrcEntry] = useState<ComboEntry | null>(collections.find((e) => e.value === currentRef) ?? null);
   const publicEntries = collections.filter((e) => e.visibility === "public" && e.selectable);
@@ -275,8 +276,25 @@ export function SectionEditorForm({
             <div role="radiogroup" aria-label="Fonte" className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 font-bold"><input type="radio" name="source_kind" value="editorial-module" checked={sourceKind === "editorial-module"} onChange={() => setSourceKind("editorial-module")} /> Curadoria editorial atual</label>
               <label className="flex items-center gap-2 font-bold"><input type="radio" name="source_kind" value="ink-category" checked={sourceKind === "ink-category"} onChange={() => setSourceKind("ink-category")} disabled={collections.length === 0} /> Coleção da INK</label>
+              <label className="flex items-center gap-2 font-bold"><input type="radio" name="source_kind" value="umapenca" checked={sourceKind === "umapenca"} onChange={() => setSourceKind("umapenca")} /> Uma Penca (canecas, ecobags)</label>
             </div>
-            {sourceKind === "editorial-module" ? (
+            {sourceKind === "umapenca" ? (
+              <div className="grid gap-4 md:grid-cols-[3fr_1fr]">
+                <fieldset>
+                  <legend className="a-label">Tipos (do feed da Uma Penca, na ordem do feed)</legend>
+                  <div className="mt-2 flex flex-wrap gap-4">
+                    {ARTICLE_KINDS.map((k) => (
+                      <label key={k} className="flex items-center gap-2 font-bold"><input type="checkbox" name={`source_up_${k}`} defaultChecked={cur?.kind === "umapenca" ? cur.articleKinds.includes(k) : k === "caneca"} /> {ARTICLE_KIND_LABELS[k].plural}</label>
+                    ))}
+                  </div>
+                  <p className="a-muted mt-1 text-[0.8125rem]">Nenhuma coleção da INK: os cards abrem a loja da Uma Penca. Para “Crie a sua”, use “Destacar um produto personalizável” abaixo e escolha um modelo da Uma Penca.</p>
+                </fieldset>
+                <div>
+                  <label className="a-label" htmlFor="source_limit">Cards</label>
+                  <input id="source_limit" name="source_limit" type="number" min={3} max={24} defaultValue={cur?.kind === "umapenca" ? cur.limit : 8} className="a-input" />
+                </div>
+              </div>
+            ) : sourceKind === "editorial-module" ? (
               <div>
                 <label className="a-label" htmlFor="source_module">Módulo</label>
                 <select id="source_module" name="source_module" className="a-select" defaultValue={cur?.kind === "editorial-module" ? cur.key : "terra"}>

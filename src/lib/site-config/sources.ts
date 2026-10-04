@@ -1,5 +1,6 @@
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
+import type { ArticleKind } from "../umapenca/types";
 import { PAGE_SEGMENT, type Destination, type EditorialModuleKey, type Source } from "./schema";
 
 /**
@@ -12,7 +13,8 @@ export type UnavailableReason =
   | "collection-not-enabled" // an internal (hidden-on-INK) collection the CMS has not enabled
   | "collection-needs-resync" // recorded by an older sync that kept no members: run collections:sync again
   | "collection-has-no-products" // none of its products exist in the store's catalog snapshot
-  | "manual-source-not-implemented";
+  | "manual-source-not-implemented"
+  | "umapenca-not-synced"; // no Uma Penca snapshot yet (npm run umapenca:sync / the cron)
 
 export type SourceResult = { status: "ok"; items: CarouselItem[] } | { status: "unavailable"; reason: UnavailableReason };
 
@@ -21,7 +23,10 @@ export type EditorialItems = Readonly<Record<EditorialModuleKey, CarouselItem[]>
 /** Real products of one INK collection, already limited to this store's own catalog. Supplied by the server (never fetched here). */
 export type CategoryLookup = (store: CommerceStoreKey, collectionId: number, limit: number) => SourceResult;
 
-export function resolveSource(source: Source, editorial: EditorialItems, categories?: CategoryLookup): SourceResult {
+/** The Uma Penca articles of these kinds, at most `limit`, as carousel items. Supplied by the server from the synced snapshot. */
+export type UmaPencaLookup = (kinds: readonly ArticleKind[], limit: number) => SourceResult;
+
+export function resolveSource(source: Source, editorial: EditorialItems, categories?: CategoryLookup, umapenca?: UmaPencaLookup): SourceResult {
   switch (source.kind) {
     case "editorial-module":
       return { status: "ok", items: editorial[source.key] };
@@ -30,6 +35,8 @@ export function resolveSource(source: Source, editorial: EditorialItems, categor
       return categories ? categories(source.store, source.collectionId, source.limit) : { status: "unavailable", reason: "ink-collections-not-synced" };
     case "manual":
       return { status: "unavailable", reason: "manual-source-not-implemented" };
+    case "umapenca":
+      return umapenca ? umapenca(source.articleKinds, source.limit) : { status: "unavailable", reason: "umapenca-not-synced" };
   }
 }
 

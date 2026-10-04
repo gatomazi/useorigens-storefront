@@ -1,6 +1,7 @@
 "use client";
 
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
+import { SOURCES } from "@/lib/analytics/sources";
 import { trackGoToUmaPenca } from "@/lib/analytics/track";
 import { formatPrice } from "@/lib/format";
 import { ARTICLE_KIND_LABELS, type UmaPencaArticle } from "@/lib/umapenca/types";
@@ -8,7 +9,7 @@ import { ARTICLE_KIND_LABELS, type UmaPencaArticle } from "@/lib/umapenca/types"
 /**
  * One Uma Penca article (caneca, ecobag). Same card rhythm as FamilyCard — photo, accent rule, name, price — but the whole
  * card is a plain same-tab `<a>` to the verified Uma Penca product page (like every INK purchase link on the site), firing
- * the GA4-only `go_to_umapenca` on the real click. Merch photos carry their own backgrounds, hence the 4:5 poster frame.
+ * GoToPenca (Meta) and `go_to_umapenca` (GA4) on the real click. Merch photos carry their own backgrounds, hence the 4:5 poster frame.
  */
 export function ArticleCard({ article, region, sizes, priority = false }: { article: UmaPencaArticle; region: string; sizes: string; priority?: boolean }) {
   const current = article.salePrice ?? article.price;
@@ -25,6 +26,7 @@ export function ArticleCard({ article, region, sizes, priority = false }: { arti
           productName: article.title,
           kind: article.kind,
           region,
+          sourceSection: SOURCES.outrosArtigos,
           destinationUrl: article.url,
           ...(current !== null ? { value: current } : {}),
         })

@@ -8,8 +8,8 @@
  * queued for later, nothing throws, callers never need to check anything first, and one provider being absent
  * never skips the other.
  *
- * Meta's event contract stays exactly the four events already established (`PageView`, `Search`, `SelectCity`,
- * `GoToInk`) — nothing here adds a fifth. `trackSelectState` and the `select_item` half of `trackGoToInk` are
+ * Meta's event contract is the four events already established (`PageView`, `Search`, `SelectCity`, `GoToInk`) plus
+ * `GoToPenca` (a click to the Uma Penca store, see `trackGoToUmaPenca`) — nothing else is added. `trackSelectState` and the `select_item` half of `trackGoToInk` are
  * GA4-only, with no Meta equivalent by design. `Meta`'s own `PageView` lifecycle stays owned entirely by
  * `src/components/analytics/MetaPixel.tsx`; GA4's `page_view` lifecycle is owned the same way by
  * `GoogleAnalytics.tsx`, which calls `trackPageView` below rather than touching `window.gtag` directly.
@@ -17,7 +17,6 @@
 
 import { hasAnalyticsConsent } from "@/lib/consent/store";
 import { activeGa4, activeMetaPixel } from "./active-ids";
-import { SOURCES } from "./sources";
 import type { CartItemsBucket, MirrorAgeBucket, OrigensEntryPoint } from "./origens-events";
 
 declare global {
@@ -263,28 +262,44 @@ export function whenAnalyticsReady(send: () => void, intervalMs = 250, maxAttemp
 }
 
 /**
- * A click on an Uma Penca article ("Outros artigos": canecas, ecobags) — GA4 only (`select_item` + `go_to_umapenca`). Meta's
- * contract stays the four events above: an Uma Penca click is not an INK click, so it never becomes a GoToInk.
+ * A click on an Uma Penca article (canecas, ecobags: the "Outros artigos" page or a home carousel of them) — its own events, never GoToInk
+ * (an Uma Penca click is not an INK click): `GoToPenca` (Meta custom event, the fifth of the contract, owner's request) and GA4's
+ * `select_item` + `go_to_umapenca`. Same instrumentation point for both providers, like GoToInk.
  */
-export type GoToUmaPencaParams = { productId: string; productName: string; kind: string; region: string; value?: number; destinationUrl: string };
+export type GoToUmaPencaParams = {
+  productId: string;
+  productName: string;
+  kind: string;
+  region: string;
+  /** Where the click happened: SOURCES.outrosArtigos or SOURCES.homeUmaPenca. */
+  sourceSection: string;
+  value?: number;
+  destinationUrl: string;
+};
 export function trackGoToUmaPenca(params: GoToUmaPencaParams): void {
-  if (!gtagReady()) return;
-  sendGtag("event", "select_item", {
-    item_list_name: SOURCES.outrosArtigos,
-    items: [{ item_id: params.productId, item_name: params.productName, item_category: params.kind, ...(params.value !== undefined ? { price: params.value, currency: "BRL" } : {}) }],
-  });
-  sendGtag("event", "go_to_umapenca", {
-    product_id: params.productId,
-    product_name: params.productName,
-    article_kind: params.kind,
-    region: params.region,
-    destination_url: params.destinationUrl,
-    ...(params.value !== undefined ? { value: params.value, currency: "BRL" } : {}),
-  });
+  const value = params.value !== undefined ? { value: params.value, currency: "BRL" } : {};
+  if (fbqReady()) {
+    sendFbq("trackCustom", "GoToPenca", { product_id: params.productId, source_section: params.sourceSection, article_kind: params.kind, region: params.region, currency: "BRL", ...(params.value !== undefined ? { value: params.value } : {}) });
+  }
+  if (gtagReady()) {
+    sendGtag("event", "select_item", {
+      item_list_name: params.sourceSection,
+      items: [{ item_id: params.productId, item_name: params.productName, item_category: params.kind, ...(params.value !== undefined ? { price: params.value, currency: "BRL" } : {}) }],
+    });
+    sendGtag("event", "go_to_umapenca", {
+      product_id: params.productId,
+      product_name: params.productName,
+      article_kind: params.kind,
+      region: params.region,
+      source_section: params.sourceSection,
+      destination_url: params.destinationUrl,
+      ...value,
+    });
+  }
 }
 
 /**
- * "Cupons e promoções" button (GA4 only; no Meta event, its contract stays the four events above). Never the coupon code, never any text of the card:
+ * "Cupons e promoções" button (GA4 only; no Meta event, its contract stays the events above). Never the coupon code, never any text of the card:
  * only the item id the CMS gave it. `surface` tells the storefront button from the one the Worker draws on the INK (which sends its own events).
  */
 export type PromoEvent = "promo_fab_open" | "promo_coupon_copy" | "promo_panel_close";

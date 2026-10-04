@@ -19,7 +19,7 @@ export const TEMPLATE_KEYS = ["hero", "page-hero", "city-styles", "product-carou
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
 /** Closed list of analytics origins a carousel may report (keys of `SOURCES`); never a free string (would pollute Meta/GA4). */
-export const CAROUSEL_SOURCE_KEYS = ["homeTerra", "homeRedesenhos", "homeFeitoParaVoce", "homeFala", "homeDdd", "homeCollection"] as const;
+export const CAROUSEL_SOURCE_KEYS = ["homeTerra", "homeRedesenhos", "homeFeitoParaVoce", "homeFala", "homeDdd", "homeCollection", "homeUmaPenca"] as const;
 export type CarouselSourceKey = (typeof CAROUSEL_SOURCE_KEYS)[number];
 
 export const EDITORIAL_MODULE_KEYS = ["terra", "recreations", "lenda", "dizeres", "ddd"] as const;
@@ -67,7 +67,9 @@ export type Destination =
 export type Source =
   | { kind: "editorial-module"; key: EditorialModuleKey }
   | { kind: "ink-category"; store: CommerceStoreKey; collectionId: number; order: "category" | "manual"; limit: number }
-  | { kind: "manual"; productIds: string[]; limit: number };
+  | { kind: "manual"; productIds: string[]; limit: number }
+  /** Canecas/ecobags from the synced Uma Penca feed (src/lib/umapenca), in feed order. No INK collection is involved. */
+  | { kind: "umapenca"; articleKinds: ArticleKind[]; limit: number };
 
 export type FeaturedProductRef = { store: CommerceStoreKey; productId: string };
 export const MAX_FEATURED = 3;
@@ -378,7 +380,11 @@ function checkSource(c: Collector, path: string, v: unknown): void {
     } else if (!Array.isArray(v.productIds) || v.productIds.length > 100 || v.productIds.some((p) => typeof p !== "string" || !/^\d{1,20}$/.test(p))) {
       c.fail(`${path}.productIds`, "must be ≤ 100 numeric INK ids");
     }
-  } else c.fail(`${path}.kind`, "must be editorial-module | ink-category | manual");
+  } else if (v.kind === "umapenca") {
+    if (typeof v.limit !== "number" || !Number.isInteger(v.limit) || v.limit < 3 || v.limit > 24) c.fail(`${path}.limit`, "must be an integer 3..24");
+    const kinds = v.articleKinds;
+    if (!Array.isArray(kinds) || kinds.length === 0 || kinds.some((k) => !(ARTICLE_KINDS as readonly unknown[]).includes(k)) || new Set(kinds).size !== kinds.length) c.fail(`${path}.articleKinds`, `a non-empty list of distinct ${ARTICLE_KINDS.join(", ")}`);
+  } else c.fail(`${path}.kind`, "must be editorial-module | ink-category | manual | umapenca");
 }
 
 function checkSection(c: Collector, path: string, v: unknown): void {

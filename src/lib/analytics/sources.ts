@@ -38,6 +38,8 @@ export const SOURCES = {
   homeDdd: "home_ddd",
   /** A home carousel created in the CMS from an INK collection (a closed, enumerated origin — never a free string from a document). */
   homeCollection: "home_colecao",
+  /** A home carousel of Uma Penca articles (canecas, ecobags) created in the CMS — fires GoToPenca / go_to_umapenca, never GoToInk. */
+  homeUmaPenca: "home_umapenca",
   /** The home's "Sua cidade, de 8 jeitos" example-city cards that open the INK product directly. */
   homeStyles: "home_styles",
   /** The text search results page (`/<region>/busca`): a product card that opens the INK product. */
