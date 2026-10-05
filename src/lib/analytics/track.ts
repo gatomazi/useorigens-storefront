@@ -334,3 +334,20 @@ export function trackPodioClick(params: PodioClickParams): void {
     ...(params.position !== undefined ? { position: params.position } : {}),
   });
 }
+
+/**
+ * "Compartilhar" (GA4 recommended `share` event; GA4 only, no Meta event). `method` is how the person chose to share: `native` = the
+ * system share sheet resolved (it never proves a message was sent or received), `copy` = the link was really copied, `whatsapp` = the
+ * WhatsApp link was opened. `item_id` is the INK product id or the storefront path — never a URL, never a query string.
+ */
+export type ShareParams = { method: "native" | "copy" | "whatsapp"; contentType: "product" | "design" | "page"; itemId: string };
+export function trackShare(params: ShareParams): void {
+  if (!gtagReady()) return;
+  sendGtag("event", "share", { method: params.method, content_type: params.contentType, item_id: params.itemId });
+}
+
+/** "Guia de medidas" opened (GA4 only). Low-cardinality: the INK base garment the guide opened on and where the button was. */
+export function trackSizeGuideOpen(params: { garmentTypeId: number; source: string }): void {
+  if (!gtagReady()) return;
+  sendGtag("event", "size_guide_open", { garment_type_id: params.garmentTypeId, source: params.source });
+}

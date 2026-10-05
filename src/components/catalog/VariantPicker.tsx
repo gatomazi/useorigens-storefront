@@ -1,8 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { ShareButton } from "@/components/share/ShareButton";
 import { trackGoToInk } from "@/lib/analytics/track";
+import { CLASSIC_GARMENT_TYPE_ID } from "@/lib/catalog/garments";
+import type { SharePayload } from "@/lib/share/url";
 import { ProductPhoto } from "./ProductPhoto";
+import { SizeGuideButton } from "./SizeGuide";
 
 export type VariantOption = {
   id: string;
@@ -15,6 +19,8 @@ export type VariantOption = {
   rawPrice?: number | null;
   /** Verified INK purchase URL, or null when the destination is unusable. */
   href: string | null;
+  /** "Compartilhar" payload for THIS option (its own INK product page), built on the server; null = no verified destination, no button. */
+  share?: SharePayload | null;
 };
 
 /**
@@ -90,9 +96,14 @@ export function VariantPicker({
 
           <div className="mt-5 lg:mt-6">
             {selected.detail && <p className="t-place mb-1">{selected.detail}</p>}
-            <p className="t-h2" aria-live="polite">
-              {selected.price ?? "Consulte na loja"}
-            </p>
+            {/* "Guia de medidas" shares the price's row, before the CTA, so it adds no height: the CTA stays inside a small phone's first
+                screen and the decision block stays compact (tests/e2e/sul.spec.ts). Lighter than the CTA, never a second filled button. */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <p className="t-h2" aria-live="polite">
+                {selected.price ?? "Consulte na loja"}
+              </p>
+              <SizeGuideButton garmentTypeIds={[CLASSIC_GARMENT_TYPE_ID]} initialGarmentTypeId={CLASSIC_GARMENT_TYPE_ID} fallbackHref={selected.href} source={sourceSection} />
+            </div>
           </div>
 
           {selected.href ? (
@@ -112,6 +123,8 @@ export function VariantPicker({
             </div>
           )}
           <p className="t-caption mt-3 max-w-sm">Tamanho, cor, frete e pagamento você define na loja {storeName}.</p>
+          {/* Sharing is secondary: after the purchase CTA, for the version selected now (its own INK product page). */}
+          {selected.share && <ShareButton key={selected.id} share={selected.share} variant="inline" className="mt-2 -ml-0.5" />}
         </div>
       </div>
     </div>

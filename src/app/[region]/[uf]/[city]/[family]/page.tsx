@@ -14,6 +14,7 @@ import { familyDescription, familyTitle } from "@/lib/seo/copy";
 import { breadcrumbList } from "@/lib/seo/jsonld";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { SITE_URL } from "@/lib/site";
+import { inkProductShare } from "@/lib/share/server";
 
 export const revalidate = 3600;
 
@@ -50,14 +51,19 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
   const { city, family, primary, variants, stateName } = resolved;
   const base = `/${region}/${uf}/${city.slug}`;
 
-  const options: VariantOption[] = [primary, ...variants].map((binding) => ({
-    id: binding.inkProductId,
-    label: binding.designVariant === "base" ? "Principal" : binding.variantLabel ?? binding.designVariant,
-    imageUrl: binding.imageUrl,
-    price: formatPrice(binding.price),
-    rawPrice: binding.price,
-    href: purchaseUrl(binding),
-  }));
+  const options: VariantOption[] = [primary, ...variants].map((binding) => {
+    const label = binding.designVariant === "base" ? "Principal" : binding.variantLabel ?? binding.designVariant;
+    return {
+      id: binding.inkProductId,
+      label,
+      imageUrl: binding.imageUrl,
+      price: formatPrice(binding.price),
+      rawPrice: binding.price,
+      href: purchaseUrl(binding),
+      // Each version shares its own real INK product page (this page opens on the primary one, so it cannot stand for a version).
+      share: inkProductShare(binding, `${family.name} – ${city.name}${binding.designVariant === "base" ? "" : ` (${label})`}`),
+    };
+  });
 
   const others = cityData.families.filter((entry) => entry.family.id !== family.id);
 

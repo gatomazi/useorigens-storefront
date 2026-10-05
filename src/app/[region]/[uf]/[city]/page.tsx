@@ -25,6 +25,10 @@ import { breadcrumbList } from "@/lib/seo/jsonld";
 import { stateOf } from "@/lib/seo/state-copy";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { SITE_URL } from "@/lib/site";
+import { pageShare } from "@/lib/share/server";
+import { ShareButton } from "@/components/share/ShareButton";
+import { SizeGuideButton } from "@/components/catalog/SizeGuide";
+import { CLASSIC_GARMENT_TYPE_ID } from "@/lib/catalog/garments";
 
 export const revalidate = 3600;
 
@@ -92,6 +96,9 @@ export default async function CityPage({ params }: { params: Params }) {
   // instead of sitting as its own banner slice between the header and "Estilos" (docs/decisions/0003).
   const cityPhoto = usableBannerAsset("city", bannerFor(city.regionSlug, "city"));
 
+  // The canonical city URL (never the current one: `?peca=` and anything else the visitor carries stays out).
+  const share = pageShare(base, cityTitle(city));
+
   const intro = cityIntro(city, city.regionSlug, families.map((entry) => entry.family.name));
 
   return (
@@ -122,6 +129,7 @@ export default async function CityPage({ params }: { params: Params }) {
             <div className="min-w-0">
               <h1 className="t-city">{city.name}</h1>
               <p className="t-place mt-4 text-[1.125rem] sm:text-[1.5rem]">{localitySubtitle(city)}</p>
+              {share && <ShareButton share={share} variant="inline" className="mt-3 -ml-0.5" />}
             </div>
             <StateOutline uf={city.uf} className="hidden h-44 w-56 shrink-0 text-ink lg:block" strokeWidth={2} />
           </div>
@@ -129,14 +137,21 @@ export default async function CityPage({ params }: { params: Params }) {
       </section>
 
       <section aria-labelledby="styles-title" className="wrap pb-14 lg:pb-20">
-        <h2 id="styles-title" className="mb-6 text-[1.5rem] font-extrabold tracking-tight lg:mb-10 lg:text-[1.875rem]">
-          Estilos
-        </h2>
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 lg:mb-10">
+          <h2 id="styles-title" className="text-[1.5rem] font-extrabold tracking-tight lg:text-[1.875rem]">
+            Estilos
+          </h2>
+          {/* Without piece tabs every card is the classic tee; with tabs, the guide lives next to them (CityGarmentTabs). */}
+          {families.length > 0 && garment.tabs.length === 0 && (
+            <SizeGuideButton garmentTypeIds={[CLASSIC_GARMENT_TYPE_ID]} initialGarmentTypeId={CLASSIC_GARMENT_TYPE_ID} source={SOURCES.cityStyles} />
+          )}
+        </div>
         {families.length > 0 ? (
           garment.tabs.length > 0 ? (
             <Suspense fallback={<FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk />}>
               <CityGarmentTabs
                 tabs={garment.tabs}
+                guideSource={SOURCES.cityStyles}
                 panels={Object.fromEntries(
                   garment.tabs.map((tab) => [
                     tab.id,
@@ -149,6 +164,7 @@ export default async function CityPage({ params }: { params: Params }) {
                       sourceSection={SOURCES.cityStyles}
                       directToInk
                       pieceLabel={tab.id === garment.tabs[0].id ? undefined : tab.label}
+                      garmentTypeId={tab.id === garment.tabs[0].id ? undefined : tab.id}
                     />,
                   ]),
                 )}
