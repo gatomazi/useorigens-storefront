@@ -4,6 +4,8 @@ import { purchaseUrl } from "@/lib/catalog/commerce";
 import type { CityFamilyEntry } from "@/lib/catalog/repository";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { ShareButton } from "@/components/share/ShareButton";
+import { designShare, inkProductShare } from "@/lib/share/server";
 import { SOURCES } from "@/lib/analytics/sources";
 import { ProductPhoto } from "./ProductPhoto";
 
@@ -30,6 +32,7 @@ export function FamilyCard({
   priority = false,
   directToInk = false,
   pieceLabel,
+  garmentTypeId,
 }: {
   entry: CityFamilyEntry;
   href: string;
@@ -47,11 +50,20 @@ export function FamilyCard({
    * cards, aria-labels and GoToInk payloads are byte-identical to before this round.
    */
   pieceLabel?: string;
+  /** INK `product_type.id` of the piece shown (garment tabs only) — picks the share text ("camiseta" or not). */
+  garmentTypeId?: number;
 }) {
   const price = formatPrice(entry.primary.price);
   const inkHref = directToInk && entry.variants.length === 0 ? purchaseUrl(entry.primary) : null;
   const finalHref = inkHref ?? href;
   const displayName = pieceLabel ? `${entry.family.name} ${pieceLabel}` : entry.family.name;
+  // Same destination the card opens: the real INK product when the card goes straight there; otherwise the family page, which groups
+  // the design's versions — so it is shared as "Compartilhar estampa", never as if it were one variant.
+  const share = inkHref
+    ? inkProductShare(entry.primary, `${displayName} – ${cityName}`, garmentTypeId)
+    : entry.variants.length > 0
+      ? designShare(href, `${entry.family.name} – ${cityName}`)
+      : null;
 
   const content = (
     <>
@@ -72,7 +84,7 @@ export function FamilyCard({
   // same tab (matches the rest of the site's purchase links — VariantPicker's own CTA is also a same-tab <a>,
   // no new-tab popup).
   //
-  // The heart is a SIBLING of the anchor, absolutely positioned on top of the photo — never nested inside it
+  // The heart (and the share button under it) is a SIBLING of the anchor, absolutely positioned on top of the photo — never nested inside it
   // (a <button> inside an <a> is invalid HTML and would fire both the save and the navigation on one tap).
   return (
     <div className="group relative">
@@ -87,6 +99,7 @@ export function FamilyCard({
         }}
         className="absolute right-2 top-2 z-10"
       />
+      {share && <ShareButton share={share} variant="icon" className="absolute right-2 top-14 z-10" />}
       {inkHref ? (
         <TrackedInkLink
           href={inkHref}

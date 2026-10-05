@@ -23,6 +23,8 @@ import { stateOf } from "@/lib/seo/state-copy";
 import { breadcrumbList } from "@/lib/seo/jsonld";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { SITE_URL } from "@/lib/site";
+import { pageShare } from "@/lib/share/server";
+import { ShareButton } from "@/components/share/ShareButton";
 
 export const revalidate = 3600;
 
@@ -125,6 +127,9 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   const capital = hasRegions ? undefined : cities.find((c) => c.slug === STATE_CAPITAL_SLUG[uf]);
   const podium = getStatePodium(region, uf);
 
+  // The state's canonical URL — the same path its metadata declares, never the visitor's current one.
+  const share = pageShare(`/${region}/${uf.toLowerCase()}`, stateTitle(uf, counts.administrativeRegions));
+
   return (
     <>
       <JsonLd data={breadcrumbList(SITE_URL, [{ name: REGIONS[region].name, path: `/${region}` }, { name: STATE_NAMES[uf], path: `/${region}/${uf.toLowerCase()}` }])} />
@@ -146,6 +151,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
                   <p className="t-place mt-3 text-[1.125rem]">
                     {hasRegions ? stateLocalityLabel(counts) : `${numberPt.format(cities.length)} cidades · ${groups.length} regiões`}
                   </p>
+                  {share && <ShareButton share={share} variant="inline" className="mt-3 -ml-0.5" />}
                 </div>
                 <StateOutline uf={uf} className="h-20 w-24 shrink-0 text-ink md:hidden" strokeWidth={2} />
               </div>

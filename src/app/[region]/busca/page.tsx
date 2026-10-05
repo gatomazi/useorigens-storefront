@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
+import { ShareButton } from "@/components/share/ShareButton";
+import { inkProductShare } from "@/lib/share/server";
 import { SOURCES } from "@/lib/analytics/sources";
 import { regionSearchDocs } from "@/lib/catalog/search-docs";
 import { formatPrice, numberPt } from "@/lib/format";
@@ -101,33 +103,38 @@ export default async function SearchPage({ params, searchParams }: Props) {
             {result.pageCount > 1 ? ` · página ${numberPt.format(result.page)} de ${numberPt.format(result.pageCount)}` : ""}
           </p>
           <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
-            {result.items.map((item, i) => (
-              <li key={item.id} className="group relative">
-                <FavoriteButton
-                  item={{
-                    inkProductId: item.id,
-                    commerceStoreKey: item.commerceStoreKey,
-                    title: item.title,
-                    context: item.context,
-                    imageUrl: item.imageUrl,
-                    price: item.price,
-                  }}
-                  className="absolute right-2 top-2 z-10"
-                />
-                <TrackedInkLink
-                  href={item.href}
-                  params={{ productId: item.id, sourceSection: SOURCES.search, state: item.uf ?? undefined, value: item.price ?? undefined, productName: item.title, destinationUrl: item.href }}
-                  className="block"
-                >
-                  <ProductPhoto src={item.imageUrl} alt={item.context ? `${item.title}, ${item.context}` : item.title} sizes="(min-width: 1024px) 22vw, (min-width: 768px) 30vw, 46vw" priority={i < 4} />
-                  <div className="mt-3">
-                    <h2 className="t-h3 link-line inline">{item.title}</h2>
-                    {item.context && <p className="t-place mt-1 text-[0.95rem] text-ink-mute">{item.context}</p>}
-                    {formatPrice(item.price) && <p className="t-small mt-0.5 font-semibold">{formatPrice(item.price)}</p>}
-                  </div>
-                </TrackedInkLink>
-              </li>
-            ))}
+            {result.items.map((item, i) => {
+              // The same real INK product the card opens (cleaned by allowlist); no verified URL, no share button.
+              const share = inkProductShare({ inkProductId: item.id, storeProductUrl: item.href }, item.context ? `${item.title}, ${item.context}` : item.title);
+              return (
+                <li key={item.id} className="group relative">
+                  <FavoriteButton
+                    item={{
+                      inkProductId: item.id,
+                      commerceStoreKey: item.commerceStoreKey,
+                      title: item.title,
+                      context: item.context,
+                      imageUrl: item.imageUrl,
+                      price: item.price,
+                    }}
+                    className="absolute right-2 top-2 z-10"
+                  />
+                  {share && <ShareButton share={share} variant="icon" className="absolute right-2 top-14 z-10" />}
+                  <TrackedInkLink
+                    href={item.href}
+                    params={{ productId: item.id, sourceSection: SOURCES.search, state: item.uf ?? undefined, value: item.price ?? undefined, productName: item.title, destinationUrl: item.href }}
+                    className="block"
+                  >
+                    <ProductPhoto src={item.imageUrl} alt={item.context ? `${item.title}, ${item.context}` : item.title} sizes="(min-width: 1024px) 22vw, (min-width: 768px) 30vw, 46vw" priority={i < 4} />
+                    <div className="mt-3">
+                      <h2 className="t-h3 link-line inline">{item.title}</h2>
+                      {item.context && <p className="t-place mt-1 text-[0.95rem] text-ink-mute">{item.context}</p>}
+                      {formatPrice(item.price) && <p className="t-small mt-0.5 font-semibold">{formatPrice(item.price)}</p>}
+                    </div>
+                  </TrackedInkLink>
+                </li>
+              );
+            })}
           </ul>
 
           {result.pageCount > 1 && (

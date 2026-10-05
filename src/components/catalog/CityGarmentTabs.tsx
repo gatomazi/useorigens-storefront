@@ -3,6 +3,7 @@
 import { usePathname, useSearchParams } from "next/navigation";
 import { useRef, useState, type ReactNode } from "react";
 import type { GarmentTabOption } from "@/lib/catalog/repository";
+import { SizeGuideButton } from "./SizeGuide";
 
 /**
  * Garment-type selector for the city page (MD "seletor de peças na página da cidade"): tabs directly under
@@ -19,7 +20,7 @@ import type { GarmentTabOption } from "@/lib/catalog/repository";
  * plain React nodes is the supported RSC pattern for exactly this case. All panels are always mounted (never
  * remounted on tab switch, so images never re-fetch); only the inactive ones get the `hidden` attribute.
  */
-export function CityGarmentTabs({ tabs, panels }: { tabs: GarmentTabOption[]; panels: Record<number, ReactNode> }) {
+export function CityGarmentTabs({ tabs, panels, guideSource }: { tabs: GarmentTabOption[]; panels: Record<number, ReactNode>; guideSource: string }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const listRef = useRef<HTMLDivElement>(null);
@@ -53,29 +54,34 @@ export function CityGarmentTabs({ tabs, panels }: { tabs: GarmentTabOption[]; pa
 
   return (
     <div>
-      <div
-        ref={listRef}
-        role="tablist"
-        aria-label="Tipo de peça"
-        onKeyDown={onKeyDown}
-        className="-mx-4 mb-6 flex gap-2 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
-      >
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            id={`garment-tab-${tab.slug}`}
-            aria-selected={tab.id === selected.id}
-            aria-controls={`garment-panel-${tab.slug}`}
-            tabIndex={tab.id === selected.id ? 0 : -1}
-            onClick={() => select(tab)}
-            className="min-h-11 shrink-0 whitespace-nowrap border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors aria-selected:border-region-primary aria-selected:bg-region-primary aria-selected:text-white"
-          >
-            {tab.label}
-            {tab.count > 0 && <span className="ml-1 font-normal opacity-70">· {tab.count}</span>}
-          </button>
-        ))}
+      {/* One "Guia de medidas" for the whole listing (never one per card): it opens on the piece of the selected tab, and inside it the
+          person can switch to any other piece listed here. A tab's id IS the INK product_type.id (repository.ts garmentTabsForCity). */}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+        <div
+          ref={listRef}
+          role="tablist"
+          aria-label="Tipo de peça"
+          onKeyDown={onKeyDown}
+          className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 [&::-webkit-scrollbar]:hidden"
+        >
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              id={`garment-tab-${tab.slug}`}
+              aria-selected={tab.id === selected.id}
+              aria-controls={`garment-panel-${tab.slug}`}
+              tabIndex={tab.id === selected.id ? 0 : -1}
+              onClick={() => select(tab)}
+              className="min-h-11 shrink-0 whitespace-nowrap border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors aria-selected:border-region-primary aria-selected:bg-region-primary aria-selected:text-white"
+            >
+              {tab.label}
+              {tab.count > 0 && <span className="ml-1 font-normal opacity-70">· {tab.count}</span>}
+            </button>
+          ))}
+        </div>
+        <SizeGuideButton garmentTypeIds={tabs.map((t) => t.id)} initialGarmentTypeId={selected.id} source={guideSource} className="shrink-0 self-start" />
       </div>
       {tabs.map((tab) => (
         <div key={tab.id} role="tabpanel" id={`garment-panel-${tab.slug}`} aria-labelledby={`garment-tab-${tab.slug}`} hidden={tab.id !== selected.id}>

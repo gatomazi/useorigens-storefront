@@ -15,6 +15,7 @@ export function FamilyGrid({
   sourceSection,
   directToInk = false,
   pieceLabel,
+  garmentTypeId,
 }: {
   entries: CityFamilyEntry[];
   hrefBase: string;
@@ -24,6 +25,8 @@ export function FamilyGrid({
   directToInk?: boolean;
   /** Forwarded to every `FamilyCard` — set only by the city page's garment-type tabs. */
   pieceLabel?: string;
+  /** Forwarded to every `FamilyCard` with `pieceLabel` (the tab's INK `product_type.id`). */
+  garmentTypeId?: number;
 }) {
   if (entries.length === 0) return null;
 
@@ -41,6 +44,7 @@ export function FamilyGrid({
             sizes="(min-width: 1024px) 23vw, (min-width: 768px) 30vw, 46vw"
             directToInk={directToInk}
             pieceLabel={pieceLabel}
+            garmentTypeId={garmentTypeId}
           />
         </li>
       ))}
