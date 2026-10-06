@@ -2,6 +2,7 @@ import "server-only";
 import { DESIGN_FAMILIES } from "../catalog/families";
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import { getRegionHome } from "../home";
+import { storeForRegion } from "../catalog/commerce-mode";
 
 /**
  * What the REAL catalog of a region can feed to the three structured home components, for the admin (editor panel, model cards and preview
@@ -12,7 +13,7 @@ export type StructuredStatus = { ok: boolean; summary: string; notes: string[] }
 
 export function cityStylesStatus(region: RegionSlug, configured?: { title?: string; count?: number }): StructuredStatus {
   const home = getRegionHome(region);
-  const own = REGIONS[region].storeKey;
+  const own = storeForRegion(region);
   const showcase = home.showcase;
   if (!showcase) return { ok: false, summary: "Sem cidade de exemplo com produtos", notes: [`Nenhuma cidade de exemplo de ${REGIONS[region].name} tem produtos no catálogo desta loja: a seção não aparece na loja até o catálogo ser sincronizado.`] };
   const entries = showcase.families.filter((f) => f.primary.commerceStoreKey === own);

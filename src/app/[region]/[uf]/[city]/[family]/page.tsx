@@ -61,7 +61,9 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
       rawPrice: binding.price,
       href: purchaseUrl(binding),
       // Each version shares its own real INK product page (this page opens on the primary one, so it cannot stand for a version).
-      share: inkProductShare(binding, `${family.name} – ${city.name}${binding.designVariant === "base" ? "" : ` (${label})`}`),
+      // A simulated product (single-store preview) is hidden in INK: no share link to it either.
+      share: binding.simulated ? null : inkProductShare(binding, `${family.name} – ${city.name}${binding.designVariant === "base" ? "" : ` (${label})`}`),
+      ...(binding.simulated ? { simulated: true } : {}),
     };
   });
 

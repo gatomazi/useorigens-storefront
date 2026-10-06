@@ -3,7 +3,7 @@ import { cityById } from "../../geo/cities";
 import { localityById } from "../../geo/localities";
 import { buildStoreIndex } from "../indexer";
 import { parseProductName } from "../parse";
-import type { InkProductNormalized, StoreIndex, UnrankedBinding } from "../types";
+import type { InkProductNormalized, UnrankedBinding } from "../types";
 import { chaveMigracaoDoVinculo, chavePeca, chaveProduto, lugarDaChaveMigracao, MODELO_PARA_FAMILIA } from "./chave";
 import { idNoEstado, type EstadoMigracao } from "./estado-migracao";
 import type { ProdutoBruto } from "./produto-bruto";
@@ -509,47 +509,5 @@ export function reconciliar(input: {
 }
 
 // ─── Índice sombra ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-export type ResultadoSombra = {
-  /** Mesmo formato do catalog-snapshot.json de produção (versão 1), com UMA loja (use-sul) servindo as três regiões. */
-  snapshot: { version: 1; stores: { "use-sul": StoreIndex } };
-  /** Peças incluídas por SIMULAÇÃO de ativação (hoje ocultas): a Camiseta base de cada item do migrador. */
-  simulados: string[];
-  /** Peças que entrariam na simulação mas não podem ser servidas (sem imagem/URL): ficam fora, contadas. */
-  foraPorImagem: string[];
-};
-
-/**
- * O que a vitrine serviria se as três regiões viessem só da loja Sul: o mesmo recorte do sync de produção (visível + publicado), MAIS a
- * Camiseta base de cada item migrado como se tivesse sido ativada (é a peça clássica do card; as outras 9 vão para o índice de peças, não
- * aqui). Região de cada produto vem da classificação; desconhecida/conflito fica fora (listada na classificação, nunca descartada em silêncio).
- */
-export function montarIndiceSombra(sul: Map<string, ProdutoSul>, syncedAt: string): ResultadoSombra {
-  const juntos: StoreIndex = { commerceStoreKey: "use-sul", syncedAt, productCount: 0, bindings: [], merch: [], excluded: [] };
-  const simulados: string[] = [];
-  const foraPorImagem: string[] = [];
-  for (const regiao of Object.keys(REGIONS) as RegionSlug[]) {
-    for (const s of sul.values()) {
-      if (s.regiao !== regiao || !s.classificado) continue;
-      const p = s.produto;
-      const publicado = p.visible && p.status === "published";
-      const simulado = !publicado && s.tipoNoEstado === 1;
-      if (!publicado && !simulado) continue;
-      if (!p.image || !p.url) {
-        if (simulado) foraPorImagem.push(p.id);
-        continue;
-      }
-      if (simulado) simulados.push(p.id);
-      juntos.productCount++;
-      const c = s.classificado;
-      if (c.tipo === "desenho") juntos.bindings.push({ ...c.vinculo!, syncedAt });
-      else if (c.tipo === "merch") {
-        juntos.merch.push({ inkProductId: p.id, commerceStoreKey: "use-sul", regionSlug: regiao, name: p.name.replace(/\s+/g, " ").trim(), slug: p.slug, storeProductUrl: p.url, imageUrl: p.image, price: p.price === null ? null : Number(p.price), totalSalesCount: p.sales, ...(p.clusterId ? { productClusterId: p.clusterId } : {}), syncedAt });
-      } else {
-        const [reason, ...detail] = (c.motivoExclusao ?? "city-not-found").split(" ");
-        juntos.excluded.push({ inkProductId: p.id, commerceStoreKey: "use-sul", name: p.name, reason: reason as never, detail: detail.join(" ") || undefined });
-      }
-    }
-  }
-  return { snapshot: { version: 1, stores: { "use-sul": juntos } }, simulados, foraPorImagem };
-}
+// A montagem do que a vitrine serve a partir da loja única (catálogo, peças, coleções) está em ./loja-unica.ts (`montarLojaUnica`), usada
+// pela reconciliação, pela geração da prévia e pelo sync — uma implementação só.

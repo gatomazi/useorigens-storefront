@@ -71,6 +71,12 @@ export type CityDesignBinding = {
    * src/lib/editorial/state-showcase.ts).
    */
   totalSalesCount?: number;
+
+  /**
+   * Only in a SIMULATION snapshot of the single store (src/lib/catalog/unificado/loja-unica.ts): a product that is hidden in INK today and
+   * is shown as if it had been activated. Never sellable: `purchaseUrl` returns null for it. Absent everywhere in production data.
+   */
+  simulated?: true;
 };
 
 /** What the indexer stores per store. Ranking across stores happens at read time (ranking.ts). */
@@ -95,6 +101,8 @@ export type MerchProduct = {
   /** INK's `product_type.id` when known: picks the classic T-shirt as a design's representative (src/lib/recommendations). */
   garmentTypeId?: number;
   syncedAt: string;
+  /** See `CityDesignBinding.simulated`. */
+  simulated?: true;
 };
 
 export type ExclusionReason =
@@ -145,7 +153,29 @@ export type StoreIndex = {
   excluded: ExcludedProduct[];
 };
 
+/**
+ * Where a snapshot came from. Absent = the regional sync (`multi-store`, every snapshot written before this field existed). A
+ * `single-store` snapshot is one INK store serving the three regions (src/lib/catalog/unificado/loja-unica.ts); the storefront only serves
+ * it in `COMMERCE_MODE=single-store` and refuses it otherwise (src/lib/catalog/commerce-mode.ts), so a catalog can never be paired with
+ * the other mode's purchase stores.
+ */
+export type CatalogSource =
+  | { mode: "multi-store" }
+  | {
+      mode: "single-store";
+      storeKey: CommerceStoreKey;
+      /** True only for the local preview that shows hidden Norte/CO products as if activated. Never produced by the production sync. */
+      simulation: boolean;
+      runId: string;
+      generatedAt: string;
+      /** Version of the old → new map the references were resolved with (docs/migracao-ink/). */
+      mapVersion: number;
+      /** sha256 of the migrator state (+ complement) that identified the migrated products. */
+      identitySha256: string;
+    };
+
 export type CatalogSnapshot = {
   version: 1;
+  source?: CatalogSource;
   stores: Partial<Record<CommerceStoreKey, StoreIndex>>;
 };

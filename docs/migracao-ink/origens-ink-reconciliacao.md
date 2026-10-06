@@ -51,12 +51,12 @@ H=$(shasum -a 256 ../orgulhoregional/scripts/.migracao-estado.jsonl | cut -c1-16
 cp -p ../orgulhoregional/scripts/.migracao-estado.jsonl data/unificado/estado/migracao-estado-$H.jsonl
 # 3) Reconciliação + índice sombra: offline, cerca de 30 s
 npm run unificado:reconciliar -- --estado=data/unificado/estado/migracao-estado-$H.jsonl
-# 4) Ver o catálogo sombra no storefront local (o snapshot de produção não muda)
-CATALOG_SNAPSHOT_DIR=$PWD/data/unificado/saida/<runId>/sombra npm run dev
+# 4) Prévia completa (catálogo + peças + coleções, nos dois modos): ver origens-storefront-unificado-preparacao.md §2
+npm run unificado:gerar -- --estado=data/unificado/estado/migracao-estado-$H.jsonl --modo=simulacao
 ```
 
-No passo 4 o diretório sombra só tem `catalog-snapshot.json`. As abas de peça e as coleções aparecem vazias nessa pré-visualização, e
-isso é esperado.
+> Atualizado em 06/10: o antigo passo 4 (`CATALOG_SNAPSHOT_DIR=…/sombra`) servia só `catalog-snapshot.json`, com abas de peça e coleções
+> vazias. Foi substituído por `unificado:gerar` e pelo modo de comércio `COMMERCE_MODE` (origens-storefront-unificado-preparacao.md).
 
 ## 3. O que mudou no código
 

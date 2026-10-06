@@ -33,7 +33,8 @@
     "test:admin:prod": "playwright test -c playwright.prod.config.ts",
     "cms:check": "node --env-file-if-exists=.env.local --import tsx scripts/cms-check.mts",
     "unificado:ler": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-unificado-ler.mts",
-    "unificado:reconciliar": "node --conditions=react-server --import tsx scripts/ink-unificado-reconciliar.mts"
+    "unificado:reconciliar": "node --conditions=react-server --import tsx scripts/ink-unificado-reconciliar.mts",
+    "unificado:gerar": "node --max-old-space-size=8192 --conditions=react-server --import tsx scripts/ink-unificado-gerar.mts"
   },
   "dependencies": {
     "embla-carousel-react": "^8.6.0",

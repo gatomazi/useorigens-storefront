@@ -1,5 +1,6 @@
 import "server-only";
 import { commerceStorePriorityOverride } from "../config/env";
+import { commercePlan, SINGLE_STORE_KEY, type CommercePlan } from "./commerce-mode";
 import { allCities, cityById, type City } from "../geo/cities";
 import { localityById } from "../geo/localities";
 import { REGIONS, REGION_SLUGS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
@@ -7,9 +8,9 @@ import { buildLore, type Lore } from "../editorial/lore";
 import { DESIGN_FAMILIES, type DesignFamily, type DesignFamilyId } from "./families";
 import { isSubLocality, localityKeyOf, withLocality } from "./locality-binding";
 import { CLASSIC_GARMENT_TYPE_ID, GARMENT_TYPES, garmentTypeById } from "./garments";
-import { emptyGarmentIndex, expandTuple, garmentIndexMtimeMs, readGarmentIndexSync, type ExpandedPiece, type GarmentIndex } from "./garment-index-file";
+import { emptyGarmentIndex, expandTuple, garmentIndexMtimeMs, garmentIndexPath, readGarmentIndexSync, type ExpandedPiece, type GarmentIndex } from "./garment-index-file";
 import { compareIds, rankBindings } from "./ranking";
-import { readSnapshotSync, snapshotMtimeMs } from "./snapshot-file";
+import { EMPTY_SNAPSHOT, readSnapshotSync, snapshotMtimeMs, snapshotPath } from "./snapshot-file";
 import type { CityDesignBinding, MerchProduct, UnrankedBinding } from "./types";
 
 export type CityFamilyEntry = {
@@ -58,8 +59,10 @@ export type StoreProducts = { merch: ReadonlyMap<string, MerchProduct>; cityDesi
 /**
  * `regional` (default): a region's own INK store wins, matching how commerce runs today.
  * A comma list (e.g. `use-origens,use-sul`) overrides it globally once stores are consolidated.
+ * Single-store mode (commerce-mode.ts): the single store only — the plan already refuses the mode when an override is also set.
  */
-function storeOrderFor(region: RegionSlug): CommerceStoreKey[] {
+function storeOrderFor(region: RegionSlug, plan: CommercePlan): CommerceStoreKey[] {
+  if (plan.effective === "single-store") return [SINGLE_STORE_KEY];
   const override = commerceStorePriorityOverride();
   if (override) return override;
   const own = REGIONS[region].storeKey;
@@ -67,26 +70,42 @@ function storeOrderFor(region: RegionSlug): CommerceStoreKey[] {
   return [own, ...others];
 }
 
-let cache: { mtimeMs: number; catalog: Catalog } | null = null;
+let cache: { key: string; mtimeMs: number; catalog: Catalog } | null = null;
 
 /**
  * The garment-piece index has its own mtime-keyed cache, independent of the base snapshot's: a re-sync of
  * pieces never forces a catalog rebuild, and a missing/corrupt file is just an empty index (no tabs), so the
  * optional index can never take the storefront down.
  */
-let garmentIndexCache: { mtimeMs: number; index: GarmentIndex } | null = null;
+let garmentIndexCache: { file: string; mtimeMs: number; index: GarmentIndex } | null = null;
 
 /** The garment-piece index, cached by file mtime (shared with the global search, so the 20 MB file is parsed once per change). */
 export function getGarmentIndex(): GarmentIndex {
-  const mtimeMs = garmentIndexMtimeMs();
-  if (garmentIndexCache && garmentIndexCache.mtimeMs === mtimeMs) return garmentIndexCache.index;
-  const { index } = mtimeMs === 0 ? { index: emptyGarmentIndex() } : readGarmentIndexSync();
-  garmentIndexCache = { mtimeMs, index };
+  const file = garmentIndexPath(commercePlan().dataDir);
+  const mtimeMs = garmentIndexMtimeMs(file);
+  if (garmentIndexCache && garmentIndexCache.file === file && garmentIndexCache.mtimeMs === mtimeMs) return garmentIndexCache.index;
+  const { index } = mtimeMs === 0 ? { index: emptyGarmentIndex() } : readGarmentIndexSync(file);
+  garmentIndexCache = { file, mtimeMs, index };
   return index;
 }
 
-function build(): { catalog: Catalog; mtimeMs: number } {
-  const { snapshot, mtimeMs } = readSnapshotSync();
+/**
+ * A snapshot is only served under the mode it was made for (commerce-mode.ts): the regional data set must not declare `single-store`
+ * (a single-store catalog read by the regional mode would sell Norte/CO through the Sul store), and the plan has already checked the
+ * single-store one. A mismatch serves nothing from that file, loudly — never a mix.
+ */
+function snapshotForPlan(file: string, plan: CommercePlan) {
+  const read = readSnapshotSync(file);
+  const declared = read.snapshot.source?.mode ?? "multi-store";
+  if (declared !== plan.effective) {
+    console.error(`[catalog] ${file} declara ${declared}, mas o modo servido é ${plan.effective}: arquivo recusado`);
+    return { snapshot: EMPTY_SNAPSHOT, mtimeMs: read.mtimeMs };
+  }
+  return read;
+}
+
+function build(file: string, plan: CommercePlan): { catalog: Catalog; mtimeMs: number } {
+  const { snapshot, mtimeMs } = snapshotForPlan(file, plan);
   const stores = Object.values(snapshot.stores);
 
   const byRegion = new Map<RegionSlug, UnrankedBinding[]>();
@@ -109,7 +128,7 @@ function build(): { catalog: Catalog; mtimeMs: number } {
   // Keyed by locality: a municipality id, or an administrative region's own id (its products never mix with Brasília's).
   const ranked = new Map<string, CityDesignBinding[]>();
   for (const region of REGION_SLUGS) {
-    for (const binding of rankBindings(byRegion.get(region) ?? [], storeOrderFor(region))) {
+    for (const binding of rankBindings(byRegion.get(region) ?? [], storeOrderFor(region, plan))) {
       const key = localityKeyOf(binding);
       const list = ranked.get(key) ?? [];
       list.push(binding);
@@ -191,6 +210,8 @@ function build(): { catalog: Catalog; mtimeMs: number } {
             imageUrl: piece.imageUrl,
             price: piece.price,
             syncedAt: garmentIndex.stores[primary.commerceStoreKey]?.syncedAt ?? "",
+            // A piece of a simulated classic is hidden in INK just like it: never sellable either (commerce.ts).
+            ...(primary.simulated ? { simulated: true as const } : {}),
           },
           variants: [],
         });
@@ -250,12 +271,15 @@ function build(): { catalog: Catalog; mtimeMs: number } {
   return { catalog, mtimeMs };
 }
 
-/** Cached per process; rebuilt only when the snapshot file changes (a stat per call is cheap). */
+/** Cached per process; rebuilt only when the served snapshot file (or the effective commerce mode) changes (a stat per call is cheap). */
 export function getCatalog(): Catalog {
-  const mtimeMs = snapshotMtimeMs();
-  if (cache && cache.mtimeMs === mtimeMs) return cache.catalog;
-  const built = build();
-  cache = { mtimeMs: built.mtimeMs, catalog: built.catalog };
+  const plan = commercePlan();
+  const file = snapshotPath(plan.dataDir);
+  const mtimeMs = snapshotMtimeMs(file);
+  const key = `${plan.effective}|${plan.simulation}|${file}`;
+  if (cache && cache.key === key && cache.mtimeMs === mtimeMs) return cache.catalog;
+  const built = build(file, plan);
+  cache = { key, mtimeMs: built.mtimeMs, catalog: built.catalog };
   return built.catalog;
 }
 

@@ -3,14 +3,16 @@
 // Usage: npm run recommendations:build [-- --dry-run] [--audit <dir>] [--stores use-sul,use-norte]
 //   --dry-run   build + validate + report, but do not touch the live index
 //   --audit     also write the human review sample (Markdown + CSV) into <dir>
+//   --loja-unica  build the single store's index from <snapshot dir>/loja-unica/ (use-sul only; a SIMULATION snapshot is refused)
 // Deterministic: the same inputs produce a byte-identical file (sha256 printed). Validation runs BEFORE promotion; the live file is kept
 // as <file>.prev and a failed validation leaves the live file untouched (exit 1).
 import { performance } from "node:perf_hooks";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import { readSnapshotSync } from "../src/lib/catalog/snapshot-file";
-import { readCollectionsFile } from "../src/lib/catalog/collections-file";
-import { readGarmentIndexSync } from "../src/lib/catalog/garment-index-file";
+import { readSnapshotSync, snapshotPath } from "../src/lib/catalog/snapshot-file";
+import { collectionsPath, readCollectionsFile } from "../src/lib/catalog/collections-file";
+import { garmentIndexPath, readGarmentIndexSync } from "../src/lib/catalog/garment-index-file";
+import { SINGLE_STORE_KEY, singleStoreDataDir } from "../src/lib/catalog/commerce-mode";
 import { readPublished } from "../src/lib/site-config/published";
 import type { CommerceStoreKey } from "../src/lib/geo/regions";
 import { buildRecommendationsIndex, lookupRecommendations, serializeIndex, type StoreBuildInput } from "../src/lib/recommendations/build";
@@ -26,12 +28,18 @@ const value = (name: string) => {
 };
 const dryRun = flag("--dry-run");
 const auditDir = value("--audit");
-const wanted = (value("--stores")?.split(",") ?? ["use-sul", "use-norte", "use-centro"]) as CommerceStoreKey[];
+const lojaUnica = flag("--loja-unica");
+const dataDir = lojaUnica ? singleStoreDataDir() : undefined;
+const wanted = (lojaUnica ? [SINGLE_STORE_KEY] : (value("--stores")?.split(",") ?? ["use-sul", "use-norte", "use-centro"])) as CommerceStoreKey[];
 
 const t0 = performance.now();
-const { snapshot } = readSnapshotSync();
-const { snapshot: collections } = readCollectionsFile();
-const { index: garments } = readGarmentIndexSync();
+const { snapshot } = readSnapshotSync(dataDir ? snapshotPath(dataDir) : undefined);
+if (lojaUnica && (snapshot.source?.mode !== "single-store" || snapshot.source.simulation)) {
+  console.error("refusing --loja-unica: the snapshot there is not a production single-store snapshot (a simulation would recommend hidden products)");
+  process.exit(1);
+}
+const { snapshot: collections } = readCollectionsFile(dataDir ? collectionsPath(dataDir) : undefined);
+const { index: garments } = readGarmentIndexSync(dataDir ? garmentIndexPath(dataDir) : undefined);
 const published = readPublished();
 const bundle = published.source === "published" ? published.bundle : null;
 const tRead = performance.now();
@@ -96,10 +104,10 @@ if (dryRun) {
   console.log("dry run: live index untouched");
 } else {
   try {
-    const promoted = await writeAndPromote(text, { expectStores: inputs.map((i) => i.store), minListsPerStore: 10 });
+    const promoted = await writeAndPromote(text, { expectStores: inputs.map((i) => i.store), minListsPerStore: 10, ...(dataDir ? { target: recommendationsIndexPath(dataDir) } : {}) });
     console.log(`promoted ${promoted.target} (${promoted.validation.bytes} bytes, sha256 ${promoted.validation.sha256})${promoted.previous ? `, previous kept at ${path.basename(promoted.previous)}` : ""}`);
   } catch (err) {
-    console.error(`NOT promoted, ${recommendationsIndexPath()} unchanged: ${(err as Error).message}`);
+    console.error(`NOT promoted, ${recommendationsIndexPath(dataDir)} unchanged: ${(err as Error).message}`);
     for (const e of (err as { errors?: string[] }).errors ?? []) console.error(`  - ${e}`);
     process.exit(1);
   }

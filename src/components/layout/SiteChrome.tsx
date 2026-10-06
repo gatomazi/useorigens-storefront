@@ -18,6 +18,7 @@ import { HeaderDropdown } from "./HeaderDropdown";
 import { HeaderShell } from "./HeaderShell";
 import { MobileMenu } from "./MobileMenu";
 import { CartMirrorMenu } from "../cart-mirror/CartMirrorMenu";
+import { cartRegionFor } from "@/lib/catalog/commerce-mode";
 import { FavoritesMenu } from "../favorites/FavoritesMenu";
 import { SearchDialog } from "../search/SearchDialog";
 
@@ -111,7 +112,7 @@ export function Header({ region }: { region: RegionSlug }) {
             </HeaderDropdown>
           )}
           <FavoritesMenu region={region} />
-          <CartMirrorMenu region={region} />
+          <CartMirrorMenu region={cartRegionFor(region)} />
           <SearchDialog region={region} />
         </div>
       </div>

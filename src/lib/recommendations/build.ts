@@ -200,9 +200,9 @@ export type PublicRecommendation = { productId: string; title: string; image: st
  * One product page's list, as the public route and the Worker see it. Rebuilds every URL from the store's own base (an item never carries
  * a host) and drops anything that does not rebuild cleanly. O(1): one object lookup plus at most four array reads.
  */
-export function lookupRecommendations(index: RecommendationsIndex | null, region: RegionSlug, productId: string): PublicRecommendation[] {
+/** `storeKey` is the region's store under the effective commerce mode (the route passes `storeForRegion`); defaults to the regional one. */
+export function lookupRecommendations(index: RecommendationsIndex | null, region: RegionSlug, productId: string, storeKey: CommerceStoreKey | undefined = REGIONS[region]?.storeKey): PublicRecommendation[] {
   if (!index || !PRODUCT_ID.test(productId)) return [];
-  const storeKey = REGIONS[region]?.storeKey;
   const store = storeKey ? index.stores[storeKey] : undefined;
   const base = storeKey ? STORE_PRODUCT_URL_BASE[storeKey] : undefined;
   if (!store || !base) return [];

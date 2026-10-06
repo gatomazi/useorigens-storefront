@@ -1,9 +1,11 @@
 import "server-only";
-import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
+import { STATE_NAMES, type RegionSlug } from "../geo/regions";
 import { prepareDocs, type PreparedDoc, type SearchDoc } from "../search/catalog-search";
 import { purchaseUrl } from "./commerce";
 import { searchMembers, type CollectionRecord } from "./collections";
 import { getStoreCollections } from "./collections-file";
+import { collectionsForRegion } from "./collection-source";
+import { storeForRegion } from "./commerce-mode";
 import { DESIGN_FAMILIES, variantLabel } from "./families";
 import { isSubLocality, localityOfBinding } from "./locality-binding";
 import { getCatalog, type Catalog } from "./repository";
@@ -111,11 +113,12 @@ const cache = new Map<RegionSlug, { catalog: Catalog; collectionsKey: string; do
 /** Cached per region; rebuilt when the catalog snapshot (a new `Catalog` object) or the collections snapshot changes. */
 export function regionSearchDocs(region: RegionSlug): PreparedDoc[] {
   const catalog = getCatalog();
-  const store = getStoreCollections(REGIONS[region].storeKey);
-  const collectionsKey = store ? `${store.syncedAt}:${store.collections.length}` : "none"; // a collections resync rewrites syncedAt
+  const storeKey = storeForRegion(region);
+  const store = getStoreCollections(storeKey);
+  const collectionsKey = store ? `${storeKey}:${store.syncedAt}:${store.collections.length}` : "none"; // a collections resync rewrites syncedAt
   const hit = cache.get(region);
   if (hit && hit.catalog === catalog && hit.collectionsKey === collectionsKey) return hit.docs;
-  const docs = buildSearchDocs(catalog, region, store?.collections ?? []);
+  const docs = buildSearchDocs(catalog, region, store ? collectionsForRegion(region, (s) => catalog.productsOfStore(s)) : []);
   cache.set(region, { catalog, collectionsKey, docs });
   return docs;
 }

@@ -10,7 +10,7 @@ import { RECOMMENDATIONS_VERSION, validateRecommendationsText, type IndexValidat
  * `recommendations-index.json` lives next to the catalog snapshot (the Railway Volume). It is OPTIONAL: missing, corrupt or of another
  * version means "no recommendations" (every product page stays exactly as INK draws it), never an error.
  */
-export const recommendationsIndexPath = (): string => path.join(catalogSnapshotDir(), "recommendations-index.json");
+export const recommendationsIndexPath = (dir: string = catalogSnapshotDir()): string => path.join(dir, "recommendations-index.json");
 
 let cache: { file: string; mtimeMs: number; index: RecommendationsIndex | null } | null = null;
 

@@ -155,15 +155,20 @@ export async function lerLojaInteira(
   return { paginasLidas: lidas, ultimaPagina: page - 1, totalPages, completo: page > totalPages };
 }
 
-/** Coleções (categorias) de uma loja COM os `product_ids` — só as que a reconciliação usa (segmentação regional), filtradas por `quer`. */
+/**
+ * Coleções (categorias) de uma loja COM os `product_ids` — só as que a reconciliação usa (segmentação regional), filtradas por `quer`.
+ * `paginas` devolve as respostas da INK como vieram (forma de `GET /v1/stores/collections`): a geração da loja única as passa pelo MESMO
+ * `parseCollectionsPage` do sync de coleções de produção, casadas com o catálogo gerado — nenhum segundo parser.
+ */
 export async function lerColecoes(
   storeKey: CommerceStoreKey,
   quer: (nome: string) => boolean,
-): Promise<{ todas: { id: number; name: string; isAvailable: boolean; reported: number }[]; membros: { id: number; name: string; productIds: string[] }[] }> {
+): Promise<{ todas: { id: number; name: string; isAvailable: boolean; reported: number }[]; membros: { id: number; name: string; productIds: string[] }[]; paginas: unknown[] }> {
   const token = tokenFor(storeKey);
   if (!token) throw new Error(`sem credencial para ${storeKey}`);
   const todas: { id: number; name: string; isAvailable: boolean; reported: number }[] = [];
   const membros: { id: number; name: string; productIds: string[] }[] = [];
+  const paginas: unknown[] = [];
   for (let page = 1, totalPages = 1; page <= totalPages; page++) {
     let body: { collections?: unknown; total_pages?: unknown } | undefined;
     for (let tentativa = 0; ; tentativa++) {
@@ -181,6 +186,7 @@ export async function lerColecoes(
     }
     if (!body || !Array.isArray(body.collections) || typeof body.total_pages !== "number") throw new Error(`${storeKey} coleções: formato inesperado`);
     totalPages = body.total_pages;
+    paginas.push(body);
     for (const c of body.collections as Record<string, unknown>[]) {
       const ids = Array.isArray(c.product_ids) ? (c.product_ids as unknown[]).map(String) : [];
       const item = { id: Number(c.id), name: String(c.name ?? ""), isAvailable: c.is_available === true, reported: ids.length };
@@ -189,5 +195,5 @@ export async function lerColecoes(
     }
     if (page < totalPages) await dormir(PACE_MS);
   }
-  return { todas, membros };
+  return { todas, membros, paginas };
 }
