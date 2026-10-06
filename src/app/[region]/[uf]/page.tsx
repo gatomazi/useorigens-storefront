@@ -11,6 +11,9 @@ import { getStatePodium } from "@/lib/podio/server";
 import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { stateShowcase } from "@/lib/editorial/state-showcase";
+import { stateStyles } from "@/lib/editorial/state-styles";
+import { getStoreCollections } from "@/lib/catalog/collections-file";
+import { StateStyles } from "@/components/catalog/StateStyles";
 import { SOURCES } from "@/lib/analytics/sources";
 import { numberPt } from "@/lib/format";
 import { localitiesOfRegion, pluralLocalidades, stateLocalityCounts, stateLocalityGroups, stateLocalityLabel } from "@/lib/geo/localities";
@@ -101,6 +104,17 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
     capitalSlug: hasRegions ? undefined : STATE_CAPITAL_SLUG[uf],
   });
 
+  // "Escolha o estilo": the same places, grouped by style (src/lib/editorial/state-styles.ts). "Ver todos" only where the store has the
+  // style-and-state navigation collection.
+  const styles = stateStyles({
+    uf,
+    cities: hasRegions ? cities.filter((c) => c.type === "administrative_region") : cities,
+    catalog,
+    store: REGIONS[region].storeKey,
+    collections: getStoreCollections(REGIONS[region].storeKey)?.collections ?? [],
+    capitalSlug: hasRegions ? undefined : STATE_CAPITAL_SLUG[uf],
+  });
+
   // Editorial mesoregion grouping (ADR 0004), navigation only — not the current IBGE division. Cities
   // without one still appear in A–Z. A state with administrative regions groups them apart from its municipality.
   const groups: BrowserGroup[] = stateLocalityGroups(uf, cities).map((g) => ({
@@ -182,7 +196,13 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
         </section>
       )}
 
-      {/* "O Pódio": right after the first product showcase, before the editorial context (docs/storefront/podio.md). Absent when there is
+      {styles.length > 0 && (
+        <section id="estilos" className="wrap pb-10 lg:pb-14" aria-labelledby="styles-title">
+          <StateStyles stateName={STATE_NAMES[uf]} styles={styles} sourceSection={SOURCES.stateStyles} />
+        </section>
+      )}
+
+      {/* "O Pódio": right after the product rows (showcase, styles), before the editorial context (docs/storefront/podio.md). Absent when there is
           no fresh snapshot or no eligible sale in this UF. Its CTA goes back up to the showcase, or down to the places list without one. */}
       {podium && <StatePodium podium={podium} productsAnchor={showcase.length > 0 ? "camisetas" : "lugares"} />}
 

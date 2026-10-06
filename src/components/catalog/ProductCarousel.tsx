@@ -1,7 +1,7 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
-import { useCallback, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { trackGoToInk, trackGoToUmaPenca } from "@/lib/analytics/track";
 import { ProductPhoto } from "./ProductPhoto";
 
@@ -63,6 +63,8 @@ export function ProductCarousel({
   viewAllLabel = "Ver todos",
   sourceSection,
   leading,
+  toolbar,
+  resetKey,
 }: {
   /** When set, this card is ALWAYS the first one; `items` are the ordinary products after it. */
   leading?: LeadingCard;
@@ -79,6 +81,10 @@ export function ProductCarousel({
   /** GoToInk `source_section` — one value for the whole carousel instance, e.g. "home_terra". This is the one
    * shared click point behind five of the home's sections (Da Nossa Terra, Redesenhos, Feito Para Você, Fala
    * daqui, DDD) — CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md §2. */
+  /** Controls between the heading and the cards (the style chips of a state page). */
+  toolbar?: ReactNode;
+  /** Changing it scrolls the row back to the first card (the items were swapped in place, e.g. another style chosen). */
+  resetKey?: string;
   sourceSection: string;
 }) {
   const dark = tone === "dark";
@@ -95,6 +101,10 @@ export function ProductCarousel({
     },
     [embla],
   );
+  useEffect(() => {
+    embla?.scrollTo(0, true);
+  }, [embla, resetKey]);
+
   const canPrev = useSyncExternalStore(subscribe, () => embla?.canScrollPrev() ?? false, () => false);
   const canNext = useSyncExternalStore(subscribe, () => embla?.canScrollNext() ?? true, () => true);
 
@@ -125,6 +135,7 @@ export function ProductCarousel({
           </div>
         </div>
       </div>
+      {toolbar && <div className="-mt-2 pb-6 sm:-mt-4 sm:pb-8">{toolbar}</div>}
       <div ref={viewport} className="-mr-4 overflow-hidden sm:mr-0">
         <ul className="-ml-3 flex touch-pan-y sm:-ml-4 lg:-ml-6">
           {leading && (

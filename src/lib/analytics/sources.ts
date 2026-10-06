@@ -45,6 +45,8 @@ export const SOURCES = {
   /** The text search results page (`/<region>/busca`): a product card that opens the INK product. */
   search: "search_results",
   stateShowcase: "state_showcase",
+  /** "Escolha o estilo" on a state page: the state's city designs of one style (chips switch the style). */
+  stateStyles: "state_styles",
   cityStyles: "city_styles",
   cityFala: "city_fala",
   cityLocalities: "city_localities",

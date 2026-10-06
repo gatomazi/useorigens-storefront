@@ -5,7 +5,7 @@ Reconstrução (2026-10) da funcionalidade apagada. Não havia código anterior 
 
 ## O que aparece
 
-- **Página do estado** (`/[region]/[uf]`, `#podio`): logo depois da vitrine "Destaques de {estado}" e antes do texto editorial.
+- **Página do estado** (`/[region]/[uf]`, `#podio`): logo depois das vitrines "Destaques de {estado}" e "Escolha o estilo" e antes do texto editorial.
   "O Pódio {de/do} {estado}", Top 3 **lugares mais vestidos** (municípios; no DF, Regiões Administrativas) e Top 3 **estampas mais
   vestidas** (famílias), com movimento (`↑1`, `↓2`, `NOVO`, `—`) em relação ao dia anterior e um rodapé com CTA para a vitrine
   (`#camisetas`, ou `#lugares` se o estado não tiver vitrine).
@@ -74,7 +74,7 @@ Escrita sempre temp + rename. Falha (INK, paginação, catálogo ausente, disco)
 - **Primeiro cálculo (local)**: `npm run podio:sync` (ou `-- sul norte`). Precisa de `INK_TOKEN_*` e do snapshot de catálogo.
 - **Em produção**: `POST /api/admin/podio-sync` com `Authorization: Bearer $ADMIN_SYNC_TOKEN` (sem token: 503; outro processo
   rodando: 409; alguma região falhou: 502 com detalhes). Revalida `/<region>` e `/<region>/<uf>` das regiões calculadas.
-- **Cron diário (a criar no Railway — não existe ainda)**: serviço `podio-sync-cron`, imagem `curlimages/curl`, sem Volume, mesmo molde do
+- **Cron diário (criado no Railway; ativo em 2026-10-05)**: serviço `podio-sync-cron`, imagem `curlimages/curl`, sem Volume, mesmo molde do
   `garments-sync-cron`, schedule `0 7 * * *` (UTC) = **04:00 em Brasília** (depois do garments/catalog sync das 03:30):
 
   ```sh
