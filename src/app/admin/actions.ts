@@ -116,7 +116,7 @@ export async function addCollectionSection(fd: FormData) {
   const problem = sourceProblem({ kind: "ink-category", ...ref, order: "category", limit: 6 }, (await loadWorkspace(scope)).doc);
   if (problem) back(at, { err: [problem] });
   const limit = Math.min(24, Math.max(3, Math.round(Number(text(fd, "limit")) || 6)));
-  return run(fd, { type: "add-carousel", title: text(fd, "title") || findCollection(ref.store, ref.collectionId)?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit } }, "Seção criada no rascunho.", "/admin/home", true);
+  return run(fd, { type: "add-carousel", title: text(fd, "title") || findCollection(ref.store, ref.collectionId)?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit }, cta: { label: "Ver todos", dest: { kind: "ink-collection", ...ref } } }, "Seção criada no rascunho.", "/admin/home", true);
 }
 
 /**

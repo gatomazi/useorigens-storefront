@@ -121,7 +121,7 @@ function FamilyList({ podium, entries }: { podium: PublicPodium; entries: Public
                   <span className="sr-only">1º lugar: </span>
                   {e.name}
                 </span>
-                {e.example && <span className="t-caption mt-1 block">Exemplo da estampa: {e.example.placeName}</span>}
+                {e.example && <span className="t-caption mt-1 block">Na foto: {e.example.placeName}</span>}
                 {e.href && <span className="mt-2 inline-block text-[0.9375rem] font-semibold link-static">Ver camiseta →</span>}
               </span>
               <FamilyThumb entry={e} size="lead" />
@@ -137,7 +137,7 @@ function FamilyList({ podium, entries }: { podium: PublicPodium; entries: Public
                   <span className="sr-only">{e.position}º lugar: </span>
                   {e.name}
                 </span>
-                {e.example && <span className="t-caption block">Exemplo: {e.example.placeName}{e.href ? " · Ver camiseta →" : ""}</span>}
+                {e.example && <span className="t-caption block">Na foto: {e.example.placeName}{e.href ? " · Ver camiseta →" : ""}</span>}
               </span>
               <MovementBadge movement={e.movement} />
             </EntryShell>
