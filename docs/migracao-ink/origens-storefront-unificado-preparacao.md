@@ -166,6 +166,27 @@ Situação dos produtos da loja única:
 As bases sem imagem ficam fora: nenhum mockup substituto. As três famílias zeradas são justamente os lotes sem imagem. Os desenhos
 que só existem na loja única (14 Norte, 114 CO) vieram do acervo e a loja antiga não tinha.
 
+### Vitrine real de Norte e Centro-Oeste (CMS em produção)
+
+O `published.json` que está no ar (release 41) foi copiado do Volume só para leitura. A prévia foi gerada de novo com ele
+(`--site-config=data/unificado/published-producao.json`) e renderizada nos dois modos.
+
+| Referência no CMS | Hoje (três lojas) | Loja única: o que acontece |
+|---|---|---|
+| Hero Norte: 3 destaques `use-norte` (Macapá · Ponto de Origem, Parintins · Feito em, Porto Velho · Território) | 3 cards | Os 3 têm correspondência confirmada no mapa. Macapá e Parintins são bases **sem imagem** e somem. Porto Velho está **simulado** e só aparece depois da ativação. Resultado: **1 de 3** |
+| Hero CO: 3 destaques `use-centro` (Ponto de Origem, Feito em, Território) | 3 cards | Feito em sem imagem. Os outros 2 estão simulados. Resultado: **2 de 3** depois da ativação |
+| Carrosséis Norte: "Made In Norte" (141902), "Identidade" (142833), "Fala de Onde" (142840) | 3 seções | **Somem as 3.** São coleções de merch da `use-norte`, sem nenhum item na loja única |
+| Carrosséis CO: "Made in Centro-Oeste" (139344), "Identidade" (139345), "Fala de Onde" (139343) | 3 seções | **Somem as 3**, pelo mesmo motivo |
+| Sul: carrossel "Novidades" (153383) | 11 itens | **5 itens.** Os outros 6 são merch criado depois de 12/09 sem a coleção `SUL` (região pendente, item 8) |
+| Navbar de Norte e CO | vazia | vazia (sem impacto) |
+
+Não há perda silenciosa: hoje a home de Norte e CO tem 3 carrosséis cada e, no modo único, fica só com hero, estilos e estados. Para
+recuperar a vitrine é preciso recriar na `use-sul` o merch "Made In", "Identidade" e "Fala de Onde" de cada região, criar coleções
+regionais e re-apontar as seções no CMS. Isso é a dependência `cms-references`, junto com o item 6.
+
+Observação lateral: o grupo principal da navbar da Sul aponta a coleção 152270, que não existe na leitura de coleções de 06/10. Esse
+item já cai hoje, nos dois modos.
+
 ## 6. Pendências reais
 
 **Dependências externas que bloqueiam a ativação comercial.** Ficam em `SINGLE_STORE_DEPENDENCIES`, todas `ready: false`; cada uma só
@@ -176,8 +197,9 @@ vira `true` num PR, depois de entregue e verificada:
 2. `buy-session-worker`: `list-watch.js` na usesul precisa atender `?ls=` de listas montadas em `/norte`/`/centro-oeste`.
 3. `checkout-theme`: nome, logo e volta para a região navegada no checkout da loja única. Inclui os textos "Loja Use Norte" e
    "finaliza a compra na loja Use Norte" do storefront.
-4. `cms-references`: publicação de Norte/CO ainda aponta coleções/produtos de `use-norte`/`use-centro`. Produto em destaque se resolve
-   pelo mapa; coleção não tem mapa (ids por loja) e precisa ser re-escolhida no CMS.
+4. `cms-references`: a publicação de Norte/CO ainda aponta coleções/produtos de `use-norte`/`use-centro` (detalhe em §5, "Vitrine
+   real"). Os produtos em destaque se resolvem pelo mapa. Coleção não tem mapa (os ids são por loja), então os 6 carrosséis precisam ser
+   re-escolhidos no CMS depois que o merch for recriado.
 
 **Dados:**
 
