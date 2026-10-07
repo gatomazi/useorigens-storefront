@@ -18,6 +18,7 @@
     "recommendations:build": "node --conditions=react-server --import tsx scripts/build-recommendations.mts",
     "collections:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-collections.mts",
     "umapenca:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-umapenca.mts",
+    "umapenca:fotos": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-umapenca-fotos.mts",
     "podio:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-podio.mts",
     "verify:bootstrap": "tsx scripts/verify-bootstrap.mts",
     "verify:prerender": "tsx scripts/verify-prerender.mts",

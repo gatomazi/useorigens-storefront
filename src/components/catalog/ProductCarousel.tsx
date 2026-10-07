@@ -19,6 +19,8 @@ export type CarouselItem = {
   /** UF, when this item is genuinely tied to one state — the GoToInk `state` param. Never guessed. */
   state?: string;
   imageUrl: string;
+  /** Second photo, shown under the pointer. Only Uma Penca articles have one (fetched on demand, src/lib/umapenca/hover.ts). */
+  hoverImageUrl?: string;
   /** Verified purchase URL: the INK store, or the Uma Penca store when `umaPenca` is set. */
   href: string;
   /** Set only for an Uma Penca article (canecas, ecobags): the click then fires GoToPenca / go_to_umapenca instead of GoToInk. */
@@ -178,6 +180,7 @@ export function ProductCarousel({
                 <ProductPhoto
                   poster={poster}
                   src={item.imageUrl}
+                  hoverSrc={item.hoverImageUrl}
                   alt={`${item.eyebrow ? `${item.eyebrow}, ` : ""}${item.name}${item.context ? `, ${item.context}` : ""}`}
                   sizes="(min-width: 1280px) 19vw, (min-width: 1024px) 22vw, (min-width: 768px) 27vw, (min-width: 640px) 34vw, 62vw"
                   priority={i < 2}

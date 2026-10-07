@@ -6,6 +6,7 @@ import { isRegionSlug } from "@/lib/geo/regions";
 import { publishedFor } from "@/lib/pages/public";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { createYourOwnCards } from "@/lib/umapenca/customizer-cards";
+import { umaPencaHoverPhotos } from "@/lib/umapenca/hover";
 import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
@@ -39,6 +40,7 @@ export default async function OutrosArtigosPage({ params }: Props) {
   const { region } = await params;
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const articles = readUmaPencaSnapshot()?.articles ?? [];
+  const hover = umaPencaHoverPhotos();
   const published = publishedFor(region);
   const groups = ARTICLE_KINDS.map((kind) => ({
     kind,
@@ -76,7 +78,7 @@ export default async function OutrosArtigosPage({ params }: Props) {
             ))}
             {articles.map((article, i) => (
               <li key={article.id}>
-                <ArticleCard article={article} region={region} sizes={SIZES} priority={groupIndex === 0 && cards.length + i < 2} />
+                <ArticleCard article={article} region={region} sizes={SIZES} hoverImageUrl={hover[article.id]} priority={groupIndex === 0 && cards.length + i < 2} />
               </li>
             ))}
           </ul>
