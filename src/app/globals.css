@@ -270,6 +270,16 @@ a:hover > .photo img,
 .photo-hover:hover .photo img {
   transform: scale(1.035);
 }
+/* Second photo (Uma Penca articles): cross-fades in under the pointer, only where a pointer can hover — on touch the first photo stays. */
+.photo .photo-alt {
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out), transform 500ms var(--ease-out);
+}
+@media (hover: hover) {
+  a:hover > .photo .photo-alt {
+    opacity: 1;
+  }
+}
 
 /*
  * Code-drawn overlays for a regional photo used as a SECTION BACKGROUND (never as a standalone banner slice —

@@ -10,6 +10,7 @@ export function ProductPhoto({
   sizes,
   priority = false,
   poster = false,
+  hoverSrc,
   className = "",
 }: {
   src: string;
@@ -18,11 +19,14 @@ export function ProductPhoto({
   priority?: boolean;
   /** 4:5 frame with a consistent crop, for merchandise whose photos have their own backgrounds. */
   poster?: boolean;
+  /** Second photo shown under the pointer (devices that hover only). Decorative: the link is already named by the main photo. */
+  hoverSrc?: string;
   className?: string;
 }) {
   return (
     <span className={`photo ${poster ? "photo-poster" : ""} ${className}`}>
       <Image src={src} alt={alt} fill sizes={sizes} quality={80} loading={priority ? "eager" : undefined} fetchPriority={priority ? "high" : undefined} />
+      {hoverSrc && <Image src={hoverSrc} alt="" aria-hidden="true" fill sizes={sizes} quality={80} className="photo-alt" />}
     </span>
   );
 }
