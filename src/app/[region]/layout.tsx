@@ -15,6 +15,7 @@ import { regionThemeStyle } from "@/lib/theme/region-theme";
 import { regionChrome } from "@/lib/site-config/chrome";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { publishedTracking } from "@/lib/site-config/tracking";
+import { cartRegionFor, commercePlan } from "@/lib/catalog/commerce-mode";
 
 // No region page is prebuilt: this layout reads the catalog snapshot (header count, footer sync date), and the
 // snapshot lives on the runtime Volume, which does not exist at `next build` time. Prebuilding `/sul` baked an
@@ -52,8 +53,15 @@ export default async function RegionLayout({ children, params }: { children: Rea
   const { cssVars } = regionChrome(region);
   return (
     <ConsentProvider>
-      <CartRefCapture region={region} />
+      {/* The cart lives in the store that sells (commerce-mode.ts): the region's own in multi-store, the single store's otherwise. */}
+      <CartRefCapture region={cartRegionFor(region)} />
       <div data-region={region} style={{ ...regionThemeStyle(region), ...cssVars, ...(cssVars["--ground"] ? { background: "var(--ground)" } : {}), ...(cssVars["--ink"] ? { color: "var(--ink)" } : {}) }} className="relative">
+        {commercePlan().simulation && (
+          // Local preview only (COMMERCE_SIMULATION=on): never rendered in production, where a simulation snapshot is refused.
+          <p role="note" className="bg-[#fde68a] px-4 py-2 text-center text-[0.8125rem] font-semibold text-black">
+            Prévia local da loja única (simulação): estampas ainda ocultas na INK aparecem sem botão de compra.
+          </p>
+        )}
         <AnnouncementBar region={region} cityCount={catalog.coveredCityIds(region).size} />
         <Header region={region} />
         <main id="conteudo">{children}</main>

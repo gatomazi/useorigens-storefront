@@ -4,9 +4,13 @@ import { purchaseUrl } from "./commerce";
 import { familyById, variantLabel } from "./families";
 import { isSubLocality, localityOfBinding } from "./locality-binding";
 import { getCatalog } from "./repository";
+import { canonicalRef } from "./references";
 
 export type ProductDisplay = {
+  /** The product actually served — in single-store mode an old regional ref resolves to its confirmed new id (references.ts). */
   inkProductId: string;
+  /** Store that sells it: where a list session must be minted, whatever store the caller's reference came from. */
+  commerceStoreKey: CommerceStoreKey;
   title: string;
   context: string | null;
   imageUrl: string;
@@ -22,7 +26,10 @@ export type ProductDisplay = {
  * removed, or never existed): the caller decides how to represent that ("indisponível", skip, etc.), this function
  * never invents a fallback.
  */
-export function resolveProductDisplay(storeKey: CommerceStoreKey, inkProductId: string): ProductDisplay | null {
+export function resolveProductDisplay(requestedStore: CommerceStoreKey, requestedId: string): ProductDisplay | null {
+  const ref = canonicalRef({ store: requestedStore, id: requestedId });
+  if (!ref) return null; // an old regional id with no confirmed row in the old → new map: unavailable, never guessed
+  const { store: storeKey, id: inkProductId } = ref;
   const { merch, cityDesigns } = getCatalog().productsOfStore(storeKey);
 
   const binding = cityDesigns.get(inkProductId);
@@ -38,6 +45,7 @@ export function resolveProductDisplay(storeKey: CommerceStoreKey, inkProductId: 
     const label = inside ?? (binding.designVariant === "base" ? null : (binding.variantLabel ?? variantLabel(binding.designVariant)));
     return {
       inkProductId,
+      commerceStoreKey: storeKey,
       title: label ? `${family.name} · ${label}` : family.name,
       context: `${inside ?? place.name} · ${place.uf}`,
       imageUrl: binding.imageUrl,
@@ -50,6 +58,7 @@ export function resolveProductDisplay(storeKey: CommerceStoreKey, inkProductId: 
   if (!product) return null;
   return {
     inkProductId,
+    commerceStoreKey: storeKey,
     title: product.name.replace(/\s+/g, " ").trim(),
     context: null,
     imageUrl: product.imageUrl,

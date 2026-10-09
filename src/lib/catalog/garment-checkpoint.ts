@@ -42,8 +42,8 @@ function isCheckpoint(value: unknown): value is GarmentSyncCheckpoint {
   return typeof value === "object" && value !== null && (value as GarmentSyncCheckpoint).version === 1 && typeof (value as GarmentSyncCheckpoint).stores === "object";
 }
 
-export function garmentCheckpointPath(): string {
-  return path.join(catalogSnapshotDir(), "garment-sync-checkpoint.json");
+export function garmentCheckpointPath(dir: string = catalogSnapshotDir()): string {
+  return path.join(dir, "garment-sync-checkpoint.json");
 }
 
 /** Always a fresh object on the "no file yet" path — never the shared `EMPTY_GARMENT_CHECKPOINT` singleton

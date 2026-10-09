@@ -35,8 +35,9 @@ export function emptyGarmentIndex(): GarmentIndex {
 
 const IMAGE_PREFIX = "https://gcp-images.majestic.ink.rsvcloud.com/";
 
-export function garmentIndexPath(): string {
-  return path.join(catalogSnapshotDir(), "garment-index.json");
+/** `dir` defaults to the snapshot directory (the regional data set the syncs write); the storefront reads `servedDataDir()` (commerce-mode.ts). */
+export function garmentIndexPath(dir: string = catalogSnapshotDir()): string {
+  return path.join(dir, "garment-index.json");
 }
 
 function isGarmentIndex(value: unknown): value is GarmentIndex {

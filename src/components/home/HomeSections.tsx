@@ -11,7 +11,8 @@ import { getPodiumLeaders } from "@/lib/podio/server";
 import { SOURCES } from "@/lib/analytics/sources";
 import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
-import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
+import type { RegionSlug } from "@/lib/geo/regions";
+import { storeForRegion } from "@/lib/catalog/commerce-mode";
 import { firstImageSectionId, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
 import type { Fill, Page, PublishedBundle, Section } from "@/lib/site-config/schema";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
@@ -64,7 +65,7 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
             if (!showcase || !cityPath) return null;
             // Only the styles that really exist for the example city (never padded); the configured count is a ceiling.
             // Also only products of THIS region's own INK store, whatever the catalog holds (never a foreign product).
-            const ownStore = REGIONS[region].storeKey;
+            const ownStore = storeForRegion(region);
             const entries = showcase.families.filter((f) => f.primary.commerceStoreKey === ownStore).slice(0, s.count ?? 8);
             if (entries.length === 0) return null;
             const content = (

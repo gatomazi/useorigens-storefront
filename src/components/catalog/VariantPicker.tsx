@@ -21,6 +21,8 @@ export type VariantOption = {
   href: string | null;
   /** "Compartilhar" payload for THIS option (its own INK product page), built on the server; null = no verified destination, no button. */
   share?: SharePayload | null;
+  /** Single-store SIMULATION only (commerce-mode.ts): hidden in INK today, shown as if activated — never presented as purchasable. */
+  simulated?: boolean;
 };
 
 /**
@@ -117,9 +119,13 @@ export function VariantPicker({
           ) : (
             <div className="mt-4">
               <span className="btn w-full sm:w-auto sm:min-w-72" aria-disabled="true">
-                Indisponível no momento
+                {selected.simulated ? "Prévia · ainda não está à venda" : "Indisponível no momento"}
               </span>
-              <p className="t-caption mt-3">Não conseguimos abrir este produto na loja agora. Tente novamente em instantes.</p>
+              <p className="t-caption mt-3">
+                {selected.simulated
+                  ? "Simulação da loja única: esta estampa ainda está oculta na loja e só aparece nesta prévia."
+                  : "Não conseguimos abrir este produto na loja agora. Tente novamente em instantes."}
+              </p>
             </div>
           )}
           <p className="t-caption mt-3 max-w-sm">Tamanho, cor, frete e pagamento você define na loja {storeName}.</p>

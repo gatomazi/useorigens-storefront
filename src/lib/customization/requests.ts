@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import { REGIONS } from "../geo/regions";
+import { storeForRegion } from "../catalog/commerce-mode";
 import { isUmaPencaProductUrl, UMAPENCA_STORE_HOST } from "../umapenca/hosts";
 import type { ModelSnapshot, Values } from "./validate";
 
@@ -142,7 +143,7 @@ export function productLinkFor(region: RegionSlug, raw: string, store?: ModelSna
   } catch {
     return { ok: false, error: "Link inválido: cole o endereço completo da página do produto." };
   }
-  const host = STORE_HOST[REGIONS[region].storeKey];
+  const host = STORE_HOST[storeForRegion(region)];
   if (url.protocol !== "https:") return { ok: false, error: "O link precisa começar com https://." };
   if (url.username || url.password || url.port) return { ok: false, error: "O link não pode ter usuário, senha nem porta." };
   if (store === "umapenca") {

@@ -9,6 +9,11 @@ import type { ExclusionReason, InkProductNormalized } from "./types";
 const PIPE_NAME = /^(?<title>.+?)\s*\|\s*(?<label>[^|]+?)(?:\s+(?<uf>[A-Z]{2}))?\s*$/;
 /** Norte/Centro: `Feito Em <City> - <UF>`. Sul: `Feito em <City>` (no UF at all). */
 const FEITO_EM_NAME = /^feito em\s+(?<city>.+?)(?:\s+-\s+(?<uf>[A-Z]{2}))?\s*$/i;
+/**
+ * Products the Centro/Norte → Sul migrator created: `Feito em <City> <UF>` (UF after a space, no hyphen — orgulhoregional
+ * scripts/migracao-config.mjs). Only an exact uppercase UF code is lifted out of the city; anything else stays part of the name.
+ */
+const TRAILING_UF = /\s([A-Z]{2})$/;
 
 /** Variant words that follow the family word in the label. Feminine forms collapse to one key. */
 const VARIANT_ALIASES: Readonly<Record<string, string>> = { personalizada: "personalizado" };
@@ -28,13 +33,14 @@ export type ParsedName =
 export function parseProductName(name: string): ParsedName {
   const feito = FEITO_EM_NAME.exec(name.trim());
   if (feito?.groups) {
-    return {
-      kind: "city-design",
-      family: "feito-em",
-      variant: "base",
-      title: feito.groups.city.trim(),
-      uf: feito.groups.uf ?? null,
-    };
+    let city = feito.groups.city.trim();
+    let uf = feito.groups.uf ?? null;
+    const trailing = uf === null ? TRAILING_UF.exec(city) : null;
+    if (trailing && trailing[1] in STATE_NAMES) {
+      uf = trailing[1];
+      city = city.slice(0, -3).trim();
+    }
+    return { kind: "city-design", family: "feito-em", variant: "base", title: city, uf };
   }
 
   const pipe = PIPE_NAME.exec(name.trim());
@@ -64,10 +70,14 @@ export type CityResolution =
   | { ok: true; city: City; localityLabel?: string; localityId?: string }
   | { ok: false; reason: ExclusionReason; detail?: string };
 
-/** UFs a product may belong to: its own UF when the name states one, else the store's UFs. */
-function candidateUfs(storeKey: CommerceStoreKey, statedUf: string | null): readonly string[] {
+/**
+ * UFs a product may belong to: its own UF when the name states one, else the store's UFs. `scopeUfs` replaces the store's UFs — only the
+ * unified-store shadow read passes it (one INK store holding several regions: the region comes from the migration state or the regional
+ * collection, never from the store). Omitted = production behaviour.
+ */
+function candidateUfs(storeKey: CommerceStoreKey, statedUf: string | null, scopeUfs?: readonly string[]): readonly string[] {
   const region = Object.values(REGIONS).find((r) => r.storeKey === storeKey);
-  const storeUfs = region?.ufs ?? [];
+  const storeUfs = scopeUfs ?? region?.ufs ?? [];
   if (statedUf === null) return storeUfs;
   return storeUfs.includes(statedUf) ? [statedUf] : [];
 }
@@ -88,8 +98,9 @@ function uniqueCity(name: string, ufs: readonly string[]): CityResolution {
 export function resolveCity(
   parsed: Extract<ParsedName, { kind: "city-design" }>,
   product: Pick<InkProductNormalized, "tags" | "storeKey">,
+  scopeUfs?: readonly string[],
 ): CityResolution {
-  const ufs = candidateUfs(product.storeKey, parsed.uf);
+  const ufs = candidateUfs(product.storeKey, parsed.uf, scopeUfs);
   if (ufs.length === 0) return { ok: false, reason: "uf-mismatch", detail: parsed.uf ?? undefined };
 
   if (parsed.family === "gentilico") {

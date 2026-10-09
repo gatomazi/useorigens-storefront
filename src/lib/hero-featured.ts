@@ -2,13 +2,15 @@ import "server-only";
 import { purchaseUrl } from "./catalog/commerce";
 import { DESIGN_FAMILIES, familyById } from "./catalog/families";
 import { getCatalog, type Catalog } from "./catalog/repository";
+import { storeForRegion } from "./catalog/commerce-mode";
+import { canonicalRef } from "./catalog/references";
 import { isSubLocality, localityOfBinding } from "./catalog/locality-binding";
 import { resolveCityProduct } from "./catalog/resolver";
 import type { UnrankedBinding } from "./catalog/types";
 import { formatPrice } from "./format";
 import type { LocalityType } from "./geo/cities";
 import { localityKindLabel } from "./geo/localities";
-import { REGIONS, type CommerceStoreKey, type RegionSlug } from "./geo/regions";
+import type { CommerceStoreKey, RegionSlug } from "./geo/regions";
 import { normalizeText } from "./geo/text";
 import { HERO_FAMILIES } from "./editorial/sul";
 import type { HeroFamilyCard } from "./home";
@@ -24,7 +26,7 @@ import { MAX_FEATURED, type FeaturedProductRef } from "./site-config/schema";
 export type FeaturedSlot = { ref: FeaturedProductRef; ok: boolean; reason: string | null; card: HeroFamilyCard | null; buyUrl: string | null; imageUrl: string | null };
 
 function cardOf(region: RegionSlug, b: UnrankedBinding, catalog: Catalog): { card: HeroFamilyCard | null; reason: string | null } {
-  if (b.commerceStoreKey !== REGIONS[region].storeKey) return { card: null, reason: "produto de outra loja da INK" };
+  if (b.commerceStoreKey !== storeForRegion(region)) return { card: null, reason: "produto de outra loja da INK" };
   // A place INSIDE a municipality (Torres · Praia Paraíso) is not a card of its own; a Federal District administrative region is (it has its own page).
   if (isSubLocality(b)) return { card: null, reason: "produto de localidade dentro da cidade, não da cidade" };
   const city = localityOfBinding(b);
@@ -44,8 +46,11 @@ function cardOf(region: RegionSlug, b: UnrankedBinding, catalog: Catalog): { car
 export function resolveFeatured(region: RegionSlug, refs: readonly FeaturedProductRef[]): FeaturedSlot[] {
   const catalog = getCatalog();
   return refs.slice(0, MAX_FEATURED).map((ref) => {
-    if (ref.store !== REGIONS[region].storeKey) return { ref, ok: false, reason: "produto de outra loja da INK", card: null, buyUrl: null, imageUrl: null };
-    const binding = catalog.productsOfStore(ref.store).cityDesigns.get(ref.productId);
+    // The CMS keeps its reference as saved; single-store mode reads an old regional ref through the old → new map (references.ts).
+    const served = canonicalRef({ store: ref.store, id: ref.productId });
+    if (!served) return { ref, ok: false, reason: "produto da loja regional sem correspondência confirmada na loja única", card: null, buyUrl: null, imageUrl: null };
+    if (served.store !== storeForRegion(region)) return { ref, ok: false, reason: "produto de outra loja da INK", card: null, buyUrl: null, imageUrl: null };
+    const binding = catalog.productsOfStore(served.store).cityDesigns.get(served.id);
     if (!binding) return { ref, ok: false, reason: "o produto não existe mais no catálogo sincronizado", card: null, buyUrl: null, imageUrl: null };
     const { card, reason } = cardOf(region, binding, catalog);
     return { ref, ok: card !== null, reason, card, buyUrl: purchaseUrl(binding), imageUrl: binding.imageUrl || null };
@@ -93,7 +98,7 @@ const indexes = new WeakMap<Catalog, Map<CommerceStoreKey, Indexed[]>>();
 
 function indexOf(region: RegionSlug): Indexed[] {
   const catalog = getCatalog();
-  const store = REGIONS[region].storeKey;
+  const store = storeForRegion(region);
   let perStore = indexes.get(catalog);
   if (!perStore) indexes.set(catalog, (perStore = new Map()));
   const cached = perStore.get(store);

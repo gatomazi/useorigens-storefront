@@ -59,3 +59,6 @@ next-env.d.ts
 
 # local CMS sandbox: drafts, sandbox publications, uploads (docs/admin/cms-local-usage.md)
 /data/admin-dev/
+
+# leitura em modo sombra da loja INK unificada (docs/migracao-ink/origens-ink-reconciliacao.md)
+/data/unificado/

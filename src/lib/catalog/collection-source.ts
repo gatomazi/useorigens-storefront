@@ -4,9 +4,10 @@ import { enabledInternalIds } from "../site-config/collections-enabled";
 import type { ScopeDoc } from "../site-config/schema";
 import type { CategoryLookup } from "../site-config/sources";
 import { formatPrice } from "../format";
-import type { CommerceStoreKey } from "../geo/regions";
+import { isRegionSlug, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { commercePlan, storeForRegion } from "./commerce-mode";
 import { purchaseUrl } from "./commerce";
-import { collectionState, MIN_USABLE_PRODUCTS, type CollectionReason } from "./collections";
+import { collectionState, MIN_USABLE_PRODUCTS, searchMembers, type CollectionReason, type CollectionRecord } from "./collections";
 import { findCollection, getStoreCollections } from "./collections-file";
 import { DESIGN_FAMILIES } from "./families";
 import { localityOfBinding } from "./locality-binding";
@@ -70,12 +71,38 @@ function cityDesignItem(design: UnrankedBinding): CarouselItem | null {
   return { id: design.inkProductId, name: family.name, context: `${city.name} · ${city.uf}`, price: formatPrice(design.price), rawPrice: design.price, state: city.uf, imageUrl: design.imageUrl, href };
 }
 
+/** The region a catalog product is about (a city design's locality, a merch item's own region), or null when unknown. */
+export function regionOfStoreProduct(products: StoreProducts, id: string): RegionSlug | null {
+  const merch = products.merch.get(id);
+  if (merch) return merch.regionSlug;
+  const design = products.cityDesigns.get(id);
+  return design ? (localityOfBinding(design)?.regionSlug ?? null) : null;
+}
+
+/**
+ * The collections a region may show (search results, collection pages): those of the region's store under the effective commerce mode. In
+ * single-store mode one store's collections serve three regions, so a collection belongs to a region only when EVERY member known in the
+ * catalog is a product of that region (evidence from the products themselves, never from the collection's name); mixed or unknown ones are
+ * left out. In the regional mode every collection of the region's own store qualifies, as before.
+ */
+export function collectionsForRegion(region: RegionSlug, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): CollectionRecord[] {
+  const store = storeForRegion(region);
+  const all = getStoreCollections(store, filePath)?.collections ?? [];
+  if (commercePlan().effective !== "single-store") return all;
+  const products = productsOf(store);
+  return all.filter((c) => {
+    const ids = searchMembers(c) ?? c.memberIds;
+    return ids.length > 0 && ids.every((id) => regionOfStoreProduct(products, id) === region);
+  });
+}
+
 /**
  * Resolves a collection to carousel items using ONLY products of the same store that exist in the catalog snapshot (merch or city
  * design); hidden, missing, other-store and duplicated ids never appear, nothing is invented. Order = INK's own. A public collection is
- * usable as-is; an INTERNAL one only when the document has explicitly enabled it (`enabled`).
+ * usable as-is; an INTERNAL one only when the document has explicitly enabled it (`enabled`). With `region`, products of another region
+ * are skipped too (a no-op for a regional store; in single-store mode one store holds the three regions).
  */
-export function categoryLookup(productsOf: (store: CommerceStoreKey) => StoreProducts, enabled: (store: CommerceStoreKey) => ReadonlySet<number>, filePath?: string): CategoryLookup {
+export function categoryLookup(productsOf: (store: CommerceStoreKey) => StoreProducts, enabled: (store: CommerceStoreKey) => ReadonlySet<number>, filePath?: string, region?: RegionSlug): CategoryLookup {
   return (store, collectionId, limit) => {
     if (!getStoreCollections(store, filePath)) return { status: "unavailable", reason: "ink-collections-not-synced" };
     const collection = findCollection(store, collectionId, filePath);
@@ -86,6 +113,7 @@ export function categoryLookup(productsOf: (store: CommerceStoreKey) => StorePro
     const products = productsOf(store);
     const items: CarouselItem[] = [];
     for (const id of collection.memberIds) {
+      if (region && regionOfStoreProduct(products, id) !== region) continue;
       const merch = products.merch.get(id);
       const item = merch ? merchItem(merch) : products.cityDesigns.has(id) ? cityDesignItem(products.cityDesigns.get(id)!) : null;
       if (item) items.push(item);
@@ -104,7 +132,7 @@ export function publicCollectionSlug(store: CommerceStoreKey, collectionId: numb
 /** What `HomeSections` needs to render collection-backed (and Uma Penca) sections for a document (the published one, or a draft in the preview). */
 export function categoryProps(productsOf: (store: CommerceStoreKey) => StoreProducts, doc: ScopeDoc | undefined) {
   return {
-    categories: categoryLookup(productsOf, (store) => enabledInternalIds(doc, store)),
+    categories: categoryLookup(productsOf, (store) => enabledInternalIds(doc, store), undefined, doc && isRegionSlug(doc.scope) ? doc.scope : undefined),
     slugOf: (store: CommerceStoreKey, collectionId: number) => publicCollectionSlug(store, collectionId),
     umapenca: umaPencaLookup(doc?.scope ?? ""),
   };

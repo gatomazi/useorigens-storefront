@@ -12,14 +12,15 @@ import { getFavorites, removeFavorite, subscribeFavorites } from "@/lib/favorite
 import type { FavoriteItem } from "@/lib/favorites/types";
 import { REGIONS, type CommerceStoreKey, type RegionSlug } from "@/lib/geo/regions";
 
-type Resolved = { available: true; title: string; context: string | null; imageUrl: string; price: number | null; url: string } | { available: false };
+/** `purchaseStoreKey`/`purchaseId`: who sells it now (single-store mode resolves an old regional favorite to the single store). */
+type Resolved = { available: true; title: string; context: string | null; imageUrl: string; price: number | null; url: string; purchaseStoreKey: CommerceStoreKey; purchaseId: string } | { available: false };
 
 // `useSyncExternalStore`'s getServerSnapshot must return the SAME reference every call (React compares by
 // identity) — an inline `() => []` allocates a new array each time and triggers "The result of getServerSnapshot
 // should be cached to avoid an infinite loop" during hydration.
 const EMPTY_FAVORITES: readonly FavoriteItem[] = [];
 
-const storeLabel = (storeKey: CommerceStoreKey): string => Object.values(REGIONS).find((r) => r.storeKey === storeKey)?.name ?? "Use Origens";
+const defaultStoreLabel = (storeKey: CommerceStoreKey): string => Object.values(REGIONS).find((r) => r.storeKey === storeKey)?.name ?? "Use Origens";
 const groupKey = (storeKey: CommerceStoreKey, id: string) => `${storeKey}:${id}`;
 
 /** One request per store, batching every id currently favorited there — never one request per item. */
@@ -32,7 +33,18 @@ async function resolveGroup(storeKey: CommerceStoreKey, ids: string[], signal: A
     for (const item of data.items ?? []) {
       out.set(
         groupKey(storeKey, item.inkProductId),
-        item.available ? { available: true, title: item.title as string, context: item.context as string | null, imageUrl: item.imageUrl as string, price: item.price as number | null, url: item.url as string } : { available: false },
+        item.available
+          ? {
+              available: true,
+              title: item.title as string,
+              context: item.context as string | null,
+              imageUrl: item.imageUrl as string,
+              price: item.price as number | null,
+              url: item.url as string,
+              purchaseStoreKey: (item.purchaseStoreKey as CommerceStoreKey | undefined) ?? storeKey,
+              purchaseId: (item.purchaseId as string | undefined) ?? item.inkProductId,
+            }
+          : { available: false },
       );
     }
   } catch {
@@ -41,7 +53,13 @@ async function resolveGroup(storeKey: CommerceStoreKey, ids: string[], signal: A
   return out;
 }
 
-export function MeusLugaresView({ region }: { region: RegionSlug }) {
+/**
+ * `storeLabels` (server-computed, src/lib/catalog/commerce-mode.ts): the name each SELLING store is shown under in this region. Regional
+ * mode: the store's own region. Single-store mode: the region being browsed — the navigation region keeps its identity even though the
+ * single store sells.
+ */
+export function MeusLugaresView({ region, storeLabels = {} }: { region: RegionSlug; storeLabels?: Partial<Record<CommerceStoreKey, string>> }) {
+  const storeLabel = (storeKey: CommerceStoreKey) => storeLabels[storeKey] ?? defaultStoreLabel(storeKey);
   const favorites = useSyncExternalStore(subscribeFavorites, getFavorites, () => EMPTY_FAVORITES) as FavoriteItem[];
   const [resolved, setResolved] = useState<Map<string, Resolved>>(new Map());
   const [buying, setBuying] = useState<CommerceStoreKey | null>(null);
@@ -64,15 +82,28 @@ export function MeusLugaresView({ region }: { region: RegionSlug }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idsKey]);
 
+  // What is displayed and bought is grouped by the store that SELLS each item (as resolved now), not by the store it was saved from: in
+  // single-store mode favorites saved in /norte under use-norte join the single store's list — one list, one purchase session.
+  const sellerOf = (item: FavoriteItem): CommerceStoreKey => {
+    const info = resolved.get(groupKey(item.commerceStoreKey, item.inkProductId));
+    return info?.available ? info.purchaseStoreKey : item.commerceStoreKey;
+  };
+  const bySeller = new Map<CommerceStoreKey, FavoriteItem[]>();
+  for (const item of favorites) bySeller.set(sellerOf(item), [...(bySeller.get(sellerOf(item)) ?? []), item]);
+
   async function buyList(storeKey: CommerceStoreKey, items: FavoriteItem[]) {
-    const eligible = items.filter((item) => resolved.get(groupKey(storeKey, item.inkProductId))?.available);
+    const eligible = items.filter((item) => resolved.get(groupKey(item.commerceStoreKey, item.inkProductId))?.available);
     if (eligible.length === 0) return;
+    const purchaseIds = eligible.map((item) => {
+      const info = resolved.get(groupKey(item.commerceStoreKey, item.inkProductId));
+      return info?.available ? info.purchaseId : item.inkProductId;
+    });
     setBuying(storeKey);
     try {
       const response = await fetch("/api/buy-session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ storeKey, inkProductIds: eligible.map((item) => item.inkProductId) }),
+        body: JSON.stringify({ storeKey, inkProductIds: purchaseIds }),
       });
       if (response.ok) {
         const data = (await response.json()) as { sessionId: string; firstProductUrl: string };
@@ -86,7 +117,7 @@ export function MeusLugaresView({ region }: { region: RegionSlug }) {
     }
     // No session (feature not configured, all ineligible on the server, or a network error): open the first
     // product exactly like a normal purchase link, never announcing that the "next item" card is active.
-    const first = resolved.get(groupKey(storeKey, eligible[0].inkProductId));
+    const first = resolved.get(groupKey(eligible[0].commerceStoreKey, eligible[0].inkProductId));
     if (first?.available) window.location.assign(first.url);
     setBuying(null);
   }
@@ -112,8 +143,8 @@ export function MeusLugaresView({ region }: { region: RegionSlug }) {
         {favorites.length} {favorites.length === 1 ? "estampa salva" : "estampas salvas"}
       </p>
 
-      {[...byStore.entries()].map(([storeKey, items]) => {
-        const eligibleCount = items.filter((item) => resolved.get(groupKey(storeKey, item.inkProductId))?.available).length;
+      {[...bySeller.entries()].map(([storeKey, items]) => {
+        const eligibleCount = items.filter((item) => resolved.get(groupKey(item.commerceStoreKey, item.inkProductId))?.available).length;
         return (
           <section key={storeKey} className="mt-10">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -127,13 +158,13 @@ export function MeusLugaresView({ region }: { region: RegionSlug }) {
 
             <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-9 md:grid-cols-3 lg:grid-cols-4">
               {items.map((item) => {
-                const info = resolved.get(groupKey(storeKey, item.inkProductId));
+                const info = resolved.get(groupKey(item.commerceStoreKey, item.inkProductId));
                 const title = info?.available ? info.title : item.title;
                 const context = info?.available ? info.context : item.context;
                 const imageUrl = info?.available ? info.imageUrl : item.imageUrl;
                 const price = info?.available ? info.price : item.price;
                 return (
-                  <li key={item.inkProductId} className="relative">
+                  <li key={groupKey(item.commerceStoreKey, item.inkProductId)} className="relative">
                     <button
                       type="button"
                       aria-label={`Remover ${title} de Meus Lugares`}

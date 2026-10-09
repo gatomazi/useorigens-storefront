@@ -5,6 +5,7 @@ import { readPublished } from "./published";
 import { effectiveNavbarGroups } from "./navbar-groups";
 import { MAX_NAVBAR_GROUP, type CollectionRef } from "./schema";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
+import { storeForRegion } from "../catalog/commerce-mode";
 
 /**
  * The lean, PUBLIC navbar configuration the Worker turns into the header it draws on the INK product pages. Two groups the owner fills freely in the CMS
@@ -20,7 +21,9 @@ export type NavbarState = { uf: string; name: string; path: string };
 export type NavbarConfig = { v: 2; region: RegionSlug; states: NavbarState[]; top: NavbarEntry[]; more: NavbarEntry[] };
 
 export function publicNavbar(region: RegionSlug): NavbarConfig {
-  const store = REGIONS[region].storeKey;
+  // The region's store under the effective commerce mode: in single-store mode a published ref to use-norte/use-centro is dropped (its
+  // collection does not exist in the single store and its URL would send the buyer to the old store) until the CMS is re-pointed.
+  const store = storeForRegion(region);
   const { groups, legacy } = effectiveNavbarGroups(readPublished().bundle.docs[region]);
 
   const resolve = (refs: readonly CollectionRef[]): NavbarEntry[] => {

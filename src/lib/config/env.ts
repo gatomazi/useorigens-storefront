@@ -110,6 +110,33 @@ export function commerceStorePriorityOverride(): CommerceStoreKey[] | null {
 }
 
 /**
+ * How commerce is organized (docs/migracao-ink/origens-storefront-unificado-preparacao.md):
+ *  - `multi-store` (default, unset, or the literal "multi-store"): each region's catalog AND purchases come from its own INK store
+ *    (/sul → use-sul, /norte → use-norte, /centro-oeste → use-centro). This is production today.
+ *  - `single-store`: the three regions read one store's catalog (filtered per region) and buy there. Only REQUESTS the mode: whether it is
+ *    actually served is decided by `commercePlan()` (src/lib/catalog/commerce-mode.ts), which falls back to `multi-store` whenever the
+ *    single-store data or its external dependencies are not ready.
+ * Never throws (the web process must keep serving): an unknown value is reported as `invalid` and treated as `multi-store`, so a typo can
+ * never turn the single store on by accident. Read at call time, never inlined at build.
+ */
+export type CommerceModeSetting = { mode: "multi-store" | "single-store"; raw: string | null; invalid: boolean };
+
+export function commerceModeSetting(): CommerceModeSetting {
+  const raw = process.env.COMMERCE_MODE?.trim() || null;
+  if (raw === null || raw === "multi-store") return { mode: "multi-store", raw, invalid: false };
+  if (raw === "single-store") return { mode: "single-store", raw, invalid: false };
+  return { mode: "multi-store", raw, invalid: true };
+}
+
+/**
+ * Local/preview only: lets `single-store` serve a SIMULATION snapshot (hidden Norte/CO products shown as if activated, never sellable).
+ * Off unless the literal string "on". Production never sets it, and the production sync cannot produce a simulation snapshot anyway.
+ */
+export function commerceSimulationAllowed(): boolean {
+  return process.env.COMMERCE_SIMULATION === "on";
+}
+
+/**
  * Bearer token gating `POST /api/admin/catalog-sync`. Unset (the default) means the route stays disabled
  * (503) rather than silently open — set it only where the sync is meant to be triggered from.
  */

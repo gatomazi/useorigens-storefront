@@ -9,8 +9,8 @@ import type { CatalogSnapshot } from "./types";
  * `CATALOG_SNAPSHOT_DIR` at call time, so this always reflects the current environment rather than whatever
  * was set the first time this module happened to load.
  */
-export function snapshotPath(): string {
-  return path.join(catalogSnapshotDir(), "catalog-snapshot.json");
+export function snapshotPath(dir: string = catalogSnapshotDir()): string {
+  return path.join(dir, "catalog-snapshot.json");
 }
 
 export const EMPTY_SNAPSHOT: CatalogSnapshot = { version: 1, stores: {} };
@@ -24,18 +24,18 @@ function isSnapshot(value: unknown): value is CatalogSnapshot {
   );
 }
 
-export async function readSnapshot(): Promise<CatalogSnapshot> {
+export async function readSnapshot(filePath: string = snapshotPath()): Promise<CatalogSnapshot> {
   try {
-    const parsed: unknown = JSON.parse(await readFile(snapshotPath(), "utf8"));
+    const parsed: unknown = JSON.parse(await readFile(filePath, "utf8"));
     return isSnapshot(parsed) ? parsed : EMPTY_SNAPSHOT;
   } catch {
     return EMPTY_SNAPSHOT;
   }
 }
 
-export function snapshotMtimeMs(): number {
+export function snapshotMtimeMs(filePath: string = snapshotPath()): number {
   try {
-    return statSync(snapshotPath()).mtimeMs;
+    return statSync(filePath).mtimeMs;
   } catch {
     return 0;
   }
