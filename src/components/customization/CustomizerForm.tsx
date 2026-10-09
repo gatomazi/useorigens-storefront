@@ -209,7 +209,7 @@ export function CustomizerForm({
                 </fieldset>
               )}
 
-              <fieldset className="space-y-4 border-t border-line pt-6" data-testid="contact-fieldset">
+              <fieldset className="space-y-4 border-t border-line pt-6" data-testid="contact-fieldset" data-clarity-mask="True">
                 <legend className="t-h3">Como podemos entrar em contato com você?</legend>
                 <p className="t-small text-ink-mute">Informe o seu nome e pelo menos um canal: WhatsApp ou e-mail (pode ser os dois).</p>
                 {([

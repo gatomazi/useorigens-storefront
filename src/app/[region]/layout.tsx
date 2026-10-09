@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CartRefCapture } from "@/components/cart-mirror/CartRefCapture";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { PromoFab } from "@/components/promotions/PromoFab";
 import { ConsentProvider } from "@/lib/consent/ConsentProvider";
@@ -63,6 +64,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
         <MetaPixel pixelId={tracking?.metaPixelId} />
         <GoogleAnalytics measurementId={tracking?.ga4MeasurementId} />
       </Suspense>
+      <MicrosoftClarity region={region} />
       <ConsentBanner region={region} />
       {/* Coupons and promotions of THIS region (CMS, published only); renders nothing when there are none or anything fails. */}
       <PromoFab key={region} region={region} />
