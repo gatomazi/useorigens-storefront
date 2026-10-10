@@ -43,7 +43,9 @@ Toda seção de produtos (coleção da INK, Uma Penca ou curadoria editorial), n
 - Borda de 1px suave (preto a 15%, 35% no hover; branco a 25% sobre superfície escura), cantos de 8px, sem sombra nem gradiente.
 - Sem fundo próprio: o card mostra o fundo da grade (`--card-fill`, transparente). A moldura da foto continua no cinza da loja (`.photo`), então nenhum mockup da INK ganha um retângulo branco atrás. Numa página com fundo temático, o card recebe a cor da página para o pattern passar entre os cards e nunca atrás de nome e preço.
 - A foto não é cortada (`object-fit: contain`): os mockups da INK (800×820) ocupam a moldura exatamente; foto de outro formato mantém a proporção.
-- Informações com padding de 12px no celular e 16px a partir do tablet. Nome com peso 500 e espaço fixo de duas linhas (o nome completo continua no DOM). Preço de 16px no celular e 18px no desktop, semibold. Assim preço e botão ficam na mesma altura em toda a linha.
+- Informações com padding de 12px no celular e 16px a partir do tablet. Nome com peso 500, até duas linhas (o nome completo continua no DOM). Preço de 16px no celular e 18px no desktop, semibold.
+- Preço e botão ficam presos ao pé do card: os cards de uma linha têm a mesma altura, então preços e botões ficam alinhados. Quando todos os nomes da linha cabem numa linha, o preço vem logo abaixo do nome (4px); o espaço só aparece ao lado de um nome que ocupa duas linhas.
+- Promoção da INK: o preço cheio aparece riscado antes do promocional (`PriceText`), também nos cards de cidade, na busca, na PDP, no hero e em Meus Lugares (ver `docs/deploy/railway.md`, "Promoções da INK").
 - Grade: espaço uniforme entre os cards (12/16/20px). Com o botão ligado, o "Ver todos" do fim da grade vira botão secundário (contorno) no fundo claro.
 - O card inteiro é um único link (sem link aninhado), com o anel de foco global em volta dele.
 

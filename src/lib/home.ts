@@ -10,13 +10,13 @@ import { recreationProducts } from "./editorial/recreations";
 import { stateLineProduct } from "./editorial/state-lines";
 import { terraProducts } from "./editorial/terra";
 import { HERO_FAMILIES, STATE_ORDER } from "./editorial/sul";
-import { formatPrice } from "./format";
+import { formatListPrice, formatPrice } from "./format";
 import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, type RegionSlug } from "./geo/regions";
 import { localitiesOfRegion, stateBrowseLabel, stateLocalityCounts, stateLocalityGroups, stateLocalityLabel, stateLocalityShortcuts } from "./geo/localities";
 import { SHOWCASE } from "./site";
 
 /** One hero shirt: a real product of a commercial family, linking to its storefront page. */
-export type HeroFamilyCard = { familyId: string; familyName: string; cityName: string; uf: string; imageUrl: string; price: string | null; href: string };
+export type HeroFamilyCard = { familyId: string; familyName: string; cityName: string; uf: string; imageUrl: string; price: string | null; listPrice?: string; href: string };
 
 export type StateCard = {
   uf: string;
@@ -35,7 +35,7 @@ export type StateCard = {
    */
   regions: { name: string; slug: string; count?: number; href?: string }[];
   /** The state's own clean line (Clean, Minimal, Escritas, Atlas), or null when the state has none (E1). */
-  line: { label: string; name: string; imageUrl: string; price: string | null; href: string | null } | null;
+  line: { label: string; name: string; imageUrl: string; price: string | null; listPrice?: string; href: string | null } | null;
 };
 
 export type RegionHome = {
@@ -81,12 +81,12 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const heroFamilies: HeroFamilyCard[] = HERO_FAMILIES.flatMap(({ family, uf, slug }) => {
     const hit = resolveCityProduct(region, uf, slug, family);
     if (!hit) return [];
-    return [{ familyId: hit.family.id, familyName: hit.family.name, cityName: hit.city.name, uf: hit.city.uf, imageUrl: hit.primary.imageUrl, price: formatPrice(hit.primary.price), href: `/${region}/${uf}/${slug}/${family}` }];
+    return [{ familyId: hit.family.id, familyName: hit.family.name, cityName: hit.city.name, uf: hit.city.uf, imageUrl: hit.primary.imageUrl, price: formatPrice(hit.primary.price), listPrice: formatListPrice(hit.primary), href: `/${region}/${uf}/${slug}/${family}` }];
   });
   const ddd: CarouselItem[] = allDdd.flatMap((d) => {
     const href = purchaseUrl(d.product);
     return href
-      ? [{ id: d.product.inkProductId, name: d.regionName, eyebrow: d.code, context: STATE_NAMES[d.uf], price: formatPrice(d.product.price), rawPrice: d.product.price, state: d.uf, imageUrl: d.product.imageUrl, href }]
+      ? [{ id: d.product.inkProductId, name: d.regionName, eyebrow: d.code, context: STATE_NAMES[d.uf], price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), rawPrice: d.product.price, state: d.uf, imageUrl: d.product.imageUrl, href }]
       : [];
   });
 
@@ -96,17 +96,17 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const falaAll: Fala[] = [];
   for (const d of dizeresWithContext(merch)) {
     const href = purchaseUrl(d.product);
-    if (href) falaAll.push({ id: d.product.inkProductId, uf: d.uf, state: d.uf, name: d.text, context: d.context, price: formatPrice(d.product.price), rawPrice: d.product.price, imageUrl: d.product.imageUrl, href });
+    if (href) falaAll.push({ id: d.product.inkProductId, uf: d.uf, state: d.uf, name: d.text, context: d.context, price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), rawPrice: d.product.price, imageUrl: d.product.imageUrl, href });
   }
   for (const s of lore.byState) {
     const href = purchaseUrl(s.product);
-    if (href) falaAll.push({ id: s.product.inkProductId, uf: s.uf, state: s.uf, name: s.text, context: STATE_NAMES[s.uf], price: formatPrice(s.product.price), rawPrice: s.product.price, imageUrl: s.product.imageUrl, href });
+    if (href) falaAll.push({ id: s.product.inkProductId, uf: s.uf, state: s.uf, name: s.text, context: STATE_NAMES[s.uf], price: formatPrice(s.product.price), listPrice: formatListPrice(s.product), rawPrice: s.product.price, imageUrl: s.product.imageUrl, href });
   }
   for (const [cityId, items] of lore.byCity) {
     for (const item of items) {
       if (item.kind !== "expressao") continue;
       const href = purchaseUrl(item.product);
-      if (href) falaAll.push({ id: item.product.inkProductId, uf: item.city.uf, state: item.city.uf, name: item.text, context: `${item.city.name} · ${item.city.uf}`, price: formatPrice(item.product.price), rawPrice: item.product.price, imageUrl: item.product.imageUrl, href });
+      if (href) falaAll.push({ id: item.product.inkProductId, uf: item.city.uf, state: item.city.uf, name: item.text, context: `${item.city.name} · ${item.city.uf}`, price: formatPrice(item.product.price), listPrice: formatListPrice(item.product), rawPrice: item.product.price, imageUrl: item.product.imageUrl, href });
     }
     void cityId;
   }
@@ -135,7 +135,7 @@ export function getRegionHome(region: RegionSlug): RegionHome {
           .sort((a, b) => Number(b.localities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])) - Number(a.localities.some((c) => c.slug === STATE_CAPITAL_SLUG[uf])))
           .map((g) => ({ name: g.name, slug: g.slug, count: g.localities.length })),
         line: found
-          ? { label: found.line, name: found.product.name.replace(/\s+/g, " ").trim(), imageUrl: found.product.imageUrl, price: formatPrice(found.product.price), href: purchaseUrl(found.product) }
+          ? { label: found.line, name: found.product.name.replace(/\s+/g, " ").trim(), imageUrl: found.product.imageUrl, price: formatPrice(found.product.price), listPrice: formatListPrice(found.product), href: purchaseUrl(found.product) }
           : null,
       };
     })
@@ -148,7 +148,7 @@ export function getRegionHome(region: RegionSlug): RegionHome {
 
   const recreations: CarouselItem[] = recreationProducts(merch).flatMap(({ product, theme }) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), context: theme, price: formatPrice(product.price), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), context: theme, price: formatPrice(product.price), listPrice: formatListPrice(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
   // terraProducts already balances across the three states (see its own doc comment), but which UF a given
@@ -156,12 +156,12 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   // label text.
   const terra: CarouselItem[] = terraProducts(merch, ufs).flatMap(({ product, label }) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: label, price: formatPrice(product.price), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ id: product.inkProductId, name: label, price: formatPrice(product.price), listPrice: formatListPrice(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
   const feitoParaVoce: CarouselItem[] = lendaProducts(merch).flatMap((product) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").replace(/\s*\|\s*Lenda$/i, "").trim(), context: "Lenda", price: formatPrice(product.price), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").replace(/\s*\|\s*Lenda$/i, "").trim(), context: "Lenda", price: formatPrice(product.price), listPrice: formatListPrice(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
   return { cityCount: covered.size, syncedAt: catalog.syncedAt, showcase, heroFamilies, ddd, fala, states, terra, recreations, feitoParaVoce, campaignCrops };

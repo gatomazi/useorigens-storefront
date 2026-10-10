@@ -5,7 +5,7 @@ import { getCatalog, type Catalog } from "./catalog/repository";
 import { isSubLocality, localityOfBinding } from "./catalog/locality-binding";
 import { resolveCityProduct } from "./catalog/resolver";
 import type { UnrankedBinding } from "./catalog/types";
-import { formatPrice } from "./format";
+import { formatListPrice, formatPrice } from "./format";
 import type { LocalityType } from "./geo/cities";
 import { localityKindLabel } from "./geo/localities";
 import { REGIONS, type CommerceStoreKey, type RegionSlug } from "./geo/regions";
@@ -35,7 +35,7 @@ function cardOf(region: RegionSlug, b: UnrankedBinding, catalog: Catalog): { car
   if (!b.imageUrl) return { card: null, reason: "sem foto no catálogo" };
   if (!purchaseUrl(b)) return { card: null, reason: "sem link de compra verificado" };
   return {
-    card: { familyId: `${family.id}:${b.inkProductId}`, familyName: family.name, cityName: city.name, uf: city.uf, imageUrl: b.imageUrl, price: formatPrice(b.price), href: `/${region}/${city.uf.toLowerCase()}/${city.slug}/${family.id}` },
+    card: { familyId: `${family.id}:${b.inkProductId}`, familyName: family.name, cityName: city.name, uf: city.uf, imageUrl: b.imageUrl, price: formatPrice(b.price), listPrice: formatListPrice(b), href: `/${region}/${city.uf.toLowerCase()}/${city.slug}/${family.id}` },
     reason: null,
   };
 }

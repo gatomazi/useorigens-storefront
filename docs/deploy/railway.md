@@ -174,6 +174,17 @@ próprio processo web** (via a rota autenticada), que já está no mesmo disco q
 `POST /api/admin/catalog-sync` chama a mesma função que `npm run catalog:sync` usa localmente
 (`src/lib/catalog/sync-service.ts` — uma implementação só, nunca duas concorrentes).
 
+### Promoções da INK
+
+Durante uma promoção, a INK devolve `promotional_price` junto com `price` (ex.: `"109.9"` e `"89.9"`). O sync guarda
+o preço cobrado agora em `price` e o preço cheio em `listPrice` (só enquanto houver promoção; `src/lib/ink/normalize.ts`,
+`inkPricing`). A vitrine mostra o preço cheio riscado antes do promocional, e o `value` dos eventos de clique é o promocional.
+
+A vitrine só enxerga uma promoção depois de uma sincronização. **Sincronize quando uma promoção começar e quando
+terminar**: sem isso, a vitrine continua com o preço anterior (e, no fim da promoção, mostraria um desconto que a INK
+já não dá). As abas de peça das páginas de cidade (Oversized, Cropped…) vêm do índice de peças, que segue o sync próprio
+(`/api/admin/garments-sync`); as recomendações da PDP da INK, do `recommendations:build`.
+
 ### Por que é assíncrona, não uma chamada HTTP síncrona
 
 O proxy público do Railway fecha uma requisição HTTP após **5 minutos sem transferir dados** (até 15 minutos

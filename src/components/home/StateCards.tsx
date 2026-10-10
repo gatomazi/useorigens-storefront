@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { StateOutline } from "@/components/brand/StateOutline";
+import { PriceText } from "@/components/catalog/PriceText";
 import { BannerBackground } from "@/components/banners/BannerBackground";
 import { TrackedStateLink } from "@/components/analytics/TrackedStateLink";
 import { SOURCES } from "@/lib/analytics/sources";
@@ -18,7 +19,7 @@ function StateLine({ line }: { line: NonNullable<StateCard["line"]> }) {
       </span>
       <span>
         <span className="t-label block">{line.name}</span>
-        {line.price && <span className="t-small block font-semibold">{line.price}</span>}
+        {line.price && <span className="t-small block font-semibold"><PriceText price={line.price} listPrice={line.listPrice} /></span>}
         <span className="t-caption block link-line">Ver na loja</span>
       </span>
     </a>

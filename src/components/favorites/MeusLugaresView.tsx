@@ -2,17 +2,18 @@
 
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { PriceText } from "@/components/catalog/PriceText";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
 import { SOURCES } from "@/lib/analytics/sources";
 import { trackGoToInk } from "@/lib/analytics/track";
-import { formatPrice } from "@/lib/format";
+import { formatListPrice, formatPrice } from "@/lib/format";
 import { withListSession } from "@/lib/favorites/buy-session-url";
 import { getFavorites, removeFavorite, subscribeFavorites } from "@/lib/favorites/store";
 import type { FavoriteItem } from "@/lib/favorites/types";
 import { REGIONS, type CommerceStoreKey, type RegionSlug } from "@/lib/geo/regions";
 
-type Resolved = { available: true; title: string; context: string | null; imageUrl: string; price: number | null; url: string } | { available: false };
+type Resolved = { available: true; title: string; context: string | null; imageUrl: string; price: number | null; listPrice?: number; url: string } | { available: false };
 
 // `useSyncExternalStore`'s getServerSnapshot must return the SAME reference every call (React compares by
 // identity) — an inline `() => []` allocates a new array each time and triggers "The result of getServerSnapshot
@@ -32,7 +33,7 @@ async function resolveGroup(storeKey: CommerceStoreKey, ids: string[], signal: A
     for (const item of data.items ?? []) {
       out.set(
         groupKey(storeKey, item.inkProductId),
-        item.available ? { available: true, title: item.title as string, context: item.context as string | null, imageUrl: item.imageUrl as string, price: item.price as number | null, url: item.url as string } : { available: false },
+        item.available ? { available: true, title: item.title as string, context: item.context as string | null, imageUrl: item.imageUrl as string, price: item.price as number | null, ...(typeof item.listPrice === "number" ? { listPrice: item.listPrice } : {}), url: item.url as string } : { available: false },
       );
     }
   } catch {
@@ -132,6 +133,8 @@ export function MeusLugaresView({ region }: { region: RegionSlug }) {
                 const context = info?.available ? info.context : item.context;
                 const imageUrl = info?.available ? info.imageUrl : item.imageUrl;
                 const price = info?.available ? info.price : item.price;
+                // The struck regular price only from the live catalog (a saved favourite keeps no promotion: it may have ended).
+                const listPrice = info?.available ? formatListPrice(info) : undefined;
                 return (
                   <li key={item.inkProductId} className="relative">
                     <button
@@ -148,7 +151,7 @@ export function MeusLugaresView({ region }: { region: RegionSlug }) {
                     <div className="mt-3">
                       <p className="t-h3">{title}</p>
                       {context && <p className="t-place mt-1 text-[0.95rem] text-ink-mute">{context}</p>}
-                      {formatPrice(price) && <p className="t-small mt-0.5 font-semibold">{formatPrice(price)}</p>}
+                      {formatPrice(price) && <p className="t-small mt-0.5 font-semibold"><PriceText price={formatPrice(price)!} listPrice={listPrice} /></p>}
                       <p className="mt-2">
                         {!info ? (
                           <span className="t-small text-ink-mute">Carregando…</span>

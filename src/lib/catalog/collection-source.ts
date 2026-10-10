@@ -3,7 +3,7 @@ import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import { enabledInternalIds } from "../site-config/collections-enabled";
 import type { ScopeDoc } from "../site-config/schema";
 import { arrangeMembers, type CategoryLookup } from "../site-config/sources";
-import { formatPrice } from "../format";
+import { formatListPrice, formatPrice } from "../format";
 import type { CommerceStoreKey } from "../geo/regions";
 import { purchaseUrl } from "./commerce";
 import { collectionState, MIN_USABLE_PRODUCTS, type CollectionReason } from "./collections";
@@ -57,7 +57,7 @@ export const selectableEntries = (store: CommerceStoreKey, enabledInternal: Read
 function merchItem(product: MerchProduct): CarouselItem | null {
   const href = purchaseUrl(product);
   if (!href) return null;
-  return { id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), price: formatPrice(product.price), rawPrice: product.price, imageUrl: product.imageUrl, href };
+  return { id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), price: formatPrice(product.price), listPrice: formatListPrice(product), rawPrice: product.price, imageUrl: product.imageUrl, href };
 }
 
 /** A city design has no display name of its own: its family and city are the label ("Ponto de Origem" · "Tijucas · SC"). */
@@ -67,7 +67,7 @@ function cityDesignItem(design: UnrankedBinding): CarouselItem | null {
   const city = localityOfBinding(design);
   const family = DESIGN_FAMILIES.find((f) => f.id === design.designFamily);
   if (!href || !city || !family) return null;
-  return { id: design.inkProductId, name: family.name, context: `${city.name} · ${city.uf}`, price: formatPrice(design.price), rawPrice: design.price, state: city.uf, imageUrl: design.imageUrl, href };
+  return { id: design.inkProductId, name: family.name, context: `${city.name} · ${city.uf}`, price: formatPrice(design.price), listPrice: formatListPrice(design), rawPrice: design.price, state: city.uf, imageUrl: design.imageUrl, href };
 }
 
 /**

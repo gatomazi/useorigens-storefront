@@ -5,7 +5,7 @@ import { collectionUrl } from "../site-config/sources";
 import { MIN_USABLE_PRODUCTS, type CollectionRecord } from "../catalog/collections";
 import { DESIGN_FAMILIES, type DesignFamilyId } from "../catalog/families";
 import type { Catalog } from "../catalog/repository";
-import { formatPrice } from "../format";
+import { formatListPrice, formatPrice } from "../format";
 import type { City } from "../geo/cities";
 import type { CommerceStoreKey } from "../geo/regions";
 import { normalizeText } from "../geo/text";
@@ -85,7 +85,7 @@ export function stateStyles(params: {
           id: entry.primary.inkProductId,
           name: city.name,
           context: `${entry.family.name} · ${uf}`,
-          price: formatPrice(entry.primary.price),
+          price: formatPrice(entry.primary.price), listPrice: formatListPrice(entry.primary),
           rawPrice: entry.primary.price,
           state: uf,
           imageUrl: entry.primary.imageUrl,

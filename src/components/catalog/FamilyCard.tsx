@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatPrice } from "@/lib/format";
+import { formatListPrice, formatPrice } from "@/lib/format";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import type { CityFamilyEntry } from "@/lib/catalog/repository";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
@@ -8,6 +8,7 @@ import { ShareButton } from "@/components/share/ShareButton";
 import { designShare, inkProductShare } from "@/lib/share/server";
 import { SOURCES } from "@/lib/analytics/sources";
 import { ProductPhoto } from "./ProductPhoto";
+import { PriceText } from "./PriceText";
 
 /**
  * One design family for one city: the primary real INK product represents it. Every card is the same size —
@@ -54,6 +55,7 @@ export function FamilyCard({
   garmentTypeId?: number;
 }) {
   const price = formatPrice(entry.primary.price);
+  const listPrice = formatListPrice(entry.primary);
   const inkHref = directToInk && entry.variants.length === 0 ? purchaseUrl(entry.primary) : null;
   const finalHref = inkHref ?? href;
   const displayName = pieceLabel ? `${entry.family.name} ${pieceLabel}` : entry.family.name;
@@ -71,7 +73,7 @@ export function FamilyCard({
       <span aria-hidden="true" className="mt-3 block h-[3px] w-6 bg-region-accent transition-colors group-hover:bg-region-primary" />
       <div className="mt-2">
         <h3 className="link-line inline text-[1.0625rem] font-bold leading-tight tracking-tight transition-colors group-hover:text-region-primary sm:text-[1.125rem]">{entry.family.name}</h3>
-        {price && <p className="t-small mt-0.5 font-semibold">{price}</p>}
+        {price && <p className="t-small mt-0.5 font-semibold"><PriceText price={price} listPrice={listPrice} /></p>}
       </div>
       <p className="t-caption mt-1 hidden max-w-[30ch] sm:block">{pieceLabel ?? entry.family.description}</p>
       {entry.variants.length > 0 && (
