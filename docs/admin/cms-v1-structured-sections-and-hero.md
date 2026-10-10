@@ -57,6 +57,12 @@ Toda seção de produtos (coleção da INK, Uma Penca ou curadoria editorial), n
 - Mínimo de 44px de altura, na largura da área de informações, no formato do CTA da loja (retangular, sólido, caixa alta): preto em fundo claro, branco em fundo escuro. Fica sempre no pé do card.
 - O card personalizável mostra o “Personalizar” dele no mesmo formato. A lista de seções mostra o selo com o texto do botão.
 
+**Etiquetas nas fotos** (`layout.tags`). Em **Editar seção → Layout → “Etiquetas nas fotos dos produtos”**, em qualquer seção de produtos; desligadas por padrão.
+
+- **Desconto**: “18% OFF” em cada produto com promoção valendo na INK (ou na Uma Penca), calculado com os dois preços que a loja envia e **truncado** como a própria INK mostra (104,90 → 94,90 = “9% OFF”; `discountPercent` em `src/lib/format.ts`, em centavos inteiros). Sem promoção, sem etiqueta; depende do catálogo sincronizado.
+- **Etiqueta própria**: um texto (até 24 caracteres) em todos os cards da seção (“Black Friday”, “Lançamento”).
+- No canto superior esquerdo da foto: o desconto na cor da região, a própria em preto (o mesmo estilo de “Personalizável”); as duas juntas quando ligadas. Ficam dentro do link do card (o leitor de tela ouve com o produto). A lista de seções mostra o selo “Etiquetas”. Capturas: [`screenshots/etiquetas-cards/`](../screenshots/etiquetas-cards/).
+
 **Fora deste ajuste** (componentes próprios, com regras próprias): `FamilyCard` (páginas de cidade, “Estilos da cidade” e “Outros estilos” do PDP: tem favoritar, compartilhar e versões), os resultados de `/busca` e os cards de `/outros-artigos`. Dá para estender a eles reaproveitando as mesmas classes.
 
 Capturas: [`screenshots/botao-comprar-cards/`](../screenshots/botao-comprar-cards/).

@@ -8,7 +8,7 @@ import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/
 import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
-import { DEFAULT_BUY_LABEL, MAX_BUY_LABEL, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, MAX_BUY_LABEL, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
 import { customizerCardFieldDefaults } from "@/lib/admin/section-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
@@ -132,6 +132,7 @@ export function SectionEditorForm({
   // A grid lays out more cards than a carousel scrolls through (same ceiling as the save: section-form.ts).
   const maxCards = maxSectionProducts(display);
   const [buyOn, setBuyOn] = useState(Boolean(section.layout?.buyLabel));
+  const [tagOn, setTagOn] = useState(Boolean(section.layout?.tags?.text));
   const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
 
   const [navShow, setNavShow] = useState(Boolean(section.nav));
@@ -416,6 +417,20 @@ export function SectionEditorForm({
                 </div>
               )}
             </div>
+            <fieldset className="space-y-2 border border-black/20 p-3">
+              <legend className="px-1 font-bold">Etiquetas nas fotos dos produtos</legend>
+              <input type="hidden" name="tags_present" value="1" />
+              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="tags_discount" defaultChecked={Boolean(section.layout?.tags?.discount)} /> Desconto (“18% OFF”) nos produtos em promoção</label>
+              <p className="a-muted text-[0.8125rem]">Calculado com os dois preços que a INK (ou a Uma Penca) envia, arredondado como a própria loja mostra. Só aparece nos produtos com promoção valendo, depois de sincronizar o catálogo; sem promoção, nenhuma etiqueta.</p>
+              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="tags_custom" checked={tagOn} onChange={(e) => setTagOn(e.target.checked)} /> Etiqueta própria em todos os cards desta seção</label>
+              {tagOn && (
+                <div className="max-w-xs">
+                  <label className="a-label" htmlFor="tags_text">Texto da etiqueta</label>
+                  <input id="tags_text" name="tags_text" defaultValue={section.layout?.tags?.text ?? ""} className="a-input" maxLength={MAX_TAG_TEXT} placeholder="Ex.: Black Friday" required />
+                  <p className="a-muted mt-1 text-[0.8125rem]">Até {MAX_TAG_TEXT} caracteres, em caixa alta na foto. Com o desconto ligado, as duas aparecem juntas.</p>
+                </div>
+              )}
+            </fieldset>
           </fieldset>
         </>
       )}

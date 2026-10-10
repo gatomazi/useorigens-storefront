@@ -1,3 +1,4 @@
+import type { ProductTags } from "@/lib/site-config/schema";
 import { CustomizerCardLink, ProductCardLink, ProductSectionHeading } from "./ProductCard";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
 
@@ -22,6 +23,7 @@ export function ProductGrid({
   sourceSection,
   leading,
   buyLabel,
+  tags,
 }: {
   leading?: LeadingCard;
   items: CarouselItem[];
@@ -36,6 +38,8 @@ export function ProductGrid({
   sourceSection: string;
   /** The section's buy button ("Comprar") under every product card; absent = none. */
   buyLabel?: string;
+  /** The section's tags on the product pictures (`layout.tags`); absent = none. */
+  tags?: ProductTags;
 }) {
   const dark = tone === "dark";
   const cards = items.length + (leading ? 1 : 0);
@@ -51,7 +55,7 @@ export function ProductGrid({
         )}
         {items.map((item, i) => (
           <li key={item.id}>
-            <ProductCardLink item={item} poster={poster} dark={dark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} />
+            <ProductCardLink item={item} poster={poster} dark={dark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} tags={tags} />
           </li>
         ))}
       </ul>
