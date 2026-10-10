@@ -12,7 +12,7 @@ import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { SectionEditorForm } from "@/components/admin/SectionEditorForm";
 import { listMedia } from "@/lib/admin/media";
 import { requireAdmin } from "@/lib/admin/auth/guard";
-import { sourceStatus } from "@/lib/admin/validate-draft";
+import { collectionOrderMembers, sourceStatus } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { campaignStatus, cityStylesStatus, imageGridStatus, statesStatus } from "@/lib/admin/structured-status";
 import { currentScope, storeOf } from "@/lib/admin/scope";
@@ -62,7 +62,7 @@ export default async function EditSection({ params, searchParams }: { params: Pr
       <Flash ok={sp.ok} err={sp.err} />
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,34rem)_1fr]">
         <section className="a-card p-5" aria-label="Editor da seção">
-          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={structured?.notes} featured={featured} stateCovers={stateCovers} pages={pageOptions(ws.doc, (await platform().files.read())?.docs[scope] ?? ws.baseDoc)} customizers={(ws.doc.customizers ?? []).map((m) => ({ id: m.id, name: m.name, active: m.active, live: Boolean(ws.baseDoc.customizers?.some((x) => x.id === m.id)) }))} anchors={(ws.doc.home?.sections ?? []).map((x) => ({ anchor: x.anchor, label: x.title?.replace(/\n/g, " ") ?? x.anchor }))} />
+          <SectionEditorForm section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={structured?.notes} featured={featured} stateCovers={stateCovers} pages={pageOptions(ws.doc, (await platform().files.read())?.docs[scope] ?? ws.baseDoc)} customizers={(ws.doc.customizers ?? []).map((m) => ({ id: m.id, name: m.name, active: m.active, live: Boolean(ws.baseDoc.customizers?.some((x) => x.id === m.id)) }))} anchors={(ws.doc.home?.sections ?? []).map((x) => ({ anchor: x.anchor, label: x.title?.replace(/\n/g, " ") ?? x.anchor }))} collectionMembers={collectionOrderMembers(section, ws.doc)} />
         </section>
         <section className="a-card p-5 2xl:sticky 2xl:top-4 2xl:self-start" aria-label="Pré-visualização">
           <PreviewFrame version={ws.record?.rev ?? 0} anchor={anchor} height={760} />

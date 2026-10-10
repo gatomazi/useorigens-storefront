@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
+import { CollectionOrder, type OrderMember } from "@/components/admin/CollectionOrder";
 import { GridTilesEditor } from "@/components/admin/GridTilesEditor";
 import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
 import type { FeaturedCandidate } from "@/lib/hero-featured";
@@ -75,8 +76,10 @@ function AnchorPicker({ anchors, current }: { anchors: { anchor: string; label: 
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pages = [], customizers = [], anchors = [],
+  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pages = [], customizers = [], anchors = [], collectionMembers,
 }: {
+  /** Collection carousels: the saved collection's products in INK's order, for the order list (absent when it does not resolve). */
+  collectionMembers?: OrderMember[];
   /** Set when the section belongs to a PAGE (hotpage / landing) instead of the home: the id of the page. */
   page?: string;
   /** Pages of this region a button may lead to: value `hotpage/slug`, with a status the editor should know. */
@@ -124,6 +127,7 @@ export function SectionEditorForm({
   const [srcEntry, setSrcEntry] = useState<ComboEntry | null>(collections.find((e) => e.value === currentRef) ?? null);
   const publicEntries = collections.filter((e) => e.visibility === "public" && e.selectable);
   const internalSource = sourceKind === "ink-category" && srcEntry?.visibility === "internal";
+  const [inkLimit, setInkLimit] = useState(String(section.source?.kind === "ink-category" ? section.source.limit : 6));
   const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
 
   const [navShow, setNavShow] = useState(Boolean(section.nav));
@@ -323,11 +327,21 @@ export function SectionEditorForm({
                 <CollectionCombobox name="source_collection" label="Coleção (busque pelo nome, slug ou número)" entries={collections} defaultValue={currentRef} libraryFrom={`/admin/home/${section.id}`} onSelect={setSrcEntry} />
                 <div>
                   <label className="a-label" htmlFor="source_limit">Cards</label>
-                  <input id="source_limit" name="source_limit" type="number" min={3} max={24} defaultValue={cur?.kind === "ink-category" ? cur.limit : 6} className="a-input" />
+                  <input id="source_limit" name="source_limit" type="number" min={3} max={24} value={inkLimit} onChange={(e) => setInkLimit(e.target.value)} className="a-input" />
                 </div>
               </div>
             )}
-            {sourceKind === "ink-category" && section.id.startsWith("seed-") && <p className="a-flash err text-[0.875rem]">Atenção: isto substitui a curadoria original desta seção por uma coleção da INK (ordem da INK). Só vale depois de publicado.</p>}
+            {sourceKind === "ink-category" && cur?.kind === "ink-category" && collectionMembers && collectionMembers.length > 0 && (srcEntry?.value ?? currentRef) === currentRef && (
+              <CollectionOrder
+                collectionRef={currentRef!}
+                members={collectionMembers}
+                initial={{ order: cur.order, productIds: cur.productIds, hiddenIds: cur.hiddenIds }}
+                // Same clamp as the save (3..24); the customizer card takes the first place.
+                visible={Math.min(24, Math.max(3, Math.round(Number(inkLimit)) || 6)) - (ccShow ? 1 : 0)}
+              />
+            )}
+            {sourceKind === "ink-category" && srcEntry && srcEntry.value !== currentRef && <p className="a-muted text-[0.8125rem]">Salve o rascunho para ordenar ou esconder os produtos desta coleção (ela começa na ordem da INK).</p>}
+            {sourceKind === "ink-category" && section.id.startsWith("seed-") && <p className="a-flash err text-[0.875rem]">Atenção: isto substitui a curadoria original desta seção por uma coleção da INK (na ordem da INK, que você ajusta aqui depois de salvar). Só vale depois de publicado.</p>}
           </fieldset>
 
           <fieldset className="space-y-4">

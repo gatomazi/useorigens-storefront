@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type Section, type Source } from "./contract";
+import { EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { ARTICLE_KINDS } from "../umapenca/types";
@@ -123,6 +123,31 @@ function parseGridLayout(f: Fields, current: GridLayout | undefined): GridLayout
   };
 }
 
+const inkIds = (v: unknown): string[] => (Array.isArray(v) ? [...new Set(v.filter((id): id is string => typeof id === "string" && /^\d{1,20}$/.test(id)))].slice(0, MAX_ARRANGED_IDS) : []);
+
+/**
+ * The order / hidden products of an ink-category source. The panel's list posts them (`source_arrangement`, JSON) together with the collection it
+ * was drawn for (`source_arrangement_for`): they only apply to THAT collection. Choosing another collection starts over in INK's order; a form
+ * without the list (the collection did not resolve, so no list was drawn) keeps what is saved, so a save never wipes the owner's order.
+ */
+function parseArrangement(f: Fields, ref: string, current: Source | undefined): Pick<Extract<Source, { kind: "ink-category" }>, "order" | "productIds" | "hiddenIds"> {
+  const raw = f.get("source_arrangement");
+  if (typeof raw === "string" && str(f, "source_arrangement_for") === ref) {
+    try {
+      const v = JSON.parse(raw) as { order?: unknown; productIds?: unknown; hiddenIds?: unknown };
+      const hiddenIds = inkIds(v.hiddenIds);
+      const productIds = v.order === "manual" ? inkIds(v.productIds) : [];
+      return { order: productIds.length > 0 ? "manual" : "category", ...(productIds.length > 0 ? { productIds } : {}), ...(hiddenIds.length > 0 ? { hiddenIds } : {}) };
+    } catch {
+      // A malformed list is ignored like a missing one.
+    }
+  }
+  if (current?.kind === "ink-category" && `${current.store}:${current.collectionId}` === ref) {
+    return { order: current.order, ...(current.productIds ? { productIds: current.productIds } : {}), ...(current.hiddenIds ? { hiddenIds: current.hiddenIds } : {}) };
+  }
+  return { order: "category" };
+}
+
 function parseSource(f: Fields, current: Source | undefined): Source | undefined {
   const kind = str(f, "source_kind");
   if (kind === "editorial-module") {
@@ -132,7 +157,7 @@ function parseSource(f: Fields, current: Source | undefined): Source | undefined
   if (kind === "ink-category") {
     const ref = parseCollectionRef(str(f, "source_collection"));
     if (!ref) return current;
-    return { kind: "ink-category", ...ref, order: "category", limit: clamp(Math.round(num(f, "source_limit", 6)), 3, 24) };
+    return { kind: "ink-category", ...ref, ...parseArrangement(f, `${ref.store}:${ref.collectionId}`, current), limit: clamp(Math.round(num(f, "source_limit", 6)), 3, 24) };
   }
   if (kind === "umapenca") {
     // Checkboxes `source_up_<kind>`: none ticked keeps the current source (the schema refuses an empty list anyway).

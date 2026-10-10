@@ -2,7 +2,7 @@ import "server-only";
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import { enabledInternalIds } from "../site-config/collections-enabled";
 import type { ScopeDoc } from "../site-config/schema";
-import type { CategoryLookup } from "../site-config/sources";
+import { arrangeMembers, type CategoryLookup } from "../site-config/sources";
 import { formatPrice } from "../format";
 import type { CommerceStoreKey } from "../geo/regions";
 import { purchaseUrl } from "./commerce";
@@ -72,20 +72,22 @@ function cityDesignItem(design: UnrankedBinding): CarouselItem | null {
 
 /**
  * Resolves a collection to carousel items using ONLY products of the same store that exist in the catalog snapshot (merch or city
- * design); hidden, missing, other-store and duplicated ids never appear, nothing is invented. Order = INK's own. A public collection is
- * usable as-is; an INTERNAL one only when the document has explicitly enabled it (`enabled`).
+ * design); hidden, missing, other-store and duplicated ids never appear, nothing is invented. Order = INK's own, unless the section set its
+ * own (`arrangeMembers`). A public collection is usable as-is; an INTERNAL one only when the document has explicitly enabled it (`enabled`).
  */
 export function categoryLookup(productsOf: (store: CommerceStoreKey) => StoreProducts, enabled: (store: CommerceStoreKey) => ReadonlySet<number>, filePath?: string): CategoryLookup {
-  return (store, collectionId, limit) => {
+  return (store, collectionId, limit, arrangement) => {
     if (!getStoreCollections(store, filePath)) return { status: "unavailable", reason: "ink-collections-not-synced" };
     const collection = findCollection(store, collectionId, filePath);
     if (!collection) return { status: "unavailable", reason: "collection-not-found" };
     const state = collectionState(collection, enabled(store));
     if (state.reason === "needs-resync") return { status: "unavailable", reason: "collection-needs-resync" };
     if (!state.enabled) return { status: "unavailable", reason: "collection-not-enabled" };
+    const ids = arrangeMembers(collection.memberIds, arrangement);
+    if (ids.length === 0 && collection.memberIds.length > 0) return { status: "unavailable", reason: "collection-all-hidden" };
     const products = productsOf(store);
     const items: CarouselItem[] = [];
-    for (const id of collection.memberIds) {
+    for (const id of ids) {
       const merch = products.merch.get(id);
       const item = merch ? merchItem(merch) : products.cityDesigns.has(id) ? cityDesignItem(products.cityDesigns.get(id)!) : null;
       if (item) items.push(item);

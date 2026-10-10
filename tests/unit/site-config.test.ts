@@ -304,6 +304,32 @@ describe("section sources", () => {
     expect(resolveSource({ kind: "ink-category", store: "use-sul", collectionId: 1, order: "category", limit: 6 }, items)).toEqual({ status: "unavailable", reason: "ink-collections-not-synced" });
   });
 
+  test("given an ink-category source, when resolved, then the lookup gets its own order only in manual mode, and its hidden products in both", () => {
+    const calls: unknown[] = [];
+    const categories = (...args: unknown[]) => (calls.push(args), { status: "ok" as const, items: [] });
+    resolveSource({ kind: "ink-category", store: "use-sul", collectionId: 1, order: "manual", limit: 6, productIds: ["2", "1"], hiddenIds: ["3"] }, items, categories);
+    resolveSource({ kind: "ink-category", store: "use-sul", collectionId: 1, order: "category", limit: 6, productIds: ["2"], hiddenIds: ["3"] }, items, categories);
+    expect(calls).toEqual([
+      ["use-sul", 1, 6, { productIds: ["2", "1"], hiddenIds: ["3"] }],
+      ["use-sul", 1, 6, { productIds: undefined, hiddenIds: ["3"] }],
+    ]);
+  });
+
+  test("given an ink-category's own order and hidden list, when validated, then only distinct numeric ids pass, and an order only in manual mode", () => {
+    const withSource = (source: unknown) => {
+      const doc = clone(seed().docs.sul);
+      doc.home!.sections.find((s) => s.id === "seed-terra")!.source = source as never;
+      return validateScopeDoc(doc).ok;
+    };
+    const base = { kind: "ink-category", store: "use-sul", collectionId: 152188, limit: 6 };
+    expect(withSource({ ...base, order: "manual", productIds: ["2", "1"], hiddenIds: ["3"] })).toBe(true);
+    expect(withSource({ ...base, order: "category", hiddenIds: ["3"] })).toBe(true);
+    expect(withSource({ ...base, order: "category", productIds: ["2"] })).toBe(false); // an order without the manual mode
+    expect(withSource({ ...base, order: "manual", productIds: ["2", "2"] })).toBe(false);
+    expect(withSource({ ...base, order: "manual", productIds: ["<script>"] })).toBe(false);
+    expect(withSource({ ...base, order: "category", hiddenIds: Array.from({ length: 101 }, (_, i) => String(i)) })).toBe(false);
+  });
+
   test("given destinations, when turned into hrefs, then an unresolved INK collection yields null", () => {
     expect(destinationHref({ kind: "route", path: "/sul/sc" })).toBe("/sul/sc");
     expect(destinationHref({ kind: "external", url: "https://www.usesul.com.br/usesul/collections/x" })).toBe("https://www.usesul.com.br/usesul/collections/x");
