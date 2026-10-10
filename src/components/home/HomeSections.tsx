@@ -260,6 +260,7 @@ function CarouselSection({
       sourceSection={SOURCES[s.analyticsSource]}
       buyLabel={s.layout.buyLabel}
       tags={s.layout.tags}
+      solidCards={hasImage(bg)}
     />
   );
 

@@ -63,6 +63,8 @@ Toda seção de produtos (coleção da INK, Uma Penca ou curadoria editorial), n
 - **Etiqueta própria**: um texto (até 24 caracteres) em todos os cards da seção (“Black Friday”, “Lançamento”).
 - No canto superior esquerdo da foto: o desconto na cor da região, a própria em preto (o mesmo estilo de “Personalizável”); as duas juntas quando ligadas. Ficam dentro do link do card (o leitor de tela ouve com o produto). A lista de seções mostra o selo “Etiquetas”. Capturas: [`screenshots/etiquetas-cards/`](../screenshots/etiquetas-cards/).
 
+**Seção com foto de fundo**: os cards ganham fundo próprio (o cinza `--ground`, o mesmo dos mockups da INK, então foto e texto viram uma peça só) e texto escuro, mesmo com o título da seção em branco (`SOLID_CARDS` em `ProductCard.tsx`, ligado por `solidCards` quando a seção tem imagem). Sem isso o card é transparente e a foto aparece por trás do nome e do preço. Seção só com cor (sem foto) continua com cards transparentes sobre a cor. Capturas: [`screenshots/cards-fundo-imagem/`](../screenshots/cards-fundo-imagem/).
+
 **Fora deste ajuste** (componentes próprios, com regras próprias): `FamilyCard` (páginas de cidade, “Estilos da cidade” e “Outros estilos” do PDP: tem favoritar, compartilhar e versões), os resultados de `/busca` e os cards de `/outros-artigos`. Dá para estender a eles reaproveitando as mesmas classes.
 
 Capturas: [`screenshots/botao-comprar-cards/`](../screenshots/botao-comprar-cards/).
