@@ -88,7 +88,18 @@ export type Source =
 export type FeaturedProductRef = { store: CommerceStoreKey; productId: string };
 export const MAX_FEATURED = 3;
 
-export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary" };
+/**
+ * `display` (product sections only): "carousel" = one row that scrolls sideways (the default, also when absent); "grid" = every card laid out on the page,
+ * two per row on phones, three on tablets and four on desktop, like a category page.
+ */
+export const PRODUCT_DISPLAYS = ["carousel", "grid"] as const;
+export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
+export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay };
+/** Cards of a product section: a carousel scrolls through at most 24; a grid lays out up to 48 (every product an INK collection keeps for showcases). */
+export const MIN_SECTION_PRODUCTS = 3;
+export const MAX_CAROUSEL_PRODUCTS = 24;
+export const MAX_GRID_PRODUCTS = 48;
+export const maxSectionProducts = (display: ProductDisplay | undefined): number => (display === "grid" ? MAX_GRID_PRODUCTS : MAX_CAROUSEL_PRODUCTS);
 
 /**
  * Image grid ("Compre por peça", "Coleções"…): each tile is a picture with a name that leads somewhere real. Nothing is read from the catalog,
@@ -167,12 +178,23 @@ export type CollectionRef = { store: CommerceStoreKey; collectionId: number };
  * same components); the first is always a `page-hero`. Lives in the region's document but is published on its own (see admin/publishing.ts).
  */
 export type PageSeo = { title?: string; description?: string; ogImage?: MediaRef; indexable: boolean };
+/**
+ * A page's own ground, for a themed page (Black Friday, Natal…): a colour under every section and, optionally, a picture repeated over it as a pattern
+ * (always decorative). A section with a surface of its own (a photo, a colour, paper) keeps painting it. `tone` is the ground's lightness, the same word
+ * the sections use: "light" = dark text (the store's usual look), "dark" = light text. `size` is the width of one repeat in CSS pixels; `opacity` lets the
+ * pattern sit softly over the colour.
+ */
+export type PageBackdrop = { color: `#${string}`; tone: "light" | "dark"; pattern?: { image: MediaRef; size: number; opacity: number } };
+export const PATTERN_SIZE = { min: 40, max: 600 } as const;
+export const PATTERN_OPACITY = { min: 0.05, max: 1 } as const;
 export type Page = {
   id: string;
   kind: PageKind;
   slug: string;
   title: string;
   seo: PageSeo;
+  /** Absent = the region's own ground (the page looks like the rest of the store). */
+  backdrop?: PageBackdrop;
   sections: Section[];
   /** An archived page is not served (404) and cannot be a link target; its content is kept. */
   archived?: boolean;
@@ -404,12 +426,13 @@ export const MAX_ARRANGED_IDS = 100;
 const isInkIdList = (v: unknown): boolean =>
   Array.isArray(v) && v.length <= MAX_ARRANGED_IDS && v.every((p) => typeof p === "string" && /^\d{1,20}$/.test(p)) && new Set(v).size === v.length;
 
-function checkSource(c: Collector, path: string, v: unknown): void {
+function checkSource(c: Collector, path: string, v: unknown, max: number): void {
   if (!isRecord(v)) return c.fail(path, "must be an object");
+  const badLimit = (n: unknown) => typeof n !== "number" || !Number.isInteger(n) || n < MIN_SECTION_PRODUCTS || n > max;
   if (v.kind === "editorial-module") {
     if (!(EDITORIAL_MODULE_KEYS as readonly unknown[]).includes(v.key)) c.fail(`${path}.key`, "unknown editorial module");
   } else if (v.kind === "ink-category" || v.kind === "manual") {
-    if (typeof v.limit !== "number" || !Number.isInteger(v.limit) || v.limit < 3 || v.limit > 24) c.fail(`${path}.limit`, "must be an integer 3..24");
+    if (badLimit(v.limit)) c.fail(`${path}.limit`, `must be an integer ${MIN_SECTION_PRODUCTS}..${max}`);
     if (v.kind === "ink-category") {
       if (typeof v.store !== "string" || !STORES.includes(v.store)) c.fail(`${path}.store`, "unknown store");
       if (typeof v.collectionId !== "number" || !Number.isInteger(v.collectionId) || v.collectionId <= 0) c.fail(`${path}.collectionId`, "must be a positive integer");
@@ -420,7 +443,7 @@ function checkSource(c: Collector, path: string, v: unknown): void {
       c.fail(`${path}.productIds`, "must be ≤ 100 numeric INK ids");
     }
   } else if (v.kind === "umapenca") {
-    if (typeof v.limit !== "number" || !Number.isInteger(v.limit) || v.limit < 3 || v.limit > 24) c.fail(`${path}.limit`, "must be an integer 3..24");
+    if (badLimit(v.limit)) c.fail(`${path}.limit`, `must be an integer ${MIN_SECTION_PRODUCTS}..${max}`);
     const kinds = v.articleKinds;
     if (!Array.isArray(kinds) || kinds.length === 0 || kinds.some((k) => !(ARTICLE_KINDS as readonly unknown[]).includes(k)) || new Set(kinds).size !== kinds.length) c.fail(`${path}.articleKinds`, `a non-empty list of distinct ${ARTICLE_KINDS.join(", ")}`);
   } else c.fail(`${path}.kind`, "must be editorial-module | ink-category | manual | umapenca");
@@ -443,9 +466,12 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     const l = v.layout;
     if (!isRecord(l) || (l.variant !== "standard" && l.variant !== "poster") || (l.tone !== "light" && l.tone !== "dark") || !["paper", "plain", "region-primary"].includes(l.surface as string)) {
       c.fail(`${path}.layout`, "must be {variant: standard|poster, tone: light|dark, surface: paper|plain|region-primary}");
+    } else if (l.display !== undefined && (v.template !== "product-carousel" || !(PRODUCT_DISPLAYS as readonly unknown[]).includes(l.display))) {
+      c.fail(`${path}.layout.display`, `product sections only: ${PRODUCT_DISPLAYS.join(" | ")}`);
     }
   }
-  if (v.source !== undefined) checkSource(c, `${path}.source`, v.source);
+  // A grid shows more cards than a carousel scrolls through: the ceiling follows the display.
+  if (v.source !== undefined) checkSource(c, `${path}.source`, v.source, isRecord(v.layout) && v.layout.display === "grid" ? MAX_GRID_PRODUCTS : MAX_CAROUSEL_PRODUCTS);
   if (v.analyticsSource !== undefined && !(CAROUSEL_SOURCE_KEYS as readonly unknown[]).includes(v.analyticsSource)) c.fail(`${path}.analyticsSource`, "not an allowed analytics origin");
   if (v.fallback !== undefined && v.fallback !== "crops" && v.fallback !== "fill") c.fail(`${path}.fallback`, "must be crops | fill");
   if (v.featured !== undefined) {
@@ -522,6 +548,20 @@ function checkSlug(c: Collector, path: string, v: unknown): void {
   else if (RESERVED_SLUGS.includes(v)) c.fail(path, `"${v}" is reserved`);
 }
 
+function checkPageBackdrop(c: Collector, path: string, v: unknown): void {
+  if (!isRecord(v)) return c.fail(path, "must be { color, tone, pattern? }");
+  if (typeof v.color !== "string" || !HEX.test(v.color)) c.fail(`${path}.color`, "must be #rrggbb");
+  if (v.tone !== "light" && v.tone !== "dark") c.fail(`${path}.tone`, "must be light | dark");
+  if (v.pattern === undefined) return;
+  const p = v.pattern;
+  if (!isRecord(p)) return c.fail(`${path}.pattern`, "must be { image, size, opacity }");
+  checkMediaRef(c, `${path}.pattern.image`, p.image);
+  // The pattern is texture, never content: always decorative.
+  if (isRecord(p.image) && p.image.decorative !== true) c.fail(`${path}.pattern.image.decorative`, "a pattern is always decorative");
+  if (typeof p.size !== "number" || !Number.isInteger(p.size) || p.size < PATTERN_SIZE.min || p.size > PATTERN_SIZE.max) c.fail(`${path}.pattern.size`, `an integer ${PATTERN_SIZE.min}..${PATTERN_SIZE.max} (pixels)`);
+  if (typeof p.opacity !== "number" || !Number.isFinite(p.opacity) || p.opacity < PATTERN_OPACITY.min || p.opacity > PATTERN_OPACITY.max) c.fail(`${path}.pattern.opacity`, `${PATTERN_OPACITY.min}..${PATTERN_OPACITY.max}`);
+}
+
 function checkPage(c: Collector, path: string, v: unknown): void {
   if (!isRecord(v)) return c.fail(path, "must be an object");
   if (typeof v.id !== "string" || !ID.test(v.id)) c.fail(`${path}.id`, "invalid id");
@@ -536,6 +576,7 @@ function checkPage(c: Collector, path: string, v: unknown): void {
     if (v.seo.description !== undefined && !isStr(v.seo.description, 200)) c.fail(`${path}.seo.description`, "1..200 chars");
     if (v.seo.ogImage !== undefined) checkMediaRef(c, `${path}.seo.ogImage`, v.seo.ogImage);
   }
+  if (v.backdrop !== undefined) checkPageBackdrop(c, `${path}.backdrop`, v.backdrop);
   const sections = v.sections;
   if (!Array.isArray(sections) || sections.length < 1 || sections.length > 40) return c.fail(`${path}.sections`, "1..40 sections");
   sections.forEach((s, i) => {
@@ -857,7 +898,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   return c.errors.length === 0 ? { ok: true, value: input as unknown as ScopeDoc } : { ok: false, errors: c.errors };
 }
 
-/** Every media reference of a document (sections of the home and of the pages, covers, cards, SEO image, models): what a publish must resolve into the media table. */
+/** Every media reference of a document (sections of the home and of the pages, covers, cards, SEO image, page pattern, models): what a publish must resolve into the media table. */
 export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
   if (!doc) return [];
   const out: MediaRef[] = [];
@@ -867,6 +908,7 @@ export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
   for (const s of doc.home?.sections ?? []) ofSection(s);
   for (const p of doc.pages ?? []) {
     if (p.seo.ogImage) out.push(p.seo.ogImage);
+    if (p.backdrop?.pattern) out.push(p.backdrop.pattern.image);
     for (const s of p.sections) ofSection(s);
   }
   for (const m of doc.customizers ?? []) for (const r of [m.cardImage, m.pageMockup]) if (r) out.push(r);

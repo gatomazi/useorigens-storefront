@@ -55,7 +55,7 @@ function sanitizePagesAndModels(scope: Scope, raw: Record<string, unknown>, medi
       if (!r.ok) { diagnostics.push(`${scope}: page #${i + 1} dropped (${r.errors[0]})`); continue; }
       const key = `${r.value.kind}/${r.value.slug}`;
       if (slugs.has(key) || ids.has(r.value.id)) { diagnostics.push(`${scope}: page "${key}" dropped (duplicate slug or id)`); continue; }
-      const missing = r.value.sections.some((s) => !known(s.appearance.image?.mobile) || !known(s.appearance.image?.desktop));
+      const missing = r.value.sections.some((s) => !known(s.appearance.image?.mobile) || !known(s.appearance.image?.desktop)) || !known(r.value.backdrop?.pattern?.image);
       if (missing) diagnostics.push(`${scope}: page "${key}" has images missing from the media table (they render without them)`);
       slugs.add(key);
       ids.add(r.value.id);

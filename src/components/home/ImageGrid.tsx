@@ -25,7 +25,7 @@ function TileLink({ tile, className, children }: { tile: GridTileView; className
  * name sits on a dark scrim over the lower edge of the picture, so it stays readable over any photo (the plain block needs no scrim).
  */
 export function ImageGrid({
-  anchor, headingId, title, subtitle, tiles, layout, backdrop,
+  anchor, headingId, title, subtitle, tiles, layout, backdrop, className,
 }: {
   anchor: string;
   headingId: string;
@@ -34,6 +34,8 @@ export function ImageGrid({
   tiles: GridTileView[];
   layout: GridLayout;
   backdrop?: ReactNode;
+  /** Extra classes of the `<section>` (on a CMS page with a dark ground, a grid with its own light background keeps dark text: `on-light`). */
+  className?: string;
 }) {
   const { grid, sizes } = COLUMNS[layout.columns];
   const overlay = layout.labels === "overlay";
@@ -82,13 +84,13 @@ export function ImageGrid({
 
   if (!backdrop) {
     return (
-      <section id={anchor} aria-labelledby={headingId} className="wrap py-14 lg:py-24">
+      <section id={anchor} aria-labelledby={headingId} className={["wrap py-14 lg:py-24", className].filter(Boolean).join(" ")}>
         {content}
       </section>
     );
   }
   return (
-    <section id={anchor} aria-labelledby={headingId} className="relative isolate overflow-hidden">
+    <section id={anchor} aria-labelledby={headingId} className={["relative isolate overflow-hidden", className].filter(Boolean).join(" ")}>
       {backdrop}
       <div className="wrap py-14 lg:py-24">{content}</div>
     </section>

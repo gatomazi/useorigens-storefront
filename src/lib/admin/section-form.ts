@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type Section, type Source } from "./contract";
+import { EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { ARTICLE_KINDS } from "../umapenca/types";
@@ -148,7 +148,8 @@ function parseArrangement(f: Fields, ref: string, current: Source | undefined): 
   return { order: "category" };
 }
 
-function parseSource(f: Fields, current: Source | undefined): Source | undefined {
+/** `max`: the most cards the section's display may show (a grid shows more than a carousel scrolls through). */
+function parseSource(f: Fields, current: Source | undefined, max: number): Source | undefined {
   const kind = str(f, "source_kind");
   if (kind === "editorial-module") {
     const key = str(f, "source_module");
@@ -157,13 +158,13 @@ function parseSource(f: Fields, current: Source | undefined): Source | undefined
   if (kind === "ink-category") {
     const ref = parseCollectionRef(str(f, "source_collection"));
     if (!ref) return current;
-    return { kind: "ink-category", ...ref, ...parseArrangement(f, `${ref.store}:${ref.collectionId}`, current), limit: clamp(Math.round(num(f, "source_limit", 6)), 3, 24) };
+    return { kind: "ink-category", ...ref, ...parseArrangement(f, `${ref.store}:${ref.collectionId}`, current), limit: clamp(Math.round(num(f, "source_limit", 6)), MIN_SECTION_PRODUCTS, max) };
   }
   if (kind === "umapenca") {
     // Checkboxes `source_up_<kind>`: none ticked keeps the current source (the schema refuses an empty list anyway).
     const articleKinds = ARTICLE_KINDS.filter((k) => f.get(`source_up_${k}`) !== null);
     if (articleKinds.length === 0) return current;
-    return { kind: "umapenca", articleKinds, limit: clamp(Math.round(num(f, "source_limit", 8)), 3, 24) };
+    return { kind: "umapenca", articleKinds, limit: clamp(Math.round(num(f, "source_limit", 8)), MIN_SECTION_PRODUCTS, max) };
   }
   return current;
 }
@@ -186,13 +187,18 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     patch.appearance = parseAppearance(f, section.appearance);
   }
   if (section.template === "product-carousel") {
+    // Carousel or grid ("carousel" is never stored: absent means carousel, so the sections saved before the grid existed stay as they were).
+    const display: ProductDisplay | undefined = f.get("layout_display") === null ? section.layout?.display : str(f, "layout_display") === "grid" ? "grid" : undefined;
     patch.cta = parseCta(f);
-    patch.source = parseSource(f, section.source);
+    const max = maxSectionProducts(display);
+    const source = parseSource(f, section.source, max);
+    // A grid turned back into a carousel: a source kept as it was (its collection did not resolve in the form) still fits the smaller ceiling.
+    patch.source = source && "limit" in source && source.limit > max ? { ...source, limit: max } : source;
     const variant = str(f, "layout_variant") === "poster" ? "poster" : "standard";
     const tone = str(f, "layout_tone") === "dark" ? "dark" : "light";
     const surfaceRaw = str(f, "layout_surface");
     const surface = surfaceRaw === "paper" || surfaceRaw === "region-primary" ? surfaceRaw : "plain";
-    patch.layout = { variant, tone, surface };
+    patch.layout = { variant, tone, surface, ...(display === "grid" ? { display } : {}) };
   }
   if (section.template === "page-hero") {
     patch.cta = parseCta(f);

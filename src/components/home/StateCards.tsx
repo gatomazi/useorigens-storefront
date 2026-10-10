@@ -69,6 +69,7 @@ export function StateCards({
   headingId = "states-title",
   backdrop,
   covers,
+  className,
 }: {
   region: RegionSlug;
   states: StateCard[];
@@ -81,6 +82,8 @@ export function StateCards({
   backdrop?: ReactNode;
   /** CMS covers per UF; a state without one keeps the cover the code has for it (if any). */
   covers?: Record<string, BannerAsset>;
+  /** Extra classes of the `<section>` (a CMS page with a dark ground of its own keeps this one on dark text: `on-light`). */
+  className?: string;
 }) {
   const body = (
     <>
@@ -157,14 +160,14 @@ export function StateCards({
   );
   if (backdrop) {
     return (
-      <section id={anchor} aria-labelledby={headingId} className="relative isolate overflow-hidden">
+      <section id={anchor} aria-labelledby={headingId} className={["relative isolate overflow-hidden", className].filter(Boolean).join(" ")}>
         {backdrop}
         <div className="wrap py-14 lg:py-24">{body}</div>
       </section>
     );
   }
   return (
-    <section id={anchor} aria-labelledby={headingId} className="wrap py-14 lg:py-24">
+    <section id={anchor} aria-labelledby={headingId} className={["wrap py-14 lg:py-24", className].filter(Boolean).join(" ")}>
       {body}
     </section>
   );

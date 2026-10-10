@@ -18,6 +18,19 @@ import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
 const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens", footer: "Rodapé" };
+const typeLabel = (s: Section) => (s.template === "product-carousel" && s.layout?.display === "grid" ? "Grade de produtos" : TYPE_LABEL[s.template]);
+/** "Exibição" of a new product section (the same choice the section editor offers). */
+function DisplaySelect({ id }: { id: string }) {
+  return (
+    <div>
+      <label className="a-label" htmlFor={id}>Exibição</label>
+      <select id={id} name="display" className="a-select" defaultValue="carousel">
+        <option value="carousel">Carrossel</option>
+        <option value="grid">Grade (4 por linha)</option>
+      </select>
+    </div>
+  );
+}
 
 function RowForm({ action, rev, scope, id, extra, children, danger = false, label }: { action: (fd: FormData) => Promise<void>; rev: number | null; scope: string; id: string; extra?: Record<string, string>; children: React.ReactNode; danger?: boolean; label: string }) {
   return (
@@ -95,9 +108,9 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                 <tr key={s.id} className={s.active ? "" : "opacity-60"}>
                   <td className="a-muted w-8 font-bold">{i + 1}</td>
                   <td>
-                    <p className="font-bold">{s.title?.replace(/\n/g, " ") ?? TYPE_LABEL[s.template]}</p>
+                    <p className="font-bold">{s.title?.replace(/\n/g, " ") ?? typeLabel(s)}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.8125rem]">
-                      <span className="a-badge">{TYPE_LABEL[s.template]}</span>
+                      <span className="a-badge">{typeLabel(s)}</span>
                       {custom && <span className="a-badge ok">Criada aqui</span>}
                       {s.nav && <span className="a-badge ok" title="Aparece no menu do topo da loja">Menu: {s.nav.label}</span>}
                       {s.appearance.image && <span className="a-badge">Com imagem</span>}
@@ -144,7 +157,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         {entries.length === 0 ? (
           <p className="a-flash err mt-3">Nenhuma coleção sincronizada: rode <code>npm run collections:sync</code> (só leitura) depois de um catálogo sincronizado.</p>
         ) : (
-          <form action={addCollectionSection} aria-label="Nova seção a partir de uma coleção da INK" className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1fr_auto] md:items-start">
+          <form action={addCollectionSection} aria-label="Nova seção a partir de uma coleção da INK" className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1.2fr_1fr_auto] md:items-start">
             <input type="hidden" name="rev" value={rev ?? "null"} />
             <input type="hidden" name="scope" value={scope} />
             <CollectionCombobox name="collection" label="Coleção (busque pelo nome)" entries={entries} libraryFrom="/admin/home" hint={anySelectable ? "Inclui as coleções internas que você habilitou na Biblioteca." : "Nenhuma coleção utilizável ainda."} />
@@ -152,20 +165,21 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
               <label className="a-label" htmlFor="title">Título (opcional)</label>
               <input id="title" name="title" className="a-input" maxLength={120} placeholder="Usa o nome da coleção" />
             </div>
+            <DisplaySelect id="display" />
             <div>
               <label className="a-label" htmlFor="limit">Cards</label>
-              <input id="limit" name="limit" type="number" min={3} max={24} defaultValue={6} className="a-input" />
+              <input id="limit" name="limit" type="number" min={3} max={48} defaultValue={6} className="a-input" />
             </div>
             <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
           </form>
         )}
         <p className="a-muted mt-3 text-[0.8125rem]">Precisa de uma coleção interna? <Link className="a-link" href="/admin/colecoes?from=/admin/home">Habilite-a na Biblioteca</Link>.</p>
-        <p className="a-muted mt-3 text-[0.8125rem]">A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A seção começa na ordem devolvida pela INK (não é “mais vendidos” nem “mais recentes”); depois de criada, você muda a ordem e esconde produtos no editor dela. A seção nova entra só no rascunho, antes da campanha.</p>
+        <p className="a-muted mt-3 text-[0.8125rem]">Carrossel: uma fileira que a pessoa arrasta (até 24 cards). Grade: todos os produtos na página, 4 por linha no desktop e 2 no celular (até 48). Dá para trocar depois, no editor da seção. A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A seção começa na ordem devolvida pela INK (não é “mais vendidos” nem “mais recentes”); depois de criada, você muda a ordem e esconde produtos no editor dela. A seção nova entra só no rascunho, antes da campanha.</p>
 
         <h3 className="mt-8 font-extrabold">Produtos: canecas e ecobags da Uma Penca</h3>
         <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os produtos vêm do feed da loja da Uma Penca (sincronizado a cada 6 horas), sem coleção da INK. O botão “Ver todos” já leva para <code>/{scope}/outros-artigos</code>. Para pôr o seu modelo “Crie a sua” como primeiro card, edite a seção depois de criada e marque “Destacar um produto personalizável”.</p>
         <p className="a-muted mt-1 text-[0.8125rem]" data-testid="umapenca-feed-count">No feed agora: {ARTICLE_KINDS.map((k) => `${umaPencaCounts[k]} ${umaPencaCounts[k] === 1 ? ARTICLE_KIND_LABELS[k].singular.toLowerCase() : ARTICLE_KIND_LABELS[k].plural.toLowerCase()}`).join(" · ")}{umaPencaSyncedAt ? "" : " (o feed ainda não foi sincronizado)"}</p>
-        <form action={addUmaPencaSection} aria-label="Nova seção de canecas e ecobags da Uma Penca" className="mt-3 grid gap-4 md:grid-cols-[2fr_2fr_1fr_auto] md:items-start">
+        <form action={addUmaPencaSection} aria-label="Nova seção de canecas e ecobags da Uma Penca" className="mt-3 grid gap-4 md:grid-cols-[2fr_2fr_1.2fr_1fr_auto] md:items-start">
           <input type="hidden" name="rev" value={rev ?? "null"} />
           <input type="hidden" name="scope" value={scope} />
           <fieldset>
@@ -180,9 +194,10 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
             <label className="a-label" htmlFor="up_title">Título (opcional)</label>
             <input id="up_title" name="title" className="a-input" maxLength={120} placeholder="Canecas, Ecobags ou Outros artigos" />
           </div>
+          <DisplaySelect id="up_display" />
           <div>
             <label className="a-label" htmlFor="up_limit">Cards</label>
-            <input id="up_limit" name="limit" type="number" min={3} max={24} defaultValue={8} className="a-input" />
+            <input id="up_limit" name="limit" type="number" min={3} max={48} defaultValue={8} className="a-input" />
           </div>
           <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
         </form>
