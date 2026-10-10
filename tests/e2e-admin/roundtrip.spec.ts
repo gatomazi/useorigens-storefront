@@ -61,9 +61,11 @@ test("given the local CMS, when a collection section is created, styled, reorder
   await picker.press("ArrowDown");
   await picker.press("Enter");
   await expect(picker).toHaveValue("Fé de Origem");
-  await page.getByLabel("Título (opcional)").fill("Terra em foco");
-  await page.getByLabel("Cards").fill("6");
-  await page.getByRole("button", { name: "Criar seção" }).click();
+  // The home has two "add a section" forms (INK collection, Uma Penca) with the same field names: fill the INK one.
+  const create = page.getByRole("form", { name: "Nova seção a partir de uma coleção da INK" });
+  await create.getByLabel("Título (opcional)").fill("Terra em foco");
+  await create.getByLabel("Cards").fill("6");
+  await create.getByRole("button", { name: "Criar seção" }).click();
   await expect(page).toHaveURL(/\/admin\/home\/custom-[0-9a-f]+(\?|$)/);
   await expect(page.getByText("Seção criada no rascunho.")).toBeVisible();
   // An internal collection has no public page: the editor says so instead of offering a "Ver todos".

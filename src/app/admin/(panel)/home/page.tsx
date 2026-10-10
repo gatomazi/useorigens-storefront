@@ -144,7 +144,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         {entries.length === 0 ? (
           <p className="a-flash err mt-3">Nenhuma coleção sincronizada: rode <code>npm run collections:sync</code> (só leitura) depois de um catálogo sincronizado.</p>
         ) : (
-          <form action={addCollectionSection} className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1fr_auto] md:items-start">
+          <form action={addCollectionSection} aria-label="Nova seção a partir de uma coleção da INK" className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1fr_auto] md:items-start">
             <input type="hidden" name="rev" value={rev ?? "null"} />
             <input type="hidden" name="scope" value={scope} />
             <CollectionCombobox name="collection" label="Coleção (busque pelo nome)" entries={entries} libraryFrom="/admin/home" hint={anySelectable ? "Inclui as coleções internas que você habilitou na Biblioteca." : "Nenhuma coleção utilizável ainda."} />
@@ -165,7 +165,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         <h3 className="mt-8 font-extrabold">Produtos: canecas e ecobags da Uma Penca</h3>
         <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os produtos vêm do feed da loja da Uma Penca (sincronizado a cada 6 horas), sem coleção da INK. O botão “Ver todos” já leva para <code>/{scope}/outros-artigos</code>. Para pôr o seu modelo “Crie a sua” como primeiro card, edite a seção depois de criada e marque “Destacar um produto personalizável”.</p>
         <p className="a-muted mt-1 text-[0.8125rem]" data-testid="umapenca-feed-count">No feed agora: {ARTICLE_KINDS.map((k) => `${umaPencaCounts[k]} ${umaPencaCounts[k] === 1 ? ARTICLE_KIND_LABELS[k].singular.toLowerCase() : ARTICLE_KIND_LABELS[k].plural.toLowerCase()}`).join(" · ")}{umaPencaSyncedAt ? "" : " (o feed ainda não foi sincronizado)"}</p>
-        <form action={addUmaPencaSection} className="mt-3 grid gap-4 md:grid-cols-[2fr_2fr_1fr_auto] md:items-start">
+        <form action={addUmaPencaSection} aria-label="Nova seção de canecas e ecobags da Uma Penca" className="mt-3 grid gap-4 md:grid-cols-[2fr_2fr_1fr_auto] md:items-start">
           <input type="hidden" name="rev" value={rev ?? "null"} />
           <input type="hidden" name="scope" value={scope} />
           <fieldset>
