@@ -32,7 +32,10 @@
     "db:migrate": "node --env-file-if-exists=.env.local db/db-cli.mjs migrate",
     "db:validate": "node db/db-cli.mjs validate",
     "test:admin:prod": "playwright test -c playwright.prod.config.ts",
-    "cms:check": "node --env-file-if-exists=.env.local --import tsx scripts/cms-check.mts"
+    "cms:check": "node --env-file-if-exists=.env.local --import tsx scripts/cms-check.mts",
+    "unificado:ler": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-unificado-ler.mts",
+    "unificado:reconciliar": "node --conditions=react-server --import tsx scripts/ink-unificado-reconciliar.mts",
+    "mockups:fila": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-mockups-fila.mts"
   },
   "dependencies": {
     "embla-carousel-react": "^8.6.0",

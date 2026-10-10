@@ -7,7 +7,13 @@ import type {
   StoreIndex,
   UnrankedBinding,
 } from "./types";
-import type { CommerceStoreKey } from "../geo/regions";
+import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
+
+/**
+ * Only the unified-store shadow read sets these (src/lib/catalog/unificado/): one INK store that holds several regions, so the UFs a city
+ * may resolve in and the merchandise region come from the caller's trusted classification, not from the store. Omitted = production.
+ */
+export type IndexScope = { ufs: readonly string[]; region: RegionSlug };
 
 /**
  * Turns one store's INK products into bindings + merchandise + an audit trail.
@@ -18,11 +24,12 @@ export function buildStoreIndex(
   storeKey: CommerceStoreKey,
   products: readonly InkProductNormalized[],
   syncedAt: string,
+  scope?: IndexScope,
 ): StoreIndex {
   const bindings: UnrankedBinding[] = [];
   const merch: MerchProduct[] = [];
   const excluded: ExcludedProduct[] = [];
-  const region = regionOfStore(storeKey);
+  const region = scope?.region ?? regionOfStore(storeKey);
 
   for (const product of products) {
     const parsed = parseProductName(product.name);
@@ -58,7 +65,7 @@ export function buildStoreIndex(
       continue;
     }
 
-    const resolution = resolveCity(parsed, product);
+    const resolution = resolveCity(parsed, product, scope?.ufs);
     if (!resolution.ok) {
       excluded.push({
         inkProductId: product.id,
