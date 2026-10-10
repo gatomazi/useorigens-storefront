@@ -90,6 +90,11 @@ export function collectionProblems(doc: ScopeDoc): string[] {
       const c = findCollection(s.cta.dest.store, s.cta.dest.collectionId);
       if (!c?.isAvailable) out.push(`${name}: o botão "Ver todos" aponta para uma coleção interna ou inexistente (sem página pública verificada)`);
     }
+    for (const t of s.tiles ?? []) {
+      if (t.dest.kind !== "ink-collection") continue;
+      const c = findCollection(t.dest.store, t.dest.collectionId);
+      if (!c?.isAvailable) out.push(`${name}: o bloco "${t.label}" aponta para uma coleção interna ou inexistente (sem página pública verificada)`);
+    }
   }
   return out;
 }
@@ -100,6 +105,7 @@ export function sectionTone(section: Section): "light" | "dark" | null {
   if (section.template === "hero") return "light";
   if (section.template === "campaign") return "dark";
   if (section.template === "city-styles" || section.template === "states") return section.layout?.tone ?? "light";
+  if (section.template === "image-grid") return "light"; // dark title over the section's own background
   return null;
 }
 

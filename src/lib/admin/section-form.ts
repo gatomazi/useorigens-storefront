@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { EDITORIAL_MODULE_KEYS, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type Overlay, type Section, type Source } from "./contract";
+import { EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { ARTICLE_KINDS } from "../umapenca/types";
@@ -67,18 +67,60 @@ export function parsePageRef(value: string): Destination | null {
   return m ? { kind: "page", pageKind: m[1] as "hotpage" | "categoryLanding", slug: m[2] } : null;
 }
 
-function parseCta(f: Fields): Section["cta"] | undefined {
-  const kind = str(f, "cta_kind");
-  const label = str(f, "cta_label");
-  let dest: Destination | null = null;
+/** A destination from the `<prefix>_kind` field and the one field of that kind (`<prefix>_collection`, `_url`, `_route`, `_page`, `_anchor`), or null. */
+function parseDest(f: Fields, prefix: string): Destination | null {
+  const kind = str(f, `${prefix}_kind`);
   if (kind === "ink-collection") {
-    const ref = parseCollectionRef(str(f, "cta_collection"));
-    if (ref) dest = { kind: "ink-collection", ...ref };
-  } else if (kind === "external") dest = { kind: "external", url: str(f, "cta_url") };
-  else if (kind === "route") dest = { kind: "route", path: str(f, "cta_route") };
-  else if (kind === "page") dest = parsePageRef(str(f, "cta_page"));
-  else if (kind === "anchor") dest = { kind: "anchor", anchor: str(f, "cta_anchor") };
-  return dest ? { label: label || "Ver todos", dest } : undefined;
+    const ref = parseCollectionRef(str(f, `${prefix}_collection`));
+    return ref ? { kind: "ink-collection", ...ref } : null;
+  }
+  if (kind === "external") return { kind: "external", url: str(f, `${prefix}_url`) };
+  if (kind === "route") return { kind: "route", path: str(f, `${prefix}_route`) };
+  if (kind === "page") return parsePageRef(str(f, `${prefix}_page`));
+  if (kind === "anchor") return { kind: "anchor", anchor: str(f, `${prefix}_anchor`) };
+  return null;
+}
+
+function parseCta(f: Fields): Section["cta"] | undefined {
+  const dest = parseDest(f, "cta");
+  return dest ? { label: str(f, "cta_label") || "Ver todos", dest } : undefined;
+}
+
+/**
+ * The image grid's tile rows `tile_<i>_*` (i < `tile_count`), in order. A row with neither a name nor a picture is an empty slot and is skipped;
+ * a row missing its name or its destination is reported in plain words (`problems`) instead of reaching the validator as a cryptic path.
+ * Tile pictures are always decorative: the tile's name is the link text.
+ */
+export function parseGridTiles(f: Fields): { tiles: GridTile[]; problems: string[] } {
+  const tiles: GridTile[] = [];
+  const problems: string[] = [];
+  const rows = clamp(Math.round(num(f, "tile_count", 0)), 0, MAX_GRID_TILES);
+  let n = 0; // the tile's number as the editor shows it (empty slots don't count)
+  for (let i = 0; i < rows; i++) {
+    const label = str(f, `tile_${i}_label`);
+    const assetId = str(f, `tile_${i}_image`);
+    if (!label && !assetId) continue;
+    n++;
+    const dest = parseDest(f, `tile_${i}`);
+    if (!label) problems.push(`Bloco ${n}: falta o nome.`);
+    if (!dest) problems.push(`Bloco ${n}${label ? ` ("${label}")` : ""}: escolha para onde ele leva.`);
+    if (!label || !dest) continue;
+    const caption = str(f, `tile_${i}_caption`);
+    tiles.push({ label, ...(caption ? { caption } : {}), ...(assetId ? { image: { assetId, alt: "", decorative: true } } : {}), dest });
+  }
+  if (problems.length === 0 && tiles.length < MIN_GRID_TILES) problems.push(`A grade precisa de pelo menos ${MIN_GRID_TILES} blocos.`);
+  return { tiles, problems };
+}
+
+function parseGridLayout(f: Fields, current: GridLayout | undefined): GridLayout {
+  const columns = Number(str(f, "grid_columns"));
+  const aspect = str(f, "grid_aspect");
+  const labels = str(f, "grid_labels");
+  return {
+    columns: (GRID_COLUMNS as readonly number[]).includes(columns) ? (columns as GridLayout["columns"]) : current?.columns ?? 4,
+    aspect: (GRID_ASPECTS as readonly string[]).includes(aspect) ? (aspect as GridLayout["aspect"]) : current?.aspect ?? "portrait",
+    labels: (GRID_LABELS as readonly string[]).includes(labels) ? (labels as GridLayout["labels"]) : current?.labels ?? "below",
+  };
 }
 
 function parseSource(f: Fields, current: Source | undefined): Source | undefined {
@@ -115,7 +157,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
   // A field that is not in the form is left alone; a field that is present and empty clears the value (a carousel's title is then rejected).
   if (f.get("title") !== null) patch.title = str(f, "title") || undefined;
   if (f.get("subtitle") !== null) patch.subtitle = str(f, "subtitle") || undefined;
-  if (section.template === "product-carousel" || section.template === "campaign" || section.template === "hero" || section.template === "city-styles" || section.template === "states" || section.template === "page-hero") {
+  if (section.template === "product-carousel" || section.template === "campaign" || section.template === "hero" || section.template === "city-styles" || section.template === "states" || section.template === "page-hero" || section.template === "image-grid") {
     patch.appearance = parseAppearance(f, section.appearance);
   }
   if (section.template === "product-carousel") {
@@ -166,6 +208,10 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
       covers[uf] = { assetId, alt, decorative: alt === "" };
     }
     patch.stateCovers = Object.keys(covers).length > 0 ? covers : undefined;
+  }
+  if (section.template === "image-grid" && f.get("grid_present") !== null) {
+    patch.grid = parseGridLayout(f, section.grid);
+    patch.tiles = parseGridTiles(f).tiles; // the caller refuses the save when `parseGridTiles` reports problems
   }
   if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", 8)), 1, 8);
   return patch;

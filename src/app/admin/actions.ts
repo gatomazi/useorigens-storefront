@@ -23,7 +23,7 @@ import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { isUmaPencaSource, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
-import { parseCollectionRef, parseFeaturedFields, parseSectionForm } from "@/lib/admin/section-form";
+import { parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
 import { nextStatuses, productLinkFor, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
@@ -182,6 +182,10 @@ export async function saveSection(fd: FormData) {
       patch.featured = refs;
     } else if (mode === "seed") patch.featured = legacyFeaturedRefs(scope);
     else if (mode === "reset" && scope === "sul") patch.featured = undefined;
+  }
+  if (section.template === "image-grid") {
+    const { problems } = parseGridTiles(fd);
+    if (problems.length > 0) back(pageId ? inPagePath(pageId, `/admin/home/${id}`) : `/admin/home/${id}`, { err: problems });
   }
   const problem = patch.source ? sourceProblem(patch.source, ws.doc) : null;
   if (problem) back(pageId ? inPagePath(pageId, `/admin/home/${id}`) : `/admin/home/${id}`, { err: [problem] });

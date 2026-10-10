@@ -15,7 +15,7 @@ import { ARTICLE_KIND_LABELS, ARTICLE_KINDS, type ArticleKind } from "../umapenc
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
 export type Scope = (typeof SCOPES)[number];
 
-export const TEMPLATE_KEYS = ["hero", "page-hero", "city-styles", "product-carousel", "states", "campaign", "footer"] as const;
+export const TEMPLATE_KEYS = ["hero", "page-hero", "city-styles", "product-carousel", "states", "campaign", "image-grid", "footer"] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
 /** Closed list of analytics origins a carousel may report (keys of `SOURCES`); never a free string (would pollute Meta/GA4). */
@@ -76,6 +76,20 @@ export const MAX_FEATURED = 3;
 
 export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary" };
 
+/**
+ * Image grid ("Compre por peça", "Coleções"…): each tile is a picture with a name that leads somewhere real. Nothing is read from the catalog,
+ * so a tile never shows a price or a count it could get wrong; the destination goes through the same rules as any button (own region, live page).
+ * A tile without a picture is drawn as a plain colour block with its name (a "Ver tudo" tile, or a grid still waiting for its photos).
+ */
+export type GridTile = { label: string; caption?: string; image?: MediaRef; dest: Destination };
+export const GRID_COLUMNS = [2, 3, 4] as const;
+export const GRID_ASPECTS = ["square", "portrait", "landscape"] as const;
+export const GRID_LABELS = ["below", "overlay"] as const;
+/** `columns` is the desktop count (phones always show two side by side); `labels`: the name under the picture or over its lower edge. */
+export type GridLayout = { columns: (typeof GRID_COLUMNS)[number]; aspect: (typeof GRID_ASPECTS)[number]; labels: (typeof GRID_LABELS)[number] };
+export const MIN_GRID_TILES = 2;
+export const MAX_GRID_TILES = 12;
+
 export type Section = {
   id: string;
   /** DOM id of the `<section>` (existing anchors keep working). */
@@ -113,6 +127,10 @@ export type Section = {
    * none. The images are resolved into the published media table like any section image.
    */
   stateCovers?: Record<string, MediaRef>;
+  /** Image grid only: the tiles, in order (MIN_GRID_TILES..MAX_GRID_TILES). */
+  tiles?: GridTile[];
+  /** Image grid only. */
+  grid?: GridLayout;
   appearance: Appearance;
 };
 
@@ -443,6 +461,28 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       else checkMediaRef(c, `${path}.stateCovers.${uf}`, ref);
     }
   }
+  if (v.tiles !== undefined) {
+    if (v.template !== "image-grid" || !Array.isArray(v.tiles) || v.tiles.length < MIN_GRID_TILES || v.tiles.length > MAX_GRID_TILES) c.fail(`${path}.tiles`, `image grid only, ${MIN_GRID_TILES}..${MAX_GRID_TILES} tiles`);
+    else v.tiles.forEach((t, i) => {
+      const at = `${path}.tiles[${i}]`;
+      if (!isRecord(t)) return c.fail(at, "must be an object");
+      if (!isStr(t.label, 40)) c.fail(`${at}.label`, "1..40 chars");
+      if (t.caption !== undefined && !isStr(t.caption, 80)) c.fail(`${at}.caption`, "1..80 chars");
+      if (t.image !== undefined) checkMediaRef(c, `${at}.image`, t.image);
+      checkDestination(c, `${at}.dest`, t.dest);
+    });
+  }
+  if (v.grid !== undefined) {
+    const g = v.grid;
+    if (v.template !== "image-grid" || !isRecord(g) || !(GRID_COLUMNS as readonly unknown[]).includes(g.columns) || !(GRID_ASPECTS as readonly unknown[]).includes(g.aspect) || !(GRID_LABELS as readonly unknown[]).includes(g.labels)) {
+      c.fail(`${path}.grid`, `image grid only: {columns: ${GRID_COLUMNS.join("|")}, aspect: ${GRID_ASPECTS.join("|")}, labels: ${GRID_LABELS.join("|")}}`);
+    }
+  }
+  if (v.template === "image-grid") {
+    if (!v.title) c.fail(`${path}.title`, "required for an image grid");
+    if (!v.tiles) c.fail(`${path}.tiles`, "required for an image grid");
+    if (!v.grid) c.fail(`${path}.grid`, "required for an image grid");
+  }
   if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > 8)) c.fail(`${path}.count`, "city styles only, an integer 1..8");
   if (v.template === "page-hero" && !v.title) c.fail(`${path}.title`, "required for a page hero");
   if (v.template === "product-carousel") {
@@ -454,7 +494,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
   checkAppearance(c, `${path}.appearance`, v.appearance);
 }
 
-const TEMPLATES_IN_PAGES: readonly string[] = ["page-hero", "product-carousel", "campaign", "states", "city-styles"];
+const TEMPLATES_IN_PAGES: readonly string[] = ["page-hero", "product-carousel", "campaign", "states", "city-styles", "image-grid"];
 
 function checkSlug(c: Collector, path: string, v: unknown): void {
   if (typeof v !== "string" || v.length < 2 || v.length > 60 || !PAGE_SLUG.test(v)) c.fail(path, "2..60 chars: lowercase letters, digits and single hyphens");
@@ -584,7 +624,20 @@ function checkRegionRules(c: Collector, base: string, sections: unknown[], sc: S
       if (dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`${at}.${name}.dest.path`, "must be a page of this region");
     }
     if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(region.ufs as readonly string[]).includes(uf)) c.fail(`${at}.stateCovers.${uf}`, "not a state of this region");
+    checkTileRegion(c, at, s.tiles, sc);
     if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && ref.store !== region.storeKey) c.fail(`${at}.featured[${j}].store`, "belongs to another region's INK store"); });
+  });
+}
+
+/** A grid tile, like a button, stays inside its region: its own INK store, its own pages. */
+function checkTileRegion(c: Collector, at: string, tiles: unknown, sc: Scope): void {
+  const region = REGIONS[sc as RegionSlug];
+  if (!region || !Array.isArray(tiles)) return;
+  tiles.forEach((t, j) => {
+    const dest = isRecord(t) && isRecord(t.dest) ? t.dest : null;
+    if (!dest) return;
+    if (dest.kind === "ink-collection" && dest.store !== region.storeKey) c.fail(`${at}.tiles[${j}].dest.store`, "belongs to another region's INK store");
+    if (dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`${at}.tiles[${j}].dest.path`, "must be a page of this region");
   });
 }
 
@@ -706,6 +759,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
           if (navDest && navDest.kind === "ink-collection" && navDest.store !== ownStore) c.fail(`doc.home.sections[${i}].nav.dest.store`, "belongs to another region's INK store");
           if (navDest && navDest.kind === "route" && typeof navDest.path === "string" && navDest.path !== `/${sc}` && !navDest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].nav.dest.path`, "must be a page of this region");
           if (s.template === "page-hero") c.fail(`doc.home.sections[${i}].template`, "the page hero belongs to pages, not to the home");
+          checkTileRegion(c, `doc.home.sections[${i}]`, s.tiles, sc);
           // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
           if (dest && dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].cta.dest.path`, "must be a page of this region");
         });
@@ -787,7 +841,7 @@ export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
   if (!doc) return [];
   const out: MediaRef[] = [];
   const ofSection = (s: Section) => {
-    for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), s.customizerCard?.image]) if (r) out.push(r);
+    for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), s.customizerCard?.image, ...(s.tiles ?? []).map((t) => t.image)]) if (r) out.push(r);
   };
   for (const s of doc.home?.sections ?? []) ofSection(s);
   for (const p of doc.pages ?? []) {

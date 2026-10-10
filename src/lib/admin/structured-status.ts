@@ -41,3 +41,11 @@ export function campaignStatus(region: RegionSlug): StructuredStatus {
   const crops = getRegionHome(region).campaignCrops.length;
   return { ok: true, summary: "Não depende do catálogo", notes: [crops > 0 ? `Recortes de camisetas reais disponíveis para o fundo: ${crops}.` : "Sem recortes de camisetas reais nesta região: use uma cor, um degradê ou uma imagem."] };
 }
+
+export function imageGridStatus(configured?: { tiles?: { image?: unknown }[] }): StructuredStatus {
+  const tiles = configured?.tiles ?? [];
+  const withoutImage = tiles.filter((t) => !t.image).length;
+  const notes = ["Cada bloco tem nome, imagem e destino próprios: uma coleção da INK, uma página desta região ou uma URL da loja Use."];
+  if (withoutImage > 0) notes.push(`${withoutImage} bloco(s) sem imagem aparecem como uma placa de cor com o nome. Envie as fotos em Mídia e escolha-as aqui.`);
+  return { ok: true, summary: configured ? `${tiles.length} bloco(s)` : "Não depende do catálogo", notes };
+}

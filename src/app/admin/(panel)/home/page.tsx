@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
-import { campaignStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
+import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
 import { SINGLETON_TEMPLATES, STRUCTURED_MODELS } from "@/lib/site-config/structured";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
@@ -17,7 +17,7 @@ import type { Section } from "@/lib/site-config/schema";
 import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
-const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", footer: "Rodapé" };
+const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens", footer: "Rodapé" };
 
 function RowForm({ action, rev, scope, id, extra, children, danger = false, label }: { action: (fd: FormData) => Promise<void>; rev: number | null; scope: string; id: string; extra?: Record<string, string>; children: React.ReactNode; danger?: boolean; label: string }) {
   return (
@@ -188,11 +188,11 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         </form>
 
         <h3 className="mt-8 font-extrabold">Componentes da home</h3>
-        <ul className="mt-3 grid gap-4 md:grid-cols-3" aria-label="Componentes da home">
+        <ul className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Componentes da home">
           {STRUCTURED_MODELS.map((model) => {
             const existing = sections.find((x) => x.template === model.template) ?? null;
             const single = SINGLETON_TEMPLATES.includes(model.template);
-            const status = model.template === "city-styles" ? cityStylesStatus(scope, existing ?? undefined) : model.template === "states" ? statesStatus(scope) : campaignStatus(scope);
+            const status = model.template === "city-styles" ? cityStylesStatus(scope, existing ?? undefined) : model.template === "states" ? statesStatus(scope) : model.template === "image-grid" ? imageGridStatus() : campaignStatus(scope);
             const addForm = single && existing ? null : (
               <form action={addStructuredSection}>
                 <input type="hidden" name="rev" value={rev ?? "null"} />
