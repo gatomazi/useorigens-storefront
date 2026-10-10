@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
+import { PriceText } from "@/components/catalog/PriceText";
 import { SearchDialog } from "@/components/search/SearchDialog";
 import { usableBannerAsset, type BannerConfig } from "@/lib/editorial/banners";
 import { numberPt } from "@/lib/format";
@@ -87,7 +88,7 @@ export function RegionHero({
                       <p className="mt-0.5 font-[family-name:var(--font-serif-stack)] text-[0.9375rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere] sm:text-[1.0625rem]">
                         {d.cityName} · {d.uf}
                       </p>
-                      {d.price && <p className="mt-2 text-[0.9375rem] font-semibold sm:text-base">{d.price}</p>}
+                      {d.price && <p className="mt-2 text-[0.9375rem] font-semibold sm:text-base"><PriceText price={d.price} listPrice={d.listPrice} /></p>}
                     </div>
                   </Link>
                 </li>

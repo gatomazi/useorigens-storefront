@@ -108,6 +108,7 @@ export function linkGarmentBindings(
       storeProductUrl: raw.storeProductUrl,
       imageUrl: raw.imageUrl,
       price: raw.price,
+      ...(raw.listPrice !== undefined ? { listPrice: raw.listPrice } : {}),
       productClusterId: raw.clusterId,
       syncedAt,
     });

@@ -5,6 +5,11 @@ export function formatPrice(price: number | null): string | null {
   return price === null ? null : brl.format(price);
 }
 
+/** INK's regular price, formatted, ONLY while a promotion is on (shown struck through before the price); undefined otherwise. */
+export function formatListPrice(product: { listPrice?: number }): string | undefined {
+  return product.listPrice === undefined ? undefined : brl.format(product.listPrice);
+}
+
 export const numberPt = new Intl.NumberFormat("pt-BR");
 
 /** "1 cidade" / "2 cidades" — correct singular/plural, never a bare number glued to "cidades". */

@@ -12,6 +12,8 @@ export type CarouselItem = {
   /** Where it comes from: "Curitiba · PR". Always shown for regional voice items. */
   context?: string;
   price: string | null;
+  /** INK's regular price, formatted, only while a promotion is on: struck through before `price` (src/components/catalog/PriceText.tsx). */
+  listPrice?: string;
   /** Exactly what INK returned — the GoToInk `value` param. Omitted (not guessed) when not cleanly known for
    * this item (e.g. a state-wide editorial pick with no single city). */
   rawPrice?: number | null;

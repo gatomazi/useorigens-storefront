@@ -9,7 +9,10 @@ export type InkProductNormalized = {
   slug: string;
   storeProductUrl: string;
   imageUrl: string;
+  /** What INK charges now: its promotional price while a promotion is on, else its regular price (src/lib/ink/normalize.ts `inkPricing`). */
   price: number | null;
+  /** INK's regular price, ONLY while a promotion is on (shown struck through next to `price`). Absent = no promotion. */
+  listPrice?: number;
   tags: string[];
   clusterId: string | null;
   /** INK's global `product_type.id` (1 = classic T-shirt, see garments.ts). Optional: test fixtures and old callers may omit it. */
@@ -57,8 +60,13 @@ export type CityDesignBinding = {
   slug: string;
   storeProductUrl: string;
   imageUrl: string;
-  /** Exactly what INK returned, never normalized or rewritten. */
+  /**
+   * What INK charges now, exactly as INK returned it: its `promotional_price` while a promotion is on, else its `price` (never computed or
+   * rounded here). Every price shown, and the `value` of the click events, is this one.
+   */
   price: number | null;
+  /** INK's regular `price`, ONLY while a promotion is on (struck through next to `price`). Absent = no promotion, or a snapshot from before promotions were read. */
+  listPrice?: number;
 
   syncedAt: string;
 
@@ -85,7 +93,10 @@ export type MerchProduct = {
   slug: string;
   storeProductUrl: string;
   imageUrl: string;
+  /** What INK charges now (its promotional price during a promotion); see `CityDesignBinding.price`. */
   price: number | null;
+  /** INK's regular price, only while a promotion is on. */
+  listPrice?: number;
   totalSalesCount: number;
   /**
    * INK's `product_cluster_id`, when it returned one: the pieces of ONE design share it (the global search groups merchandise by it; the
@@ -131,7 +142,10 @@ export type GarmentBinding = {
   slug: string;
   storeProductUrl: string;
   imageUrl: string;
+  /** What INK charges now (its promotional price during a promotion); see `CityDesignBinding.price`. */
   price: number | null;
+  /** INK's regular price, only while a promotion is on. */
+  listPrice?: number;
   productClusterId: string;
   syncedAt: string;
 };

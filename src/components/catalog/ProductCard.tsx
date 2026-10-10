@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { trackGoToInk, trackGoToUmaPenca } from "@/lib/analytics/track";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
 import { ProductPhoto } from "./ProductPhoto";
+import { PriceText } from "./PriceText";
 
 /**
  * The pieces a product section is made of, shared by its two displays (ProductCarousel: one row that scrolls; ProductGrid: every card on the page),
@@ -52,17 +53,22 @@ const frame = (dark: boolean) =>
   `group flex h-full flex-col overflow-hidden rounded-lg border bg-[var(--card-fill)] transition-colors ${dark ? "border-white/25 hover:border-white/55" : "border-black/15 hover:border-black/35"}`;
 /** Name, price and button: 12px of padding on phones, 16px from tablets up. */
 const INFO = "flex grow flex-col p-3 md:p-4";
-/** Up to two lines, and always the room of two (a short name never lifts the price or the button above its neighbours'); the full name stays in the DOM. */
-const NAME = "line-clamp-2 min-h-[2.6em] text-[0.9375rem] font-medium leading-[1.3] md:text-base";
+/** Up to two lines (the full name stays in the DOM). No room is reserved under a short name: see `FOOT`. */
+const NAME = "line-clamp-2 text-[0.9375rem] font-medium leading-[1.3] md:text-base";
+/**
+ * Price and button, pinned to the foot of the card. The cards of a row share one height, so prices and buttons line up whatever the length of
+ * the names above them; and when every name of the row fits one line, the price sits right under the name (the room appears only next to a
+ * neighbour whose name takes two lines).
+ */
+const FOOT = "mt-auto pt-1";
 
 /**
  * The section's buy button at the foot of a card, in the store's own CTA shape (`.btn`: rectangular, solid, uppercase). It is NOT a second link: it sits
- * inside the card's own link, so it opens the same product page and the click is reported once, exactly as before. Pushed to the bottom of the card,
- * so the buttons of a row line up whatever the length of the names above them.
+ * inside the card's own link, so it opens the same product page and the click is reported once, exactly as before. Lives in the card's `FOOT`.
  */
 function CardButton({ label, dark }: { label: string; dark: boolean }) {
   return (
-    <span className="mt-auto block pt-3">
+    <span className="block pt-2.5">
       <span
         className={`flex min-h-11 w-full items-center justify-center border-2 px-3 text-center text-[0.8125rem] font-bold uppercase leading-tight tracking-[0.04em] transition-colors ${dark ? "border-white bg-white text-black group-hover:bg-transparent group-hover:text-white" : "border-ink bg-ink text-white group-hover:bg-transparent group-hover:text-ink"}`}
       >
@@ -96,7 +102,7 @@ export function CustomizerCardLink({ card, poster, dark, sizes, asButton = false
       <div className={INFO}>
         <h3 className={NAME}>{card.title}</h3>
         {card.description && <p className={`t-place mt-1 text-[0.95rem] ${dark ? "text-white/80" : "text-ink-mute"}`}>{card.description}</p>}
-        {asButton ? <CardButton label={card.button} dark={dark} /> : <p className="t-small mt-1.5 font-semibold underline decoration-region-accent decoration-2 underline-offset-4">{card.button} →</p>}
+        <div className={FOOT}>{asButton ? <CardButton label={card.button} dark={dark} /> : <p className="t-small font-semibold underline decoration-region-accent decoration-2 underline-offset-4">{card.button} →</p>}</div>
       </div>
     </a>
   );
@@ -132,8 +138,10 @@ export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSec
         {item.eyebrow && <p className="mb-1 font-display text-[1.6rem] font-extrabold leading-none">{item.eyebrow}</p>}
         <h3 className={NAME}>{item.name}</h3>
         {item.context && <p className={`t-place mt-1 text-[0.95rem] ${dark ? "text-white/80" : "text-ink-mute"}`}>{item.context}</p>}
-        {item.price && <p className="mt-1.5 text-base font-semibold leading-tight tabular-nums md:text-lg">{item.price}</p>}
-        {buyLabel && <CardButton label={buyLabel} dark={dark} />}
+        <div className={FOOT}>
+          {item.price && <p className="text-base font-semibold leading-tight tabular-nums md:text-lg"><PriceText price={item.price} listPrice={item.listPrice} /></p>}
+          {buyLabel && <CardButton label={buyLabel} dark={dark} />}
+        </div>
       </div>
     </a>
   );

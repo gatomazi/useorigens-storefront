@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { PriceText } from "@/components/catalog/PriceText";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
@@ -8,7 +9,7 @@ import { ShareButton } from "@/components/share/ShareButton";
 import { inkProductShare } from "@/lib/share/server";
 import { SOURCES } from "@/lib/analytics/sources";
 import { regionSearchDocs } from "@/lib/catalog/search-docs";
-import { formatPrice, numberPt } from "@/lib/format";
+import { formatListPrice, formatPrice, numberPt } from "@/lib/format";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { cleanQuery, MAX_QUERY_CHARS, parsePage, searchDocs } from "@/lib/search/catalog-search";
@@ -129,7 +130,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
                     <div className="mt-3">
                       <h2 className="t-h3 link-line inline">{item.title}</h2>
                       {item.context && <p className="t-place mt-1 text-[0.95rem] text-ink-mute">{item.context}</p>}
-                      {formatPrice(item.price) && <p className="t-small mt-0.5 font-semibold">{formatPrice(item.price)}</p>}
+                      {formatPrice(item.price) && <p className="t-small mt-0.5 font-semibold"><PriceText price={formatPrice(item.price)!} listPrice={formatListPrice(item)} /></p>}
                     </div>
                   </TrackedInkLink>
                 </li>

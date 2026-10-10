@@ -6,7 +6,7 @@ import { VariantPicker, type VariantOption } from "@/components/catalog/VariantP
 import { SOURCES } from "@/lib/analytics/sources";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import { resolveCity, resolveCityProduct } from "@/lib/catalog/resolver";
-import { formatPrice } from "@/lib/format";
+import { formatListPrice, formatPrice } from "@/lib/format";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -58,6 +58,7 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
       label,
       imageUrl: binding.imageUrl,
       price: formatPrice(binding.price),
+      listPrice: formatListPrice(binding),
       rawPrice: binding.price,
       href: purchaseUrl(binding),
       // Each version shares its own real INK product page (this page opens on the primary one, so it cannot stand for a version).

@@ -10,7 +10,10 @@ export type ProductDisplay = {
   title: string;
   context: string | null;
   imageUrl: string;
+  /** What INK charges now (its promotional price during a promotion). */
   price: number | null;
+  /** INK's regular price, only while a promotion is on. */
+  listPrice?: number;
   /** Verified purchase link, or null when INK's own URL can't be trusted (never a CTA in that case). */
   url: string | null;
 };
@@ -42,6 +45,7 @@ export function resolveProductDisplay(storeKey: CommerceStoreKey, inkProductId: 
       context: `${inside ?? place.name} · ${place.uf}`,
       imageUrl: binding.imageUrl,
       price: binding.price,
+      ...(binding.listPrice !== undefined ? { listPrice: binding.listPrice } : {}),
       url: purchaseUrl(binding),
     };
   }
@@ -54,6 +58,7 @@ export function resolveProductDisplay(storeKey: CommerceStoreKey, inkProductId: 
     context: null,
     imageUrl: product.imageUrl,
     price: product.price,
+    ...(product.listPrice !== undefined ? { listPrice: product.listPrice } : {}),
     url: purchaseUrl(product),
   };
 }

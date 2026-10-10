@@ -190,6 +190,7 @@ function build(): { catalog: Catalog; mtimeMs: number } {
             storeProductUrl: piece.storeProductUrl,
             imageUrl: piece.imageUrl,
             price: piece.price,
+            ...(piece.listPrice !== undefined ? { listPrice: piece.listPrice } : {}),
             syncedAt: garmentIndex.stores[primary.commerceStoreKey]?.syncedAt ?? "",
           },
           variants: [],

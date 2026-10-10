@@ -5,6 +5,7 @@ import { ShareButton } from "@/components/share/ShareButton";
 import { trackGoToInk } from "@/lib/analytics/track";
 import { CLASSIC_GARMENT_TYPE_ID } from "@/lib/catalog/garments";
 import type { SharePayload } from "@/lib/share/url";
+import { PriceText } from "./PriceText";
 import { ProductPhoto } from "./ProductPhoto";
 import { SizeGuideButton } from "./SizeGuide";
 
@@ -15,6 +16,8 @@ export type VariantOption = {
   detail?: string;
   imageUrl: string;
   price: string | null;
+  /** INK's regular price, formatted, only while a promotion is on (struck through before `price`). */
+  listPrice?: string;
   /** Exactly what INK returned for this variant — the GoToInk `value` param; never invented when absent. */
   rawPrice?: number | null;
   /** Verified INK purchase URL, or null when the destination is unusable. */
@@ -100,7 +103,8 @@ export function VariantPicker({
                 screen and the decision block stays compact (tests/e2e/sul.spec.ts). Lighter than the CTA, never a second filled button. */}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <p className="t-h2" aria-live="polite">
-                {selected.price ?? "Consulte na loja"}
+                {/* Next to a display-size price the struck regular price stays small: context, never a second headline. */}
+                {selected.price ? <PriceText price={selected.price} listPrice={selected.listPrice} listClassName="mr-2 align-middle text-[0.5em] font-medium opacity-70" /> : "Consulte na loja"}
               </p>
               <SizeGuideButton garmentTypeIds={[CLASSIC_GARMENT_TYPE_ID]} initialGarmentTypeId={CLASSIC_GARMENT_TYPE_ID} fallbackHref={selected.href} source={sourceSection} />
             </div>

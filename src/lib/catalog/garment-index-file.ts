@@ -17,7 +17,8 @@ import type { GarmentBinding } from "./types";
  * tuple `[garmentTypeId, inkProductId, slug, image, price]`; the store URL is rebuilt from the slug and the
  * common image host prefix is stripped.
  */
-export type GarmentTuple = [garmentTypeId: number, inkProductId: string, slug: string, image: string, price: number];
+/** `listPrice` (6th, optional): INK's regular price, only while a promotion is on (`price` is then the promotional one). Files written before it have 5. */
+export type GarmentTuple = [garmentTypeId: number, inkProductId: string, slug: string, image: string, price: number, listPrice?: number];
 
 export type GarmentIndexStore = {
   syncedAt: string;
@@ -101,10 +102,10 @@ export function urlMatchesShape(storeKey: CommerceStoreKey, slug: string, storeP
 }
 
 /** Null when the piece cannot be stored compactly (no price). The caller has already checked the URL shape. */
-export function toTuple(piece: Pick<GarmentBinding, "garmentTypeId" | "inkProductId" | "slug" | "imageUrl" | "price">): GarmentTuple | null {
+export function toTuple(piece: Pick<GarmentBinding, "garmentTypeId" | "inkProductId" | "slug" | "imageUrl" | "price" | "listPrice">): GarmentTuple | null {
   if (piece.price === null) return null;
   const image = piece.imageUrl.startsWith(IMAGE_PREFIX) ? piece.imageUrl.slice(IMAGE_PREFIX.length) : piece.imageUrl;
-  return [piece.garmentTypeId, piece.inkProductId, piece.slug, image, piece.price];
+  return piece.listPrice !== undefined ? [piece.garmentTypeId, piece.inkProductId, piece.slug, image, piece.price, piece.listPrice] : [piece.garmentTypeId, piece.inkProductId, piece.slug, image, piece.price];
 }
 
 export type ExpandedPiece = {
@@ -114,13 +115,15 @@ export type ExpandedPiece = {
   storeProductUrl: string;
   imageUrl: string;
   price: number;
+  /** Only while a promotion is on. */
+  listPrice?: number;
 };
 
 /** Null (piece skipped) for anything malformed or for a store without a known URL base — fail closed. */
 export function expandTuple(storeKey: CommerceStoreKey, tuple: unknown): ExpandedPiece | null {
   const base = STORE_PRODUCT_URL_BASE[storeKey];
   if (!base || !Array.isArray(tuple) || tuple.length < 5) return null;
-  const [garmentTypeId, inkProductId, slug, image, price] = tuple as unknown[];
+  const [garmentTypeId, inkProductId, slug, image, price, listPrice] = tuple as unknown[];
   if (typeof garmentTypeId !== "number" || typeof inkProductId !== "string" || typeof slug !== "string" || typeof image !== "string" || typeof price !== "number") return null;
   if (!slug || !image) return null;
   return {
@@ -130,6 +133,8 @@ export function expandTuple(storeKey: CommerceStoreKey, tuple: unknown): Expande
     storeProductUrl: `${base}/${slug}`,
     imageUrl: image.startsWith("https://") ? image : `${IMAGE_PREFIX}${image}`,
     price,
+    // A regular price only counts above the price charged (anything else is no promotion).
+    ...(typeof listPrice === "number" && listPrice > price ? { listPrice } : {}),
   };
 }
 
@@ -137,7 +142,7 @@ export function expandTuple(storeKey: CommerceStoreKey, tuple: unknown): Expande
  * Upserts pieces into one store's clusters (mutates `clusters`): a piece already present (same INK id) is
  * replaced in place, a new one is appended — so running the same input twice yields the same index.
  */
-export function upsertPieces(clusters: Record<string, GarmentTuple[]>, pieces: readonly Pick<GarmentBinding, "productClusterId" | "garmentTypeId" | "inkProductId" | "slug" | "imageUrl" | "price">[]): number {
+export function upsertPieces(clusters: Record<string, GarmentTuple[]>, pieces: readonly Pick<GarmentBinding, "productClusterId" | "garmentTypeId" | "inkProductId" | "slug" | "imageUrl" | "price" | "listPrice">[]): number {
   let written = 0;
   const touched = new Set<string>();
   for (const piece of pieces) {
