@@ -177,7 +177,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
 
       <section className="wrap pb-8 pt-6 lg:pb-12">
         <div className="max-w-2xl">
-          <GlobalSearch region={region} source={SOURCES.stateSearch} />
+          <GlobalSearch region={region} source={SOURCES.stateSearch} boxed />
         </div>
       </section>
 

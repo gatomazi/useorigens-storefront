@@ -1,6 +1,8 @@
 import "server-only";
 import { categoryLookup, libraryEntries, MIN_USABLE_PRODUCTS } from "../catalog/collection-source";
+import { MAX_STORED_MEMBERS } from "../catalog/collections";
 import { findCollection } from "../catalog/collections-file";
+import type { OrderMember } from "@/components/admin/CollectionOrder";
 import { getCatalog } from "../catalog/repository";
 import { getRegionHome } from "../home";
 import { REGIONS, type RegionSlug } from "../geo/regions";
@@ -24,6 +26,7 @@ const REASONS: Record<string, string> = {
   "collection-not-enabled": "coleção interna não habilitada no CMS (habilite na Biblioteca de coleções)",
   "collection-needs-resync": "registro antigo sem os produtos da coleção (rode npm run collections:sync de novo)",
   "collection-has-no-products": "nenhum produto da coleção existe no catálogo local",
+  "collection-all-hidden": "todos os produtos da coleção estão escondidos nesta seção (mostre algum na ordem dos produtos)",
   "manual-source-not-implemented": "curadoria manual ainda não disponível",
 };
 
@@ -42,10 +45,11 @@ export function sourceStatus(section: Section, doc: ScopeDoc): SourceStatus | nu
   }
   if (src.kind === "ink-category") {
     const collection = findCollection(src.store, src.collectionId);
-    const label = collection ? `Coleção INK · ${collection.name}` : `Coleção INK #${src.collectionId}`;
+    const hidden = src.hiddenIds?.length ?? 0;
+    const label = `${collection ? `Coleção INK · ${collection.name}` : `Coleção INK #${src.collectionId}`}${src.order === "manual" ? " · ordem manual" : ""}${hidden > 0 ? ` · ${hidden} escondido(s)` : ""}`;
     const catalog = getCatalog();
     const enabled = enabledInternalIds(doc, src.store);
-    const lookup = categoryLookup((s) => catalog.productsOfStore(s), () => enabled)(src.store, src.collectionId, src.limit);
+    const lookup = categoryLookup((s) => catalog.productsOfStore(s), () => enabled)(src.store, src.collectionId, src.limit, { productIds: src.order === "manual" ? src.productIds : undefined, hiddenIds: src.hiddenIds });
     const entry = libraryEntries(src.store, enabled).find((e) => e.id === src.collectionId);
     const internal = entry?.visibility === "internal";
     if (lookup.status !== "ok") return { label, products: null, internal, problem: REASONS[lookup.reason] ?? lookup.reason };
@@ -60,6 +64,19 @@ export function sourceStatus(section: Section, doc: ScopeDoc): SourceStatus | nu
     return { label, products: Math.min(products, src.limit), problem: products === 0 ? "o feed da Uma Penca não tem produtos desse tipo agora" : null };
   }
   return { label: "Curadoria manual", products: null, problem: REASONS["manual-source-not-implemented"] };
+}
+
+/**
+ * The saved collection's products for the section editor's order list: every product it keeps for showcases (MAX_STORED_MEMBERS), in INK's
+ * order, read from the catalog snapshot like the storefront does. `undefined` when the section has no collection or it does not resolve.
+ */
+export function collectionOrderMembers(section: Section, doc: ScopeDoc): OrderMember[] | undefined {
+  const src = section.source;
+  if (src?.kind !== "ink-category") return undefined;
+  const catalog = getCatalog();
+  const enabled = enabledInternalIds(doc, src.store);
+  const result = categoryLookup((s) => catalog.productsOfStore(s), () => enabled)(src.store, src.collectionId, MAX_STORED_MEMBERS);
+  return result.status === "ok" ? result.items.map((i) => ({ id: i.id, name: i.name, context: i.context, price: i.price, imageUrl: i.imageUrl })) : undefined;
 }
 
 /** Why a collection cannot be used as a section source in this document, in Portuguese, or null when it can. Used by the actions BEFORE saving. */

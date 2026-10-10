@@ -160,7 +160,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           </form>
         )}
         <p className="a-muted mt-3 text-[0.8125rem]">Precisa de uma coleção interna? <Link className="a-link" href="/admin/colecoes?from=/admin/home">Habilite-a na Biblioteca</Link>.</p>
-        <p className="a-muted mt-3 text-[0.8125rem]">A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A ordem dos cards é a devolvida pela INK; não é “mais vendidos” nem “mais recentes”. A seção nova entra só no rascunho, antes da campanha.</p>
+        <p className="a-muted mt-3 text-[0.8125rem]">A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A seção começa na ordem devolvida pela INK (não é “mais vendidos” nem “mais recentes”); depois de criada, você muda a ordem e esconde produtos no editor dela. A seção nova entra só no rascunho, antes da campanha.</p>
 
         <h3 className="mt-8 font-extrabold">Produtos: canecas e ecobags da Uma Penca</h3>
         <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os produtos vêm do feed da loja da Uma Penca (sincronizado a cada 6 horas), sem coleção da INK. O botão “Ver todos” já leva para <code>/{scope}/outros-artigos</code>. Para pôr o seu modelo “Crie a sua” como primeiro card, edite a seção depois de criada e marque “Destacar um produto personalizável”.</p>

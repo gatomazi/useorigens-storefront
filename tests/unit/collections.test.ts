@@ -378,6 +378,21 @@ describe("internal collections, CMS enablement and product resolution", () => {
     expect(r.status === "ok" && r.items.find((i) => i.id === "4")!.href).toContain("usenorte"); // (a product the snapshot of THIS store holds under that id keeps its own url)
   });
 
+  test("given the section's own order, when resolved, then its products come first, the rest follow in INK's order, and the limit applies after", () => {
+    const ids = (r: ReturnType<ReturnType<typeof lookup>>) => (r.status === "ok" ? r.items.map((i) => i.id) : r.reason);
+    expect(ids(lookup()("use-sul", 10, 6))).toEqual(["3", "1", "2", "4"]); // INK's order
+    expect(ids(lookup()("use-sul", 10, 6, { productIds: ["4", "2"] }))).toEqual(["4", "2", "3", "1"]); // "3" and "1" are not in the saved order (new on INK): they follow
+    expect(ids(lookup()("use-sul", 10, 2, { productIds: ["2", "4", "3", "1"] }))).toEqual(["2", "4"]);
+    expect(ids(lookup()("use-sul", 10, 6, { productIds: ["999", "1", "1"] }))).toEqual(["1", "3", "2", "4"]); // left the collection: skipped; a repeat counts once
+  });
+
+  test("given products hidden in a section, when resolved, then they never show, in INK's order or the section's own; hiding all of them says so", () => {
+    const ids = (r: ReturnType<ReturnType<typeof lookup>>) => (r.status === "ok" ? r.items.map((i) => i.id) : r.reason);
+    expect(ids(lookup()("use-sul", 10, 6, { hiddenIds: ["1"] }))).toEqual(["3", "2", "4"]);
+    expect(ids(lookup()("use-sul", 10, 6, { productIds: ["4", "2", "3", "1"], hiddenIds: ["2", "999"] }))).toEqual(["4", "3", "1"]);
+    expect(ids(lookup()("use-sul", 10, 6, { hiddenIds: ["3", "1", "2", "4"] }))).toBe("collection-all-hidden");
+  });
+
   test("given a product whose url is not an allowed commerce host, when resolved, then it is not shown", () => {
     const bad = products({ merch: new Map([["1", merchProduct("1", { storeProductUrl: "https://evil.example/p/1" })]]) });
     expect(lookup([13], bad)("use-sul", 13, 6)).toEqual({ status: "unavailable", reason: "collection-has-no-products" });

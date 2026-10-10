@@ -13,6 +13,7 @@ export type UnavailableReason =
   | "collection-not-enabled" // an internal (hidden-on-INK) collection the CMS has not enabled
   | "collection-needs-resync" // recorded by an older sync that kept no members: run collections:sync again
   | "collection-has-no-products" // none of its products exist in the store's catalog snapshot
+  | "collection-all-hidden" // the section hides every product the collection has
   | "manual-source-not-implemented"
   | "umapenca-not-synced"; // no Uma Penca snapshot yet (npm run umapenca:sync / the cron)
 
@@ -20,8 +21,24 @@ export type SourceResult = { status: "ok"; items: CarouselItem[] } | { status: "
 
 export type EditorialItems = Readonly<Record<EditorialModuleKey, CarouselItem[]>>;
 
+/** How a section arranges its collection: the owner's order (`productIds`, absent = INK's) and the products it leaves out. */
+export type CategoryArrangement = { productIds?: readonly string[]; hiddenIds?: readonly string[] };
+
+/**
+ * The ids a section shows, in its order, from the collection's stored products (`memberIds`, INK order): the owner's order first, keeping only
+ * ids still among them (a product that left the collection, or fell past its first MAX_STORED_MEMBERS, is skipped), then every other member in
+ * INK's order (what INK added since); hidden ids never. Pure: the storefront and the panel's list use the same rule.
+ */
+export function arrangeMembers(memberIds: readonly string[], arrangement?: CategoryArrangement): string[] {
+  const hidden = new Set(arrangement?.hiddenIds ?? []);
+  const members = new Set(memberIds);
+  const pinned = [...new Set(arrangement?.productIds ?? [])].filter((id) => members.has(id));
+  const placed = new Set(pinned);
+  return [...pinned, ...memberIds.filter((id) => !placed.has(id))].filter((id) => !hidden.has(id));
+}
+
 /** Real products of one INK collection, already limited to this store's own catalog. Supplied by the server (never fetched here). */
-export type CategoryLookup = (store: CommerceStoreKey, collectionId: number, limit: number) => SourceResult;
+export type CategoryLookup = (store: CommerceStoreKey, collectionId: number, limit: number, arrangement?: CategoryArrangement) => SourceResult;
 
 /** The Uma Penca articles of these kinds, at most `limit`, as carousel items. Supplied by the server from the synced snapshot. */
 export type UmaPencaLookup = (kinds: readonly ArticleKind[], limit: number) => SourceResult;
@@ -32,7 +49,9 @@ export function resolveSource(source: Source, editorial: EditorialItems, categor
       return { status: "ok", items: editorial[source.key] };
     case "ink-category":
       // Only a real, synced, available collection resolves. Categories are never inferred from product names or tags.
-      return categories ? categories(source.store, source.collectionId, source.limit) : { status: "unavailable", reason: "ink-collections-not-synced" };
+      return categories
+        ? categories(source.store, source.collectionId, source.limit, { productIds: source.order === "manual" ? source.productIds : undefined, hiddenIds: source.hiddenIds })
+        : { status: "unavailable", reason: "ink-collections-not-synced" };
     case "manual":
       return { status: "unavailable", reason: "manual-source-not-implemented" };
     case "umapenca":

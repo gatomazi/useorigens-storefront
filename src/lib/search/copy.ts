@@ -13,6 +13,8 @@ export type PlaceSearchCopy = {
   dialog: string;
   /** Hero field. */
   hero: string;
+  /** A boxed field with the search icon, or under its own heading ("Busque outra cidade"): the verb is already said, and it fits a phone. */
+  field: string;
   label: string;
   placeholder: string;
   loading: string;
@@ -31,6 +33,7 @@ export function placeSearchCopy(region: RegionSlug): PlaceSearchCopy {
     trigger: "Buscar",
     dialog: "Buscar na Use Origens",
     hero: ra ? "Busque sua cidade, região ou estampa…" : "Busque sua cidade, estampa ou coleção…",
+    field: ra ? "Cidade, região ou estampa…" : "Cidade, estampa ou coleção…",
     label: ra ? "Busque uma cidade, região, estampa ou coleção" : "Busque uma cidade, estampa ou coleção",
     placeholder: ra ? "Busque uma cidade, região ou estampa…" : "Busque uma cidade, estampa ou coleção…",
     loading: "Buscando…",

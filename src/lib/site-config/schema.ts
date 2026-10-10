@@ -66,7 +66,21 @@ export type Destination =
 
 export type Source =
   | { kind: "editorial-module"; key: EditorialModuleKey }
-  | { kind: "ink-category"; store: CommerceStoreKey; collectionId: number; order: "category" | "manual"; limit: number }
+  | {
+      kind: "ink-category";
+      store: CommerceStoreKey;
+      collectionId: number;
+      /** "category" = INK's own order; "manual" = `productIds` first (the owner's order), then whatever the collection has that they are not. */
+      order: "category" | "manual";
+      limit: number;
+      /**
+       * `order: "manual"` only: the collection's products (INK ids) in the order the owner set in the panel. A product INK adds later is not here, so
+       * it follows these in INK's order; an id that left the collection (or its first products) is skipped. Never a copy of a name or a price.
+       */
+      productIds?: string[];
+      /** Products of the collection taken out of THIS section (INK ids), in either order. */
+      hiddenIds?: string[];
+    }
   | { kind: "manual"; productIds: string[]; limit: number }
   /** Canecas/ecobags from the synced Uma Penca feed (src/lib/umapenca), in feed order. No INK collection is involved. */
   | { kind: "umapenca"; articleKinds: ArticleKind[]; limit: number };
@@ -385,6 +399,11 @@ function checkDestination(c: Collector, path: string, v: unknown): void {
   } else c.fail(`${path}.kind`, "must be route | page | anchor | ink-collection | external");
 }
 
+/** An ink-category's own order / hidden list: at most the products a collection keeps for showcases (MAX_STORED_MEMBERS = 48), with room to spare. */
+export const MAX_ARRANGED_IDS = 100;
+const isInkIdList = (v: unknown): boolean =>
+  Array.isArray(v) && v.length <= MAX_ARRANGED_IDS && v.every((p) => typeof p === "string" && /^\d{1,20}$/.test(p)) && new Set(v).size === v.length;
+
 function checkSource(c: Collector, path: string, v: unknown): void {
   if (!isRecord(v)) return c.fail(path, "must be an object");
   if (v.kind === "editorial-module") {
@@ -395,6 +414,8 @@ function checkSource(c: Collector, path: string, v: unknown): void {
       if (typeof v.store !== "string" || !STORES.includes(v.store)) c.fail(`${path}.store`, "unknown store");
       if (typeof v.collectionId !== "number" || !Number.isInteger(v.collectionId) || v.collectionId <= 0) c.fail(`${path}.collectionId`, "must be a positive integer");
       if (v.order !== "category" && v.order !== "manual") c.fail(`${path}.order`, "must be category | manual");
+      if (v.productIds !== undefined && (v.order !== "manual" || !isInkIdList(v.productIds))) c.fail(`${path}.productIds`, `only with order manual: ≤ ${MAX_ARRANGED_IDS} distinct numeric INK ids`);
+      if (v.hiddenIds !== undefined && !isInkIdList(v.hiddenIds)) c.fail(`${path}.hiddenIds`, `must be ≤ ${MAX_ARRANGED_IDS} distinct numeric INK ids`);
     } else if (!Array.isArray(v.productIds) || v.productIds.length > 100 || v.productIds.some((p) => typeof p !== "string" || !/^\d{1,20}$/.test(p))) {
       c.fail(`${path}.productIds`, "must be ≤ 100 numeric INK ids");
     }

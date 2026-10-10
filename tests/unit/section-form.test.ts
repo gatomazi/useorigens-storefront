@@ -35,6 +35,25 @@ describe("section form parsing", () => {
     expect(s.cta).toEqual({ label: "Ver tudo", dest: { kind: "ink-collection", store: "use-sul", collectionId: 152188 } });
   });
 
+  test("given the panel's order list, when parsed, then it applies only to the collection it was drawn for, and a save without it keeps the saved order", () => {
+    const ink = { source_kind: "ink-category", source_collection: "use-sul:152188", source_limit: "8" };
+    const arranged = (v: unknown, forRef = "use-sul:152188") => ({ ...ink, source_arrangement: JSON.stringify(v), source_arrangement_for: forRef });
+    const manual = parseSectionForm(form(arranged({ order: "manual", productIds: ["2", "1", "x", "2"], hiddenIds: ["3"] })), terra());
+    expect(manual.source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 152188, order: "manual", productIds: ["2", "1"], hiddenIds: ["3"], limit: 8 });
+    // Only hidden products: INK's order stays live.
+    expect(parseSectionForm(form(arranged({ order: "category", productIds: ["2"], hiddenIds: ["3"] })), terra()).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 152188, order: "category", hiddenIds: ["3"], limit: 8 });
+
+    const saved = { ...terra(), source: manual.source };
+    // No list in the form (the collection did not resolve), or a malformed one: what is saved stays.
+    expect(parseSectionForm(form(ink), saved).source).toEqual(manual.source);
+    expect(parseSectionForm(form({ ...ink, source_arrangement: "{", source_arrangement_for: "use-sul:152188" }), saved).source).toEqual(manual.source);
+    // Another collection: it starts in INK's order, whatever list came along.
+    expect(parseSectionForm(form({ ...arranged({ order: "manual", productIds: ["2"] }), source_collection: "use-sul:9" }), saved).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 9, order: "category", limit: 8 });
+    expect(parseSectionForm(form({ ...ink, source_collection: "use-sul:9" }), saved).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 9, order: "category", limit: 8 });
+    // "Voltar à ordem da INK".
+    expect(parseSectionForm(form(arranged({ order: "category", hiddenIds: [] })), saved).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 152188, order: "category", limit: 8 });
+  });
+
   test("given out-of-range numbers, when parsed, then they are clamped (limit 3..24, focal 0..100, overlay ≤ 0.85)", () => {
     const patch = parseSectionForm(form({ source_kind: "ink-category", source_collection: "use-sul:1", source_limit: "500", overlay_kind: "custom", overlay_color: "#000000", overlay_opacity: "9", focal_mx: "-50", focal_dx: "999" }), terra());
     expect(patch.source).toMatchObject({ limit: 24 });

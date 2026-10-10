@@ -7,6 +7,7 @@ import { CityGarmentTabs } from "@/components/catalog/CityGarmentTabs";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
+import { SearchDialog } from "@/components/search/SearchDialog";
 import { TrackedCityLink } from "@/components/analytics/TrackedCityLink";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
 import { SOURCES } from "@/lib/analytics/sources";
@@ -176,6 +177,12 @@ export default async function CityPage({ params }: { params: Params }) {
         ) : (
           <p className="t-body max-w-xl">Ainda não temos camisetas de {city.name} na loja. Volte em breve ou escolha outra cidade da região.</p>
         )}
+        {/* Right where the products end, since the header icon alone goes unnoticed once a place is chosen. It opens the search sheet
+            instead of searching inline: this low on a phone, the keyboard would cover the results. */}
+        <div className="mt-10 max-w-2xl lg:mt-14">
+          <h2 className="mb-4 text-[1.25rem] font-extrabold tracking-tight">{isRegion ? "Busque outra localidade" : "Busque outra cidade"}</h2>
+          <SearchDialog region={city.regionSlug} variant="field" source={SOURCES.citySearch} />
+        </div>
         {/* Short, real text UNDER the products (never above them): the styles this page actually lists, nothing else. */}
         {intro && <p className="t-body mt-8 max-w-2xl text-ink-soft lg:mt-12">{intro}</p>}
       </section>
