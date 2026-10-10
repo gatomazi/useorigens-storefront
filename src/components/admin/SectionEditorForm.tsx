@@ -8,7 +8,7 @@ import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/
 import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
-import type { Appearance, Section } from "@/lib/site-config/schema";
+import { maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
 import { customizerCardFieldDefaults } from "@/lib/admin/section-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
@@ -29,7 +29,7 @@ const PRESETS = [
   ["regional-wash-dark", "Véu escuro (texto claro)"],
 ] as const;
 
-const previewSrc = (m: MediaOption | undefined) => (m ? (m.kind === "banner" ? m.src.replace(/\.[a-z]+$/i, "-640.webp") : m.src) : undefined);
+export const previewSrc = (m: MediaOption | undefined) => (m ? (m.kind === "banner" ? m.src.replace(/\.[a-z]+$/i, "-640.webp") : m.src) : undefined);
 const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
 
 function FocalPad({ label, image, x, y, onChange }: { label: string; image?: MediaOption; x: number; y: number; onChange: (x: number, y: number) => void }) {
@@ -128,6 +128,9 @@ export function SectionEditorForm({
   const publicEntries = collections.filter((e) => e.visibility === "public" && e.selectable);
   const internalSource = sourceKind === "ink-category" && srcEntry?.visibility === "internal";
   const [inkLimit, setInkLimit] = useState(String(section.source?.kind === "ink-category" ? section.source.limit : 6));
+  const [display, setDisplay] = useState<ProductDisplay>(section.layout?.display ?? "carousel");
+  // A grid lays out more cards than a carousel scrolls through (same ceiling as the save: section-form.ts).
+  const maxCards = maxSectionProducts(display);
   const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
 
   const [navShow, setNavShow] = useState(Boolean(section.nav));
@@ -310,8 +313,8 @@ export function SectionEditorForm({
                   <p className="a-muted mt-1 text-[0.8125rem]">Nenhuma coleção da INK: os cards abrem a loja da Uma Penca. Para “Crie a sua”, use “Destacar um produto personalizável” abaixo e escolha um modelo da Uma Penca.</p>
                 </fieldset>
                 <div>
-                  <label className="a-label" htmlFor="source_limit">Cards</label>
-                  <input id="source_limit" name="source_limit" type="number" min={3} max={24} defaultValue={cur?.kind === "umapenca" ? cur.limit : 8} className="a-input" />
+                  <label className="a-label" htmlFor="source_limit">Cards (até {maxCards})</label>
+                  <input id="source_limit" name="source_limit" type="number" min={MIN_SECTION_PRODUCTS} max={maxCards} defaultValue={cur?.kind === "umapenca" ? cur.limit : 8} className="a-input" />
                 </div>
               </div>
             ) : sourceKind === "editorial-module" ? (
@@ -326,8 +329,8 @@ export function SectionEditorForm({
               <div className="grid gap-4 md:grid-cols-[3fr_1fr]">
                 <CollectionCombobox name="source_collection" label="Coleção (busque pelo nome, slug ou número)" entries={collections} defaultValue={currentRef} libraryFrom={`/admin/home/${section.id}`} onSelect={setSrcEntry} />
                 <div>
-                  <label className="a-label" htmlFor="source_limit">Cards</label>
-                  <input id="source_limit" name="source_limit" type="number" min={3} max={24} value={inkLimit} onChange={(e) => setInkLimit(e.target.value)} className="a-input" />
+                  <label className="a-label" htmlFor="source_limit">Cards (até {maxCards})</label>
+                  <input id="source_limit" name="source_limit" type="number" min={MIN_SECTION_PRODUCTS} max={maxCards} value={inkLimit} onChange={(e) => setInkLimit(e.target.value)} className="a-input" />
                 </div>
               </div>
             )}
@@ -336,8 +339,8 @@ export function SectionEditorForm({
                 collectionRef={currentRef!}
                 members={collectionMembers}
                 initial={{ order: cur.order, productIds: cur.productIds, hiddenIds: cur.hiddenIds }}
-                // Same clamp as the save (3..24); the customizer card takes the first place.
-                visible={Math.min(24, Math.max(3, Math.round(Number(inkLimit)) || 6)) - (ccShow ? 1 : 0)}
+                // Same clamp as the save (3..24, or up to 48 in a grid); the customizer card takes the first place.
+                visible={Math.min(maxCards, Math.max(MIN_SECTION_PRODUCTS, Math.round(Number(inkLimit)) || 6)) - (ccShow ? 1 : 0)}
               />
             )}
             {sourceKind === "ink-category" && srcEntry && srcEntry.value !== currentRef && <p className="a-muted text-[0.8125rem]">Salve o rascunho para ordenar ou esconder os produtos desta coleção (ela começa na ordem da INK).</p>}
@@ -384,6 +387,18 @@ export function SectionEditorForm({
 
           <fieldset className="space-y-4">
             <legend className="a-h2 mb-3">Layout</legend>
+            <div role="radiogroup" aria-label="Exibição dos produtos" className="grid gap-3 md:grid-cols-2">
+              {([
+                ["carousel", "Carrossel", "Uma fileira que a pessoa arrasta para o lado. Até 24 cards."],
+                ["grid", "Grade", "Todos os produtos na página, como numa categoria: 4 por linha no desktop, 3 no tablet e 2 no celular. Até 48 cards."],
+              ] as const).map(([value, label, help]) => (
+                <label key={value} className={`flex cursor-pointer gap-3 border p-3 ${display === value ? "border-black bg-white" : "border-black/20"}`}>
+                  <input type="radio" name="layout_display" value={value} checked={display === value} onChange={() => setDisplay(value)} className="mt-1" />
+                  <span><span className="block font-bold">{label}</span><span className="a-muted block text-[0.8125rem]">{help}</span></span>
+                </label>
+              ))}
+            </div>
+            {display === "grid" && <p className="a-muted text-[0.8125rem]">Dica: na grade, um múltiplo de 4 (8, 12, 16…) fecha as linhas no desktop; com o card personalizável ligado, ele conta como um dos cards.</p>}
             <div className="grid gap-4 md:grid-cols-3">
               <div><label className="a-label" htmlFor="layout_variant">Cards</label><select id="layout_variant" name="layout_variant" className="a-select" defaultValue={section.layout?.variant ?? "standard"}><option value="standard">Padrão</option><option value="poster">Pôster (mais editorial)</option></select></div>
               <div><label className="a-label" htmlFor="layout_surface">Superfície</label><select id="layout_surface" name="layout_surface" className="a-select" defaultValue={section.layout?.surface ?? "plain"}><option value="plain">Fundo da página</option><option value="paper">Papel</option><option value="region-primary">Verde regional</option></select></div>

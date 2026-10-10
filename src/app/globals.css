@@ -400,6 +400,24 @@ a:hover > .photo img,
 .paper {
   background: var(--paper);
 }
+
+/*
+ * A CMS page on a dark ground of its own ("Fundo da página" with light text, components/pages/PageGround.tsx): the page's text turns light.
+ * Only the text: --ink keeps its value, because the store also paints with it (buttons, the "Personalizável" tag, the icons of the white chips).
+ * A section that brings a light surface of its own (paper, a light photo or colour) inside such a page goes back to dark text with .on-light.
+ */
+.page-dark {
+  color: #fff;
+  --ink-soft: rgb(255 255 255 / 0.86);
+  --ink-mute: rgb(255 255 255 / 0.72);
+  --line: rgb(255 255 255 / 0.3);
+}
+.on-light {
+  color: var(--ink);
+  --ink-soft: #33332f;
+  --ink-mute: #56564f;
+  --line: rgb(0 0 0 / 0.22);
+}
 .search-input:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 8px;

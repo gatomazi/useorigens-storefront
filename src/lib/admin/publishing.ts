@@ -10,7 +10,7 @@ import { themeProblems } from "../site-config/navigation";
 import { pageAsHomeDoc } from "../site-config/pages";
 import { buildSeedBundle } from "../site-config/seed";
 import { readJson, withLock, writeJsonAtomic } from "./local-store";
-import { collectionProblems, customizerProblems, readabilityProblems } from "./validate-draft";
+import { collectionProblems, customizerProblems, pageGroundProblems, readabilityProblems } from "./validate-draft";
 import type { BeginRequest, PublishedFileStore, ReleaseStore, ReleaseView } from "./store/ports";
 
 /**
@@ -161,7 +161,7 @@ export async function preflight(deps: Pick<PublishDeps, "releases" | "media">, d
   if (target.kind === "page") {
     const page = composed.pages!.find((p) => p.id === target.id)!;
     const asHome = pageAsHomeDoc(composed, page);
-    return [...problems, ...collectionProblems(asHome), ...readabilityProblems(asHome), ...linkProblems(composed, page.sections)];
+    return [...problems, ...collectionProblems(asHome), ...readabilityProblems(asHome), ...pageGroundProblems(page), ...linkProblems(composed, page.sections)];
   }
   const model = composed.customizers!.find((m) => m.id === target.id)!;
   return [...problems, ...customizerProblems(composed, model)];

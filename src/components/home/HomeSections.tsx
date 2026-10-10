@@ -1,9 +1,11 @@
 import { isSameFill, SectionBackdrop } from "@/components/banners/SectionBackdrop";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
+import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { Campaign } from "@/components/home/Campaign";
 import { ImageGrid, type GridTileView } from "@/components/home/ImageGrid";
 import { PageHero } from "@/components/home/PageHero";
+import { PageGround } from "@/components/pages/PageGround";
 import { RegionHero } from "@/components/home/RegionHero";
 import { Fragment } from "react";
 import { StateCards } from "@/components/home/StateCards";
@@ -42,8 +44,13 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
   const { showcase } = home;
   const cityPath = showcase ? `/${region}/${showcase.city.uf.toLowerCase()}/${showcase.city.slug}` : null;
   const editorial = { terra: home.terra, recreations: home.recreations, lenda: home.feitoParaVoce, dizeres: home.fala, ddd: home.ddd };
+  // A page with a ground of its own (PageGround): text with no surface of its own follows that ground. On a DARK ground, a section that paints a light
+  // surface goes back to dark text (`on-light`), and the two sections that have no dark version (city styles, states) sit on paper.
+  const pageTone = page?.backdrop?.tone;
+  const darkPage = pageTone === "dark";
+  const paperLayer = <div aria-hidden="true" className="paper absolute inset-0 -z-10" />;
 
-  return (
+  const rendered = (
     <>
       {sections.map((s) => {
         const bg = resolveBackground(s.appearance, media);
@@ -79,7 +86,8 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
                 <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk />
               </>
             );
-            if (!hasImage(bg) && bg.fill.kind === "none") {
+            const visual = hasImage(bg) || bg.fill.kind !== "none";
+            if (!visual && !darkPage) {
               return (
                 <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className="wrap py-14 lg:py-24">
                   {content}
@@ -87,8 +95,8 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
               );
             }
             return (
-              <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className="relative isolate overflow-hidden">
-                <SectionBackdrop bg={bg} priority={priorityId === s.id} />
+              <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className={`relative isolate overflow-hidden ${darkPage ? "on-light" : ""}`}>
+                {visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : paperLayer}
                 <div className="wrap py-14 lg:py-24">{content}</div>
               </section>
             );
@@ -108,7 +116,8 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
                   subtitle={s.subtitle}
                   anchor={s.anchor}
                   headingId={s.headingId}
-                  backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
+                  backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : darkPage ? paperLayer : undefined}
+                  className={darkPage ? "on-light" : undefined}
                   covers={resolveStateCovers(s, media)}
                 />
                 {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage) — docs/storefront/podio.md. */}
@@ -120,6 +129,8 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
           case "page-hero": {
             const ctaHref = s.cta ? destinationHref(s.cta.dest, slugOf, region) : null;
             const visual = hasImage(bg) || bg.fill.kind !== "none";
+            // Without a background of its own the hero sits on the page's ground, so its text follows that ground.
+            const tone = !visual && pageTone ? pageTone : s.layout?.tone ?? "dark";
             return (
               <PageHero
                 key={s.id}
@@ -128,14 +139,15 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
                 title={s.title ?? ""}
                 subtitle={s.subtitle}
                 cta={ctaHref && s.cta ? { label: s.cta.label, href: ctaHref } : undefined}
-                tone={s.layout?.tone ?? "dark"}
+                tone={tone}
+                className={darkPage && visual && tone === "light" ? "on-light" : undefined}
                 backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
               />
             );
           }
 
           case "product-carousel":
-            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} umapenca={umapenca} slugOf={slugOf} region={region} card={resolveCustomizerCard(s, doc, media, region)} />;
+            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} umapenca={umapenca} slugOf={slugOf} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} />;
 
           case "campaign": {
             const image = hasImage(bg);
@@ -174,6 +186,7 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
                 subtitle={s.subtitle}
                 tiles={tiles}
                 layout={s.grid}
+                className={darkPage && visual ? "on-light" : undefined}
                 backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
               />
             );
@@ -185,6 +198,7 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
       })}
     </>
   );
+  return page?.backdrop ? <PageGround backdrop={page.backdrop} media={media}>{rendered}</PageGround> : rendered;
 }
 
 function CarouselSection({
@@ -197,8 +211,11 @@ function CarouselSection({
   slugOf,
   region,
   card,
+  pageTone,
 }: {
   region: RegionSlug;
+  /** The ground of the page the section is on, when that page has one of its own (PageGround). */
+  pageTone?: "light" | "dark";
   /** The customizer card that takes the FIRST position (null: none, or it cannot be shown: then only products). */
   card: ReturnType<typeof resolveCustomizerCard>;
   s: Section;
@@ -217,10 +234,20 @@ function CarouselSection({
   const total = s.source.kind === "editorial-module" ? result.items.length : s.source.limit;
   const items = card ? result.items.slice(0, Math.max(0, total - 1)) : result.items;
 
-  const { variant, tone, surface } = s.layout;
+  const { variant, surface } = s.layout;
+  // A section with a photo or a colour/gradient of its own is drawn as a self-contained block: the background is a layer INSIDE it (never a
+  // band between sections) and the text colour follows the tone. Sections with no visual keep exactly the original markup.
+  const visual = hasImage(bg) || bg.fill.kind !== "none";
+  const ownSurface = visual || surface !== "plain";
+  // With no surface of its own the text sits on the page's ground: on a page with a ground of its own it follows that ground, whatever the section says.
+  const tone = !ownSurface && pageTone ? pageTone : s.layout.tone;
+  // A light surface of its own on a dark page: back to dark text.
+  const onLight = pageTone === "dark" && ownSurface && tone === "light" ? "on-light" : "";
   const href = s.cta ? destinationHref(s.cta.dest, slugOf, region) : null;
+  // Carousel (a row that scrolls) or grid (every card on the page): same heading, cards and click tracking.
+  const Display = s.layout.display === "grid" ? ProductGrid : ProductCarousel;
   const carousel = (
-    <ProductCarousel
+    <Display
       poster={variant === "poster"}
       tone={tone}
       items={items}
@@ -234,12 +261,9 @@ function CarouselSection({
     />
   );
 
-  // A section with a photo or a colour/gradient of its own is drawn as a self-contained block: the background is a layer INSIDE it (never a
-  // band between sections) and the text colour follows the tone. Sections with no visual keep exactly the original markup.
-  const visual = hasImage(bg) || bg.fill.kind !== "none";
   if (!visual && surface === "paper") {
     return (
-      <section id={s.anchor} className="paper">
+      <section id={s.anchor} className={["paper", onLight].filter(Boolean).join(" ")}>
         <div className="wrap py-14 lg:py-24">{carousel}</div>
       </section>
     );
@@ -254,7 +278,7 @@ function CarouselSection({
   const surfaceClass = surface === "region-primary" ? "bg-region-primary" : surface === "paper" ? "paper" : "";
   const toneClass = tone === "dark" ? "text-white" : "";
   return (
-    <section id={s.anchor} className={["relative isolate overflow-hidden", surfaceClass, toneClass].filter(Boolean).join(" ")}>
+    <section id={s.anchor} className={["relative isolate overflow-hidden", surfaceClass, toneClass, onLight].filter(Boolean).join(" ")}>
       {(hasImage(bg) || !isSameFill(bg.fill, NATIVE_FILL[surface])) && <SectionBackdrop bg={bg} priority={priority} nativeFill={NATIVE_FILL[surface]} />}
       <div className="wrap py-14 lg:py-24">{carousel}</div>
     </section>

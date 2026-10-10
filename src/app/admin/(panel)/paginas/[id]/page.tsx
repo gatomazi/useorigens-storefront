@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addCollectionSection, addStructuredSection, archivePageAction, duplicateSection, moveSection, publishTargetAction, removePageAction, removeSection, restoreTargetAction, setSectionActive, updatePageAction } from "@/app/admin/actions";
+import { addCollectionSection, addStructuredSection, archivePageAction, duplicateSection, moveSection, publishTargetAction, removePageAction, removeSection, restoreTargetAction, savePageBackdropAction, setSectionActive, updatePageAction } from "@/app/admin/actions";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
+import { PageBackdropEditor } from "@/components/admin/PageBackdropEditor";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { RowForm } from "@/components/admin/RowForm";
@@ -17,9 +18,11 @@ import { loadWorkspace } from "@/lib/admin/workspace";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { PAGE_KIND_LABEL, pageAsHomeDoc, pageHref } from "@/lib/site-config/pages";
+import type { Section } from "@/lib/site-config/schema";
 import { STRUCTURED_MODELS } from "@/lib/site-config/structured";
 
 const TYPE_LABEL: Record<string, string> = { "page-hero": "Topo da página", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens" };
+const typeLabel = (s: Section) => (s.template === "product-carousel" && s.layout?.display === "grid" ? "Grade de produtos" : TYPE_LABEL[s.template] ?? s.template);
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("pt-BR") : "—");
 
 export default async function PageEditor({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
@@ -98,6 +101,12 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
         </form>
       </section>
 
+      <section className="a-card p-5" aria-labelledby="fundo">
+        <h2 id="fundo" className="a-h2">Fundo da página</h2>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Para uma página temática (Black Friday, Natal…): uma cor para a página inteira e, se quiser, uma imagem repetida por cima como pattern. Só esta página muda; a home e o resto da loja ficam como estão.</p>
+        <PageBackdropEditor backdrop={page.backdrop} media={media} action={savePageBackdropAction} hidden={<>{hidden}<input type="hidden" name="id" value={page.id} /></>} />
+      </section>
+
       <section className="a-card overflow-x-auto" aria-label="Seções da página">
         <table className="a-table">
           <caption className="sr-only">Seções da página, em ordem</caption>
@@ -115,7 +124,7 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
                   <td>
                     <p className="font-bold">{label}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.8125rem]">
-                      <span className="a-badge">{TYPE_LABEL[s.template] ?? s.template}</span>
+                      <span className="a-badge">{typeLabel(s)}</span>
                       {s.customizerCard && <span className="a-badge ok">1º card personalizável</span>}
                       {readable.some((r) => r.level === "blocking") && <span className="a-badge bad">Texto ilegível</span>}
                     </p>
@@ -146,14 +155,21 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
       <section className="a-card p-5" aria-labelledby="add">
         <h2 id="add" className="a-h2">Adicionar seção</h2>
         <h3 className="mt-4 font-extrabold">Produtos: a partir de uma coleção da INK ({scopeName(scope)})</h3>
-        <form action={addCollectionSection} className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1fr_auto] md:items-start">
+        <form action={addCollectionSection} className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1.2fr_1fr_auto] md:items-start">
           {hidden}
           <CollectionCombobox name="collection" label="Coleção (busque pelo nome)" entries={entries} libraryFrom={`/admin/paginas/${page.id}`} hint="Coleções públicas e as internas habilitadas na Biblioteca." />
           <div><label className="a-label" htmlFor="ctitle">Título (opcional)</label><input id="ctitle" name="title" className="a-input" maxLength={120} placeholder="Usa o nome da coleção" /></div>
-          <div><label className="a-label" htmlFor="climit">Cards</label><input id="climit" name="limit" type="number" min={3} max={24} defaultValue={6} className="a-input" /></div>
+          <div>
+            <label className="a-label" htmlFor="cdisplay">Exibição</label>
+            <select id="cdisplay" name="display" className="a-select" defaultValue="carousel">
+              <option value="carousel">Carrossel</option>
+              <option value="grid">Grade (4 por linha)</option>
+            </select>
+          </div>
+          <div><label className="a-label" htmlFor="climit">Cards</label><input id="climit" name="limit" type="number" min={3} max={48} defaultValue={6} className="a-input" /></div>
           <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
         </form>
-        <p className="a-muted mt-2 text-[0.8125rem]">Cada seção usa uma coleção diferente: é assim que uma categoria-pai organiza subtemas. O total de cards é o número acima; a ordem dos produtos é a da INK (não é “mais vendidos”). O botão “Ver todos” só existe quando a coleção tem página pública verificada.</p>
+        <p className="a-muted mt-2 text-[0.8125rem]">Cada seção usa uma coleção diferente: é assim que uma categoria-pai organiza subtemas. O total de cards é o número acima (até 24 no carrossel, até 48 na grade); a ordem dos produtos é a da INK (não é “mais vendidos”) e pode ser ajustada depois, no editor da seção. Na grade, os produtos aparecem todos na página: 4 por linha no desktop e 2 no celular. O botão “Ver todos” só existe quando a coleção tem página pública verificada.</p>
         <h3 className="mt-6 font-extrabold">Componentes</h3>
         <div className="mt-3 flex flex-wrap gap-3">
           {STRUCTURED_MODELS.map((m) => (

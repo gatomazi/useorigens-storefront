@@ -5,10 +5,10 @@ import { Fragment } from "react";
  * The first block of a hotpage or a parent-category landing: title, subtitle and an optional button over the section's own background (the layer
  * is drawn INSIDE the section, like every other section: never a loose banner). No search box and no product cards: those belong to the region home.
  */
-export function PageHero({ id, headingId, title, subtitle, cta, tone, backdrop }: { id: string; headingId: string; title: string; subtitle?: string; cta?: { label: string; href: string }; tone: "light" | "dark"; backdrop?: ReactNode }) {
+export function PageHero({ id, headingId, title, subtitle, cta, tone, backdrop, className }: { id: string; headingId: string; title: string; subtitle?: string; cta?: { label: string; href: string }; tone: "light" | "dark"; backdrop?: ReactNode; className?: string }) {
   const dark = tone === "dark";
   return (
-    <section id={id} aria-labelledby={headingId} className={`relative isolate overflow-hidden ${dark ? "text-white" : ""}`}>
+    <section id={id} aria-labelledby={headingId} className={["relative isolate overflow-hidden", dark ? "text-white" : "", className].filter(Boolean).join(" ")}>
       {backdrop}
       <div className="wrap py-14 lg:py-24">
         <span aria-hidden="true" className="mb-4 block h-[3px] w-12 bg-region-accent" />

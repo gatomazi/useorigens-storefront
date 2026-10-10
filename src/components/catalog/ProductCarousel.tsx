@@ -2,8 +2,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useSyncExternalStore, type ReactNode } from "react";
-import { trackGoToInk, trackGoToUmaPenca } from "@/lib/analytics/track";
-import { ProductPhoto } from "./ProductPhoto";
+import { CustomizerCardLink, ProductCardLink, ProductSectionHeading } from "./ProductCard";
 
 export type CarouselItem = {
   id: string;
@@ -45,6 +44,9 @@ function Arrow({ direction, disabled, onClick, dark }: { direction: "prev" | "ne
     </button>
   );
 }
+
+/** Width of one card at each breakpoint (the `basis-*` of the row below). */
+const CARD_SIZES = "(min-width: 1280px) 19vw, (min-width: 1024px) 22vw, (min-width: 768px) 27vw, (min-width: 640px) 34vw, 62vw";
 
 /**
  * Touch-first carousel. No autoplay; arrows are real buttons (hidden on phones, where swipe is natural);
@@ -112,86 +114,23 @@ export function ProductCarousel({
 
   return (
     <div role="region" aria-roledescription="carrossel" aria-labelledby={labelledBy}>
-      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 pb-6 sm:pb-8">
-        <div className="max-w-2xl">
-          <h2 id={labelledBy} className="t-h2">
-            {title}
-          </h2>
-          {intro && <p className={`t-body mt-3 ${dark ? "text-white/85" : "text-ink-soft"}`}>{intro}</p>}
+      <ProductSectionHeading labelledBy={labelledBy} title={title} intro={intro} dark={dark} viewAllHref={viewAllHref} viewAllLabel={viewAllLabel}>
+        <div className="hidden shrink-0 gap-2 sm:flex">
+          <Arrow dark={dark} direction="prev" disabled={!canPrev} onClick={() => embla?.scrollPrev()} />
+          <Arrow dark={dark} direction="next" disabled={!canNext} onClick={() => embla?.scrollNext()} />
         </div>
-        <div className="flex shrink-0 items-center gap-4">
-          {viewAllHref && (
-            <a
-              href={viewAllHref}
-              className={`group inline-flex min-h-11 items-center gap-1.5 text-[0.9375rem] font-semibold transition-colors ${dark ? "text-white hover:text-region-accent" : "text-ink hover:text-region-primary"}`}
-            >
-              <span className="link-line inline">{viewAllLabel}</span>
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </a>
-          )}
-          <div className="hidden shrink-0 gap-2 sm:flex">
-            <Arrow dark={dark} direction="prev" disabled={!canPrev} onClick={() => embla?.scrollPrev()} />
-            <Arrow dark={dark} direction="next" disabled={!canNext} onClick={() => embla?.scrollNext()} />
-          </div>
-        </div>
-      </div>
+      </ProductSectionHeading>
       {toolbar && <div className="-mt-2 pb-6 sm:-mt-4 sm:pb-8">{toolbar}</div>}
       <div ref={viewport} className="-mr-4 overflow-hidden sm:mr-0">
         <ul className="-ml-3 flex touch-pan-y sm:-ml-4 lg:-ml-6">
           {leading && (
             <li key="customizer-card" data-customizer-card className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
-              <a href={leading.href} className="group block" draggable={false} aria-label={`${leading.title}. Personalize: você escolhe as palavras (não é uma camiseta pronta da loja).`}>
-                <span className={`photo ${poster ? "photo-poster" : ""}`}>
-                  {/* eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin (never through the image optimizer) */}
-                  <img
-                    src={leading.image.variants?.[Math.min(1, leading.image.variants.length - 1)]?.src ?? leading.image.src}
-                    srcSet={leading.image.variants?.map((v) => `${v.src} ${v.w}w`).join(", ")}
-                    sizes="(min-width: 1280px) 19vw, (min-width: 1024px) 22vw, (min-width: 768px) 27vw, (min-width: 640px) 34vw, 62vw"
-                    width={leading.image.width}
-                    height={leading.image.height}
-                    alt={leading.image.alt}
-                    loading="eager"
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                  <span className="absolute left-2 top-2 bg-ink px-2 py-1 text-[0.6875rem] font-bold uppercase tracking-[0.08em] text-white">Personalizável</span>
-                </span>
-                <div className="mt-3">
-                  <h3 className="t-h3 link-line inline">{leading.title}</h3>
-                  {leading.description && <p className={`t-place mt-1 text-[0.95rem] ${dark ? "text-white/80" : "text-ink-mute"}`}>{leading.description}</p>}
-                  <p className="t-small mt-1 font-semibold underline decoration-region-accent decoration-2 underline-offset-4">{leading.button} →</p>
-                </div>
-              </a>
+              <CustomizerCardLink card={leading} poster={poster} dark={dark} sizes={CARD_SIZES} />
             </li>
           )}
           {items.map((item, i) => (
             <li key={item.id} className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
-              <a
-                href={item.href}
-                className="group block"
-                draggable={false}
-                onClick={() =>
-                  item.umaPenca
-                    ? trackGoToUmaPenca({ productId: item.id, productName: item.name, kind: item.umaPenca.kind, region: item.umaPenca.region, sourceSection, value: item.rawPrice ?? undefined, destinationUrl: item.href })
-                    : trackGoToInk({ productId: item.id, sourceSection, state: item.state, value: item.rawPrice ?? undefined, productName: item.name, destinationUrl: item.href })
-                }
-              >
-                <ProductPhoto
-                  poster={poster}
-                  src={item.imageUrl}
-                  hoverSrc={item.hoverImageUrl}
-                  alt={`${item.eyebrow ? `${item.eyebrow}, ` : ""}${item.name}${item.context ? `, ${item.context}` : ""}`}
-                  sizes="(min-width: 1280px) 19vw, (min-width: 1024px) 22vw, (min-width: 768px) 27vw, (min-width: 640px) 34vw, 62vw"
-                  priority={i < 2}
-                />
-                <div className="mt-3">
-                  {item.eyebrow && <p className="font-display text-[1.6rem] font-extrabold leading-none">{item.eyebrow}</p>}
-                  <h3 className="t-h3 link-line mt-1 inline">{item.name}</h3>
-                  {item.context && <p className={`t-place mt-1 text-[0.95rem] ${dark ? "text-white/80" : "text-ink-mute"}`}>{item.context}</p>}
-                  {item.price && <p className="t-small mt-1 font-semibold">{item.price}</p>}
-                </div>
-              </a>
+              <ProductCardLink item={item} poster={poster} dark={dark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} />
             </li>
           ))}
         </ul>

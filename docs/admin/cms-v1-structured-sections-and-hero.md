@@ -26,6 +26,25 @@ Quarto modelo em **Componentes da home** e em **Componentes** das páginas: bloc
 - **Ao adicionar**: "Compre por peça" com dois blocos que existem em toda região (Camisetas → busca de estampas; Canecas e ecobags → Outros artigos), antes da campanha de fechamento. Pode haver várias grades.
 - Erros de preenchimento aparecem em português no editor ("Bloco 2: escolha para onde ele leva."). Um bloco cujo destino não resolve na loja é omitido (nunca link morto); sem blocos, a seção some.
 
+### Produtos em grade (`layout.display`, `feature/grade-produtos-fundo-pagina`)
+
+Toda seção de produtos (coleção da INK, Uma Penca ou curadoria editorial), na home e nas páginas, escolhe a **Exibição** em Layout: **Carrossel** (a fileira de sempre) ou **Grade** (todos os cards na página, como numa categoria: 4 por linha no desktop, 3 no tablet, 2 no celular).
+
+- `layout.display: "grid"`; ausente = carrossel. Nada é gravado para o carrossel, então as seções salvas antes continuam idênticas.
+- Limite de cards: 3 a 24 no carrossel, 3 a **48** na grade (tudo o que a coleção guarda para vitrine, `MAX_STORED_MEMBERS`). Voltar de grade para carrossel corta o limite para 24 no salvar.
+- Mesmo card, mesmo título/"Ver todos" e mesmo evento de clique (`GoToInk` / `GoToPenca` com o `source_section` da seção) nos dois modos. O primeiro card personalizável continua sendo a primeira célula. Na grade, a partir de 8 cards o "Ver todos" se repete como botão no fim.
+- A ordem manual e os produtos escondidos da coleção valem igual nos dois modos.
+- **Adicionar seção** (home e páginas) já pergunta a exibição ao criar; a lista de seções mostra "Grade de produtos".
+
+## Fundo da página (`page.backdrop`, `feature/grade-produtos-fundo-pagina`)
+
+Hotpages e categorias-pai têm o card **Fundo da página** (página temática: Black Friday, Natal…): cor da página inteira, cor do texto e, opcional, uma imagem de **pattern** repetida por cima (tamanho de cada repetição 40–600 px, intensidade 5–100%). Só a página muda; a home e o resto da loja não.
+
+- `backdrop: { color, tone: "light" | "dark", pattern?: { image, size, opacity } }`; sem `backdrop`, o fundo normal da região. A imagem é sempre decorativa, entra na tabela de mídia da publicação e, se faltar, a página aparece só com a cor.
+- O pattern é uma camada sob as seções. Seção com fundo próprio (foto, cor, papel) continua pintando o dela.
+- **Texto**: com fundo escuro (`tone: "dark"`), o texto das seções sem fundo próprio fica claro (`.page-dark` em `globals.css`, que troca só a cor do texto e os tons `--ink-soft`/`--ink-mute`/`--line`; `--ink` fica como está porque também pinta botões e etiquetas). Seções de produtos e o topo da página sem fundo próprio seguem o tom da página automaticamente. Seção com superfície clara própria volta ao texto escuro (`.on-light`), e as duas seções sem versão escura (Estilos da cidade, Escolha seu estado) ficam sobre papel.
+- Legibilidade: o contraste do texto sobre a cor bloqueia a publicação abaixo de 3:1 e avisa abaixo de 4,5:1 (mesma regra das seções); pattern com intensidade acima de 50% só avisa. Ao trocar a cor, o editor sugere a cor de texto que lê melhor.
+
 ## 2. Três produtos do hero por região (`feature/cms-hero-featured-products`)
 
 Home → Seções → **Hero** → bloco **Produtos em destaque**: três posições, buscar (cidade, UF, estilo ou ID) → **Usar aqui**, **Substituir**, **Limpar**, **↑/↓**. Cada ação salva o rascunho e atualiza a prévia 375/desktop; nada é publicado.
@@ -46,3 +65,4 @@ Home → Seções → **Hero** → bloco **Produtos em destaque**: três posiç�
 - E2E do admin: `structured.spec.ts` (Norte, Centro-Oeste e Sul: adicionar, editar, prévia 375/desktop, publicar no sandbox, sem duplicar) e `hero.spec.ts` (três produtos reais no Norte, prévia, recusa de outra loja, reordenar/limpar, rascunho persistente, publicar, restaurar, Centro-Oeste independente e Sul byte a byte igual).
 - Smoke público (`SMOKE_REGIONS_ONLY=1`): as regiões lançadas com os três componentes e o hero de 2 cards (Norte) e sem cards (Centro-Oeste). `verify-home-equivalence` do Sul: pixel-identical.
 - Capturas do hero: [`screenshots/2026-09-25-cms-sections/`](../screenshots/2026-09-25-cms-sections/).
+- Capturas da grade e do fundo (pattern de teste gerado só para a QA): [`screenshots/grade-produtos-fundo-pagina/`](../screenshots/grade-produtos-fundo-pagina/).

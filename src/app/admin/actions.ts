@@ -21,10 +21,11 @@ import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
-import { isUmaPencaSource, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
+import { isUmaPencaSource, maxSectionProducts, MIN_SECTION_PRODUCTS, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
+import { parsePageBackdrop } from "@/lib/admin/page-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
 import { nextStatuses, productLinkFor, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
 import type { PageKind } from "@/lib/site-config/schema";
@@ -107,6 +108,10 @@ export async function setScopeAction(fd: FormData) {
   redirect(from.startsWith("/admin") && !from.startsWith("//") && !from.includes("..") && !from.startsWith("/admin/preview") ? from.split("?")[0] : "/admin");
 }
 
+/** "Exibição" of a new product section: a grid, or (anything else) the usual carousel. */
+const displayOf = (fd: FormData): ProductDisplay | undefined => (text(fd, "display") === "grid" ? "grid" : undefined);
+const limitOf = (fd: FormData, display: ProductDisplay | undefined, fallback: number) => Math.min(maxSectionProducts(display), Math.max(MIN_SECTION_PRODUCTS, Math.round(Number(text(fd, "limit")) || fallback)));
+
 export async function addCollectionSection(fd: FormData) {
   const { scope } = await editScope(fd);
   const at = text(fd, "page") ? inPagePath(text(fd, "page"), "/admin/home") : "/admin/home";
@@ -115,11 +120,12 @@ export async function addCollectionSection(fd: FormData) {
   // Same rule the editor's autocomplete applies, enforced here too: never trust that the form only offered valid choices.
   const problem = sourceProblem({ kind: "ink-category", ...ref, order: "category", limit: 6 }, (await loadWorkspace(scope)).doc);
   if (problem) back(at, { err: [problem] });
-  const limit = Math.min(24, Math.max(3, Math.round(Number(text(fd, "limit")) || 6)));
+  const display = displayOf(fd);
+  const limit = limitOf(fd, display, 6);
   const collection = findCollection(ref.store, ref.collectionId);
   // "Ver todos" only for a collection with a verified public page: an internal one has none, and the publish would refuse the button (collectionProblems).
   const cta = collection?.isAvailable ? { cta: { label: "Ver todos", dest: { kind: "ink-collection" as const, ...ref } } } : {};
-  return run(fd, { type: "add-carousel", title: text(fd, "title") || collection?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit }, ...cta }, "Seção criada no rascunho.", "/admin/home", true);
+  return run(fd, { type: "add-carousel", title: text(fd, "title") || collection?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit }, ...cta, ...(display ? { display } : {}) }, "Seção criada no rascunho.", "/admin/home", true);
 }
 
 /**
@@ -131,9 +137,10 @@ export async function addUmaPencaSection(fd: FormData) {
   const at = text(fd, "page") ? inPagePath(text(fd, "page"), "/admin/home") : "/admin/home";
   const kinds = ARTICLE_KINDS.filter((k) => fd.get(`kind_${k}`) !== null);
   if (kinds.length === 0) back(at, { err: ["Escolha ao menos um tipo: Canecas ou Ecobags."] });
-  const limit = Math.min(24, Math.max(3, Math.round(Number(text(fd, "limit")) || 8)));
+  const display = displayOf(fd);
+  const limit = limitOf(fd, display, 8);
   const title = text(fd, "title") || (kinds.length === 1 ? ARTICLE_KIND_LABELS[kinds[0]].plural : "Outros artigos");
-  return run(fd, { type: "add-carousel", title, source: { kind: "umapenca", articleKinds: kinds, limit }, cta: { label: "Ver todos", dest: { kind: "route", path: `/${scope}/outros-artigos` } } }, "Seção da Uma Penca criada no rascunho.", "/admin/home", true);
+  return run(fd, { type: "add-carousel", title, source: { kind: "umapenca", articleKinds: kinds, limit }, cta: { label: "Ver todos", dest: { kind: "route", path: `/${scope}/outros-artigos` } }, ...(display ? { display } : {}) }, "Seção da Uma Penca criada no rascunho.", "/admin/home", true);
 }
 
 export async function moveSection(fd: FormData) {
@@ -710,6 +717,15 @@ export async function updatePageAction(fd: FormData) {
     ...(og ? { ogImage: { assetId: og, alt: text(fd, "seo_og_alt"), decorative: text(fd, "seo_og_alt") === "" } } : {}),
   };
   return runRaw(fd, { type: "update-page", id, patch: { title: text(fd, "title"), slug, seo } }, "Rascunho da página salvo.", here);
+}
+
+/** The page's own ground ("Fundo da página": colour, text tone, optional pattern), or back to the region's ground when switched off. */
+export async function savePageBackdropAction(fd: FormData) {
+  const id = text(fd, "id");
+  const here = `/admin/paginas/${id}`;
+  const { backdrop, problems } = parsePageBackdrop(fd);
+  if (problems.length > 0) back(here, { err: problems });
+  return runRaw(fd, { type: "update-page", id, patch: { backdrop } }, backdrop ? "Fundo da página salvo no rascunho." : "A página voltou ao fundo da região (rascunho).", here);
 }
 
 export async function duplicatePageAction(fd: FormData) {

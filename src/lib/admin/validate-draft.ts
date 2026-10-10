@@ -7,8 +7,8 @@ import { getCatalog } from "../catalog/repository";
 import { getRegionHome } from "../home";
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import { enabledInternalIds } from "../site-config/collections-enabled";
-import { isUmaPencaSource, type Customizer, type ScopeDoc, type Section, type Source } from "../site-config/schema";
-import { readability, type ReadabilityIssue } from "./contrast";
+import { isUmaPencaSource, type Customizer, type Page, type ScopeDoc, type Section, type Source } from "../site-config/schema";
+import { groundReadability, readability, type ReadabilityIssue } from "./contrast";
 import { readUmaPencaSnapshot } from "../umapenca/snapshot";
 import { ARTICLE_KIND_LABELS } from "../umapenca/types";
 
@@ -134,6 +134,11 @@ export function sectionReadability(section: Section): ReadabilityIssue[] {
   // The campaign keeps its own dark surface (with product crops) when it has neither image nor fill, so only judge what is configured.
   if (section.template === "campaign" && !hasImage && section.appearance.fill.kind === "none") return [];
   return readability(section.appearance, tone, hasImage);
+}
+
+/** Blocking readability problems of a page's own ground (its text over its colour); warnings stay in the editor. */
+export function pageGroundProblems(page: Page): string[] {
+  return page.backdrop ? groundReadability(page.backdrop).filter((i) => i.level === "blocking").map((i) => `Fundo da página: ${i.message}`) : [];
 }
 
 /** Blocking readability problems of the ACTIVE sections (warnings are shown in the editor but never stop a publish). */

@@ -14,12 +14,13 @@ import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredT
 import { newPage, uniqueSlug } from "../site-config/pages";
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import type { PromotionsConfig } from "../site-config/promotions-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageKind, type PageSeo, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid">;
 
 export type DraftOp =
-  | { type: "add-carousel"; title: string; source: Source; cta?: Section["cta"] }
+  /** `display: "grid"` creates the section already as a product grid (absent = a carousel). */
+  | { type: "add-carousel"; title: string; source: Source; cta?: Section["cta"]; display?: ProductDisplay }
   /** Adds one of the structured home components (city styles, state chooser, regional campaign, image grid) with the defaults of THIS region. */
   | { type: "add-structured"; template: StructuredTemplate }
   | { type: "duplicate"; id: string }
@@ -46,8 +47,11 @@ export type DraftOp =
   | { type: "set-launched"; launched: boolean }
   // ── Pages (hotpages and parent-category landings) ──
   | { type: "create-page"; kind: PageKind; title: string; slug?: string }
-  /** Title, slug and SEO of a page (the slug of an already-published page is refused by the caller: its URL must not change). */
-  | { type: "update-page"; id: string; patch: { title?: string; slug?: string; seo?: PageSeo } }
+  /**
+   * Title, slug, SEO and ground of a page (the slug of an already-published page is refused by the caller: its URL must not change).
+   * `backdrop: null` takes the page back to the region's ground.
+   */
+  | { type: "update-page"; id: string; patch: { title?: string; slug?: string; seo?: PageSeo; backdrop?: PageBackdrop | null } }
   | { type: "duplicate-page"; id: string }
   | { type: "set-page-archived"; id: string; archived: boolean }
   | { type: "remove-page"; id: string }
@@ -140,7 +144,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       const anchor = uniqueAnchor(`colecao-${slug(title)}`, new Set(sections.map((s) => s.anchor)));
       const created: Section = {
         id, anchor, headingId: `${anchor}-title`, template: "product-carousel", active: true, title,
-        layout: { variant: "standard", tone: "light", surface: "plain" },
+        layout: { variant: "standard", tone: "light", surface: "plain", ...(op.display === "grid" ? { display: "grid" as const } : {}) },
         source: op.source, analyticsSource: op.source.kind === "umapenca" ? "homeUmaPenca" : "homeCollection", appearance: defaultAppearance(),
         ...(op.cta ? { cta: op.cta } : {}),
       };
@@ -283,7 +287,8 @@ function pageOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-page" | "upd
   if (index < 0) return fail("this page does not exist");
   const page = pages[index];
   if (op.type === "update-page") {
-    const merged: Page = { ...page, ...(op.patch.title !== undefined ? { title: op.patch.title.trim() } : {}), ...(op.patch.slug !== undefined ? { slug: op.patch.slug.trim() } : {}), ...(op.patch.seo !== undefined ? { seo: op.patch.seo } : {}) };
+    const merged: Page = { ...page, ...(op.patch.title !== undefined ? { title: op.patch.title.trim() } : {}), ...(op.patch.slug !== undefined ? { slug: op.patch.slug.trim() } : {}), ...(op.patch.seo !== undefined ? { seo: op.patch.seo } : {}), ...(op.patch.backdrop ? { backdrop: op.patch.backdrop } : {}) };
+    if (op.patch.backdrop === null) delete merged.backdrop;
     if (op.patch.slug !== undefined && merged.slug !== page.slug && pages.some((p, i) => i !== index && p.kind === merged.kind && p.slug === merged.slug)) return fail(`this region already has a page with the address "${merged.slug}"`);
     pages[index] = merged;
     return withPages(doc, pages, merged.id);
