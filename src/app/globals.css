@@ -28,6 +28,8 @@
   --region-wash: 229 229 229;
   --region-fill: var(--region-accent);
   --region-ink: var(--region-primary);
+  /* Fill of a product card (ProductCard.tsx): none, so it shows the ground the grid sits on; a themed page sets its own colour to hide its pattern. */
+  --card-fill: transparent;
 
   --font-display-stack: var(--font-display), "Arial Narrow", Impact, sans-serif;
   --font-body-stack: var(--font-body), system-ui, sans-serif;
@@ -265,6 +267,10 @@ a:focus-visible .link-line {
 .photo img {
   object-fit: cover;
   transition: transform 500ms var(--ease-out);
+}
+/* Product cards: the mockup is never cropped. INK pictures (800x820) fill the frame exactly; another shape keeps its proportions on the frame's grey. */
+.photo-contain img {
+  object-fit: contain;
 }
 a:hover > .photo img,
 .photo-hover:hover .photo img {

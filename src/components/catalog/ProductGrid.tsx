@@ -42,7 +42,8 @@ export function ProductGrid({
   return (
     <div role="region" aria-labelledby={labelledBy}>
       <ProductSectionHeading labelledBy={labelledBy} title={title} intro={intro} dark={dark} viewAllHref={viewAllHref} viewAllLabel={viewAllLabel} />
-      <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-5 md:grid-cols-3 md:gap-x-6 md:gap-y-10 lg:grid-cols-4">
+      {/* Bordered cards carry their own separation: one even gap on both axes, no taller rows of air between them. */}
+      <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
         {leading && (
           <li key="customizer-card" data-customizer-card>
             <CustomizerCardLink card={leading} poster={poster} dark={dark} sizes={CARD_SIZES} asButton={Boolean(buyLabel)} />
@@ -56,7 +57,8 @@ export function ProductGrid({
       </ul>
       {viewAllHref && cards >= FOOTER_LINK_FROM && (
         <div className="mt-10 flex justify-center lg:mt-14">
-          <a href={viewAllHref} className={dark ? "btn btn-light" : "btn"}>
+          {/* Secondary next to the cards' own buttons: outlined on a light ground, so "see the whole collection" never competes with a product. */}
+          <a href={viewAllHref} className={dark ? "btn btn-light" : "btn btn-ghost"}>
             {viewAllLabel}
           </a>
         </div>

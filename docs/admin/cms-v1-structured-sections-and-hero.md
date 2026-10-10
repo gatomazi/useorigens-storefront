@@ -36,15 +36,27 @@ Toda seção de produtos (coleção da INK, Uma Penca ou curadoria editorial), n
 - A ordem manual e os produtos escondidos da coleção valem igual nos dois modos.
 - **Adicionar seção** (home e páginas) já pergunta a exibição ao criar; a lista de seções mostra "Grade de produtos".
 
-### Botão "Comprar" nos cards (`layout.buyLabel`, `feature/botao-comprar-cards`)
+### Cards de produto e botão de compra (`feature/botao-comprar-cards`)
 
-Em Layout, toda seção de produtos (carrossel ou grade, home e páginas) pode ligar **Botão “Comprar” em cada card de produto**, com o texto editável (até 20 caracteres; vazio vira "Comprar").
+**Card** (`src/components/catalog/ProductCard.tsx`, usado por `ProductGrid` e `ProductCarousel`: grades e carrosséis do CMS na home e nas páginas, e os carrosséis das páginas de estado). Cada produto é um bloco só: foto em cima, de ponta a ponta, e nome, preço e botão opcional embaixo.
 
-- `layout.buyLabel`; ausente = sem botão (seções existentes não mudam).
-- O botão é parte do próprio link do card (não é um segundo link): abre a mesma página do produto na INK ou na Uma Penca e dispara o mesmo `GoToInk`/`GoToPenca`, uma vez.
-- Fica no pé do card, alinhado em toda a linha mesmo quando os nomes quebram em duas linhas. Segue o tom da seção: preto em fundo claro, branco em fundo escuro (inclusive na página com fundo escuro próprio).
-- O primeiro card personalizável, quando existe, mostra o texto do botão dele ("Personalizar") no mesmo formato.
-- A lista de seções mostra o selo "Botão “Comprar”". Capturas: [`screenshots/botao-comprar-cards/`](../screenshots/botao-comprar-cards/).
+- Borda de 1px suave (preto a 15%, 35% no hover; branco a 25% sobre superfície escura), cantos de 8px, sem sombra nem gradiente.
+- Sem fundo próprio: o card mostra o fundo da grade (`--card-fill`, transparente). A moldura da foto continua no cinza da loja (`.photo`), então nenhum mockup da INK ganha um retângulo branco atrás. Numa página com fundo temático, o card recebe a cor da página para o pattern passar entre os cards e nunca atrás de nome e preço.
+- A foto não é cortada (`object-fit: contain`): os mockups da INK (800×820) ocupam a moldura exatamente; foto de outro formato mantém a proporção.
+- Informações com padding de 12px no celular e 16px a partir do tablet. Nome com peso 500 e espaço fixo de duas linhas (o nome completo continua no DOM). Preço de 16px no celular e 18px no desktop, semibold. Assim preço e botão ficam na mesma altura em toda a linha.
+- Grade: espaço uniforme entre os cards (12/16/20px). Com o botão ligado, o "Ver todos" do fim da grade vira botão secundário (contorno) no fundo claro.
+- O card inteiro é um único link (sem link aninhado), com o anel de foco global em volta dele.
+
+**Botão de compra** (`layout.buyLabel`). No painel, em **Editar seção → Layout → “Botão de compra em cada card de produto”**, em qualquer seção de produtos (carrossel ou grade, home e páginas). Ausente = sem botão; as seções existentes não mudam.
+
+- Texto editável (até 20 caracteres). O padrão é **“Ver produto”**, porque o botão leva à página do produto na loja, onde a pessoa escolhe tamanho e cor. Dá para trocar por “Comprar”.
+- Faz parte do próprio link do card: mesmo destino (INK ou Uma Penca), mesmo `GoToInk`/`GoToPenca`, um clique só. Não há compra direta, carrinho nem modal.
+- Mínimo de 44px de altura, na largura da área de informações, no formato do CTA da loja (retangular, sólido, caixa alta): preto em fundo claro, branco em fundo escuro. Fica sempre no pé do card.
+- O card personalizável mostra o “Personalizar” dele no mesmo formato. A lista de seções mostra o selo com o texto do botão.
+
+**Fora deste ajuste** (componentes próprios, com regras próprias): `FamilyCard` (páginas de cidade, “Estilos da cidade” e “Outros estilos” do PDP: tem favoritar, compartilhar e versões), os resultados de `/busca` e os cards de `/outros-artigos`. Dá para estender a eles reaproveitando as mesmas classes.
+
+Capturas: [`screenshots/botao-comprar-cards/`](../screenshots/botao-comprar-cards/).
 
 ## Fundo da página (`page.backdrop`, `feature/grade-produtos-fundo-pagina`)
 

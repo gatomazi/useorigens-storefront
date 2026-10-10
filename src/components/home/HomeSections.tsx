@@ -264,7 +264,7 @@ function CarouselSection({
 
   if (!visual && surface === "paper") {
     return (
-      <section id={s.anchor} className={["paper", onLight].filter(Boolean).join(" ")}>
+      <section id={s.anchor} className={["paper [--card-fill:transparent]", onLight].filter(Boolean).join(" ")}>
         <div className="wrap py-14 lg:py-24">{carousel}</div>
       </section>
     );
@@ -279,7 +279,7 @@ function CarouselSection({
   const surfaceClass = surface === "region-primary" ? "bg-region-primary" : surface === "paper" ? "paper" : "";
   const toneClass = tone === "dark" ? "text-white" : "";
   return (
-    <section id={s.anchor} className={["relative isolate overflow-hidden", surfaceClass, toneClass, onLight].filter(Boolean).join(" ")}>
+    <section id={s.anchor} className={["relative isolate overflow-hidden [--card-fill:transparent]", surfaceClass, toneClass, onLight].filter(Boolean).join(" ")}>
       {(hasImage(bg) || !isSameFill(bg.fill, NATIVE_FILL[surface])) && <SectionBackdrop bg={bg} priority={priority} nativeFill={NATIVE_FILL[surface]} />}
       <div className="wrap py-14 lg:py-24">{carousel}</div>
     </section>

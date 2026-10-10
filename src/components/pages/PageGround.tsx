@@ -22,7 +22,8 @@ export function PageGround({ backdrop, media, children }: { backdrop: PageBackdr
   const layer: CSSProperties | null =
     pattern && src && CSS_URL_SAFE.test(src) ? { backgroundImage: `url("${src}")`, backgroundSize: `${pattern.size}px auto`, backgroundRepeat: "repeat", opacity: pattern.opacity } : null;
   return (
-    <div data-page-ground={backdrop.tone} className={`relative isolate ${backdrop.tone === "dark" ? "page-dark" : ""}`} style={{ backgroundColor: backdrop.color }}>
+    // `--card-fill`: product cards take the page colour, so the pattern runs between them and never under a name or a price.
+    <div data-page-ground={backdrop.tone} className={`relative isolate ${backdrop.tone === "dark" ? "page-dark" : ""}`} style={{ backgroundColor: backdrop.color, ["--card-fill" as string]: backdrop.color }}>
       {layer && <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10" style={layer} />}
       {children}
     </div>
