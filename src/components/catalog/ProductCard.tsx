@@ -53,6 +53,12 @@ export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllH
  * the picture keeps the photo frame of the store (`.photo`, the INK grey), so a mockup with a grey of its own never sits on a white box.
  * The whole block is the card's single link: no nested links, and the global focus ring outlines it for keyboard users.
  */
+/**
+ * Cards with a ground of their own, for a section on a photo (a see-through card would show the picture behind its text): the INK grey, the
+ * same as the mockups, so picture and text read as one piece, and dark text even when the section's heading is white (`on-light`).
+ */
+export const SOLID_CARDS = "on-light [--card-fill:var(--ground)]";
+
 const frame = (dark: boolean) =>
   `group relative flex h-full flex-col overflow-hidden rounded-lg border bg-[var(--card-fill)] transition-colors ${dark ? "border-white/25 hover:border-white/55" : "border-black/15 hover:border-black/35"}`;
 /** Name, price and button: 12px of padding on phones, 16px from tablets up. */

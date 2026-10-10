@@ -1,5 +1,5 @@
 import type { ProductTags } from "@/lib/site-config/schema";
-import { CustomizerCardLink, ProductCardLink, ProductSectionHeading } from "./ProductCard";
+import { CustomizerCardLink, ProductCardLink, ProductSectionHeading, SOLID_CARDS } from "./ProductCard";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
 
 /** Width of one card: four columns from 1024px, three from 768px, two on phones (the same steps as FamilyGrid and the search results). */
@@ -24,6 +24,7 @@ export function ProductGrid({
   leading,
   buyLabel,
   tags,
+  solidCards = false,
 }: {
   leading?: LeadingCard;
   items: CarouselItem[];
@@ -40,22 +41,25 @@ export function ProductGrid({
   buyLabel?: string;
   /** The section's tags on the product pictures (`layout.tags`); absent = none. */
   tags?: ProductTags;
+  /** Opaque light cards (`SOLID_CARDS`), for a section on a photo. */
+  solidCards?: boolean;
 }) {
   const dark = tone === "dark";
+  const cardDark = dark && !solidCards;
   const cards = items.length + (leading ? 1 : 0);
   return (
     <div role="region" aria-labelledby={labelledBy}>
       <ProductSectionHeading labelledBy={labelledBy} title={title} intro={intro} dark={dark} viewAllHref={viewAllHref} viewAllLabel={viewAllLabel} />
       {/* Bordered cards carry their own separation: one even gap on both axes, no taller rows of air between them. */}
-      <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5">
+      <ul className={`grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 ${solidCards ? SOLID_CARDS : ""}`}>
         {leading && (
           <li key="customizer-card" data-customizer-card>
-            <CustomizerCardLink card={leading} poster={poster} dark={dark} sizes={CARD_SIZES} asButton={Boolean(buyLabel)} />
+            <CustomizerCardLink card={leading} poster={poster} dark={cardDark} sizes={CARD_SIZES} asButton={Boolean(buyLabel)} />
           </li>
         )}
         {items.map((item, i) => (
           <li key={item.id}>
-            <ProductCardLink item={item} poster={poster} dark={dark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} tags={tags} />
+            <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} tags={tags} />
           </li>
         ))}
       </ul>

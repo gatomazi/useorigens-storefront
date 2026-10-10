@@ -3,7 +3,7 @@
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import type { ProductTags } from "@/lib/site-config/schema";
-import { CustomizerCardLink, ProductCardLink, ProductSectionHeading } from "./ProductCard";
+import { CustomizerCardLink, ProductCardLink, ProductSectionHeading, SOLID_CARDS } from "./ProductCard";
 
 export type CarouselItem = {
   id: string;
@@ -76,6 +76,7 @@ export function ProductCarousel({
   tags,
   toolbar,
   resetKey,
+  solidCards = false,
 }: {
   /** When set, this card is ALWAYS the first one; `items` are the ordinary products after it. */
   leading?: LeadingCard;
@@ -101,8 +102,11 @@ export function ProductCarousel({
   buyLabel?: string;
   /** The section's tags on the product pictures (`layout.tags`); absent = none. */
   tags?: ProductTags;
+  /** Opaque light cards (`SOLID_CARDS`), for a section on a photo: the picture behind would show through the cards otherwise. */
+  solidCards?: boolean;
 }) {
   const dark = tone === "dark";
+  const cardDark = dark && !solidCards;
   const [viewport, embla] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", dragFree: true });
 
   // Arrow state mirrors Embla's own scroll position (an external system), so subscribe to it.
@@ -133,15 +137,15 @@ export function ProductCarousel({
       </ProductSectionHeading>
       {toolbar && <div className="-mt-2 pb-6 sm:-mt-4 sm:pb-8">{toolbar}</div>}
       <div ref={viewport} className="-mr-4 overflow-hidden sm:mr-0">
-        <ul className="-ml-3 flex touch-pan-y sm:-ml-4 lg:-ml-6">
+        <ul className={`-ml-3 flex touch-pan-y sm:-ml-4 lg:-ml-6 ${solidCards ? SOLID_CARDS : ""}`}>
           {leading && (
             <li key="customizer-card" data-customizer-card className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
-              <CustomizerCardLink card={leading} poster={poster} dark={dark} sizes={CARD_SIZES} asButton={Boolean(buyLabel)} />
+              <CustomizerCardLink card={leading} poster={poster} dark={cardDark} sizes={CARD_SIZES} asButton={Boolean(buyLabel)} />
             </li>
           )}
           {items.map((item, i) => (
             <li key={item.id} className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
-              <ProductCardLink item={item} poster={poster} dark={dark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} tags={tags} />
+              <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} tags={tags} />
             </li>
           ))}
         </ul>
