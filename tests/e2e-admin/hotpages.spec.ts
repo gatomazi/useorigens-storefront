@@ -26,9 +26,9 @@ const publicHtml = async (page: Page, url: string) => (await page.request.get(ur
 const status = async (page: Page, url: string) => (await page.request.get(url, { timeout: 300_000 })).status();
 const waitPost = (page: Page) => page.waitForResponse((r) => r.request().method() === "POST", { timeout: 120_000 });
 
-/** Picks an INK collection in the autocomplete by (part of) its name. */
+/** Picks an INK collection in the autocomplete by (part of) its name. The text autocomplete, not a `<select>` (also a combobox): the new-model form has "Origem" first. */
 async function pickCollection(page: Page, scopeSelector: ReturnType<Page["locator"]>, text: string, optionName: RegExp) {
-  const combo = scopeSelector.getByRole("combobox").first();
+  const combo = scopeSelector.locator('input[role="combobox"]').first();
   await combo.fill(text);
   await page.getByRole("option", { name: optionName }).first().click();
 }
