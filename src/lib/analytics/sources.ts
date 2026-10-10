@@ -17,6 +17,8 @@ export const SOURCES = {
   /** The inline `<GlobalSearch>` embedded directly on a state page (not behind the `SearchDialog` modal) — a
    * third, real, distinct search entry point not in the command's own suggested list. */
   stateSearch: "state_search",
+  /** A city page's "Busque outra cidade" field under the styles (it opens the search sheet). */
+  citySearch: "city_search",
 
   // City selection, outside of search.
   stateMesoregion: "state_mesoregion",

@@ -19,7 +19,21 @@ type Props = {
   source?: string;
   /** The dialog keeps the field visible above the results while the phone keyboard is open. */
   sticky?: boolean;
+  /**
+   * A white bordered field with the search icon (same look as the hero trigger), for a search that sits in the page among other content: the
+   * dialog's bare underlined field reads as a line of text on the grey ground there.
+   */
+  boxed?: boolean;
 };
+
+export function SearchIcon({ className }: { className: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.2">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 const DEBOUNCE_MS = 140;
 const responses = new Map<string, Promise<GlobalSearchResponse>>();
@@ -71,7 +85,7 @@ function Thumb({ result }: { result: GlobalResult }) {
  * floating dropdown), so it behaves the same on a phone, in a sheet, and with a screen reader. A design is ONE row per place × family, its
  * pieces counted from the product cluster, never one row per piece.
  */
-export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false }: Props) {
+export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false, boxed = false }: Props) {
   const copy = placeSearchCopy(region);
   const router = useRouter();
   const uid = useId();
@@ -223,10 +237,11 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
 
   return (
     <div className="w-full">
-      <div className={sticky ? "sticky top-0 z-10 -mx-5 bg-ground px-5 pb-1 pt-1 sm:-mx-10 sm:px-10" : ""}>
+      <div className={sticky ? "sticky top-0 z-10 -mx-5 bg-ground px-5 pb-1 pt-1 sm:-mx-10 sm:px-10" : boxed ? "relative text-ink" : ""}>
         <label htmlFor={`${uid}-input`} className="sr-only">
           {copy.label}
         </label>
+        {boxed && <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 sm:left-5" />}
         <input
           id={`${uid}-input`}
           ref={inputRef}
@@ -243,14 +258,19 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
           enterKeyHint="search"
           inputMode="search"
           maxLength={80}
-          placeholder={copy.placeholder}
+          // The box's icon already says "search", and a phone's width (minus the icon) cuts the longer wording.
+          placeholder={boxed ? copy.field : copy.placeholder}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
             setActive(0);
           }}
           onKeyDown={onKeyDown}
-          className="search-input block w-full border-0 border-b-[3px] border-ink bg-transparent px-0 pb-3 pt-2 text-[clamp(1.5rem,5.5vw,3.25rem)] font-extrabold leading-none tracking-tight text-ink outline-none transition-colors placeholder:text-[clamp(1.125rem,4.4vw,2.25rem)] placeholder:font-semibold placeholder:text-ink-mute focus:border-region-ink focus:outline-none"
+          className={
+            boxed
+              ? "block min-h-16 w-full border-2 border-ink bg-white pl-13 pr-4 text-[1.125rem] font-semibold text-ink transition-colors placeholder:font-medium placeholder:text-ink-mute hover:border-region-primary sm:min-h-[4.5rem] sm:pl-15 sm:text-[1.1875rem]"
+              : "search-input block w-full border-0 border-b-[3px] border-ink bg-transparent px-0 pb-3 pt-2 text-[clamp(1.5rem,5.5vw,3.25rem)] font-extrabold leading-none tracking-tight text-ink outline-none transition-colors placeholder:text-[clamp(1.125rem,4.4vw,2.25rem)] placeholder:font-semibold placeholder:text-ink-mute focus:border-region-ink focus:outline-none"
+          }
         />
       </div>
 
