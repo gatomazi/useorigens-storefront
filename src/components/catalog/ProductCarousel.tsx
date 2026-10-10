@@ -2,6 +2,7 @@
 
 import useEmblaCarousel from "embla-carousel-react";
 import { useCallback, useEffect, useSyncExternalStore, type ReactNode } from "react";
+import type { ProductTags } from "@/lib/site-config/schema";
 import { CustomizerCardLink, ProductCardLink, ProductSectionHeading } from "./ProductCard";
 
 export type CarouselItem = {
@@ -14,6 +15,8 @@ export type CarouselItem = {
   price: string | null;
   /** INK's regular price, formatted, only while a promotion is on: struck through before `price` (src/components/catalog/PriceText.tsx). */
   listPrice?: string;
+  /** The "% OFF" during a promotion, as INK shows it (`discountPercent`); shown as a tag only where the section turns discount tags on. */
+  discount?: number;
   /** Exactly what INK returned — the GoToInk `value` param. Omitted (not guessed) when not cleanly known for
    * this item (e.g. a state-wide editorial pick with no single city). */
   rawPrice?: number | null;
@@ -70,6 +73,7 @@ export function ProductCarousel({
   sourceSection,
   leading,
   buyLabel,
+  tags,
   toolbar,
   resetKey,
 }: {
@@ -95,6 +99,8 @@ export function ProductCarousel({
   sourceSection: string;
   /** The section's buy button ("Comprar") under every product card; absent = none. */
   buyLabel?: string;
+  /** The section's tags on the product pictures (`layout.tags`); absent = none. */
+  tags?: ProductTags;
 }) {
   const dark = tone === "dark";
   const [viewport, embla] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", dragFree: true });
@@ -135,7 +141,7 @@ export function ProductCarousel({
           )}
           {items.map((item, i) => (
             <li key={item.id} className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
-              <ProductCardLink item={item} poster={poster} dark={dark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} />
+              <ProductCardLink item={item} poster={poster} dark={dark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} tags={tags} />
             </li>
           ))}
         </ul>

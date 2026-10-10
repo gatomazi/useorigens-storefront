@@ -127,6 +127,7 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
                       <span className="a-badge">{typeLabel(s)}</span>
                       {s.customizerCard && <span className="a-badge ok">1º card personalizável</span>}
                       {s.layout?.buyLabel && <span className="a-badge ok">Botão “{s.layout.buyLabel}”</span>}
+                      {s.layout?.tags && <span className="a-badge ok">Etiquetas: {[s.layout.tags.discount ? "% OFF" : null, s.layout.tags.text ? `“${s.layout.tags.text}”` : null].filter(Boolean).join(" + ")}</span>}
                       {readable.some((r) => r.level === "blocking") && <span className="a-badge bad">Texto ilegível</span>}
                     </p>
                   </td>

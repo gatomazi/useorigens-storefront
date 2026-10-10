@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_BUY_LABEL, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type Section, type Source } from "./contract";
+import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { ARTICLE_KINDS } from "../umapenca/types";
@@ -200,7 +200,14 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     const surface = surfaceRaw === "paper" || surfaceRaw === "region-primary" ? surfaceRaw : "plain";
     // The buy button: the checkbox and its text (empty = "Ver produto"); a form without the block keeps what is saved.
     const buyLabel = f.get("layout_buy_present") === null ? section.layout?.buyLabel : f.get("layout_buy") !== null ? str(f, "layout_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL : undefined;
-    patch.layout = { variant, tone, surface, ...(display === "grid" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}) };
+    // Tags on the pictures: the "% OFF" of a promotion and/or the section's own text (an empty text is no tag); a form without the block keeps them.
+    let tags: ProductTags | undefined = section.layout?.tags;
+    if (f.get("tags_present") !== null) {
+      const text = f.get("tags_custom") !== null ? str(f, "tags_text").slice(0, MAX_TAG_TEXT).trim() : "";
+      const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text } : {}) };
+      tags = next.discount || next.text ? next : undefined;
+    }
+    patch.layout = { variant, tone, surface, ...(display === "grid" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(tags ? { tags } : {}) };
   }
   if (section.template === "page-hero") {
     patch.cta = parseCta(f);

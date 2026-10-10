@@ -10,7 +10,7 @@ import { recreationProducts } from "./editorial/recreations";
 import { stateLineProduct } from "./editorial/state-lines";
 import { terraProducts } from "./editorial/terra";
 import { HERO_FAMILIES, STATE_ORDER } from "./editorial/sul";
-import { formatListPrice, formatPrice } from "./format";
+import { discountPercent, formatListPrice, formatPrice } from "./format";
 import { REGIONS, STATE_CAPITAL_SLUG, STATE_NAMES, type RegionSlug } from "./geo/regions";
 import { localitiesOfRegion, stateBrowseLabel, stateLocalityCounts, stateLocalityGroups, stateLocalityLabel, stateLocalityShortcuts } from "./geo/localities";
 import { SHOWCASE } from "./site";
@@ -86,7 +86,7 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const ddd: CarouselItem[] = allDdd.flatMap((d) => {
     const href = purchaseUrl(d.product);
     return href
-      ? [{ id: d.product.inkProductId, name: d.regionName, eyebrow: d.code, context: STATE_NAMES[d.uf], price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), rawPrice: d.product.price, state: d.uf, imageUrl: d.product.imageUrl, href }]
+      ? [{ id: d.product.inkProductId, name: d.regionName, eyebrow: d.code, context: STATE_NAMES[d.uf], price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), discount: discountPercent(d.product), rawPrice: d.product.price, state: d.uf, imageUrl: d.product.imageUrl, href }]
       : [];
   });
 
@@ -96,17 +96,17 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const falaAll: Fala[] = [];
   for (const d of dizeresWithContext(merch)) {
     const href = purchaseUrl(d.product);
-    if (href) falaAll.push({ id: d.product.inkProductId, uf: d.uf, state: d.uf, name: d.text, context: d.context, price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), rawPrice: d.product.price, imageUrl: d.product.imageUrl, href });
+    if (href) falaAll.push({ id: d.product.inkProductId, uf: d.uf, state: d.uf, name: d.text, context: d.context, price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), discount: discountPercent(d.product), rawPrice: d.product.price, imageUrl: d.product.imageUrl, href });
   }
   for (const s of lore.byState) {
     const href = purchaseUrl(s.product);
-    if (href) falaAll.push({ id: s.product.inkProductId, uf: s.uf, state: s.uf, name: s.text, context: STATE_NAMES[s.uf], price: formatPrice(s.product.price), listPrice: formatListPrice(s.product), rawPrice: s.product.price, imageUrl: s.product.imageUrl, href });
+    if (href) falaAll.push({ id: s.product.inkProductId, uf: s.uf, state: s.uf, name: s.text, context: STATE_NAMES[s.uf], price: formatPrice(s.product.price), listPrice: formatListPrice(s.product), discount: discountPercent(s.product), rawPrice: s.product.price, imageUrl: s.product.imageUrl, href });
   }
   for (const [cityId, items] of lore.byCity) {
     for (const item of items) {
       if (item.kind !== "expressao") continue;
       const href = purchaseUrl(item.product);
-      if (href) falaAll.push({ id: item.product.inkProductId, uf: item.city.uf, state: item.city.uf, name: item.text, context: `${item.city.name} · ${item.city.uf}`, price: formatPrice(item.product.price), listPrice: formatListPrice(item.product), rawPrice: item.product.price, imageUrl: item.product.imageUrl, href });
+      if (href) falaAll.push({ id: item.product.inkProductId, uf: item.city.uf, state: item.city.uf, name: item.text, context: `${item.city.name} · ${item.city.uf}`, price: formatPrice(item.product.price), listPrice: formatListPrice(item.product), discount: discountPercent(item.product), rawPrice: item.product.price, imageUrl: item.product.imageUrl, href });
     }
     void cityId;
   }
@@ -148,7 +148,7 @@ export function getRegionHome(region: RegionSlug): RegionHome {
 
   const recreations: CarouselItem[] = recreationProducts(merch).flatMap(({ product, theme }) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), context: theme, price: formatPrice(product.price), listPrice: formatListPrice(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), context: theme, price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
   // terraProducts already balances across the three states (see its own doc comment), but which UF a given
@@ -156,12 +156,12 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   // label text.
   const terra: CarouselItem[] = terraProducts(merch, ufs).flatMap(({ product, label }) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: label, price: formatPrice(product.price), listPrice: formatListPrice(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ id: product.inkProductId, name: label, price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
   const feitoParaVoce: CarouselItem[] = lendaProducts(merch).flatMap((product) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").replace(/\s*\|\s*Lenda$/i, "").trim(), context: "Lenda", price: formatPrice(product.price), listPrice: formatListPrice(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").replace(/\s*\|\s*Lenda$/i, "").trim(), context: "Lenda", price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
   return { cityCount: covered.size, syncedAt: catalog.syncedAt, showcase, heroFamilies, ddd, fala, states, terra, recreations, feitoParaVoce, campaignCrops };

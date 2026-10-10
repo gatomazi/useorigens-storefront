@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { trackGoToInk, trackGoToUmaPenca } from "@/lib/analytics/track";
+import type { ProductTags } from "@/lib/site-config/schema";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
 import { ProductPhoto } from "./ProductPhoto";
 import { PriceText } from "./PriceText";
@@ -53,7 +54,7 @@ export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllH
  * The whole block is the card's single link: no nested links, and the global focus ring outlines it for keyboard users.
  */
 const frame = (dark: boolean) =>
-  `group flex h-full flex-col overflow-hidden rounded-lg border bg-[var(--card-fill)] transition-colors ${dark ? "border-white/25 hover:border-white/55" : "border-black/15 hover:border-black/35"}`;
+  `group relative flex h-full flex-col overflow-hidden rounded-lg border bg-[var(--card-fill)] transition-colors ${dark ? "border-white/25 hover:border-white/55" : "border-black/15 hover:border-black/35"}`;
 /** Name, price and button: 12px of padding on phones, 16px from tablets up. */
 const INFO = "flex grow flex-col p-3 md:p-4";
 /** Up to two lines (the full name stays in the DOM). No room is reserved under a short name: see `FOOT`. */
@@ -64,6 +65,24 @@ const NAME = "line-clamp-2 text-[0.9375rem] font-medium leading-[1.3] md:text-ba
  * neighbour whose name takes two lines).
  */
 const FOOT = "mt-auto pt-1";
+
+/** A notch smaller on phones, so a discount and a short own tag share one line instead of stacking over the print. */
+const TAG = "px-1.5 py-0.5 text-[0.625rem] font-bold uppercase leading-[1.15] tracking-[0.04em] text-white sm:px-2 sm:py-1 sm:text-[0.6875rem] sm:tracking-[0.08em]";
+
+/**
+ * The section's tags over the top-left corner of the picture (`layout.tags`): the "% OFF" of a product on promotion first, in the region's colour,
+ * then the section's own text in ink, the same family as the "Personalizável" tag. Inside the card's link, so a screen reader hears them with
+ * the product; never zoomed with the photo.
+ */
+function CardTags({ discount, text }: { discount?: number; text?: string }) {
+  if (!discount && !text) return null;
+  return (
+    <span className="pointer-events-none absolute left-2 top-2 z-[1] flex max-w-[calc(100%-1rem)] flex-wrap items-start gap-1">
+      {discount !== undefined && <span className={`${TAG} bg-region-primary`}>{discount}% OFF</span>}
+      {text && <span className={`${TAG} bg-ink`}>{text}</span>}
+    </span>
+  );
+}
 
 /**
  * The section's buy button at the foot of a card, in the store's own CTA shape (`.btn`: rectangular, solid, uppercase). It is NOT a second link: it sits
@@ -116,7 +135,7 @@ export function CustomizerCardLink({ card, poster, dark, sizes, asButton = false
  * `buyLabel`: the section's buy button ("Ver produto", or the text the owner set) at the foot of the card. The picture is contained, never cropped:
  * INK mockups (800×820) fill the frame exactly; a photo of another shape keeps its proportions on the frame's grey.
  */
-export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSection, buyLabel }: { item: CarouselItem; poster: boolean; dark: boolean; sizes: string; priority: boolean; sourceSection: string; buyLabel?: string }) {
+export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSection, buyLabel, tags }: { item: CarouselItem; poster: boolean; dark: boolean; sizes: string; priority: boolean; sourceSection: string; buyLabel?: string; tags?: ProductTags }) {
   return (
     <a
       href={item.href}
@@ -137,6 +156,7 @@ export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSec
         priority={priority}
         className="photo-contain"
       />
+      <CardTags discount={tags?.discount ? item.discount : undefined} text={tags?.text} />
       <div className={INFO}>
         {item.eyebrow && <p className="mb-1 font-display text-[1.6rem] font-extrabold leading-none">{item.eyebrow}</p>}
         <h3 className={NAME}>{item.name}</h3>

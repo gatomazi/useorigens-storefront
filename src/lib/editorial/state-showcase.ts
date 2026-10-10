@@ -4,7 +4,7 @@ import { purchaseUrl } from "../catalog/commerce";
 import { DESIGN_FAMILIES } from "../catalog/families";
 import type { Catalog } from "../catalog/repository";
 import type { MerchProduct } from "../catalog/types";
-import { formatListPrice, formatPrice } from "../format";
+import { discountPercent, formatListPrice, formatPrice } from "../format";
 import type { City } from "../geo/cities";
 import { terraProducts } from "./terra";
 
@@ -48,7 +48,7 @@ export function stateShowcase(params: {
         id: entry.primary.inkProductId,
         name: entry.family.name,
         context: city.name,
-        price: formatPrice(entry.primary.price), listPrice: formatListPrice(entry.primary),
+        price: formatPrice(entry.primary.price), listPrice: formatListPrice(entry.primary), discount: discountPercent(entry.primary),
         rawPrice: entry.primary.price,
         state: uf,
         imageUrl: entry.primary.imageUrl,
@@ -69,7 +69,7 @@ export function stateShowcase(params: {
     .filter((t) => t.uf === uf)
     .flatMap((t): CarouselItem[] => {
       const href = purchaseUrl(t.product);
-      return href ? [{ id: t.product.inkProductId, name: t.label, price: formatPrice(t.product.price), listPrice: formatListPrice(t.product), rawPrice: t.product.price, state: uf, imageUrl: t.product.imageUrl, href }] : [];
+      return href ? [{ id: t.product.inkProductId, name: t.label, price: formatPrice(t.product.price), listPrice: formatListPrice(t.product), discount: discountPercent(t.product), rawPrice: t.product.price, state: uf, imageUrl: t.product.imageUrl, href }] : [];
     });
 
   // Interleave so the row reads as "this state", not "one city's products with a state item tacked on": the

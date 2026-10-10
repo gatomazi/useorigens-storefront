@@ -259,6 +259,7 @@ function CarouselSection({
       viewAllLabel={s.cta?.label}
       sourceSection={SOURCES[s.analyticsSource]}
       buyLabel={s.layout.buyLabel}
+      tags={s.layout.tags}
     />
   );
 

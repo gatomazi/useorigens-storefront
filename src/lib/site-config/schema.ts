@@ -96,7 +96,14 @@ export const MAX_FEATURED = 3;
  */
 export const PRODUCT_DISPLAYS = ["carousel", "grid"] as const;
 export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
-export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string };
+/**
+ * Tags drawn on the product pictures of a section (product sections only; absent = none). `discount`: "18% OFF" on every product INK (or Uma Penca)
+ * has on promotion right now, worked out from the two prices the store sent, never typed. `text`: the section's own tag on every product card
+ * ("Black Friday", "Lançamento"), the same for all of them.
+ */
+export type ProductTags = { discount?: true; text?: string };
+export const MAX_TAG_TEXT = 24;
+export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string; tags?: ProductTags };
 export const DEFAULT_BUY_LABEL = "Ver produto";
 export const MAX_BUY_LABEL = 20;
 /** Cards of a product section: a carousel scrolls through at most 24; a grid lays out up to 48 (every product an INK collection keeps for showcases). */
@@ -473,6 +480,17 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     } else {
       if (l.display !== undefined && (v.template !== "product-carousel" || !(PRODUCT_DISPLAYS as readonly unknown[]).includes(l.display))) c.fail(`${path}.layout.display`, `product sections only: ${PRODUCT_DISPLAYS.join(" | ")}`);
       if (l.buyLabel !== undefined && (v.template !== "product-carousel" || !isStr(l.buyLabel, MAX_BUY_LABEL) || l.buyLabel.trim() !== l.buyLabel)) c.fail(`${path}.layout.buyLabel`, `product sections only: 1..${MAX_BUY_LABEL} chars, no leading or trailing spaces`);
+      if (l.tags !== undefined) {
+        const t = l.tags;
+        const ok =
+          v.template === "product-carousel" &&
+          isRecord(t) &&
+          Object.keys(t).every((k) => k === "discount" || k === "text") &&
+          (t.discount === undefined || t.discount === true) &&
+          (t.text === undefined || (isStr(t.text, MAX_TAG_TEXT) && t.text.trim() === t.text)) &&
+          (t.discount === true || t.text !== undefined);
+        if (!ok) c.fail(`${path}.layout.tags`, `product sections only: { discount?: true, text?: 1..${MAX_TAG_TEXT} chars }, at least one`);
+      }
     }
   }
   // A grid shows more cards than a carousel scrolls through: the ceiling follows the display.
