@@ -198,7 +198,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     const tone = str(f, "layout_tone") === "dark" ? "dark" : "light";
     const surfaceRaw = str(f, "layout_surface");
     const surface = surfaceRaw === "paper" || surfaceRaw === "region-primary" ? surfaceRaw : "plain";
-    // "Botão Comprar": the checkbox and its text (empty = "Comprar"); a form without the block keeps what is saved.
+    // The buy button: the checkbox and its text (empty = "Ver produto"); a form without the block keeps what is saved.
     const buyLabel = f.get("layout_buy_present") === null ? section.layout?.buyLabel : f.get("layout_buy") !== null ? str(f, "layout_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL : undefined;
     patch.layout = { variant, tone, surface, ...(display === "grid" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}) };
   }

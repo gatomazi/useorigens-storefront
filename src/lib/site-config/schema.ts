@@ -91,13 +91,13 @@ export const MAX_FEATURED = 3;
 /**
  * `display` (product sections only): "carousel" = one row that scrolls sideways (the default, also when absent); "grid" = every card laid out on the page,
  * two per row on phones, three on tablets and four on desktop, like a category page.
- * `buyLabel` (product sections only): a buy button under every product card, with this text ("Comprar"); absent = no button. It is part of the card's
- * own link, so it opens the same store page and reports the same click.
+ * `buyLabel` (product sections only): a buy button under every product card, with this text; absent = no button. It is part of the card's own
+ * link, so it opens the same store page (where size and colour are chosen) and reports the same click. The suggested text says just that: "Ver produto".
  */
 export const PRODUCT_DISPLAYS = ["carousel", "grid"] as const;
 export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
 export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string };
-export const DEFAULT_BUY_LABEL = "Comprar";
+export const DEFAULT_BUY_LABEL = "Ver produto";
 export const MAX_BUY_LABEL = 20;
 /** Cards of a product section: a carousel scrolls through at most 24; a grid lays out up to 48 (every product an INK collection keeps for showcases). */
 export const MIN_SECTION_PRODUCTS = 3;

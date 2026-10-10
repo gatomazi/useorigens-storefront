@@ -407,8 +407,8 @@ export function SectionEditorForm({
             </div>
             <div className="space-y-2 border border-black/20 p-3">
               <input type="hidden" name="layout_buy_present" value="1" />
-              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="layout_buy" checked={buyOn} onChange={(e) => setBuyOn(e.target.checked)} /> Botão “Comprar” em cada card de produto</label>
-              <p className="a-muted text-[0.8125rem]">Um botão no pé de cada card, alinhado em todos. Ele faz parte do próprio card: abre a mesma página do produto na loja e conta o mesmo clique. O card personalizável mostra o texto do botão dele no mesmo formato.</p>
+              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="layout_buy" checked={buyOn} onChange={(e) => setBuyOn(e.target.checked)} /> Botão de compra em cada card de produto</label>
+              <p className="a-muted text-[0.8125rem]">Um botão no pé de cada card, alinhado em todos. Ele faz parte do próprio card: abre a mesma página do produto na loja (onde a pessoa escolhe tamanho e cor) e conta o mesmo clique. O texto sugerido é “{DEFAULT_BUY_LABEL}”; dá para trocar por “Comprar”, por exemplo. O card personalizável mostra o texto do botão dele no mesmo formato.</p>
               {buyOn && (
                 <div className="max-w-xs">
                   <label className="a-label" htmlFor="layout_buy_label">Texto do botão</label>
