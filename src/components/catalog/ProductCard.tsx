@@ -41,10 +41,36 @@ export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllH
   );
 }
 
-/** The reserved first card ("personalize yours on this model"): a link inside the region, never a checkout. */
-export function CustomizerCardLink({ card, poster, dark, sizes }: { card: LeadingCard; poster: boolean; dark: boolean; sizes: string }) {
+/**
+ * The call to action at the foot of a card, drawn as a button (the section's "Botão Comprar"). It is NOT a second link: it sits inside the card's own
+ * link, so it opens the same page and the click is reported once, exactly as before. Pushed to the bottom of the card, so the buttons of a row line up
+ * whatever the length of the names above them.
+ */
+function CardButton({ label, dark, icon = false }: { label: string; dark: boolean; icon?: boolean }) {
   return (
-    <a href={card.href} className="group block" draggable={false} aria-label={`${card.title}. Personalize: você escolhe as palavras (não é uma camiseta pronta da loja).`}>
+    <span className="mt-auto block pt-3">
+      <span
+        className={`flex min-h-11 w-full items-center justify-center gap-2 border-2 px-3 text-center text-[0.8125rem] font-bold uppercase leading-tight tracking-[0.06em] transition-colors ${dark ? "border-white bg-white text-black group-hover:bg-transparent group-hover:text-white" : "border-ink bg-ink text-white group-hover:bg-transparent group-hover:text-ink"}`}
+      >
+        {icon && (
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5.5 8h13l-1.2 12H6.7L5.5 8z" />
+            <path d="M9 8a3 3 0 0 1 6 0" />
+          </svg>
+        )}
+        {label}
+      </span>
+    </span>
+  );
+}
+
+/**
+ * The reserved first card ("personalize yours on this model"): a link inside the region, never a checkout. `asButton`: the section shows buy buttons, so
+ * this card's own call ("Personalizar") takes the same button shape, at the same height as theirs.
+ */
+export function CustomizerCardLink({ card, poster, dark, sizes, asButton = false }: { card: LeadingCard; poster: boolean; dark: boolean; sizes: string; asButton?: boolean }) {
+  return (
+    <a href={card.href} className={asButton ? "group flex h-full flex-col" : "group block"} draggable={false} aria-label={`${card.title}. Personalize: você escolhe as palavras (não é uma camiseta pronta da loja).`}>
       <span className={`photo ${poster ? "photo-poster" : ""}`}>
         {/* eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin (never through the image optimizer) */}
         <img
@@ -62,18 +88,22 @@ export function CustomizerCardLink({ card, poster, dark, sizes }: { card: Leadin
       <div className="mt-3">
         <h3 className="t-h3 link-line inline">{card.title}</h3>
         {card.description && <p className={`t-place mt-1 text-[0.95rem] ${dark ? "text-white/80" : "text-ink-mute"}`}>{card.description}</p>}
-        <p className="t-small mt-1 font-semibold underline decoration-region-accent decoration-2 underline-offset-4">{card.button} →</p>
+        {!asButton && <p className="t-small mt-1 font-semibold underline decoration-region-accent decoration-2 underline-offset-4">{card.button} →</p>}
       </div>
+      {asButton && <CardButton label={card.button} dark={dark} />}
     </a>
   );
 }
 
-/** One product: photo, name and price, opening the real store page (INK or Uma Penca) and reporting the click with the section's `sourceSection`. */
-export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSection }: { item: CarouselItem; poster: boolean; dark: boolean; sizes: string; priority: boolean; sourceSection: string }) {
+/**
+ * One product: photo, name and price, opening the real store page (INK or Uma Penca) and reporting the click with the section's `sourceSection`.
+ * `buyLabel`: the section's buy button ("Comprar") at the foot of the card.
+ */
+export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSection, buyLabel }: { item: CarouselItem; poster: boolean; dark: boolean; sizes: string; priority: boolean; sourceSection: string; buyLabel?: string }) {
   return (
     <a
       href={item.href}
-      className="group block"
+      className={buyLabel ? "group flex h-full flex-col" : "group block"}
       draggable={false}
       onClick={() =>
         item.umaPenca
@@ -95,6 +125,7 @@ export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSec
         {item.context && <p className={`t-place mt-1 text-[0.95rem] ${dark ? "text-white/80" : "text-ink-mute"}`}>{item.context}</p>}
         {item.price && <p className="t-small mt-1 font-semibold">{item.price}</p>}
       </div>
+      {buyLabel && <CardButton label={buyLabel} dark={dark} icon />}
     </a>
   );
 }

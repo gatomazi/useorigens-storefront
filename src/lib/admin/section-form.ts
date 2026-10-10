@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type Section, type Source } from "./contract";
+import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_BUY_LABEL, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { ARTICLE_KINDS } from "../umapenca/types";
@@ -198,7 +198,9 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     const tone = str(f, "layout_tone") === "dark" ? "dark" : "light";
     const surfaceRaw = str(f, "layout_surface");
     const surface = surfaceRaw === "paper" || surfaceRaw === "region-primary" ? surfaceRaw : "plain";
-    patch.layout = { variant, tone, surface, ...(display === "grid" ? { display } : {}) };
+    // "Botão Comprar": the checkbox and its text (empty = "Comprar"); a form without the block keeps what is saved.
+    const buyLabel = f.get("layout_buy_present") === null ? section.layout?.buyLabel : f.get("layout_buy") !== null ? str(f, "layout_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL : undefined;
+    patch.layout = { variant, tone, surface, ...(display === "grid" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}) };
   }
   if (section.template === "page-hero") {
     patch.cta = parseCta(f);

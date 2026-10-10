@@ -36,6 +36,16 @@ Toda seção de produtos (coleção da INK, Uma Penca ou curadoria editorial), n
 - A ordem manual e os produtos escondidos da coleção valem igual nos dois modos.
 - **Adicionar seção** (home e páginas) já pergunta a exibição ao criar; a lista de seções mostra "Grade de produtos".
 
+### Botão "Comprar" nos cards (`layout.buyLabel`, `feature/botao-comprar-cards`)
+
+Em Layout, toda seção de produtos (carrossel ou grade, home e páginas) pode ligar **Botão “Comprar” em cada card de produto**, com o texto editável (até 20 caracteres; vazio vira "Comprar").
+
+- `layout.buyLabel`; ausente = sem botão (seções existentes não mudam).
+- O botão é parte do próprio link do card (não é um segundo link): abre a mesma página do produto na INK ou na Uma Penca e dispara o mesmo `GoToInk`/`GoToPenca`, uma vez.
+- Fica no pé do card, alinhado em toda a linha mesmo quando os nomes quebram em duas linhas. Segue o tom da seção: preto em fundo claro, branco em fundo escuro (inclusive na página com fundo escuro próprio).
+- O primeiro card personalizável, quando existe, mostra o texto do botão dele ("Personalizar") no mesmo formato.
+- A lista de seções mostra o selo "Botão “Comprar”". Capturas: [`screenshots/botao-comprar-cards/`](../screenshots/botao-comprar-cards/).
+
 ## Fundo da página (`page.backdrop`, `feature/grade-produtos-fundo-pagina`)
 
 Hotpages e categorias-pai têm o card **Fundo da página** (página temática: Black Friday, Natal…): cor da página inteira, cor do texto e, opcional, uma imagem de **pattern** repetida por cima (tamanho de cada repetição 40–600 px, intensidade 5–100%). Só a página muda; a home e o resto da loja não.
