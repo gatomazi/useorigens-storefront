@@ -12,7 +12,7 @@ import { PriceText } from "./PriceText";
  */
 
 /**
- * Title, intro and the small "Ver todos" link of a product section, on one row with `children` (the carousel's arrows). `viewAllHref` is a real store
+ * Title, intro and the "Ver todos" button (outlined, quieter than the cards' own) of a product section, on one row with `children` (the carousel's arrows). `viewAllHref` is a real store
  * URL, verified live (never guessed — see editorial/collections.ts); if the title is too long to share the row, the link wraps to its own line underneath.
  */
 export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllHref, viewAllLabel, children }: { labelledBy: string; title: string; intro?: string; dark: boolean; viewAllHref?: string; viewAllLabel: string; children?: ReactNode }) {
@@ -24,13 +24,16 @@ export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllH
         </h2>
         {intro && <p className={`t-body mt-3 ${dark ? "text-white/85" : "text-ink-soft"}`}>{intro}</p>}
       </div>
-      <div className="flex shrink-0 items-center gap-4">
+      {/* Phones: its own row under the title, "Ver todos" at the start and the carousel arrows (`children`, pushed by `ml-auto`) at the end. */}
+      <div className="flex w-full shrink-0 items-center gap-4 sm:w-auto">
         {viewAllHref && (
+          // An outlined button in the store's CTA shape (and the carousel arrows' height), quieter than the cards' filled buttons: it reads as a
+          // control, not as a line of text, and fills only under the pointer.
           <a
             href={viewAllHref}
-            className={`group inline-flex min-h-11 items-center gap-1.5 text-[0.9375rem] font-semibold transition-colors ${dark ? "text-white hover:text-region-accent" : "text-ink hover:text-region-primary"}`}
+            className={`group inline-flex h-11 items-center gap-2 border-2 px-4 text-[0.8125rem] font-bold uppercase tracking-[0.04em] transition-colors sm:h-12 ${dark ? "border-white/40 text-white hover:border-white hover:bg-white hover:text-ink" : "border-ink/25 text-ink hover:border-ink hover:bg-ink hover:text-white"}`}
           >
-            <span className="link-line inline">{viewAllLabel}</span>
+            {viewAllLabel}
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14M13 6l6 6-6 6" />
             </svg>

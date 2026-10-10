@@ -51,12 +51,12 @@ function Arrow({ direction, disabled, onClick, dark }: { direction: "prev" | "ne
 const CARD_SIZES = "(min-width: 1280px) 19vw, (min-width: 1024px) 22vw, (min-width: 768px) 27vw, (min-width: 640px) 34vw, 62vw";
 
 /**
- * Touch-first carousel. No autoplay; arrows are real buttons (hidden on phones, where swipe is natural);
- * drag and swipe work. The title lives here so arrows and heading share one row on every width.
+ * Touch-first carousel. No autoplay; drag and swipe work, and the arrows are real buttons on every width: on a phone they are
+ * the visible cue that more products wait to the side (next to the next card's edge peeking in), not only a mouse affordance. The title lives here so arrows and heading share one row on every width.
  *
  * `viewAllHref`, when given, is a real store collection URL, verified live (never guessed — see
- * editorial/collections.ts). It renders as a small "Ver todos" text link next to the title, on every width
- * (never a big button); if the title is too long to share the row, it wraps to its own line underneath.
+ * editorial/collections.ts). It renders as an outlined "Ver todos" button next to the title, on every width (quieter than
+ * the cards' filled buttons, the arrows' height); if the title is too long to share the row, it wraps to its own line underneath.
  */
 export function ProductCarousel({
   items,
@@ -120,7 +120,7 @@ export function ProductCarousel({
   return (
     <div role="region" aria-roledescription="carrossel" aria-labelledby={labelledBy}>
       <ProductSectionHeading labelledBy={labelledBy} title={title} intro={intro} dark={dark} viewAllHref={viewAllHref} viewAllLabel={viewAllLabel}>
-        <div className="hidden shrink-0 gap-2 sm:flex">
+        <div className="ml-auto flex shrink-0 gap-2">
           <Arrow dark={dark} direction="prev" disabled={!canPrev} onClick={() => embla?.scrollPrev()} />
           <Arrow dark={dark} direction="next" disabled={!canNext} onClick={() => embla?.scrollNext()} />
         </div>
