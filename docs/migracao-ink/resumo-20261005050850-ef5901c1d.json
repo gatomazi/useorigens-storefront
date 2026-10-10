@@ -1,0 +1,331 @@
+{
+  "mapaVersao": 1,
+  "runId": "20261005050850-ef5901c1d",
+  "geradoEm": "2026-10-05T05:08:50.829Z",
+  "corteMigracao": {
+    "menorId": 4938261,
+    "inicio": "2026-09-12T13:53:59.577Z"
+  },
+  "estado": {
+    "arquivo": "data/unificado/estado/migracao-estado-f5901c1ddcfb1dbf.jsonl",
+    "sha256": "f5901c1ddcfb1dbfe7e659bcf853c7a1906b252091399026e166c793d1dafe16",
+    "linhas": 66004,
+    "linhasInvalidas": 0
+  },
+  "leitura": {
+    "use-sul": {
+      "paginas": 1607,
+      "totalPages": 1607,
+      "totalCountInk": 160662,
+      "produtosUnicos": 160662,
+      "repetidosNaPaginacao": 0,
+      "completa": true
+    },
+    "use-norte": {
+      "paginas": 309,
+      "totalPages": 309,
+      "totalCountInk": 30816,
+      "produtosUnicos": 30816,
+      "repetidosNaPaginacao": 0,
+      "completa": true
+    },
+    "use-centro": {
+      "paginas": 385,
+      "totalPages": 385,
+      "totalCountInk": 38403,
+      "produtosUnicos": 38403,
+      "repetidosNaPaginacao": 0,
+      "completa": true
+    }
+  },
+  "colecoesLidasEm": "2026-10-05T02:46:49.645Z",
+  "estadoVsSul": {
+    "itens": 7553,
+    "itensComBase": 7553,
+    "itensConcluidos": 1854,
+    "idsVigentes": 56863,
+    "idsVigentesPresentesNaSul": 56863,
+    "idsVigentesAusentesNaSul": 0,
+    "exemplosAusentes": []
+  },
+  "sulPorRegiao": {
+    "desconhecida": {
+      "pecas": 110,
+      "visiveis": 11,
+      "ocultas": 99,
+      "semImagem": 0,
+      "desenho": 0,
+      "merch": 0,
+      "excluido": 0,
+      "doEstado": 0,
+      "problemaVariantes": 0
+    },
+    "norte": {
+      "pecas": 35981,
+      "visiveis": 0,
+      "ocultas": 35981,
+      "semImagem": 4277,
+      "desenho": 35981,
+      "merch": 0,
+      "excluido": 0,
+      "doEstado": 26496,
+      "problemaVariantes": 0
+    },
+    "centro-oeste": {
+      "pecas": 39554,
+      "visiveis": 0,
+      "ocultas": 39554,
+      "semImagem": 3855,
+      "desenho": 39550,
+      "merch": 0,
+      "excluido": 4,
+      "doEstado": 30367,
+      "problemaVariantes": 1
+    },
+    "sul": {
+      "pecas": 85017,
+      "visiveis": 9834,
+      "ocultas": 75183,
+      "semImagem": 20,
+      "desenho": 82927,
+      "merch": 1658,
+      "excluido": 432,
+      "doEstado": 0,
+      "problemaVariantes": 0
+    }
+  },
+  "diagnosticosSemRegiao": {
+    "desconhecida: produto não geográfico sem coleção regional": 100,
+    "desconhecida: sem estado do migrador nem coleção regional; o nome sugere sul (…) — não basta para classificar": 10
+  },
+  "mapaPorRegiao": {
+    "norte": {
+      "pecasOrigem": 30816,
+      "desenhosOrigem": 3591,
+      "variantesOrigem": 1033242,
+      "status:ausente": 24,
+      "visiveisOrigem": 3655,
+      "visiveisOrigemNaoConfirmados:ausente": 4,
+      "status:confirmado": 30575,
+      "confirmadosOcultosNoDestino": 30575,
+      "confirmadosPrecoDivergente": 28838,
+      "confirmadosImagemPendente": 2878,
+      "confirmadosQueEramVisiveis": 3587,
+      "status:sem-chave": 197,
+      "status:ambiguo": 20,
+      "visiveisOrigemNaoConfirmados:ambiguo": 2,
+      "visiveisOrigemNaoConfirmados:sem-chave": 62,
+      "desenhosComAlgumaPecaConfirmada": 3586
+    },
+    "centro-oeste": {
+      "pecasOrigem": 38403,
+      "desenhosOrigem": 3835,
+      "variantesOrigem": 1222949,
+      "status:sem-chave": 835,
+      "visiveisOrigem": 3923,
+      "visiveisOrigemNaoConfirmados:sem-chave": 85,
+      "status:ausente": 262,
+      "visiveisOrigemNaoConfirmados:ausente": 27,
+      "status:confirmado": 37306,
+      "confirmadosOcultosNoDestino": 37306,
+      "confirmadosPrecoDivergente": 36847,
+      "confirmadosImagemPendente": 3865,
+      "confirmadosQueEramVisiveis": 3811,
+      "confirmadosProblemaVariantes": 1,
+      "desenhosComAlgumaPecaConfirmada": 3808
+    }
+  },
+  "motivosPorRegiao": {
+    "norte": {
+      "ausente": [
+        [
+          "item <chave> não aparece no estado do migrador (não rodado, bloqueado ou fora do acervo)",
+          20
+        ],
+        [
+          "variante \"…\" fora do escopo do migrador (só cria a base)",
+          4
+        ]
+      ],
+      "ambiguo": [
+        [
+          "COLISÃO: 2 peças antigas (use-norte:#, use-norte:#) apontam para #",
+          14
+        ],
+        [
+          "item <chave> no estado sem id para o tipo 165; vínculo pelo catálogo; COLISÃO: 2 peças antigas (use-norte:#, use-norte:#) apontam para #",
+          2
+        ],
+        [
+          "item <chave> no estado sem id para o tipo 119; vínculo pelo catálogo; COLISÃO: 2 peças antigas (use-norte:#, use-norte:#) apontam para #",
+          2
+        ],
+        [
+          "item <chave> no estado sem id para o tipo 8; vínculo pelo catálogo; COLISÃO: 2 peças antigas (use-norte:#, use-norte:#) apontam para #",
+          2
+        ]
+      ],
+      "semChave": [
+        [
+          "merch/linha não geográfica: o migrador não copia; sem chave de identidade documentada",
+          186
+        ],
+        [
+          "desenho sem cidade resolvida na origem: city-not-found",
+          11
+        ]
+      ]
+    },
+    "centro-oeste": {
+      "ausente": [
+        [
+          "item <chave> não aparece no estado do migrador (não rodado, bloqueado ou fora do acervo)",
+          150
+        ],
+        [
+          "variante \"…\" fora do escopo do migrador (só cria a base)",
+          112
+        ]
+      ],
+      "ambiguo": [],
+      "semChave": [
+        [
+          "merch/linha não geográfica: o migrador não copia; sem chave de identidade documentada",
+          789
+        ],
+        [
+          "desenho sem cidade resolvida na origem: city-not-found",
+          42
+        ],
+        [
+          "desenho sem cidade resolvida na origem: uf-mismatch (MG)",
+          4
+        ]
+      ]
+    }
+  },
+  "precosDivergentes": {
+    "Hoodie Moletom: 199.0 → 209.9": 6722,
+    "Cropped Moletom: 159.0 → 169.9": 6721,
+    "Suéter Moletom: 189.0 → 179.9": 6710,
+    "Camiseta Infantil: 96.0 → 99.9": 6256,
+    "Body Infantil: 96.0 → 89.9": 6248,
+    "Regata: 96.0 → 99.9": 6224,
+    "Cropped: 94.0 → 99.9": 6222,
+    "Camiseta Oversized: 129.0 → 139.9": 5827,
+    "Camiseta Algodão Peruano: 129.9 → 139.9": 2847,
+    "Camiseta Algodão Peruano: 119.0 → 139.9": 2563,
+    "Camiseta: 99.9 → 109.9": 1887,
+    "Camiseta: 119.9 → 109.9": 1867,
+    "Camiseta: 114.9 → 109.9": 1827,
+    "Camiseta: 94.9 → 104.9": 909,
+    "Camiseta Oversized: 134.9 → 139.9": 893,
+    "Cropped: 92.0 → 99.9": 321,
+    "Camiseta Infantil: 92.0 → 99.9": 321,
+    "Regata: 92.0 → 99.9": 317,
+    "Body Infantil: 92.0 → 89.9": 311,
+    "Body Infantil: 91.0 → 89.9": 157,
+    "Camiseta Infantil: 89.0 → 99.9": 157,
+    "Regata: 93.9 → 99.9": 146,
+    "Cropped: 93.9 → 99.9": 146,
+    "Regata: 89.0 → 99.9": 38,
+    "Cropped: 89.0 → 99.9": 37,
+    "Camiseta Algodão Peruano: 129.99 → 139.9": 11
+  },
+  "sombra": {
+    "pecas": 14122,
+    "vinculos": 13824,
+    "merch": 244,
+    "excluidos": 54,
+    "simulados": 4289,
+    "foraPorImagem": 3264
+  },
+  "cobertura": {
+    "norte": {
+      "desenhosVisiveisHoje": 3584,
+      "desenhosNaSombra": 1944,
+      "emAmbos": 1930,
+      "soHoje": 1654,
+      "soHojePorFamiliaVariante": {
+        "gentilico/base": 450,
+        "legado/base": 450,
+        "feito-em/base": 449,
+        "coordenadas/base": 202,
+        "ponto-de-origem/base": 99,
+        "ponto-de-origem/localidade": 2,
+        "territorio/base": 2
+      },
+      "soNaSombra": 14,
+      "merchVisivelHoje": 60,
+      "merchNaSombra": 0
+    },
+    "centro-oeste": {
+      "desenhosVisiveisHoje": 3826,
+      "desenhosNaSombra": 2344,
+      "emAmbos": 2230,
+      "soHoje": 1596,
+      "soHojePorFamiliaVariante": {
+        "feito-em/base": 501,
+        "gentilico/base": 462,
+        "legado/base": 460,
+        "ponto-de-origem/base": 124,
+        "coordenadas/base": 30,
+        "tipografia/base": 7,
+        "ponto-de-origem/regional": 5,
+        "ponto-de-origem/localidade": 4,
+        "ponto-de-origem/legenda": 2,
+        "ponto-de-origem/explicativa": 1
+      },
+      "soNaSombra": 114,
+      "merchVisivelHoje": 81,
+      "merchNaSombra": 0
+    },
+    "sul": {
+      "vinculosProducaoHoje": 9531,
+      "vinculosSombraSul": 9535,
+      "soProducao": 1,
+      "soSombra": 5,
+      "exemplosSoProducao": [
+        "4969234|4321501|ponto-de-origem|localidade|sub:praia paraiso"
+      ]
+    }
+  },
+  "verificacoes": {
+    "integridade": {
+      "linhasNoMapa": 69219,
+      "produtosAntigosLidos": 69219,
+      "umaLinhaPorPecaAntiga": true,
+      "confirmadosSemIdNovo": 0,
+      "idNovoInexistenteNaSul": 0,
+      "confirmadosComTipoDiferente": 0,
+      "confirmadosEmOutraRegiao": 0
+    },
+    "colisoes": {
+      "confirmadosCompartilhandoIdNovo": 335,
+      "linhasComColisaoNoDestino": 1,
+      "linhasAmbiguas": 20
+    },
+    "separacaoRegional": {
+      "vinculosNaUfDeOutraRegiao": 0,
+      "merchSemRegiaoConfirmada": 0
+    },
+    "itensFechadosPeloComplemento": 5699,
+    "itensComAs10Pecas": 7553,
+    "estadoComplementar": {
+      "linhas": 24366,
+      "criado": 0,
+      "colisoesExcluidas": 0
+    },
+    "ativacaoCamisetaBase": {
+      "pronta": 4289,
+      "bloqueada": 3264
+    },
+    "producaoIntocada": {
+      "snapshotProducao": "/Users/izamoti/projects/useorigens/data/generated/catalog-snapshot.json",
+      "sha256Antes": "d409885405921bfbaa4e9649f154560996100e2ba5617cbd2892b7dff366d531",
+      "sha256Depois": "d409885405921bfbaa4e9649f154560996100e2ba5617cbd2892b7dff366d531",
+      "igual": true,
+      "saidaForaDaProducao": true
+    }
+  }
+}
