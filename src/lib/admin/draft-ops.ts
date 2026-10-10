@@ -16,11 +16,11 @@ import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-sc
 import type { PromotionsConfig } from "../site-config/promotions-schema";
 import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageKind, type PageSeo, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid">;
 
 export type DraftOp =
   | { type: "add-carousel"; title: string; source: Source; cta?: Section["cta"] }
-  /** Adds one of the structured home components (city styles, state chooser, regional campaign) with the defaults of THIS region. */
+  /** Adds one of the structured home components (city styles, state chooser, regional campaign, image grid) with the defaults of THIS region. */
   | { type: "add-structured"; template: StructuredTemplate }
   | { type: "duplicate"; id: string }
   | { type: "move"; id: string; direction: "up" | "down" }
@@ -159,8 +159,9 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       const created = structuredDefaults(op.template, doc.scope, id, new Set(sections.map((s) => s.anchor)));
       const check = validateSection(created);
       if (!check.ok) return { ok: false, errors: check.errors };
-      // City styles go right after the hero (as on the Sul home); the state chooser and campaigns go before the footer, campaigns last.
-      const at = op.template === "city-styles" ? 1 : ctx.mode === "page" ? next.length : next.length - 1;
+      // City styles go right after the hero (as on the Sul home); the state chooser and campaigns go before the footer, campaigns last; a grid goes
+      // where a new carousel goes (before the closing campaign).
+      const at = op.template === "city-styles" ? 1 : ctx.mode === "page" ? next.length : op.template === "image-grid" ? Math.max(1, next.length - 2) : next.length - 1;
       next.splice(at, 0, created);
       return withSections(next, id);
     }

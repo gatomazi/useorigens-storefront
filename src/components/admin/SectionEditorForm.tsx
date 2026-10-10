@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
+import { GridTilesEditor } from "@/components/admin/GridTilesEditor";
 import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
 import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
@@ -99,7 +100,7 @@ export function SectionEditorForm({
 }) {
   const a: Appearance = section.appearance;
   const isCarousel = section.template === "product-carousel";
-  const hasVisual = isCarousel || section.template === "hero" || section.template === "page-hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states";
+  const hasVisual = isCarousel || section.template === "hero" || section.template === "page-hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states" || section.template === "image-grid";
 
   const [tone, setTone] = useState<"light" | "dark">(isCarousel ? section.layout?.tone ?? "light" : section.template === "campaign" ? "dark" : section.template === "page-hero" ? section.layout?.tone ?? "dark" : "light");
   const [fillKind, setFillKind] = useState<"none" | "solid" | "gradient">(a.fill.kind);
@@ -197,6 +198,19 @@ export function SectionEditorForm({
             })}
           </div>
         </fieldset>
+      )}
+
+      {section.template === "image-grid" && (
+        <GridTilesEditor
+          scope={scope}
+          tiles={section.tiles ?? []}
+          layout={section.grid ?? { columns: 4, aspect: "portrait", labels: "below" }}
+          media={media}
+          thumbOf={(assetId) => previewSrc(byId.get(assetId))}
+          collections={publicEntries}
+          pages={pages}
+          anchors={anchors.filter((x) => x.anchor !== section.anchor)}
+        />
       )}
 
       {section.template === "hero" && featured && <HeroFeaturedProducts scope={scope} regionName={featured.regionName} mode={featured.mode} initial={featured.initial} eligible={featured.eligible} search={featured.search} />}

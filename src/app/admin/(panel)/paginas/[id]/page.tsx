@@ -19,7 +19,7 @@ import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { PAGE_KIND_LABEL, pageAsHomeDoc, pageHref } from "@/lib/site-config/pages";
 import { STRUCTURED_MODELS } from "@/lib/site-config/structured";
 
-const TYPE_LABEL: Record<string, string> = { "page-hero": "Topo da página", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha" };
+const TYPE_LABEL: Record<string, string> = { "page-hero": "Topo da página", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens" };
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("pt-BR") : "—");
 
 export default async function PageEditor({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {

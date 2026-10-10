@@ -2,6 +2,7 @@ import { isSameFill, SectionBackdrop } from "@/components/banners/SectionBackdro
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
 import { Campaign } from "@/components/home/Campaign";
+import { ImageGrid, type GridTileView } from "@/components/home/ImageGrid";
 import { PageHero } from "@/components/home/PageHero";
 import { RegionHero } from "@/components/home/RegionHero";
 import { Fragment } from "react";
@@ -159,6 +160,25 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
             );
           }
 
+          case "image-grid": {
+            if (!s.title || !s.grid) return null;
+            const tiles = gridTiles(s, media, slugOf, region);
+            if (tiles.length === 0) return null;
+            const visual = hasImage(bg) || bg.fill.kind !== "none";
+            return (
+              <ImageGrid
+                key={s.id}
+                anchor={s.anchor}
+                headingId={s.headingId}
+                title={s.title}
+                subtitle={s.subtitle}
+                tiles={tiles}
+                layout={s.grid}
+                backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
+              />
+            );
+          }
+
           case "footer":
             return null; // rendered by the region layout, never as a home section
         }
@@ -239,6 +259,23 @@ function CarouselSection({
       <div className="wrap py-14 lg:py-24">{carousel}</div>
     </section>
   );
+}
+
+/** The grid's tiles with a real link (a tile whose destination cannot be resolved here is left out, never a dead link); a picture the media table does not know falls back to the plain block. */
+function gridTiles(s: Section, media: PublishedBundle["media"], slugOf: SlugLookup | undefined, region: RegionSlug): GridTileView[] {
+  return (s.tiles ?? []).flatMap((t) => {
+    const href = destinationHref(t.dest, slugOf, region);
+    if (!href) return [];
+    const info = t.image ? media[t.image.assetId] : undefined;
+    const picture = info ? { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}) } : null;
+    return [{
+      label: t.label,
+      caption: t.caption,
+      href,
+      external: t.dest.kind === "external" || t.dest.kind === "ink-collection",
+      image: picture ? { mobile: picture, desktop: picture, alt: "" } : null,
+    }];
+  });
 }
 
 /**

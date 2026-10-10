@@ -16,6 +16,16 @@ Home · Seções → **Adicionar seção** agora tem dois grupos: **Produtos** (
 - Novas seções só entram no **rascunho** da região selecionada; ordenar, ocultar, editar, remover (as criadas aqui), restaurar e publicar usam o fluxo existente.
 - O `update` de seção passou a validar também as regras do documento inteiro (loja da região, rota da região), reportando só o que é daquela seção.
 
+### Grade de imagens (`image-grid`, `feature/secao-grid-imagens`)
+
+Quarto modelo em **Componentes da home** e em **Componentes** das páginas: blocos com imagem e nome, cada um levando a um destino próprio ("Compre por peça", "Coleções", subtemas de uma categoria-pai).
+
+- **Blocos** (`tiles`, de 2 a 12, na ordem da lista): nome (até 40), legenda opcional (até 80), imagem opcional da Mídia e destino. Os destinos são os mesmos de um botão (coleção pública da INK, hotpage/categoria publicada, caminho da própria região, seção da página, URL da loja Use) e passam pelas mesmas regras: loja e rotas só da região, página precisa estar publicada, coleção interna é recusada na publicação. Nada vem do catálogo, então um bloco nunca mostra preço ou contagem que possa ficar errado.
+- **Layout** (`grid`): colunas no desktop (2, 3 ou 4; no celular sempre 2), formato das imagens (retrato 4:5, quadrado, paisagem 4:3) e nome embaixo da imagem ou sobre ela (texto branco com degradê escuro).
+- **Sem imagem**, o bloco vira uma placa na cor da região com uma seta (serve para um "Ver tudo"). As imagens dos blocos são decorativas: o nome é o texto do link.
+- **Ao adicionar**: "Compre por peça" com dois blocos que existem em toda região (Camisetas → busca de estampas; Canecas e ecobags → Outros artigos), antes da campanha de fechamento. Pode haver várias grades.
+- Erros de preenchimento aparecem em português no editor ("Bloco 2: escolha para onde ele leva."). Um bloco cujo destino não resolve na loja é omitido (nunca link morto); sem blocos, a seção some.
+
 ## 2. Três produtos do hero por região (`feature/cms-hero-featured-products`)
 
 Home → Seções → **Hero** → bloco **Produtos em destaque**: três posições, buscar (cidade, UF, estilo ou ID) → **Usar aqui**, **Substituir**, **Limpar**, **↑/↓**. Cada ação salva o rascunho e atualiza a prévia 375/desktop; nada é publicado.
