@@ -277,8 +277,9 @@ test("given the global palette, when a region inherits it, then the region shows
 test("given a region that inherits, when an older release is restored, then it goes back to that release's look and the others stay as they are", async ({ page }) => {
   await chooseRegion(page, "Norte");
   await open(page, "/admin/publicar");
-  // The oldest release that touched Norte is its launch: no navigation, no palette.
-  const history = page.locator("tbody tr").filter({ has: page.getByRole("button", { name: "Restaurar Norte" }) });
+  // Norte's first launch: no navigation, no palette. Picked by its note, not as "the oldest release that touched Norte": in the full ordered
+  // run, earlier specs publish Norte while it is still a preview, and restoring one of those takes it off the air (a 404, correctly).
+  const history = page.locator("tbody tr").filter({ hasText: "Lançamento público de Norte" }).filter({ has: page.getByRole("button", { name: "Restaurar Norte" }) });
   await history.last().getByRole("button", { name: "Restaurar Norte" }).click();
   await expect(flash(page, /Norte: versão \d+ restaurada/)).toBeVisible({ timeout: 300_000 });
   await expect(await openPublicMenu(page, "norte"), "back to today's look").toHaveCSS("background-color", "rgb(35, 75, 80)");
