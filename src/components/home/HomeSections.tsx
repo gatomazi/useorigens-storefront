@@ -258,6 +258,7 @@ function CarouselSection({
       viewAllHref={href ?? undefined}
       viewAllLabel={s.cta?.label}
       sourceSection={SOURCES[s.analyticsSource]}
+      buyLabel={s.layout.buyLabel}
     />
   );
 

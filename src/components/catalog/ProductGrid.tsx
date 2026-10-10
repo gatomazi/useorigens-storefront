@@ -21,6 +21,7 @@ export function ProductGrid({
   viewAllLabel = "Ver todos",
   sourceSection,
   leading,
+  buyLabel,
 }: {
   leading?: LeadingCard;
   items: CarouselItem[];
@@ -33,6 +34,8 @@ export function ProductGrid({
   viewAllHref?: string;
   viewAllLabel?: string;
   sourceSection: string;
+  /** The section's buy button ("Comprar") under every product card; absent = none. */
+  buyLabel?: string;
 }) {
   const dark = tone === "dark";
   const cards = items.length + (leading ? 1 : 0);
@@ -42,12 +45,12 @@ export function ProductGrid({
       <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-5 md:grid-cols-3 md:gap-x-6 md:gap-y-10 lg:grid-cols-4">
         {leading && (
           <li key="customizer-card" data-customizer-card>
-            <CustomizerCardLink card={leading} poster={poster} dark={dark} sizes={CARD_SIZES} />
+            <CustomizerCardLink card={leading} poster={poster} dark={dark} sizes={CARD_SIZES} asButton={Boolean(buyLabel)} />
           </li>
         )}
         {items.map((item, i) => (
           <li key={item.id}>
-            <ProductCardLink item={item} poster={poster} dark={dark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} />
+            <ProductCardLink item={item} poster={poster} dark={dark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} />
           </li>
         ))}
       </ul>

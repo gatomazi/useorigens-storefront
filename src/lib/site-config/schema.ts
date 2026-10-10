@@ -91,10 +91,14 @@ export const MAX_FEATURED = 3;
 /**
  * `display` (product sections only): "carousel" = one row that scrolls sideways (the default, also when absent); "grid" = every card laid out on the page,
  * two per row on phones, three on tablets and four on desktop, like a category page.
+ * `buyLabel` (product sections only): a buy button under every product card, with this text ("Comprar"); absent = no button. It is part of the card's
+ * own link, so it opens the same store page and reports the same click.
  */
 export const PRODUCT_DISPLAYS = ["carousel", "grid"] as const;
 export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
-export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay };
+export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string };
+export const DEFAULT_BUY_LABEL = "Comprar";
+export const MAX_BUY_LABEL = 20;
 /** Cards of a product section: a carousel scrolls through at most 24; a grid lays out up to 48 (every product an INK collection keeps for showcases). */
 export const MIN_SECTION_PRODUCTS = 3;
 export const MAX_CAROUSEL_PRODUCTS = 24;
@@ -466,8 +470,9 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     const l = v.layout;
     if (!isRecord(l) || (l.variant !== "standard" && l.variant !== "poster") || (l.tone !== "light" && l.tone !== "dark") || !["paper", "plain", "region-primary"].includes(l.surface as string)) {
       c.fail(`${path}.layout`, "must be {variant: standard|poster, tone: light|dark, surface: paper|plain|region-primary}");
-    } else if (l.display !== undefined && (v.template !== "product-carousel" || !(PRODUCT_DISPLAYS as readonly unknown[]).includes(l.display))) {
-      c.fail(`${path}.layout.display`, `product sections only: ${PRODUCT_DISPLAYS.join(" | ")}`);
+    } else {
+      if (l.display !== undefined && (v.template !== "product-carousel" || !(PRODUCT_DISPLAYS as readonly unknown[]).includes(l.display))) c.fail(`${path}.layout.display`, `product sections only: ${PRODUCT_DISPLAYS.join(" | ")}`);
+      if (l.buyLabel !== undefined && (v.template !== "product-carousel" || !isStr(l.buyLabel, MAX_BUY_LABEL) || l.buyLabel.trim() !== l.buyLabel)) c.fail(`${path}.layout.buyLabel`, `product sections only: 1..${MAX_BUY_LABEL} chars, no leading or trailing spaces`);
     }
   }
   // A grid shows more cards than a carousel scrolls through: the ceiling follows the display.

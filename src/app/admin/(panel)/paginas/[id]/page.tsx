@@ -126,6 +126,7 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.8125rem]">
                       <span className="a-badge">{typeLabel(s)}</span>
                       {s.customizerCard && <span className="a-badge ok">1º card personalizável</span>}
+                      {s.layout?.buyLabel && <span className="a-badge ok">Botão “{s.layout.buyLabel}”</span>}
                       {readable.some((r) => r.level === "blocking") && <span className="a-badge bad">Texto ilegível</span>}
                     </p>
                   </td>

@@ -8,7 +8,7 @@ import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/
 import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
-import { maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, MAX_BUY_LABEL, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
 import { customizerCardFieldDefaults } from "@/lib/admin/section-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
@@ -131,6 +131,7 @@ export function SectionEditorForm({
   const [display, setDisplay] = useState<ProductDisplay>(section.layout?.display ?? "carousel");
   // A grid lays out more cards than a carousel scrolls through (same ceiling as the save: section-form.ts).
   const maxCards = maxSectionProducts(display);
+  const [buyOn, setBuyOn] = useState(Boolean(section.layout?.buyLabel));
   const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
 
   const [navShow, setNavShow] = useState(Boolean(section.nav));
@@ -403,6 +404,17 @@ export function SectionEditorForm({
               <div><label className="a-label" htmlFor="layout_variant">Cards</label><select id="layout_variant" name="layout_variant" className="a-select" defaultValue={section.layout?.variant ?? "standard"}><option value="standard">Padrão</option><option value="poster">Pôster (mais editorial)</option></select></div>
               <div><label className="a-label" htmlFor="layout_surface">Superfície</label><select id="layout_surface" name="layout_surface" className="a-select" defaultValue={section.layout?.surface ?? "plain"}><option value="plain">Fundo da página</option><option value="paper">Papel</option><option value="region-primary">Verde regional</option></select></div>
               <div><label className="a-label" htmlFor="layout_tone">Cor do texto</label><select id="layout_tone" name="layout_tone" className="a-select" value={tone} onChange={(e) => setTone(e.target.value as "light" | "dark")}><option value="light">Escuro (para fundos claros)</option><option value="dark">Claro (para fundos escuros)</option></select></div>
+            </div>
+            <div className="space-y-2 border border-black/20 p-3">
+              <input type="hidden" name="layout_buy_present" value="1" />
+              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="layout_buy" checked={buyOn} onChange={(e) => setBuyOn(e.target.checked)} /> Botão “Comprar” em cada card de produto</label>
+              <p className="a-muted text-[0.8125rem]">Um botão no pé de cada card, alinhado em todos. Ele faz parte do próprio card: abre a mesma página do produto na loja e conta o mesmo clique. O card personalizável mostra o texto do botão dele no mesmo formato.</p>
+              {buyOn && (
+                <div className="max-w-xs">
+                  <label className="a-label" htmlFor="layout_buy_label">Texto do botão</label>
+                  <input id="layout_buy_label" name="layout_buy_label" defaultValue={section.layout?.buyLabel ?? DEFAULT_BUY_LABEL} className="a-input" maxLength={MAX_BUY_LABEL} placeholder={DEFAULT_BUY_LABEL} />
+                </div>
+              )}
             </div>
           </fieldset>
         </>
