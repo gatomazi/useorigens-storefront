@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addCollectionSection, addStructuredSection, archivePageAction, duplicateSection, moveSection, publishTargetAction, removePageAction, removeSection, restoreTargetAction, savePageBackdropAction, setSectionActive, updatePageAction } from "@/app/admin/actions";
+import { addCollectionSection, addStructuredSection, archivePageAction, duplicateSection, publishTargetAction, removePageAction, removeSection, reorderSections, restoreTargetAction, savePageBackdropAction, setSectionActive, updatePageAction } from "@/app/admin/actions";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
 import { PageBackdropEditor } from "@/components/admin/PageBackdropEditor";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { RowForm } from "@/components/admin/RowForm";
+import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { toComboEntries } from "@/lib/admin/combo";
 import { listMedia } from "@/lib/admin/media";
@@ -108,19 +109,20 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
       </section>
 
       <section className="a-card overflow-x-auto" aria-label="Seções da página">
-        <table className="a-table">
-          <caption className="sr-only">Seções da página, em ordem</caption>
-          <thead><tr><th scope="col">#</th><th scope="col">Seção</th><th scope="col">Fonte dos produtos</th><th scope="col">Estado</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
-          <tbody>
-            {page.sections.map((s, i) => {
+        <SectionOrderTable
+          caption="Seções da página, em ordem"
+          action={reorderSections}
+          rev={rev}
+          scope={scope}
+          page={page.id}
+          rows={page.sections.map((s) => {
               const status = sourceStatus(s, ws.doc);
               const locked = s.template === "page-hero";
               const custom = s.id.startsWith("custom-") && !locked;
               const readable = sectionReadability(s);
               const label = s.title?.replace(/\n/g, " ") ?? s.anchor;
-              return (
-                <tr key={s.id} className={s.active ? "" : "opacity-60"}>
-                  <td className="a-muted w-8 font-bold">{i + 1}</td>
+              return { id: s.id, label, movable: !locked, dimmed: !s.active, cells: (
+                <>
                   <td>
                     <p className="font-bold">{label}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.8125rem]">
@@ -135,23 +137,16 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
                   <td>{locked ? <span className="a-badge">Fixa</span> : s.active ? <span className="a-badge ok">Ativa</span> : <span className="a-badge">Oculta</span>}</td>
                   <td>
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
-                      {!locked && (
-                        <>
-                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ direction: "up" }} label={`Mover “${label}” para cima`}>↑</RowForm>
-                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ direction: "down" }} label={`Mover “${label}” para baixo`}>↓</RowForm>
-                          <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${label}”` : `Ativar “${label}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>
-                        </>
-                      )}
+                      {!locked && <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${label}”` : `Ativar “${label}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>}
                       <Link href={`/admin/paginas/${page.id}/secoes/${s.id}`} className="a-btn sm">Editar</Link>
                       {s.template === "product-carousel" && <RowForm action={duplicateSection} rev={rev} scope={scope} id={s.id} page={page.id} label={`Duplicar “${label}”`}>Duplicar</RowForm>}
                       {custom && <RowForm action={removeSection} rev={rev} scope={scope} id={s.id} page={page.id} label={`Remover “${label}”`} danger>Remover</RowForm>}
                     </div>
                   </td>
-                </tr>
-              );
+                </>
+              ) };
             })}
-          </tbody>
-        </table>
+        />
       </section>
 
       <section className="a-card p-5" aria-labelledby="add">

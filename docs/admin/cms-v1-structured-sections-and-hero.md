@@ -76,6 +76,15 @@ Hotpages e categorias-pai têm o card **Fundo da página** (página temática: B
 - **Texto**: com fundo escuro (`tone: "dark"`), o texto das seções sem fundo próprio fica claro (`.page-dark` em `globals.css`, que troca só a cor do texto e os tons `--ink-soft`/`--ink-mute`/`--line`; `--ink` fica como está porque também pinta botões e etiquetas). Seções de produtos e o topo da página sem fundo próprio seguem o tom da página automaticamente. Seção com superfície clara própria volta ao texto escuro (`.on-light`), e as duas seções sem versão escura (Estilos da cidade, Escolha seu estado) ficam sobre papel.
 - Legibilidade: o contraste do texto sobre a cor bloqueia a publicação abaixo de 3:1 e avisa abaixo de 4,5:1 (mesma regra das seções); pattern com intensidade acima de 50% só avisa. Ao trocar a cor, o editor sugere a cor de texto que lê melhor.
 
+## Ordenar arrastando (`feature/ordenar-arrastando`)
+
+A ordem das seções (Home · Seções e cada página) e a ordem dos produtos de uma seção de coleção mudam **arrastando a linha pela alça** (os seis pontos à esquerda), no mouse ou no dedo, em vez de um ↑/↓ por vez. As outras linhas abrem espaço enquanto ela passa e, perto da borda, a lista (ou a janela) rola sozinha; Esc desfaz o movimento.
+
+- **Seções**: a nova ordem é salva no rascunho **ao soltar**, de uma vez (`reorderSections` → operação `reorder`), com a mesma checagem de revisão das outras ações (outra aba com o rascunho mais novo recusa e avisa). O hero fica no topo e o rodapé no fim: não têm alça e nada passa deles (regra também em `draft-ops.ts`).
+- **Produtos**: arrastar só muda a lista do editor; vale ao **Salvar rascunho**, como antes. “Topo” continua levando direto ao primeiro lugar, e a linha tracejada de “a loja mostra só os N primeiros” acompanha o arraste.
+- **Teclado e leitor de tela**: na alça, Espaço (ou Enter) pega a linha, ↑/↓ (Home/End) movem, Espaço solta e Esc cancela; cada passo é anunciado. A alça tem `touch-action: none`, então no celular o resto da lista continua rolando com o dedo.
+- Código: `src/components/admin/useDragSort.tsx` (o arrastar, sem biblioteca), `src/lib/admin/drag-sort.ts` (a conta de onde a linha entra, testada em `tests/unit/drag-sort.test.ts`), `SectionOrderTable.tsx` (as tabelas de seções) e `CollectionOrder.tsx`. Capturas: [`screenshots/ordenar-arrastando/`](../screenshots/ordenar-arrastando/).
+
 ## 2. Três produtos do hero por região (`feature/cms-hero-featured-products`)
 
 Home → Seções → **Hero** → bloco **Produtos em destaque**: três posições, buscar (cidade, UF, estilo ou ID) → **Usar aqui**, **Substituir**, **Limpar**, **↑/↓**. Cada ação salva o rascunho e atualiza a prévia 375/desktop; nada é publicado.

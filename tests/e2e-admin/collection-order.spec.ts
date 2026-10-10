@@ -1,14 +1,28 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * A collection section's own order, on our side: from INK's order, a product goes to the top and another is hidden; the draft keeps both across a
- * reload, the preview shows the cards in that order without the hidden one, and "Voltar à ordem da INK" undoes both. Uses the locally synced public
+ * A collection section's own order, on our side: from INK's order, a product goes to the top, another is hidden and another is dragged up by its
+ * grip; the draft keeps it all across a reload, the preview shows the cards in that order without the hidden one, and "Voltar à ordem da INK"
+ * undoes it all. Uses the locally synced public
  * collection "Pré-treino Raiz" (18 products), so it needs no enablement and runs alone (`--no-deps`).
  */
 const hydrated = (page: Page) => page.waitForFunction(() => document.documentElement.dataset.hydrated === "true", undefined, { timeout: 180_000 });
 async function open(page: Page, url: string) {
   await page.goto(url, { waitUntil: "domcontentloaded", timeout: 300_000 });
   await hydrated(page);
+}
+/** Drags row `from` by its grip onto row `to` with the mouse, and lets go once the list shows it there. */
+async function dragRow(page: Page, from: number, to: number) {
+  const rows = page.getByTestId("collection-order-row");
+  const grip = (i: number) => rows.nth(i).getByRole("button", { name: /^Mover / });
+  const a = (await grip(from).boundingBox())!;
+  const b = (await grip(to).boundingBox())!;
+  await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(a.x + a.width / 2, to < from ? b.y + 4 : b.y + b.height - 4, { steps: 20 });
+  await expect(rows.nth(to)).toHaveAttribute("data-dragging", "");
+  await page.mouse.up();
+  await expect(rows.nth(to)).not.toHaveAttribute("data-dragging", "");
 }
 const rowNames = async (page: Page) => (await page.getByTestId("collection-order-row").locator("p.font-bold").allInnerTexts()).map((t) => t.replace(/\s*novo$/i, "").trim());
 
@@ -35,7 +49,10 @@ test("given a collection section, when a product goes to the top and another is 
   await page.getByRole("button", { name: `Levar ${ink[5]} para o topo` }).click();
   await expect(page.getByTestId("collection-order-mode")).toHaveText("Ordem manual");
   await page.getByRole("button", { name: `Esconder ${ink[0]} desta seção` }).click();
-  const expected = [ink[5], ...ink.slice(1, 5), ...ink.slice(6)];
+  expect(await rowNames(page)).toEqual([ink[5], ...ink.slice(1, 5), ...ink.slice(6)]);
+  // Dragged by its grip: the (now) 4th product goes up to the 2nd place.
+  await dragRow(page, 3, 1);
+  const expected = [ink[5], ink[3], ink[1], ink[2], ink[4], ...ink.slice(6)];
   expect(await rowNames(page)).toEqual(expected);
   await expect(page.getByRole("list", { name: "Produtos escondidos" })).toContainText(ink[0]);
 
