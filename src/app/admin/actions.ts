@@ -143,9 +143,17 @@ export async function addUmaPencaSection(fd: FormData) {
   return run(fd, { type: "add-carousel", title, source: { kind: "umapenca", articleKinds: kinds, limit }, cta: { label: "Ver todos", dest: { kind: "route", path: `/${scope}/outros-artigos` } }, ...(display ? { display } : {}) }, "Seção da Uma Penca criada no rascunho.", "/admin/home", true);
 }
 
-export async function moveSection(fd: FormData) {
-  const direction = text(fd, "direction") === "up" ? "up" : "down";
-  return run(fd, { type: "move", id: text(fd, "id"), direction }, "Ordem alterada.", "/admin/home");
+/** The order a drag in the sections list ended with (JSON list of section ids); the op checks it is the same sections with the fixed ones in place. */
+export async function reorderSections(fd: FormData) {
+  let ids: unknown;
+  try {
+    ids = JSON.parse(text(fd, "order"));
+  } catch {
+    ids = null;
+  }
+  const at = text(fd, "page") ? inPagePath(text(fd, "page"), "/admin/home") : "/admin/home";
+  if (!Array.isArray(ids) || ids.length > 200 || !ids.every((id) => typeof id === "string")) back(at, { err: ["Ordem inválida: recarregue a página e tente de novo."] });
+  return run(fd, { type: "reorder", ids }, "Ordem alterada.", "/admin/home");
 }
 
 export async function setSectionActive(fd: FormData) {

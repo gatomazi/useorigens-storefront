@@ -49,6 +49,11 @@ describe("pages in the region document", () => {
     expect(page().sections.map((s) => s.template)).toEqual(["page-hero", "campaign", "product-carousel"]);
     expect(applyOp(doc, { type: "in-page", page: page().id, op: { type: "move", id: page().sections[1].id, direction: "up" } }, ctx()).ok).toBe(false); // cannot pass the hero
     expect(applyOp(doc, { type: "in-page", page: page().id, op: { type: "set-active", id: page().sections[0].id, active: false } }, ctx()).ok).toBe(false);
+    // A whole new order (a drag in the panel): anything but the hero, which stays first.
+    const [hero, a, b] = page().sections.map((s) => s.id);
+    doc = run(doc, { type: "in-page", page: page().id, op: { type: "reorder", ids: [hero, b, a] } }).doc;
+    expect(page().sections.map((s) => s.id)).toEqual([hero, b, a]);
+    expect(applyOp(doc, { type: "in-page", page: page().id, op: { type: "reorder", ids: [b, hero, a] } }, ctx()).ok).toBe(false);
     expect(applyOp(doc, { type: "in-page", page: page().id, op: { type: "add-structured", template: "campaign" } }, ctx()).ok).toBe(true); // campaigns repeat
   });
 

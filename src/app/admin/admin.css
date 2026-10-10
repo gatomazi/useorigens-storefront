@@ -32,6 +32,16 @@
 .a-swatch { width: 1.75rem; height: 1.75rem; border: 1px solid rgb(0 0 0 / 0.4); flex: none; }
 .a-thumb { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #ddd; }
 .a-card { min-width: 0; position: relative; }
+
+/* Drag to reorder (useDragSort): the grip that moves a row, and the row while it moves. */
+.a-grip { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 2rem; min-height: 2.5rem; border: 0; background: transparent; color: var(--ink-mute); cursor: grab; touch-action: none; }
+.a-grip:hover { color: var(--ink); background: rgb(0 0 0 / 0.07); }
+.a-grip:focus-visible { outline: 3px solid var(--region-accent); outline-offset: 1px; }
+.a-grip[aria-pressed="true"] { color: #fff; background: var(--ink); }
+.a-grip[aria-disabled="true"] { opacity: 0.35; cursor: progress; }
+@media (pointer: coarse) { .a-grip { width: 2.75rem; min-height: 2.75rem; } }
+[data-dragging] { position: relative; z-index: 3; background: #fff; box-shadow: 0 14px 28px -12px rgb(0 0 0 / 0.5), 0 0 0 2px var(--ink); }
+html.a-dragging, html.a-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
 @media (max-width: 640px) { .a-btn { white-space: normal; text-align: center; padding-block: 0.4rem; } }
 
 /* A table that becomes a list of cards below 720px: each cell is labelled by its data-label, so nothing is hidden behind a sideways scroll. */

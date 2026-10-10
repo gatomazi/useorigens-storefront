@@ -2,6 +2,7 @@
 
 import { Fragment, useMemo, useState } from "react";
 import { arrangeMembers } from "@/lib/site-config/sources";
+import { DragSortStatus, GripIcon, useDragSort } from "./useDragSort";
 
 /** One product of the collection as the panel lists it (from the catalog snapshot: never typed in). */
 export type OrderMember = { id: string; name: string; context?: string; price: string | null; imageUrl: string };
@@ -14,8 +15,8 @@ function Thumb({ src }: { src: string }) {
 const label = (m: OrderMember) => (m.context ? `${m.name} · ${m.context}` : m.name);
 
 /**
- * The order of an ink-category section, on our side: ↑ ↓ / "Topo" set the owner's order, "Esconder" takes a product out of this section, and
- * "Voltar à ordem da INK" undoes both. What is posted (`source_arrangement`) is read by `parseSectionForm` for THIS collection only
+ * The order of an ink-category section, on our side: dragging a row by its grip (or "Topo") sets the owner's order, "Esconder" takes a
+ * product out of this section, and "Voltar à ordem da INK" undoes both. What is posted (`source_arrangement`) is read by `parseSectionForm` for THIS collection only
  * (`source_arrangement_for`). A product INK adds later is not in the saved order, so it shows at the end, flagged "novo" — the same rule the
  * storefront applies (`arrangeMembers`).
  */
@@ -40,18 +41,15 @@ export function CollectionOrder({
   const [order, setOrder] = useState<string[] | null>(savedOrder);
   const [hidden, setHidden] = useState<string[]>(() => (initial.hiddenIds ?? []).filter((id) => byId.has(id)));
 
-  const rows = arrangeMembers(memberIds, { productIds: order ?? undefined, hiddenIds: hidden });
+  const arranged = arrangeMembers(memberIds, { productIds: order ?? undefined, hiddenIds: hidden });
   const saved = new Set([...(savedOrder ?? []), ...(initial.hiddenIds ?? [])]);
   const isNew = (id: string) => savedOrder !== null && !saved.has(id);
   const stale = [...new Set([...(initial.productIds ?? []), ...(initial.hiddenIds ?? [])])].filter((id) => !byId.has(id)).length;
 
-  const place = (from: number, to: number) => {
-    if (to < 0 || to >= rows.length || from === to) return;
-    const next = [...rows];
-    const [id] = next.splice(from, 1);
-    next.splice(to, 0, id);
-    setOrder(next);
-  };
+  const sort = useDragSort({ ids: arranged, onDrop: setOrder, label: (id) => label(byId.get(id)!) });
+  // While a row is being dragged, the list shows where it would land (the cut and the numbers follow it).
+  const rows = sort.order;
+  const toTop = (id: string) => setOrder([id, ...arranged.filter((x) => x !== id)]);
   const hide = (id: string) => setHidden((h) => [...h, id]);
   const show = (id: string) => setHidden((h) => h.filter((x) => x !== id));
   const reset = () => {
@@ -60,7 +58,7 @@ export function CollectionOrder({
   };
 
   const manual = order !== null;
-  const value = JSON.stringify(manual ? { order: "manual", productIds: rows, hiddenIds: hidden } : { order: "category", hiddenIds: hidden });
+  const value = JSON.stringify(manual ? { order: "manual", productIds: arranged, hiddenIds: hidden } : { order: "category", hiddenIds: hidden });
 
   return (
     <div className="space-y-3" data-testid="collection-order">
@@ -71,8 +69,9 @@ export function CollectionOrder({
         <span className={`a-badge${manual ? " ok" : ""}`} data-testid="collection-order-mode">{manual ? "Ordem manual" : "Ordem da INK"}</span>
       </div>
       <p className="a-muted text-[0.8125rem]">
-        Use ↑ ↓ e “Topo” para mudar a posição e “Esconder” para tirar um produto só desta seção (na INK nada muda). Produto novo que a INK colocar na coleção entra no fim da lista. Salve o rascunho para ver na prévia.
+        Arraste o produto pela alça <span className="inline-flex translate-y-0.5 text-ink"><GripIcon /></span> para mudar a posição, ou use “Topo” para levá-lo direto ao primeiro lugar. “Esconder” tira um produto só desta seção (na INK nada muda). Produto novo que a INK colocar na coleção entra no fim da lista. Salve o rascunho para ver na prévia.
       </p>
+      <DragSortStatus hintId={sort.hintId} announcement={sort.announcement} />
       {stale > 0 && <p className="a-flash err text-[0.875rem]">{stale} produto(s) da ordem salva não estão mais entre os produtos da coleção e saem da lista ao salvar.</p>}
       {rows.length === 0 && <p className="a-flash err text-[0.875rem]">Todos os produtos estão escondidos: a seção não aparece na loja.</p>}
       <ol className="max-h-[36rem] overflow-y-auto border border-black/20 bg-white" aria-label="Produtos da seção, na ordem da loja">
@@ -85,10 +84,13 @@ export function CollectionOrder({
                   A loja mostra só os {visible} primeiros. Os abaixo ficam de reserva.
                 </li>
               )}
-              <li className={`flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-black/10 px-3 py-2 ${i >= visible ? "opacity-60" : ""}`} data-testid="collection-order-row">
+              <li {...sort.row(id)} className={`flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-black/10 bg-white py-2 pl-1 pr-3 ${i >= visible && sort.active !== id ? "opacity-60" : ""}`} data-testid="collection-order-row">
+                <button {...sort.handle(id)} className="a-grip -mr-2" aria-label={`Mover ${label(m)}`} title="Arraste para mudar a posição">
+                  <GripIcon />
+                </button>
                 <span className="w-6 shrink-0 text-right text-[0.8125rem] font-extrabold">{i + 1}</span>
                 <Thumb src={m.imageUrl} />
-                <div className="min-w-0 flex-1 basis-40 text-[0.8125rem]">
+                <div className="min-w-0 flex-1 basis-32 text-[0.8125rem]">
                   <p className="font-bold">
                     {label(m)} {isNew(id) && <span className="a-badge warn">novo</span>}
                   </p>
@@ -96,9 +98,7 @@ export function CollectionOrder({
                 </div>
                 {/* Beside the product on a wide panel, on a line of their own below it on a phone. */}
                 <div className="ml-auto flex shrink-0 gap-1">
-                  <button type="button" className="a-btn ghost sm" onClick={() => place(i, 0)} disabled={i === 0} aria-label={`Levar ${label(m)} para o topo`}>Topo</button>
-                  <button type="button" className="a-btn ghost sm" onClick={() => place(i, i - 1)} disabled={i === 0} aria-label={`Subir ${label(m)}`}>↑</button>
-                  <button type="button" className="a-btn ghost sm" onClick={() => place(i, i + 1)} disabled={i === rows.length - 1} aria-label={`Descer ${label(m)}`}>↓</button>
+                  <button type="button" className="a-btn ghost sm" onClick={() => toTop(id)} disabled={i === 0} aria-label={`Levar ${label(m)} para o topo`}>Topo</button>
                   <button type="button" className="a-btn danger sm" onClick={() => hide(id)} aria-label={`Esconder ${label(m)} desta seção`}>Esconder</button>
                 </div>
               </li>

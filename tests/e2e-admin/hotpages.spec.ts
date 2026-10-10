@@ -104,7 +104,9 @@ test("A · hotpage: create, compose, style, reorder, preview, publish, restore �
   const rows = page.locator("section[aria-label='Seções da página'] tbody tr");
   await expect(rows).toHaveCount(4);
   const posted = waitPost(page);
-  await page.getByRole("button", { name: /Mover “.*” para cima/ }).last().click();
+  await page.getByRole("button", { name: /^Mover “/ }).last().press("Space");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("Space");
   await posted;
   await page.waitForLoadState("networkidle");
   await expect(rows.nth(2)).toContainText("Campanha");

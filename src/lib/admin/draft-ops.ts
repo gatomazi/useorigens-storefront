@@ -25,6 +25,8 @@ export type DraftOp =
   | { type: "add-structured"; template: StructuredTemplate }
   | { type: "duplicate"; id: string }
   | { type: "move"; id: string; direction: "up" | "down" }
+  /** The whole order at once (drag and drop in the panel): the same sections, the hero first and the footer last, fixed sections where they were. */
+  | { type: "reorder"; ids: string[] }
   | { type: "set-active"; id: string; active: boolean }
   | { type: "remove"; id: string }
   | { type: "update"; id: string; patch: Partial<Editable> }
@@ -187,6 +189,13 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       if (target < 1 || target > (ctx.mode === "page" ? next.length - 1 : next.length - 2)) return fail(ctx.mode === "page" ? "it cannot go above the page hero" : "it cannot go past the hero or the footer");
       [next[index], next[target]] = [next[target], next[index]];
       return withSections(next, op.id);
+    }
+    case "reorder": {
+      const byId = new Map(next.map((s) => [s.id, s]));
+      if (op.ids.length !== next.length || new Set(op.ids).size !== op.ids.length || op.ids.some((id) => !byId.has(id))) return fail("the new order must list every section exactly once");
+      const fixed = next.findIndex((s, i) => (i === 0 || isLocked(s) || (ctx.mode !== "page" && i === next.length - 1)) && op.ids[i] !== s.id);
+      if (fixed >= 0) return fail(ctx.mode === "page" ? "it cannot go above the page hero" : "it cannot go past the hero or the footer");
+      return withSections(op.ids.map((id) => byId.get(id)!));
     }
     case "set-active": {
       if (isLocked(next[index]) && !op.active) return fail("the hero and the footer cannot be hidden");

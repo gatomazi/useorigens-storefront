@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
+import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, setSectionActive } from "@/app/admin/actions";
+import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
 import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
 import { SINGLETON_TEMPLATES, STRUCTURED_MODELS } from "@/lib/site-config/structured";
@@ -64,7 +65,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="a-h1">Home · Seções <span className="a-muted">· {scopeName(scope)}</span></h1>
-          <p className="a-muted mt-2 max-w-2xl">A ordem abaixo é a ordem da home. O hero fica sempre no topo e o rodapé no fim. As seções originais podem ser editadas, movidas e ocultadas; só as criadas aqui podem ser removidas.</p>
+          <p className="a-muted mt-2 max-w-2xl">A ordem abaixo é a ordem da home: arraste uma seção pela alça para mudá-la de lugar (a ordem é salva no rascunho ao soltar). O hero fica sempre no topo e o rodapé no fim. As seções originais podem ser editadas, movidas e ocultadas; só as criadas aqui podem ser removidas.</p>
         </div>
         <div className="flex items-center gap-2">
           {ws.dirty ? <span className="a-badge warn">Alterações não publicadas</span> : <span className="a-badge ok">Igual ao publicado</span>}
@@ -93,20 +94,18 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
 
       {ws.doc.home && (
       <div className="a-card overflow-x-auto">
-        <table className="a-table">
-          <caption className="sr-only">Seções da home de {scopeName(scope)}, em ordem</caption>
-          <thead>
-            <tr><th scope="col">#</th><th scope="col">Seção</th><th scope="col">Fonte dos produtos</th><th scope="col">Estado</th><th scope="col"><span className="sr-only">Ações</span></th></tr>
-          </thead>
-          <tbody>
-            {sections.map((s: Section, i) => {
+        <SectionOrderTable
+          caption={`Seções da home de ${scopeName(scope)}, em ordem`}
+          action={reorderSections}
+          rev={rev}
+          scope={scope}
+          rows={sections.map((s: Section) => {
               const status = sourceStatus(s, ws.doc);
               const locked = s.template === "hero" || s.template === "footer";
               const readable = sectionReadability(s);
               const custom = s.id.startsWith("custom-");
-              return (
-                <tr key={s.id} className={s.active ? "" : "opacity-60"}>
-                  <td className="a-muted w-8 font-bold">{i + 1}</td>
+              return { id: s.id, label: s.title?.replace(/\n/g, " ") ?? typeLabel(s), movable: !locked, dimmed: !s.active, cells: (
+                <>
                   <td>
                     <p className="font-bold">{s.title?.replace(/\n/g, " ") ?? typeLabel(s)}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.8125rem]">
@@ -131,23 +130,16 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                   <td>{locked ? <span className="a-badge">Fixa</span> : s.active ? <span className="a-badge ok">Ativa</span> : <span className="a-badge">Oculta</span>}</td>
                   <td>
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
-                      {!locked && (
-                        <>
-                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} extra={{ direction: "up" }} label={`Mover “${s.title ?? s.anchor}” para cima`}>↑</RowForm>
-                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} extra={{ direction: "down" }} label={`Mover “${s.title ?? s.anchor}” para baixo`}>↓</RowForm>
-                          <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${s.title ?? s.anchor}”` : `Ativar “${s.title ?? s.anchor}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>
-                        </>
-                      )}
+                      {!locked && <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${s.title ?? s.anchor}”` : `Ativar “${s.title ?? s.anchor}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>}
                       <Link href={`/admin/home/${s.id}`} className="a-btn sm">Editar</Link>
                       {s.template === "product-carousel" && <RowForm action={duplicateSection} rev={rev} scope={scope} id={s.id} label={`Duplicar “${s.title ?? s.anchor}”`}>Duplicar</RowForm>}
                       {custom && <RowForm action={removeSection} rev={rev} scope={scope} id={s.id} label={`Remover “${s.title ?? s.anchor}”`} danger>Remover</RowForm>}
                     </div>
                   </td>
-                </tr>
-              );
+                </>
+              ) };
             })}
-          </tbody>
-        </table>
+        />
       </div>
       )}
 
