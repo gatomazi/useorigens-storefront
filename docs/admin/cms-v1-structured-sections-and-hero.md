@@ -48,6 +48,7 @@ Toda seção de produtos (coleção da INK, Uma Penca ou curadoria editorial), n
 - Promoção da INK: o preço cheio aparece riscado antes do promocional (`PriceText`), também nos cards de cidade, na busca, na PDP, no hero e em Meus Lugares (ver `docs/deploy/railway.md`, "Promoções da INK").
 - Grade: espaço uniforme entre os cards (12/16/20px). Com o botão ligado, o "Ver todos" do fim da grade vira botão secundário (contorno) no fundo claro.
 - O card inteiro é um único link (sem link aninhado), com o anel de foco global em volta dele.
+- Cabeçalho da seção: o "Ver todos" é um botão de contorno (mesma altura das setas, preenche só no hover), mais discreto que os botões dos cards. As setas do carrossel aparecem também no celular, numa linha sob o título ("Ver todos" à esquerda, setas à direita), como pista de que há mais produtos para o lado. Capturas: [`screenshots/ver-todos-setas/`](../screenshots/ver-todos-setas/).
 
 **Botão de compra** (`layout.buyLabel`). No painel, em **Editar seção → Layout → “Botão de compra em cada card de produto”**, em qualquer seção de produtos (carrossel ou grade, home e páginas). Ausente = sem botão; as seções existentes não mudam.
 
