@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
+import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { ARTICLE_KINDS } from "../umapenca/types";
@@ -70,9 +70,9 @@ export function parsePageRef(value: string): Destination | null {
 /** A destination from the `<prefix>_kind` field and the one field of that kind (`<prefix>_collection`, `_url`, `_route`, `_page`, `_anchor`), or null. */
 function parseDest(f: Fields, prefix: string): Destination | null {
   const kind = str(f, `${prefix}_kind`);
-  if (kind === "ink-collection") {
+  if (kind === "ink-collection" || kind === "collection-page") {
     const ref = parseCollectionRef(str(f, `${prefix}_collection`));
-    return ref ? { kind: "ink-collection", ...ref } : null;
+    return ref ? { kind, ...ref } : null;
   }
   if (kind === "external") return { kind: "external", url: str(f, `${prefix}_url`) };
   if (kind === "route") return { kind: "route", path: str(f, `${prefix}_route`) };
@@ -126,23 +126,28 @@ function parseGridLayout(f: Fields, current: GridLayout | undefined): GridLayout
 const inkIds = (v: unknown): string[] => (Array.isArray(v) ? [...new Set(v.filter((id): id is string => typeof id === "string" && /^\d{1,20}$/.test(id)))].slice(0, MAX_ARRANGED_IDS) : []);
 
 /**
- * The order / hidden products of an ink-category source. The panel's list posts them (`source_arrangement`, JSON) together with the collection it
- * was drawn for (`source_arrangement_for`): they only apply to THAT collection. Choosing another collection starts over in INK's order; a form
- * without the list (the collection did not resolve, so no list was drawn) keeps what is saved, so a save never wipes the owner's order.
+ * The order / hidden products of the section's COLLECTION, from the panel's list (`source_arrangement`, JSON), which says which collection it was drawn
+ * for (`source_arrangement_for`): they only apply to THAT collection, and they belong to the collection (every section built on it and its page follow
+ * them: `set-collection-arrangement`). Null = no list for this collection (another collection was chosen, or the collection did not resolve, so no list
+ * was drawn): what is saved stays, so a save never wipes the owner's order.
  */
-function parseArrangement(f: Fields, ref: string, current: Source | undefined): Pick<Extract<Source, { kind: "ink-category" }>, "order" | "productIds" | "hiddenIds"> {
+export function parseCollectionArrangement(f: Fields, ref: CollectionRef): { productIds: string[]; hiddenIds: string[] } | null {
   const raw = f.get("source_arrangement");
-  if (typeof raw === "string" && str(f, "source_arrangement_for") === ref) {
-    try {
-      const v = JSON.parse(raw) as { order?: unknown; productIds?: unknown; hiddenIds?: unknown };
-      const hiddenIds = inkIds(v.hiddenIds);
-      const productIds = v.order === "manual" ? inkIds(v.productIds) : [];
-      return { order: productIds.length > 0 ? "manual" : "category", ...(productIds.length > 0 ? { productIds } : {}), ...(hiddenIds.length > 0 ? { hiddenIds } : {}) };
-    } catch {
-      // A malformed list is ignored like a missing one.
-    }
+  if (typeof raw !== "string" || str(f, "source_arrangement_for") !== `${ref.store}:${ref.collectionId}`) return null;
+  try {
+    const v = JSON.parse(raw) as { order?: unknown; productIds?: unknown; hiddenIds?: unknown };
+    return { productIds: v.order === "manual" ? inkIds(v.productIds) : [], hiddenIds: inkIds(v.hiddenIds) };
+  } catch {
+    return null; // A malformed list is ignored like a missing one.
   }
-  if (current?.kind === "ink-category" && `${current.store}:${current.collectionId}` === ref) {
+}
+
+/**
+ * The section's own (older) order fields: kept as they are while the panel posts no list for this collection; dropped as soon as it does, since the
+ * order then lives in the collection (`parseCollectionArrangement`). Choosing another collection starts with none.
+ */
+function legacyOrder(f: Fields, ref: CollectionRef, current: Source | undefined): Pick<Extract<Source, { kind: "ink-category" }>, "order" | "productIds" | "hiddenIds"> {
+  if (parseCollectionArrangement(f, ref) === null && current?.kind === "ink-category" && current.store === ref.store && current.collectionId === ref.collectionId) {
     return { order: current.order, ...(current.productIds ? { productIds: current.productIds } : {}), ...(current.hiddenIds ? { hiddenIds: current.hiddenIds } : {}) };
   }
   return { order: "category" };
@@ -158,7 +163,7 @@ function parseSource(f: Fields, current: Source | undefined, max: number): Sourc
   if (kind === "ink-category") {
     const ref = parseCollectionRef(str(f, "source_collection"));
     if (!ref) return current;
-    return { kind: "ink-category", ...ref, ...parseArrangement(f, `${ref.store}:${ref.collectionId}`, current), limit: clamp(Math.round(num(f, "source_limit", 6)), MIN_SECTION_PRODUCTS, max) };
+    return { kind: "ink-category", ...ref, ...legacyOrder(f, ref, current), limit: clamp(Math.round(num(f, "source_limit", 6)), MIN_SECTION_PRODUCTS, max) };
   }
   if (kind === "umapenca") {
     // Checkboxes `source_up_<kind>`: none ticked keeps the current source (the schema refuses an empty list anyway).
@@ -188,7 +193,8 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
   }
   if (section.template === "product-carousel") {
     // Carousel or grid ("carousel" is never stored: absent means carousel, so the sections saved before the grid existed stay as they were).
-    const display: ProductDisplay | undefined = f.get("layout_display") === null ? section.layout?.display : str(f, "layout_display") === "grid" ? "grid" : undefined;
+    const posted = str(f, "layout_display");
+    const display: ProductDisplay | undefined = f.get("layout_display") === null ? section.layout?.display : posted === "grid" || posted === "paged" ? posted : undefined;
     patch.cta = parseCta(f);
     const max = maxSectionProducts(display);
     const source = parseSource(f, section.source, max);
@@ -207,7 +213,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
       const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text } : {}) };
       tags = next.discount || next.text ? next : undefined;
     }
-    patch.layout = { variant, tone, surface, ...(display === "grid" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(tags ? { tags } : {}) };
+    patch.layout = { variant, tone, surface, ...(display === "grid" || display === "paged" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(tags ? { tags } : {}) };
   }
   if (section.template === "page-hero") {
     patch.cta = parseCta(f);
@@ -227,6 +233,11 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
         button: str(f, "cc_button"),
       };
     } else patch.customizerCard = undefined;
+  }
+  // A paged grid has no reserved first card (the same card on every page would push a product off each one), nor a "Ver todos": it IS all of them.
+  if (section.template === "product-carousel" && patch.layout?.display === "paged") {
+    patch.customizerCard = undefined;
+    patch.cta = undefined;
   }
   if (section.template === "campaign") {
     patch.fallback = str(f, "fallback") === "fill" ? "fill" : "crops";

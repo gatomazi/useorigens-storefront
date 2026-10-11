@@ -2,7 +2,7 @@ import "server-only";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
 import { prepareDocs, type PreparedDoc, type SearchDoc } from "../search/catalog-search";
 import { purchaseUrl } from "./commerce";
-import { searchMembers, type CollectionRecord } from "./collections";
+import { completeMembers, type CollectionRecord } from "./collections";
 import { getStoreCollections } from "./collections-file";
 import { DESIGN_FAMILIES, variantLabel } from "./families";
 import { isSubLocality, localityOfBinding } from "./locality-binding";
@@ -20,14 +20,14 @@ import type { CityDesignBinding } from "./types";
  */
 const familyById = new Map(DESIGN_FAMILIES.map((f) => [f.id, f]));
 
-/** Product id -> names of the PUBLIC INK collections it belongs to, from each collection's COMPLETE membership (`searchMembers`). A collection whose
+/** Product id -> names of the PUBLIC INK collections it belongs to, from each collection's COMPLETE membership (`completeMembers`). A collection whose
  * membership is only a truncated slice (a snapshot from before the full lists were stored) is skipped rather than matched by name: it would return an
  * arbitrary subset with a misleading total. `searchCoverage` tells the admin which ones need a collections resync. */
 export function collectionNamesByProduct(records: readonly CollectionRecord[]): Map<string, string[]> {
   const out = new Map<string, string[]>();
   for (const record of records) {
     if (!record.isAvailable) continue;
-    for (const id of searchMembers(record) ?? []) out.set(id, [...(out.get(id) ?? []), record.name]);
+    for (const id of completeMembers(record) ?? []) out.set(id, [...(out.get(id) ?? []), record.name]);
   }
   return out;
 }

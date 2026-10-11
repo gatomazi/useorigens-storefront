@@ -11,7 +11,7 @@
 import { sectionsUsing } from "../site-config/collections-enabled";
 import { effectiveNavbarGroups, movedWithin, withNavbarGroups, withPosition, type NavbarPosition } from "../site-config/navbar-groups";
 import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredTemplate } from "../site-config/structured";
-import { newPage, uniqueSlug } from "../site-config/pages";
+import { newCollectionLanding, newPage, uniqueSlug } from "../site-config/pages";
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import type { PromotionsConfig } from "../site-config/promotions-schema";
 import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
@@ -31,6 +31,15 @@ export type DraftOp =
   | { type: "remove"; id: string }
   | { type: "update"; id: string; patch: Partial<Editable> }
   | ({ type: "set-collection-enabled"; enabled: boolean } & CollectionRef)
+  /**
+   * The order and hidden products of ONE collection in this region (every section built on it and its collection page follow them). Both lists empty =
+   * INK's order; the entry stays, as "INK's order", only while an older section still carries an order of its own that it must override.
+   */
+  | ({ type: "set-collection-arrangement"; productIds: string[]; hiddenIds: string[] } & CollectionRef)
+  /** Every link to the INK page of one of these collections (buttons, menu links, grid tiles; home and pages) leads to the collection's page on the site instead. */
+  | { type: "link-collection-pages"; refs: CollectionRef[] }
+  /** Several operations as one save: all of them apply, or none (the first refusal comes back). */
+  | { type: "batch"; ops: DraftOp[] }
   /** Places a PUBLIC INK collection in the navbar the Worker draws on the INK product pages: "none" | "top" | "more" (independent of `set-collection-enabled`). */
   | ({ type: "set-collection-navbar-position"; position: NavbarPosition } & CollectionRef)
   /** Reorders a collection one step inside its navbar group. */
@@ -48,7 +57,8 @@ export type DraftOp =
   /** Launches / recalls a region publicly (takes effect only when published). */
   | { type: "set-launched"; launched: boolean }
   // ── Pages (hotpages and parent-category landings) ──
-  | { type: "create-page"; kind: PageKind; title: string; slug?: string }
+  /** `collection`: a parent-category landing that is the page of that collection (its hero, then every product of it, paged). */
+  | { type: "create-page"; kind: PageKind; title: string; slug?: string; collection?: CollectionRef }
   /**
    * Title, slug, SEO and ground of a page (the slug of an already-published page is refused by the caller: its URL must not change).
    * `backdrop: null` takes the page back to the region's ground.
@@ -98,7 +108,20 @@ const fail = (...errors: string[]): OpResult => ({ ok: false, errors });
 export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "create-page" || op.type === "update-page" || op.type === "duplicate-page" || op.type === "set-page-archived" || op.type === "remove-page" || op.type === "in-page") return pageOp(doc, op, ctx);
   if (op.type === "create-customizer" || op.type === "update-customizer" || op.type === "duplicate-customizer" || op.type === "remove-customizer") return customizerOp(doc, op, ctx);
+  if (op.type === "batch") {
+    let current = doc;
+    let focusId: string | undefined;
+    for (const inner of op.ops) {
+      const r = applyOp(current, inner, ctx);
+      if (!r.ok) return r;
+      current = r.doc;
+      focusId ??= r.focusId;
+    }
+    return { ok: true, doc: current, ...(focusId ? { focusId } : {}) };
+  }
   if (op.type === "set-collection-enabled") return setCollectionEnabled(doc, op);
+  if (op.type === "set-collection-arrangement") return setCollectionArrangement(doc, op);
+  if (op.type === "link-collection-pages") return linkCollectionPages(doc, op.refs);
   if (op.type === "set-collection-navbar-position" || op.type === "move-collection-navbar") return editNavbar(doc, op);
   if (op.type === "init-home") {
     if (doc.scope === "global") return fail("global has no home");
@@ -246,9 +269,55 @@ function setCollectionEnabled(doc: ScopeDoc, op: { store: CollectionRef["store"]
   }
   const remaining = current.filter((r) => !(r.store === op.store && r.collectionId === op.collectionId));
   const next: ScopeDoc = { ...doc };
-  // The navbar list is a separate decision: emptying the enablements must not drop it.
-  if (remaining.length > 0 || (doc.collections?.navbarGroups?.top.length ?? 0) + (doc.collections?.navbarGroups?.more.length ?? 0) > 0 || (doc.collections?.navbar?.length ?? 0) > 0) next.collections = { ...doc.collections, enabled: remaining };
+  // The navbar list and the arrangements are separate decisions: emptying the enablements must not drop them.
+  if (remaining.length > 0 || (doc.collections?.navbarGroups?.top.length ?? 0) + (doc.collections?.navbarGroups?.more.length ?? 0) > 0 || (doc.collections?.navbar?.length ?? 0) > 0 || (doc.collections?.arrangements?.length ?? 0) > 0) next.collections = { ...doc.collections, enabled: remaining };
   else delete next.collections;
+  return { ok: true, doc: next };
+}
+
+/** See the op. Only the destination's kind changes (same collection, same label); a link to a collection not listed stays on INK. */
+function linkCollectionPages(doc: ScopeDoc, refs: CollectionRef[]): OpResult {
+  const wanted = new Set(refs.map((r) => `${r.store}:${r.collectionId}`));
+  const swap = <T extends { kind: string }>(dest: T): T =>
+    dest.kind === "ink-collection" && wanted.has(`${(dest as unknown as CollectionRef).store}:${(dest as unknown as CollectionRef).collectionId}`) ? ({ ...dest, kind: "collection-page" } as T) : dest;
+  const fix = (s: Section): Section => ({
+    ...s,
+    ...(s.cta ? { cta: { ...s.cta, dest: swap(s.cta.dest) } } : {}),
+    ...(s.nav?.dest ? { nav: { ...s.nav, dest: swap(s.nav.dest) } } : {}),
+    ...(s.tiles ? { tiles: s.tiles.map((t) => ({ ...t, dest: swap(t.dest) })) } : {}),
+  });
+  const next: ScopeDoc = { ...doc, ...(doc.home ? { home: { sections: doc.home.sections.map(fix) } } : {}), ...(doc.pages ? { pages: doc.pages.map((p) => ({ ...p, sections: p.sections.map(fix) })) } : {}) };
+  const check = validateScopeDoc(next);
+  return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+}
+
+/** Does any section of the document (home or page) still carry an order of its own for this collection, from before orders belonged to collections? */
+function olderSectionOrder(doc: ScopeDoc, ref: CollectionRef): boolean {
+  return [...(doc.home?.sections ?? []), ...(doc.pages ?? []).flatMap((p) => p.sections)].some(
+    (s) => s.source?.kind === "ink-category" && s.source.store === ref.store && s.source.collectionId === ref.collectionId && ((s.source.order === "manual" && (s.source.productIds?.length ?? 0) > 0) || (s.source.hiddenIds?.length ?? 0) > 0),
+  );
+}
+
+/** Sets how this region arranges a collection (see the op). Nothing in INK changes; the sections keep their own settings (limit, layout). */
+function setCollectionArrangement(doc: ScopeDoc, op: CollectionRef & { productIds: string[]; hiddenIds: string[] }): OpResult {
+  if (doc.scope === "global") return fail("global has no collections");
+  const ref: CollectionRef = { store: op.store, collectionId: op.collectionId };
+  const productIds = [...new Set(op.productIds)];
+  const hiddenIds = [...new Set(op.hiddenIds)];
+  const entry = { ...ref, ...(productIds.length > 0 ? { productIds } : {}), ...(hiddenIds.length > 0 ? { hiddenIds } : {}) };
+  const keep = productIds.length > 0 || hiddenIds.length > 0 || olderSectionOrder(doc, ref);
+  const current = doc.collections?.arrangements ?? [];
+  const same = (a: CollectionRef) => a.store === ref.store && a.collectionId === ref.collectionId;
+  // In place when it already has one (a stable document, a readable diff), at the end when it is new.
+  const arrangements = current.some(same) ? current.flatMap((a) => (same(a) ? (keep ? [entry] : []) : [a])) : keep ? [...current, entry] : current;
+  const { arrangements: _old, ...rest } = doc.collections ?? { enabled: [] };
+  void _old;
+  const next: ScopeDoc = { ...doc, collections: { ...rest, enabled: rest.enabled ?? [], ...(arrangements.length > 0 ? { arrangements } : {}) } };
+  const check = validateScopeDoc(next);
+  if (!check.ok) {
+    const own = check.errors.filter((e) => e.startsWith("doc.collections.arrangements"));
+    if (own.length > 0) return { ok: false, errors: own };
+  }
   return { ok: true, doc: next };
 }
 
@@ -286,7 +355,9 @@ function pageOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-page" | "upd
     if (title.length === 0 || title.length > 120) return fail("the title must have 1 to 120 characters");
     const slug = op.slug?.trim() ? op.slug.trim() : uniqueSlug(title, taken(op.kind));
     if (taken(op.kind).has(slug)) return fail(`this region already has a page with the address "${slug}"`);
-    const page = newPage({ id: `${PAGE_PREFIX}${ctx.newId()}`, kind: op.kind, title, slug, heroId: `${CUSTOM_PREFIX}${ctx.newId()}`, subtitle: op.kind === "hotpage" ? undefined : undefined });
+    const page = op.collection && op.kind === "categoryLanding"
+      ? newCollectionLanding({ id: `${PAGE_PREFIX}${ctx.newId()}`, heroId: `${CUSTOM_PREFIX}${ctx.newId()}`, gridId: `${CUSTOM_PREFIX}${ctx.newId()}`, title, slug, ref: op.collection })
+      : newPage({ id: `${PAGE_PREFIX}${ctx.newId()}`, kind: op.kind, title, slug, heroId: `${CUSTOM_PREFIX}${ctx.newId()}`, subtitle: op.kind === "hotpage" ? undefined : undefined });
     const check = validatePage(page, doc.scope);
     if (!check.ok) return { ok: false, errors: check.errors };
     return withPages(doc, [...pages, page], page.id);

@@ -34,7 +34,7 @@ function merch(name: string, extra: Partial<MerchProduct> = {}): MerchProduct {
 }
 function collection(id: number, slug: string, members: readonly { inkProductId: string }[], opts: Partial<CollectionRecord> = {}): CollectionRecord {
   const ids = members.map((m) => m.inkProductId);
-  return { id, name: slug, slug, position: id, isAvailable: true, reportedProductCount: ids.length, matchedCount: ids.length, merchCount: ids.length, cityDesignCount: 0, memberIds: ids, searchMemberIds: ids, ...opts };
+  return { id, name: slug, slug, position: id, isAvailable: true, reportedProductCount: ids.length, matchedCount: ids.length, merchCount: ids.length, cityDesignCount: 0, memberIds: ids, allMemberIds: ids, ...opts };
 }
 
 /** A small but realistic Sul store: two SC cities with several families, Bagé, and editorial lines. */
@@ -239,7 +239,7 @@ describe("recommendations — determinism, index and validation", () => {
   it("14. another store's products never enter a store's lists, and every href is rebuilt on the store's own host", () => {
     const { ed, input } = fixture();
     const foreign = { ...merch("Bah | Dizeres"), commerceStoreKey: "use-norte" as const };
-    const mixed: StoreBuildInput = { ...input, merch: [...input.merch, foreign], collections: input.collections.map((c) => (c.slug === "fala-daqui" ? { ...c, memberIds: [...c.memberIds, foreign.inkProductId], searchMemberIds: [...(c.searchMemberIds ?? []), foreign.inkProductId] } : c)) };
+    const mixed: StoreBuildInput = { ...input, merch: [...input.merch, foreign], collections: input.collections.map((c) => (c.slug === "fala-daqui" ? { ...c, memberIds: [...c.memberIds, foreign.inkProductId], allMemberIds: [...(c.allMemberIds ?? []), foreign.inkProductId] } : c)) };
     const list = listFor(mixed, ed.tche.inkProductId);
     expect(list.map((i) => i.productId)).not.toContain(foreign.inkProductId);
     for (const item of list) expect(item.href.startsWith(`${BASE}/`)).toBe(true);

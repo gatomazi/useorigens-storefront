@@ -21,6 +21,7 @@ import { defineConfig } from "@playwright/test";
  *     Sul with its own palette, so it goes last; it can also run alone on a fresh sandbox (`--no-deps`).
  *   - `promotions.spec.ts` publishes Sul's coupons and promotions; it does not depend on the others' state and also runs alone (`--no-deps`).
  *   - `collection-order.spec.ts` builds its own draft section from a public collection and publishes nothing; it also runs alone (`--no-deps`).
+ *   - `collection-page.spec.ts` reads a public collection's page, builds a draft section and a draft landing, and publishes nothing; it also runs alone.
  * `hotpages.spec.ts` and the production-mode suite (`tests/e2e-prod`) additionally treat "already enabled" as fine on their own (see the idempotent
  * enable step in both), so this order is a documented convenience, not the only thing standing between the suite and a false failure.
  * `docs/admin/cms-hotpages-personalizacao-final-gate.md` §C has the failures this replaced and the reproduction command for the old, unordered run.
@@ -29,7 +30,7 @@ const port = 3320;
 const sandbox = process.env.CMS_TEST_SANDBOX ?? mkdtempSync(path.join(tmpdir(), "cms-e2e-"));
 process.env.CMS_TEST_SANDBOX = sandbox;
 
-const ORDER = ["roundtrip.spec.ts", "scopes.spec.ts", "hero.spec.ts", "hotpages.spec.ts", "navbar.spec.ts", "structured.spec.ts", "navigation-theme.spec.ts", "promotions.spec.ts", "collection-order.spec.ts"] as const;
+const ORDER = ["roundtrip.spec.ts", "scopes.spec.ts", "hero.spec.ts", "hotpages.spec.ts", "navbar.spec.ts", "structured.spec.ts", "navigation-theme.spec.ts", "promotions.spec.ts", "collection-order.spec.ts", "collection-page.spec.ts"] as const;
 
 export default defineConfig({
   testDir: "tests/e2e-admin",

@@ -11,7 +11,7 @@ import { pageOptions } from "@/lib/admin/pages-view";
 import { platform } from "@/lib/admin/platform";
 import { currentScope, storeOf } from "@/lib/admin/scope";
 import { campaignStatus, cityStylesStatus, imageGridStatus, statesStatus } from "@/lib/admin/structured-status";
-import { collectionOrderMembers, sourceStatus } from "@/lib/admin/validate-draft";
+import { collectionOrderArrangement, collectionOrderMembers, sourceStatus } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { STATE_NAMES } from "@/lib/geo/regions";
@@ -56,6 +56,8 @@ export default async function PageSectionEditor({ params, searchParams }: { para
             section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={structured?.notes}
             stateCovers={stateCovers} page={page.id} pages={pageOptions(ws.doc, published)} customizers={customizers} anchors={page.sections.map((s) => ({ anchor: s.anchor, label: s.title?.replace(/\n/g, " ") ?? s.anchor }))}
             collectionMembers={collectionOrderMembers(section, ws.doc)}
+            collectionArrangement={collectionOrderArrangement(section, ws.doc)}
+            pageKind={page.kind}
           />
         </section>
         <section className="a-card p-5 2xl:sticky 2xl:top-4 2xl:self-start" aria-label="Pré-visualização">
