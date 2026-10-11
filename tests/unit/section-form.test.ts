@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { applyOp } from "@/lib/admin/draft-ops";
-import { customizerCardFieldDefaults, parseCollectionRef, parseSectionForm } from "@/lib/admin/section-form";
+import { customizerCardFieldDefaults, parseCollectionArrangement, parseCollectionRef, parseSectionForm } from "@/lib/admin/section-form";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 
 const seed = () => structuredClone(buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null }).docs.sul);
@@ -35,23 +35,28 @@ describe("section form parsing", () => {
     expect(s.cta).toEqual({ label: "Ver tudo", dest: { kind: "ink-collection", store: "use-sul", collectionId: 152188 } });
   });
 
-  test("given the panel's order list, when parsed, then it applies only to the collection it was drawn for, and a save without it keeps the saved order", () => {
+  test("given the panel's order list, when parsed, then it is the COLLECTION's arrangement, only for the collection it was drawn for, and a save without it keeps what is saved", () => {
     const ink = { source_kind: "ink-category", source_collection: "use-sul:152188", source_limit: "8" };
+    const ref = { store: "use-sul", collectionId: 152188 } as const;
     const arranged = (v: unknown, forRef = "use-sul:152188") => ({ ...ink, source_arrangement: JSON.stringify(v), source_arrangement_for: forRef });
-    const manual = parseSectionForm(form(arranged({ order: "manual", productIds: ["2", "1", "x", "2"], hiddenIds: ["3"] })), terra());
-    expect(manual.source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 152188, order: "manual", productIds: ["2", "1"], hiddenIds: ["3"], limit: 8 });
+    expect(parseCollectionArrangement(form(arranged({ order: "manual", productIds: ["2", "1", "x", "2"], hiddenIds: ["3"] })), ref)).toEqual({ productIds: ["2", "1"], hiddenIds: ["3"] });
     // Only hidden products: INK's order stays live.
-    expect(parseSectionForm(form(arranged({ order: "category", productIds: ["2"], hiddenIds: ["3"] })), terra()).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 152188, order: "category", hiddenIds: ["3"], limit: 8 });
-
-    const saved = { ...terra(), source: manual.source };
-    // No list in the form (the collection did not resolve), or a malformed one: what is saved stays.
-    expect(parseSectionForm(form(ink), saved).source).toEqual(manual.source);
-    expect(parseSectionForm(form({ ...ink, source_arrangement: "{", source_arrangement_for: "use-sul:152188" }), saved).source).toEqual(manual.source);
-    // Another collection: it starts in INK's order, whatever list came along.
-    expect(parseSectionForm(form({ ...arranged({ order: "manual", productIds: ["2"] }), source_collection: "use-sul:9" }), saved).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 9, order: "category", limit: 8 });
-    expect(parseSectionForm(form({ ...ink, source_collection: "use-sul:9" }), saved).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 9, order: "category", limit: 8 });
+    expect(parseCollectionArrangement(form(arranged({ order: "category", productIds: ["2"], hiddenIds: ["3"] })), ref)).toEqual({ productIds: [], hiddenIds: ["3"] });
     // "Voltar à ordem da INK".
-    expect(parseSectionForm(form(arranged({ order: "category", hiddenIds: [] })), saved).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 152188, order: "category", limit: 8 });
+    expect(parseCollectionArrangement(form(arranged({ order: "category", hiddenIds: [] })), ref)).toEqual({ productIds: [], hiddenIds: [] });
+    // Drawn for another collection, missing or malformed: no arrangement to save.
+    expect(parseCollectionArrangement(form(arranged({ order: "manual", productIds: ["2"] }, "use-sul:9")), ref)).toBeNull();
+    expect(parseCollectionArrangement(form(ink), ref)).toBeNull();
+    expect(parseCollectionArrangement(form({ ...ink, source_arrangement: "{", source_arrangement_for: "use-sul:152188" }), ref)).toBeNull();
+
+    // The section itself drops its own older order as soon as the list is posted: the order now lives in the collection.
+    const older = { ...terra(), source: { kind: "ink-category" as const, store: "use-sul" as const, collectionId: 152188, order: "manual" as const, productIds: ["2", "1"], hiddenIds: ["3"], limit: 8 } };
+    expect(parseSectionForm(form(arranged({ order: "manual", productIds: ["1"] })), older).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 152188, order: "category", limit: 8 });
+    // No list in the form (the collection did not resolve), or a malformed one: what is saved stays.
+    expect(parseSectionForm(form(ink), older).source).toEqual(older.source);
+    expect(parseSectionForm(form({ ...ink, source_arrangement: "{", source_arrangement_for: "use-sul:152188" }), older).source).toEqual(older.source);
+    // Another collection: it starts with no order of its own, whatever list came along.
+    expect(parseSectionForm(form({ ...arranged({ order: "manual", productIds: ["2"] }), source_collection: "use-sul:9" }), older).source).toEqual({ kind: "ink-category", store: "use-sul", collectionId: 9, order: "category", limit: 8 });
   });
 
   test("given out-of-range numbers, when parsed, then they are clamped (limit 3..24, focal 0..100, overlay ≤ 0.85)", () => {

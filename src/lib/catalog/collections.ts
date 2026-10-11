@@ -36,11 +36,12 @@ export type CollectionRecord = {
   /** The first matched ids, in the order INK returned them (at most MAX_STORED_MEMBERS). Not "best sellers", not "newest". */
   memberIds: string[];
   /**
-   * EVERY matched id (de-duplicated, INK order), stored ONLY for PUBLIC collections: the text search lists a collection's products when its name is
-   * searched, and the 48 above are a showcase slice, not the membership. Present ⇒ the search by collection name is complete for it (`searchMembers`).
-   * Absent on records written before this field existed (and on internal collections, which are never searched): they need a collections resync.
+   * EVERY matched id (de-duplicated, INK order), for every collection: the collection pages list all of them (paginated), and the text search lists a
+   * public collection's products when its name is searched. The 48 above are a showcase slice, not the membership. Present ⇒ the membership is
+   * complete (`completeMembers`). Absent on records written before this field existed: they need a collections resync. The file written before
+   * internal collections were stored kept the same list, for public ones only, as `searchMemberIds`: the reader takes it as this field.
    */
-  searchMemberIds?: string[];
+  allMemberIds?: string[];
   /** Set on records migrated from the v1 file, which dropped the members of hidden collections and all city designs: needs a resync. */
   needsResync?: true;
 };
@@ -64,9 +65,9 @@ const SLUG = /^[a-z0-9][a-z0-9-]{0,80}$/;
 
 export type Parsed<T> = { ok: true; value: T } | { ok: false; error: string };
 
-/** Which of a collection's ids exist in the store's catalog, and the first ones in INK's order. Injected so parsing never needs the catalog.
- * `keepAll` also returns every matched id (`all`); asked only for public collections so a 100k-id internal segmentation is never held in the file. */
-export type IdMatcher = (ids: readonly string[], options?: { keepAll?: boolean }) => { members: string[]; matched: number; merch: number; cityDesigns: number; all?: string[] };
+/** Which of a collection's ids exist in the store's catalog: the first ones in INK's order and all of them (`all`). Injected so parsing never needs the
+ * catalog. Only ids of the catalog are kept, so a 100k-id internal segmentation becomes the few thousand products the store really sells. */
+export type IdMatcher = (ids: readonly string[]) => { members: string[]; matched: number; merch: number; cityDesigns: number; all: string[] };
 
 /**
  * Validates ONE page of `GET /v1/stores/collections` and reduces every collection immediately (the raw `product_ids` array is dropped as
@@ -92,7 +93,7 @@ export function parseCollectionsPage(raw: unknown, match: IdMatcher): Parsed<{ c
     if (c.is_available !== null && typeof c.is_available !== "boolean") return { ok: false, error: `collections[${i}].is_available` };
     if (!Array.isArray(c.product_ids) || c.product_ids.some((p) => typeof p !== "number")) return { ok: false, error: `collections[${i}].product_ids` };
     const ids = (c.product_ids as number[]).map(String);
-    const matched = match(ids, { keepAll: c.is_available === true });
+    const matched = match(ids);
     out.push({
       id: c.id,
       name: c.name,
@@ -104,7 +105,7 @@ export function parseCollectionsPage(raw: unknown, match: IdMatcher): Parsed<{ c
       merchCount: matched.merch,
       cityDesignCount: matched.cityDesigns,
       memberIds: matched.members,
-      ...(matched.all ? { searchMemberIds: matched.all } : {}),
+      allMemberIds: matched.all,
     });
   }
   return { ok: true, value: { collections: out, page: page as number, totalPages: totalPages as number, totalCount: totalCount as number } };
@@ -114,9 +115,9 @@ export function parseCollectionsPage(raw: unknown, match: IdMatcher): Parsed<{ c
 export function matcherForStore(index: { bindings: readonly { inkProductId: string }[]; merch: readonly { inkProductId: string }[] }): IdMatcher {
   const cityDesigns = new Set(index.bindings.map((b) => b.inkProductId));
   const merch = new Set(index.merch.map((m) => m.inkProductId));
-  return (ids, options) => {
+  return (ids) => {
     const members: string[] = [];
-    const all: string[] | undefined = options?.keepAll ? [] : undefined;
+    const all: string[] = [];
     let merchCount = 0;
     let cityCount = 0;
     const seen = new Set<string>();
@@ -127,9 +128,9 @@ export function matcherForStore(index: { bindings: readonly { inkProductId: stri
       else if (cityDesigns.has(id)) cityCount++;
       else continue;
       if (members.length < MAX_STORED_MEMBERS) members.push(id);
-      all?.push(id);
+      all.push(id);
     }
-    return { members, matched: merchCount + cityCount, merch: merchCount, cityDesigns: cityCount, ...(all ? { all } : {}) };
+    return { members, matched: merchCount + cityCount, merch: merchCount, cityDesigns: cityCount, all };
   };
 }
 
@@ -173,6 +174,12 @@ function migrateLegacy(r: LegacyRecord): CollectionRecord {
   };
 }
 
+/** A record of the file written before every collection kept its full list: the list it had (public collections only) was `searchMemberIds`. */
+function withAllMembers(record: CollectionRecord): CollectionRecord {
+  const { searchMemberIds, ...rest } = record as CollectionRecord & { searchMemberIds?: string[] };
+  return searchMemberIds !== undefined && rest.allMemberIds === undefined ? { ...rest, allMemberIds: searchMemberIds } : rest;
+}
+
 /**
  * Accepts the current (v2) file and the previous (v1) one. A v1 record is never presented as complete: it is flagged `needsResync`, and
  * `collectionState` only lets it feed a section under the OLD rule (a public collection with ≥ 3 merch members).
@@ -186,7 +193,7 @@ export function normalizeCollectionsSnapshot(value: unknown): CollectionsSnapsho
   for (const [key, raw] of Object.entries(v.stores as Record<string, unknown>)) {
     if (!STORE_KEYS.includes(key) || typeof raw !== "object" || raw === null || !Array.isArray((raw as StoreCollections).collections)) return null;
     const s = raw as StoreCollections;
-    stores[key as CommerceStoreKey] = v.version === 1 ? { ...s, collections: (s.collections as unknown as LegacyRecord[]).map(migrateLegacy) } : s;
+    stores[key as CommerceStoreKey] = v.version === 1 ? { ...s, collections: (s.collections as unknown as LegacyRecord[]).map(migrateLegacy) } : { ...s, collections: s.collections.map(withAllMembers) };
   }
   return { version: 2, stores };
 }
@@ -224,20 +231,20 @@ export function collectionState(record: CollectionRecord, enabledInternal: Reado
 }
 
 /**
- * The COMPLETE membership of a collection for the text search, or null when it is not known completely. Complete means: a stored full list whose size
- * equals the matched count, or a short collection whose showcase slice already is everything (`memberIds.length === matchedCount`, ≤ 48). Anything else
- * is a truncated slice: the search must not list it by name (it would return an arbitrary subset and a misleading total).
+ * The COMPLETE membership of a collection, or null when it is not known completely. Complete means: a stored full list whose size equals the matched
+ * count, or a short collection whose showcase slice already is everything (`memberIds.length === matchedCount`, ≤ 48). Anything else is a truncated
+ * slice: the search must not list it by name (it would return an arbitrary subset and a misleading total), and a collection page shows only that slice.
  */
-export function searchMembers(record: CollectionRecord): readonly string[] | null {
+export function completeMembers(record: CollectionRecord): readonly string[] | null {
   if (record.needsResync || record.matchedCount === 0) return null;
-  if (record.searchMemberIds !== undefined) return Array.isArray(record.searchMemberIds) && record.searchMemberIds.length === record.matchedCount && record.searchMemberIds.every((id) => typeof id === "string") ? record.searchMemberIds : null;
+  if (record.allMemberIds !== undefined) return Array.isArray(record.allMemberIds) && record.allMemberIds.length === record.matchedCount && record.allMemberIds.every((id) => typeof id === "string") ? record.allMemberIds : null;
   return record.memberIds.length === record.matchedCount ? record.memberIds : null;
 }
 
 /** For the admin: how many public collections the search covers completely, and which ones still need a collections resync. Pure. */
 export function searchCoverage(records: readonly CollectionRecord[]): { complete: number; partial: string[] } {
   const publicWithProducts = records.filter((r) => r.isAvailable && r.matchedCount > 0);
-  const partial = publicWithProducts.filter((r) => searchMembers(r) === null).map((r) => r.name);
+  const partial = publicWithProducts.filter((r) => completeMembers(r) === null).map((r) => r.name);
   return { complete: publicWithProducts.length - partial.length, partial };
 }
 

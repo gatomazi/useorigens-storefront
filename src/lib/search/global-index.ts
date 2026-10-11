@@ -1,10 +1,10 @@
 import "server-only";
 import { statSync } from "node:fs";
 import { purchaseUrl } from "../catalog/commerce";
-import { categoryLookup } from "../catalog/collection-source";
+import { categoryLookup, collectionPageSlug } from "../catalog/collection-source";
 import { MIN_USABLE_PRODUCTS, type CollectionRecord } from "../catalog/collections";
 import { getStoreCollections } from "../catalog/collections-file";
-import { enabledInternalIds } from "../site-config/collections-enabled";
+import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
 import { expandTuple, garmentIndexMtimeMs, type GarmentIndex } from "../catalog/garment-index-file";
 import { garmentTypeById, CLASSIC_GARMENT_TYPE_ID } from "../catalog/garments";
 import { compareIds } from "../catalog/ranking";
@@ -20,7 +20,7 @@ import { siteConfigHomeEnabled } from "../site-config/flag";
 import { customizerHref, pageHref, PAGE_KIND_LABEL } from "../site-config/pages";
 import { readPublished } from "../site-config/published";
 import type { PublishedBundle, ScopeDoc, Source as CarouselSource } from "../site-config/schema";
-import { collectionUrl, resolveSource, type EditorialItems, type SourceResult } from "../site-config/sources";
+import { collectionPagePath, collectionUrl, resolveSource, type EditorialItems, type SourceResult } from "../site-config/sources";
 import { umaPencaLookup } from "../umapenca/carousel";
 import { readUmaPencaSnapshot, umaPencaSnapshotPath } from "../umapenca/snapshot";
 import { prepareGlobalDocs, type GlobalDoc, type PreparedGlobalDoc } from "./global";
@@ -154,14 +154,17 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
     });
   }
 
-  // Public INK collections with a verified public page and enough real products; an internal collection never becomes a link.
+  // Public INK collections with enough real products: their page on the storefront (the INK one only without the CMS, which draws that page). An
+  // internal collection is never searched by name: its name is an internal segmentation, not a word a customer types.
+  const store = REGIONS[region].storeKey;
   for (const c of input.collections) {
     if (!c.isAvailable || c.matchedCount < MIN_USABLE_PRODUCTS) continue;
-    const url = collectionUrl(REGIONS[region].storeKey, c.slug);
+    const ours = input.doc ? collectionPageSlug(input.doc, store, c.id) : null;
+    const url = ours ? collectionPagePath(region, ours) : collectionUrl(store, c.slug);
     if (!url) continue;
     docs.push({
-      key: `col:${c.id}`, kind: "page", region, title: c.name.replace(/\s+/g, " ").trim(), subtitle: `${plural(c.matchedCount, "produto", "produtos")} na loja`,
-      href: url, external: true, tag: "Coleção", rank: 4 + c.position / 10_000, names: [c.name], strong: [c.slug.replace(/-/g, " ")], weak: [],
+      key: `col:${c.id}`, kind: "page", region, title: c.name.replace(/\s+/g, " ").trim(), subtitle: ours ? plural(c.matchedCount, "produto", "produtos") : `${plural(c.matchedCount, "produto", "produtos")} na loja`,
+      href: url, ...(ours ? {} : { external: true }), tag: "Coleção", rank: 4 + c.position / 10_000, names: [c.name], strong: [c.slug.replace(/-/g, " ")], weak: [],
     });
   }
   return dedupeEditorial(docs);
@@ -252,7 +255,7 @@ export function globalSearchIndex(): Built {
   for (const region of regions) {
     const doc = bundle?.docs[region];
     const store = getStoreCollections(REGIONS[region].storeKey);
-    const categories = categoryLookup((s) => catalog.productsOfStore(s), (s) => enabledInternalIds(doc, s));
+    const categories = categoryLookup((s) => catalog.productsOfStore(s), (s) => enabledInternalIds(doc, s), undefined, (src) => arrangementOf(doc, src.store, src.collectionId, src));
     const editorial = doc ? editorialItems(region) : null;
     const carouselItems = (source: CarouselSource): number => {
       if (!editorial) return 0;

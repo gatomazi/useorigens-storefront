@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pagination } from "@/components/catalog/Pagination";
 import { PriceText } from "@/components/catalog/PriceText";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
@@ -34,18 +35,6 @@ const pageHref = (region: string, q: string, page: number): string => {
   if (page > 1) params.set("page", String(page));
   return `/${region}/busca?${params}`;
 };
-
-/** Page numbers to show: first, last, and a window around the current one, with gaps as `null`. */
-function pageWindow(current: number, count: number): (number | null)[] {
-  const wanted = new Set([1, count, current - 1, current, current + 1]);
-  const pages = [...wanted].filter((p) => p >= 1 && p <= count).sort((a, b) => a - b);
-  const out: (number | null)[] = [];
-  pages.forEach((p, i) => {
-    if (i > 0 && p - (pages[i - 1] ?? 0) > 1) out.push(null);
-    out.push(p);
-  });
-  return out;
-}
 
 /**
  * Text search over the region's whole catalog (city designs, expressions, state lines, collections…). Distinct from the header's "Buscar cidade":
@@ -138,35 +127,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
             })}
           </ul>
 
-          {result.pageCount > 1 && (
-            <nav aria-label="Paginação dos resultados" className="mt-12 flex flex-wrap items-center gap-2">
-              {result.page > 1 && (
-                <Link href={pageHref(region, q, result.page - 1)} rel="prev" className="btn-ghost inline-flex min-h-11 items-center px-4">
-                  Anterior
-                </Link>
-              )}
-              {pageWindow(result.page, result.pageCount).map((p, i) =>
-                p === null ? (
-                  <span key={`gap-${i}`} aria-hidden="true" className="px-1">
-                    …
-                  </span>
-                ) : p === result.page ? (
-                  <span key={p} aria-current="page" className="inline-flex min-h-11 min-w-11 items-center justify-center border-2 border-ink bg-ink px-3 font-semibold text-white">
-                    {p}
-                  </span>
-                ) : (
-                  <Link key={p} href={pageHref(region, q, p)} className="inline-flex min-h-11 min-w-11 items-center justify-center border-2 border-ink px-3 font-semibold hover:bg-ink hover:text-white">
-                    {p}
-                  </Link>
-                ),
-              )}
-              {result.page < result.pageCount && (
-                <Link href={pageHref(region, q, result.page + 1)} rel="next" className="btn-ghost inline-flex min-h-11 items-center px-4">
-                  Próxima
-                </Link>
-              )}
-            </nav>
-          )}
+          <Pagination page={result.page} pageCount={result.pageCount} hrefOf={(p) => pageHref(region, q, p)} label="Paginação dos resultados" />
         </>
       )}
     </div>

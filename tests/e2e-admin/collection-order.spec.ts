@@ -48,7 +48,7 @@ test("given a collection section, when a product goes to the top and another is 
   // The 6th product goes to the top; the (new) 2nd is hidden.
   await page.getByRole("button", { name: `Levar ${ink[5]} para o topo` }).click();
   await expect(page.getByTestId("collection-order-mode")).toHaveText("Ordem manual");
-  await page.getByRole("button", { name: `Esconder ${ink[0]} desta seção` }).click();
+  await page.getByRole("button", { name: `Esconder ${ink[0]} da coleção` }).click();
   expect(await rowNames(page)).toEqual([ink[5], ...ink.slice(1, 5), ...ink.slice(6)]);
   // Dragged by its grip: the (now) 4th product goes up to the 2nd place.
   await dragRow(page, 3, 1);

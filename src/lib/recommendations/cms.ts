@@ -12,7 +12,7 @@ export function featuredCollectionIds(bundle: PublishedBundle | null, store: Com
   const fromSections = (sections: readonly Section[] | undefined) => {
     for (const s of sections ?? []) {
       if (s.source?.kind === "ink-category" && s.source.store === store) ids.add(s.source.collectionId);
-      if (s.cta?.dest.kind === "ink-collection" && s.cta.dest.store === store) ids.add(s.cta.dest.collectionId);
+      if ((s.cta?.dest.kind === "ink-collection" || s.cta?.dest.kind === "collection-page") && s.cta.dest.store === store) ids.add(s.cta.dest.collectionId);
     }
   };
   for (const doc of Object.values(bundle.docs ?? {})) {

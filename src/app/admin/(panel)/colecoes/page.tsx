@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { moveCollectionNavbarAction, setCollectionEnabledAction, setCollectionNavbarPositionAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
+import { createCollectionPageAction, linkCollectionPagesAction, moveCollectionNavbarAction, setCollectionEnabledAction, setCollectionNavbarPositionAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { LibrarySearch } from "@/components/admin/LibrarySearch";
-import { libraryEntries, type LibraryEntry } from "@/lib/catalog/collection-source";
+import { collectionPageSlug, libraryEntries, type LibraryEntry } from "@/lib/catalog/collection-source";
 import { searchCoverage } from "@/lib/catalog/collections";
 import { getCollections } from "@/lib/catalog/collections-file";
 import { searchCollections } from "@/lib/admin/collection-search";
@@ -14,7 +14,7 @@ import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { currentScope, storeOf } from "@/lib/admin/scope";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
-import { enabledInternalIds, sectionsUsing } from "@/lib/site-config/collections-enabled";
+import { enabledInternalIds, inkCollectionLinks, sectionsUsing } from "@/lib/site-config/collections-enabled";
 import { effectiveNavbarGroups, navbarPositionOf, type NavbarPosition } from "@/lib/site-config/navbar-groups";
 import { numberPt } from "@/lib/format";
 
@@ -66,6 +66,8 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
   const staleReason = !synced ? null : ageDays >= 7 ? "Desatualizada (7+ dias)" : currentCatalog && new Date(currentCatalog) > new Date(synced.catalogSyncedAt) ? "O catálogo é mais novo que as coleções" : null;
   const { syncs } = platform();
   const lastRun = actor.role === "owner" ? await syncs.last("collections") : null;
+  // Links still opening a collection on INK that can open its page on the site instead ("Levar para as páginas do site").
+  const toSite = inkCollectionLinks(ws.doc).filter((r) => collectionPageSlug(ws.doc, r.store, r.collectionId) !== null).length;
   const filtered = searchCollections(all.filter((e) => passes(e, f)), q).sort((a, b) => (q ? 0 : a.position - b.position));
   const shown = filtered.slice(0, MAX_ROWS);
   const counts = {
@@ -87,7 +89,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Coleções da INK</h1>
-        <p className="a-muted mt-2 max-w-3xl">Biblioteca das coleções sincronizadas, inclusive as internas (ocultas na INK). Aqui você decide quais podem alimentar seções da home. Nada é alterado na INK.</p>
+        <p className="a-muted mt-2 max-w-3xl">Biblioteca das coleções sincronizadas, inclusive as internas (ocultas na INK). Aqui você decide quais podem alimentar seções da home. Cada coleção que a região pode usar tem uma página no site com todos os produtos, em páginas, que é para onde o “Ver todos” leva. Nada é alterado na INK.</p>
       </div>
       {from && <p><Link href={from} className="a-btn ghost sm">← Voltar ao que eu estava fazendo</Link></p>}
       <Flash ok={sp.ok} err={sp.err} />
@@ -147,6 +149,15 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
         </div>
       </div>
 
+      {toSite > 0 && (
+        <form action={linkCollectionPagesAction} className="a-card flex flex-wrap items-center justify-between gap-3 p-5" data-testid="link-collection-pages">
+          <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+          <input type="hidden" name="scope" value={scope} />
+          <p className="max-w-3xl text-[0.9375rem]"><strong>{toSite === 1 ? "1 botão ou bloco ainda abre" : `${toSite} botões ou blocos ainda abrem`} a coleção na loja da INK.</strong> Eles podem levar à página da coleção aqui no site, com todos os produtos. A troca vai para o rascunho; depois publique a home e as páginas alteradas.</p>
+          <button type="submit" className="a-btn sm">Levar para as páginas do site</button>
+        </form>
+      )}
+
       <p className="a-muted">Coleções da loja INK de <strong>{store.name}</strong> (a região em edição). Para ver outra loja, troque a região no topo.</p>
 
       <div className="a-card p-5"><LibrarySearch q={q} f={f} /></div>
@@ -192,11 +203,13 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
         <section className="a-card overflow-x-auto" aria-label="Coleções">
           <table className="a-table a-stack">
             <caption className="sr-only">Coleções de {store.name}</caption>
-            <thead><tr><th scope="col">Coleção</th><th scope="col">Na INK</th><th scope="col">Produtos no catálogo</th><th scope="col">No CMS</th><th scope="col">Navbar da INK</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
+            <thead><tr><th scope="col">Coleção</th><th scope="col">Na INK</th><th scope="col">Produtos no catálogo</th><th scope="col">No CMS</th><th scope="col">Página no site</th><th scope="col">Navbar da INK</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
             <tbody>
-              {shown.length === 0 && <tr><td colSpan={6} className="a-muted">Nenhuma coleção corresponde à busca e ao filtro.{" "}<Link className="a-link" href={carry({ q: "", f: "all" }).replace(/q=&?|f=all&?/g, "")}>Limpar</Link></td></tr>}
+              {shown.length === 0 && <tr><td colSpan={7} className="a-muted">Nenhuma coleção corresponde à busca e ao filtro.{" "}<Link className="a-link" href={carry({ q: "", f: "all" }).replace(/q=&?|f=all&?/g, "")}>Limpar</Link></td></tr>}
               {shown.map((e) => {
                 const users = e.visibility === "internal" ? sectionsUsing(ws.doc, e.store, e.id) : [];
+                // The collection's page on the storefront: drawn on its own for every collection the region can use; a landing at the same address replaces it.
+                const landing = ws.doc.pages?.find((p) => p.kind === "categoryLanding" && p.slug === e.slug);
                 return (
                   <tr key={e.id}>
                     <td>
@@ -212,6 +225,22 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
                     <td data-label="No CMS">
                       {e.visibility === "public" ? <span className="a-muted">Habilitada (pública)</span> : e.enabled ? <span className="a-badge ok">Habilitada no CMS</span> : <span className="a-badge">Desabilitada</span>}
                       {users.length > 0 && <p className="a-muted mt-1 text-[0.8125rem]">Usada em: {users.map((s) => s.title ?? s.id).join(", ")}</p>}
+                    </td>
+                    <td data-label="Página no site">
+                      {landing ? (
+                        <>
+                          <Link className="a-link font-semibold" href={`/admin/paginas/${landing.id}`}>Editar página</Link>
+                          <p className="a-muted mt-1 text-[0.8125rem]">Categoria-pai “{landing.title}”{landing.archived ? " (arquivada: a automática vale)" : ws.baseDoc.pages?.some((p) => p.id === landing.id) ? "" : " (rascunho: até publicar, vale a automática)"}</p>
+                        </>
+                      ) : e.selectable ? (
+                        <form action={createCollectionPageAction} className="space-y-1">
+                          <input type="hidden" name="ref" value={`${e.store}:${e.id}`} />
+                          <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                          <input type="hidden" name="scope" value={scope} />
+                          <p className="text-[0.8125rem]"><code>/{scope}/colecoes/{e.slug}</code></p>
+                          <button type="submit" className="a-btn ghost sm" title="Cria no rascunho uma categoria-pai com este endereço, com o título e a grade da coleção, para você trocar textos e imagem">Personalizar página</button>
+                        </form>
+                      ) : <span className="a-muted" title="Só coleções que a região pode usar (públicas, ou internas habilitadas, com ao menos 3 produtos) têm página.">Sem página</span>}
                     </td>
                     <td data-label="Navbar da INK">
                       {e.visibility === "public" ? (

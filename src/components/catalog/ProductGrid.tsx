@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { ProductTags } from "@/lib/site-config/schema";
 import { CustomizerCardLink, ProductCardLink, ProductSectionHeading, SOLID_CARDS } from "./ProductCard";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
@@ -25,7 +26,13 @@ export function ProductGrid({
   buyLabel,
   tags,
   solidCards = false,
+  aside,
+  footer,
 }: {
+  /** Next to the heading, where "Ver todos" goes (a paged grid shows its product count there). */
+  aside?: ReactNode;
+  /** Under the grid (a paged grid's page links). */
+  footer?: ReactNode;
   leading?: LeadingCard;
   items: CarouselItem[];
   labelledBy: string;
@@ -49,7 +56,9 @@ export function ProductGrid({
   const cards = items.length + (leading ? 1 : 0);
   return (
     <div role="region" aria-labelledby={labelledBy}>
-      <ProductSectionHeading labelledBy={labelledBy} title={title} intro={intro} dark={dark} viewAllHref={viewAllHref} viewAllLabel={viewAllLabel} />
+      <ProductSectionHeading labelledBy={labelledBy} title={title} intro={intro} dark={dark} viewAllHref={viewAllHref} viewAllLabel={viewAllLabel}>
+        {aside}
+      </ProductSectionHeading>
       {/* Bordered cards carry their own separation: one even gap on both axes, no taller rows of air between them. */}
       <ul className={`grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 ${solidCards ? SOLID_CARDS : ""}`}>
         {leading && (
@@ -71,6 +80,7 @@ export function ProductGrid({
           </a>
         </div>
       )}
+      {footer}
     </div>
   );
 }

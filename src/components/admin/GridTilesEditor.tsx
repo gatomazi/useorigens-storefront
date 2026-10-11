@@ -5,10 +5,10 @@ import type { ComboEntry } from "@/components/admin/CollectionCombobox";
 import type { MediaOption } from "@/components/admin/SectionEditorForm";
 import { MAX_GRID_TILES, MIN_GRID_TILES, type GridLayout, type GridTile } from "@/lib/site-config/schema";
 
-type DestKind = "ink-collection" | "page" | "route" | "anchor" | "external";
+type DestKind = "collection-page" | "ink-collection" | "page" | "route" | "anchor" | "external";
 type Row = { key: number; label: string; caption: string; image: string; kind: DestKind; collection: string; page: string; route: string; url: string; anchor: string };
 
-const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "ink-collection", collection: "", page: "", route: `/${scope}`, url: "", anchor: "" });
+const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "" });
 
 function toRow(t: GridTile, key: number, scope: string): Row {
   const d = t.dest;
@@ -18,7 +18,7 @@ function toRow(t: GridTile, key: number, scope: string): Row {
     caption: t.caption ?? "",
     image: t.image?.assetId ?? "",
     kind: d.kind,
-    collection: d.kind === "ink-collection" ? `${d.store}:${d.collectionId}` : "",
+    collection: d.kind === "ink-collection" || d.kind === "collection-page" ? `${d.store}:${d.collectionId}` : "",
     page: d.kind === "page" ? `${d.pageKind}/${d.slug}` : "",
     route: d.kind === "route" ? d.path : `/${scope}`,
     url: d.kind === "external" ? d.url : "",
@@ -139,19 +139,21 @@ export function GridTilesEditor({
                       <div>
                         <label className="a-label" htmlFor={id("kind")}>Leva para</label>
                         <select id={id("kind")} name={id("kind")} className="a-select" value={r.kind} onChange={(e) => patch(r.key, { kind: e.target.value as DestKind })}>
-                          <option value="ink-collection">Coleção da INK (página real na loja)</option>
+                          <option value="collection-page">Página da coleção (no site, com todos os produtos)</option>
+                          <option value="ink-collection">Coleção da INK (página na loja da INK)</option>
                           <option value="page">Hotpage ou categoria-pai publicada</option>
                           <option value="route">Página desta loja (endereço)</option>
                           <option value="anchor">Uma seção desta página</option>
                           <option value="external">URL da loja Use (Sul, Norte ou Centro)</option>
                         </select>
                       </div>
-                      {r.kind === "ink-collection" && (
+                      {(r.kind === "ink-collection" || r.kind === "collection-page") && (
                         <div>
                           <label className="a-label" htmlFor={id("collection")}>Coleção</label>
                           <select id={id("collection")} name={id("collection")} className="a-select" value={r.collection} onChange={(e) => patch(r.key, { collection: e.target.value })} required>
                             <option value="" disabled>Escolha…</option>
-                            {collections.map((c) => <option key={c.value} value={c.value}>{c.name} · {c.matchedCount} produtos</option>)}
+                            {/* INK has a page only for its public collections; ours exists for every one the region can use. */}
+                            {collections.filter((c) => r.kind === "collection-page" || c.visibility === "public").map((c) => <option key={c.value} value={c.value}>{c.name} · {c.matchedCount} produtos{c.visibility === "internal" ? " · interna" : ""}</option>)}
                           </select>
                         </div>
                       )}

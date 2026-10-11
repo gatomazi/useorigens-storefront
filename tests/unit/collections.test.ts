@@ -11,6 +11,10 @@ import type { MerchProduct, UnrankedBinding } from "@/lib/catalog/types";
 import { fetchStoreCollections, InkCollectionsError, MAX_BODY_BYTES } from "@/lib/ink/collections-client";
 import { collectionUrl, destinationHref, resolveSource } from "@/lib/site-config/sources";
 
+/** An ink-category source as a section stores it (its own older order, the way `categoryLookup` reads it with no document). */
+const src = (store: "use-sul" | "use-norte", collectionId: number, limit: number, a: { productIds?: string[]; hiddenIds?: string[] } = {}) =>
+  ({ kind: "ink-category", store, collectionId, limit, order: a.productIds ? "manual" : "category", ...(a.productIds ? { productIds: a.productIds } : {}), ...(a.hiddenIds ? { hiddenIds: a.hiddenIds } : {}) }) as const;
+
 const index = { bindings: [{ inkProductId: "9001" }, { inkProductId: "9002" }], merch: [{ inkProductId: "11" }, { inkProductId: "12" }, { inkProductId: "13" }, { inkProductId: "14" }] };
 const match = matcherForStore(index);
 
@@ -41,7 +45,7 @@ describe("collections page parsing", () => {
     expect(r.ok && r.value.collections.map((c) => [c.isAvailable, c.memberIds])).toEqual([[false, ["9001", "9002", "11"]], [false, ["12"]]]);
   });
 
-  test("given a huge collection, when parsed, then the total is counted, the showcase keeps the first members, and only the MATCHED ids (never the raw 100k) are stored for a public one", () => {
+  test("given a huge collection, when parsed, then the total is counted, the showcase keeps the first members, and only the MATCHED ids (never the raw 100k) are stored", () => {
     const big = Array.from({ length: 200 }, (_, i) => 20_000 + i);
     const wide = matcherForStore({ bindings: big.map((id) => ({ inkProductId: String(id) })), merch: [] });
     const raw = [...big, ...Array.from({ length: 100_000 }, (_, i) => 1_000_000 + i)];
@@ -50,14 +54,14 @@ describe("collections page parsing", () => {
     expect(c).toMatchObject({ matchedCount: 200, reportedProductCount: 100_200 });
     expect(c!.memberIds).toHaveLength(MAX_STORED_MEMBERS);
     expect(c!.memberIds[0]).toBe("20000"); // INK's order
-    expect(c!.searchMemberIds).toHaveLength(200); // complete membership for the text search, still only ids that exist in the catalog
-    expect(c!.searchMemberIds!.slice(0, 3)).toEqual(["20000", "20001", "20002"]);
+    expect(c!.allMemberIds).toHaveLength(200); // complete membership (collection pages, text search), still only ids that exist in the catalog
+    expect(c!.allMemberIds!.slice(0, 3)).toEqual(["20000", "20001", "20002"]);
     expect(JSON.stringify(c).length).toBeLessThan(4000);
-    // An INTERNAL segmentation (hidden on INK, never searched) keeps the old small footprint.
+    // An INTERNAL segmentation keeps its complete list too (its collection page lists every product), still only the matched ids.
     const internal = parseCollectionsPage(inkPage([inkItem({ is_available: false, product_ids: raw })]), wide);
     const i = internal.ok ? internal.value.collections[0] : null;
-    expect(i!.searchMemberIds).toBeUndefined();
-    expect(JSON.stringify(i).length).toBeLessThan(1000);
+    expect(i!.allMemberIds).toHaveLength(200);
+    expect(JSON.stringify(i).length).toBeLessThan(4000);
   });
 
   test("given repeated ids in one collection, when matched, then a product counts once", () => {
@@ -67,7 +71,7 @@ describe("collections page parsing", () => {
 
   test("given a store index, when matching, then an id only counts for the store the index belongs to", () => {
     const norte = matcherForStore({ bindings: [], merch: [{ inkProductId: "9999" }] });
-    expect(norte(["11", "9999"])).toEqual({ members: ["9999"], matched: 1, merch: 1, cityDesigns: 0 });
+    expect(norte(["11", "9999"])).toEqual({ members: ["9999"], matched: 1, merch: 1, cityDesigns: 0, all: ["9999"] });
   });
 
   test("given malformed pages, when parsed, then each is rejected as a whole", () => {
@@ -292,7 +296,7 @@ describe("compatibility (no file, corrupt file, the older v1 file)", () => {
     await writeFile(file, JSON.stringify(v1));
     expect(libraryEntries("use-sul", new Set([11]), file).find((e) => e.id === 11)).toMatchObject({ selectable: false, reason: "needs-resync", needsResync: true });
     const lookup = categoryLookup(() => ({ merch: new Map(), cityDesigns: new Map() }), () => new Set([11]), file);
-    expect(lookup("use-sul", 11, 6)).toEqual({ status: "unavailable", reason: "collection-needs-resync" });
+    expect(lookup(src("use-sul", 11, 6))).toEqual({ status: "unavailable", reason: "collection-needs-resync" });
   });
 
   test("given no collections file, when an ink-category section resolves, then it is unavailable and the section hides (today's behaviour)", () => {
@@ -354,11 +358,11 @@ describe("internal collections, CMS enablement and product resolution", () => {
   });
 
   test("given an internal collection that is NOT enabled, when resolved, then it yields no products even though they exist", () => {
-    expect(lookup([])("use-sul", 12, 6)).toEqual({ status: "unavailable", reason: "collection-not-enabled" });
+    expect(lookup([])(src("use-sul", 12, 6))).toEqual({ status: "unavailable", reason: "collection-not-enabled" });
   });
 
   test("given an enabled internal collection of city designs, when resolved, then real products appear, labelled by family and city, in INK's order", () => {
-    const r = lookup([12])("use-sul", 12, 3);
+    const r = lookup([12])(src("use-sul", 12, 3));
     expect(r.status).toBe("ok");
     if (r.status !== "ok") return;
     expect(r.items.map((i) => i.id)).toEqual(["d1", "d2", "d3"]);
@@ -366,47 +370,47 @@ describe("internal collections, CMS enablement and product resolution", () => {
   });
 
   test("given an enabled internal collection of merch, when resolved, then the merch products appear", () => {
-    const r = lookup([13])("use-sul", 13, 6);
+    const r = lookup([13])(src("use-sul", 13, 6));
     expect(r).toMatchObject({ status: "ok" });
     expect(r.status === "ok" && r.items.map((i) => i.id)).toEqual(["2", "1", "4"]);
   });
 
   test("given hidden, missing or other-store ids among the members, when resolved, then they never appear", () => {
     const partial = products({ merch: new Map([["2", merchProduct("2")], ["4", merchProduct("4", { commerceStoreKey: "use-norte", storeProductUrl: "https://www.usenorte.com.br/usenorte/product/4" })]]) });
-    const r = lookup([13], partial)("use-sul", 13, 6);
+    const r = lookup([13], partial)(src("use-sul", 13, 6));
     expect(r.status === "ok" && r.items.map((i) => i.id)).toEqual(["2", "4"]); // "1" is not in the store's snapshot: skipped, not invented
     expect(r.status === "ok" && r.items.find((i) => i.id === "4")!.href).toContain("usenorte"); // (a product the snapshot of THIS store holds under that id keeps its own url)
   });
 
   test("given the section's own order, when resolved, then its products come first, the rest follow in INK's order, and the limit applies after", () => {
     const ids = (r: ReturnType<ReturnType<typeof lookup>>) => (r.status === "ok" ? r.items.map((i) => i.id) : r.reason);
-    expect(ids(lookup()("use-sul", 10, 6))).toEqual(["3", "1", "2", "4"]); // INK's order
-    expect(ids(lookup()("use-sul", 10, 6, { productIds: ["4", "2"] }))).toEqual(["4", "2", "3", "1"]); // "3" and "1" are not in the saved order (new on INK): they follow
-    expect(ids(lookup()("use-sul", 10, 2, { productIds: ["2", "4", "3", "1"] }))).toEqual(["2", "4"]);
-    expect(ids(lookup()("use-sul", 10, 6, { productIds: ["999", "1", "1"] }))).toEqual(["1", "3", "2", "4"]); // left the collection: skipped; a repeat counts once
+    expect(ids(lookup()(src("use-sul", 10, 6)))).toEqual(["3", "1", "2", "4"]); // INK's order
+    expect(ids(lookup()(src("use-sul", 10, 6, { productIds: ["4", "2"] })))).toEqual(["4", "2", "3", "1"]); // "3" and "1" are not in the saved order (new on INK): they follow
+    expect(ids(lookup()(src("use-sul", 10, 2, { productIds: ["2", "4", "3", "1"] })))).toEqual(["2", "4"]);
+    expect(ids(lookup()(src("use-sul", 10, 6, { productIds: ["999", "1", "1"] })))).toEqual(["1", "3", "2", "4"]); // left the collection: skipped; a repeat counts once
   });
 
   test("given products hidden in a section, when resolved, then they never show, in INK's order or the section's own; hiding all of them says so", () => {
     const ids = (r: ReturnType<ReturnType<typeof lookup>>) => (r.status === "ok" ? r.items.map((i) => i.id) : r.reason);
-    expect(ids(lookup()("use-sul", 10, 6, { hiddenIds: ["1"] }))).toEqual(["3", "2", "4"]);
-    expect(ids(lookup()("use-sul", 10, 6, { productIds: ["4", "2", "3", "1"], hiddenIds: ["2", "999"] }))).toEqual(["4", "3", "1"]);
-    expect(ids(lookup()("use-sul", 10, 6, { hiddenIds: ["3", "1", "2", "4"] }))).toBe("collection-all-hidden");
+    expect(ids(lookup()(src("use-sul", 10, 6, { hiddenIds: ["1"] })))).toEqual(["3", "2", "4"]);
+    expect(ids(lookup()(src("use-sul", 10, 6, { productIds: ["4", "2", "3", "1"], hiddenIds: ["2", "999"] })))).toEqual(["4", "3", "1"]);
+    expect(ids(lookup()(src("use-sul", 10, 6, { hiddenIds: ["3", "1", "2", "4"] })))).toBe("collection-all-hidden");
   });
 
   test("given a product whose url is not an allowed commerce host, when resolved, then it is not shown", () => {
     const bad = products({ merch: new Map([["1", merchProduct("1", { storeProductUrl: "https://evil.example/p/1" })]]) });
-    expect(lookup([13], bad)("use-sul", 13, 6)).toEqual({ status: "unavailable", reason: "collection-has-no-products" });
+    expect(lookup([13], bad)(src("use-sul", 13, 6))).toEqual({ status: "unavailable", reason: "collection-has-no-products" });
   });
 
   test("given a collection with fewer than 3 real products, when resolved, then it can still resolve (the editor refuses to build on it, the library explains why)", () => {
-    expect(lookup([14])("use-sul", 14, 6)).toMatchObject({ status: "ok" });
+    expect(lookup([14])(src("use-sul", 14, 6))).toMatchObject({ status: "ok" });
     expect(libraryEntries("use-sul", new Set([14]), filePath).find((e) => e.id === 14)).toMatchObject({ selectable: false, reason: "too-few-products" });
   });
 
   test("given unknown, other-store and empty collections, when resolved, then each is unavailable with its own reason", () => {
-    expect(lookup()("use-sul", 999, 6)).toEqual({ status: "unavailable", reason: "collection-not-found" });
-    expect(lookup()("use-norte", 10, 6)).toEqual({ status: "unavailable", reason: "ink-collections-not-synced" });
-    expect(lookup()("use-sul", 15, 6)).toEqual({ status: "unavailable", reason: "collection-has-no-products" });
+    expect(lookup()(src("use-sul", 999, 6))).toEqual({ status: "unavailable", reason: "collection-not-found" });
+    expect(lookup()(src("use-norte", 10, 6))).toEqual({ status: "unavailable", reason: "ink-collections-not-synced" });
+    expect(lookup()(src("use-sul", 15, 6))).toEqual({ status: "unavailable", reason: "collection-has-no-products" });
   });
 
   test("given the stored link is store + id, when a collection is renamed on INK, then the same id still resolves", async () => {
@@ -414,7 +418,7 @@ describe("internal collections, CMS enablement and product resolution", () => {
     renamed.stores["use-sul"].collections[0].name = "Outro nome";
     const file2 = path.join(dir, "renamed.json");
     await writeFile(file2, JSON.stringify(renamed));
-    expect(categoryLookup(products(), () => new Set(), file2)("use-sul", 10, 6)).toMatchObject({ status: "ok" });
+    expect(categoryLookup(products(), () => new Set(), file2)(src("use-sul", 10, 6))).toMatchObject({ status: "ok" });
   });
 
   test("given public and internal collections, when the 'Ver todos' slug is asked, then only the public one has a page (no invented URL for an internal one)", () => {
@@ -440,7 +444,7 @@ describe("collection URLs (verified pattern)", () => {
   test("given an ink-collection destination, when resolved, then it needs the slug from the snapshot (otherwise null)", () => {
     const dest = { kind: "ink-collection", store: "use-sul", collectionId: 152188 } as const;
     expect(destinationHref(dest)).toBeNull();
-    expect(destinationHref(dest, () => "da-nossa-terra")).toBe("https://www.usesul.com.br/usesul/collections/da-nossa-terra");
-    expect(destinationHref(dest, () => null)).toBeNull();
+    expect(destinationHref(dest, { inkSlug: () => "da-nossa-terra" })).toBe("https://www.usesul.com.br/usesul/collections/da-nossa-terra");
+    expect(destinationHref(dest, { inkSlug: () => null })).toBeNull();
   });
 });

@@ -76,10 +76,14 @@ function AnchorPicker({ anchors, current }: { anchors: { anchor: string; label: 
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pages = [], customizers = [], anchors = [], collectionMembers,
+  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement,
 }: {
   /** Collection carousels: the saved collection's products in INK's order, for the order list (absent when it does not resolve). */
   collectionMembers?: OrderMember[];
+  /** How this region arranges the saved collection now (`arrangementOf`): it belongs to the collection, every section built on it shares it. */
+  collectionArrangement?: { productIds?: string[]; hiddenIds?: string[] };
+  /** The kind of page the section is on (absent: the home). A parent-category landing may hold the paged grid of a collection. */
+  pageKind?: "hotpage" | "categoryLanding";
   /** Set when the section belongs to a PAGE (hotpage / landing) instead of the home: the id of the page. */
   page?: string;
   /** Pages of this region a button may lead to: value `hotpage/slug`, with a status the editor should know. */
@@ -133,7 +137,10 @@ export function SectionEditorForm({
   const maxCards = maxSectionProducts(display);
   const [buyOn, setBuyOn] = useState(Boolean(section.layout?.buyLabel));
   const [tagOn, setTagOn] = useState(Boolean(section.layout?.tags?.text));
-  const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
+  const [ctaKind, setCtaKind] = useState<"none" | "collection-page" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
+  // The collections a "Ver todos" may lead to a page of: every one the region can use (public, or internal and enabled), the section's own first.
+  const pageEntries = collections.filter((e) => e.selectable);
+  const ctaCollection = section.cta && (section.cta.dest.kind === "collection-page" || section.cta.dest.kind === "ink-collection") ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : srcEntry?.value ?? currentRef ?? "";
 
   const [navShow, setNavShow] = useState(Boolean(section.nav));
   const [navLabel, setNavLabel] = useState(section.nav?.label ?? suggestedNavLabel(section));
@@ -216,7 +223,7 @@ export function SectionEditorForm({
           layout={section.grid ?? { columns: 4, aspect: "portrait", labels: "below" }}
           media={media}
           thumbOf={(assetId) => previewSrc(byId.get(assetId))}
-          collections={publicEntries}
+          collections={pageEntries}
           pages={pages}
           anchors={anchors.filter((x) => x.anchor !== section.anchor)}
         />
@@ -234,7 +241,7 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
-      {isCarousel && (
+      {isCarousel && display !== "paged" && (
         <fieldset className="space-y-4">
           <legend className="a-h2 mb-3">Primeiro card personalizável</legend>
           <input type="hidden" name="cc_present" value="1" />
@@ -279,6 +286,7 @@ export function SectionEditorForm({
               <label className="a-label" htmlFor="cta_kind">Destino</label>
               <select id="cta_kind" name="cta_kind" className="a-select" value={ctaKind} onChange={(e) => setCtaKind(e.target.value as typeof ctaKind)}>
                 <option value="none">Busca de cidade (padrão)</option>
+                <option value="collection-page">Página de uma coleção (no site)</option>
                 <option value="route">Página desta região (endereço)</option>
                 <option value="page">Hotpage ou categoria-pai publicada</option>
                 <option value="anchor">Uma seção desta página</option>
@@ -287,6 +295,15 @@ export function SectionEditorForm({
             </div>
             {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver mais"} className="a-input" maxLength={32} /></div>}
           </div>
+          {ctaKind === "collection-page" && (
+            <div>
+              <label className="a-label" htmlFor="cta_collection">Coleção</label>
+              <select id="cta_collection" name="cta_collection" className="a-select" defaultValue={section.cta?.dest.kind === "collection-page" ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : ""} required>
+                <option value="" disabled>Escolha…</option>
+                {pageEntries.map((c) => <option key={c.value} value={c.value}>{c.name} · {c.matchedCount} produtos{c.visibility === "internal" ? " · interna" : ""}</option>)}
+              </select>
+            </div>
+          )}
           {ctaKind === "page" && <PagePicker pages={pages} current={section.cta?.dest.kind === "page" ? `${section.cta.dest.pageKind}/${section.cta.dest.slug}` : ""} />}
           {ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
           {ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho (dentro de /{scope})</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : `/${scope}`} className="a-input" placeholder={`/${scope}/pa`} /><p className="a-muted mt-1 text-[0.8125rem]">Ex.: <code>/{scope}</code> ou a página de um estado. Um caminho de outra região é recusado.</p></div>}
@@ -331,7 +348,7 @@ export function SectionEditorForm({
               <div className="grid gap-4 md:grid-cols-[3fr_1fr]">
                 <CollectionCombobox name="source_collection" label="Coleção (busque pelo nome, slug ou número)" entries={collections} defaultValue={currentRef} libraryFrom={`/admin/home/${section.id}`} onSelect={setSrcEntry} />
                 <div>
-                  <label className="a-label" htmlFor="source_limit">Cards (até {maxCards})</label>
+                  <label className="a-label" htmlFor="source_limit">{display === "paged" ? `Produtos por página (até ${maxCards})` : `Cards (até ${maxCards})`}</label>
                   <input id="source_limit" name="source_limit" type="number" min={MIN_SECTION_PRODUCTS} max={maxCards} value={inkLimit} onChange={(e) => setInkLimit(e.target.value)} className="a-input" />
                 </div>
               </div>
@@ -340,30 +357,29 @@ export function SectionEditorForm({
               <CollectionOrder
                 collectionRef={currentRef!}
                 members={collectionMembers}
-                initial={{ order: cur.order, productIds: cur.productIds, hiddenIds: cur.hiddenIds }}
-                // Same clamp as the save (3..24, or up to 48 in a grid); the customizer card takes the first place.
-                visible={Math.min(maxCards, Math.max(MIN_SECTION_PRODUCTS, Math.round(Number(inkLimit)) || 6)) - (ccShow ? 1 : 0)}
+                initial={{ order: collectionArrangement?.productIds?.length ? "manual" : "category", productIds: collectionArrangement?.productIds, hiddenIds: collectionArrangement?.hiddenIds }}
+                // Same clamp as the save (3..24, or up to 48 in a grid); the customizer card takes the first place. A paged grid shows them all.
+                visible={display === "paged" ? null : Math.min(maxCards, Math.max(MIN_SECTION_PRODUCTS, Math.round(Number(inkLimit)) || 6)) - (ccShow ? 1 : 0)}
+                total={srcEntry?.value === currentRef ? srcEntry?.matchedCount : undefined}
               />
             )}
             {sourceKind === "ink-category" && srcEntry && srcEntry.value !== currentRef && <p className="a-muted text-[0.8125rem]">Salve o rascunho para ordenar ou esconder os produtos desta coleção (ela começa na ordem da INK).</p>}
             {sourceKind === "ink-category" && section.id.startsWith("seed-") && <p className="a-flash err text-[0.875rem]">Atenção: isto substitui a curadoria original desta seção por uma coleção da INK (na ordem da INK, que você ajusta aqui depois de salvar). Só vale depois de publicado.</p>}
           </fieldset>
 
+          {display === "paged" ? (
+            <p className="a-muted text-[0.875rem]">Na grade paginada não há botão “Ver todos”: ela já mostra todos os produtos da coleção.</p>
+          ) : (
           <fieldset className="space-y-4">
             <legend className="a-h2 mb-3">Botão “Ver todos”</legend>
-            {internalSource && (
-              <div className="a-flash ok text-[0.875rem]">
-                <p className="font-bold">Coleção interna: link “Ver todos” desativado.</p>
-                <p>Ela não tem uma página pública verificada na loja da INK, então nenhum botão é criado (nem uma URL inventada).</p>
-                <input type="hidden" name="cta_kind" value="none" />
-              </div>
-            )}
-            {!internalSource && <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="a-label" htmlFor="cta_kind">Destino</label>
                 <select id="cta_kind" name="cta_kind" className="a-select" value={ctaKind} onChange={(e) => setCtaKind(e.target.value as typeof ctaKind)}>
                   <option value="none">Sem botão</option>
-                  <option value="ink-collection">Coleção da INK (página real na loja)</option>
+                  <option value="collection-page">Página da coleção (no site, com todos os produtos)</option>
+                  {/* An internal collection has no verified public page on INK: never an invented URL. */}
+                  {(!internalSource || ctaKind === "ink-collection") && <option value="ink-collection">Coleção da INK (página na loja da INK)</option>}
                   <option value="external">URL da loja Use (Sul, Norte ou Centro)</option>
                   <option value="route">Página desta loja</option>
                   <option value="page">Hotpage ou categoria-pai publicada</option>
@@ -371,21 +387,32 @@ export function SectionEditorForm({
                 </select>
               </div>
               {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver todos"} className="a-input" maxLength={32} /></div>}
-            </div>}
-            {!internalSource && ctaKind === "ink-collection" && (
+            </div>
+            {ctaKind === "collection-page" && (
               <div>
                 <label className="a-label" htmlFor="cta_collection">Coleção</label>
-                <select id="cta_collection" name="cta_collection" className="a-select" defaultValue={section.cta?.dest.kind === "ink-collection" ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : ""} required>
+                <select key="page" id="cta_collection" name="cta_collection" className="a-select" defaultValue={pageEntries.some((c) => c.value === ctaCollection) ? ctaCollection : ""} required>
+                  <option value="" disabled>Escolha…</option>
+                  {pageEntries.map((c) => <option key={c.value} value={c.value}>{c.name} · {c.matchedCount} produtos{c.visibility === "internal" ? " · interna" : ""}</option>)}
+                </select>
+                <p className="a-muted mt-1 text-[0.8125rem]">A página fica em <code>/{scope}/colecoes/…</code> com todos os produtos da coleção, em páginas, na mesma ordem e sem os produtos escondidos daqui. Ela existe sozinha; para trocar o título, a imagem ou o texto, use “Personalizar página” em Coleções.</p>
+              </div>
+            )}
+            {ctaKind === "ink-collection" && (
+              <div>
+                <label className="a-label" htmlFor="cta_collection">Coleção</label>
+                <select key="ink" id="cta_collection" name="cta_collection" className="a-select" defaultValue={section.cta?.dest.kind === "ink-collection" ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : ""} required>
                   <option value="" disabled>Escolha…</option>
                   {publicEntries.map((c) => <option key={c.value} value={c.value}>{c.name} · {c.matchedCount} produtos</option>)}
                 </select>
               </div>
             )}
-            {!internalSource && ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usesul.com.br/usesul/collections/…" /></div>}
-            {!internalSource && ctaKind === "page" && <PagePicker pages={pages} current={section.cta?.dest.kind === "page" ? `${section.cta.dest.pageKind}/${section.cta.dest.slug}` : ""} />}
-            {!internalSource && ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
-            {!internalSource && ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : ""} className="a-input" placeholder="/sul/sc" /></div>}
+            {ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usesul.com.br/usesul/collections/…" /></div>}
+            {ctaKind === "page" && <PagePicker pages={pages} current={section.cta?.dest.kind === "page" ? `${section.cta.dest.pageKind}/${section.cta.dest.slug}` : ""} />}
+            {ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
+            {ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : ""} className="a-input" placeholder="/sul/sc" /></div>}
           </fieldset>
+          )}
 
           <fieldset className="space-y-4">
             <legend className="a-h2 mb-3">Layout</legend>
@@ -393,6 +420,8 @@ export function SectionEditorForm({
               {([
                 ["carousel", "Carrossel", "Uma fileira que a pessoa arrasta para o lado. Até 24 cards."],
                 ["grid", "Grade", "Todos os produtos na página, como numa categoria: 4 por linha no desktop, 3 no tablet e 2 no celular. Até 48 cards."],
+                // Only on a parent-category landing (its address carries the page numbers), only for an INK collection.
+                ...(pageKind === "categoryLanding" && sourceKind === "ink-category" ? [["paged", "Grade paginada (página da coleção)", "Todos os produtos da coleção, em páginas: os cards abaixo são os de cada página. Sem botão “Ver todos” nem card personalizável."]] as const : []),
               ] as const).map(([value, label, help]) => (
                 <label key={value} className={`flex cursor-pointer gap-3 border p-3 ${display === value ? "border-black bg-white" : "border-black/20"}`}>
                   <input type="radio" name="layout_display" value={value} checked={display === value} onChange={() => setDisplay(value)} className="mt-1" />

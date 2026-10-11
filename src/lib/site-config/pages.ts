@@ -3,7 +3,7 @@
  * admin, the storefront and the tests share them.
  */
 import type { RegionSlug } from "../geo/regions";
-import { CUSTOMIZER_SEGMENT, PAGE_SEGMENT, RESERVED_SLUGS, type Appearance, type Customizer, type Page, type PageKind, type ScopeDoc, type Section } from "./schema";
+import { CUSTOMIZER_SEGMENT, DEFAULT_PAGE_PRODUCTS, PAGE_SEGMENT, RESERVED_SLUGS, type Appearance, type CollectionRef, type Customizer, type Page, type PageKind, type ScopeDoc, type Section } from "./schema";
 
 export const PAGE_KIND_LABEL: Record<PageKind, string> = { hotpage: "Hotpage", categoryLanding: "Categoria-pai" };
 
@@ -58,4 +58,27 @@ export function newPageHero(id: string, title: string, subtitle?: string): Secti
 
 export function newPage(input: { id: string; kind: PageKind; title: string; slug: string; heroId: string; subtitle?: string }): Page {
   return { id: input.id, kind: input.kind, slug: input.slug, title: input.title, seo: { indexable: false }, sections: [newPageHero(input.heroId, input.title, input.subtitle)], version: 1 };
+}
+
+/**
+ * The paged grid of a collection page: every product of the collection, `DEFAULT_PAGE_PRODUCTS` per page, "% OFF" on the ones on promotion (worked
+ * out from INK's own two prices), on the page's ground. Arranged like every section of that collection (`collections.arrangements`).
+ */
+export function newCollectionGrid(id: string, ref: CollectionRef): Section {
+  return {
+    id, anchor: "produtos", headingId: "produtos-title", template: "product-carousel", active: true, title: "Todos os produtos",
+    layout: { variant: "standard", tone: "light", surface: "plain", display: "paged", tags: { discount: true } },
+    source: { kind: "ink-category", ...ref, order: "category", limit: DEFAULT_PAGE_PRODUCTS },
+    analyticsSource: "collectionPage",
+    appearance: noImage(),
+  };
+}
+
+/**
+ * A collection page as a parent-category landing: the hero with the collection's name, then its paged grid. The storefront draws it for any collection
+ * the region can use, with no document behind it (`collectionLanding`); "Personalizar página" puts the same page in the draft, for the owner to dress.
+ */
+export function newCollectionLanding(input: { id: string; heroId: string; gridId: string; title: string; slug: string; ref: CollectionRef }): Page {
+  const page = newPage({ id: input.id, kind: "categoryLanding", title: input.title, slug: input.slug, heroId: input.heroId });
+  return { ...page, sections: [...page.sections, newCollectionGrid(input.gridId, input.ref)] };
 }

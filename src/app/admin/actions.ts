@@ -17,13 +17,14 @@ import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
 import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { ALL_SCOPES } from "@/lib/admin/auth/authorize";
 import { canEdit, type Actor } from "@/lib/admin/store/ports";
+import { collectionPageSlug } from "@/lib/catalog/collection-source";
 import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
-import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
+import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
 import { isUmaPencaSource, maxSectionProducts, MIN_SECTION_PRODUCTS, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
-import { parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
+import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
 import { parsePageBackdrop } from "@/lib/admin/page-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
@@ -78,11 +79,12 @@ function back(path: string, flash: { ok?: string; err?: string[] }): never {
 /** `/admin/home[/<id>]` → the same place inside a page (`/admin/paginas/<page>[/secoes/<id>]`): the section actions serve the home and the pages alike. */
 const inPagePath = (pageId: string, p: string): string => p.replace(/^\/admin\/home\/([^/?]+)/, `/admin/paginas/${pageId}/secoes/$1`).replace(/^\/admin\/home(?=$|\?)/, `/admin/paginas/${pageId}`);
 
-async function run(fd: FormData, op: DraftOp, okMessage: string, returnTo: string, focusToEditor = false): Promise<never> {
+/** `wrapped`: the op already says where it applies (a batch with a page op inside): it is not wrapped for the page again. */
+async function run(fd: FormData, op: DraftOp, okMessage: string, returnTo: string, focusToEditor = false, wrapped = false): Promise<never> {
   const { actor, scope } = await editScope(fd);
   const pageId = text(fd, "page");
   const to = (p: string) => (pageId ? inPagePath(pageId, p) : p);
-  const outcome: SaveOutcome = await applyAndSave(scope, pageId ? { type: "in-page", page: pageId, op } : op, revNumber(fd), actor);
+  const outcome: SaveOutcome = await applyAndSave(scope, pageId && !wrapped ? { type: "in-page", page: pageId, op } : op, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to(returnTo), { err: outcome.errors });
   await audit(actor, "draft.save", scope, op.type);
@@ -123,8 +125,9 @@ export async function addCollectionSection(fd: FormData) {
   const display = displayOf(fd);
   const limit = limitOf(fd, display, 6);
   const collection = findCollection(ref.store, ref.collectionId);
-  // "Ver todos" only for a collection with a verified public page: an internal one has none, and the publish would refuse the button (collectionProblems).
-  const cta = collection?.isAvailable ? { cta: { label: "Ver todos", dest: { kind: "ink-collection" as const, ...ref } } } : {};
+  // "Ver todos" leads to the collection's page on the storefront (every product, paged), public and internal collections alike: INK is for the product,
+  // the cart and the checkout. The button can still be pointed at INK's own page of a public collection in the editor.
+  const cta = { cta: { label: "Ver todos", dest: { kind: "collection-page" as const, ...ref } } };
   return run(fd, { type: "add-carousel", title: text(fd, "title") || collection?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit }, ...cta, ...(display ? { display } : {}) }, "Seção criada no rascunho.", "/admin/home", true);
 }
 
@@ -207,6 +210,13 @@ export async function saveSection(fd: FormData) {
   }
   const problem = patch.source ? sourceProblem(patch.source, ws.doc) : null;
   if (problem) back(pageId ? inPagePath(pageId, `/admin/home/${id}`) : `/admin/home/${id}`, { err: [problem] });
+  // The order list belongs to the COLLECTION: saved with the section, in one go, for every section built on it and its page.
+  const arrangement = patch.source?.kind === "ink-category" ? parseCollectionArrangement(fd, patch.source) : null;
+  if (patch.source?.kind === "ink-category" && arrangement) {
+    const update: DraftOp = { type: "update", id, patch };
+    const ops: DraftOp[] = [pageId ? { type: "in-page", page: pageId, op: update } : update, { type: "set-collection-arrangement", store: patch.source.store, collectionId: patch.source.collectionId, ...arrangement }];
+    return run(fd, { type: "batch", ops }, "Rascunho salvo.", `/admin/home/${id}`, false, true);
+  }
   return run(fd, { type: "update", id, patch }, "Rascunho salvo.", `/admin/home/${id}`);
 }
 
@@ -702,6 +712,36 @@ const publishedPage = (base: import("@/lib/site-config/schema").ScopeDoc, id: st
 
 export async function createPageAction(fd: FormData) {
   return runRaw(fd, { type: "create-page", kind: pageKindOf(fd), title: text(fd, "title"), slug: text(fd, "slug") || undefined }, "Página criada no rascunho. Nada é público até publicar.", "/admin/paginas", (id) => `/admin/paginas/${id}`);
+}
+
+/**
+ * Coleções, "Levar para as páginas do site": every "Ver todos" (and menu link, grid tile) that still opens a collection on INK opens its page on the site
+ * instead, for every collection the region can show (one that cannot keeps its INK link, so nothing turns into a dead button). A draft, like any edit.
+ */
+export async function linkCollectionPagesAction(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const ws = await loadWorkspace(scope);
+  const refs = inkCollectionLinks(ws.doc).filter((r) => collectionPageSlug(ws.doc, r.store, r.collectionId) !== null);
+  if (refs.length === 0) back("/admin/colecoes", { ok: "Nenhum link para trocar: os que restam levam a coleções sem página no site." });
+  return runRaw(fd, { type: "link-collection-pages", refs }, `${refs.length === 1 ? "1 link agora leva" : `${refs.length} links agora levam`} à página da coleção no site (rascunho). Publique a home e as páginas alteradas para valer.`, "/admin/colecoes");
+}
+
+/**
+ * "Personalizar página" of a collection (Coleções): its page, as a draft parent-category landing at the collection's own address, with the hero and
+ * every product of it, for the owner to dress (texts, picture, SEO). Until it is published the storefront keeps drawing the automatic one.
+ */
+export async function createCollectionPageAction(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
+  if (!ref) back("/admin/colecoes", { err: ["Coleção inválida."] });
+  const ws = await loadWorkspace(scope);
+  const problem = sourceProblem({ kind: "ink-category", ...ref, order: "category", limit: 6 }, ws.doc);
+  if (problem) back("/admin/colecoes", { err: [problem] });
+  const collection = findCollection(ref.store, ref.collectionId);
+  if (!collection) back("/admin/colecoes", { err: ["Essa coleção não existe no snapshot sincronizado."] });
+  const existing = ws.doc.pages?.find((p) => p.kind === "categoryLanding" && p.slug === collection.slug);
+  if (existing) back(`/admin/paginas/${existing.id}`, { ok: "Esta coleção já tem uma página no rascunho." });
+  return runRaw(fd, { type: "create-page", kind: "categoryLanding", title: collection.name.replace(/\s+/g, " ").trim(), slug: collection.slug, collection: ref }, "Página da coleção criada no rascunho. Até publicar, a loja segue mostrando a página automática.", "/admin/colecoes", (id) => `/admin/paginas/${id}`);
 }
 
 /** Title, address and SEO. The address of a page that is already published cannot change (its URL is public); only the owner turns indexing on. */

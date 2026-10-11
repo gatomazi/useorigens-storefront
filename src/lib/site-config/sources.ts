@@ -37,8 +37,17 @@ export function arrangeMembers(memberIds: readonly string[], arrangement?: Categ
   return [...pinned, ...memberIds.filter((id) => !placed.has(id))].filter((id) => !hidden.has(id));
 }
 
-/** Real products of one INK collection, already limited to this store's own catalog. Supplied by the server (never fetched here). */
-export type CategoryLookup = (store: CommerceStoreKey, collectionId: number, limit: number, arrangement?: CategoryArrangement) => SourceResult;
+export type InkCategorySource = Extract<Source, { kind: "ink-category" }>;
+
+/**
+ * Real products of one INK collection, already limited to this store's own catalog and arranged as this region arranges the collection. Supplied by the
+ * server (never fetched here), which knows the document the arrangement lives in.
+ */
+export type CategoryLookup = (source: InkCategorySource) => SourceResult;
+
+/** One page of a collection's products (a paged grid): `page` is 1-based; `pageCount` ≥ 1 whenever the collection has products. */
+export type CollectionPageResult = { status: "ok"; items: CarouselItem[]; total: number; page: number; pageCount: number } | { status: "unavailable"; reason: UnavailableReason };
+export type CollectionPageLookup = (source: InkCategorySource, page: number) => CollectionPageResult;
 
 /** The Uma Penca articles of these kinds, at most `limit`, as carousel items. Supplied by the server from the synced snapshot. */
 export type UmaPencaLookup = (kinds: readonly ArticleKind[], limit: number) => SourceResult;
@@ -49,9 +58,7 @@ export function resolveSource(source: Source, editorial: EditorialItems, categor
       return { status: "ok", items: editorial[source.key] };
     case "ink-category":
       // Only a real, synced, available collection resolves. Categories are never inferred from product names or tags.
-      return categories
-        ? categories(source.store, source.collectionId, source.limit, { productIds: source.order === "manual" ? source.productIds : undefined, hiddenIds: source.hiddenIds })
-        : { status: "unavailable", reason: "ink-collections-not-synced" };
+      return categories ? categories(source) : { status: "unavailable", reason: "ink-collections-not-synced" };
     case "manual":
       return { status: "unavailable", reason: "manual-source-not-implemented" };
     case "umapenca":
@@ -73,14 +80,27 @@ export function collectionUrl(store: CommerceStoreKey, slug: string): string | n
 }
 
 /**
+ * How a collection becomes a link, from the server's snapshot: `inkSlug` = the slug of its PUBLIC page on INK; `pageSlug` = the slug of the storefront's own
+ * collection page, when the region can show that collection (null otherwise: no page, no link).
+ */
+export type CollectionLinks = { inkSlug?: (store: CommerceStoreKey, collectionId: number) => string | null; pageSlug?: (store: CommerceStoreKey, collectionId: number) => string | null };
+
+/** The storefront's own page of a collection: a parent-category landing address (a published landing with the same address takes its place). */
+export const collectionPagePath = (region: RegionSlug, slug: string): string => `/${region}/${PAGE_SEGMENT.categoryLanding}/${slug}`;
+
+/**
  * Real href of a CTA destination, or `null` when it cannot be resolved (an INK collection needs its slug from the snapshot; a page needs the
  * region it is rendered in). A link to a page is only ever built for the region being rendered: a page of another region is never linked.
  */
-export function destinationHref(dest: Destination, slugOf?: (store: CommerceStoreKey, collectionId: number) => string | null, region?: RegionSlug): string | null {
+export function destinationHref(dest: Destination, links?: CollectionLinks, region?: RegionSlug): string | null {
   if (dest.kind === "route") return dest.path;
   if (dest.kind === "external") return dest.url;
   if (dest.kind === "anchor") return `#${dest.anchor}`;
   if (dest.kind === "page") return region ? `/${region}/${PAGE_SEGMENT[dest.pageKind]}/${dest.slug}` : null;
-  const slug = slugOf?.(dest.store, dest.collectionId);
+  if (dest.kind === "collection-page") {
+    const slug = region ? links?.pageSlug?.(dest.store, dest.collectionId) : null;
+    return region && slug ? collectionPagePath(region, slug) : null;
+  }
+  const slug = links?.inkSlug?.(dest.store, dest.collectionId);
   return slug ? collectionUrl(dest.store, slug) : null;
 }

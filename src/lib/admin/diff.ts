@@ -42,10 +42,28 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
     if (edited.length > 0) changes.push({ kind: "edited", sectionId: s.id, text: `"${label(s)}": ${edited.join(", ")}` });
   }
   // The INK navbar groups are part of the document but not of any section: without this, changing only the navbar would read "nothing to publish".
-  changes.push(...navbarChanges(published, draft, nameOf));
+  changes.push(...navbarChanges(published, draft, nameOf), ...arrangementChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
   changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft));
   return changes;
+}
+
+/** The order / hidden products of a collection changed (they belong to the collection, not to a section: every section and its page follow them). Pure. */
+function arrangementChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer): Change[] {
+  const key = (r: CollectionRef) => `${r.store}:${r.collectionId}`;
+  const was = new Map((published.collections?.arrangements ?? []).map((a) => [key(a), a]));
+  const now = new Map((draft.collections?.arrangements ?? []).map((a) => [key(a), a]));
+  const out: Change[] = [];
+  for (const k of new Set([...was.keys(), ...now.keys()])) {
+    const a = was.get(k);
+    const b = now.get(k);
+    if (json(a?.productIds) === json(b?.productIds) && json(a?.hiddenIds) === json(b?.hiddenIds)) continue;
+    const ref = (b ?? a)!;
+    const hidden = b?.hiddenIds?.length ?? 0;
+    const what = b?.productIds?.length ? "ordem própria" : "ordem da INK";
+    out.push({ kind: "edited", sectionId: `arrangement:${k}`, text: `Coleção ${nameOf(ref) ?? `#${ref.collectionId}`}: ${what}${hidden > 0 ? `, ${hidden} produto(s) escondido(s)` : ""} (seções e página da coleção)` });
+  }
+  return out;
 }
 
 const GROUP_LABEL = { top: "no topo da navbar da INK", more: "em Demais categorias da navbar da INK" } as const;

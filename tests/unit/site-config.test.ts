@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { bundleChecksum, canonicalJson } from "@/lib/site-config/checksum";
 import { firstImageSectionId, focalToCss, renderableSections, resolveBackground, resolveTracking } from "@/lib/site-config/resolve";
 import { buildSeedBundle } from "@/lib/site-config/seed";
-import { validateBundle, validateScopeDoc, type Appearance, type PublishedBundle, type ScopeDoc, type Section } from "@/lib/site-config/schema";
+import { validateBundle, validateScopeDoc, type Appearance, type PublishedBundle, type ScopeDoc, type Section, type Source } from "@/lib/site-config/schema";
 import { destinationHref, resolveSource } from "@/lib/site-config/sources";
 
 const ENV = { metaPixelId: "1558923262073052", ga4MeasurementId: "G-8GYTEJ1F77" };
@@ -304,15 +304,12 @@ describe("section sources", () => {
     expect(resolveSource({ kind: "ink-category", store: "use-sul", collectionId: 1, order: "category", limit: 6 }, items)).toEqual({ status: "unavailable", reason: "ink-collections-not-synced" });
   });
 
-  test("given an ink-category source, when resolved, then the lookup gets its own order only in manual mode, and its hidden products in both", () => {
+  test("given an ink-category source, when resolved, then the lookup gets the whole source (the server resolves its arrangement from the document)", () => {
     const calls: unknown[] = [];
-    const categories = (...args: unknown[]) => (calls.push(args), { status: "ok" as const, items: [] });
-    resolveSource({ kind: "ink-category", store: "use-sul", collectionId: 1, order: "manual", limit: 6, productIds: ["2", "1"], hiddenIds: ["3"] }, items, categories);
-    resolveSource({ kind: "ink-category", store: "use-sul", collectionId: 1, order: "category", limit: 6, productIds: ["2"], hiddenIds: ["3"] }, items, categories);
-    expect(calls).toEqual([
-      ["use-sul", 1, 6, { productIds: ["2", "1"], hiddenIds: ["3"] }],
-      ["use-sul", 1, 6, { productIds: undefined, hiddenIds: ["3"] }],
-    ]);
+    const categories = (source: unknown) => (calls.push(source), { status: "ok" as const, items: [] });
+    const source: Source = { kind: "ink-category", store: "use-sul", collectionId: 1, order: "manual", limit: 6, productIds: ["2", "1"], hiddenIds: ["3"] };
+    resolveSource(source, items, categories);
+    expect(calls).toEqual([source]);
   });
 
   test("given an ink-category's own order and hidden list, when validated, then only distinct numeric ids pass, and an order only in manual mode", () => {

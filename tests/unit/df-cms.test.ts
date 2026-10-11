@@ -115,7 +115,7 @@ describe("INK-collection sections over the Federal District", () => {
   test("given the DF collection, when a section resolves it, then each RA product reads as its own RA ('Taguatinga · DF'), never Brasília", () => {
     const catalog = repo.getCatalog();
     const lookup = source.categoryLookup((store) => catalog.productsOfStore(store), () => new Set<number>(), collectionsFile);
-    const result = lookup("use-centro", 139672, 24);
+    const result = lookup({ kind: "ink-category", store: "use-centro", collectionId: 139672, order: "category", limit: 24 });
     expect(result.status).toBe("ok");
     if (result.status !== "ok") return;
     const context = Object.fromEntries(result.items.map((i) => [i.id, i.context]));

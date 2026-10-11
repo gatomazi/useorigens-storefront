@@ -15,24 +15,27 @@ function Thumb({ src }: { src: string }) {
 const label = (m: OrderMember) => (m.context ? `${m.name} · ${m.context}` : m.name);
 
 /**
- * The order of an ink-category section, on our side: dragging a row by its grip (or "Topo") sets the owner's order, "Esconder" takes a
- * product out of this section, and "Voltar à ordem da INK" undoes both. What is posted (`source_arrangement`) is read by `parseSectionForm` for THIS collection only
- * (`source_arrangement_for`). A product INK adds later is not in the saved order, so it shows at the end, flagged "novo" — the same rule the
- * storefront applies (`arrangeMembers`).
+ * The order of a COLLECTION in this region, on our side, edited from a section built on it: dragging a row by its grip (or "Topo") sets the owner's
+ * order, "Esconder" takes a product out of the collection's showcase here, and "Voltar à ordem da INK" undoes both. Every section built on the collection
+ * and its page follow it. What is posted (`source_arrangement`) is read by `parseCollectionArrangement` for THIS collection only (`source_arrangement_for`).
+ * A product INK adds later is not in the saved order, so it shows at the end, flagged "novo" — the same rule the storefront applies (`arrangeMembers`).
  */
 export function CollectionOrder({
   collectionRef,
   members,
   initial,
   visible,
+  total,
 }: {
   /** "store:collectionId" the list was drawn for. */
   collectionRef: string;
   /** The collection's products, in INK's order. */
   members: OrderMember[];
   initial: { order: "category" | "manual"; productIds?: string[]; hiddenIds?: string[] };
-  /** How many product cards the section shows (the limit, minus the customizer card when there is one). */
-  visible: number;
+  /** How many product cards the section shows (the limit, minus the customizer card when there is one); null = all of them (a paged grid). */
+  visible: number | null;
+  /** How many products the collection has in the catalog, when the list shows only its first ones. */
+  total?: number;
 }) {
   const byId = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
   const memberIds = useMemo(() => members.map((m) => m.id), [members]);
@@ -69,22 +72,26 @@ export function CollectionOrder({
         <span className={`a-badge${manual ? " ok" : ""}`} data-testid="collection-order-mode">{manual ? "Ordem manual" : "Ordem da INK"}</span>
       </div>
       <p className="a-muted text-[0.8125rem]">
-        Arraste o produto pela alça <span className="inline-flex translate-y-0.5 text-ink"><GripIcon /></span> para mudar a posição, ou use “Topo” para levá-lo direto ao primeiro lugar. “Esconder” tira um produto só desta seção (na INK nada muda). Produto novo que a INK colocar na coleção entra no fim da lista. Salve o rascunho para ver na prévia.
+        Arraste o produto pela alça <span className="inline-flex translate-y-0.5 text-ink"><GripIcon /></span> para mudar a posição, ou use “Topo” para levá-lo direto ao primeiro lugar. “Esconder” tira o produto da vitrine (na INK nada muda). Produto novo que a INK colocar na coleção entra no fim da lista. Salve o rascunho para ver na prévia.
+      </p>
+      <p className="a-muted text-[0.8125rem]" data-testid="collection-order-scope">
+        A ordem e os escondidos são <strong>da coleção</strong> nesta região: todas as seções feitas com ela e a página da coleção seguem esta lista.
+        {total !== undefined && total > members.length && ` A lista mostra os ${members.length} primeiros dos ${total} produtos; os demais vêm depois deles, na ordem da INK.`}
       </p>
       <DragSortStatus hintId={sort.hintId} announcement={sort.announcement} />
       {stale > 0 && <p className="a-flash err text-[0.875rem]">{stale} produto(s) da ordem salva não estão mais entre os produtos da coleção e saem da lista ao salvar.</p>}
-      {rows.length === 0 && <p className="a-flash err text-[0.875rem]">Todos os produtos estão escondidos: a seção não aparece na loja.</p>}
+      {rows.length === 0 && (total === undefined || total <= members.length) && <p className="a-flash err text-[0.875rem]">Todos os produtos estão escondidos: as seções desta coleção e a página dela não aparecem na loja.</p>}
       <ol className="max-h-[36rem] overflow-y-auto border border-black/20 bg-white" aria-label="Produtos da seção, na ordem da loja">
         {rows.map((id, i) => {
           const m = byId.get(id)!;
           return (
             <Fragment key={id}>
-              {i === visible && (
+              {visible !== null && i === visible && (
                 <li className="border-y-2 border-dashed border-black/40 bg-neutral-100 px-3 py-1.5 text-[0.75rem] font-bold" data-testid="collection-order-cut">
                   A loja mostra só os {visible} primeiros. Os abaixo ficam de reserva.
                 </li>
               )}
-              <li {...sort.row(id)} className={`flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-black/10 bg-white py-2 pl-1 pr-3 ${i >= visible && sort.active !== id ? "opacity-60" : ""}`} data-testid="collection-order-row">
+              <li {...sort.row(id)} className={`flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-black/10 bg-white py-2 pl-1 pr-3 ${visible !== null && i >= visible && sort.active !== id ? "opacity-60" : ""}`} data-testid="collection-order-row">
                 <button {...sort.handle(id)} className="a-grip -mr-2" aria-label={`Mover ${label(m)}`} title="Arraste para mudar a posição">
                   <GripIcon />
                 </button>
@@ -99,7 +106,7 @@ export function CollectionOrder({
                 {/* Beside the product on a wide panel, on a line of their own below it on a phone. */}
                 <div className="ml-auto flex shrink-0 gap-1">
                   <button type="button" className="a-btn ghost sm" onClick={() => toTop(id)} disabled={i === 0} aria-label={`Levar ${label(m)} para o topo`}>Topo</button>
-                  <button type="button" className="a-btn danger sm" onClick={() => hide(id)} aria-label={`Esconder ${label(m)} desta seção`}>Esconder</button>
+                  <button type="button" className="a-btn danger sm" onClick={() => hide(id)} aria-label={`Esconder ${label(m)} da coleção`}>Esconder</button>
                 </div>
               </li>
             </Fragment>
@@ -108,7 +115,7 @@ export function CollectionOrder({
       </ol>
       {hidden.length > 0 && (
         <div>
-          <p className="a-label">Escondidos nesta seção ({hidden.length})</p>
+          <p className="a-label">Escondidos da coleção ({hidden.length})</p>
           <ul className="space-y-1" aria-label="Produtos escondidos">
             {hidden.map((id) => {
               const m = byId.get(id)!;

@@ -54,10 +54,13 @@ export function movedWithin(groups: NavbarGroups, ref: CollectionRef, direction:
 /** Writes the groups into the document. Drops the legacy flat list (it has been migrated into `top`) and the whole key when nothing is left. */
 export function withNavbarGroups(doc: ScopeDoc, groups: NavbarGroups): ScopeDoc {
   const enabled = doc.collections?.enabled ?? [];
+  // The order of each collection is a separate decision: rewriting the navbar keeps it.
+  const arrangements = doc.collections?.arrangements;
+  const kept = arrangements?.length ? { arrangements } : {};
   const next: ScopeDoc = { ...doc };
   const hasGroups = groups.top.length + groups.more.length > 0;
-  if (hasGroups) next.collections = { enabled, navbarGroups: groups };
-  else if (enabled.length > 0) next.collections = { enabled };
+  if (hasGroups) next.collections = { enabled, navbarGroups: groups, ...kept };
+  else if (enabled.length > 0 || arrangements?.length) next.collections = { enabled, ...kept };
   else delete next.collections;
   return next;
 }
