@@ -1,25 +1,27 @@
 import { isRegionSlug } from "@/lib/geo/regions";
 import { findCollectionLanding, pagedGridItems } from "@/lib/pages/public";
 import { isRegionLaunched } from "@/lib/regions/launched";
-import { filterCollection, MAX_COLLECTION_QUERY, MAX_COLLECTION_RESULTS } from "@/lib/search/collection-filter";
+import { MAX_COLLECTION_RESULTS, parseCollectionQuery, runCollectionQuery } from "@/lib/search/collection-filter";
 
 // One response per query: never prerendered. The work is a scan of the collection's own cards (the synced catalog), no INK, no database.
 export const dynamic = "force-dynamic";
 
 /**
- * `GET /api/colecoes/sul/da-nossa-terra?q=floripa` — the mini search of a collection page: the cards of THAT page's collection (the same products, in
- * the same order, as its paged grid) whose name, place or state match, at most `MAX_COLLECTION_RESULTS`. Public data only (what the cards already
- * show). A region that is not launched or an address with no collection page is a 404. CDN-cacheable for a few minutes, like the global search.
+ * `GET /api/colecoes/sul/da-nossa-terra?q=floripa&peca=178&uf=SC&cidade=Tijucas&estilo=origem&ordem=price-asc` — the mini search and the
+ * filters of a collection page: the cards of THAT page's collection (the same products, in the same order, as its paged grid) that match the
+ * text, pass the filters and come in the order asked, at most `MAX_COLLECTION_RESULTS`, with the facets each filter can still choose (rules
+ * in search/collection-filter.ts). Public data only (what the cards already show). A region that is not launched or an address with no
+ * collection page is a 404. CDN-cacheable for a few minutes, like the global search.
  */
 export async function GET(request: Request, { params }: { params: Promise<{ region: string; slug: string }> }) {
   const { region, slug } = await params;
   if (!isRegionSlug(region) || !isRegionLaunched(region)) return Response.json({ error: "unknown region" }, { status: 404 });
   const found = findCollectionLanding(region, slug);
   if (!found) return Response.json({ error: "unknown collection" }, { status: 404 });
-  const q = (new URL(request.url).searchParams.get("q") ?? "").slice(0, MAX_COLLECTION_QUERY);
-  const matched = filterCollection(pagedGridItems(found.region, found.bundle, found.page), q);
+  const query = parseCollectionQuery(new URL(request.url).searchParams);
+  const { items, facets } = runCollectionQuery(pagedGridItems(found.region, found.bundle, found.page), query);
   return Response.json(
-    { q, total: matched.length, items: matched.slice(0, MAX_COLLECTION_RESULTS) },
+    { q: query.q, filters: query.filters, sort: query.sort, total: items.length, items: items.slice(0, MAX_COLLECTION_RESULTS), facets },
     { headers: { "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600" } },
   );
 }

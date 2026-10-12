@@ -13,6 +13,7 @@ import { localityOfBinding } from "./locality-binding";
 import type { StoreProducts } from "./repository";
 import type { MerchProduct, UnrankedBinding } from "./types";
 import { umaPencaLookup } from "../umapenca/carousel";
+import { CITY_DESIGN_GARMENT_TYPE_ID } from "../search/collection-filter";
 
 export { MIN_USABLE_PRODUCTS };
 
@@ -57,7 +58,10 @@ export const selectableEntries = (store: CommerceStoreKey, enabledInternal: Read
 function merchItem(product: MerchProduct): CarouselItem | null {
   const href = purchaseUrl(product);
   if (!href) return null;
-  return { id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href };
+  return {
+    id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href,
+    ...(product.garmentTypeId !== undefined ? { garmentTypeId: product.garmentTypeId } : {}),
+  };
 }
 
 /** A city design has no display name of its own: its family and city are the label ("Ponto de Origem" · "Tijucas · SC"). */
@@ -67,7 +71,10 @@ function cityDesignItem(design: UnrankedBinding): CarouselItem | null {
   const city = localityOfBinding(design);
   const family = DESIGN_FAMILIES.find((f) => f.id === design.designFamily);
   if (!href || !city || !family) return null;
-  return { id: design.inkProductId, name: family.name, context: `${city.name} · ${city.uf}`, price: formatPrice(design.price), listPrice: formatListPrice(design), discount: discountPercent(design), rawPrice: design.price, state: city.uf, imageUrl: design.imageUrl, href };
+  return {
+    id: design.inkProductId, name: family.name, context: `${city.name} · ${city.uf}`, price: formatPrice(design.price), listPrice: formatListPrice(design), discount: discountPercent(design), rawPrice: design.price, state: city.uf, imageUrl: design.imageUrl, href,
+    city: city.name, family: family.id, garmentTypeId: CITY_DESIGN_GARMENT_TYPE_ID,
+  };
 }
 
 /** The card of one product of the store's catalog snapshot (merch or city design), or null when it is not there (or has no verified purchase URL). */

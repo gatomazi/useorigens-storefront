@@ -29,7 +29,10 @@ export function ProductGrid({
   aside,
   toolbar,
   footer,
+  compact = false,
 }: {
+  /** The automatic collection page: the page header already names the collection, so the grid's heading is a quiet line (still the section's name for assistive tech). */
+  compact?: boolean;
   /** Next to the heading, where "Ver todos" goes (a paged grid shows its product count there). */
   aside?: ReactNode;
   /** Between the heading and the cards (a collection page's mini search). */
@@ -59,9 +62,18 @@ export function ProductGrid({
   const cards = items.length + (leading ? 1 : 0);
   return (
     <div role="region" aria-labelledby={labelledBy}>
-      <ProductSectionHeading labelledBy={labelledBy} title={title} intro={intro} dark={dark} viewAllHref={viewAllHref} viewAllLabel={viewAllLabel}>
-        {aside}
-      </ProductSectionHeading>
+      {compact ? (
+        <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pb-4">
+          <h2 id={labelledBy} className="text-[1.125rem] font-extrabold tracking-tight">
+            {title}
+          </h2>
+          {aside}
+        </div>
+      ) : (
+        <ProductSectionHeading labelledBy={labelledBy} title={title} intro={intro} dark={dark} viewAllHref={viewAllHref} viewAllLabel={viewAllLabel}>
+          {aside}
+        </ProductSectionHeading>
+      )}
       {toolbar}
       {/* Bordered cards carry their own separation: one even gap on both axes, no taller rows of air between them. */}
       <ul className={`grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 ${solidCards ? SOLID_CARDS : ""}`}>
