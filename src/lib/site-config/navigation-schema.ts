@@ -18,6 +18,8 @@ export type NavigationConfig = {
   /** The "Comprar" block: its title, visibility and position among the blocks. */
   primaryBlock?: NavBlockConfig;
   primaryLinks?: NavPrimaryLink[];
+  /** "Categorias": automatic as well (the region's collection menu, `collection-menu.ts`); also the name of the desktop dropdown and of the Worker's. */
+  categoriesBlock?: NavBlockConfig;
   /** "Estados do <região>": the block is automatic, only its title, visibility and position are editable. */
   statesBlock?: NavBlockConfig;
   /** "Explorar outras regiões": automatic as well. */
@@ -58,8 +60,8 @@ export function validateNavigation(input: unknown, scope: Scope, path = "navigat
   const errors: string[] = [];
   if (scope === "global") return { ok: false, errors: [`${path}: the navigation belongs to a region`] };
   if (!isRecord(input)) return { ok: false, errors: [`${path}: must be an object`] };
-  for (const key of Object.keys(input)) if (!["primaryBlock", "primaryLinks", "statesBlock", "regionsBlock"].includes(key)) errors.push(`${path}.${key}: unknown field`);
-  for (const key of ["primaryBlock", "statesBlock", "regionsBlock"] as const) if (input[key] !== undefined) checkBlock(errors, `${path}.${key}`, input[key]);
+  for (const key of Object.keys(input)) if (!["primaryBlock", "primaryLinks", "categoriesBlock", "statesBlock", "regionsBlock"].includes(key)) errors.push(`${path}.${key}: unknown field`);
+  for (const key of ["primaryBlock", "categoriesBlock", "statesBlock", "regionsBlock"] as const) if (input[key] !== undefined) checkBlock(errors, `${path}.${key}`, input[key]);
   if (input.primaryLinks !== undefined) {
     if (!Array.isArray(input.primaryLinks) || input.primaryLinks.length > NAV_DESTINATIONS.length) errors.push(`${path}.primaryLinks: a list of at most ${NAV_DESTINATIONS.length} known links`);
     else {

@@ -9,7 +9,7 @@ import type { NavBlockData, ResolvedNavigation, ThemeColors } from "@/lib/site-c
  * The two surfaces the editor is styling, drawn from the SAME resolved data and the SAME menu component the store uses (MobileMenuPanel), on the colours
  * being edited. Inert on purpose: nothing here links, tracks or requests anything, so opening the editor never reports an event.
  */
-export function ChromePreview({ region, navigation, colors }: { region: RegionSlug; navigation: Pick<ResolvedNavigation, "blocks" | "primary" | "states" | "regions">; colors: ThemeColors }) {
+export function ChromePreview({ region, navigation, colors }: { region: RegionSlug; navigation: Pick<ResolvedNavigation, "blocks" | "primary" | "collections" | "categories" | "categoriesLabel" | "states" | "regions">; colors: ThemeColors }) {
   const logo = `/brand/logo-${region === "centro-oeste" ? "centro" : region}.png`;
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_20rem]" data-testid="chrome-preview">
@@ -23,7 +23,8 @@ export function ChromePreview({ region, navigation, colors }: { region: RegionSl
             </span>
             <span className="hidden items-center gap-5 text-[0.8125rem] font-semibold sm:flex">
               {navigation.states.length > 0 && <span>Regiões ▾</span>}
-              {navigation.primary.map((l) => <span key={l.href}>{l.label}</span>)}
+              {navigation.categories.length > 0 && <span>{navigation.categoriesLabel} ▾</span>}
+              {[...navigation.primary, ...navigation.collections].map((l) => <span key={l.href}>{l.label}</span>)}
             </span>
             <span className="flex items-center gap-3 text-[0.8125rem] font-semibold">
               {navigation.regions.length > 0 && <span>{REGIONS[region].name} ▾</span>}

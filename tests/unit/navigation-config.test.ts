@@ -22,7 +22,7 @@ const regionWithHome = (region: RegionSlug): ScopeDoc => {
 };
 const sulDoc = (): ScopeDoc => structuredClone(seed.docs.sul);
 const labels = (region: RegionSlug, doc: ScopeDoc | undefined, launched: readonly RegionSlug[] = ALL, covered: readonly string[] | null = null) => resolveNavigation({ region, doc, launched, coveredUfs: covered });
-const block = (nav: ReturnType<typeof labels>, kind: "primary" | "states" | "regions") => nav.blocks.find((b) => b.kind === kind);
+const block = (nav: ReturnType<typeof labels>, kind: "primary" | "categories" | "states" | "regions") => nav.blocks.find((b) => b.kind === kind);
 
 describe("regional menu: the hierarchy comes from real data", () => {
   test("given Sul with everything launched, when the menu is built, then it is Comprar, Estados do Sul (PR, SC, RS) and the other two regions", () => {
@@ -60,6 +60,26 @@ describe("regional menu: the hierarchy comes from real data", () => {
     expect(block(labels("norte", regionWithHome("norte"), ALL, ["AC", "AM"]), "states")!.items.map((i) => i.label)).toEqual(["Acre", "Amazonas"]);
     expect(block(labels("norte", regionWithHome("norte"), ALL, null), "states")!.items).toHaveLength(7);
     expect(block(labels("norte", regionWithHome("norte"), ALL, []), "states")!.items).toHaveLength(7);
+  });
+
+  test("given the region's collection menu, when built, then Categorias comes after Comprar on the phone and the bar's collections are only on the desktop bar", () => {
+    const collections = { top: [{ label: "Novidades", href: "/sul/colecoes/novidades" }], categories: [{ label: "Novidades", href: "/sul/colecoes/novidades" }, { label: "Seu Lugar", href: "/sul/colecoes/seu-lugar" }] };
+    const nav = resolveNavigation({ region: "sul", doc: sulDoc(), launched: ALL, coveredUfs: null, collections });
+    expect(nav.blocks.map((b) => [b.kind, b.label])).toEqual([["primary", "Comprar"], ["categories", "Categorias"], ["states", "Estados do Sul"], ["regions", "Explorar outras regiões"]]);
+    expect(block(nav, "categories")!.items.map((i) => i.label)).toEqual(["Novidades", "Seu Lugar"]);
+    expect(block(nav, "primary")!.items.map((i) => i.label)).toEqual(["Estilos", "Fala daqui", "Estados"]); // never doubled on the phone
+    expect(nav.collections.map((i) => i.label)).toEqual(["Novidades"]);
+    expect(nav.categoriesLabel).toBe("Categorias");
+    // Renamed, or hidden by the editor: the desktop dropdown follows the block.
+    const config: NavigationConfig = { categoriesBlock: { label: "Coleções", visible: true, order: 40 } };
+    const renamed = assembleNavigation("sul", config, navData({ region: "sul", doc: sulDoc(), launched: ALL, coveredUfs: null, collections }));
+    expect(renamed.categoriesLabel).toBe("Coleções");
+    expect(renamed.blocks.at(-1)!.kind).toBe("categories");
+    const hidden = assembleNavigation("sul", { categoriesBlock: { label: "Categorias", visible: false, order: 15 } }, navData({ region: "sul", doc: sulDoc(), launched: ALL, coveredUfs: null, collections }));
+    expect(hidden.categories).toEqual([]);
+    expect(block(hidden, "categories")).toBeUndefined();
+    // No collection with a page: no block, no dropdown.
+    expect(block(labels("sul", sulDoc()), "categories")).toBeUndefined();
   });
 
   test("given the links, when built, then every href comes from the route helpers (regions, states, home anchors)", () => {
@@ -274,6 +294,7 @@ describe("editing: draft operations, forms and the publish screen's list of chan
   const nav = (over: Record<string, string> = {}) =>
     form({
       primaryBlock_label: "Comprar", primaryBlock_visible: "on", primaryBlock_order: "10",
+      categoriesBlock_label: "Categorias", categoriesBlock_visible: "on", categoriesBlock_order: "15",
       statesBlock_label: "Estados do Sul", statesBlock_visible: "on", statesBlock_order: "20",
       regionsBlock_label: "Explorar outras regiões", regionsBlock_visible: "on", regionsBlock_order: "30",
       link_styles_label: "Estilos", link_styles_visible: "on", link_styles_order: "10",
@@ -287,6 +308,7 @@ describe("editing: draft operations, forms and the publish screen's list of chan
     expect(parsed.ok).toBe(true);
     if (parsed.ok) {
       expect(parsed.value.statesBlock).toEqual({ label: "Por estado", visible: true, order: 20 });
+      expect(parsed.value.categoriesBlock).toEqual({ label: "Categorias", visible: true, order: 15 });
       expect(parsed.value.primaryLinks!.find((l) => l.destination === "speech")!.visible).toBe(false);
     }
   });

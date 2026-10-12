@@ -1,4 +1,5 @@
 import "server-only";
+import { siteCollectionMenu } from "../catalog/collection-menu";
 import { getCatalog } from "../catalog/repository";
 import { citiesOfRegion } from "../geo/cities";
 import type { RegionSlug } from "../geo/regions";
@@ -11,7 +12,7 @@ import type { ScopeDoc } from "./schema";
 /**
  * What the storefront header, the mobile menu and the region wrapper need, resolved on the SERVER from the PUBLISHED configuration (the local
  * published.json, cached by mtime: no database, no network, nothing per page view) and from the data that is really live: the launched
- * regions and the states of the region that have products. With the config-driven home off, or nothing published, the config is empty and the
+ * regions, the states of the region that have products and the collections of its menu that have a page. With the config-driven home off, or nothing published, the config is empty and the
  * result is the default menu hierarchy in the region's current colours.
  */
 export type RegionChrome = { navigation: ResolvedNavigation; theme: ResolvedTheme; cssVars: Record<string, string> };
@@ -34,7 +35,7 @@ export function regionChrome(region: RegionSlug): RegionChrome {
   const { doc, global } = publishedDocs(region);
   const theme = resolveTheme(region, doc, global);
   return {
-    navigation: resolveNavigation({ region, doc, launched: launchedRegions(), coveredUfs: coveredUfs(region) }),
+    navigation: resolveNavigation({ region, doc, launched: launchedRegions(), coveredUfs: coveredUfs(region), collections: siteCollectionMenu(region, doc) }),
     theme,
     cssVars: themeCssVars(theme.configured),
   };

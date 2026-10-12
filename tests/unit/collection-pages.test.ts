@@ -9,7 +9,7 @@ import { normalizeCollectionsSnapshot, type CollectionRecord } from "@/lib/catal
 import type { StoreProducts } from "@/lib/catalog/repository";
 import type { MerchProduct } from "@/lib/catalog/types";
 import { arrangementOf, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
-import { withNavbarGroups } from "@/lib/site-config/navbar-groups";
+import { withMenu } from "@/lib/site-config/collection-menu";
 import { newCollectionLanding } from "@/lib/site-config/pages";
 import { validatePage, validateScopeDoc, type Page, type ScopeDoc, type Section } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
@@ -71,13 +71,13 @@ describe("the order of a collection belongs to the collection", () => {
     expect(refused.ok).toBe(false);
   });
 
-  test("given arrangements, when the enablements or the INK navbar change, then the arrangements stay", () => {
+  test("given arrangements, when the enablements or the collection menu change, then the arrangements stay", () => {
     const doc = ok(applyOp(seedDoc(), { type: "set-collection-arrangement", store: "use-sul", collectionId: 10, productIds: ["2"], hiddenIds: [] }, ctx));
     const enabled = ok(applyOp(doc, { type: "set-collection-enabled", store: "use-sul", collectionId: 12, enabled: true }, ctx));
     const disabled = ok(applyOp(enabled, { type: "set-collection-enabled", store: "use-sul", collectionId: 12, enabled: false }, ctx));
     expect(disabled.collections?.arrangements).toHaveLength(1);
-    expect(withNavbarGroups(doc, { top: [], more: [] }).collections?.arrangements).toHaveLength(1);
-    expect(withNavbarGroups(doc, { top: [{ store: "use-sul", collectionId: 10 }], more: [] }).collections?.arrangements).toHaveLength(1);
+    expect(withMenu(doc, { top: [], hidden: [], added: [] }).collections?.arrangements).toHaveLength(1);
+    expect(ok(applyOp(doc, { type: "set-collection-menu-position", store: "use-sul", collectionId: 10, position: "top", isPublic: true }, ctx)).collections?.arrangements).toHaveLength(1);
   });
 
   test("given a changed arrangement, when the publish screen lists the changes, then it names the collection", () => {

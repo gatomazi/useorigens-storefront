@@ -202,6 +202,11 @@ export type CollectionRef = { store: CommerceStoreKey; collectionId: number };
  */
 export type CollectionArrangement = CollectionRef & { productIds?: string[]; hiddenIds?: string[] };
 export const MAX_ARRANGEMENTS = 300;
+/**
+ * The region's collection menu (`site-config/collection-menu.ts`): only what departs from the default. `top` = on the bar, in this order; `hidden` = public
+ * collections taken out of "Categorias"; `added` = internal collections brought into it (site only). A collection is in at most one list.
+ */
+export type CollectionMenu = { top: CollectionRef[]; hidden: CollectionRef[]; added: CollectionRef[] };
 
 /**
  * A page of a region outside the home: an editorial hotpage or a parent-category landing. Made of the SAME sections as the home (rendered by the
@@ -324,6 +329,13 @@ export type ScopeDoc = {
      * There are no special slots ("Novidades", "destaque"): those are just names of collections.
      */
     navbarGroups?: { top: CollectionRef[]; more: CollectionRef[] };
+    /**
+     * The ONE collection menu of the region: the storefront header (collections on the bar + "Categorias") AND the navbar the Worker draws on the INK
+     * product pages. Public collections are in "Categorias" unless hidden, so a new one shows up on its own. Replaces `navbarGroups` / `navbar`: while it
+     * is absent the storefront derives its menu from them and the Worker keeps reading them unchanged; once it exists both are ignored (and dropped on
+     * the next edit).
+     */
+    menu?: CollectionMenu;
     /**
      * Order and hidden products per collection (at most one entry per collection). Before this existed each section kept its own (`Source.productIds` /
      * `hiddenIds`): those are read only while the collection has no entry here (`arrangementOf`), so an entry with neither list means "INK's order"
@@ -810,6 +822,20 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
     const top = new Set(v.navbarGroups.top.filter(isRecord).map((r) => `${r.store}:${r.collectionId}`));
     v.navbarGroups.more.forEach((r, i) => { if (isRecord(r) && top.has(`${r.store}:${r.collectionId}`)) c.fail(`${path}.navbarGroups.more[${i}]`, "already in the top group"); });
   }
+  if (v.menu !== undefined) {
+    if (!isRecord(v.menu) || !Array.isArray(v.menu.top) || !Array.isArray(v.menu.hidden) || !Array.isArray(v.menu.added)) return c.fail(`${path}.menu`, "must be { top: [...], hidden: [...], added: [...] }");
+    checkRefList(c, `${path}.menu.top`, v.menu.top, MAX_NAVBAR_GROUP);
+    checkRefList(c, `${path}.menu.hidden`, v.menu.hidden, 300);
+    checkRefList(c, `${path}.menu.added`, v.menu.added, MAX_NAVBAR_GROUP);
+    // One collection, one place: a later list never repeats a collection of an earlier one.
+    const key = (r: Record<string, unknown>) => `${r.store}:${r.collectionId}`;
+    const earlier = new Set<string>();
+    for (const list of ["top", "hidden", "added"] as const) {
+      const items = v.menu[list] as unknown[];
+      items.forEach((r, i) => { if (isRecord(r) && earlier.has(key(r))) c.fail(`${path}.menu.${list}[${i}]`, "already in another list of the menu"); });
+      items.forEach((r) => { if (isRecord(r)) earlier.add(key(r)); });
+    }
+  }
   if (v.arrangements !== undefined) {
     checkRefList(c, `${path}.arrangements`, v.arrangements, MAX_ARRANGEMENTS);
     if (Array.isArray(v.arrangements)) v.arrangements.forEach((a, i) => {
@@ -855,7 +881,11 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
       // A region only enables collections of ITS OWN INK store: the wrong store's collection can never be enabled here.
       if (isRecord(input.collections)) {
         const groups = isRecord(input.collections.navbarGroups) ? input.collections.navbarGroups : {};
-        const lists: [string, unknown][] = [["enabled", input.collections.enabled], ["navbar", input.collections.navbar], ["navbarGroups.top", groups.top], ["navbarGroups.more", groups.more], ["arrangements", input.collections.arrangements]];
+        const menu = isRecord(input.collections.menu) ? input.collections.menu : {};
+        const lists: [string, unknown][] = [
+          ["enabled", input.collections.enabled], ["navbar", input.collections.navbar], ["navbarGroups.top", groups.top], ["navbarGroups.more", groups.more],
+          ["menu.top", menu.top], ["menu.hidden", menu.hidden], ["menu.added", menu.added], ["arrangements", input.collections.arrangements],
+        ];
         for (const [key, list] of lists) {
           if (!Array.isArray(list)) continue;
           list.forEach((ref, i) => {
