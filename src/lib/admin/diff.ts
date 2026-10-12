@@ -46,7 +46,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft));
   return changes;
 }
 
@@ -114,6 +114,15 @@ function navigationChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
     if (json(was) !== json(now)) out.push({ kind: "navigation", sectionId: `navigation:link:${destination}`, text: `Navegação, link ${NAV_DESTINATION_LABEL[destination]}: ${blockText(was)} → ${blockText(now)}` });
   }
   return out;
+}
+
+/** The store-wide buy button of the product cards (global scope). Pure. */
+function cardsChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const was = published.cards?.buyLabel;
+  const now = draft.cards?.buyLabel;
+  if (was === now) return [];
+  const text = (label: string | undefined) => (label ? `botão “${label}” em todos os cards` : "cada seção decide");
+  return [{ kind: "theme", sectionId: "cards:buy", text: `Botão nos cards de produto: ${text(was)} → ${text(now)}` }];
 }
 
 const modeText = (doc: ScopeDoc): string => (doc.theme ? (doc.theme.mode === "inherit" ? "herda a paleta da Use Origens" : "paleta própria") : "visual atual (sem configuração)");

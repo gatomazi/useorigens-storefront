@@ -7,6 +7,7 @@ import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { ShareButton } from "@/components/share/ShareButton";
 import { designShare, inkProductShare } from "@/lib/share/server";
 import { SOURCES } from "@/lib/analytics/sources";
+import { CardButton } from "./CardButton";
 import { ProductPhoto } from "./ProductPhoto";
 import { PriceText } from "./PriceText";
 
@@ -34,6 +35,7 @@ export function FamilyCard({
   directToInk = false,
   pieceLabel,
   garmentTypeId,
+  buyLabel,
 }: {
   entry: CityFamilyEntry;
   href: string;
@@ -53,6 +55,8 @@ export function FamilyCard({
   pieceLabel?: string;
   /** INK `product_type.id` of the piece shown (garment tabs only) — picks the share text ("camiseta" or not). */
   garmentTypeId?: number;
+  /** The store-wide buy button (global `cards.buyLabel`) at the foot of the card; absent = none. */
+  buyLabel?: string;
 }) {
   const price = formatPrice(entry.primary.price);
   const listPrice = formatListPrice(entry.primary);
@@ -79,8 +83,11 @@ export function FamilyCard({
       {entry.variants.length > 0 && (
         <p className="t-caption mt-1 font-semibold text-ink">{entry.variants.length === 1 ? "Mais 1 versão" : `Mais ${entry.variants.length} versões`}</p>
       )}
+      {buyLabel && <CardButton label={buyLabel} className="mt-auto" />}
     </>
   );
+  // With a button the card fills its grid cell, so the buttons of a row line up whatever the texts above them.
+  const linkClass = buyLabel ? "flex h-full flex-col" : "block";
 
   // A plain <a> (via TrackedInkLink), not next/link, for the INK case: it's a real cross-origin navigation,
   // same tab (matches the rest of the site's purchase links — VariantPicker's own CTA is also a same-tab <a>,
@@ -89,7 +96,7 @@ export function FamilyCard({
   // The heart (and the share button under it) is a SIBLING of the anchor, absolutely positioned on top of the photo — never nested inside it
   // (a <button> inside an <a> is invalid HTML and would fire both the save and the navigation on one tap).
   return (
-    <div className="group relative">
+    <div className={`group relative${buyLabel ? " h-full" : ""}`}>
       <FavoriteButton
         item={{
           inkProductId: entry.primary.inkProductId,
@@ -116,13 +123,13 @@ export function FamilyCard({
             destinationUrl: inkHref,
             garmentType: pieceLabel,
           }}
-          className="block"
+          className={linkClass}
           ariaLabel={`Comprar ${displayName} de ${cityName} na loja`}
         >
           {content}
         </TrackedInkLink>
       ) : (
-        <Link href={finalHref} className="block">
+        <Link href={finalHref} className={linkClass}>
           {content}
         </Link>
       )}

@@ -22,7 +22,7 @@ import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
-import { isUmaPencaSource, maxSectionProducts, MIN_SECTION_PRODUCTS, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, isUmaPencaSource, MAX_BUY_LABEL, maxSectionProducts, MIN_SECTION_PRODUCTS, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
@@ -545,6 +545,21 @@ export async function publishGlobalThemeAction(fd: FormData) {
   await audit(actor, result.outcome.status === "failed" ? "publish.failed" : "publish", "global", result.outcome.releaseId, { status: result.outcome.status });
   if (result.outcome.status === "failed") back("/admin/aparencia", { err: ["A publicação falhou ao gravar o arquivo; a versão anterior continua no ar."] });
   back("/admin/aparencia", { ok: `Paleta global publicada (release ${result.outcome.releaseId}).` });
+}
+
+/**
+ * Aparência (owner): the store-wide buy button of the product cards, saved in the GLOBAL draft. On: every product card of every region gets a button
+ * with this text (a section's own text wins). Off: each section decides, as before. Published with "Publicar configuração global".
+ */
+export async function saveCardsAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const on = fd.get("cards_buy") === "on";
+  const label = text(fd, "cards_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL;
+  const outcome = await applyAndSave("global", { type: "set-cards", cards: on ? { buyLabel: label } : null }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/aparencia", { err: outcome.errors.map((e) => (e.includes("buyLabel") ? `O texto do botão precisa ter de 1 a ${MAX_BUY_LABEL} caracteres, sem espaço nas pontas.` : e)) });
+  await audit(actor, "draft.save", "global", "set-cards");
+  back("/admin/aparencia#botao-cards", { ok: on ? `Rascunho salvo: botão “${label}” em todos os cards. Publique a configuração global para valer na loja.` : "Rascunho salvo: cada seção volta a decidir o próprio botão. Publique a configuração global para valer na loja." });
 }
 
 export async function discardGlobalThemeAction() {

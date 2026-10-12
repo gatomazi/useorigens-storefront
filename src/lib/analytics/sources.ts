@@ -42,6 +42,8 @@ export const SOURCES = {
   homeCollection: "home_colecao",
   /** The paged grid of a collection page (`/<region>/colecoes/<slug>`): every product of an INK collection, page by page. */
   collectionPage: "colecao_pagina",
+  /** A card found by a collection page's own mini search ("Buscar nesta coleção"). */
+  collectionSearch: "colecao_busca",
   /** A home carousel of Uma Penca articles (canecas, ecobags) created in the CMS — fires GoToPenca / go_to_umapenca, never GoToInk. */
   homeUmaPenca: "home_umapenca",
   /** The home's "Sua cidade, de 8 jeitos" example-city cards that open the INK product directly. */

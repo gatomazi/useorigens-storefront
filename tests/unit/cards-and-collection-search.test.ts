@@ -1,0 +1,101 @@
+import { describe, expect, test } from "vitest";
+import { applyOp } from "@/lib/admin/draft-ops";
+import { diffDocs } from "@/lib/admin/diff";
+import { cardButtonOf, validateCards } from "@/lib/site-config/cards-schema";
+import { sanitizeBundle } from "@/lib/site-config/sanitize";
+import { validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
+import { buildSeedBundle } from "@/lib/site-config/seed";
+import { collectionQueryTerms, filterCollection, MAX_COLLECTION_QUERY } from "@/lib/search/collection-filter";
+
+const seed = () => buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null });
+const ctx = { newId: () => "t1" };
+const ok = (d: ScopeDoc, op: Parameters<typeof applyOp>[1]) => {
+  const r = applyOp(d, op, ctx);
+  if (!r.ok) throw new Error(r.errors.join("; "));
+  return r.doc;
+};
+
+describe("store-wide buy button on the product cards (global scope)", () => {
+  test("given the global document, when the button is turned on and off, then only `cards` changes and the document stays valid", () => {
+    const global = structuredClone(seed().docs.global);
+    const on = ok(global, { type: "set-cards", cards: { buyLabel: "Comprar" } });
+    expect(on.cards).toEqual({ buyLabel: "Comprar" });
+    expect(validateScopeDoc(on).ok).toBe(true);
+    const off = ok(on, { type: "set-cards", cards: null });
+    expect("cards" in off).toBe(false);
+    expect(off).toEqual(global);
+  });
+
+  test("given a region, when the button is set there, then it is refused: it belongs to the global scope (every region)", () => {
+    expect(applyOp(structuredClone(seed().docs.sul), { type: "set-cards", cards: { buyLabel: "Comprar" } }, ctx).ok).toBe(false);
+    expect(validateScopeDoc({ ...seed().docs.sul, cards: { buyLabel: "Comprar" } }).ok).toBe(false);
+  });
+
+  test("given bad labels, when validated, then each is refused", () => {
+    for (const buyLabel of ["", " Comprar", "Comprar ", "x".repeat(21), "Com\nprar"]) expect(validateCards({ buyLabel }, "global").ok).toBe(false);
+    expect(validateCards({ buyLabel: "Ver produto", extra: 1 }, "global").ok).toBe(false);
+    expect(validateCards({ buyLabel: "Ver produto" }, "global").ok).toBe(true);
+  });
+
+  test("given a published bundle, when read, then the label comes from the global document; an invalid one is dropped without touching the tracking", () => {
+    const bundle = seed();
+    expect(cardButtonOf(bundle)).toBeUndefined();
+    const raw = { ...bundle, releaseId: "r1", docs: { ...bundle.docs, global: { ...bundle.docs.global, cards: { buyLabel: "Comprar" } } } };
+    expect(cardButtonOf(sanitizeBundle(raw, bundle).bundle)).toBe("Comprar");
+    const bad = { ...raw, docs: { ...raw.docs, global: { ...raw.docs.global, cards: { buyLabel: "" } } } };
+    const read = sanitizeBundle(bad, bundle);
+    expect(cardButtonOf(read.bundle)).toBeUndefined();
+    expect(read.bundle?.docs.global.tracking).toEqual(bundle.docs.global.tracking);
+    expect(read.diagnostics.some((d) => d.includes("cards is invalid"))).toBe(true);
+  });
+
+  test("given a change of the button, when the publish screen diffs the global document, then it says what changes", () => {
+    const global = structuredClone(seed().docs.global);
+    const on = ok(global, { type: "set-cards", cards: { buyLabel: "Comprar" } });
+    expect(diffDocs(global, on).map((c) => c.text)).toEqual(["Botão nos cards de produto: cada seção decide → botão “Comprar” em todos os cards"]);
+    expect(diffDocs(on, on)).toEqual([]);
+  });
+});
+
+describe("mini search of a collection page", () => {
+  const cards = [
+    { id: "1", name: "Ponto de Origem", context: "Florianópolis · SC", state: "SC" },
+    { id: "2", name: "Feito em", context: "Porto Alegre · RS", state: "RS" },
+    { id: "3", name: "Coordenadas", context: "Alegrete · RS", state: "RS" },
+    { id: "4", name: "Camiseta Bah Tchê", context: undefined, state: undefined },
+    { id: "5", name: "Feito em", context: "Tijucas · SC", state: "SC" },
+    { id: "6", name: "Território", context: "Curitiba · PR", state: "PR" },
+  ];
+  const ids = (q: string) => filterCollection(cards, q).map((c) => c.id);
+
+  test("given a city, a style or a state, when searched, then the matching cards come back in the collection's order", () => {
+    expect(ids("tijucas")).toEqual(["5"]);
+    expect(ids("feito em")).toEqual(["2", "5"]);
+    expect(ids("santa catarina")).toEqual(["1", "5"]);
+    expect(ids("RS")).toEqual(["2", "3"]);
+    expect(ids("bah")).toEqual(["4"]);
+  });
+
+  test("given accents, case and the city nicknames, when searched, then they do not matter", () => {
+    expect(ids("FLORIANOPOLIS")).toEqual(["1"]);
+    expect(ids("floripa")).toEqual(["1"]);
+    expect(ids("poa")).toEqual(["2"]);
+    expect(ids("ctba")).toEqual(["6"]);
+    expect(ids("territorio")).toEqual(["6"]);
+  });
+
+  test("given several terms, when searched, then every one must start a word (no fuzzy, no middle-of-word hits)", () => {
+    expect(ids("porto alegre")).toEqual(["2"]);
+    expect(ids("alegre")).toEqual(["2", "3"]);
+    expect(ids("flor")).toEqual(["1"]);
+    expect(ids("polis")).toEqual([]);
+    expect(ids("feito curitiba")).toEqual([]);
+  });
+
+  test("given a query too short or empty, when searched, then nothing is searched", () => {
+    expect(collectionQueryTerms("a")).toEqual([]);
+    expect(collectionQueryTerms("  ")).toEqual([]);
+    expect(ids("")).toEqual([]);
+    expect(collectionQueryTerms("x".repeat(MAX_COLLECTION_QUERY + 50))[0]).toHaveLength(MAX_COLLECTION_QUERY);
+  });
+});

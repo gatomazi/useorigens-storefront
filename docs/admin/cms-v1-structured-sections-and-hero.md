@@ -111,6 +111,30 @@ Cada coleção que a região pode usar (pública, ou interna habilitada, com pel
 - **Publicar** lista “"X" vai para o topo do menu / fica em Categorias / sai do menu”, “A ordem do topo do menu mudou” e, na adoção, “A navbar da INK passa a seguir o menu de coleções do site”.
 - Código: `src/lib/site-config/collection-menu.ts` (regras puras), `src/lib/catalog/collection-menu.ts` (o que cada superfície consegue linkar), `src/lib/site-config/navbar.ts`, `src/lib/site-config/navigation.ts`, `src/components/layout/SiteChrome.tsx` e `PriorityLinks.tsx`, `src/app/admin/(panel)/colecoes/page.tsx`. Testes: `tests/unit/navbar.test.ts`, `tests/unit/navigation-config.test.ts`, `tests/e2e-admin/navbar.spec.ts`. Capturas: [`screenshots/menu-categorias/`](../screenshots/menu-categorias/).
 
+## Botão em todos os cards e busca na página da coleção (`feature/botao-global-busca-colecao`)
+
+- **Botão global nos cards** (Aparência → "Botão nos cards de produto · todas as regiões", só o owner):
+  - Ligado, todo card de produto da loja ganha um botão com o texto escolhido. Vale nas seções de produtos (home, hotpages, páginas de coleção, inclusive o card de personalização), nos estilos da cidade (home, estado, cidade, outros estilos da página da estampa), nos resultados de `/busca` e nos artigos da Uma Penca.
+  - O botão faz parte do link do card: abre a mesma página e registra o mesmo clique.
+  - Uma seção com texto de botão próprio (`layout.buyLabel`) continua com o dela. Desligado, cada seção decide, como antes.
+  - Ficam de fora os 3 cards do hero e a lista de Meus Lugares.
+  - Fica no documento **global** (`cards.buyLabel`, `src/lib/site-config/cards-schema.ts`). Uma região não aceita esse campo.
+  - Publica com "Publicar configuração global" (o mesmo botão da paleta global, que publica o documento global inteiro).
+  - Um valor inválido no arquivo publicado é ignorado, sem derrubar o tracking global.
+- **Mini busca da página de coleção** ("Buscar nesta coleção"):
+  - Aparece na grade paginada das páginas de coleção (automática ou categoria-pai) com mais de 12 produtos.
+  - Conforme a pessoa digita, a grade mostra os cards da coleção **inteira**, todas as páginas, que combinam com o texto, na ordem da coleção e com os mesmos cards e botões. Limpar volta à página com a paginação.
+  - Regras (`src/lib/search/collection-filter.ts`):
+    - procura no nome, no lugar ("Tijucas · SC") e no nome do estado;
+    - ignora maiúsculas, acentos e pontuação;
+    - aceita os apelidos da busca global ("floripa", "poa");
+    - cada termo precisa começar uma palavra, sem busca aproximada;
+    - mínimo de 2 caracteres; até 60 resultados, com aviso para refinar.
+  - API: `GET /api/colecoes/<região>/<slug>?q=` resolve o endereço exatamente como a página e responde 404 para região não lançada ou coleção sem página. Cache de 60 s no navegador e 300 s na CDN.
+  - O clique num resultado registra `source=colecao_busca`. A busca não muda o endereço da página, que continua em cache.
+- **Menu do topo:** "Categorias" e as coleções do Topo já abrem a página da coleção no site; não há chave para isso. Só a navbar da INK (Worker) ainda abre a coleção na INK.
+- Código: `src/components/catalog/CardButton.tsx`, `CollectionSearch.tsx`, `src/app/api/colecoes/[region]/[slug]/route.ts`, `src/lib/pages/public.ts` (`findCollectionLanding`, `pagedGridItems`), `src/lib/site-config/cards.ts`. Testes: `tests/unit/cards-and-collection-search.test.ts`. Capturas: [`screenshots/botao-global-busca-colecao/`](../screenshots/botao-global-busca-colecao/).
+
 ## 2. Três produtos do hero por região (`feature/cms-hero-featured-products`)
 
 Home → Seções → **Hero** → bloco **Produtos em destaque**: três posições, buscar (cidade, UF, estilo ou ID) → **Usar aqui**, **Substituir**, **Limpar**, **↑/↓**. Cada ação salva o rascunho e atualiza a prévia 375/desktop; nada é publicado.

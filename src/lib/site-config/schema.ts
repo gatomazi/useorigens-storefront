@@ -7,6 +7,7 @@
  * final URL and dimensions, so rendering never needs the database or the storage API).
  */
 import { isAllowedMediaSrc } from "./media-hosts";
+import { DEFAULT_BUY_LABEL, MAX_BUY_LABEL, validateCards, type CardsConfig } from "./cards-schema";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
 import { REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
@@ -114,8 +115,7 @@ export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
 export type ProductTags = { discount?: true; text?: string };
 export const MAX_TAG_TEXT = 24;
 export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string; tags?: ProductTags };
-export const DEFAULT_BUY_LABEL = "Ver produto";
-export const MAX_BUY_LABEL = 20;
+export { DEFAULT_BUY_LABEL, MAX_BUY_LABEL };
 /** Cards of a product section: a carousel scrolls through at most 24; a grid lays out up to 48 (every product an INK collection keeps for showcases),
  * and a paged grid shows up to 48 per page. */
 export const MIN_SECTION_PRODUCTS = 3;
@@ -302,6 +302,8 @@ export type ScopeDoc = {
    * Absent or empty = no button anywhere. Published with the region (never with a page); the public reads only live items (site-config/promotions.ts).
    */
   promotions?: PromotionsConfig;
+  /** GLOBAL only: the store-wide setting of the product cards (a buy button on every one of them, `cards-schema.ts`). Published with the global scope. */
+  cards?: CardsConfig;
   /**
    * Hotpages and parent-category landings of this region. Part of the document for storage and rollback, but PUBLISHED ON THEIR OWN: publishing the
    * home never publishes a draft page, and publishing a page never touches the home (admin/publishing.ts composes the bundle per target).
@@ -872,6 +874,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.promotions !== undefined) {
     const r = validatePromotions(input.promotions, sc, "doc.promotions");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.cards !== undefined) {
+    const r = validateCards(input.cards, sc, "doc.cards");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.collections !== undefined) {

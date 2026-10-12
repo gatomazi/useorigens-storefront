@@ -15,6 +15,7 @@ import { breadcrumbList } from "@/lib/seo/jsonld";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { SITE_URL } from "@/lib/site";
 import { inkProductShare } from "@/lib/share/server";
+import { storeCardButton } from "@/lib/site-config/cards";
 
 export const revalidate = 3600;
 
@@ -123,7 +124,7 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
             <h2 id="other-title" className="mb-6 text-[1.5rem] font-extrabold tracking-tight lg:mb-10 lg:text-[1.875rem]">
               Outros estilos de {city.name}
             </h2>
-            <FamilyGrid entries={others} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.pdpOtherStyles} directToInk />
+            <FamilyGrid entries={others} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.pdpOtherStyles} directToInk buyLabel={storeCardButton()} />
           </div>
         </section>
       )}

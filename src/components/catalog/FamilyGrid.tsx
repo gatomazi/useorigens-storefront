@@ -16,6 +16,7 @@ export function FamilyGrid({
   directToInk = false,
   pieceLabel,
   garmentTypeId,
+  buyLabel,
 }: {
   entries: CityFamilyEntry[];
   hrefBase: string;
@@ -27,6 +28,8 @@ export function FamilyGrid({
   pieceLabel?: string;
   /** Forwarded to every `FamilyCard` with `pieceLabel` (the tab's INK `product_type.id`). */
   garmentTypeId?: number;
+  /** The store-wide buy button (global `cards.buyLabel`), forwarded to every `FamilyCard`. */
+  buyLabel?: string;
 }) {
   if (entries.length === 0) return null;
 
@@ -45,6 +48,7 @@ export function FamilyGrid({
             directToInk={directToInk}
             pieceLabel={pieceLabel}
             garmentTypeId={garmentTypeId}
+            buyLabel={buyLabel}
           />
         </li>
       ))}

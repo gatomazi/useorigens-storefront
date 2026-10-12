@@ -9,6 +9,8 @@ import { getCatalog } from "../catalog/repository";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
 import { livePage, liveCustomizer, newCollectionLanding, pageHref } from "../site-config/pages";
 import type { Customizer, Page, PageKind, PublishedBundle } from "../site-config/schema";
+import type { CollectionPageLookup, InkCategorySource } from "../site-config/sources";
+import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 
 /**
  * The storefront side of pages: everything is read from the PUBLISHED document (published.json through the tolerant reader, cached by mtime),
@@ -43,24 +45,44 @@ export function collectionLanding(collection: CollectionRecord, store: CommerceS
  * collection with that slug (a collection the region can use right now). Anything else is a 404.
  */
 export function resolveCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page } {
-  const found = publishedFor(regionParam);
+  const found = findCollectionLanding(regionParam, slug);
   if (!found) notFound();
+  return found;
+}
+
+/** The same resolution without the 404: null when the address has no page (for the API of the page's mini search). */
+export function findCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page } | null {
+  const found = publishedFor(regionParam);
+  if (!found) return null;
   const doc = found.bundle.docs[found.region];
   const page = livePage(doc, "categoryLanding", slug);
   if (page) return { ...found, page };
   const collection = collectionForPage(found.region, doc, slug);
-  if (!collection) notFound();
-  return { ...found, page: collectionLanding(collection, REGIONS[found.region].storeKey) };
+  return collection ? { ...found, page: collectionLanding(collection, REGIONS[found.region].storeKey) } : null;
+}
+
+/** The page's paged grid, if it has one, with the lookup of its collection as the region shows it (same arrangement as the page itself). */
+function pagedGrid(region: RegionSlug, bundle: PublishedBundle, page: Page): { source: InkCategorySource; lookup: CollectionPageLookup } | null {
+  const grid = page.sections.find((s) => s.active && s.layout?.display === "paged");
+  if (grid?.source?.kind !== "ink-category") return null;
+  const doc = bundle.docs[region];
+  const catalog = getCatalog();
+  const lookup = collectionPageLookup((store) => catalog.productsOfStore(store), (store) => enabledInternalIds(doc, store), undefined, (src) => arrangementOf(doc, src.store, src.collectionId, src));
+  return { source: grid.source, lookup };
 }
 
 /** How many pages the page's paged grid has (0: it has none, or its collection shows nothing): a page number past it is a 404. */
 export function pagedGridPageCount(region: RegionSlug, bundle: PublishedBundle, page: Page): number {
-  const grid = page.sections.find((s) => s.active && s.layout?.display === "paged");
-  if (grid?.source?.kind !== "ink-category") return 0;
-  const doc = bundle.docs[region];
-  const catalog = getCatalog();
-  const result = collectionPageLookup((store) => catalog.productsOfStore(store), (store) => enabledInternalIds(doc, store), undefined, (src) => arrangementOf(doc, src.store, src.collectionId, src))(grid.source, 1);
-  return result.status === "ok" ? result.pageCount : 0;
+  const grid = pagedGrid(region, bundle, page);
+  const result = grid?.lookup(grid.source, 1);
+  return result?.status === "ok" ? result.pageCount : 0;
+}
+
+/** EVERY card of the page's paged grid, in the page's order (what its mini search looks through); empty when it has none. */
+export function pagedGridItems(region: RegionSlug, bundle: PublishedBundle, page: Page): CarouselItem[] {
+  const grid = pagedGrid(region, bundle, page);
+  const result = grid?.lookup({ ...grid.source, limit: Number.MAX_SAFE_INTEGER }, 1);
+  return result?.status === "ok" ? result.items : [];
 }
 
 /** The address of page `n` of a landing's paged grid: the landing itself for the first one, `/<n>` after it. */
