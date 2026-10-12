@@ -48,7 +48,7 @@ export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllH
 }
 
 /**
- * The frame every product card shares: ONE bordered block (picture on top, edge to edge; name, price and the optional button under it), so a product
+ * The frame every product card shares (the style cards of a city too, FamilyCardView.tsx): ONE bordered block (picture on top, edge to edge; name, price and the optional button under it), so a product
  * reads as one thing instead of a picture and two loose lines on the page ground. Elevation is the border alone (no shadow, no gradient). The block
  * has no tint of its own: it shows the ground the grid sits on (`--card-fill`, transparent unless a themed page fills it to hide its pattern), and
  * the picture keeps the photo frame of the store (`.photo`, the INK grey), so a mockup with a grey of its own never sits on a white box.
@@ -60,18 +60,22 @@ export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllH
  */
 export const SOLID_CARDS = "on-light [--card-fill:var(--ground)]";
 
-const frame = (dark: boolean) =>
+export const cardFrame = (dark: boolean) =>
   `group relative flex h-full flex-col overflow-hidden rounded-lg border bg-[var(--card-fill)] transition-colors ${dark ? "border-white/25 hover:border-white/55" : "border-black/15 hover:border-black/35"}`;
+const frame = cardFrame;
 /** Name, price and button: 12px of padding on phones, 16px from tablets up. */
-const INFO = "flex grow flex-col p-3 md:p-4";
+export const CARD_INFO = "flex grow flex-col p-3 md:p-4";
+const INFO = CARD_INFO;
 /** Up to two lines (the full name stays in the DOM). No room is reserved under a short name: see `FOOT`. */
-const NAME = "line-clamp-2 text-[0.9375rem] font-medium leading-[1.3] md:text-base";
+export const CARD_NAME = "line-clamp-2 text-[0.9375rem] font-medium leading-[1.3] md:text-base";
+const NAME = CARD_NAME;
 /**
  * Price and button, pinned to the foot of the card. The cards of a row share one height, so prices and buttons line up whatever the length of
  * the names above them; and when every name of the row fits one line, the price sits right under the name (the room appears only next to a
  * neighbour whose name takes two lines).
  */
-const FOOT = "mt-auto pt-1";
+export const CARD_FOOT = "mt-auto pt-1";
+const FOOT = CARD_FOOT;
 
 /** A notch smaller on phones, so a discount and a short own tag share one line instead of stacking over the print. */
 const TAG = "px-1.5 py-0.5 text-[0.625rem] font-bold uppercase leading-[1.15] tracking-[0.04em] text-white sm:px-2 sm:py-1 sm:text-[0.6875rem] sm:tracking-[0.08em]";
@@ -81,7 +85,7 @@ const TAG = "px-1.5 py-0.5 text-[0.625rem] font-bold uppercase leading-[1.15] tr
  * then the section's own text in ink, the same family as the "Personalizável" tag. Inside the card's link, so a screen reader hears them with
  * the product; never zoomed with the photo.
  */
-function CardTags({ discount, text }: { discount?: number; text?: string }) {
+export function CardTags({ discount, text }: { discount?: number; text?: string }) {
   if (!discount && !text) return null;
   return (
     <span className="pointer-events-none absolute left-2 top-2 z-[1] flex max-w-[calc(100%-1rem)] flex-wrap items-start gap-1">
