@@ -30,6 +30,7 @@ import { pageShare } from "@/lib/share/server";
 import { ShareButton } from "@/components/share/ShareButton";
 import { SizeGuideButton } from "@/components/catalog/SizeGuide";
 import { CLASSIC_GARMENT_TYPE_ID } from "@/lib/catalog/garments";
+import { storeCardButton } from "@/lib/site-config/cards";
 
 export const revalidate = 3600;
 
@@ -57,6 +58,8 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 
 export default async function CityPage({ params }: { params: Params }) {
   const { region, uf, city: citySlug } = await params;
+  // The store-wide buy button (Aparência, global): on the styles' cards too.
+  const buyLabel = storeCardButton();
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const resolved = resolveCity(region, uf, citySlug);
   if (!resolved) notFound();
@@ -149,7 +152,7 @@ export default async function CityPage({ params }: { params: Params }) {
         </div>
         {families.length > 0 ? (
           garment.tabs.length > 0 ? (
-            <Suspense fallback={<FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk />}>
+            <Suspense fallback={<FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk buyLabel={buyLabel} />}>
               <CityGarmentTabs
                 tabs={garment.tabs}
                 guideSource={SOURCES.cityStyles}
@@ -164,6 +167,7 @@ export default async function CityPage({ params }: { params: Params }) {
                       stateUf={city.uf}
                       sourceSection={SOURCES.cityStyles}
                       directToInk
+                      buyLabel={buyLabel}
                       pieceLabel={tab.id === garment.tabs[0].id ? undefined : tab.label}
                       garmentTypeId={tab.id === garment.tabs[0].id ? undefined : tab.id}
                     />,
@@ -172,7 +176,7 @@ export default async function CityPage({ params }: { params: Params }) {
               />
             </Suspense>
           ) : (
-            <FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk />
+            <FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk buyLabel={buyLabel} />
           )
         ) : (
           <p className="t-body max-w-xl">Ainda não temos camisetas de {city.name} na loja. Volte em breve ou escolha outra cidade da região.</p>

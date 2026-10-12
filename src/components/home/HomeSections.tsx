@@ -1,6 +1,7 @@
 import { isSameFill, SectionBackdrop } from "@/components/banners/SectionBackdrop";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
+import { CollectionSearch } from "@/components/catalog/CollectionSearch";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { Campaign } from "@/components/home/Campaign";
 import { ImageGrid, type GridTileView } from "@/components/home/ImageGrid";
@@ -16,10 +17,14 @@ import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { firstImageSectionId, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
+import { cardButtonOf } from "@/lib/site-config/cards-schema";
 import type { Fill, Page, PublishedBundle, Section } from "@/lib/site-config/schema";
 import { Pagination } from "@/components/catalog/Pagination";
 import { numberPt } from "@/lib/format";
 import { destinationHref, resolveSource, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type SourceResult, type UmaPencaLookup } from "@/lib/site-config/sources";
+
+/** A collection page gets its mini search when it has more products than this (fewer fit on one screen anyway). */
+const SEARCH_FROM = 12;
 
 const NATIVE_FILL: Record<"paper" | "plain" | "region-primary", Fill> = {
   paper: { kind: "none" },
@@ -41,6 +46,8 @@ export function HomeSections({
   region, home, bundle, categories, collectionPage, links, umapenca, page, paging,
 }: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging }) {
   const doc = bundle.docs[region];
+  // The store-wide buy button (Aparência, global): on every product card, unless a section set a text of its own.
+  const cardButton = cardButtonOf(bundle);
   // A page (hotpage / landing) is drawn by the very same renderer: its sections instead of the home's.
   const sections = page ? page.sections.filter((s) => s.active && s.template !== "footer") : renderableSections(doc);
   const media = bundle.media;
@@ -87,7 +94,7 @@ export function HomeSections({
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
                 </div>
-                <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk />
+                <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buyLabel={cardButton} />
               </>
             );
             const visual = hasImage(bg) || bg.fill.kind !== "none";
@@ -151,7 +158,7 @@ export function HomeSections({
           }
 
           case "product-carousel":
-            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} />;
+            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} />;
 
           case "campaign": {
             const image = hasImage(bg);
@@ -218,8 +225,14 @@ function CarouselSection({
   region,
   card,
   pageTone,
+  cardButton,
+  searchSlug,
 }: {
   region: RegionSlug;
+  /** The store-wide buy button (global `cards.buyLabel`); the section's own text wins. */
+  cardButton?: string;
+  /** The address of the collection page this paged grid is on, live (never in the panel's preview): it gets the mini search. */
+  searchSlug?: string;
   /** The ground of the page the section is on, when that page has one of its own (PageGround). */
   pageTone?: "light" | "dark";
   /** The customizer card that takes the FIRST position (null: none, or it cannot be shown: then only products). */
@@ -258,26 +271,32 @@ function CarouselSection({
   // Carousel (a row that scrolls) or grid (every card on the page): same heading, cards and click tracking.
   const Display = s.layout.display === "grid" ? ProductGrid : ProductCarousel;
   const pages = paged?.status === "ok" ? paged : null;
-  const carousel = pages ? (
-    <ProductGrid
-      poster={variant === "poster"}
-      tone={tone}
-      items={items}
-      labelledBy={s.headingId}
-      title={s.title}
-      intro={s.subtitle}
-      sourceSection={SOURCES[s.analyticsSource]}
-      buyLabel={s.layout.buyLabel}
-      tags={s.layout.tags}
-      solidCards={hasImage(bg)}
-      aside={
-        <p className={`t-small ${tone === "dark" ? "text-white/85" : "text-ink-soft"}`}>
-          {pages.total === 1 ? "1 produto" : `${numberPt.format(pages.total)} produtos`}
-          {pages.pageCount > 1 && ` · página ${pages.page} de ${pages.pageCount}`}
-        </p>
-      }
-      footer={<Pagination page={pages.page} pageCount={pages.pageCount} hrefOf={paging?.hrefOf} label={`Páginas de ${s.title}`} dark={tone === "dark"} className="mt-10 justify-center lg:mt-14" />}
-    />
+  const buyLabel = s.layout.buyLabel ?? cardButton;
+  const pagedGrid = pages && {
+    poster: variant === "poster",
+    tone,
+    labelledBy: s.headingId,
+    title: s.title,
+    intro: s.subtitle,
+    sourceSection: SOURCES[s.analyticsSource],
+    buyLabel,
+    tags: s.layout.tags,
+    solidCards: hasImage(bg),
+  };
+  // Both elements cross into the mini search (a client component), which renders them among its own children: each carries a key of its own.
+  const pagedAside = pages && (
+    <p key="count" className={`t-small ${tone === "dark" ? "text-white/85" : "text-ink-soft"}`}>
+      {`${pages.total === 1 ? "1 produto" : `${numberPt.format(pages.total)} produtos`}${pages.pageCount > 1 ? ` · página ${pages.page} de ${pages.pageCount}` : ""}`}
+    </p>
+  );
+  const pagedFooter = pages && <Pagination key="pages" page={pages.page} pageCount={pages.pageCount} hrefOf={paging?.hrefOf} label={`Páginas de ${s.title}`} dark={tone === "dark"} className="mt-10 justify-center lg:mt-14" />;
+  const carousel = pages && pagedGrid ? (
+    // A collection with more than a screenful of products gets its own search, over every page of it.
+    searchSlug && pages.total > SEARCH_FROM ? (
+      <CollectionSearch region={region} slug={searchSlug} grid={pagedGrid} items={items} aside={pagedAside} footer={pagedFooter} />
+    ) : (
+      <ProductGrid {...pagedGrid} items={items} aside={pagedAside} footer={pagedFooter} />
+    )
   ) : (
     <Display
       poster={variant === "poster"}
@@ -290,7 +309,7 @@ function CarouselSection({
       viewAllHref={href ?? undefined}
       viewAllLabel={s.cta?.label}
       sourceSection={SOURCES[s.analyticsSource]}
-      buyLabel={s.layout.buyLabel}
+      buyLabel={buyLabel}
       tags={s.layout.tags}
       solidCards={hasImage(bg)}
     />

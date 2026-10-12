@@ -14,6 +14,7 @@ import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredT
 import { newCollectionLanding, newPage, uniqueSlug } from "../site-config/pages";
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import type { PromotionsConfig } from "../site-config/promotions-schema";
+import type { CardsConfig } from "../site-config/cards-schema";
 import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid">;
@@ -59,6 +60,8 @@ export type DraftOp =
   | { type: "set-theme"; theme: ThemeConfig | null }
   /** Replaces the coupons and promotions of a region (an empty list is valid: no button). Strictly validated. */
   | { type: "set-promotions"; promotions: PromotionsConfig }
+  /** GLOBAL only: a buy button on every product card of the store (`cards.buyLabel`), or `null` to leave it to each section again. */
+  | { type: "set-cards"; cards: CardsConfig | null }
   /** Launches / recalls a region publicly (takes effect only when published). */
   | { type: "set-launched"; launched: boolean }
   // ── Pages (hotpages and parent-category landings) ──
@@ -152,6 +155,13 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-promotions") {
     if (doc.scope === "global") return fail("promotions belong to a region");
     const next: ScopeDoc = { ...doc, promotions: op.promotions };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-cards") {
+    if (doc.scope !== "global") return fail("the cards' setting belongs to the global scope");
+    const next: ScopeDoc = { ...doc, cards: op.cards ?? undefined };
+    if (!op.cards) delete next.cards;
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }

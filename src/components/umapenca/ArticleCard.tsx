@@ -1,5 +1,6 @@
 "use client";
 
+import { CardButton } from "@/components/catalog/CardButton";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { SOURCES } from "@/lib/analytics/sources";
 import { trackGoToUmaPenca } from "@/lib/analytics/track";
@@ -11,7 +12,7 @@ import { ARTICLE_KIND_LABELS, type UmaPencaArticle } from "@/lib/umapenca/types"
  * card is a plain same-tab `<a>` to the verified Uma Penca product page (like every INK purchase link on the site), firing
  * GoToPenca (Meta) and `go_to_umapenca` (GA4) on the real click. Merch photos carry their own backgrounds, hence the 4:5 poster frame.
  */
-export function ArticleCard({ article, region, sizes, priority = false, hoverImageUrl }: { article: UmaPencaArticle; region: string; sizes: string; priority?: boolean; hoverImageUrl?: string }) {
+export function ArticleCard({ article, region, sizes, priority = false, hoverImageUrl, buyLabel }: { article: UmaPencaArticle; region: string; sizes: string; priority?: boolean; hoverImageUrl?: string; buyLabel?: string }) {
   const current = article.salePrice ?? article.price;
   const price = formatPrice(current);
   const fullPrice = article.salePrice !== null ? formatPrice(article.price) : null;
@@ -19,7 +20,7 @@ export function ArticleCard({ article, region, sizes, priority = false, hoverIma
   return (
     <a
       href={article.url}
-      className="group block"
+      className={buyLabel ? "group flex h-full flex-col" : "group block"}
       onClick={() =>
         trackGoToUmaPenca({
           productId: article.id,
@@ -51,6 +52,7 @@ export function ArticleCard({ article, region, sizes, priority = false, hoverIma
         )}
       </div>
       <p className="t-caption mt-1">{ARTICLE_KIND_LABELS[article.kind].singular} · na loja Uma Penca</p>
+      {buyLabel && <CardButton label={buyLabel} className="mt-auto" />}
     </a>
   );
 }

@@ -27,10 +27,13 @@ export function ProductGrid({
   tags,
   solidCards = false,
   aside,
+  toolbar,
   footer,
 }: {
   /** Next to the heading, where "Ver todos" goes (a paged grid shows its product count there). */
   aside?: ReactNode;
+  /** Between the heading and the cards (a collection page's mini search). */
+  toolbar?: ReactNode;
   /** Under the grid (a paged grid's page links). */
   footer?: ReactNode;
   leading?: LeadingCard;
@@ -59,6 +62,7 @@ export function ProductGrid({
       <ProductSectionHeading labelledBy={labelledBy} title={title} intro={intro} dark={dark} viewAllHref={viewAllHref} viewAllLabel={viewAllLabel}>
         {aside}
       </ProductSectionHeading>
+      {toolbar}
       {/* Bordered cards carry their own separation: one even gap on both axes, no taller rows of air between them. */}
       <ul className={`grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 ${solidCards ? SOLID_CARDS : ""}`}>
         {leading && (
