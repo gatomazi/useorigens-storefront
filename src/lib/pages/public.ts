@@ -44,21 +44,21 @@ export function collectionLanding(collection: CollectionRecord, store: CommerceS
  * What `/<region>/colecoes/<slug>` shows: the published parent-category landing with that address or, when there is none, the page of the region's
  * collection with that slug (a collection the region can use right now). Anything else is a 404.
  */
-export function resolveCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page } {
+export function resolveCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page; automatic: boolean } {
   const found = findCollectionLanding(regionParam, slug);
   if (!found) notFound();
   return found;
 }
 
-/** The same resolution without the 404: null when the address has no page (for the API of the page's mini search). */
-export function findCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page } | null {
+/** The same resolution without the 404: null when the address has no page (for the API of the page's mini search). `automatic` = the page was generated from the collection (no landing of the owner's at that address). */
+export function findCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page; automatic: boolean } | null {
   const found = publishedFor(regionParam);
   if (!found) return null;
   const doc = found.bundle.docs[found.region];
   const page = livePage(doc, "categoryLanding", slug);
-  if (page) return { ...found, page };
+  if (page) return { ...found, page, automatic: false };
   const collection = collectionForPage(found.region, doc, slug);
-  return collection ? { ...found, page: collectionLanding(collection, REGIONS[found.region].storeKey) } : null;
+  return collection ? { ...found, page: collectionLanding(collection, REGIONS[found.region].storeKey), automatic: true } : null;
 }
 
 /** The page's paged grid, if it has one, with the lookup of its collection as the region shows it (same arrangement as the page itself). */

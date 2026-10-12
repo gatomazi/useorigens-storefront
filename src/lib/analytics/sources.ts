@@ -44,6 +44,8 @@ export const SOURCES = {
   collectionPage: "colecao_pagina",
   /** A card found by a collection page's own mini search ("Buscar nesta coleção"). */
   collectionSearch: "colecao_busca",
+  /** A card chosen through a collection page's filters or sort (piece, state, city, style, price order) without a text search. */
+  collectionFilter: "colecao_filtro",
   /** A home carousel of Uma Penca articles (canecas, ecobags) created in the CMS — fires GoToPenca / go_to_umapenca, never GoToInk. */
   homeUmaPenca: "home_umapenca",
   /** The home's "Sua cidade, de 8 jeitos" example-city cards that open the INK product directly. */

@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { StateOutline } from "@/components/brand/StateOutline";
 import { CityGarmentTabs } from "@/components/catalog/CityGarmentTabs";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
+import { familyCardModel } from "@/lib/catalog/family-card";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
 import { SearchDialog } from "@/components/search/SearchDialog";
@@ -141,40 +141,46 @@ export default async function CityPage({ params }: { params: Params }) {
       </section>
 
       <section aria-labelledby="styles-title" className="wrap pb-14 lg:pb-20">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3 lg:mb-10">
+        {/* Title and the one "Guia de medidas" of the listing on a single row (never one per card): the guide opens on the piece selected
+            below and lets the person switch to any other piece listed here. With piece tabs the guide knows them all; without, only the classic tee. */}
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 sm:mb-4">
           <h2 id="styles-title" className="text-[1.5rem] font-extrabold tracking-tight lg:text-[1.875rem]">
             Estilos
           </h2>
-          {/* Without piece tabs every card is the classic tee; with tabs, the guide lives next to them (CityGarmentTabs). */}
-          {families.length > 0 && garment.tabs.length === 0 && (
-            <SizeGuideButton garmentTypeIds={[CLASSIC_GARMENT_TYPE_ID]} initialGarmentTypeId={CLASSIC_GARMENT_TYPE_ID} source={SOURCES.cityStyles} />
+          {families.length > 0 && (
+            <SizeGuideButton
+              garmentTypeIds={garment.tabs.length > 0 ? garment.tabs.map((t) => t.id) : [CLASSIC_GARMENT_TYPE_ID]}
+              initialGarmentTypeId={CLASSIC_GARMENT_TYPE_ID}
+              source={SOURCES.cityStyles}
+              className="shrink-0"
+            />
           )}
         </div>
         {families.length > 0 ? (
           garment.tabs.length > 0 ? (
-            <Suspense fallback={<FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk buyLabel={buyLabel} />}>
-              <CityGarmentTabs
-                tabs={garment.tabs}
-                guideSource={SOURCES.cityStyles}
-                panels={Object.fromEntries(
-                  garment.tabs.map((tab) => [
-                    tab.id,
-                    <FamilyGrid
-                      key={tab.id}
-                      entries={garment.entriesByGarment[tab.id] ?? []}
-                      hrefBase={base}
-                      cityName={city.name}
-                      stateUf={city.uf}
-                      sourceSection={SOURCES.cityStyles}
-                      directToInk
-                      buyLabel={buyLabel}
-                      pieceLabel={tab.id === garment.tabs[0].id ? undefined : tab.label}
-                      garmentTypeId={tab.id === garment.tabs[0].id ? undefined : tab.id}
-                    />,
-                  ]),
-                )}
-              />
-            </Suspense>
+            // The tabs are drawn on the server with the classic piece selected (no client-only fallback, no layout shift at hydration). Each
+            // piece's grid travels as plain card models (verified URLs, share payloads, tracking params: src/lib/catalog/family-card.ts) and is
+            // mounted only when that piece is chosen, so the document carries one grid instead of ten.
+            <CityGarmentTabs
+              tabs={garment.tabs}
+              buyLabel={buyLabel}
+              panels={Object.fromEntries(
+                garment.tabs.map((tab) => [
+                  tab.id,
+                  (garment.entriesByGarment[tab.id] ?? []).map((entry) =>
+                    familyCardModel(entry, {
+                      href: `${base}/${entry.family.id}`,
+                      cityName: city.name,
+                      stateUf: city.uf,
+                      sourceSection: SOURCES.cityStyles,
+                      directToInk: true,
+                      pieceLabel: tab.id === garment.tabs[0].id ? undefined : tab.label,
+                      garmentTypeId: tab.id === garment.tabs[0].id ? undefined : tab.id,
+                    }),
+                  ),
+                ]),
+              )}
+            />
           ) : (
             <FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk buyLabel={buyLabel} />
           )

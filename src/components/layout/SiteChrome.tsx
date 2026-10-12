@@ -43,8 +43,11 @@ export function Header({ region }: { region: RegionSlug }) {
   const { navigation } = regionChrome(region);
   // The home's links first, then the collections the owner put on the bar: when the row is too short for all of them, the last ones step out (they are
   // all in "Categorias" anyway).
-  const items = [...navigation.primary, ...navigation.collections].filter((item, i, all) => all.findIndex((o) => o.href === item.href) === i);
   const states = navigation.states;
+  // The "Estados" dropdown already leads to the home's state chooser ("Ver estados"): the home's own "Estados" link would say it twice.
+  const items = [...navigation.primary, ...navigation.collections]
+    .filter((item) => !(states.length > 0 && item.href.endsWith("#estados")))
+    .filter((item, i, all) => all.findIndex((o) => o.href === item.href) === i);
   const categories = navigation.categories;
   const others = navigation.regions;
   // Long lists read down the columns, never one endless column.
@@ -64,8 +67,9 @@ export function Header({ region }: { region: RegionSlug }) {
         <nav aria-label="Principal" className="hidden min-w-0 flex-1 items-center justify-center gap-6 px-4 lg:flex xl:gap-8 xl:px-8">
           {states.length > 0 && (
             <HeaderDropdown className="relative">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 whitespace-nowrap py-1 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden">
-                Regiões
+              {/* Named after what it lists (the region's states): "Regiões" next to the "Sul ▾" region switcher read as two menus of the same thing. */}
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 whitespace-nowrap py-1 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden" data-testid="header-states">
+                Estados
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m6 9 6 6 6-6" />
                 </svg>

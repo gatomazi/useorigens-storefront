@@ -22,6 +22,12 @@ export type CarouselItem = {
   rawPrice?: number | null;
   /** UF, when this item is genuinely tied to one state — the GoToInk `state` param. Never guessed. */
   state?: string;
+  /** The city (or DF administrative region) of a city design, as named in `context`; absent for merchandise. A collection page filters by it. */
+  city?: string;
+  /** The design family id of a city design (families.ts); absent for merchandise. */
+  family?: string;
+  /** INK's `product_type.id` when known (garments.ts): a city design is the classic piece; merchandise carries what INK returned. */
+  garmentTypeId?: number;
   imageUrl: string;
   /** Second photo, shown under the pointer. Only Uma Penca articles have one (fetched on demand, src/lib/umapenca/hover.ts). */
   hoverImageUrl?: string;

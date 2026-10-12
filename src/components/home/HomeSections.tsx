@@ -1,7 +1,7 @@
 import { isSameFill, SectionBackdrop } from "@/components/banners/SectionBackdrop";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
-import { CollectionSearch } from "@/components/catalog/CollectionSearch";
+import { CollectionBrowser } from "@/components/catalog/CollectionBrowser";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { Campaign } from "@/components/home/Campaign";
 import { ImageGrid, type GridTileView } from "@/components/home/ImageGrid";
@@ -21,6 +21,7 @@ import { cardButtonOf } from "@/lib/site-config/cards-schema";
 import type { Fill, Page, PublishedBundle, Section } from "@/lib/site-config/schema";
 import { Pagination } from "@/components/catalog/Pagination";
 import { numberPt } from "@/lib/format";
+import { collectionFacets } from "@/lib/search/collection-filter";
 import { destinationHref, resolveSource, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type SourceResult, type UmaPencaLookup } from "@/lib/site-config/sources";
 
 /** A collection page gets its mini search when it has more products than this (fewer fit on one screen anyway). */
@@ -43,8 +44,8 @@ const NATIVE_FILL: Record<"paper" | "plain" | "region-primary", Fill> = {
 export type Paging = { page: number; hrefOf?: (page: number) => string };
 
 export function HomeSections({
-  region, home, bundle, categories, collectionPage, links, umapenca, page, paging,
-}: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging }) {
+  region, home, bundle, categories, collectionPage, links, umapenca, page, paging, compactHero = false,
+}: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging; /** The automatic collection page: short header, product count next to the title. */ compactHero?: boolean }) {
   const doc = bundle.docs[region];
   // The store-wide buy button (Aparência, global): on every product card, unless a section set a text of its own.
   const cardButton = cardButtonOf(bundle);
@@ -142,6 +143,10 @@ export function HomeSections({
             const visual = hasImage(bg) || bg.fill.kind !== "none";
             // Without a background of its own the hero sits on the page's ground, so its text follows that ground.
             const tone = !visual && pageTone ? pageTone : s.layout?.tone ?? "dark";
+            // The compact header says how many products the page's grid has, right next to the title.
+            const grid = compactHero ? sections.find((g) => g.active && g.layout?.display === "paged" && g.source?.kind === "ink-category") : undefined;
+            const gridResult = grid?.source?.kind === "ink-category" && collectionPage ? collectionPage(grid.source, 1) : null;
+            const total = gridResult?.status === "ok" ? gridResult.total : null;
             return (
               <PageHero
                 key={s.id}
@@ -151,6 +156,8 @@ export function HomeSections({
                 subtitle={s.subtitle}
                 cta={ctaHref && s.cta ? { label: s.cta.label, href: ctaHref } : undefined}
                 tone={tone}
+                compact={compactHero}
+                aside={total !== null ? <p className={`t-small pb-1 ${tone === "dark" ? "text-white/85" : "text-ink-soft"}`}>{total === 1 ? "1 produto" : `${numberPt.format(total)} produtos`}</p> : undefined}
                 className={darkPage && visual && tone === "light" ? "on-light" : undefined}
                 backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
               />
@@ -158,7 +165,7 @@ export function HomeSections({
           }
 
           case "product-carousel":
-            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} />;
+            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} compact={compactHero} />;
 
           case "campaign": {
             const image = hasImage(bg);
@@ -227,8 +234,11 @@ function CarouselSection({
   pageTone,
   cardButton,
   searchSlug,
+  compact = false,
 }: {
   region: RegionSlug;
+  /** The automatic collection page: the grid's own heading is left out (the page header already names the collection and counts its products). */
+  compact?: boolean;
   /** The store-wide buy button (global `cards.buyLabel`); the section's own text wins. */
   cardButton?: string;
   /** The address of the collection page this paged grid is on, live (never in the panel's preview): it gets the mini search. */
@@ -284,18 +294,22 @@ function CarouselSection({
     solidCards: hasImage(bg),
   };
   // Both elements cross into the mini search (a client component), which renders them among its own children: each carries a key of its own.
-  const pagedAside = pages && (
+  // The compact page already counts the products in its header: next to the grid only the page number remains.
+  const pagedAside = pages && (compact ? pages.pageCount > 1 : true) && (
     <p key="count" className={`t-small ${tone === "dark" ? "text-white/85" : "text-ink-soft"}`}>
-      {`${pages.total === 1 ? "1 produto" : `${numberPt.format(pages.total)} produtos`}${pages.pageCount > 1 ? ` · página ${pages.page} de ${pages.pageCount}` : ""}`}
+      {compact ? `página ${pages.page} de ${pages.pageCount}` : `${pages.total === 1 ? "1 produto" : `${numberPt.format(pages.total)} produtos`}${pages.pageCount > 1 ? ` · página ${pages.page} de ${pages.pageCount}` : ""}`}
     </p>
   );
   const pagedFooter = pages && <Pagination key="pages" page={pages.page} pageCount={pages.pageCount} hrefOf={paging?.hrefOf} label={`Páginas de ${s.title}`} dark={tone === "dark"} className="mt-10 justify-center lg:mt-14" />;
+  // The facets of the WHOLE collection (every page), counted here on the server: what the filters offer before anything is chosen.
+  const everyCard = pages && searchSlug && pages.total > SEARCH_FROM && s.source.kind === "ink-category" && collectionPage ? collectionPage({ ...s.source, limit: Number.MAX_SAFE_INTEGER }, 1) : null;
+  const facets = everyCard?.status === "ok" ? collectionFacets(everyCard.items, {}) : null;
   const carousel = pages && pagedGrid ? (
-    // A collection with more than a screenful of products gets its own search, over every page of it.
-    searchSlug && pages.total > SEARCH_FROM ? (
-      <CollectionSearch region={region} slug={searchSlug} grid={pagedGrid} items={items} aside={pagedAside} footer={pagedFooter} />
+    // A collection with more than a screenful of products gets its own search and filters, over every page of it.
+    searchSlug && pages.total > SEARCH_FROM && facets ? (
+      <CollectionBrowser region={region} slug={searchSlug} grid={{ ...pagedGrid, compact }} items={items} aside={pagedAside} footer={pagedFooter} facets={facets} />
     ) : (
-      <ProductGrid {...pagedGrid} items={items} aside={pagedAside} footer={pagedFooter} />
+      <ProductGrid {...pagedGrid} compact={compact} items={items} aside={pagedAside} footer={pagedFooter} />
     )
   ) : (
     <Display
@@ -324,7 +338,7 @@ function CarouselSection({
   }
   if (!visual && surface === "plain") {
     return (
-      <section id={s.anchor} className="wrap py-14 lg:py-24">
+      <section id={s.anchor} className={compact ? "wrap pb-14 pt-6 lg:pb-24 lg:pt-8" : "wrap py-14 lg:py-24"}>
         {carousel}
       </section>
     );

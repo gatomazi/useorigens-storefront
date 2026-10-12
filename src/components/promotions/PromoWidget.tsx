@@ -73,6 +73,7 @@ export function PromoWidget({ region, items, theme = FALLBACK_THEME, mode = "liv
   const [copy, setCopy] = useState<CopyState>(null);
   const [announce, setAnnounce] = useState("");
   const [hidden, setHidden] = useState(false);
+  const [tucked, setTucked] = useState(false);
   const [bottom, setBottom] = useState(0);
   const fabRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -205,6 +206,23 @@ export function PromoWidget({ region, items, theme = FALLBACK_THEME, mode = "liv
     };
   }, [live]);
 
+  // Out of the way while the person reads down the page: a scroll down tucks the button off the edge (it would sit on a card's price or button); a
+  // scroll up, or the top of the page, brings it back. Phones and tablets only (coarse pointer): with a mouse the button is small next to the page.
+  useEffect(() => {
+    if (!live || !coarsePointer()) return;
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      const down = y > last + 4;
+      const up = y < last - 4;
+      last = y;
+      if (down && y > 160) setTucked(true);
+      else if (up || y <= 160) setTucked(false);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [live]);
+
   // The timers below read the latest state through these refs (they must not restart on every change).
   useEffect(() => {
     openRef.current = open;
@@ -295,6 +313,7 @@ export function PromoWidget({ region, items, theme = FALLBACK_THEME, mode = "liv
         type="button"
         onClick={toggle}
         hidden={hidden}
+        data-tucked={tucked && !open ? "true" : undefined}
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         aria-haspopup="dialog"
@@ -303,7 +322,7 @@ export function PromoWidget({ region, items, theme = FALLBACK_THEME, mode = "liv
         data-testid="promo-fab"
         className={[
           position,
-          "z-30 flex h-14 w-14 items-center justify-center rounded-xl bg-[var(--promo-bg)] text-[var(--promo-fg)] shadow-[0_6px_18px_rgb(0_0_0/0.24)] outline-offset-4 transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0",
+          "z-30 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--promo-bg)] text-[var(--promo-fg)] shadow-[0_6px_18px_rgb(0_0_0/0.24)] outline-offset-4 transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0 data-[tucked=true]:-translate-x-[150%] sm:h-14 sm:w-14",
           live ? "bottom-[calc(max(1rem,env(safe-area-inset-bottom))+var(--promo-bottom))] left-[max(1rem,env(safe-area-inset-left))]" : "bottom-4 left-4",
         ].join(" ")}
       >
