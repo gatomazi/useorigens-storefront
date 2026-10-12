@@ -18,16 +18,26 @@ export function MobileMenuPanel({ blocks, interactive = true, onNavigate }: { bl
       {blocks.map((block, index) => {
         const headingId = `${prefix}-${block.kind}`;
         const primary = block.kind === "primary";
-        const itemClass = primary ? "text-[1.625rem] font-bold leading-tight tracking-tight" : "text-[1.25rem] font-semibold leading-snug";
+        // "Comprar" leads at the largest size; states a step down; the collections ("Categorias") read in two columns at a lighter size, since there
+        // can be a dozen of them; the other regions are a short row of chips. The menu stays one screen tall instead of a long single column.
+        const itemClass =
+          block.kind === "categories"
+            ? "text-[1.0625rem] font-semibold leading-snug"
+            : block.kind === "regions"
+              ? "border-2 border-current/60 px-3 text-[0.9375rem] font-semibold leading-none"
+              : primary
+                ? "text-[1.625rem] font-bold leading-tight tracking-tight"
+                : "text-[1.25rem] font-semibold leading-snug";
+        const listClass = block.kind === "categories" ? "grid grid-cols-2 gap-x-4" : block.kind === "regions" ? "flex flex-wrap gap-2 pt-1" : "space-y-0.5";
         return (
-          <div key={block.kind} role="group" aria-labelledby={headingId} data-block={block.kind} className={index === 0 ? "" : "mt-9 border-t border-current/25 pt-6"}>
+          <div key={block.kind} role="group" aria-labelledby={headingId} data-block={block.kind} className={index === 0 ? "" : "mt-7 border-t border-current/25 pt-5"}>
             <h2 id={headingId} className="mb-2 flex items-center gap-2.5 text-[0.8125rem] font-semibold uppercase leading-none tracking-[0.14em]">
               <span aria-hidden="true" className="inline-block h-[3px] w-5" style={{ background: "var(--region-accent, currentColor)" }} />
               {block.label}
             </h2>
-            <ul className="space-y-0.5">
+            <ul className={listClass}>
               {block.items.map((item) => (
-                <li key={item.href}>
+                <li key={item.href} className="min-w-0">
                   {interactive ? (
                     <Link href={item.href} onClick={() => onNavigate?.(item)} className={`flex min-h-11 items-center py-1 ${itemClass}`}>
                       {item.label}

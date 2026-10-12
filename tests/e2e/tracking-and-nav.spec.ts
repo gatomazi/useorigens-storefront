@@ -462,8 +462,8 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
     await page.setViewportSize({ width: 1440, height: 900 });
     const calls = await withGtagMock(page);
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
-    await page.locator("summary", { hasText: "Regiões" }).first().click();
-    const panel = page.locator("details:has(summary:text('Regiões')) ul").first();
+    await page.locator("summary", { hasText: "Estados" }).first().click();
+    const panel = page.locator("details:has(summary:text('Estados')) ul").first();
     await panel.getByRole("link", { name: "Rio Grande do Sul" }).click();
     await page.waitForURL(/\/sul\/rs$/);
     const selects = gaCalls(calls, "select_state");
@@ -523,8 +523,8 @@ test.describe("Header: Regiões navigation and dropdown outside-click", () => {
   test("given the desktop header, when Regiões is opened, then it lists the three real states plus Ver estados, never the DDD category", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
-    await summaryTrigger(page, "Regiões").click();
-    const panel = page.locator("details:has(summary:text('Regiões')) ul").first();
+    await summaryTrigger(page, "Estados").click();
+    const panel = page.locator("details:has(summary:text('Estados')) ul").first();
     await expect(panel.getByRole("link", { name: "Rio Grande do Sul" })).toHaveAttribute("href", "/sul/rs");
     await expect(panel.getByRole("link", { name: "Santa Catarina" })).toHaveAttribute("href", "/sul/sc");
     await expect(panel.getByRole("link", { name: "Paraná" })).toHaveAttribute("href", "/sul/pr");
@@ -534,9 +534,9 @@ test.describe("Header: Regiões navigation and dropdown outside-click", () => {
   test("given the Regiões dropdown open, when clicking outside (over the hero), then it closes", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
-    const trigger = summaryTrigger(page, "Regiões");
+    const trigger = summaryTrigger(page, "Estados");
     await trigger.click();
-    const details = page.locator("details:has(summary:text('Regiões'))").first();
+    const details = page.locator("details:has(summary:text('Estados'))").first();
     await expect(details).toHaveJSProperty("open", true);
     await page.mouse.click(700, 400); // over the hero, well outside the panel
     await expect(details).toHaveJSProperty("open", false);
@@ -579,8 +579,8 @@ test.describe("Header: Regiões navigation and dropdown outside-click", () => {
   test("given clicking inside the Regiões panel but not on a link, when it happens, then the dropdown stays open", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
-    await summaryTrigger(page, "Regiões").click();
-    const details = page.locator("details:has(summary:text('Regiões'))").first();
+    await summaryTrigger(page, "Estados").click();
+    const details = page.locator("details:has(summary:text('Estados'))").first();
     const panel = details.locator("ul");
     await panel.click({ position: { x: 5, y: 5 } }); // inside the panel, not on a link
     await expect(details).toHaveJSProperty("open", true);
@@ -611,7 +611,7 @@ test.describe("Shared consent (Meta + GA4): vendor-neutral banner, revocation st
     await page.goto("/sul", { waitUntil: "domcontentloaded" });
     const banner = page.getByRole("region", { name: "Preferências de cookies" });
     await expect(banner).toBeVisible();
-    await expect(banner).toContainText("Nosso site utiliza cookies para você ter uma melhor experiência. Saiba mais em nossa Política de Privacidade.");
+    await expect(banner).toContainText("Usamos cookies para melhorar sua experiência. Política de Privacidade.");
     await expect(banner).not.toContainText(/Meta|Pixel|Google|Analytics/i);
     await expect(banner.getByRole("link", { name: "Política de Privacidade" })).toBeVisible();
     const reject = await banner.getByRole("button", { name: "Rejeitar" }).boundingBox();

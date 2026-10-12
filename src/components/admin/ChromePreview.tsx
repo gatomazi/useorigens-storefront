@@ -22,7 +22,7 @@ export function ChromePreview({ region, navigation, colors }: { region: RegionSl
               <span translate="no" className="font-display text-[1.25rem] font-black uppercase leading-none tracking-[0.02em]">Use Origens</span>
             </span>
             <span className="hidden items-center gap-5 text-[0.8125rem] font-semibold sm:flex">
-              {navigation.states.length > 0 && <span>Regiões ▾</span>}
+              {navigation.states.length > 0 && <span>Estados ▾</span>}
               {navigation.categories.length > 0 && <span>{navigation.categoriesLabel} ▾</span>}
               {[...navigation.primary, ...navigation.collections].map((l) => <span key={l.href}>{l.label}</span>)}
             </span>
