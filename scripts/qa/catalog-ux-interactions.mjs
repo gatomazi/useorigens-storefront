@@ -1,0 +1,45 @@
+import { chromium, devices } from "@playwright/test";
+const base = process.argv[2], out = process.argv[3];
+const browser = await chromium.launch();
+// mobile menu
+let ctx = await browser.newContext({ ...devices["iPhone 13"], viewport: { width: 390, height: 844 }, locale: "pt-BR" });
+let page = await ctx.newPage();
+await page.goto(base + "/sul", { waitUntil: "networkidle" });
+await page.getByRole("button", { name: "Abrir menu" }).click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${out}/menu-mobile-390.png` });
+const h = await page.evaluate(() => (document.querySelector("dialog[open] [data-testid=mobile-menu-nav]")).scrollHeight);
+console.log("mobile menu nav height", h);
+await ctx.close();
+// desktop categories + collection filters applied
+ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "pt-BR" });
+page = await ctx.newPage();
+await page.goto(base + "/sul", { waitUntil: "networkidle" });
+await page.locator("summary", { hasText: "Categorias" }).first().click();
+await page.waitForTimeout(400);
+await page.screenshot({ path: `${out}/menu-desktop-categorias.png` });
+await page.goto(base + "/sul/colecoes/seu-lugar", { waitUntil: "networkidle" });
+await page.getByTestId("filter-state").selectOption("SC");
+await page.waitForTimeout(900);
+await page.getByTestId("filter-family").selectOption("ponto-de-origem");
+await page.getByTestId("collection-sort").selectOption("price-asc");
+await page.waitForTimeout(1200);
+await page.screenshot({ path: `${out}/colecao-filtros-desktop.png` });
+console.log("status:", await page.getByTestId("collection-status").textContent());
+await ctx.close();
+// mobile filter sheet
+ctx = await browser.newContext({ ...devices["iPhone 13"], viewport: { width: 390, height: 844 }, locale: "pt-BR" });
+page = await ctx.newPage();
+await page.goto(base + "/sul/colecoes/seu-lugar", { waitUntil: "networkidle" });
+await page.getByTestId("collection-filter-button").click();
+await page.waitForTimeout(500);
+await page.screenshot({ path: `${out}/colecao-filtros-sheet-mobile.png` });
+await page.getByRole("button", { name: /^Santa Catarina/ }).click();
+await page.waitForTimeout(1200);
+await page.screenshot({ path: `${out}/colecao-filtros-sheet-mobile-sc.png` });
+await page.getByTestId("collection-filter-apply").click();
+await page.waitForTimeout(600);
+await page.screenshot({ path: `${out}/colecao-filtros-mobile-aplicado.png` });
+console.log("status:", await page.getByTestId("collection-status").textContent());
+await ctx.close();
+await browser.close();
