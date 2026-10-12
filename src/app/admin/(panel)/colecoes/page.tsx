@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { createCollectionPageAction, linkCollectionPagesAction, moveCollectionNavbarAction, setCollectionEnabledAction, setCollectionNavbarPositionAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
+import { adoptCollectionMenuAction, createCollectionPageAction, linkCollectionPagesAction, moveCollectionMenuAction, setCollectionEnabledAction, setCollectionMenuPositionAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { LibrarySearch } from "@/components/admin/LibrarySearch";
+import { collectionMenuEntries, type MenuEntry } from "@/lib/catalog/collection-menu";
 import { collectionPageSlug, libraryEntries, type LibraryEntry } from "@/lib/catalog/collection-source";
 import { searchCoverage } from "@/lib/catalog/collections";
 import { getCollections } from "@/lib/catalog/collections-file";
@@ -15,7 +16,8 @@ import { loadWorkspace } from "@/lib/admin/workspace";
 import { currentScope, storeOf } from "@/lib/admin/scope";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { enabledInternalIds, inkCollectionLinks, sectionsUsing } from "@/lib/site-config/collections-enabled";
-import { effectiveNavbarGroups, navbarPositionOf, type NavbarPosition } from "@/lib/site-config/navbar-groups";
+import { effectiveMenu, menuPositionOf, type MenuPosition } from "@/lib/site-config/collection-menu";
+import { effectiveNavbarGroups } from "@/lib/site-config/navbar-groups";
 import { numberPt } from "@/lib/format";
 
 const STORES = [
@@ -37,6 +39,16 @@ function passes(e: LibraryEntry, f: string): boolean {
   return true;
 }
 
+const POSITION_LABEL: Record<MenuPosition, string> = { none: "Não exibir", top: "Topo", more: "Categorias" };
+
+/** Where a collection of the menu can really show up: a page of ours (the site) and/or its INK page (the Worker's navbar). */
+function reachBadge(e: MenuEntry | undefined) {
+  if (!e || (!e.pagePath && !e.inkUrl)) return <span className="a-badge warn" title="Sem página no site nem na INK (interna não habilitada, poucos produtos ou fora do último sync). A escolha fica guardada.">não aparece</span>;
+  if (!e.pagePath) return <span className="a-badge" title="Sem página no site: a página da coleção precisa de pelo menos 3 produtos. Aparece só na navbar da INK.">só na INK</span>;
+  if (!e.inkUrl) return <span className="a-badge" title="Interna (oculta na INK): não tem página na INK, então aparece só no menu do site.">só no site</span>;
+  return null;
+}
+
 const reasonText = (e: LibraryEntry): string =>
   e.reason === "too-few-products" ? `Só ${e.matchedCount} produto(s) no catálogo: o carrossel precisa de pelo menos 3.` : e.reason === "needs-resync" ? "Registro antigo, sem os produtos: rode npm run collections:sync." : "";
 
@@ -50,7 +62,12 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
   const from = sp.from?.startsWith("/admin/") ? sp.from : null;
   const ws = await loadWorkspace(scope);
   const enabled = enabledInternalIds(ws.doc, store.key);
-  const { groups: navGroups, legacy: navLegacy } = effectiveNavbarGroups(ws.doc);
+  const { menu, own: ownMenu } = effectiveMenu(ws.doc);
+  const menuEntries = collectionMenuEntries(scope, ws.doc);
+  const reach = new Map([...menuEntries.top, ...menuEntries.more].map((e) => [e.record.id, e]));
+  // Categorias as the owner reads it: what really shows up, plus anything brought in by hand (so a choice that stopped working stays visible).
+  const categories = menuEntries.more.filter((e) => e.pagePath || e.inkUrl || menu.added.some((r) => r.collectionId === e.record.id));
+  const inkBefore = effectiveNavbarGroups(ws.doc).groups;
   const file = getCollections();
   const synced = file.stores[store.key];
   const all = libraryEntries(store.key as CommerceStoreKey, enabled);
@@ -89,7 +106,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Coleções da INK</h1>
-        <p className="a-muted mt-2 max-w-3xl">Biblioteca das coleções sincronizadas, inclusive as internas (ocultas na INK). Aqui você decide quais podem alimentar seções da home. Cada coleção que a região pode usar tem uma página no site com todos os produtos, em páginas, que é para onde o “Ver todos” leva. Nada é alterado na INK.</p>
+        <p className="a-muted mt-2 max-w-3xl">Biblioteca das coleções sincronizadas, inclusive as internas (ocultas na INK). Aqui você decide quais podem alimentar seções da home e o que aparece no menu do topo. Cada coleção que a região pode usar tem uma página no site com todos os produtos, em páginas, que é para onde o “Ver todos” e o menu levam. Nada é alterado na INK.</p>
       </div>
       {from && <p><Link href={from} className="a-btn ghost sm">← Voltar ao que eu estava fazendo</Link></p>}
       <Flash ok={sp.ok} err={sp.err} />
@@ -163,38 +180,58 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
       <div className="a-card p-5"><LibrarySearch q={q} f={f} /></div>
 
       {synced && (
-        <section className="a-card p-5" aria-label="Navbar da INK" data-testid="navbar-groups">
-          <p className="a-h2">Navbar da INK</p>
-          <p className="a-muted mt-2 max-w-3xl">Duas posições livres: <strong>Topo</strong> (direto na barra) e <strong>Demais categorias</strong> (menu suspenso). Qualquer quantidade em cada uma, na ordem abaixo; uma coleção fica em no máximo uma delas. Nenhuma coleção é especial: “Novidades” é só o nome de uma coleção. Vale depois de <strong>Publicar</strong>. Regiões e Cidades são fixos.</p>
-          {navLegacy && <p className="a-flash mt-3">Seleção antiga (lista única): todas contam como <strong>Topo</strong> até você redistribuí-las; a primeira alteração aqui a converte.</p>}
+        <section id="menu-colecoes" className="a-card scroll-mt-4 p-5" aria-label="Menu de coleções" data-testid="collection-menu">
+          <p className="a-h2">Menu de coleções (site e INK)</p>
+          <p className="a-muted mt-2 max-w-3xl">Um menu só para o topo do site e para a navbar das páginas de produto da INK. <strong>Topo</strong>: direto na barra, na ordem abaixo. <strong>Categorias</strong>: o menu “Categorias” do site, com todas (as do topo primeiro), e “Demais categorias” na INK. Toda coleção <strong>pública</strong> entra sozinha em Categorias, na ordem do menu da INK; use <strong>Não exibir</strong> para tirar uma. Coleção interna só aparece no site, e só se você colocar. No site, cada uma abre a página da coleção. Vale depois de <strong>Publicar</strong>.</p>
+          {!ownMenu && (
+            <div className="a-flash mt-3 flex flex-wrap items-center justify-between gap-3" data-testid="menu-adopt">
+              <p className="max-w-3xl">A navbar da INK ainda mostra a escolha antiga ({inkBefore.top.length} no topo, {inkBefore.more.length} em Demais categorias). Ela passa a seguir este menu na primeira mudança aqui, ou com o botão ao lado, depois de publicar. O site já mostra este menu.</p>
+              <form action={adoptCollectionMenuAction}>
+                <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                <input type="hidden" name="scope" value={scope} />
+                <button type="submit" className="a-btn sm">Usar este menu também na INK</button>
+              </form>
+            </div>
+          )}
           <div className="mt-4 grid gap-6 md:grid-cols-2">
-            {(["top", "more"] as const).map((group) => (
-              <div key={group}>
-                <p className="font-bold">{group === "top" ? "Topo" : "Demais categorias"} <span className="a-muted font-normal">({navGroups[group].length})</span></p>
-                {navGroups[group].length === 0 ? <p className="a-muted mt-2 text-[0.875rem]">{group === "more" ? "Vazio: o botão “Demais categorias” não aparece." : "Nenhuma coleção no topo."}</p> : (
-                  <ol className="mt-2 space-y-1">
-                    {navGroups[group].map((ref, i) => {
-                      const entry = all.find((x) => x.id === ref.collectionId && x.store === ref.store);
-                      const eligible = !!entry && entry.visibility === "public" && entry.matchedCount >= 1;
-                      return (
-                        <li key={`${ref.store}:${ref.collectionId}`} className="flex flex-wrap items-center gap-2">
-                          <span className="a-muted w-5 text-right">{i + 1}.</span>
-                          <span className="font-semibold">{entry?.name ?? `coleção #${ref.collectionId}`}</span>
-                          {!eligible && <span className="a-badge warn" title="Interna, sem produtos ou fora do último sync: não aparece publicamente até regularizar. A escolha fica guardada.">não será publicada</span>}
-                          <form action={moveCollectionNavbarAction} className="ml-auto flex gap-1">
-                            <input type="hidden" name="ref" value={`${ref.store}:${ref.collectionId}`} />
-                            <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
-                            <input type="hidden" name="scope" value={scope} />
-                            <button type="submit" name="direction" value="up" className="a-btn sm ghost" disabled={i === 0} aria-label={`Subir ${entry?.name ?? ref.collectionId}`}>↑</button>
-                            <button type="submit" name="direction" value="down" className="a-btn sm ghost" disabled={i === navGroups[group].length - 1} aria-label={`Descer ${entry?.name ?? ref.collectionId}`}>↓</button>
-                          </form>
-                        </li>
-                      );
-                    })}
-                  </ol>
-                )}
-              </div>
-            ))}
+            <div data-testid="menu-top">
+              <p className="font-bold">Topo <span className="a-muted font-normal">({menu.top.length})</span></p>
+              {menu.top.length === 0 ? <p className="a-muted mt-2 text-[0.875rem]">Nenhuma coleção no topo: a barra mostra só Regiões, Categorias e os links da home.</p> : (
+                <ol className="mt-2 space-y-1">
+                  {menu.top.map((ref, i) => {
+                    const entry = all.find((x) => x.id === ref.collectionId && x.store === ref.store);
+                    return (
+                      <li key={`${ref.store}:${ref.collectionId}`} className="flex flex-wrap items-center gap-2">
+                        <span className="a-muted w-5 text-right">{i + 1}.</span>
+                        <span className="font-semibold">{entry?.name ?? `coleção #${ref.collectionId}`}</span>
+                        {reachBadge(reach.get(ref.collectionId))}
+                        <form action={moveCollectionMenuAction} className="ml-auto flex gap-1">
+                          <input type="hidden" name="ref" value={`${ref.store}:${ref.collectionId}`} />
+                          <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                          <input type="hidden" name="scope" value={scope} />
+                          <button type="submit" name="direction" value="up" className="a-btn sm ghost" disabled={i === 0} aria-label={`Subir ${entry?.name ?? ref.collectionId}`}>↑</button>
+                          <button type="submit" name="direction" value="down" className="a-btn sm ghost" disabled={i === menu.top.length - 1} aria-label={`Descer ${entry?.name ?? ref.collectionId}`}>↓</button>
+                        </form>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
+            </div>
+            <div data-testid="menu-categories">
+              <p className="font-bold">Categorias <span className="a-muted font-normal">({categories.length} além das do topo)</span></p>
+              {categories.length === 0 ? <p className="a-muted mt-2 text-[0.875rem]">Nenhuma outra coleção: Categorias mostra só as do topo.</p> : (
+                <ul className="mt-2 space-y-1">
+                  {categories.map((e) => (
+                    <li key={e.record.id} className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold">{e.record.name}</span>
+                      {reachBadge(e)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="a-muted mt-2 text-[0.8125rem]">Na ordem do menu da INK. Para mudar, use a coluna “Menu” da tabela.</p>
+            </div>
           </div>
         </section>
       )}
@@ -203,7 +240,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
         <section className="a-card overflow-x-auto" aria-label="Coleções">
           <table className="a-table a-stack">
             <caption className="sr-only">Coleções de {store.name}</caption>
-            <thead><tr><th scope="col">Coleção</th><th scope="col">Na INK</th><th scope="col">Produtos no catálogo</th><th scope="col">No CMS</th><th scope="col">Página no site</th><th scope="col">Navbar da INK</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
+            <thead><tr><th scope="col">Coleção</th><th scope="col">Na INK</th><th scope="col">Produtos no catálogo</th><th scope="col">No CMS</th><th scope="col">Página no site</th><th scope="col">Menu</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
             <tbody>
               {shown.length === 0 && <tr><td colSpan={7} className="a-muted">Nenhuma coleção corresponde à busca e ao filtro.{" "}<Link className="a-link" href={carry({ q: "", f: "all" }).replace(/q=&?|f=all&?/g, "")}>Limpar</Link></td></tr>}
               {shown.map((e) => {
@@ -242,25 +279,30 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
                         </form>
                       ) : <span className="a-muted" title="Só coleções que a região pode usar (públicas, ou internas habilitadas, com ao menos 3 produtos) têm página.">Sem página</span>}
                     </td>
-                    <td data-label="Navbar da INK">
-                      {e.visibility === "public" ? (
-                        <form action={setCollectionNavbarPositionAction} role="group" aria-label={`Posição de ${e.name} na navbar da INK`} className="flex flex-wrap gap-1">
-                          <input type="hidden" name="ref" value={`${e.store}:${e.id}`} />
-                          <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
-                          <input type="hidden" name="scope" value={scope} />
-                          <input type="hidden" name="q" value={q} />
-                          <input type="hidden" name="f" value={f === "all" ? "" : f} />
-                          <input type="hidden" name="from" value={from ?? ""} />
-                          {(["none", "top", "more"] as NavbarPosition[]).map((pos) => {
-                            const current = navbarPositionOf(navGroups, { store: e.store, collectionId: e.id }) === pos;
-                            return (
-                              <button key={pos} type="submit" name="position" value={pos} aria-pressed={current} className={`a-btn sm ${current ? "" : "ghost"}`} disabled={pos !== "none" && e.matchedCount < 1} title={pos !== "none" && e.matchedCount < 1 ? "Sem produtos no catálogo local." : undefined}>
-                                {pos === "none" ? "Não exibir" : pos === "top" ? "Topo" : "Demais categorias"}
-                              </button>
-                            );
-                          })}
-                        </form>
-                      ) : <span className="a-muted" title="Coleção interna: não tem página pública na INK.">Indisponível</span>}
+                    <td data-label="Menu">
+                      {(() => {
+                        const isPublic = e.visibility === "public";
+                        const reachable = collectionPageSlug(ws.doc, e.store, e.id) !== null || (isPublic && e.matchedCount >= 1);
+                        const current = menuPositionOf(menu, { store: e.store, collectionId: e.id }, isPublic);
+                        return (
+                          <form action={setCollectionMenuPositionAction} role="group" aria-label={`Posição de ${e.name} no menu`} className="flex flex-wrap gap-1">
+                            <input type="hidden" name="ref" value={`${e.store}:${e.id}`} />
+                            <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                            <input type="hidden" name="scope" value={scope} />
+                            <input type="hidden" name="q" value={q} />
+                            <input type="hidden" name="f" value={f === "all" ? "" : f} />
+                            <input type="hidden" name="from" value={from ?? ""} />
+                            {(["none", "top", "more"] as MenuPosition[]).map((pos) => {
+                              const blocked = pos !== "none" && current !== pos && !reachable;
+                              return (
+                                <button key={pos} type="submit" name="position" value={pos} aria-pressed={current === pos} className={`a-btn sm ${current === pos ? "" : "ghost"}`} disabled={blocked} title={blocked ? (isPublic ? "Sem produtos no catálogo local." : "Interna: habilite no CMS (e ela precisa de 3 produtos) para ter página no site.") : undefined}>
+                                  {POSITION_LABEL[pos]}
+                                </button>
+                              );
+                            })}
+                          </form>
+                        );
+                      })()}
                     </td>
                     <td className="text-right">
                       {e.visibility === "internal" && (

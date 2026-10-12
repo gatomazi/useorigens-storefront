@@ -29,13 +29,14 @@ function block(fd: FormReader, key: string, label: string, errors: string[]): Na
   return { label: text(fd, `${key}_label`), visible: checked(fd, `${key}_visible`), order: order(fd, `${key}_order`, label, errors) };
 }
 
-export const NAV_BLOCK_KEYS = { primaryBlock: "Bloco Comprar", statesBlock: "Bloco de estados", regionsBlock: "Bloco de outras regiões" } as const;
+export const NAV_BLOCK_KEYS = { primaryBlock: "Bloco Comprar", categoriesBlock: "Bloco Categorias", statesBlock: "Bloco de estados", regionsBlock: "Bloco de outras regiões" } as const;
 
-/** The navigation the editor submitted (always the full set: the three blocks and the three known links). */
+/** The navigation the editor submitted (always the full set: the four blocks and the three known links). */
 export function parseNavigationForm(fd: FormReader, scope: Scope): Parsed<NavigationConfig> {
   const errors: string[] = [];
   const config: NavigationConfig = {
     primaryBlock: block(fd, "primaryBlock", NAV_BLOCK_KEYS.primaryBlock, errors),
+    categoriesBlock: block(fd, "categoriesBlock", NAV_BLOCK_KEYS.categoriesBlock, errors),
     statesBlock: block(fd, "statesBlock", NAV_BLOCK_KEYS.statesBlock, errors),
     regionsBlock: block(fd, "regionsBlock", NAV_BLOCK_KEYS.regionsBlock, errors),
     primaryLinks: NAV_DESTINATIONS.map((destination): NavPrimaryLink => ({
@@ -53,7 +54,7 @@ export function parseNavigationForm(fd: FormReader, scope: Scope): Parsed<Naviga
 
 /** `navigation.statesBlock.label: a label of 1 to 40 characters` → something an editor can act on. */
 export function readableNavigationError(error: string): string {
-  const where = error.includes("primaryBlock") ? "Bloco Comprar" : error.includes("statesBlock") ? "Bloco de estados" : error.includes("regionsBlock") ? "Bloco de outras regiões" : error.includes("primaryLinks") ? "Link principal" : "Navegação";
+  const where = error.includes("primaryBlock") ? "Bloco Comprar" : error.includes("categoriesBlock") ? "Bloco Categorias" : error.includes("statesBlock") ? "Bloco de estados" : error.includes("regionsBlock") ? "Bloco de outras regiões" : error.includes("primaryLinks") ? "Link principal" : "Navegação";
   if (error.includes(".label")) return `${where}: o rótulo precisa ter de 1 a 40 caracteres, sem quebra de linha.`;
   if (error.includes(".order")) return `${where}: a posição é um número inteiro de 0 a 999.`;
   return `${where}: ${error.replace(/^[^:]*:\s*/, "")}`;

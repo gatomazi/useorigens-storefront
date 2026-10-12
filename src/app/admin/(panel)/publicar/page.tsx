@@ -20,7 +20,7 @@ export default async function PublishPage({ searchParams }: { searchParams: Prom
   const prod = platform().mode === "prod";
   const sp = await searchParams;
   const ws = await loadWorkspace(scope);
-  const changes = diffDocs(ws.baseDoc, ws.doc, (ref) => findCollection(ref.store, ref.collectionId)?.name ?? null);
+  const changes = diffDocs(ws.baseDoc, ws.doc, (ref) => findCollection(ref.store, ref.collectionId)?.name ?? null, (ref) => findCollection(ref.store, ref.collectionId)?.isAvailable ?? false);
   const errors = await preflightDoc(ws.doc);
   const trackingLines = await pendingTrackingChanges(publishDeps(), ws.doc);
   const { rows: history, total, pages, page, headId } = await historyPage(Number(sp.p));

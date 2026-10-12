@@ -1,4 +1,4 @@
-import { effectiveNavbarGroups } from "../site-config/navbar-groups";
+import { effectiveMenu, menuPositionOf, type MenuPosition } from "../site-config/collection-menu";
 import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlockConfig } from "../site-config/navigation";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
@@ -15,8 +15,10 @@ const EDITED_FIELDS: [keyof Section, string][] = [
 
 /** Name of an INK collection for the publish screen (injected: this module stays pure). */
 export type CollectionNamer = (ref: CollectionRef) => string | null;
+/** Whether an INK collection is public (injected too): it decides where a collection the menu does not mention sits. */
+export type CollectionVisibility = (ref: CollectionRef) => boolean;
 
-export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer = () => null): Change[] {
+export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer = () => null, isPublic: CollectionVisibility = () => true): Change[] {
   const before = published.home?.sections ?? [];
   const after = draft.home?.sections ?? [];
   const changes: Change[] = [];
@@ -41,8 +43,8 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
     const edited = EDITED_FIELDS.filter(([key]) => json(old[key]) !== json(s[key])).map(([, name]) => name);
     if (edited.length > 0) changes.push({ kind: "edited", sectionId: s.id, text: `"${label(s)}": ${edited.join(", ")}` });
   }
-  // The INK navbar groups are part of the document but not of any section: without this, changing only the navbar would read "nothing to publish".
-  changes.push(...navbarChanges(published, draft, nameOf), ...arrangementChanges(published, draft, nameOf));
+  // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
+  changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
   changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft));
   return changes;
@@ -66,35 +68,35 @@ function arrangementChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: Collec
   return out;
 }
 
-const GROUP_LABEL = { top: "no topo da navbar da INK", more: "em Demais categorias da navbar da INK" } as const;
+const MOVED_TO: Record<MenuPosition, string> = { top: "vai para o topo do menu", more: "fica em Categorias", none: "sai do menu" };
 
-/** What changed in the navbar groups between two documents: entering, leaving, changing group, and changing order inside a group. Pure. */
-function navbarChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer): Change[] {
-  const before = effectiveNavbarGroups(published).groups;
-  const after = effectiveNavbarGroups(draft).groups;
+/**
+ * What changed in the collection menu between two documents: a collection changing place, the order of the bar, and the INK navbar starting to follow the
+ * menu (a document from before it kept its own INK lists). Pure.
+ */
+function menuChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer, isPublic: CollectionVisibility): Change[] {
+  const before = effectiveMenu(published);
+  const after = effectiveMenu(draft);
   const key = (r: CollectionRef) => `${r.store}:${r.collectionId}`;
-  const where = (g: typeof before) => new Map<string, { ref: CollectionRef; group: "top" | "more"; index: number }>([...g.top.map((ref, index) => [key(ref), { ref, group: "top" as const, index }] as const), ...g.more.map((ref, index) => [key(ref), { ref, group: "more" as const, index }] as const)]);
-  const was = where(before);
-  const now = where(after);
   const named = (r: CollectionRef) => `"${nameOf(r) ?? `coleção #${r.collectionId}`}"`;
+  const mentioned = new Map<string, CollectionRef>();
+  for (const m of [before.menu, after.menu]) for (const r of [...m.top, ...m.hidden, ...m.added]) mentioned.set(key(r), r);
   const out: Change[] = [];
-  for (const [k, n] of now) {
-    const w = was.get(k);
-    if (!w) out.push({ kind: "navbar-added", sectionId: `navbar:${k}`, text: `${named(n.ref)} passa a aparecer ${GROUP_LABEL[n.group]}` });
-    else if (w.group !== n.group) out.push({ kind: "navbar-moved", sectionId: `navbar:${k}`, text: `${named(n.ref)} muda para ${GROUP_LABEL[n.group]}` });
+  if (!before.own && after.own) out.push({ kind: "navbar-moved", sectionId: "navbar:adopt", text: "A navbar da INK passa a seguir o menu de coleções do site (Topo e Categorias)" });
+  for (const [k, ref] of mentioned) {
+    const was = menuPositionOf(before.menu, ref, isPublic(ref));
+    const now = menuPositionOf(after.menu, ref, isPublic(ref));
+    if (was === now) continue;
+    const kind = now === "none" ? "navbar-removed" : was === "none" ? "navbar-added" : "navbar-moved";
+    out.push({ kind, sectionId: `navbar:${k}`, text: `${named(ref)} ${MOVED_TO[now]}` });
   }
-  for (const [k, w] of was) if (!now.has(k)) out.push({ kind: "navbar-removed", sectionId: `navbar:${k}`, text: `${named(w.ref)} sai da navbar da INK` });
-  // Order inside a group, among the collections that stay in it.
-  for (const group of ["top", "more"] as const) {
-    const stay = (g: typeof before, other: typeof before) => g[group].filter((r) => other[group].some((o) => key(o) === key(r))).map(key);
-    const a = stay(before, after);
-    const b = stay(after, before);
-    if (a.join() !== b.join()) out.push({ kind: "navbar-moved", sectionId: `navbar:order:${group}`, text: `A ordem ${GROUP_LABEL[group]} mudou` });
-  }
+  // Order of the bar, among the collections that stay on it.
+  const stay = (a: CollectionRef[], b: CollectionRef[]) => a.filter((r) => b.some((o) => key(o) === key(r))).map(key);
+  if (stay(before.menu.top, after.menu.top).join() !== stay(after.menu.top, before.menu.top).join()) out.push({ kind: "navbar-moved", sectionId: "navbar:order:top", text: "A ordem do topo do menu mudou" });
   return out;
 }
 
-const BLOCK_NAME = { primaryBlock: "Comprar", statesBlock: "Estados da região", regionsBlock: "Outras regiões" } as const;
+const BLOCK_NAME = { primaryBlock: "Comprar", categoriesBlock: "Categorias", statesBlock: "Estados da região", regionsBlock: "Outras regiões" } as const;
 const blockText = (b: NavBlockConfig | undefined) => (b ? `"${b.label}", posição ${b.order}, ${b.visible ? "visível" : "oculto"}` : "padrão");
 
 /** What changed in the region's menu configuration (blocks and known links). Pure. */
@@ -103,7 +105,7 @@ function navigationChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   const after = draft.navigation;
   if (json(before) === json(after)) return [];
   const out: Change[] = [];
-  for (const key of ["primaryBlock", "statesBlock", "regionsBlock"] as const) {
+  for (const key of ["primaryBlock", "categoriesBlock", "statesBlock", "regionsBlock"] as const) {
     if (json(before?.[key]) !== json(after?.[key])) out.push({ kind: "navigation", sectionId: `navigation:${key}`, text: `Navegação, bloco ${BLOCK_NAME[key]}: ${blockText(before?.[key])} → ${blockText(after?.[key])}` });
   }
   for (const destination of ["styles", "speech", "states"] as const) {

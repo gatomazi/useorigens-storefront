@@ -65,7 +65,7 @@ async function openPublicMenu(page: Page, slug: string, width = 375, height = 81
   return dialog;
 }
 const headings = (dialog: Locator) => dialog.getByRole("heading", { level: 2 }).allTextContents();
-const linksOf = (dialog: Locator, block: "primary" | "states" | "regions") => dialog.locator(`[data-block="${block}"]`).getByRole("link").allTextContents();
+const linksOf = (dialog: Locator, block: "primary" | "categories" | "states" | "regions") => dialog.locator(`[data-block="${block}"]`).getByRole("link").allTextContents();
 const previewHeadings = (page: Page) => page.getByTestId("navigation-preview-drawer").getByRole("heading", { level: 2 }).allTextContents();
 
 const SHOTS = path.join(process.cwd(), "docs", "screenshots", "navigation-theme-round");
@@ -84,7 +84,7 @@ test("given Norte and Centro-Oeste are launched, when each mobile menu opens, th
   for (const region of REGIONS) {
     for (const width of [320, 390]) {
       const dialog = await openPublicMenu(page, region.slug, width);
-      expect(await headings(dialog), `${region.slug} @${width}`).toEqual(["Comprar", expected[region.slug].label, "Explorar outras regiões"]);
+      expect(await headings(dialog), `${region.slug} @${width}`).toEqual(["Comprar", "Categorias", expected[region.slug].label, "Explorar outras regiões"]);
       expect(await linksOf(dialog, "states")).toEqual(STATES[region.slug as keyof typeof STATES]);
       const regions = await linksOf(dialog, "regions");
       expect(regions).toEqual(expected[region.slug].regions);
@@ -137,14 +137,14 @@ test("given Navegação, when the labels, order and visibility are edited, then 
   const preview = page.getByTestId("preview-drawer").first();
   expect(await previewHeadings(page).catch(() => [])).toEqual([]); // (guard: the helper below reads the drawer preview only)
   const drawerHeadings = () => preview.getByRole("heading", { level: 2 }).allTextContents();
-  expect(await drawerHeadings()).toEqual(["Comprar", "Estados do Norte", "Explorar outras regiões"]);
+  expect(await drawerHeadings()).toEqual(["Comprar", "Categorias", "Estados do Norte", "Explorar outras regiões"]);
 
   await page.getByTestId("statesBlock-label").fill("Por estado");
-  expect(await drawerHeadings()).toEqual(["Comprar", "Por estado", "Explorar outras regiões"]); // label reflected live
+  expect(await drawerHeadings()).toEqual(["Comprar", "Categorias", "Por estado", "Explorar outras regiões"]); // label reflected live
   await page.getByTestId("statesBlock-order").fill("5");
-  expect(await drawerHeadings()).toEqual(["Por estado", "Comprar", "Explorar outras regiões"]); // order reflected live
+  expect(await drawerHeadings()).toEqual(["Por estado", "Comprar", "Categorias", "Explorar outras regiões"]); // order reflected live
   await page.getByTestId("regionsBlock-visible").uncheck();
-  expect(await drawerHeadings()).toEqual(["Por estado", "Comprar"]); // visibility reflected live
+  expect(await drawerHeadings()).toEqual(["Por estado", "Comprar", "Categorias"]); // visibility reflected live
   await page.getByTestId("regionsBlock-visible").check();
   await page.getByTestId("link_states-label").fill("Escolha o estado");
   await expect(preview.getByText("Escolha o estado")).toBeVisible();
@@ -153,7 +153,7 @@ test("given Navegação, when the labels, order and visibility are edited, then 
   await expect(flash(page, /Rascunho da navegação de Norte salvo/)).toBeVisible();
   // The draft is not public yet.
   const before = await openPublicMenu(page, "norte");
-  expect(await headings(before)).toEqual(["Comprar", "Estados do Norte", "Explorar outras regiões"]);
+  expect(await headings(before)).toEqual(["Comprar", "Categorias", "Estados do Norte", "Explorar outras regiões"]);
 
   // The publish screen lists what will change, then the store follows.
   await chooseRegion(page, "Norte");
@@ -163,7 +163,7 @@ test("given Navegação, when the labels, order and visibility are edited, then 
   await expect(flash(page, /Publicado no sandbox local/)).toBeVisible({ timeout: 300_000 });
 
   const after = await openPublicMenu(page, "norte");
-  expect(await headings(after)).toEqual(["Por estado", "Comprar", "Explorar outras regiões"]);
+  expect(await headings(after)).toEqual(["Por estado", "Comprar", "Categorias", "Explorar outras regiões"]);
   expect(await linksOf(after, "primary")).toContain("Escolha o estado");
   expect(await linksOf(after, "states")).toEqual(STATES.norte);
   // The desktop header reads the same labels.
@@ -172,7 +172,7 @@ test("given Navegação, when the labels, order and visibility are edited, then 
   await expect(page.locator("header.site-header").getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Escolha o estado" })).toHaveAttribute("href", "/norte#estados");
   // Sul and Centro-Oeste are untouched.
   const sul = await openPublicMenu(page, "sul");
-  expect(await headings(sul)).toEqual(["Comprar", "Estados do Sul", "Explorar outras regiões"]);
+  expect(await headings(sul)).toEqual(["Comprar", "Categorias", "Estados do Sul", "Explorar outras regiões"]);
 });
 
 test("given Navegação, when 'Voltar ao padrão' is used and published, then the default hierarchy is back", async ({ page }) => {
@@ -182,7 +182,7 @@ test("given Navegação, when 'Voltar ao padrão' is used and published, then th
   await expect(flash(page, /Navegação padrão restaurada/)).toBeVisible();
   await publishRegion(page, "Norte");
   const dialog = await openPublicMenu(page, "norte");
-  expect(await headings(dialog)).toEqual(["Comprar", "Estados do Norte", "Explorar outras regiões"]);
+  expect(await headings(dialog)).toEqual(["Comprar", "Categorias", "Estados do Norte", "Explorar outras regiões"]);
 });
 
 test("given Aparência, when a region picks its own palette with an unreadable pair, then the editor warns, the save reports it and the publish is refused; a readable one publishes and only that region changes", async ({ page }) => {
@@ -283,7 +283,7 @@ test("given a region that inherits, when an older release is restored, then it g
   await history.last().getByRole("button", { name: "Restaurar Norte" }).click();
   await expect(flash(page, /Norte: versão \d+ restaurada/)).toBeVisible({ timeout: 300_000 });
   await expect(await openPublicMenu(page, "norte"), "back to today's look").toHaveCSS("background-color", "rgb(35, 75, 80)");
-  expect(await headings(page.getByRole("dialog", { name: "Menu" }))).toEqual(["Comprar", "Estados do Norte", "Explorar outras regiões"]);
+  expect(await headings(page.getByRole("dialog", { name: "Menu" }))).toEqual(["Comprar", "Categorias", "Estados do Norte", "Explorar outras regiões"]);
   await expect(await openPublicMenu(page, "sul"), "Sul untouched").toHaveCSS("background-color", "rgb(31, 42, 68)");
 });
 

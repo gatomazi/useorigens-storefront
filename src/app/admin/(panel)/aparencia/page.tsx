@@ -7,6 +7,7 @@ import { canEdit } from "@/lib/admin/store/ports";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
+import { siteCollectionMenu } from "@/lib/catalog/collection-menu";
 import { coveredUfs } from "@/lib/site-config/chrome";
 import { navData, type NavData } from "@/lib/site-config/navigation";
 
@@ -19,7 +20,12 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
   const launched = launchedRegions();
   // Real menu data per region for the previews (the home's own sections, launched regions, states that have products).
   const navByRegion = Object.fromEntries(
-    await Promise.all(REGION_SCOPES.map(async (r) => [r, navData({ region: r, doc: (r === scope ? ws : await loadWorkspace(r)).doc, launched, coveredUfs: coveredUfs(r) })] as const)),
+    await Promise.all(
+      REGION_SCOPES.map(async (r) => {
+        const doc = (r === scope ? ws : await loadWorkspace(r)).doc;
+        return [r, navData({ region: r, doc, launched, coveredUfs: coveredUfs(r), collections: siteCollectionMenu(r, doc) })] as const;
+      }),
+    ),
   ) as Record<RegionSlug, NavData>;
   const inherits = ws.doc.theme?.mode === "inherit";
 

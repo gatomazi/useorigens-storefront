@@ -9,7 +9,7 @@
  *  - a duplicate gets a new id and a unique anchor and starts INACTIVE, so a copy never appears on the home by accident.
  */
 import { sectionsUsing } from "../site-config/collections-enabled";
-import { effectiveNavbarGroups, movedWithin, withNavbarGroups, withPosition, type NavbarPosition } from "../site-config/navbar-groups";
+import { effectiveMenu, movedOnTop, withMenu, withMenuPosition, type MenuPosition } from "../site-config/collection-menu";
 import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredTemplate } from "../site-config/structured";
 import { newCollectionLanding, newPage, uniqueSlug } from "../site-config/pages";
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
@@ -40,10 +40,15 @@ export type DraftOp =
   | { type: "link-collection-pages"; refs: CollectionRef[] }
   /** Several operations as one save: all of them apply, or none (the first refusal comes back). */
   | { type: "batch"; ops: DraftOp[] }
-  /** Places a PUBLIC INK collection in the navbar the Worker draws on the INK product pages: "none" | "top" | "more" (independent of `set-collection-enabled`). */
-  | ({ type: "set-collection-navbar-position"; position: NavbarPosition } & CollectionRef)
-  /** Reorders a collection one step inside its navbar group. */
-  | ({ type: "move-collection-navbar"; direction: "up" | "down" } & CollectionRef)
+  /**
+   * Places a collection in the region's collection menu (storefront header and INK navbar): "none" | "top" | "more" ("Categorias"). `isPublic` = public on
+   * INK, which decides what "no choice" means for it (public: in "Categorias"; internal: out). Independent of `set-collection-enabled`.
+   */
+  | ({ type: "set-collection-menu-position"; position: MenuPosition; isPublic: boolean } & CollectionRef)
+  /** Moves a collection one step on the bar. */
+  | ({ type: "move-collection-menu"; direction: "up" | "down" } & CollectionRef)
+  /** Gives a document from before the collection menu its own menu, unchanged (the Worker then follows it once published). */
+  | { type: "adopt-collection-menu" }
   /** Creates the home of a region that has none yet, from sections the caller built out of REAL sources (see admin/region-seed.ts). */
   | { type: "init-home"; sections: Section[] }
   /** Replaces the tracking configuration of the document (validated: formats, legacy only for Sul, an inactive ID only in global). */
@@ -122,7 +127,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-collection-enabled") return setCollectionEnabled(doc, op);
   if (op.type === "set-collection-arrangement") return setCollectionArrangement(doc, op);
   if (op.type === "link-collection-pages") return linkCollectionPages(doc, op.refs);
-  if (op.type === "set-collection-navbar-position" || op.type === "move-collection-navbar") return editNavbar(doc, op);
+  if (op.type === "set-collection-menu-position" || op.type === "move-collection-menu" || op.type === "adopt-collection-menu") return editMenu(doc, op);
   if (op.type === "init-home") {
     if (doc.scope === "global") return fail("global has no home");
     if (doc.home) return fail("this region already has a home");
@@ -269,8 +274,10 @@ function setCollectionEnabled(doc: ScopeDoc, op: { store: CollectionRef["store"]
   }
   const remaining = current.filter((r) => !(r.store === op.store && r.collectionId === op.collectionId));
   const next: ScopeDoc = { ...doc };
-  // The navbar list and the arrangements are separate decisions: emptying the enablements must not drop them.
-  if (remaining.length > 0 || (doc.collections?.navbarGroups?.top.length ?? 0) + (doc.collections?.navbarGroups?.more.length ?? 0) > 0 || (doc.collections?.navbar?.length ?? 0) > 0 || (doc.collections?.arrangements?.length ?? 0) > 0) next.collections = { ...doc.collections, enabled: remaining };
+  // The menu, the older navbar lists and the arrangements are separate decisions: emptying the enablements must not drop them.
+  const c = doc.collections;
+  const others = Boolean(c?.menu) || (c?.navbarGroups?.top.length ?? 0) + (c?.navbarGroups?.more.length ?? 0) > 0 || (c?.navbar?.length ?? 0) > 0 || (c?.arrangements?.length ?? 0) > 0;
+  if (remaining.length > 0 || others) next.collections = { ...doc.collections, enabled: remaining };
   else delete next.collections;
   return { ok: true, doc: next };
 }
@@ -322,16 +329,20 @@ function setCollectionArrangement(doc: ScopeDoc, op: CollectionRef & { productId
 }
 
 /**
- * Edits the INK navbar groups. Independent of the home: it never touches `enabled` nor the sections. Only the references are stored; whether a collection is
- * public, has products and a valid slug is checked when the storefront publishes the list (`site-config/navbar.ts`), so a collection that later disappears
- * from INK stops rendering without losing the owner's choice. The first edit of a document that still has the legacy flat list migrates it into `top`.
+ * Edits the region's collection menu. Independent of the home: it never touches `enabled` nor the sections. Only references are stored; whether a collection
+ * has a page of ours or on INK is checked when the menu is read (`catalog/collection-menu.ts`), so one that later disappears stops rendering without losing
+ * the owner's choice. The first edit of a document from before the menu starts from what it already shows (its older "Topo" stays on top).
  */
-function editNavbar(doc: ScopeDoc, op: ({ type: "set-collection-navbar-position"; position: NavbarPosition } | { type: "move-collection-navbar"; direction: "up" | "down" }) & CollectionRef): OpResult {
-  const ref: CollectionRef = { store: op.store, collectionId: op.collectionId };
-  const { groups } = effectiveNavbarGroups(doc);
-  const next = op.type === "set-collection-navbar-position" ? withPosition(groups, ref, op.position) : movedWithin(groups, ref, op.direction);
-  if (next === groups && doc.collections?.navbarGroups) return { ok: true, doc }; // nothing changed
-  const edited = withNavbarGroups(doc, next);
+type MenuOp = ({ type: "set-collection-menu-position"; position: MenuPosition; isPublic: boolean } & CollectionRef) | ({ type: "move-collection-menu"; direction: "up" | "down" } & CollectionRef) | { type: "adopt-collection-menu" };
+function editMenu(doc: ScopeDoc, op: MenuOp): OpResult {
+  if (doc.scope === "global") return fail("global has no collections");
+  const { menu, own } = effectiveMenu(doc);
+  const next =
+    op.type === "adopt-collection-menu" ? menu
+    : op.type === "set-collection-menu-position" ? withMenuPosition(menu, { store: op.store, collectionId: op.collectionId }, op.position, op.isPublic)
+    : movedOnTop(menu, { store: op.store, collectionId: op.collectionId }, op.direction);
+  if (next === menu && own) return { ok: true, doc }; // nothing changed
+  const edited = withMenu(doc, next);
   const check = validateScopeDoc(edited);
   return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
 }

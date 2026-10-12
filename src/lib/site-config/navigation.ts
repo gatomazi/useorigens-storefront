@@ -34,10 +34,11 @@ export const THEME_COLOR_LABEL: Record<ThemeColorKey, string> = {
 // ── Defaults (what the storefront does with no configuration) ─────────────────────────────────────────────────
 
 export const DEFAULT_PRIMARY_BLOCK_LABEL = "Comprar";
+export const DEFAULT_CATEGORIES_BLOCK_LABEL = "Categorias";
 export const DEFAULT_REGIONS_BLOCK_LABEL = "Explorar outras regiões";
 export const defaultStatesBlockLabel = (region: RegionSlug): string => `Estados do ${REGIONS[region].name}`;
 
-const DEFAULT_ORDER = { primary: 10, states: 20, regions: 30 } as const;
+export const DEFAULT_ORDER = { primary: 10, categories: 15, states: 20, regions: 30 } as const;
 
 /** The colours the storefront uses today, per region: the fallback of every colour the CMS does not set. */
 export function themeDefaults(region: RegionSlug, brandPrimary?: string): ThemeColors {
@@ -153,13 +154,29 @@ export type NavItemData = {
   /** Present only on state entries, so `select_state` can still fire (plain data: the menu is rendered from a Server Component). */
   trackState?: { state: string; region: string };
 };
-export type NavBlockData = { kind: "primary" | "states" | "regions"; label: string; items: NavItemData[] };
-export type ResolvedNavigation = { blocks: NavBlockData[]; primary: NavItemData[]; states: NavItemData[]; regions: NavItemData[] };
+export type NavBlockData = { kind: "primary" | "categories" | "states" | "regions"; label: string; items: NavItemData[] };
+/**
+ * `primary` = the links of the home's sections and pages; `collections` = the collections the owner put on the bar (desktop bar only: on the phone they
+ * open "Categorias"); `categories` = every collection of the menu, the bar's first, under `categoriesLabel` (the desktop dropdown).
+ */
+export type ResolvedNavigation = {
+  blocks: NavBlockData[];
+  primary: NavItemData[];
+  collections: NavItemData[];
+  categories: NavItemData[];
+  categoriesLabel: string;
+  states: NavItemData[];
+  regions: NavItemData[];
+};
 
 /** A primary link the region's home really offers, before the CMS labels / hides / re-orders it. `destination` is null for links the CMS does not manage (custom sections, pages). */
 export type PrimaryCandidate = NavItemData & { destination: NavDestination | null };
-/** The REAL data a menu is made of, independent of any editor choice: what the home offers, the launched states, the launched other regions. */
-export type NavData = { primary: PrimaryCandidate[]; states: NavItemData[]; regions: NavItemData[] };
+/**
+ * The REAL data a menu is made of, independent of any editor choice here: what the home offers, the region's collection menu (resolved on the server from
+ * the synced collections: on the bar, and all of "Categorias"), the launched states, the launched other regions.
+ */
+export type NavData = { primary: PrimaryCandidate[]; collections: NavItemData[]; categories: NavItemData[]; states: NavItemData[]; regions: NavItemData[] };
+export type CollectionNavData = { top: NavItemData[]; categories: NavItemData[] };
 
 export type NavigationInput = {
   region: RegionSlug;
@@ -169,12 +186,16 @@ export type NavigationInput = {
   launched: readonly RegionSlug[];
   /** UFs of this region that have at least one product; `null` = unknown (no catalog): show every state of the region, never an empty menu. */
   coveredUfs: readonly string[] | null;
+  /** The region's collection menu with links (`catalog/collection-menu.ts`); none = no collection in the header. */
+  collections?: CollectionNavData;
 };
 
 export function navData(input: NavigationInput): NavData {
   const covered = input.coveredUfs && input.coveredUfs.length > 0 ? new Set(input.coveredUfs) : null;
   return {
     primary: headerLinks(input.doc).map((l) => ({ label: l.label, href: l.href ? l.href(input.region) : `${regionPath(input.region)}#${l.anchor}`, destination: DESTINATION_OF[l.anchor] ?? null })),
+    collections: input.collections?.top ?? [],
+    categories: input.collections?.categories ?? [],
     // The region's own (editorial) order, as the storefront has always listed them; only launched states (with products) when that is known.
     states: REGIONS[input.region].ufs
       .filter((uf) => (covered ? covered.has(uf) : true))
@@ -200,8 +221,10 @@ function orderedPrimary(config: NavigationConfig | undefined, candidates: Primar
 /** Lays a navigation configuration over real data. Also what the admin preview runs, live, on the editor's unsaved choices. */
 export function assembleNavigation(region: RegionSlug, config: NavigationConfig | undefined, data: NavData): ResolvedNavigation {
   const primary = orderedPrimary(config, data.primary);
+  const categoriesBlock = blockOf(config?.categoriesBlock, DEFAULT_CATEGORIES_BLOCK_LABEL, DEFAULT_ORDER.categories);
   const blocks: { block: NavBlockConfig; data: NavBlockData }[] = [
     { block: blockOf(config?.primaryBlock, DEFAULT_PRIMARY_BLOCK_LABEL, DEFAULT_ORDER.primary), data: { kind: "primary", label: "", items: primary } },
+    { block: categoriesBlock, data: { kind: "categories", label: "", items: data.categories } },
     { block: blockOf(config?.statesBlock, defaultStatesBlockLabel(region), DEFAULT_ORDER.states), data: { kind: "states", label: "", items: data.states } },
     { block: blockOf(config?.regionsBlock, DEFAULT_REGIONS_BLOCK_LABEL, DEFAULT_ORDER.regions), data: { kind: "regions", label: "", items: data.regions } },
   ];
@@ -213,7 +236,15 @@ export function assembleNavigation(region: RegionSlug, config: NavigationConfig 
   // The desktop dropdowns read the same data: a block the editor hides disappears from both. The primary LINKS have their own visibility (the
   // "Comprar" title only groups them on mobile).
   const shown = (kind: NavBlockData["kind"], items: NavItemData[]) => (visible.some((b) => b.kind === kind) ? items : []);
-  return { blocks: visible, primary, states: shown("states", data.states), regions: shown("regions", data.regions) };
+  return {
+    blocks: visible,
+    primary,
+    collections: data.collections,
+    categories: shown("categories", data.categories),
+    categoriesLabel: categoriesBlock.label,
+    states: shown("states", data.states),
+    regions: shown("regions", data.regions),
+  };
 }
 
 export const resolveNavigation = (input: NavigationInput): ResolvedNavigation => assembleNavigation(input.region, input.doc?.navigation, navData(input));
