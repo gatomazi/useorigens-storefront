@@ -1,0 +1,474 @@
+[
+ {
+  "name": "sul home desktop-1440 primeira-visita",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 9338,
+  "h1": [
+   "BUSQUE SUA \nCIDADE AQUI"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 831,
+    "w": 1440,
+    "h": 69
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 759,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 900
+ },
+ {
+  "name": "sul estado desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 3857,
+  "h1": [
+   "Santa Catarina"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 632
+ },
+ {
+  "name": "sul cidade desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 3321,
+  "h1": [
+   "Florianópolis"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 517,
+    "w": 1440,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 556
+ },
+ {
+  "name": "sul estampa desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 2694,
+  "h1": [
+   "Feito em"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIV.contents.lg:sticky",
+    "x": 797,
+    "y": 186,
+    "w": 595,
+    "h": 367
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 472
+ },
+ {
+  "name": "sul colecao desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 4083,
+  "h1": [
+   "Da Nossa Terra"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 2484
+ },
+ {
+  "name": "sul busca desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 1917,
+  "h1": [
+   "Buscar estampas"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 432
+ },
+ {
+  "name": "sul home mobile-390 primeira-visita",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 9001,
+  "h1": [
+   "BUSQUE SUA \nCIDADE AQUI"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 742,
+    "w": 390,
+    "h": 102
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 678,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 632
+ },
+ {
+  "name": "sul estado mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 4520,
+  "h1": [
+   "Santa Catarina"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 532
+ },
+ {
+  "name": "sul cidade mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 4177,
+  "h1": [
+   "Florianópolis"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 418,
+    "w": 390,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 540
+ },
+ {
+  "name": "sul estampa mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 3061,
+  "h1": [
+   "Feito em"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   }
+  ],
+  "lcpMs": 456
+ },
+ {
+  "name": "sul colecao mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 5315,
+  "h1": [
+   "Da Nossa Terra"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 2632
+ },
+ {
+  "name": "sul busca mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 2633,
+  "h1": [
+   "Buscar estampas"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 384
+ },
+ {
+  "name": "sul home mobile-375 primeira-visita",
+  "docW": 375,
+  "clientW": 375,
+  "docH": 8940,
+  "h1": [
+   "BUSQUE SUA \nCIDADE AQUI"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 375,
+    "h": 57
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 710,
+    "w": 375,
+    "h": 102
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 646,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 608
+ },
+ {
+  "name": "sul cidade mobile-375 retorno",
+  "docW": 375,
+  "clientW": 375,
+  "docH": 4151,
+  "h1": [
+   "Florianópolis"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 375,
+    "h": 57
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 439,
+    "w": 375,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 748,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 668
+ },
+ {
+  "name": "sul home mobile-320 primeira-visita",
+  "docW": 320,
+  "clientW": 320,
+  "docH": 8721,
+  "h1": [
+   "BUSQUE SUA \nCIDADE AQUI"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 320,
+    "h": 57
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 538,
+    "w": 320,
+    "h": 102
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 474,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 1492
+ },
+ {
+  "name": "sul cidade mobile-320 retorno",
+  "docW": 320,
+  "clientW": 320,
+  "docH": 4152,
+  "h1": [
+   "Florianópolis"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 320,
+    "h": 57
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 431,
+    "w": 320,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 576,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 520
+ }
+]

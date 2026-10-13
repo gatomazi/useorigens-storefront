@@ -1,0 +1,4762 @@
+[
+ {
+  "name": "norte home desktop-1440 primeira-visita",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 6730,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 831,
+    "w": 1440,
+    "h": 69
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 759,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 3136
+ },
+ {
+  "name": "norte estado desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 3800,
+  "h1": [
+   "Amazonas"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 348
+ },
+ {
+  "name": "norte cidade desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 2825,
+  "h1": [
+   "Manaus"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 485,
+    "w": 1440,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 2520
+ },
+ {
+  "name": "norte estampa desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 2826,
+  "h1": [
+   "Ponto de Origem"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIV.contents.lg:sticky",
+    "x": 797,
+    "y": 186,
+    "w": 595,
+    "h": 367
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 620
+ },
+ {
+  "name": "norte colecao desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 3151,
+  "h1": [
+   "Made In Norte"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 2456
+ },
+ {
+  "name": "norte busca desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 2524,
+  "h1": [
+   "Buscar estampas"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 492
+ },
+ {
+  "name": "norte home mobile-390 primeira-visita",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 7136,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 742,
+    "w": 390,
+    "h": 102
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 678,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 532
+ },
+ {
+  "name": "norte estado mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 4490,
+  "h1": [
+   "Amazonas"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 2872
+ },
+ {
+  "name": "norte cidade mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 3575,
+  "h1": [
+   "Manaus"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 394,
+    "w": 390,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 2584
+ },
+ {
+  "name": "norte estampa mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 3255,
+  "h1": [
+   "Ponto de Origem"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   }
+  ],
+  "lcpMs": 584
+ },
+ {
+  "name": "norte colecao mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 3756,
+  "h1": [
+   "Made In Norte"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 2496
+ },
+ {
+  "name": "norte busca mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 3158,
+  "h1": [
+   "Buscar estampas"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 396
+ },
+ {
+  "name": "norte home mobile-375 primeira-visita",
+  "docW": 375,
+  "clientW": 375,
+  "docH": 7085,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 375,
+    "h": 57
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 710,
+    "w": 375,
+    "h": 102
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 646,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 376
+ },
+ {
+  "name": "norte cidade mobile-375 retorno",
+  "docW": 375,
+  "clientW": 375,
+  "docH": 3542,
+  "h1": [
+   "Manaus"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 375,
+    "h": 57
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 392,
+    "w": 375,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 748,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 428
+ },
+ {
+  "name": "norte home mobile-320 primeira-visita",
+  "docW": 320,
+  "clientW": 320,
+  "docH": 6972,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 320,
+    "h": 57
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 538,
+    "w": 320,
+    "h": 102
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 474,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 424
+ },
+ {
+  "name": "norte cidade mobile-320 retorno",
+  "docW": 320,
+  "clientW": 320,
+  "docH": 3570,
+  "h1": [
+   "Manaus"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 320,
+    "h": 57
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 407,
+    "w": 320,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 576,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 472
+ },
+ {
+  "name": "norte pdp-cidade desktop-1440 primeira-visita",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 1014,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 1217,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 770,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-cidade desktop-1440 cta-variantes",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 183,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-cidade desktop-1440 tamanho-pendente",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 787,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 990,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 543,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-cidade desktop-1440 retorno-sem-aviso",
+  "accepted": true,
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 1014,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 1217,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 770,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-cidade desktop-1440 variantes-escolhidas",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 183,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-cidade desktop-1440 pos-adicao",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 183,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": true,
+  "cartDrawer": null,
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-cidade desktop-1440 carrinho",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 183,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": {
+   "x": 1050,
+   "y": 0,
+   "w": 390,
+   "h": 900
+  },
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-cidade desktop-1440 vitrine-com-carrinho",
+  "link": "https://useorigens.com.br/norte?origens_src=ink_cart_drawer&origens_p=assis-brasil-origem-ac",
+  "url": "https://useorigens.com.br/norte",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 6730,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIALOG.m-0.ml-auto",
+    "x": 992,
+    "y": 0,
+    "w": 448,
+    "h": 900
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 831,
+    "w": 1440,
+    "h": 69
+   }
+  ],
+  "lcpMs": 596
+ },
+ {
+  "name": "norte pdp-cidade mobile-390 primeira-visita",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 618,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 682,
+   "w": 381,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 1520,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1762,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1943,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-390 cta-variantes",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 618,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 682,
+   "w": 381,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-390 tamanho-pendente",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 618,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 682,
+   "w": 381,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 476,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 718,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 899,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-390 retorno-sem-aviso",
+  "accepted": true,
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 1520,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1762,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1943,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-390 variantes-escolhidas",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 727,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-390 pos-adicao",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": true,
+  "cartDrawer": null,
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-390 carrinho",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": {
+   "x": 3,
+   "y": 0,
+   "w": 390,
+   "h": 851
+  },
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-390 vitrine-com-carrinho",
+  "link": "https://useorigens.com.br/norte?origens_src=ink_cart_drawer&origens_p=assis-brasil-origem-ac",
+  "url": "https://useorigens.com.br/norte",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 7136,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIALOG.m-0.ml-auto",
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 844
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 742,
+    "w": 390,
+    "h": 102
+   }
+  ],
+  "lcpMs": 508
+ },
+ {
+  "name": "norte pdp-cidade mobile-375 primeira-visita",
+  "loader": "5.1",
+  "docW": 386,
+  "clientW": 375,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 580,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 644,
+   "w": 374,
+   "h": 180
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 1531,
+   "w": 343,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 776,
+   "w": 386,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1771,
+   "w": 343,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1953,
+   "w": 343,
+   "h": 428
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 333,
+   "y": 616,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 375,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-375 cta-variantes",
+  "loader": "5.1",
+  "docW": 386,
+  "clientW": 375,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 580,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 644,
+   "w": 374,
+   "h": 180
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 400,
+   "w": 343,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 776,
+   "w": 386,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 640,
+   "w": 343,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 343,
+   "h": 428
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 333,
+   "y": 616,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 375,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-320 primeira-visita",
+  "loader": "5.1",
+  "docW": 358,
+  "clientW": 320,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 460,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 5,
+   "y": 524,
+   "w": 347,
+   "h": 180
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 1366,
+   "w": 288,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 656,
+   "w": 358,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1616,
+   "w": 288,
+   "h": 221
+  },
+  "reco": {
+   "x": 16,
+   "y": 1857,
+   "w": 288,
+   "h": 383
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 314,
+   "y": 548,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 320,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-cidade mobile-320 cta-variantes",
+  "loader": "5.1",
+  "docW": 358,
+  "clientW": 320,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 460,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 5,
+   "y": 524,
+   "w": 347,
+   "h": 180
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 516,
+   "w": 288,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 656,
+   "w": 358,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 766,
+   "w": 288,
+   "h": 221
+  },
+  "reco": {
+   "x": 16,
+   "y": 1007,
+   "w": 288,
+   "h": 383
+  },
+  "formId": "form-product-4159627",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 314,
+   "y": 548,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 320,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-editorial desktop-1440 primeira-visita",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 962,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 1165,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 770,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-editorial desktop-1440 cta-variantes",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 235,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-editorial desktop-1440 tamanho-pendente",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 787,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 990,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 595,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-editorial desktop-1440 retorno-sem-aviso",
+  "accepted": true,
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 962,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 1165,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 770,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-editorial desktop-1440 variantes-escolhidas",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 235,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-editorial desktop-1440 pos-adicao",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 235,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": true,
+  "cartDrawer": null,
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-editorial desktop-1440 carrinho",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 235,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": {
+   "x": 1050,
+   "y": 0,
+   "w": 390,
+   "h": 900
+  },
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "norte pdp-editorial desktop-1440 vitrine-com-carrinho",
+  "link": "https://useorigens.com.br/norte?origens_src=ink_cart_drawer&origens_p=ilha-do-bananal-063",
+  "url": "https://useorigens.com.br/norte",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 6730,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIALOG.m-0.ml-auto",
+    "x": 992,
+    "y": 0,
+    "w": 448,
+    "h": 900
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 831,
+    "w": 1440,
+    "h": 69
+   }
+  ],
+  "lcpMs": 528
+ },
+ {
+  "name": "norte pdp-editorial mobile-390 primeira-visita",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 618,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 682,
+   "w": 381,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 1468,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1710,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1891,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-editorial mobile-390 cta-variantes",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 618,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 682,
+   "w": 381,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-editorial mobile-390 tamanho-pendente",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 14,
+   "y": 615,
+   "w": 62,
+   "h": 62
+  },
+  "cookie": {
+   "x": 6,
+   "y": 682,
+   "w": 381,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 476,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 718,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 899,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-editorial mobile-390 retorno-sem-aviso",
+  "accepted": true,
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 1468,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1710,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1891,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-editorial mobile-390 variantes-escolhidas",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 727,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-editorial mobile-390 pos-adicao",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": true,
+  "cartDrawer": null,
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-editorial mobile-390 carrinho",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4251783",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": {
+   "x": 3,
+   "y": 0,
+   "w": 390,
+   "h": 851
+  },
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "norte pdp-editorial mobile-390 vitrine-com-carrinho",
+  "link": "https://useorigens.com.br/norte?origens_src=ink_cart_drawer&origens_p=ilha-do-bananal-063",
+  "url": "https://useorigens.com.br/norte",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 7136,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIALOG.m-0.ml-auto",
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 844
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 742,
+    "w": 390,
+    "h": 102
+   }
+  ],
+  "lcpMs": 528
+ },
+ {
+  "name": "centro-oeste home desktop-1440 primeira-visita",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 6988,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 831,
+    "w": 1440,
+    "h": 69
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 759,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 3092
+ },
+ {
+  "name": "centro-oeste estado desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 3733,
+  "h1": [
+   "Goiás"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 2452
+ },
+ {
+  "name": "centro-oeste cidade desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 2693,
+  "h1": [
+   "Goiânia"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 485,
+    "w": 1440,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 2484
+ },
+ {
+  "name": "centro-oeste estampa desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 2694,
+  "h1": [
+   "Ponto de Origem"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIV.contents.lg:sticky",
+    "x": 797,
+    "y": 186,
+    "w": 595,
+    "h": 385
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 376
+ },
+ {
+  "name": "centro-oeste colecao desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 1868,
+  "h1": [
+   "Identidade"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 364
+ },
+ {
+  "name": "centro-oeste busca desktop-1440 retorno",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 3927,
+  "h1": [
+   "Buscar estampas"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 828,
+    "w": 56,
+    "h": 56
+   }
+  ],
+  "lcpMs": 396
+ },
+ {
+  "name": "centro-oeste home mobile-390 primeira-visita",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 6396,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 742,
+    "w": 390,
+    "h": 102
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 678,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 500
+ },
+ {
+  "name": "centro-oeste estado mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 4423,
+  "h1": [
+   "Goiás"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 2652
+ },
+ {
+  "name": "centro-oeste cidade mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 3391,
+  "h1": [
+   "Goiânia"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 394,
+    "w": 390,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 376
+ },
+ {
+  "name": "centro-oeste estampa mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 3100,
+  "h1": [
+   "Ponto de Origem"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   }
+  ],
+  "lcpMs": 648
+ },
+ {
+  "name": "centro-oeste colecao mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 2482,
+  "h1": [
+   "Identidade"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 472
+ },
+ {
+  "name": "centro-oeste busca mobile-390 retorno",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 5585,
+  "h1": [
+   "Buscar estampas"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 780,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 376
+ },
+ {
+  "name": "centro-oeste home mobile-375 primeira-visita",
+  "docW": 375,
+  "clientW": 375,
+  "docH": 6327,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 375,
+    "h": 57
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 710,
+    "w": 375,
+    "h": 102
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 646,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 412
+ },
+ {
+  "name": "centro-oeste cidade mobile-375 retorno",
+  "docW": 375,
+  "clientW": 375,
+  "docH": 3358,
+  "h1": [
+   "Goiânia"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 375,
+    "h": 57
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 392,
+    "w": 375,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 748,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 416
+ },
+ {
+  "name": "centro-oeste home mobile-320 primeira-visita",
+  "docW": 320,
+  "clientW": 320,
+  "docH": 6265,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 320,
+    "h": 57
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 538,
+    "w": 320,
+    "h": 102
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 474,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 388
+ },
+ {
+  "name": "centro-oeste cidade mobile-320 retorno",
+  "docW": 320,
+  "clientW": 320,
+  "docH": 3385,
+  "h1": [
+   "Goiânia"
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 320,
+    "h": 57
+   },
+   {
+    "el": "DIV.garment-rail.sticky",
+    "x": 0,
+    "y": 384,
+    "w": 320,
+    "h": 56
+   },
+   {
+    "el": "BUTTON.fixed.z-30",
+    "x": 16,
+    "y": 576,
+    "w": 48,
+    "h": 48
+   }
+  ],
+  "lcpMs": 404
+ },
+ {
+  "name": "centro-oeste pdp-cidade desktop-1440 primeira-visita",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 1052,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 1255,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 770,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade desktop-1440 cta-variantes",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 145,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade desktop-1440 tamanho-pendente",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 787,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 990,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 505,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade desktop-1440 retorno-sem-aviso",
+  "accepted": true,
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 1052,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 1255,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 770,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade desktop-1440 variantes-escolhidas",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 145,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade desktop-1440 pos-adicao",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 145,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": true,
+  "cartDrawer": null,
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade desktop-1440 carrinho",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 145,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": {
+   "x": 1050,
+   "y": 0,
+   "w": 390,
+   "h": 900
+  },
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade desktop-1440 vitrine-com-carrinho",
+  "link": "https://useorigens.com.br/centro-oeste?origens_src=ink_cart_drawer&origens_p=goiania-origem-go",
+  "url": "https://useorigens.com.br/centro-oeste",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 6988,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIALOG.m-0.ml-auto",
+    "x": 992,
+    "y": 0,
+    "w": 448,
+    "h": 900
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 831,
+    "w": 1440,
+    "h": 69
+   }
+  ],
+  "lcpMs": 420
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-390 primeira-visita",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 618,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 682,
+   "w": 381,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 1408,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1650,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1831,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-390 cta-variantes",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 618,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 682,
+   "w": 381,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 549,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 791,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 972,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-390 tamanho-pendente",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 618,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 682,
+   "w": 381,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 476,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 718,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 899,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-390 retorno-sem-aviso",
+  "accepted": true,
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 1558,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1800,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1981,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-390 variantes-escolhidas",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 727,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 332,
+   "y": 628,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-390 pos-adicao",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": true,
+  "cartDrawer": null,
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-390 carrinho",
+  "loader": "5.1",
+  "docW": 393,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 399,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 791,
+   "w": 393,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 641,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 822,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": {
+   "x": 3,
+   "y": 0,
+   "w": 390,
+   "h": 851
+  },
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-390 vitrine-com-carrinho",
+  "link": "https://useorigens.com.br/centro-oeste?origens_src=ink_cart_drawer&origens_p=goiania-origem-go",
+  "url": "https://useorigens.com.br/centro-oeste",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 6396,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIALOG.m-0.ml-auto",
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 844
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 742,
+    "w": 390,
+    "h": 102
+   }
+  ],
+  "lcpMs": 552
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-375 primeira-visita",
+  "loader": "5.1",
+  "docW": 386,
+  "clientW": 375,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 580,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 644,
+   "w": 374,
+   "h": 180
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 1419,
+   "w": 343,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 776,
+   "w": 386,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1659,
+   "w": 343,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1841,
+   "w": 343,
+   "h": 428
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 333,
+   "y": 616,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 375,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-375 cta-variantes",
+  "loader": "5.1",
+  "docW": 386,
+  "clientW": 375,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": {
+   "x": 6,
+   "y": 644,
+   "w": 374,
+   "h": 180
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 550,
+   "w": 343,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 776,
+   "w": 386,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 790,
+   "w": 343,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 972,
+   "w": 343,
+   "h": 428
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 333,
+   "y": 616,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 375,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-320 primeira-visita",
+  "loader": "5.1",
+  "docW": 358,
+  "clientW": 320,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 460,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 5,
+   "y": 524,
+   "w": 347,
+   "h": 180
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 1404,
+   "w": 288,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 656,
+   "w": 358,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1654,
+   "w": 288,
+   "h": 221
+  },
+  "reco": {
+   "x": 16,
+   "y": 1895,
+   "w": 288,
+   "h": 383
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 314,
+   "y": 548,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 320,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-cidade mobile-320 cta-variantes",
+  "loader": "5.1",
+  "docW": 358,
+  "clientW": 320,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 460,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 5,
+   "y": 524,
+   "w": 347,
+   "h": 180
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 516,
+   "w": 288,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 656,
+   "w": 358,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 766,
+   "w": 288,
+   "h": 221
+  },
+  "reco": {
+   "x": 16,
+   "y": 1007,
+   "w": 288,
+   "h": 383
+  },
+  "formId": "form-product-3915458",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 314,
+   "y": 548,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 320,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial desktop-1440 primeira-visita",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 1052,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 1255,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 770,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial desktop-1440 cta-variantes",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 145,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial desktop-1440 tamanho-pendente",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 330,
+   "y": 754,
+   "w": 780,
+   "h": 134
+  },
+  "ctaDesk": {
+   "x": 732,
+   "y": 787,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 990,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 505,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial desktop-1440 retorno-sem-aviso",
+  "accepted": true,
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 1052,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 1255,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 770,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial desktop-1440 variantes-escolhidas",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 828,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 145,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 1376,
+   "y": 716,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial desktop-1440 pos-adicao",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 145,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": true,
+  "cartDrawer": null,
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial desktop-1440 carrinho",
+  "loader": "5.1",
+  "docW": 1440,
+  "clientW": 1440,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 732,
+   "y": 427,
+   "w": 400,
+   "h": 46
+  },
+  "ctaMob": null,
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 732,
+   "y": 630,
+   "w": 562,
+   "h": 147
+  },
+  "reco": {
+   "x": 146,
+   "y": 145,
+   "w": 562,
+   "h": 290
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": {
+   "x": 1050,
+   "y": 0,
+   "w": 390,
+   "h": 900
+  },
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 104
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial desktop-1440 vitrine-com-carrinho",
+  "link": "https://useorigens.com.br/centro-oeste?origens_src=ink_cart_drawer&origens_p=e-bem-mato-grosso",
+  "url": "https://useorigens.com.br/centro-oeste",
+  "docW": 1440,
+  "clientW": 1440,
+  "docH": 6988,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 35,
+    "w": 1440,
+    "h": 77
+   },
+   {
+    "el": "DIALOG.m-0.ml-auto",
+    "x": 992,
+    "y": 0,
+    "w": 448,
+    "h": 900
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 831,
+    "w": 1440,
+    "h": 69
+   }
+  ],
+  "lcpMs": 592
+ },
+ {
+  "name": "centro-oeste pdp-editorial mobile-390 primeira-visita",
+  "loader": "5.1",
+  "docW": 390,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 611,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 675,
+   "w": 378,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 1408,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 784,
+   "w": 390,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1650,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1831,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 326,
+   "y": 614,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial mobile-390 cta-variantes",
+  "loader": "5.1",
+  "docW": 390,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 611,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": {
+   "x": 6,
+   "y": 675,
+   "w": 378,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 490,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 784,
+   "w": 390,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 732,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 913,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 326,
+   "y": 614,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial mobile-390 tamanho-pendente",
+  "loader": "5.1",
+  "docW": 390,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 14,
+   "y": 609,
+   "w": 59,
+   "h": 59
+  },
+  "cookie": {
+   "x": 6,
+   "y": 675,
+   "w": 378,
+   "h": 157
+  },
+  "ctaDesk": {
+   "x": 16,
+   "y": 424,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 784,
+   "w": 390,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 666,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 847,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 326,
+   "y": 614,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial mobile-390 retorno-sem-aviso",
+  "accepted": true,
+  "loader": "5.1",
+  "docW": 390,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 720,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 1506,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 784,
+   "w": 390,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 1748,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 1929,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 326,
+   "y": 614,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial mobile-390 variantes-escolhidas",
+  "loader": "5.1",
+  "docW": 390,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": {
+   "x": 16,
+   "y": 720,
+   "w": 56,
+   "h": 56
+  },
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 392,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 784,
+   "w": 390,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 634,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 815,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": null,
+  "whatsapp": {
+   "x": 326,
+   "y": 614,
+   "w": 44,
+   "h": 44
+  },
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial mobile-390 pos-adicao",
+  "loader": "5.1",
+  "docW": 390,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 392,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 784,
+   "w": 390,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 634,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 815,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": true,
+  "cartDrawer": null,
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial mobile-390 carrinho",
+  "loader": "5.1",
+  "docW": 390,
+  "clientW": 390,
+  "price": null,
+  "priceRect": null,
+  "fab": null,
+  "cookie": null,
+  "ctaDesk": {
+   "x": 16,
+   "y": 392,
+   "w": 358,
+   "h": 60
+  },
+  "ctaMob": {
+   "x": 0,
+   "y": 784,
+   "w": 390,
+   "h": 60
+  },
+  "fabOverPrice": false,
+  "fabOverCta": false,
+  "discovery": {
+   "x": 16,
+   "y": 634,
+   "w": 358,
+   "h": 161
+  },
+  "reco": {
+   "x": 16,
+   "y": 815,
+   "w": 358,
+   "h": 440
+  },
+  "formId": "form-product-4425066",
+  "errors": [],
+  "drawerPostAdd": false,
+  "cartDrawer": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 844
+  },
+  "whatsapp": null,
+  "stickyTop": {
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 110
+  }
+ },
+ {
+  "name": "centro-oeste pdp-editorial mobile-390 vitrine-com-carrinho",
+  "link": "https://useorigens.com.br/centro-oeste?origens_src=ink_cart_drawer&origens_p=e-bem-mato-grosso",
+  "url": "https://useorigens.com.br/centro-oeste",
+  "docW": 390,
+  "clientW": 390,
+  "docH": 6396,
+  "h1": [
+   "O seu lugar,\ndo seu jeito."
+  ],
+  "fixed": [
+   {
+    "el": "HEADER.site-header.sticky",
+    "x": 0,
+    "y": 34,
+    "w": 390,
+    "h": 57
+   },
+   {
+    "el": "DIALOG.m-0.ml-auto",
+    "x": 0,
+    "y": 0,
+    "w": 390,
+    "h": 844
+   },
+   {
+    "el": "DIV.on-ink.fixed",
+    "x": 0,
+    "y": 742,
+    "w": 390,
+    "h": 102
+   }
+  ],
+  "lcpMs": 536
+ }
+]
