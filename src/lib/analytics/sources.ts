@@ -60,6 +60,9 @@ export const SOURCES = {
   cityLocalities: "city_localities",
   pdp: "pdp",
   pdpOtherStyles: "pdp_other_styles",
+  /** The guided help on a design page ("Procurando sua cidade ou outra estampa?"): a product of a searched city, or of a chosen collection. */
+  pdpGuideCity: "pdp_guia_cidade",
+  pdpGuideCollection: "pdp_guia_colecao",
   /** "Comprar minha lista" on `/meus-lugares`: the click that opens the first product of a buy session. */
   meusLugares: "meus_lugares",
   /** `/<region>/outros-artigos`: an Uma Penca article (caneca, ecobag) — GA4 only, see `trackGoToUmaPenca`. */

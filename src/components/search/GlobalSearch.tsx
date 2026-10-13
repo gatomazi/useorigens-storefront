@@ -24,6 +24,13 @@ type Props = {
    * dialog's bare underlined field reads as a line of text on the grey ground there.
    */
   boxed?: boolean;
+  /** Only places (cities, localities, states): the guided help's "Buscar uma cidade" step asks for a place, not a design. */
+  placesOnly?: boolean;
+  /**
+   * Intercepts a chosen result before any navigation: return true to keep the visitor where they are (the guided help turns a place of this
+   * region into its designs, in place). Search/SelectCity are reported either way — it is still one conclusive search gesture.
+   */
+  onPick?: (result: GlobalResult) => boolean;
 };
 
 export function SearchIcon({ className }: { className: string }) {
@@ -85,7 +92,7 @@ function Thumb({ result }: { result: GlobalResult }) {
  * floating dropdown), so it behaves the same on a phone, in a sheet, and with a screen reader. A design is ONE row per place × family, its
  * pieces counted from the product cluster, never one row per piece.
  */
-export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false, boxed = false }: Props) {
+export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false, boxed = false, placesOnly = false, onPick }: Props) {
   const copy = placeSearchCopy(region);
   const router = useRouter();
   const uid = useId();
@@ -136,13 +143,16 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
   const { rows, sections } = useMemo(() => {
     const sections: { id: string; label: string | null; rows: Row[]; start: number }[] = [];
     let start = 0;
+    const isPlace = (r: GlobalResult) => r.kind === "locality" || r.kind === "state";
     for (const g of current?.groups ?? []) {
+      if (placesOnly && g.group !== "places") continue;
       sections.push({ id: g.group, label: null, rows: g.items.map((result) => ({ result, other: false })), start });
       start += g.items.length;
     }
-    if (current && current.others.length > 0) sections.push({ id: "others", label: "Em outras regiões", rows: current.others.map((result) => ({ result, other: true })), start });
+    const others = (current?.others ?? []).filter((r) => !placesOnly || isPlace(r));
+    if (others.length > 0) sections.push({ id: "others", label: "Em outras regiões", rows: others.map((result) => ({ result, other: true })), start });
     return { rows: sections.flatMap((x) => x.rows), sections };
-  }, [current]);
+  }, [current, placesOnly]);
   const activeIndex = Math.min(active, Math.max(rows.length - 1, 0));
   const showEmpty = current !== null && !loading && trimmed.length >= 2 && rows.length === 0;
   const hasList = rows.length > 0;
@@ -155,6 +165,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
     if (r.kind === "locality" && r.city && r.uf) {
       trackSelectCity({ city: r.city, state: r.uf, region: r.region, source, ...(r.administrativeRegion ? { localityType: "administrative_region" as const } : {}) });
     }
+    if (onPick?.(r)) return;
     // A merchandise design opens its INK product page: the same GoToInk (Meta) / select_item + go_to_ink (GA4) as any INK product link.
     if (r.inkProductId) {
       trackGoToInk({ productId: r.inkProductId, sourceSection: SOURCES.search, productName: r.title, destinationUrl: r.href, ...(r.minPrice !== undefined ? { value: r.minPrice } : {}) });
@@ -283,7 +294,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
         ))}
       </div>
 
-      {trimmed.length >= 2 && !failed && (current || !loading) && (
+      {!placesOnly && trimmed.length >= 2 && !failed && (current || !loading) && (
         <p className="mt-5 px-3">
           <Link href={`/${region}/busca?${new URLSearchParams({ q: trimmed })}`} onClick={() => onNavigate?.()} className="link-static inline-flex min-h-11 items-center font-semibold">
             Ver todos os produtos para “{trimmed}” →
