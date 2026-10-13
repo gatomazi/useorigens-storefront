@@ -22,7 +22,7 @@ Execução em **13/10/2026**. Tudo o que está aqui foi feito em branches e PRs 
 - **Cabeçalho da INK** (Worker): "Estados", "Categorias" (renomeável pelo CMS) e links para as páginas de coleção do site quando o CMS as manda.
 - **Medição** (storefront): qualquer slug com formato de catálogo passa no marcador de chegada; eventos `origens_guide_*` documentados.
 
-**Estado de publicação:** local + PRs abertos. Storefront: branch `feature/guia-pdp-conversao` (PR em `useorigens`). Workers: branch `feature/pdp-guide` (PR em `use-origens-workers`). Ordem de publicação quando aprovado: storefront primeiro, depois Worker loja a loja com `,pdp-guide` nas features (seção 9).
+**Estado de publicação:** local + PRs abertos. Storefront: branch `feature/guia-pdp-conversao`, [PR #70](https://github.com/gatomazi/useorigens-storefront/pull/70). Workers: branch `feature/pdp-guide`, [PR #21](https://github.com/gatomazi/worker-lojas/pull/21). Ordem de publicação quando aprovado: storefront primeiro, depois Worker loja a loja com `,pdp-guide` nas features (seção 9).
 
 ---
 
@@ -184,7 +184,7 @@ Eventos novos (INK, `gtag` da própria INK, só após o aceite do aviso dela; nu
 
 ## 9. Implementação
 
-### Storefront (`useorigens`, branch `feature/guia-pdp-conversao`)
+### Storefront (`useorigens`, branch `feature/guia-pdp-conversao`, [PR #70](https://github.com/gatomazi/useorigens-storefront/pull/70))
 
 | Commit | Arquivos |
 |---|---|
@@ -195,7 +195,7 @@ Eventos novos (INK, `gtag` da própria INK, só após o aceite do aviso dela; nu
 
 Configuração: nenhuma variável nova. A rota lê catálogo, coleções e `published.json`; 404 para região não lançada (os links são páginas do site). Cache `s-maxage=300`. Rollback: reverter o PR (o Worker trata 404/erro como "API fora": convite com 2 botões e mensagem honesta).
 
-### Workers (`use-origens-workers`, branch `feature/pdp-guide`)
+### Workers (`use-origens-workers`, branch `feature/pdp-guide`, [PR #21](https://github.com/gatomazi/worker-lojas/pull/21))
 
 | Commit | Arquivos |
 |---|---|
