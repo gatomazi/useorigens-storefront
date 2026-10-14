@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { MundoLinkRodape } from "@/components/mundo/entrada/MundoEntradas";
+import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import Link from "next/link";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
@@ -215,6 +217,11 @@ export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: str
                 Política de privacidade
               </Link>
             </li>
+            {mundoEntradasAtivas() && (
+              <li>
+                <MundoLinkRodape region={region} />
+              </li>
+            )}
             <li>
               <PrivacyPreferencesLink />
             </li>
