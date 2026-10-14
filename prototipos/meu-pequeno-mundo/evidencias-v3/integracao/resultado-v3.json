@@ -1,0 +1,414 @@
+{
+  "quando": "2026-10-14T20:54:09.622Z",
+  "servidores": {
+    "on": "http://localhost:3300",
+    "pagina": "http://localhost:3301",
+    "off": "http://localhost:3302"
+  },
+  "checagens": [
+    {
+      "nome": "[off] página, índice e perfis respondem 404",
+      "ok": true,
+      "detalhe": "404/404/404"
+    },
+    {
+      "nome": "[off] nenhuma entrada na home, no rodapé ou na cidade",
+      "ok": true,
+      "detalhe": "{\"home\":false,\"rodape\":false,\"cidade\":false}"
+    },
+    {
+      "nome": "[pagina] página, índice e perfis respondem 200",
+      "ok": true,
+      "detalhe": "200/200/200"
+    },
+    {
+      "nome": "[pagina] canonical sem parâmetros",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/meu-pequeno-mundo"
+    },
+    {
+      "nome": "[pagina] página com noindex",
+      "ok": true,
+      "detalhe": "noindex, follow"
+    },
+    {
+      "nome": "[pagina] nenhuma entrada na loja",
+      "ok": true,
+      "detalhe": "{\"home\":false,\"rodape\":false,\"cidade\":false}"
+    },
+    {
+      "nome": "[on] página, índice e perfis respondem 200",
+      "ok": true,
+      "detalhe": "200/200/200"
+    },
+    {
+      "nome": "[on] canonical sem parâmetros",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/meu-pequeno-mundo"
+    },
+    {
+      "nome": "[on] metadados da página sem noindex próprio",
+      "ok": true,
+      "detalhe": "(sem meta robots)"
+    },
+    {
+      "nome": "[on] as três entradas aparecem (home, rodapé, cidade)",
+      "ok": true,
+      "detalhe": "{\"home\":true,\"rodape\":true,\"cidade\":true}"
+    },
+    {
+      "nome": "[on] rodapé de /norte com o link e a loja certa",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[on] rodapé de /centro-oeste com o link e a loja certa",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "link antigo do protótipo redireciona com os parâmetros",
+      "ok": true,
+      "detalhe": "307 → /meu-pequeno-mundo?mundo=1&origem=4106902&presente=5208707"
+    },
+    {
+      "nome": "[desktop] home: bloco \"Os lugares que fazem parte de você\" com \"Montar meu mundo\"",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] home: botão com 44 px ou mais",
+      "ok": true,
+      "detalhe": "52 px"
+    },
+    {
+      "nome": "[desktop] home: imagem estática carregada",
+      "ok": true,
+      "detalhe": "http://localhost:3300/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Filhas-piloto.38_g_wgf12b"
+    },
+    {
+      "nome": "[desktop] rodapé: link \"Meu Pequeno Mundo\" com 44 px ou mais",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] home: nada do mundo carregado (nem prefetch, nem dados, nem 3D)",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] home: botão alcançável pelo teclado, com foco visível",
+      "ok": true,
+      "detalhe": "solid 2px"
+    },
+    {
+      "nome": "[desktop] home → mundo: barra limpa",
+      "ok": true,
+      "detalhe": "http://localhost:3300/meu-pequeno-mundo"
+    },
+    {
+      "nome": "[desktop] home → mundo: entrada registrada como \"home\"",
+      "ok": true,
+      "detalhe": "home"
+    },
+    {
+      "nome": "[desktop] \"Voltar à loja\" leva para /sul",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] cidade: convite \"Curitiba faz parte da sua história?\"",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] cidade: link com cidade=4106902 e loja=sul, 44 px ou mais",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] cidade: o convite fica abaixo dos produtos",
+      "ok": true,
+      "detalhe": "12 links da loja"
+    },
+    {
+      "nome": "[desktop] cidade: nada do mundo carregado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] cidade → mundo sem progresso: a sugestão aparece e nada é escolhido sozinho",
+      "ok": true,
+      "detalhe": "{\"origem\":null,\"presente\":null,\"coracao\":null}"
+    },
+    {
+      "nome": "[desktop] cidade → mundo: entrada registrada como \"cidade\"",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] escolher \"Meu presente\" põe Curitiba só no presente",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] home: bloco \"Os lugares que fazem parte de você\" com \"Montar meu mundo\"",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] home: botão com 44 px ou mais",
+      "ok": true,
+      "detalhe": "52 px"
+    },
+    {
+      "nome": "[mobile] home: imagem estática carregada",
+      "ok": true,
+      "detalhe": "http://localhost:3300/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Filhas-piloto.38_g_wgf12b"
+    },
+    {
+      "nome": "[mobile] rodapé: link \"Meu Pequeno Mundo\" com 44 px ou mais",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] home: nada do mundo carregado (nem prefetch, nem dados, nem 3D)",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] home → mundo: barra limpa",
+      "ok": true,
+      "detalhe": "http://localhost:3300/meu-pequeno-mundo"
+    },
+    {
+      "nome": "[mobile] home → mundo: entrada registrada como \"home\"",
+      "ok": true,
+      "detalhe": "home"
+    },
+    {
+      "nome": "[mobile] \"Voltar à loja\" leva para /sul",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] cidade: convite \"Curitiba faz parte da sua história?\"",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] cidade: link com cidade=4106902 e loja=sul, 44 px ou mais",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] cidade: o convite fica abaixo dos produtos",
+      "ok": true,
+      "detalhe": "12 links da loja"
+    },
+    {
+      "nome": "[mobile] cidade: nada do mundo carregado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] cidade → mundo sem progresso: a sugestão aparece e nada é escolhido sozinho",
+      "ok": true,
+      "detalhe": "{\"origem\":null,\"presente\":null,\"coracao\":null}"
+    },
+    {
+      "nome": "[mobile] cidade → mundo: entrada registrada como \"cidade\"",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] escolher \"Meu presente\" põe Curitiba só no presente",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "com progresso salvo (v2): nada é trocado sozinho",
+      "ok": true,
+      "detalhe": "{\"origem\":\"4205407\",\"presente\":null,\"coracao\":null}"
+    },
+    {
+      "nome": "com progresso salvo: a sugestão aparece no resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "escolher \"Meu lugar do coração\" mantém a origem salva",
+      "ok": true,
+      "detalhe": "{\"origem\":\"4205407\",\"presente\":null,\"coracao\":\"4106902\"}"
+    },
+    {
+      "nome": "progresso salvo no formato da v1 continua abrindo",
+      "ok": true,
+      "detalhe": "{\"origem\":\"4211504\",\"presente\":\"4205407\",\"coracao\":null}"
+    },
+    {
+      "nome": "\"Agora não\" fecha a sugestão sem mudar nada",
+      "ok": true,
+      "detalhe": "{\"origem\":\"4211504\",\"presente\":\"4205407\",\"coracao\":null}"
+    },
+    {
+      "nome": "link completo com cidade: o mundo do link prevalece e não há sugestão",
+      "ok": true,
+      "detalhe": "{\"origem\":\"4106902\",\"presente\":\"5208707\",\"coracao\":\"1302603\"}"
+    },
+    {
+      "nome": "mundo por link: barra limpa",
+      "ok": true,
+      "detalhe": "http://localhost:3300/meu-pequeno-mundo"
+    },
+    {
+      "nome": "mundo por link não grava por cima do mundo salvo da pessoa",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "\"Voltar à loja\" leva para a loja de chegada (/norte)",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "recarregar a página mantém o mundo aberto pelo link",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "links de cidade e produto são do próprio ambiente",
+      "ok": true,
+      "detalhe": "http://localhost:3300/sul/pr/curitiba/ponto-de-origem http://localhost:3300/sul/pr/curitiba http://localhost:3300/centro-oeste/go/goiania/ponto-de-origem http://localhost:3300/centro-oeste/go/goiania"
+    },
+    {
+      "nome": "PNG sem lembranças: 1080 × 1350",
+      "ok": true,
+      "detalhe": "1080 × 1350, 1125 KB"
+    },
+    {
+      "nome": "PNG com lembranças: 1080 × 1350",
+      "ok": true,
+      "detalhe": "1080 × 1350, 1136 KB"
+    },
+    {
+      "nome": "copiar link: URL do próprio ambiente, sem entrada, cidade ou loja",
+      "ok": true,
+      "detalhe": "http://localhost:3300/meu-pequeno-mundo?mundo=1&origem=4106902&presente=5208707&coracao=1302603&lo=Minha+av%C3%B3+%F0%9F%8C%8A+fazia+p%C3%A3o+aqui+todo+domingo"
+    },
+    {
+      "nome": "compartilhar cancelado na janela nativa: sem erro e sem diálogo",
+      "ok": true,
+      "detalhe": "Link copiado."
+    },
+    {
+      "nome": "compartilhar cancelado registrado como \"nativo_cancelado\"",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "analytics: evento page_view enviado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "analytics: evento mundo_entrada enviado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "analytics: evento mundo_ficha enviado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "analytics: evento mundo_png enviado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "analytics: evento mundo_download_iniciado enviado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "analytics: evento mundo_compartilhar enviado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "analytics: evento mundo_camisetas enviado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "analytics: page_view só com o caminho, sem consulta",
+      "ok": true,
+      "detalhe": "http://localhost:3300/meu-pequeno-mundo"
+    },
+    {
+      "nome": "analytics: nenhuma lembrança, texto de busca ou mundo nas coletas",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "analytics: mundo_concluido nunca leva os IDs juntos",
+      "ok": true,
+      "detalhe": "3"
+    },
+    {
+      "nome": "nenhum Meta Pixel ou Clarity na rota do mundo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "consentimento recusado: o mundo segue a mesma regra da loja",
+      "ok": true,
+      "detalhe": "loja carrega GA4: true; mundo: true"
+    },
+    {
+      "nome": "3D não carregou: aviso e apresentação plana, com os lugares",
+      "ok": true,
+      "detalhe": "Não foi possível carregar a maquete 3D. Seus lugares e as camisetas continuam aqui. (3 lugares)"
+    },
+    {
+      "nome": "código da experiência não chegou: aviso com \"Tentar de novo\" e \"Voltar à loja\"",
+      "ok": true,
+      "detalhe": "Não foi possível abrir o Meu Pequeno Mundo agora.Tentar de novoVoltar à loja"
+    },
+    {
+      "nome": "índice indisponível: aviso na busca com nova tentativa",
+      "ok": true,
+      "detalhe": "Não foi possível carregar as cidades. Tentar de novoUsar cidades de exemplo"
+    },
+    {
+      "nome": "perfis indisponíveis: o mundo abre mesmo assim",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "sem WebGL: apresentação plana, sem erro de script",
+      "ok": true,
+      "detalhe": ""
+    }
+  ],
+  "consoleErros": [],
+  "coletas": [
+    "/g/collect?v=2&tid=G-8GYTEJ1F77&gtm=45je6ad0v9242626175za200zd9242626175xf1&_p=1792011309922&_gaz=1&gcd=13l3l3l3l1l1&npa=0&dma=0&_eu=AAAAACAC&cid=1131270525.1792011314&frm=0&ibt=1&ngs=1&pscdl=noapi&rcb=10&sr=1440x900&uaa=arm&uab=64&uafvl=HeadlessChrome%3B153.0.8010.12%7CNot_A%2520Brand%3B8.0.0.0%7CChromium%3B153.0.8010.12&uam=&uamb=0&uap=macOS&uapv=15.8.1&uaw=0&ul=pt-br&_s=1&tag_exp=115938466~115938469~118897920~118897930~120213116~120385423~120469145~120469153~121246026~121246034&dl=http%3A%2F%2Flocalhost%3A3300%2Fmeu-pequeno-mundo&dp=%2Fmeu-pequeno-mundo&dt=Meu%20Pequeno%20Mundo%20%7C%20Use%20Origens&sid=1792011314&sct=1&seg=0&en=page_view&_fv=1&_nsi=1&_ss=1&_ee=1&tfd=4447",
+    "/g/collect?v=2&tid=G-8GYTEJ1F77&gtm=45je6ad0v9242626175za200zd9242626175xf1&_p=1792011309922&gcd=13l3l3l3l1l1&npa=0&dma=0&_eu=AAAAACQC&cid=1131270525.1792011314&frm=0&ibt=1&ngs=1&pscdl=noapi&rcb=10&sr=1440x900&uaa=arm&uab=64&uafvl=HeadlessChrome%3B153.0.8010.12%7CNot_A%2520Brand%3B8.0.0.0%7CChromium%3B153.0.8010.12&uam=&uamb=0&uap=macOS&uapv=15.8.1&uaw=0&ul=pt-br&_s=2&tag_exp=115938466~115938469~118897920~118897930~120213116~120385423~120469145~120469153~121246026~121246034&sid=1792011314&sct=1&seg=0&dl=http%3A%2F%2Flocalhost%2Fmeu-pequeno-mundo&dt=Meu%20Pequeno%20Mundo%20%7C%20Use%20Origens&en=mundo_entrada&_ee=1&ep.origem=rodape&_et=2&tfd=4456",
+    "/g/collect?v=2&tid=G-8GYTEJ1F77&gtm=45je6ad0v9242626175za200zd9242626175xf1&_p=1792011309922&gcd=13l3l3l3l1l1&npa=0&dma=0&_eu=AEAAACQC&ae=a&cid=1131270525.1792011314&frm=0&ibt=1&ngs=1&pscdl=noapi&rcb=10&sr=1440x900&uaa=arm&uab=64&uafvl=HeadlessChrome%3B153.0.8010.12%7CNot_A%2520Brand%3B8.0.0.0%7CChromium%3B153.0.8010.12&uam=&uamb=0&uap=macOS&uapv=15.8.1&uaw=0&ul=pt-br&_s=3&tag_exp=115938466~115938469~118897920~118897930~120213116~120385423~120469145~120469153~121246026~121246034&sid=1792011314&sct=1&seg=0&dl=http%3A%2F%2Flocalhost%2Fmeu-pequeno-mundo&dt=Meu%20Pequeno%20Mundo%20%7C%20Use%20Origens&en=scroll&epn.percent_scrolled=90&_et=4&tfd=9460",
+    "/g/collect?v=2&tid=G-8GYTEJ1F77&gtm=45je6ad0v9242626175za200zd9242626175xf1&_p=1792011309922&gcd=13l3l3l3l1l1&npa=0&dma=0&_eu=AAAAACQC&cid=1131270525.1792011314&frm=0&ibt=1&ngs=1&pscdl=noapi&rcb=10&sr=1440x900&uaa=arm&uab=64&uafvl=HeadlessChrome%3B153.0.8010.12%7CNot_A%2520Brand%3B8.0.0.0%7CChromium%3B153.0.8010.12&uam=&uamb=0&uap=macOS&uapv=15.8.1&uaw=0&ul=pt-br&tag_exp=115938466~115938469~118897920~118897930~120213116~120385423~120469145~120469153~121246026~121246034&sid=1792011314&sct=1&seg=1&dl=http%3A%2F%2Flocalhost%2Fmeu-pequeno-mundo&dt=Meu%20Pequeno%20Mundo%20%7C%20Use%20Origens&_s=4&tfd=42262",
+    "/g/collect?v=2&tid=G-8GYTEJ1F77&gtm=45je6ad0v9242626175za200zd9242626175xf1&_p=1792011309922&gcd=13l3l3l3l1l1&npa=0&dma=0&_eu=AAAAACQC&cid=1131270525.1792011314&frm=0&ibt=1&ngs=1&pscdl=noapi&rcb=10&sr=1440x900&uaa=arm&uab=64&uafvl=HeadlessChrome%3B153.0.8010.12%7CNot_A%2520Brand%3B8.0.0.0%7CChromium%3B153.0.8010.12&uam=&uamb=0&uap=macOS&uapv=15.8.1&uaw=0&ul=pt-br&tag_exp=115938466~115938469~118897920~118897930~120213116~120385423~120469145~120469153~121246026~121246034&sid=1792011314&sct=1&seg=1&dl=http%3A%2F%2Flocalhost%2Fmeu-pequeno-mundo&dt=Meu%20Pequeno%20Mundo%20%7C%20Use%20Origens&_s=5&tfd=48082",
+    "/g/collect?v=2&tid=G-8GYTEJ1F77&gtm=45je6ad0v9242626175za200zd9242626175xf1&_p=1792011309922&gcd=13l3l3l3l1l1&npa=0&dma=0&_eu=AAAAACQC&cid=1131270525.1792011314&frm=0&ibt=1&ngs=1&pscdl=noapi&rcb=10&sr=1440x900&uaa=arm&uab=64&uafvl=HeadlessChrome%3B153.0.8010.12%7CNot_A%2520Brand%3B8.0.0.0%7CChromium%3B153.0.8010.12&uam=&uamb=0&uap=macOS&uapv=15.8.1&uaw=0&ul=pt-br&tag_exp=115938466~115938469~118897920~118897930~120213116~120385423~120469145~120469153~121246026~121246034&sid=1792011314&sct=1&seg=1&dl=http%3A%2F%2Flocalhost%2Fmeu-pequeno-mundo&dt=Meu%20Pequeno%20Mundo%20%7C%20Use%20Origens&_s=6&tfd=53636"
+  ],
+  "pulados": [
+    {
+      "nome": "[on] home /norte com o bloco",
+      "motivo": "a configuração local da home desta região não tem a seção de estados"
+    },
+    {
+      "nome": "[on] home /centro-oeste com o bloco",
+      "motivo": "a configuração local da home desta região não tem a seção de estados"
+    }
+  ]
+}

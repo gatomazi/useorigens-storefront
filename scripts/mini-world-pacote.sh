@@ -25,7 +25,7 @@ cp "$PROTO"/relatorio-*.md "$DEST/"
 cp -R "$PROTO/$EVID" "$DEST/evidencias"
 mkdir -p "$DEST/documentacao"
 cp docs/mundo/*.md data/mundo/modelo-perfil.json "$DEST/documentacao/"
-PERFIS=$(node -e 'const d=require(process.argv[1]); console.log(Object.values(d.cidades).map((c) => c.identidade.nome).join(", "))' "$PWD/$PROTO/contexto/perfis-cidades.json")
+PERFIS=$(node -e 'const d=require(process.argv[1]); console.log(Object.values(d.cidades).map((c) => c.identidade.nome).sort((a, b) => a.localeCompare(b, "pt")).join(", "))' "$PWD/$PROTO/contexto/perfis-cidades.json")
 GERADO=$(node -e 'const d=require(process.argv[1]); console.log(d.geradoEm.slice(0,10), JSON.stringify(d.catalogo))' "$PWD/$PROTO/dados/indice.json")
 LUGARES=$(ls "$PROTO/dados/lugares" | wc -l | tr -d ' ')
 
