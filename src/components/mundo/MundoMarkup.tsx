@@ -88,6 +88,7 @@ export function MundoMarkup() {
         <div className="escolha" id="escolha" hidden>
           {/* o cartão inteiro é o botão de trocar: um alvo grande, com nome acessível "Trocar …" */}
           <button type="button" className="escolha-trocar" id="btn-trocar">
+            {/* eslint-disable-next-line @next/next/no-img-element -- the experience fills it at runtime with the region's inline seal */}
             <img id="escolha-selo" alt="" width="40" height="40" />
             <span className="escolha-texto">
               <span className="escolha-nome" id="escolha-nome"></span>

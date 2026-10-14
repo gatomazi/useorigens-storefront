@@ -8,7 +8,9 @@ import "server-only";
  *   MEU_PEQUENO_MUNDO=pagina                 → "pagina": the page and its data answer (shared worlds open), but the store shows no entry.
  *   MEU_PEQUENO_MUNDO=on                     → "on":     page + the three entries (home block, city invite, footer link).
  *
- * Rollback is one env change and a restart: "pagina" hides the entries and keeps shared links working; "off" hides everything.
+ * Rollback is one env change and a new container (Railway deploys one when a variable changes): "pagina" hides the entries and keeps
+ * shared links working; "off" hides everything. The store pages are ISR (1 h, none prebuilt), so a page already cached in a running
+ * container keeps its entries until it revalidates — docs/mundo/ativacao.md.
  */
 export type ModoMundo = "off" | "pagina" | "on";
 

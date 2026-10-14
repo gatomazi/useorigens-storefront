@@ -361,7 +361,7 @@ export type MundoCampos = Record<string, string | number | boolean>;
 
 /** One "Meu Pequeno Mundo" event. Anything outside the contract is dropped here, so the experience can never leak free text by mistake. */
 export function trackMundo(evento: string, campos: MundoCampos = {}): void {
-  if (!MUNDO_EVENTOS.has(evento) || !gtagReady()) return;
+  if (!MUNDO_EVENTOS.has(evento) || !hasAnalyticsConsent()) return;
   const params: Record<string, string | number | boolean> = {};
   for (const [k, v] of Object.entries(campos)) {
     if (!MUNDO_CAMPOS.has(k)) continue;
@@ -369,5 +369,7 @@ export function trackMundo(evento: string, campos: MundoCampos = {}): void {
     else if (typeof v === "boolean") params[k] = v;
     else if (typeof v === "string" && v.length <= 40 && /^[a-z0-9_+:-]*$/i.test(v)) params[k] = v;
   }
-  sendGtag("event", evento, params);
+  // The world starts before GA4 is configured on a fresh load (gtag.js and `config` come after hydration): its first events
+  // (mundo_entrada) wait for it like the storefront's arrival event, for ~10 s at most, and are dropped after that.
+  whenAnalyticsReady(() => sendGtag("event", evento, params));
 }

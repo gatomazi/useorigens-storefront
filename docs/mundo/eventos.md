@@ -1,6 +1,10 @@
 # Meu Pequeno Mundo — eventos de analytics
 
-Mecanismo: o GA4 que a loja já usa, com o mesmo consentimento. Sem consentimento, nada é enviado. A rota não carrega Meta Pixel nem Clarity.
+Mecanismo: o GA4 que a loja já usa, com a mesma regra de consentimento (`src/lib/consent/policy.ts`). Hoje, por decisão de 25/09/2026,
+a medição não espera o banner, como no resto da loja. Com `NEXT_PUBLIC_MEASUREMENT_REQUIRES_CONSENT=true`, nada é enviado antes de
+"Aceitar". A rota não carrega Meta Pixel nem Clarity. Os eventos que acontecem antes de o GA4 ficar pronto, como `mundo_entrada` numa
+primeira visita, esperam por ele até cerca de 10 segundos e depois são descartados.
+
 O contrato é **fechado** em `trackMundo` (`src/lib/analytics/track.ts`). O código só envia os eventos e campos listados abaixo, e todo
 valor é um número, um booleano ou um código curto de `[a-z0-9_+:-]`, com até 40 caracteres. O que estiver fora disso é descartado
 antes do envio.

@@ -1,8 +1,15 @@
 # Meu Pequeno Mundo — ativação e reversão
 
 A experiência fica em `/meu-pequeno-mundo` e é controlada por **uma variável de runtime**, `MEU_PEQUENO_MUNDO` (`src/lib/mundo/flag.ts`).
-O padrão é desligado: sem a variável, a produção fica exatamente como antes. A variável é lida a cada requisição, não no build, então mudar
-o valor pede só um restart, sem build novo.
+O padrão é desligado: sem a variável, a produção fica exatamente como antes. A variável é lida na renderização, não no build: o valor
+não fica embutido no código.
+
+**Cache.** A página `/meu-pequeno-mundo` e as rotas `/api/mundo/*` são dinâmicas e obedecem na hora. As páginas da loja que mostram as
+entradas usam ISR de 1 hora e não são geradas no build. Então:
+
+- Num container novo (o deploy que o Railway faz ao mudar uma variável, ou um restart), o cache começa vazio e as páginas já saem certas.
+- Sem container novo, uma página que já está em cache pode mostrar o estado anterior por até 1 hora. Uma sincronização do catálogo ou
+  uma publicação do CMS invalidam o cache das regiões na hora (`revalidatePath('/[region]', 'layout')`).
 
 | Valor | Página `/meu-pequeno-mundo` e `/api/mundo/*` | Entradas na loja (home, página de cidade, rodapé) | Indexação |
 |---|---|---|---|
@@ -15,19 +22,20 @@ o valor pede só um restart, sem build novo.
 1. `npm run mundo:validar -- --exigir-editorial` sem falhas. Perfis sem `revisao.status = "aprovado"` falham nesse modo.
 2. Catálogo sincronizado: `/api/ready` com 200. Com o catálogo ainda não pronto, `/api/mundo/indice` responde 503 e a página mostra o
    aviso de erro com nova tentativa.
-3. O consentimento e o GA4 já existentes valem para a página. Não há serviço novo: Meta Pixel e Clarity não carregam nessa rota.
+3. O banner e a regra de consentimento da loja valem para a página: hoje a medição não espera o banner
+   (`src/lib/consent/policy.ts`). Não há serviço novo, e Meta Pixel e Clarity não carregam nessa rota.
 
 ## Ligar em etapas (Railway, serviço web)
 
-1. `MEU_PEQUENO_MUNDO=pagina`, depois restart. Abra `/meu-pequeno-mundo` e um link compartilhado (`?mundo=1&origem=…`). A loja continua
+1. `MEU_PEQUENO_MUNDO=pagina`, depois o deploy ou restart. Abra `/meu-pequeno-mundo` e um link compartilhado (`?mundo=1&origem=…`). A loja continua
    sem nenhuma entrada.
-2. `MEU_PEQUENO_MUNDO=on`, depois restart. Aparecem três entradas: o bloco na home, depois da escolha de estados; o convite na página
+2. `MEU_PEQUENO_MUNDO=on`, depois o deploy ou restart. Aparecem três entradas: o bloco na home, depois da escolha de estados; o convite na página
    da cidade, abaixo dos produtos; e o link no rodapé, na lista "Loja".
 
 ## Reverter
 
-- **Esconder as entradas e manter os links compartilhados funcionando:** `MEU_PEQUENO_MUNDO=pagina`, depois restart.
-- **Desligar tudo:** remover a variável (ou usar `off`), depois restart. A página e os dados voltam a 404, e as entradas somem.
+- **Esconder as entradas e manter os links compartilhados funcionando:** `MEU_PEQUENO_MUNDO=pagina`, depois o deploy ou restart.
+- **Desligar tudo:** remover a variável (ou usar `off`), depois o deploy ou restart. A página e os dados voltam a 404, e as entradas somem.
 - Nada é gravado no servidor. O mundo de cada visitante fica no navegador dele: `localStorage` e, para um mundo aberto por link,
   `sessionStorage`. Desligar não apaga nem corrompe nada.
 

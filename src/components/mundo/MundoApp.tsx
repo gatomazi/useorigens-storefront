@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { trackMundo, type MundoCampos } from "@/lib/analytics/track";
 import { MundoMarkup } from "./MundoMarkup";
 import "./mundo.css";
@@ -14,6 +14,7 @@ import "./mundo.css";
  */
 export function MundoApp({ lojaHref }: { lojaHref: string }) {
   const consulta = useRef<string | null>(null);
+  const [falhou, setFalhou] = useState(false);
 
   useLayoutEffect(() => {
     if (consulta.current !== null) return; // Strict Mode runs effects twice; the first run already captured and cleaned it
@@ -33,11 +34,27 @@ export function MundoApp({ lojaHref }: { lojaHref: string }) {
         lojaHref,
         consulta: consulta.current ?? "",
       });
+    }).catch(() => {
+      // the experience's own chunk did not arrive (network, deploy in between): say so instead of an endless "Preparando a maquete…"
+      if (vivo) setFalhou(true);
     });
     return () => {
       vivo = false;
     };
   }, [lojaHref]);
 
-  return <MundoMarkup />;
+  return (
+    <>
+      <MundoMarkup />
+      {falhou && (
+        <div role="alert" className="mpm-falha">
+          <p>Não foi possível abrir o Meu Pequeno Mundo agora.</p>
+          <p>
+            <button type="button" onClick={() => window.location.reload()}>Tentar de novo</button>
+            <a href={lojaHref}>Voltar à loja</a>
+          </p>
+        </div>
+      )}
+    </>
+  );
 }
