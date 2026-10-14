@@ -1,6 +1,6 @@
 // Extracts the municipal seat (sede municipal) of every municipality in the store's states from the IBGE "Localidades do Brasil 2022"
 // KML archive, for the "Meu Pequeno Mundo" prototype (distance between places and the "Mais sobre a cidade" sheet).
-// Usage: node --import tsx scripts/mini-world-sedes.mts <Localidades_Municipios_kml.zip> [--out prototipos/meu-pequeno-mundo/contexto/sedes-municipais-ibge-2022.json]
+// Usage: node --import tsx scripts/mini-world-sedes.mts <Localidades_Municipios_kml.zip> [--out data/mundo/sedes-municipais-ibge-2022.json]
 //
 // Source: https://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/localidades/Localidades_do_Brasil/2022/Localidades_Municipios_kml.zip
 // Each municipality KML has a "01.03. Sede Municipal" placemark with LAT_LOCALIDADE / LONG_LOCALIDADE (decimal degrees, SIRGAS 2000)
@@ -13,7 +13,7 @@ const argv = process.argv.slice(2);
 const zip = argv.find((a) => !a.startsWith("--"));
 if (!zip) throw new Error("uso: node --import tsx scripts/mini-world-sedes.mts <Localidades_Municipios_kml.zip> [--out arquivo.json]");
 const outIndex = argv.indexOf("--out");
-const out = path.resolve(outIndex >= 0 ? argv[outIndex + 1] : "prototipos/meu-pequeno-mundo/contexto/sedes-municipais-ibge-2022.json");
+const out = path.resolve(outIndex >= 0 ? argv[outIndex + 1] : "data/mundo/sedes-municipais-ibge-2022.json");
 
 const UFS = ["PR", "SC", "RS", "AC", "AM", "AP", "PA", "RO", "RR", "TO", "DF", "GO", "MS", "MT"];
 const campo = (bloco: string, nome: string) => bloco.match(new RegExp(`&lt;th&gt;${nome}&lt;/th&gt;\\s*&lt;td&gt;([^&]*)&lt;/td&gt;`))?.[1]?.trim() ?? null;
