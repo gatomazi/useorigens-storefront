@@ -75,7 +75,7 @@ Cuidados tomados:
   Gallotti. Por isso a ficha não põe o Gallotti na beira do rio. Na maquete o rio e a ponte são um segundo ponto, com nota de que são
   ilustrativos.
 - **Datas.** Os textos separam início da imigração (1875), criação de distrito ou freguesia, elevação a vila e a município, e
-  instalação. Em Garopaba, "fundada em 1846" aparece como "segundo o IBGE", porque é a palavra da fonte.
+  instalação. Em Garopaba, "fundada em 1846" aparece como "segundo o IBGE", porque é a palavra da fonte. Na v2.1, depois da revisão externa, esse texto foi reescrito para não confundir 1846 com a emancipação (ver relatório v2.1, seção 6).
 - **Origem dos nomes.** Para Tijucas (Ty-Yuca), o texto diz "o nome teria origem", como o histórico do IBGE. A etimologia de Garopaba,
   que diverge entre IBGE e portal de turismo, ficou fora.
 - **Números.** População é **censitária** (Censo 2022), com ano e tipo; não há estimativa, e o campo `estimativa` fica `null`. A área

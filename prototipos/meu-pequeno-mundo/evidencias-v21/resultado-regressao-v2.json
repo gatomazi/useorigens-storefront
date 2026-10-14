@@ -1,6 +1,6 @@
 {
   "base": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html",
-  "quando": "2026-10-14T15:46:08.560Z",
+  "quando": "2026-10-14T16:54:57.615Z",
   "checagens": [
     {
       "nome": "[desktop] entrada com a prévia dos três perfis",
@@ -180,7 +180,7 @@
     {
       "nome": "[desktop] ficha Garopaba: frase e resumo de 40–70 palavras",
       "ok": true,
-      "detalhe": "55 palavras"
+      "detalhe": "56 palavras"
     },
     {
       "nome": "[desktop] ficha Garopaba: até três referências",
@@ -205,7 +205,7 @@
     {
       "nome": "[desktop] ficha Garopaba: mais sobre com dados datados",
       "ok": true,
-      "detalhe": "Gentílico: garopabense | Um pouco de história: Segundo o IBGE, Garopaba foi fundada em 19 de dezembro de 1846, com a construção da igreja matriz, do cemitério e da casa paroquial. Foi município em 1890, perdeu a condição em 1923 e voltou a ser município em 1961. | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Florianópolis · intermediária de Florianópolis | Divisão regional de 1990: Mesorregião Sul Catarinense · microrregião Tubarão | Sede municipal: 28,0237° S · 48,6135° O | População: 29.959 pessoas | Área territorial: 114,77 km²"
+      "detalhe": "Gentílico: garopabense | Um pouco de história: O histórico do IBGE associa 1846 à construção da igreja matriz, do cemitério e da casa paroquial. Garopaba passou à condição de município em 1890, perdeu essa condição em 1923 e voltou a ser município em 1961. | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Florianópolis · intermediária de Florianópolis | Divisão regional de 1990: Mesorregião Sul Catarinense · microrregião Tubarão | Sede municipal: 28,0237° S · 48,6135° O | População: 29.959 pessoas | Área territorial: 114,77 km²"
     },
     {
       "nome": "[desktop] ficha Garopaba: fontes com links",
@@ -425,7 +425,7 @@
     {
       "nome": "[mobile] ficha Garopaba: frase e resumo de 40–70 palavras",
       "ok": true,
-      "detalhe": "55 palavras"
+      "detalhe": "56 palavras"
     },
     {
       "nome": "[mobile] ficha Garopaba: até três referências",
@@ -450,7 +450,7 @@
     {
       "nome": "[mobile] ficha Garopaba: mais sobre com dados datados",
       "ok": true,
-      "detalhe": "Gentílico: garopabense | Um pouco de história: Segundo o IBGE, Garopaba foi fundada em 19 de dezembro de 1846, com a construção da igreja matriz, do cemitério e da casa paroquial. Foi município em 1890, perdeu a condição em 1923 e voltou a ser município em 1961. | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Florianópolis · intermediária de Florianópolis | Divisão regional de 1990: Mesorregião Sul Catarinense · microrregião Tubarão | Sede municipal: 28,0237° S · 48,6135° O | População: 29.959 pessoas | Área territorial: 114,77 km²"
+      "detalhe": "Gentílico: garopabense | Um pouco de história: O histórico do IBGE associa 1846 à construção da igreja matriz, do cemitério e da casa paroquial. Garopaba passou à condição de município em 1890, perdeu essa condição em 1923 e voltou a ser município em 1961. | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Florianópolis · intermediária de Florianópolis | Divisão regional de 1990: Mesorregião Sul Catarinense · microrregião Tubarão | Sede municipal: 28,0237° S · 48,6135° O | População: 29.959 pessoas | Área territorial: 114,77 km²"
     },
     {
       "nome": "[mobile] ficha Garopaba: fontes com links",

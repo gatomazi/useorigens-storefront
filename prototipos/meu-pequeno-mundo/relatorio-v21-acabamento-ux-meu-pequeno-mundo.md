@@ -185,3 +185,41 @@ Não há assets locais além desses arquivos: os selos regionais estão embutido
 - **Foto quando o arquivo falha.** "Camisetas →" depende do mesmo arquivo do lugar. Se ele falhar, o link fica desabilitado até
   "Tentar de novo".
 - **Escopo.** Como pedido, nenhum perfil novo, nenhuma curadoria em lote e nenhuma integração ao storefront.
+
+## 6. Revisão externa do pacote (14/10/2026)
+
+A revisão (`revisao-v21-meu-pequeno-mundo.md`) conferiu:
+
+- os arquivos do pacote;
+- os vínculos entre índice e lugares (2.144);
+- os 16.842 links de produtos;
+- as coordenadas;
+- a proveniência;
+- os dados do Censo 2022, contra a tabela 4714;
+- os gentílicos;
+- a distância do piloto.
+
+A recomendação foi encerrar o acabamento visual, sem nova rodada de redesign. A revisão não reexecutou os roteiros nem os fluxos 3D no
+navegador.
+
+Aplicado depois dela:
+
+- **Garopaba, curiosidade de 1846.** O texto "Segundo o IBGE, Garopaba foi fundada em 19 de dezembro de 1846…" virou "O histórico do
+  IBGE associa 1846 à construção da igreja matriz, do cemitério e da casa paroquial. Garopaba passou à condição de município em 1890,
+  perdeu essa condição em 1923 e voltou a ser município em 1961." A fonte continua sendo `ibge-biblioteca-garopaba`. Com isso, o marco
+  de 1846 deixa de parecer a emancipação.
+- **Baleias como possibilidade.** No resumo e no texto curto da descoberta, "baleias-francas são avistadas" virou "podem ser
+  avistadas". O texto completo da referência já dizia "é possível avistar".
+- **Registro.** O perfil de Garopaba ganhou `revisao.status: "revisão externa"` com a observação do que mudou.
+
+Verificação: conferi a ficha de Garopaba no navegador (texto novo, nenhuma ocorrência de "fundada", sem erros de console). Também
+rodei de novo o roteiro da v2, que cobre as fichas: **113/113, 0 erros de console** (`evidencias-v21/resultado-regressao-v2.json`, atualizado).
+
+Ficam pendentes, como a revisão aponta:
+
+- **Aparelhos reais.** Testar os fluxos principais em ao menos um iPhone e um Android: teclado virtual, toque, compartilhamento
+  nativo e desempenho.
+- **Importador futuro.** A API da Biblioteca do IBGE devolve uma chave numérica sem aspas, controles literais no texto e, às vezes,
+  conteúdo comprimido. Um importador precisa normalizar e validar a resposta como dado, sem `JSON.parse` direto. Nesta rodada, os três
+  perfis foram montados à mão a partir dessas respostas.
+

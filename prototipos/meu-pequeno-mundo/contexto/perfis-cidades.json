@@ -498,7 +498,7 @@
       "cobertura": "completo",
       "conteudo": {
         "frase": "Litoral de dunas e tradições ligadas à pesca.",
-        "resumo": "Segundo o IBGE, desde 1525 a enseada de Garopaba servia de abrigo a embarcações, e em 1666 chegaram moradores de origem açoriana, dedicados à pesca e à caça da baleia. A pesca artesanal da tainha e os engenhos de farinha seguem na identidade local. Hoje, entre julho e novembro, baleias-francas são avistadas perto da costa.",
+        "resumo": "Segundo o IBGE, desde 1525 a enseada de Garopaba servia de abrigo a embarcações, e em 1666 chegaram moradores de origem açoriana, dedicados à pesca e à caça da baleia. A pesca artesanal da tainha e os engenhos de farinha seguem na identidade local. Hoje, entre julho e novembro, baleias-francas podem ser avistadas perto da costa.",
         "fontesResumo": [
           "ibge-biblioteca-garopaba",
           "gp-turismo-destino",
@@ -533,7 +533,7 @@
               "modulo": "baleia",
               "nota": "Na maquete, a baleia é ilustrativa."
             },
-            "curto": "Entre julho e novembro, baleias-francas são avistadas perto da costa."
+            "curto": "Entre julho e novembro, baleias-francas podem ser avistadas perto da costa."
           },
           {
             "id": "pesca-e-engenhos",
@@ -547,7 +547,7 @@
         ],
         "curiosidades": [
           {
-            "texto": "Segundo o IBGE, Garopaba foi fundada em 19 de dezembro de 1846, com a construção da igreja matriz, do cemitério e da casa paroquial. Foi município em 1890, perdeu a condição em 1923 e voltou a ser município em 1961.",
+            "texto": "O histórico do IBGE associa 1846 à construção da igreja matriz, do cemitério e da casa paroquial. Garopaba passou à condição de município em 1890, perdeu essa condição em 1923 e voltou a ser município em 1961.",
             "fontes": [
               "ibge-biblioteca-garopaba"
             ]
@@ -651,9 +651,9 @@
         ]
       },
       "revisao": {
-        "status": "curadoria inicial",
+        "status": "revisão externa",
         "em": "2026-10-14",
-        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens."
+        "observacao": "Revisão de 14/10/2026: curiosidade de 1846 reescrita para não confundir com a emancipação; avistamento de baleias descrito como possibilidade."
       }
     }
   }
