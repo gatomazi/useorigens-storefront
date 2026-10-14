@@ -9,8 +9,8 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<!-- As mesmas fontes do storefront (src/app/layout.tsx): Big Shoulders (títulos), Hanken Grotesk (texto), Bodoni Moda 500 (editorial). -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@700;800;900&family=Bodoni+Moda:wght@500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap">
+<!-- As mesmas fontes do storefront (src/app/layout.tsx): Big Shoulders (títulos), Hanken Grotesk (texto), Bodoni Moda 500 (editorial; o itálico é das lembranças). -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@700;800;900&family=Bodoni+Moda:ital,wght@0,500;1,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap">
 <style>
 /* ==========================================================================
    ESTILOS
@@ -283,7 +283,7 @@ img { max-width: 100%; }
 .recolher svg { transition: transform 200ms var(--ease-out); }
 .painel.recolhido .recolher svg { transform: rotate(180deg); }
 .painel.recolhido .corpo-mundo { display: none; }
-@media (min-width: 900px) { .recolher { display: none; } .painel.recolhido .corpo-mundo { display: block; } }
+@media (min-width: 900px) { .fechar.recolher { display: none; } .painel.recolhido .corpo-mundo { display: block; } }
 .lista-lugares { list-style: none; margin: 14px 0 16px; padding: 0; display: grid; gap: 8px; }
 .lugar {
   --cor-regiao: var(--ink);
@@ -295,6 +295,8 @@ img { max-width: 100%; }
 .lugar-papeis { display: block; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cor-regiao); }
 .lugar-nome { display: block; font-family: var(--display); font-weight: 800; text-transform: uppercase; font-size: 1.3125rem; line-height: 1.05; overflow-wrap: anywhere; }
 .lugar-ver { font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+.lugar-ver .curto { display: none; }
+@media (max-width: 479px) { .lugar-ver .longo { display: none; } .lugar-ver .curto { display: inline; } }
 .lista-lugares { gap: 6px; }
 @media (max-width: 899px) {
   .cabeca-mundo .titulo-m { font-size: clamp(1.6rem, 7vw, 2.1rem); }
@@ -354,6 +356,113 @@ dialog p { margin: 0 0 16px; color: var(--ink-soft); }
 .toast.visivel { opacity: 1; }
 @media (min-width: 900px) { .toast { top: 28px; left: calc((100% - var(--painel-w) - 48px) / 2); } }
 
+
+/* ---------- V2: ficha da cidade, descobertas na maquete, lembranças e o que conecta o mundo ---------- */
+.cidade-nome .uf { font-size: 0.55em; letter-spacing: 0.02em; color: var(--ink-mute); white-space: nowrap; }
+.ficha-frase { margin: 12px 0 0; font-family: var(--serif); font-weight: 500; font-size: 1.1875rem; line-height: 1.35; text-wrap: pretty; }
+.ficha-resumo { margin: 10px 0 0; font-size: 0.9375rem; line-height: 1.6; color: var(--ink-soft); }
+.ficha-secao { margin-top: 18px; }
+.ficha-titulo { margin: 0 0 8px; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-mute); }
+.referencias { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.referencia { padding: 10px 12px 8px; background: #fff; border: 1px solid var(--line); scroll-margin: 16px; }
+.referencia.destacada { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--cor-regiao, var(--ink)); }
+.ref-tipo { display: block; font-size: 0.625rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--cor-regiao, var(--ink-mute)); }
+.ref-titulo { display: block; margin-top: 2px; font-size: 0.9375rem; font-weight: 700; line-height: 1.3; }
+.ref-texto { margin: 4px 0 0; font-size: 0.875rem; line-height: 1.55; color: var(--ink-soft); }
+.ref-nota { margin: 4px 0 0; font-size: 0.75rem; font-style: italic; color: var(--ink-mute); }
+.ref-acao { display: inline-flex; align-items: center; gap: 6px; }
+.ref-acao svg { width: 16px; height: 16px; }
+/* o "Ver camisetas" fica à vista enquanto a ficha rola, e para no seu lugar (depois das referências) */
+.ficha-cta {
+  position: sticky; z-index: 2; bottom: 0; margin: 16px -16px 0;
+  padding: 12px 16px 10px; background: linear-gradient(rgb(245 242 236 / 0), var(--paper) 12px);
+}
+@media (min-width: 900px) { .ficha-cta { margin: 16px -28px 0; padding: 12px 28px 10px; } }
+.ficha details { margin-top: 12px; border-top: 1px solid var(--line); }
+.ficha summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px;
+  font-weight: 700; font-size: 0.9375rem; cursor: pointer; list-style: none;
+}
+.ficha summary::-webkit-details-marker { display: none; }
+.ficha summary::after { content: "+"; font-size: 1.25rem; font-weight: 500; line-height: 1; }
+.ficha details[open] > summary::after { content: "−"; }
+.ficha .ficha-fontes summary { font-size: 0.8125rem; font-weight: 600; color: var(--ink-mute); }
+.dados-cidade { display: grid; grid-template-columns: minmax(0, 8.5rem) minmax(0, 1fr); gap: 8px 12px; margin: 2px 0 12px; font-size: 0.875rem; line-height: 1.45; }
+.dados-cidade dt { color: var(--ink-mute); font-weight: 600; }
+.dados-cidade dd { margin: 0; }
+.dados-cidade .detalhe { display: block; font-size: 0.75rem; color: var(--ink-mute); }
+.fontes-lista { margin: 0 0 10px; padding-left: 1.2rem; display: grid; gap: 8px; font-size: 0.8125rem; line-height: 1.45; color: var(--ink-soft); }
+.fontes-lista a { display: flex; align-items: center; min-height: 44px; color: inherit; overflow-wrap: anywhere; }
+.fontes-lista .quando { display: block; color: var(--ink-mute); font-size: 0.75rem; }
+.aviso-ilustrativo { margin: 12px 0 0; font-size: 0.75rem; line-height: 1.45; color: var(--ink-mute); }
+.ficha-sem-texto { margin: 12px 0 0; padding: 10px 12px; font-size: 0.875rem; color: var(--ink-soft); background: #fff; border: 1px dashed var(--line); }
+
+.lembranca { margin-top: 14px; }
+.escolha .lembranca { grid-column: 1 / -1; margin-top: 6px; }
+.lembranca label { display: block; margin-bottom: 6px; font-size: 0.875rem; font-weight: 700; }
+.lembranca .opcional { font-weight: 500; color: var(--ink-mute); }
+.lembranca-campo { display: flex; align-items: center; min-height: 48px; background: #fff; border: 1.5px solid var(--ink); }
+.lembranca-campo:focus-within { box-shadow: 0 0 0 3px rgb(0 0 0 / 0.14); }
+.lembranca input { flex: 1; min-width: 0; min-height: 44px; padding: 0 12px; border: 0; background: transparent; font-size: 1rem; font-family: var(--serif); font-style: italic; }
+.lembranca input:focus { outline: none; }
+.lembranca .contador { flex: none; padding: 0 10px; font-size: 0.75rem; color: var(--ink-mute); font-variant-numeric: tabular-nums; }
+.lembranca .nota { margin-top: 6px; }
+.lugar-lembranca { display: block; margin-top: 2px; font-family: var(--serif); font-style: italic; font-size: 0.875rem; line-height: 1.3; color: var(--ink-soft); overflow-wrap: anywhere; }
+
+.conecta { margin: 0 0 14px; padding: 12px 12px 10px; background: #fff; border: 1px solid var(--line); }
+.conecta .ficha-titulo { margin-bottom: 6px; }
+.conecta-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 0.875rem; line-height: 1.45; }
+.conecta-lista li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; align-items: baseline; }
+.conecta-lista svg { width: 16px; height: 16px; transform: translateY(3px); color: var(--ink-mute); }
+.conecta-lista .nota { display: block; margin: 0; font-size: 0.75rem; }
+.incluir {
+  display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; align-items: start; min-height: 44px;
+  margin: 0 0 10px; padding: 10px 12px; background: #fff; border: 1px solid var(--line); cursor: pointer;
+}
+.incluir input { width: 22px; height: 22px; margin: 1px 0 0; accent-color: var(--ink); cursor: pointer; }
+.incluir-rotulo { display: block; font-size: 0.9375rem; font-weight: 700; }
+.incluir .nota { margin: 2px 0 0; }
+
+.descobertas { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.ponto-descoberta {
+  position: absolute; left: 0; top: 0; width: 44px; height: 44px; margin: -22px 0 0 -22px; padding: 0;
+  background: none; border: 0; color: var(--ink); pointer-events: auto; will-change: transform;
+  transform: translate3d(-9999px, -9999px, 0); transition: opacity 220ms var(--ease-out);
+}
+.ponto-descoberta .anel {
+  position: absolute; inset: 10px; display: grid; place-items: center; border-radius: 50%;
+  background: #fbf9f4; border: 2px solid var(--ink); box-shadow: 0 3px 8px rgb(50 36 12 / 0.28);
+}
+.ponto-descoberta svg { width: 14px; height: 14px; }
+.ponto-descoberta::after {
+  content: ""; position: absolute; inset: 8px; border-radius: 50%; border: 2px solid var(--ink); opacity: 0;
+  animation: pulsoDescoberta 2.4s var(--ease-out) infinite;
+}
+@keyframes pulsoDescoberta { 0% { transform: scale(0.8); opacity: 0.55; } 70%, 100% { transform: scale(1.5); opacity: 0; } }
+.ponto-descoberta.aberto .anel { background: var(--ink); color: #fff; }
+.ponto-descoberta.aberto::after { animation: none; }
+.ponto-descoberta.oculta { opacity: 0; pointer-events: none; }
+@media (hover: hover) { .ponto-descoberta:hover .anel { background: var(--ink); color: #fff; } }
+.balao {
+  position: absolute; z-index: 12; left: 0; top: 0; width: min(300px, calc(100% - 32px)); margin: 0;
+  padding: 14px 14px 10px; background: #fbf9f4; border: 1.5px solid var(--ink); box-shadow: 0 16px 36px rgb(50 36 12 / 0.24);
+  will-change: transform;
+}
+.balao-topo { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.balao .ref-tipo { margin-top: 2px; }
+.balao h3 { margin: 4px 0 0; font-family: var(--display); font-weight: 800; text-transform: uppercase; font-size: 1.375rem; line-height: 1; outline: none; }
+.balao p { margin: 8px 0 0; font-size: 0.875rem; line-height: 1.5; color: var(--ink-soft); }
+.balao .ref-nota { margin-top: 6px; }
+.balao .fechar { width: 40px; height: 40px; margin: -6px -6px 0 0; }
+.balao-acoes { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 6px; }
+@media (max-width: 899px) {
+  /* no celular a maquete é só o topo da tela: o balão fica mais baixo e mais compacto */
+  .balao { width: calc(100% - 24px); padding: 10px 12px 4px; }
+  .balao h3 { font-size: 1.1875rem; }
+  .balao p { margin-top: 6px; font-size: 0.8125rem; line-height: 1.45; }
+  .balao .ref-nota { margin-top: 4px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
@@ -376,6 +485,7 @@ dialog p { margin: 0 0 16px; color: var(--ink-soft); }
        aria-describedby="palco-descricao">
     <canvas id="cena" aria-hidden="true"></canvas>
     <div class="etiquetas" id="etiquetas" aria-hidden="true"></div>
+    <div class="descobertas" id="descobertas" aria-hidden="true"></div>
     <p class="dica-palco" id="dica-palco" hidden>Escolha uma cidade para criar a primeira ilha.</p>
     <div class="status-cena" id="status-cena" role="status">
       <span class="carregando" aria-hidden="true"></span>
@@ -406,6 +516,24 @@ dialog p { margin: 0 0 16px; color: var(--ink-soft); }
     </button>
   </div>
 
+  <!-- Descoberta: um marco da maquete conta uma história curta (o mesmo texto está na ficha da cidade, para teclado e leitor de tela) -->
+  <section class="balao" id="balao" role="dialog" aria-labelledby="balao-titulo" hidden>
+    <div class="balao-topo">
+      <div>
+        <span class="ref-tipo" id="balao-tipo"></span>
+        <h3 id="balao-titulo" tabindex="-1"></h3>
+      </div>
+      <button type="button" class="fechar" id="btn-fechar-balao" aria-label="Fechar descoberta">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <p id="balao-texto"></p>
+    <p class="ref-nota" id="balao-nota"></p>
+    <div class="balao-acoes">
+      <button type="button" class="link-acao" id="btn-balao-cidade"></button>
+    </div>
+  </section>
+
   <!-- ===================== ENTRADA ===================== -->
   <section class="painel" id="painel-intro" aria-labelledby="intro-titulo" hidden>
     <p class="olho">Meu pequeno mundo</p>
@@ -431,6 +559,13 @@ dialog p { margin: 0 0 16px; color: var(--ink-soft); }
       <div class="escolha-acoes">
         <button type="button" class="link-acao" id="btn-trocar">Trocar cidade</button>
         <button type="button" class="link-acao" id="btn-remover">Remover</button>
+      </div>
+      <div class="lembranca" data-lembranca="montar">
+        <label for="lembranca-montar"><span data-texto="lembranca.pergunta"></span> <span class="opcional" data-texto="lembranca.opcional"></span></label>
+        <div class="lembranca-campo">
+          <input id="lembranca-montar" type="text" maxlength="80" autocomplete="off" enterkeyhint="done" spellcheck="true">
+          <span class="contador" aria-hidden="true"></span>
+        </div>
       </div>
     </div>
 
@@ -468,6 +603,14 @@ dialog p { margin: 0 0 16px; color: var(--ink-soft); }
     </div>
     <div class="corpo-mundo" id="corpo-mundo">
       <ul class="lista-lugares" id="lista-lugares" aria-label="Lugares do seu mundo"></ul>
+      <section class="conecta" id="conecta" aria-labelledby="conecta-titulo" hidden>
+        <h3 class="ficha-titulo" id="conecta-titulo" data-texto="conecta.titulo"></h3>
+        <ul class="conecta-lista" id="conecta-lista"></ul>
+      </section>
+      <label class="incluir" id="incluir" hidden>
+        <input type="checkbox" id="incluir-lembrancas" aria-describedby="incluir-nota">
+        <span><span class="incluir-rotulo" data-texto="compartilhar.incluir"></span><span class="nota" id="incluir-nota" data-texto="compartilhar.incluirNota"></span></span>
+      </label>
       <button type="button" class="btn btn-bloco" id="btn-compartilhar">Compartilhar meu mundo</button>
       <div class="linha-acoes">
         <button type="button" class="btn btn-ghost" id="btn-baixar">Baixar imagem</button>
@@ -479,11 +622,12 @@ dialog p { margin: 0 0 16px; color: var(--ink-soft); }
         <button type="button" class="link-acao" id="btn-editar">Editar lugares</button>
         <button type="button" class="link-acao" id="btn-recomecar">Começar de novo</button>
       </div>
+      <p class="aviso-ilustrativo" data-texto="ilustrativo"></p>
     </div>
   </section>
 
   <!-- ===================== CIDADE E CAMISETAS ===================== -->
-  <section class="painel painel-cidade" id="painel-cidade" role="dialog" aria-labelledby="cidade-nome" hidden>
+  <section class="painel painel-cidade ficha" id="painel-cidade" role="dialog" aria-labelledby="cidade-nome" hidden>
     <div class="cidade-topo">
       <ul class="papeis-chips" id="cidade-papeis" aria-label="Papel na sua história"></ul>
       <button type="button" class="fechar" id="btn-fechar-cidade" aria-label="Fechar e voltar ao mundo">
@@ -492,10 +636,35 @@ dialog p { margin: 0 0 16px; color: var(--ink-soft); }
     </div>
     <h2 class="titulo-m cidade-nome" id="cidade-nome" tabindex="-1"></h2>
     <p class="cidade-estado" id="cidade-estado"></p>
+    <p class="ficha-frase" id="cidade-frase" hidden></p>
+    <p class="ficha-resumo" id="cidade-resumo" hidden></p>
+    <p class="ficha-sem-texto" id="cidade-sem-texto" hidden></p>
     <p class="cidade-paisagem" id="cidade-paisagem"></p>
-    <a class="btn btn-bloco" id="cidade-cta" target="_blank" rel="noopener"></a>
+    <section class="ficha-secao" id="cidade-referencias-secao" aria-labelledby="cidade-referencias-titulo" hidden>
+      <h3 class="ficha-titulo" id="cidade-referencias-titulo" data-texto="ficha.referencias"></h3>
+      <ul class="referencias" id="cidade-referencias"></ul>
+    </section>
+    <div class="ficha-cta"><a class="btn btn-bloco" id="cidade-cta" target="_blank" rel="noopener"></a></div>
     <p class="produtos-titulo" id="produtos-titulo">Camisetas deste lugar</p>
     <div id="cidade-produtos" aria-live="polite" aria-busy="false"></div>
+    <div class="lembranca" data-lembranca="ficha">
+      <label for="lembranca-ficha"><span data-texto="lembranca.pergunta"></span> <span class="opcional" data-texto="lembranca.opcional"></span></label>
+      <div class="lembranca-campo">
+        <input id="lembranca-ficha" type="text" maxlength="80" autocomplete="off" enterkeyhint="done" spellcheck="true" aria-describedby="lembranca-ficha-nota">
+        <span class="contador" aria-hidden="true"></span>
+      </div>
+      <p class="nota" id="lembranca-ficha-nota" data-texto="lembranca.nota"></p>
+    </div>
+    <details class="ficha-mais" id="cidade-mais">
+      <summary data-texto="ficha.mais"></summary>
+      <dl class="dados-cidade" id="cidade-dados"></dl>
+    </details>
+    <details class="ficha-fontes" id="cidade-fontes">
+      <summary data-texto="ficha.fontes"></summary>
+      <ol class="fontes-lista" id="cidade-fontes-lista"></ol>
+      <p class="nota" id="cidade-revisao"></p>
+    </details>
+    <p class="aviso-ilustrativo" data-texto="ilustrativo"></p>
     <div class="cidade-nav" id="cidade-nav">
       <button type="button" class="link-acao" id="btn-cidade-ant"></button>
       <button type="button" class="link-acao" id="btn-cidade-prox"></button>
@@ -568,8 +737,8 @@ const TEXTOS = {
   },
   mundo: {
     titulo: (n) => (n === 1 ? 'Um lugar' : n === 2 ? 'Dois lugares' : 'Três lugares'),
-    ver: 'Ver camisetas',
-    verCurto: 'Camisetas',
+    ver: 'Conhecer o lugar e ver as camisetas',
+    verCurto: 'Conhecer o lugar',
     frase: 'Esses lugares fazem parte de mim.',
     copiado: 'Link copiado.',
     copiarFalhou: 'Não deu para copiar. Selecione o endereço na barra do navegador.',
@@ -606,6 +775,44 @@ const TEXTOS = {
           lugares.map((l) => `${l.lugar.n} (${l.papeis.map((p) => TEXTOS.papeis[p].rotulo).join(' e ')})`).join('; ') + '.',
     previa: { origem: 'Origem', presente: 'Presente', coracao: 'Coração' },
   },
+  ficha: {
+    referencias: 'Referências do lugar',
+    verNaMaquete: 'Ver na maquete',
+    mais: 'Mais sobre a cidade',
+    fontes: 'Fontes',
+    semTexto: 'Ainda não temos um texto sobre este lugar. As camisetas e os dados do IBGE estão aqui.',
+    paisagemPerfil: (rotulo) => `Na maquete: ${rotulo.charAt(0).toLowerCase()}${rotulo.slice(1)}. Representação ilustrativa.`,
+    revisao: 'Texto da Use Origens escrito a partir das fontes acima, consultadas em',
+    campos: {
+      gentilico: 'Gentílico', estado: 'Estado e região', regiaoAtual: 'Divisão regional atual', regiaoHistorica: 'Divisão regional de 1990',
+      coordenadas: 'Sede municipal', coordenadasRa: 'Ponto de referência', populacao: 'População', area: 'Área territorial', historia: 'Um pouco de história',
+    },
+  },
+  tiposReferencia: { natureza: 'Natureza', cultura: 'Cultura', patrimonio: 'Patrimônio', tradicao: 'Tradição', paisagem: 'Paisagem' },
+  descoberta: {
+    conhecer: (n) => `Conhecer ${n}`,
+    rotulo: (titulo) => `Descobrir na maquete: ${titulo}`,
+  },
+  lembranca: {
+    pergunta: 'O que esse lugar significa para você?',
+    opcional: '(opcional)',
+    exemplos: { origem: 'Ex.: Onde cresci', presente: 'Ex.: Minha família mora aqui', coracao: 'Ex.: Meu lugar de descanso' },
+    nota: 'Fica só neste navegador. Você escolhe se ela vai para a imagem e o link.',
+    limite: 80,
+  },
+  compartilhar: {
+    incluir: 'Incluir minhas lembranças',
+    incluirNota: 'Será incluída na imagem e no link compartilhados.',
+  },
+  conecta: {
+    titulo: 'O que conecta seu mundo',
+    lugares: (n, ufs) => `${n === 1 ? 'Um lugar' : n === 2 ? 'Dois lugares' : 'Três lugares'} ${ufs.length === 1 ? `em ${ESTADOS[ufs[0]] ?? ufs[0]}` : `em ${ufs.length} estados: ${ufs.join(', ')}`}.`,
+    paisagens: (lista) => `Nas fichas dos lugares: ${lista}.`,
+    distancia: (km) => `Da origem ao presente: aproximadamente ${km.toLocaleString('pt-BR')} km em linha reta.`,
+    distanciaNota: 'Entre as sedes municipais (IBGE). Não é distância por estrada.',
+    mesma: 'Sua origem e seu presente são a mesma cidade.',
+  },
+  ilustrativo: 'Representação ilustrativa dos lugares: posição e tamanho das ilhas e as pontes não representam geografia nem trajetos reais.',
 };
 
 /* ==========================================================================
@@ -621,6 +828,20 @@ const CATALOGO = {
 };
 
 const PAPEIS = ['origem', 'presente', 'coracao'];
+
+/** Contexto das cidades (perfis curados, com fontes). Arquivo próprio, versionado com o protótipo — fica fora da pasta gerada `dados/`. */
+const CONTEXTO = { arquivo: './contexto/perfis-cidades.json' };
+/** Ambientes que um perfil pode declarar, com o rótulo mostrado na tela. */
+const AMBIENTES = { vale: 'vale', litoral: 'litoral', rio: 'rio', campo: 'campo', serra: 'serra', urbano: 'área urbana', floresta: 'floresta', cerrado: 'cerrado' };
+/** Módulos da cena que um perfil pode pedir (a cena ignora qualquer outro nome). */
+const MODULOS = {
+  relevo: ['vale-montes', 'planicie', 'costa-dunas'],
+  agua: ['rio', 'mar', 'costa', 'rio-largo', 'vereda', 'lagoas', 'lagoas-muitas', 'lago'],
+  vegetacao: ['redonda', 'araucaria', 'palmeira', 'buriti', 'mata', 'cerrado', 'arbusto', 'capim', 'junco', 'restinga'],
+  construcoes: ['colonial', 'urbano', 'acoriano'],
+  marcos: ['santuario', 'pico-cruz', 'casarao', 'ponte-urbana', 'dunas', 'baleia'],
+  extras: ['pier', 'barco', 'cerca', 'silo', 'lavoura'],
+};
 
 const REGIOES = {
   sul: { nome: 'Sul', cor: '#4d543d', selo: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAAAXNSR0IArs4c6QAAAQhlWElmTU0AKgAAAAgABwESAAMAAAABAAEAAAEaAAUAAAABAAAAYgEbAAUAAAABAAAAagEoAAMAAAABAAIAAAExAAIAAAA5AAAAcgE7AAIAAAANAAAArIdpAAQAAAABAAAAugAAAAAAAABgAAAAAQAAAGAAAAABQ2FudmEgZG9jPURBRzllZnRfVDdBIHVzZXI9VUFHOVJHYmRSZXcgYnJhbmQ9QkFHOVJQYkF3eUkAAFRvbWF6aSBCcmFuZAAAAAaQAAAHAAAABDAyMTCRAQAHAAAABAECAwCgAAAHAAAABDAxMDCgAQADAAAAAQABAACgAgAEAAAAAQAAAGCgAwAEAAAAAQAAAGAAAAAAbgm44wAAAAlwSFlzAAAOxAAADsQBlSsOGwAABi9pVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IlhNUCBDb3JlIDYuMC4wIj4KICAgPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICAgICAgPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIKICAgICAgICAgICAgeG1sbnM6ZXhpZj0iaHR0cDovL25zLmFkb2JlLmNvbS9leGlmLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOnhtcD0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wLyIKICAgICAgICAgICAgeG1sbnM6dGlmZj0iaHR0cDovL25zLmFkb2JlLmNvbS90aWZmLzEuMC8iCiAgICAgICAgICAgIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyI+CiAgICAgICAgIDxleGlmOkNvbG9yU3BhY2U+NjU1MzU8L2V4aWY6Q29sb3JTcGFjZT4KICAgICAgICAgPGV4aWY6UGl4ZWxYRGltZW5zaW9uPjE5MjwvZXhpZjpQaXhlbFhEaW1lbnNpb24+CiAgICAgICAgIDxleGlmOkV4aWZWZXJzaW9uPjAyMTA8L2V4aWY6RXhpZlZlcnNpb24+CiAgICAgICAgIDxleGlmOkZsYXNoUGl4VmVyc2lvbj4wMTAwPC9leGlmOkZsYXNoUGl4VmVyc2lvbj4KICAgICAgICAgPGV4aWY6UGl4ZWxZRGltZW5zaW9uPjE5MjwvZXhpZjpQaXhlbFlEaW1lbnNpb24+CiAgICAgICAgIDxleGlmOkNvbXBvbmVudHNDb25maWd1cmF0aW9uPgogICAgICAgICAgICA8cmRmOlNlcT4KICAgICAgICAgICAgICAgPHJkZjpsaT4xPC9yZGY6bGk+CiAgICAgICAgICAgICAgIDxyZGY6bGk+MjwvcmRmOmxpPgogICAgICAgICAgICAgICA8cmRmOmxpPjM8L3JkZjpsaT4KICAgICAgICAgICAgICAgPHJkZjpsaT4wPC9yZGY6bGk+CiAgICAgICAgICAgIDwvcmRmOlNlcT4KICAgICAgICAgPC9leGlmOkNvbXBvbmVudHNDb25maWd1cmF0aW9uPgogICAgICAgICA8eG1wOkNyZWF0b3JUb29sPkNhbnZhIGRvYz1EQUc5ZWZ0X1Q3QSB1c2VyPVVBRzlSR2JkUmV3IGJyYW5kPUJBRzlSUGJBd3lJPC94bXA6Q3JlYXRvclRvb2w+CiAgICAgICAgIDx0aWZmOlJlc29sdXRpb25Vbml0PjI8L3RpZmY6UmVzb2x1dGlvblVuaXQ+CiAgICAgICAgIDx0aWZmOk9yaWVudGF0aW9uPjE8L3RpZmY6T3JpZW50YXRpb24+CiAgICAgICAgIDx0aWZmOlhSZXNvbHV0aW9uPjk2PC90aWZmOlhSZXNvbHV0aW9uPgogICAgICAgICA8dGlmZjpZUmVzb2x1dGlvbj45NjwvdGlmZjpZUmVzb2x1dGlvbj4KICAgICAgICAgPGRjOnRpdGxlPgogICAgICAgICAgICA8cmRmOkFsdD4KICAgICAgICAgICAgICAgPHJkZjpsaSB4bWw6bGFuZz0ieC1kZWZhdWx0Ij5Mb2dvIC0gMzwvcmRmOmxpPgogICAgICAgICAgICA8L3JkZjpBbHQ+CiAgICAgICAgIDwvZGM6dGl0bGU+CiAgICAgICAgIDxkYzpjcmVhdG9yPgogICAgICAgICAgICA8cmRmOlNlcT4KICAgICAgICAg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' },
@@ -874,7 +1095,7 @@ function adaptadorCatalogo(base) {
             url: urlSegura(p.url, CATALOGO.hostsLink),
           }))
           .filter((p) => p.nome && p.url);
-        return { url: urlSegura(d.url, CATALOGO.hostsLink), produtos, conectado: true };
+        return { url: urlSegura(d.url, CATALOGO.hostsLink), produtos, conectado: true, ...referenciaIbge(d) };
       })();
       produtosCache.set(id, pedido);
       pedido.catch(() => produtosCache.delete(id));
@@ -907,11 +1128,141 @@ function adaptadorDemonstracao() {
   };
 }
 
+/* ----- números e textos vindos de arquivo: só entram depois de conferidos ----- */
+const limparTexto = (v, max = 600) => (typeof v === 'string' ? v.normalize('NFC').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, max) : '');
+const numeroEntre = (v, min, max) => (typeof v === 'number' && Number.isFinite(v) && v >= min && v <= max ? v : null);
+const COR_VALIDA = /^#[0-9a-f]{6}$/i;
+/** Ponto de referência (sede municipal ou da Região Administrativa) e divisão regional de 2017, do arquivo de cada lugar (IBGE). */
+function referenciaIbge(d) {
+  const lat = numeroEntre(d?.sede?.lat, -34, 6), lon = numeroEntre(d?.sede?.lon, -75, -28);
+  return {
+    sede: lat !== null && lon !== null ? { lat, lon, tipo: d.sede.tipo === 'ra' ? 'ra' : 'sede' } : null,
+    rgi: limparTexto(d?.rgi, 80) || null,
+    rgint: limparTexto(d?.rgint, 80) || null,
+  };
+}
+
+/** Distância geodésica aproximada (fórmula de haversine, raio médio da Terra) entre dois pontos { lat, lon }, em km. */
+function distanciaKm(a, b) {
+  const rad = Math.PI / 180, R = 6371.0088;
+  const h = Math.sin(((b.lat - a.lat) * rad) / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(((b.lon - a.lon) * rad) / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+}
+/** Arredonda para não sugerir uma precisão que a medida em linha reta entre sedes não tem. */
+const arredondarKm = (km) => (km < 20 ? Math.max(1, Math.round(km)) : km < 200 ? Math.round(km / 5) * 5 : Math.round(km / 10) * 10);
+
+/**
+ * CONTEXTO DAS CIDADES — perfis curados (contexto/perfis-cidades.json). Carregado uma vez; uma cidade sem perfil segue com o
+ * cenário regional e os dados do IBGE. Tudo é conferido aqui: textos viram texto puro, módulos da cena só de uma lista fechada,
+ * referência sem fonte não entra, e a cena recebe apenas o perfil visual (nunca o texto).
+ */
+function normalizarPerfil(id, c, fontes) {
+  if (!c || typeof c !== 'object' || c.identidade?.id !== id) return null;
+  const comFonte = (lista) => (Array.isArray(lista) ? lista.filter((f) => typeof f === 'string' && fontes[f]) : []);
+  const ct = c.conteudo ?? {};
+  const referencias = (Array.isArray(ct.referencias) ? ct.referencias : []).slice(0, 3).map((r) => ({
+    id: limparTexto(r?.id, 60),
+    tipo: TEXTOS.tiposReferencia[r?.tipo] ? r.tipo : 'cultura',
+    titulo: limparTexto(r?.titulo, 80),
+    texto: limparTexto(r?.texto, 420),
+    fontes: comFonte(r?.fontes),
+    descoberta: MODULOS.marcos.includes(r?.descoberta?.modulo) ? { modulo: r.descoberta.modulo, nota: limparTexto(r.descoberta.nota, 140) } : null,
+  })).filter((r) => r.id && r.titulo && r.texto && r.fontes.length);
+  const g = c.geografia ?? {};
+  const lat = numeroEntre(g.sede?.lat, -34, 6), lon = numeroEntre(g.sede?.lon, -75, -28);
+  const censo = g.populacao?.censo;
+  const v = c.visual ?? {};
+  const cores = {};
+  for (const [k, valor] of Object.entries(v.cores ?? {})) {
+    if (!['grama', 'areia', 'fundo', 'caminho', 'terra'].includes(k)) continue;
+    if (typeof valor === 'string' && COR_VALIDA.test(valor)) cores[k] = valor;
+    else if (Array.isArray(valor) && valor.length === 2 && valor.every((x) => COR_VALIDA.test(x))) cores[k] = [...valor];
+  }
+  const inteiro = (x, max) => (Number.isInteger(x) && x >= 0 && x <= max ? x : null);
+  const visual = {
+    ambientes: (Array.isArray(v.ambientes) ? v.ambientes : []).filter((a) => AMBIENTES[a]),
+    rotulo: limparTexto(v.rotulo, 90),
+    base: PAISAGENS[v.base] ? v.base : 'interior',
+    cores,
+    relevo: MODULOS.relevo.includes(v.relevo?.modulo) ? { modulo: v.relevo.modulo, altura: numeroEntre(v.relevo.altura, 0.3, 1.6) ?? 1 } : null,
+    agua: MODULOS.agua.includes(v.agua?.modulo) ? { modulo: v.agua.modulo, largura: numeroEntre(v.agua.largura, 0.1, 0.6), direcao: numeroEntre(v.agua.direcao, -3.2, 3.2) } : null,
+    vegetacao: (Array.isArray(v.vegetacao) ? v.vegetacao : []).filter((x) => Array.isArray(x) && MODULOS.vegetacao.includes(x[0]) && inteiro(x[1], 40) !== null).map(([t, q]) => [t, q]),
+    construcoes: {
+      estilo: MODULOS.construcoes.includes(v.construcoes?.estilo) ? v.construcoes.estilo : 'colonial',
+      casas: inteiro(v.construcoes?.casas, 14) ?? 4,
+      predios: inteiro(v.construcoes?.predios, 6) ?? 0,
+    },
+    extras: (Array.isArray(v.extras) ? v.extras : []).filter((x) => MODULOS.extras.includes(x)),
+    marcos: (Array.isArray(v.marcos) ? v.marcos : [])
+      .filter((m) => MODULOS.marcos.includes(m?.modulo) && referencias.some((r) => r.id === m.referencia && r.descoberta?.modulo === m.modulo))
+      .slice(0, 2)
+      .map((m) => ({ modulo: m.modulo, referencia: m.referencia })),
+  };
+  if (!visual.vegetacao.length) visual.vegetacao = null;
+  return {
+    id,
+    cobertura: c.cobertura === 'completo' ? 'completo' : 'parcial',
+    frase: limparTexto(ct.frase, 160),
+    resumo: limparTexto(ct.resumo, 600),
+    fontesResumo: comFonte(ct.fontesResumo),
+    referencias,
+    curiosidades: (Array.isArray(ct.curiosidades) ? ct.curiosidades : []).map((x) => ({ texto: limparTexto(x?.texto, 400), fontes: comFonte(x?.fontes) })).filter((x) => x.texto && x.fontes.length).slice(0, 2),
+    gentilico: ct.gentilico && limparTexto(ct.gentilico.oficial, 60) && comFonte(ct.gentilico.fontes).length
+      ? { oficial: limparTexto(ct.gentilico.oficial, 60), variantes: (ct.gentilico.variantes ?? []).map((x) => limparTexto(x, 60)).filter(Boolean), fontes: comFonte(ct.gentilico.fontes) }
+      : null,
+    sede: lat !== null && lon !== null && comFonte(g.sede.fontes).length ? { lat, lon, fontes: comFonte(g.sede.fontes) } : null,
+    populacao: censo && Number.isInteger(censo.valor) && Number.isInteger(censo.ano) && comFonte(censo.fontes).length ? { valor: censo.valor, ano: censo.ano, tipo: 'censo', fontes: comFonte(censo.fontes) } : null,
+    area: numeroEntre(g.area?.km2, 0.01, 2e6) !== null && Number.isInteger(g.area.ano) && comFonte(g.area.fontes).length ? { km2: g.area.km2, ano: g.area.ano, fontes: comFonte(g.area.fontes) } : null,
+    regioes: g.regioes && comFonte(g.regioes.fontes).length
+      ? Object.fromEntries(['grandeRegiao', 'imediata', 'intermediaria', 'mesorregiao', 'microrregiao'].map((k) => [k, limparTexto(g.regioes[k], 80) || null]).concat([['fontes', comFonte(g.regioes.fontes)]]))
+      : null,
+    visual,
+    revisao: c.revisao ? { em: limparTexto(c.revisao.em, 20) } : null,
+  };
+}
+function adaptadorContexto(arquivo) {
+  let perfis = new Map();
+  let fontes = {};
+  let carga = null;
+  return {
+    carregar() {
+      carga ??= (async () => {
+        const resposta = await fetch(new URL(arquivo, location.href), { cache: 'no-cache' });
+        if (!resposta.ok) throw new Error(`contexto ${resposta.status}`);
+        const d = await resposta.json();
+        if (!d || d.v !== 1 || typeof d.cidades !== 'object' || typeof d.fontes !== 'object') throw new Error('contexto: formato desconhecido');
+        const f = {};
+        for (const [chave, x] of Object.entries(d.fontes)) {
+          const url = urlFonte(x?.url);
+          const titulo = limparTexto(x?.titulo, 200);
+          if (url && titulo) f[chave] = { titulo, publicador: limparTexto(x.publicador, 120), url, referencia: limparTexto(x.referencia, 120), consultadoEm: limparTexto(x.consultadoEm, 20) };
+        }
+        const p = new Map();
+        for (const [id, c] of Object.entries(d.cidades)) {
+          if (!ID_VALIDO.test(id)) continue;
+          const perfil = normalizarPerfil(id, c, f);
+          if (perfil) p.set(id, perfil);
+        }
+        fontes = f;
+        perfis = p;
+      })().catch(() => { perfis = new Map(); }); // sem contexto, o mundo funciona com o cenário regional
+      return carga;
+    },
+    perfil: (id) => perfis.get(id) ?? null,
+    fonte: (chave) => fontes[chave] ?? null,
+    get total() { return perfis.size; },
+  };
+}
+const urlFonte = (valor) => { try { const u = new URL(String(valor)); return u.protocol === 'https:' ? u.href : null; } catch { return null; } };
+const contexto = adaptadorContexto(CONTEXTO.arquivo);
+
 /* ==========================================================================
    4. ESTADO — papéis, passos, persistência local versionada e link do mundo.
    ========================================================================== */
-const ARMAZENAMENTO = { chave: 'useorigens:meu-pequeno-mundo', versao: 1 };
-const LINK = { versao: '1', parametro: 'mundo' };
+// v2: guarda também as lembranças. O formato v1 continua sendo lido (progresso de quem montou o mundo antes).
+const ARMAZENAMENTO = { chave: 'useorigens:meu-pequeno-mundo', versao: 2, aceitas: [1, 2] };
+// O link segue na versão 1: as lembranças entram como parâmetros opcionais (lo, lp, lc), que um leitor antigo simplesmente ignora.
+const LINK = { versao: '1', parametro: 'mundo', lembranca: { origem: 'lo', presente: 'lp', coracao: 'lc' }, maxBruto: 400 };
 
 const estado = {
   modo: 'carregando', // carregando | intro | montar | mundo
@@ -920,7 +1271,27 @@ const estado = {
   cidadeAberta: null, // id do lugar com o painel aberto
   doLink: false, // mundo aberto por link: só passa a ser salvo quando a pessoa mexer nele
   salvarFalhou: false,
+  lembrancas: {}, // id do lugar → texto da pessoa (uma por cidade, mesmo com vários papéis)
+  incluirLembrancas: false, // a pessoa escolheu levar as lembranças para a imagem e o link
+  descobertaAberta: null, // { id, referencia } do marco aberto na maquete
 };
+
+/** Lembrança: texto da pessoa, nunca HTML. Normaliza acentos, tira controles e marcas de direção, junta espaços e corta em 80 caracteres. */
+function limparLembranca(valor) {
+  if (typeof valor !== 'string') return '';
+  const limpo = valor.normalize('NFC').replace(/[\p{Cc}\u200e\u200f\u202a-\u202e\u2066-\u2069\u2028\u2029]/gu, ' ').replace(/\s+/g, ' ').trim();
+  return [...limpo].slice(0, TEXTOS.lembranca.limite).join('').trim();
+}
+/** As lembranças dos lugares que estão no mundo agora (as de lugares que saíram não são guardadas). */
+function lembrancasDoMundo() {
+  const saida = {};
+  for (const p of PAPEIS) {
+    const id = estado.papeis[p];
+    if (id && estado.lembrancas[id]) saida[id] = estado.lembrancas[id];
+  }
+  return saida;
+}
+const temLembranca = () => Object.keys(lembrancasDoMundo()).length > 0;
 
 /** Lugares únicos do mundo, na ordem da história. Uma cidade em dois papéis vira uma ilha só, com os dois papéis. */
 function lugaresUnicos() {
@@ -943,11 +1314,18 @@ function lerSalvo() {
     const bruto = localStorage.getItem(ARMAZENAMENTO.chave);
     if (!bruto) return null;
     const d = JSON.parse(bruto);
-    if (!d || d.v !== ARMAZENAMENTO.versao || typeof d.papeis !== 'object' || d.papeis === null) return null;
+    if (!d || !ARMAZENAMENTO.aceitas.includes(d.v) || typeof d.papeis !== 'object' || d.papeis === null) return null;
     const papeis = {};
     for (const p of PAPEIS) papeis[p] = typeof d.papeis[p] === 'string' && ID_VALIDO.test(d.papeis[p]) ? d.papeis[p] : null;
     const passo = Number.isInteger(d.passo) && d.passo >= 0 && d.passo <= 2 ? d.passo : 0;
-    return { papeis, passo, concluido: d.concluido === true };
+    const lembrancas = {};
+    if (d.v >= 2 && d.lembrancas && typeof d.lembrancas === 'object') {
+      for (const [id, txt] of Object.entries(d.lembrancas)) {
+        const limpo = ID_VALIDO.test(id) ? limparLembranca(txt) : '';
+        if (limpo) lembrancas[id] = limpo;
+      }
+    }
+    return { papeis, passo, concluido: d.concluido === true, lembrancas, incluirLembrancas: d.incluirLembrancas === true };
   } catch {
     return null; // armazenamento bloqueado ou dado corrompido: segue sem ele
   }
@@ -962,7 +1340,10 @@ function salvar() {
     }
     localStorage.setItem(
       ARMAZENAMENTO.chave,
-      JSON.stringify({ v: ARMAZENAMENTO.versao, papeis: estado.papeis, passo: estado.passo, concluido: estado.modo === 'mundo', em: new Date().toISOString() }),
+      JSON.stringify({
+        v: ARMAZENAMENTO.versao, papeis: estado.papeis, passo: estado.passo, concluido: estado.modo === 'mundo',
+        lembrancas: lembrancasDoMundo(), incluirLembrancas: estado.incluirLembrancas, em: new Date().toISOString(),
+      }),
     );
     estado.salvarFalhou = false;
   } catch {
@@ -991,16 +1372,33 @@ function lerLink() {
     else invalidos.push(p);
   }
   if (!PAPEIS.some((p) => papeis[p]) && invalidos.length === 0) return { status: 'vazio' };
-  return { status: 'ok', papeis, invalidos };
+  // lembranças: só as de um papel que veio com lugar válido; texto conferido como qualquer outro (tamanho, controles, 80 caracteres)
+  const lembrancas = {};
+  for (const p of PAPEIS) {
+    const bruto = params.get(LINK.lembranca[p]);
+    if (!bruto || !papeis[p] || bruto.length > LINK.maxBruto) continue;
+    const limpo = limparLembranca(bruto);
+    if (limpo && !lembrancas[papeis[p]]) lembrancas[papeis[p]] = limpo;
+  }
+  return { status: 'ok', papeis, invalidos, lembrancas };
 }
 
 function urlDoMundo({ comMundo = true } = {}) {
   const url = new URL(location.href);
-  for (const k of [LINK.parametro, ...PAPEIS]) url.searchParams.delete(k);
+  for (const k of [LINK.parametro, ...PAPEIS, ...Object.values(LINK.lembranca)]) url.searchParams.delete(k);
   url.hash = '';
   if (!comMundo || !temLugar()) return url.toString();
   url.searchParams.set(LINK.parametro, LINK.versao);
   for (const p of PAPEIS) if (estado.papeis[p]) url.searchParams.set(p, estado.papeis[p]);
+  if (estado.incluirLembrancas) {
+    const ja = new Set(); // a mesma cidade em dois papéis leva a lembrança uma vez só, no primeiro papel
+    for (const p of PAPEIS) {
+      const id = estado.papeis[p];
+      if (!id || ja.has(id) || !estado.lembrancas[id]) continue;
+      ja.add(id);
+      url.searchParams.set(LINK.lembranca[p], estado.lembrancas[id]);
+    }
+  }
   return url.toString();
 }
 
@@ -1115,22 +1513,27 @@ function criarCena(T, canvas, opcoes) {
     material.customProgramCacheKey = () => chave;
     return material;
   }
-  const agua = new THREE.MeshStandardMaterial({ color: 0x78adba, roughness: 0.22, metalness: 0, transparent: true, opacity: 0.82 });
-  agua.onBeforeCompile = (shader) => {
-    shader.uniforms.uTempo = uTempo;
-    shader.vertexShader = 'uniform float uTempo;\n' + shader.vertexShader
-      .replace(
-        '#include <beginnormal_vertex>',
-        `float ondaA = position.x * 2.3 + uTempo * 1.1;
-        float ondaB = position.z * 2.9 - uTempo * 0.8;
-        vec3 objectNormal = normalize( vec3( -cos( ondaA ) * 0.035, 1.0, -cos( ondaB ) * 0.03 ) );
-        #ifdef USE_TANGENT
-          vec3 objectTangent = vec3( tangent.xyz );
-        #endif`,
-      )
-      .replace('#include <begin_vertex>', 'vec3 transformed = vec3( position );\ntransformed.y += sin( ondaA ) * 0.011 + sin( ondaB ) * 0.009;');
-  };
-  agua.customProgramCacheKey = () => 'mpm-agua';
+  // Água: rios e lagos ondulam pouco; o mar aberto tem cor mais funda e ondas maiores (e espuma na praia, ver criarIlha).
+  function materialAgua(cor, opacidade, amp, chave) {
+    const m = new THREE.MeshStandardMaterial({ color: cor, roughness: 0.22, metalness: 0, transparent: true, opacity: opacidade });
+    m.onBeforeCompile = (shader) => {
+      shader.uniforms.uTempo = uTempo;
+      shader.vertexShader = 'uniform float uTempo;\n' + shader.vertexShader
+        .replace(
+          '#include <beginnormal_vertex>',
+          `float ondaA = position.x * 2.3 + uTempo * 1.1;
+          float ondaB = position.z * 2.9 - uTempo * 0.8;
+          vec3 objectNormal = normalize( vec3( -cos( ondaA ) * ${(amp * 3.2).toFixed(4)}, 1.0, -cos( ondaB ) * ${(amp * 2.7).toFixed(4)} ) );
+          #ifdef USE_TANGENT
+            vec3 objectTangent = vec3( tangent.xyz );
+          #endif`,
+        )
+        .replace('#include <begin_vertex>', `vec3 transformed = vec3( position );\ntransformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82).toFixed(4)};`);
+    };
+    m.customProgramCacheKey = () => chave;
+    return m;
+  }
+  const agua = materialAgua(0x78adba, 0.82, 0.011, 'mpm-agua');
 
   const M = {
     terreno: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.97, metalness: 0 }),
@@ -1141,7 +1544,11 @@ function criarCena(T, canvas, opcoes) {
     madeira: new THREE.MeshStandardMaterial({ color: 0x8a6949, roughness: 0.95, flatShading: true }),
     corda: new THREE.MeshStandardMaterial({ color: 0x5d4a37, roughness: 1 }),
     barco: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, flatShading: true }),
+    marco: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.78, metalness: 0, flatShading: true }),
     agua,
+    aguaMar: materialAgua(0x4f93a8, 0.86, 0.02, 'mpm-agua-mar'),
+    espuma: new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide }),
+    oculto: new THREE.MeshBasicMaterial({ visible: false }), // só para o toque: área maior que o desenho (dunas, cruz, baleia)
   };
 
   // ---------- Geometrias compartilhadas (modeladas em unidades da maquete, base em y = 0) ----------
@@ -1281,7 +1688,95 @@ function criarCena(T, canvas, opcoes) {
   G.placaQuadro = new THREE.BoxGeometry(1.34, 0.54, 0.05);
   G.placaFace = new THREE.PlaneGeometry(1.26, 0.465);
 
+  G.restinga = juntar([
+    pintar(ico(0.12).scale(1.45, 0.5, 1.1).translate(0, 0.045, 0), '#8e9a58'),
+    pintar(ico(0.085).scale(1.2, 0.6, 1).translate(0.13, 0.04, 0.05), '#a4aa66'),
+    pintar(ico(0.07).scale(1, 0.7, 1).translate(-0.11, 0.035, -0.06), '#7c8a4e'),
+  ]);
+  G.alvoEsfera = new THREE.SphereGeometry(1, 10, 8);
+  G.alvoCilindro = new THREE.CylinderGeometry(1, 1, 1, 18);
+
+  // ---------- Marcos: formas simplificadas inspiradas em lugares reais — nunca reproduções ----------
+  // Cada uma é modelada com a frente em +z (a ilha gira o marco para a câmera inicial) e a base em y = 0.
+  const CONSTRUTORES_MARCO = {
+    santuario() {
+      // planta central, laterais côncavas que sobem até a torre com a cruz (a prefeitura descreve "duas mãos em oração")
+      const H = 0.92, RB = 0.44;
+      const curva = (escala, t) => 0.014 + RB * escala * Math.pow(1 - t, 1.85);
+      const perfil = [];
+      for (let k = 0; k <= 14; k++) { const t = k / 14; perfil.push(new THREE.Vector2(curva(1, t), t * H)); }
+      const partes = [pintar(new THREE.LatheGeometry(perfil, 20), '#36587f')]; // vidro
+      for (let q = 0; q < 4; q++) {
+        const forma = new THREE.Shape();
+        forma.moveTo(0.012, H * 0.985);
+        for (let k = 1; k <= 14; k++) { const t = 1 - k / 14; forma.lineTo(curva(1.2, t), t * H * 0.985); }
+        forma.lineTo(curva(0.84, 0), 0);
+        for (let k = 1; k <= 14; k++) { const t = k / 14; forma.lineTo(curva(0.84, t), t * H * 0.97); }
+        const nervura = new THREE.ExtrudeGeometry(forma, { depth: 0.042, bevelEnabled: false, curveSegments: 1 });
+        partes.push(pintar(nervura.translate(0, 0, -0.021).rotateY(Math.PI / 4 + (q * Math.PI) / 2), '#f4f1ea'));
+      }
+      partes.push(
+        pintar(new THREE.BoxGeometry(0.05, 0.3, 0.05).translate(0, H + 0.06, 0), '#f4f1ea'),
+        pintar(new THREE.BoxGeometry(0.022, 0.15, 0.022).translate(0, H + 0.27, 0), '#f4f1ea'),
+        pintar(new THREE.BoxGeometry(0.1, 0.022, 0.022).translate(0, H + 0.3, 0), '#f4f1ea'),
+        pintar(new THREE.CylinderGeometry(RB * 1.34, RB * 1.4, 0.05, 28).translate(0, 0.025, 0), '#dad4c6'),
+        pintar(new THREE.BoxGeometry(0.13, 0.15, 0.03).translate(0, 0.125, 0.345), '#23364d'),
+      );
+      return juntar(partes);
+    },
+    casarao() {
+      // sobrado eclético de três pavimentos (porão alto), fachada simétrica, platibanda com frontão e escadaria de acessos laterais
+      const W = 0.7, D = 0.36, F = D / 2;
+      const partes = [];
+      const caixa = (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+      caixa(W, 0.11, D, 0, 0, 0, '#d9aaa0');
+      caixa(W + 0.02, 0.016, D + 0.02, 0, 0.11, 0, '#f7f2ea');
+      caixa(W, 0.15, D, 0, 0.126, 0, '#f2e8d8');
+      caixa(W + 0.02, 0.016, D + 0.02, 0, 0.276, 0, '#f7f2ea');
+      caixa(W, 0.15, D, 0, 0.292, 0, '#f2e8d8');
+      caixa(W + 0.04, 0.024, D + 0.04, 0, 0.442, 0, '#f7f2ea');
+      caixa(W, 0.055, D, 0, 0.466, 0, '#eadfce');
+      const frontao = new THREE.Shape();
+      frontao.moveTo(-0.15, 0); frontao.lineTo(0.15, 0); frontao.lineTo(0, 0.09); frontao.closePath();
+      partes.push(pintar(new THREE.ExtrudeGeometry(frontao, { depth: 0.035, bevelEnabled: false }).translate(0, 0.521, F - 0.035), '#f7f2ea'));
+      for (let k = 0; k < 7; k++) {
+        const x = -W / 2 + 0.065 + (k * (W - 0.13)) / 6;
+        caixa(0.045, k === 3 ? 0.12 : 0.09, 0.012, x, k === 3 ? 0.126 : 0.155, F + 0.004, k === 3 ? '#5b4636' : '#43474f');
+        caixa(0.045, 0.09, 0.012, x, 0.322, F + 0.004, '#43474f');
+        if (k !== 3) caixa(0.04, 0.034, 0.012, x, 0.04, F + 0.004, '#8b6a62');
+      }
+      for (const lado of [-1, 1]) for (const y of [0.155, 0.322]) for (const z of [-0.08, 0.08]) caixa(0.012, 0.09, 0.045, lado * (W / 2 + 0.004), y, z, '#43474f');
+      caixa(0.14, 0.016, 0.075, 0, 0.11, F + 0.04, '#e6dccc');
+      for (const lado of [-1, 1]) partes.push(pintar(new THREE.BoxGeometry(0.17, 0.02, 0.062).rotateZ(-lado * 0.62).translate(lado * 0.14, 0.062, F + 0.042), '#e6dccc'));
+      return juntar(partes);
+    },
+    cruz() {
+      return juntar([
+        pintar(new THREE.BoxGeometry(0.03, 0.27, 0.03).translate(0, 0.135, 0), '#f4f1ea'),
+        pintar(new THREE.BoxGeometry(0.14, 0.03, 0.03).translate(0, 0.195, 0), '#f4f1ea'),
+      ]);
+    },
+    baleiaCorpo() {
+      // dorso da baleia-franca (sem nadadeira dorsal) com as calosidades claras perto da cabeça
+      return juntar([
+        pintar(new THREE.SphereGeometry(0.2, 12, 8).scale(1.75, 0.48, 0.82), '#45515a'),
+        pintar(ico(0.028).translate(0.31, 0.07, 0.035), '#dcd8cf'),
+        pintar(ico(0.022).translate(0.27, 0.08, -0.04), '#dcd8cf'),
+      ]);
+    },
+    baleiaCauda() {
+      const lobo = (s) => {
+        const f = new THREE.Shape();
+        f.moveTo(0, 0); f.quadraticCurveTo(s * 0.07, 0.035, s * 0.18, 0.1); f.lineTo(s * 0.1, 0.03); f.lineTo(0, 0.012); f.closePath();
+        return pintar(new THREE.ExtrudeGeometry(f, { depth: 0.016, bevelEnabled: false, curveSegments: 3 }).translate(0, 0.2, -0.008), '#3d4850');
+      };
+      return juntar([pintar(new THREE.CylinderGeometry(0.022, 0.06, 0.22, 7).translate(0, 0.1, 0), '#45515a'), lobo(1), lobo(-1)]);
+    },
+  };
+  const geoMarco = (nome) => (G[`marco:${nome}`] ??= CONSTRUTORES_MARCO[nome]());
+
   const TIPOS = {
+    restinga: { malhas: [['restinga', 'veg']], raio: 0.16 },
     redonda: { malhas: [['redonda', 'veg']], raio: 0.24 },
     araucaria: { malhas: [['araucaria', 'veg']], raio: 0.27 },
     palmeira: { malhas: [['palmeira', 'veg']], raio: 0.2 },
@@ -1356,10 +1851,106 @@ function criarCena(T, canvas, opcoes) {
   let ordem = [];
   const alvosToque = [];
 
+  // Ângulo (como Math.atan2(z, x)) da direção da câmera inicial: a "frente" de toda ilha, para onde os marcos se voltam.
+  const ANG_CAMERA = Math.atan2(Math.cos(AZIMUTE), Math.sin(AZIMUTE));
+  const difAng = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
+  // Relevo base de cada módulo de perfil (o resto do relevo vem dos picos, dunas e plataformas montados em criarIlha).
+  const AJUSTE_RELEVO = {
+    'vale-montes': { base: 0.13, amp: 0.1, freq: 1.0, colina: 0 },
+    planicie: { base: 0.11, amp: 0.05, freq: 0.8, colina: 0.04 },
+    'costa-dunas': { base: 0.12, amp: 0.08, freq: 0.9, colina: 0 },
+  };
+
+  /** Monta um marco na ilha. Devolve o objeto, o que responde ao toque, a âncora do ponto de descoberta e, se houver, animação e descarte. */
+  function construirMarco(m, ctx) {
+    const { amostra, rio, dirCam, rnd } = ctx;
+    const voltado = Math.atan2(dirCam.x, dirCam.z); // gira o +z local do marco para a câmera inicial
+    const grupoM = new THREE.Group();
+    const ancora = new THREE.Object3D();
+    grupoM.add(ancora);
+    const malha = (geo) => { const x = new THREE.Mesh(geo, M.marco); x.castShadow = true; x.receiveShadow = true; return x; };
+    const alvoInvisivel = (geo, escala, x, y, z) => { const a = new THREE.Mesh(geo, M.oculto); a.scale.set(...escala); a.position.set(x, y, z); return a; };
+    if (m.modulo === 'santuario' || m.modulo === 'casarao') {
+      grupoM.position.set(m.x, amostra(m.x, m.z).h - 0.006, m.z);
+      grupoM.rotation.y = voltado;
+      const corpo = malha(geoMarco(m.modulo));
+      grupoM.add(corpo);
+      ancora.position.set(0, m.modulo === 'santuario' ? 1.48 : 0.88, 0);
+      return { objeto: grupoM, alvos: [corpo], ancora };
+    }
+    if (m.modulo === 'pico-cruz') {
+      grupoM.position.set(m.x, amostra(m.x, m.z).h - 0.03, m.z);
+      grupoM.rotation.y = voltado;
+      const cruz = malha(geoMarco('cruz'));
+      cruz.scale.setScalar(1.4);
+      const alvo = alvoInvisivel(G.alvoEsfera, [0.46, 0.46, 0.46], 0, 0.12, 0);
+      grupoM.add(cruz, alvo);
+      ancora.position.set(0, 0.66, 0);
+      return { objeto: grupoM, alvos: [cruz, alvo], ancora };
+    }
+    if (m.modulo === 'ponte-urbana' && rio) {
+      const comp = rio.larg * 2.7 + 0.34;
+      const partes = [pintar(new THREE.BoxGeometry(comp, 0.04, 0.27), '#cbc5b8')];
+      for (const lado of [-1, 1]) {
+        partes.push(pintar(new THREE.BoxGeometry(comp, 0.014, 0.014).translate(0, 0.075, lado * 0.125), '#8d8f8c'));
+        for (let k = 0; k <= 8; k++) partes.push(pintar(new THREE.BoxGeometry(0.012, 0.06, 0.012).translate(-comp / 2 + (k * comp) / 8, 0.045, lado * 0.125), '#8d8f8c'));
+      }
+      for (const px of [-comp * 0.22, comp * 0.22]) partes.push(pintar(new THREE.BoxGeometry(0.06, 0.3, 0.2).translate(px, -0.15, 0), '#b9b3a6'));
+      const geo = juntar(partes);
+      const ponte = malha(geo);
+      const pontas = [-1, 1].map((k) => amostra(m.x + rio.v.x * k * comp * 0.5, m.z + rio.v.z * k * comp * 0.5).h);
+      grupoM.position.set(m.x, Math.max(0.1, ...pontas) + 0.004, m.z);
+      grupoM.rotation.y = -Math.atan2(rio.v.z, rio.v.x); // o comprimento (x local) atravessa o rio
+      grupoM.add(ponte);
+      ancora.position.set(0, 0.44, 0);
+      return { objeto: grupoM, alvos: [ponte], ancora, descartar: () => geo.dispose() };
+    }
+    if (m.modulo === 'dunas') {
+      const alvo = alvoInvisivel(G.alvoCilindro, [m.raioCampo, 0.6, m.raioCampo], m.x, 0.15, m.z);
+      grupoM.add(alvo);
+      ancora.position.set(m.topo.x, amostra(m.topo.x, m.topo.z).h + 0.46, m.topo.z);
+      return { objeto: grupoM, alvos: [alvo], ancora };
+    }
+    if (m.modulo === 'baleia') {
+      grupoM.position.set(m.x, NIVEL, m.z);
+      grupoM.rotation.y = voltado + 1.35;
+      const corpo = malha(geoMarco('baleiaCorpo'));
+      corpo.position.y = -0.05;
+      const cauda = new THREE.Group();
+      cauda.position.set(-0.5, -0.03, 0);
+      const caudaM = malha(geoMarco('baleiaCauda'));
+      cauda.add(caudaM);
+      const alvo = alvoInvisivel(G.alvoEsfera, [0.48, 0.36, 0.48], -0.22, 0.05, 0);
+      grupoM.add(corpo, cauda, alvo);
+      ancora.position.set(-0.22, 0.64, 0);
+      const fase = rnd() * TAU;
+      const animar = (t) => {
+        grupoM.position.y = NIVEL + Math.sin(t * 0.8 + fase) * 0.018;
+        cauda.rotation.z = 0.1 + Math.sin(t * 1.05 + fase) * 0.16;
+      };
+      animar(0);
+      return { objeto: grupoM, alvos: [corpo, caudaM, alvo], ancora, animar };
+    }
+    return null;
+  }
+
   function criarIlha(info) {
     const rnd = semente(hash32(info.id));
-    const tpl = PAISAGENS[info.paisagem.chave] ?? PAISAGENS.interior;
-    const tipoAgua = info.paisagem.agua;
+    const rec = info.receita;
+    const paisagemBase = PAISAGENS[rec.base] ?? PAISAGENS.interior;
+    // Com perfil, a receita sobrepõe à paisagem base cores, relevo, água, vegetação, construções e marcos.
+    // Sem perfil, é a paisagem da curadoria e o gerador segue exatamente o caminho anterior (o mesmo mundo para os mesmos IDs).
+    const tpl = rec.perfil
+      ? {
+          ...paisagemBase, cores: { ...paisagemBase.cores, ...rec.cores }, relevo: { ...paisagemBase.relevo, ...(AJUSTE_RELEVO[rec.relevo?.modulo] ?? {}) },
+          vegetacao: rec.vegetacao ?? paisagemBase.vegetacao, casas: rec.construcoes?.casas ?? paisagemBase.casas, palafitas: 0, extras: rec.extras ?? [],
+        }
+      : paisagemBase;
+    const modAgua = rec.agua?.modulo ?? null;
+    const tipoAgua = modAgua === 'mar' ? 'costa' : modAgua;
+    const marAberto = modAgua === 'mar';
+    const angCam = ANG_CAMERA;
+    const dirCam = { x: Math.cos(angCam), z: Math.sin(angCam) };
     const R = RAIO_BASE * (info.capital ? 1.08 : 1) * (0.95 + rnd() * 0.08);
     const harm = [[2, 0.03 + rnd() * 0.05, rnd() * TAU], [3, 0.02 + rnd() * 0.04, rnd() * TAU], [5, 0.01 + rnd() * 0.018, rnd() * TAU]];
     const contorno = (th) => R * (1 + harm.reduce((s, [k, a, f]) => s + a * Math.sin(k * th + f), 0));
@@ -1373,11 +1964,14 @@ function criarCena(T, canvas, opcoes) {
     const colAng = rnd() * TAU, colDist = R * (0.15 + rnd() * 0.3), colS = R * (0.32 + rnd() * 0.15);
     const colX = Math.cos(colAng) * colDist, colZ = Math.sin(colAng) * colDist;
     const chapAng = rnd() * TAU, chapOff = 0.05 + rnd() * 0.2;
-    const aguaAng = rnd() * TAU;
+    let aguaAng = rnd() * TAU;
+    if (tipoAgua === 'costa' && rec.agua?.direcao != null) aguaAng = angCam + rec.agua.direcao; // o perfil escolhe de que lado fica o mar
     const aguaDir = { x: Math.cos(aguaAng), z: Math.sin(aguaAng) };
     const rio = tipoAgua === 'rio' || tipoAgua === 'rio-largo' || tipoAgua === 'vereda'
       ? { ang: rnd() * Math.PI, off: (rnd() - 0.5) * R * 0.5, amp: R * (0.08 + rnd() * 0.1), freq: 1.2 + rnd() * 0.8, fase: rnd() * TAU, larg: tipoAgua === 'rio-largo' ? 0.5 : tipoAgua === 'vereda' ? 0.17 : 0.3 }
       : null;
+    if (rio && rec.agua?.direcao != null) Object.assign(rio, { ang: angCam + Math.PI / 2 + rec.agua.direcao, off: 0, amp: R * 0.06, freq: 1.1 }); // atravessa a ilha diante da câmera
+    if (rio && rec.agua?.largura) rio.larg = rec.agua.largura;
     if (rio) { rio.u = { x: Math.cos(rio.ang), z: Math.sin(rio.ang) }; rio.v = { x: -rio.u.z, z: rio.u.x }; }
     const lagoas = [];
     if (tipoAgua === 'lagoas' || tipoAgua === 'lagoas-muitas' || tipoAgua === 'lago') {
@@ -1389,23 +1983,139 @@ function criarCena(T, canvas, opcoes) {
     }
     const temAgua = !!tipoAgua;
 
-    function amostra(x, z) {
-      const r = Math.hypot(x, z), th = Math.atan2(z, x);
-      const rho = r / contorno(th);
+    // --- módulos de relevo do perfil (semente própria: não muda a sequência das cidades sem perfil) ---
+    const rm = semente(hash32(`${info.id}:modulos`));
+    const modRelevo = rec.perfil ? rec.relevo?.modulo ?? null : null;
+    const picos = [];
+    let dunas = null;
+    if (modRelevo === 'vale-montes') {
+      // montes no fundo (do outro lado da câmera) e o vale aberto na frente
+      const alt = rec.relevo.altura ?? 1;
+      for (const [da, d, k] of [[-0.8, 0.62, 0.68], [0.06, 0.6, 1], [0.84, 0.64, 0.74]]) {
+        const a = angCam + Math.PI + da + (rm() - 0.5) * 0.1;
+        picos.push({ x: Math.cos(a) * d * R, z: Math.sin(a) * d * R, h: alt * k, s: R * (0.25 + rm() * 0.05) });
+      }
+    }
+    if (modRelevo === 'costa-dunas') {
+      // campo de dunas junto à praia, do lado que a câmera vê, com uma lagoa entre elas; um morro verde ao fundo
+      const lat = { x: -aguaDir.z, z: aguaDir.x };
+      const lado = Math.sign(lat.x * dirCam.x + lat.z * dirCam.z) || 1;
+      const centro = { x: lat.x * lado * R * 0.24 - aguaDir.x * R * 0.1, z: lat.z * lado * R * 0.24 - aguaDir.z * R * 0.1 };
+      const montes = [];
+      // duas fileiras de cristas paralelas à costa, a de trás mais alta
+      for (const [fileira, recuo, alto] of [[0, -0.02, 0.3], [1, -0.2, 0.42]]) {
+        for (let k = 0; k < 5; k++) {
+          const t = ((k + fileira * 0.5) / 4 - 0.55) * 0.9 * R, v = (recuo + (rm() - 0.5) * 0.05) * R;
+          const x = centro.x + lat.x * t + aguaDir.x * v, z = centro.z + lat.z * t + aguaDir.z * v;
+          if (Math.hypot(x, z) > R * 0.78) continue;
+          montes.push({ x, z, h: alto + rm() * 0.14, su: R * (0.085 + rm() * 0.035), sv: R * (0.05 + rm() * 0.02) });
+        }
+      }
+      dunas = { cx: centro.x, cz: centro.z, raioCampo: R * 0.42, montes, lat, lagoa: { x: centro.x - aguaDir.x * R * 0.1, z: centro.z - aguaDir.z * R * 0.1, r: R * 0.075 } };
+      const a = angCam + Math.PI - 0.35;
+      picos.push({ x: Math.cos(a) * R * 0.52, z: Math.sin(a) * R * 0.52, h: 0.6, s: R * 0.3 });
+    }
+    function alturaDuna(x, z) {
+      let h = 0;
+      for (const m of dunas.montes) {
+        const dx = x - m.x, dz = z - m.z;
+        const u = dx * dunas.lat.x + dz * dunas.lat.z, v = dx * aguaDir.x + dz * aguaDir.z;
+        h = Math.max(h, m.h * Math.exp(-((u * u) / (2 * m.su * m.su) + (v * v) / (2 * m.sv * m.sv))));
+      }
+      const l = dunas.lagoa;
+      return h - 0.38 * Math.exp(-((x - l.x) ** 2 + (z - l.z) ** 2) / (2 * l.r * l.r));
+    }
+    /** Altura do chão antes da água e das plataformas. */
+    function seco(x, z) {
       let h = tpl.relevo.base + ruido(x, z) * tpl.relevo.amp * 0.5 + tpl.relevo.amp * 0.15;
       h += tpl.relevo.colina * Math.exp(-((x - colX) ** 2 + (z - colZ) ** 2) / (2 * colS * colS));
       if (tpl.relevo.chapada) h += tpl.relevo.chapada * suave(-0.03, 0.05, (x * Math.cos(chapAng) + z * Math.sin(chapAng)) / R - chapOff);
+      let montanha = 0;
+      for (const p of picos) montanha += p.h * Math.exp(-((x - p.x) ** 2 + (z - p.z) ** 2) / (2 * p.s * p.s));
+      if (modRelevo === 'vale-montes') montanha += (rec.relevo.altura ?? 1) * 0.2 * suave(0.1, 0.85, -(x * dirCam.x + z * dirCam.z) / R);
+      const duna = dunas ? alturaDuna(x, z) : 0;
+      return { h: h + montanha + duna, montanha, duna: Math.max(0, duna) };
+    }
+    const plataformas = []; // chão aplainado sob o santuário e o casarão
+    function amostra(x, z) {
+      const r = Math.hypot(x, z), th = Math.atan2(z, x);
+      const rho = r / contorno(th);
+      const sc = seco(x, z);
+      let h = sc.h, plano = 0;
+      for (const p of plataformas) {
+        const t = 1 - suave(p.r * 0.7, p.r * 1.35, Math.hypot(x - p.x, z - p.z));
+        if (t > 0) { h = misturar(h, p.h, t); plano = Math.max(plano, t); }
+      }
       let molhado = 0;
       if (tipoAgua === 'costa') molhado = Math.max(molhado, suave(0.1, 0.4, (x * aguaDir.x + z * aguaDir.z) / R));
       if (rio) {
         const s = x * rio.u.x + z * rio.u.z;
         const lat = x * rio.v.x + z * rio.v.z - (rio.off + rio.amp * Math.sin(s * rio.freq + rio.fase));
-        molhado = Math.max(molhado, 1 - suave(rio.larg * 0.55, rio.larg * 1.25, Math.abs(lat)));
+        molhado = Math.max(molhado, (1 - suave(rio.larg * 0.55, rio.larg * 1.25, Math.abs(lat))) * (1 - suave(0.18, 0.5, sc.montanha)));
       }
       for (const l of lagoas) molhado = Math.max(molhado, 1 - suave(l.r * 0.5, l.r * 1.1, Math.hypot(x - l.x, z - l.z)));
+      molhado *= 1 - plano;
       h = misturar(h, FUNDO, molhado);
       if (h > 0) h -= suave(0.86, 1.0, rho) * Math.min(0.06, h * 0.3);
-      return { h, molhado, rho };
+      return { h, molhado, rho, duna: sc.duna, montanha: sc.montanha };
+    }
+
+    // --- marcos do perfil: onde fica cada um (antes do terreno, porque o santuário e o casarão aplainam o chão) ---
+    const marcos = [];
+    const caminhosFixos = []; // escadaria do santuário, ruas da cidade
+    const secoEm = (x, z, raio) => [[0, 0], [raio, 0], [-raio, 0], [0, raio], [0, -raio]].every(([dx, dz]) => {
+      const a = amostra(x + dx, z + dz);
+      return a.h > 0.06 && a.molhado < 0.05 && a.rho < 0.82;
+    });
+    for (const m of rec.perfil ? rec.marcos ?? [] : []) {
+      if (m.modulo === 'santuario') {
+        const a = angCam - 0.62, d = R * 0.24;
+        const x = Math.cos(a) * d, z = Math.sin(a) * d;
+        plataformas.push({ x, z, r: 0.58, h: Math.max(seco(x, z).h, 0.16) });
+        marcos.push({ ...m, x, z, raio: 0.62 });
+        caminhosFixos.push([{ x: x + dirCam.x * 0.5, z: z + dirCam.z * 0.5 }, { x: x + dirCam.x * 1.55, z: z + dirCam.z * 1.55 }]);
+      } else if (m.modulo === 'casarao') {
+        // perto do centro e à direita da placa na visão inicial; se o rio estiver lá, procura em volta, na outra margem ou mais longe
+        let lugar = null;
+        for (const raio of [0.48, 0.58, 0.36, 0.66]) {
+          for (let k = 0; k < 23 && !lugar; k++) {
+            const a = angCam - 0.3 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.27, d = R * raio;
+            if (secoEm(Math.cos(a) * d, Math.sin(a) * d, 0.36)) lugar = { x: Math.cos(a) * d, z: Math.sin(a) * d };
+          }
+          if (lugar) break;
+        }
+        if (!lugar) continue;
+        plataformas.push({ ...lugar, r: 0.5, h: Math.max(seco(lugar.x, lugar.z).h, 0.1) });
+        marcos.push({ ...m, ...lugar, raio: 0.5 });
+      } else if (m.modulo === 'pico-cruz' && picos.length) {
+        const p = picos.reduce((a, b) => (b.h > a.h ? b : a));
+        marcos.push({ ...m, x: p.x, z: p.z, raio: 0.25, noPico: true });
+      } else if (m.modulo === 'ponte-urbana' && rio) {
+        // o trecho do rio mais perto de um ponto à frente e à direita (a placa fica à esquerda: não tapa a ponte)
+        const alvo = { x: Math.cos(angCam - 0.75) * R * 0.32, z: Math.sin(angCam - 0.75) * R * 0.32 };
+        let melhor = null;
+        for (let sP = -R * 0.6; sP <= R * 0.6; sP += R * 0.04) {
+          const lat = rio.off + rio.amp * Math.sin(sP * rio.freq + rio.fase);
+          const x = rio.u.x * sP + rio.v.x * lat, z = rio.u.z * sP + rio.v.z * lat;
+          if (Math.hypot(x, z) > R * 0.62) continue;
+          const nota = -Math.hypot(x - alvo.x, z - alvo.z);
+          if (!melhor || nota > melhor.nota) melhor = { x, z, nota };
+        }
+        marcos.push({ ...m, x: melhor.x, z: melhor.z, raio: 0.32, naAgua: true });
+      } else if (m.modulo === 'dunas' && dunas?.montes.length) {
+        // o ponto de descoberta fica na duna mais voltada para a câmera (a mais alta pode estar escondida atrás das outras)
+        const topo = dunas.montes.reduce((a, b) => (b.x * dirCam.x + b.z * dirCam.z > a.x * dirCam.x + a.z * dirCam.z ? b : a));
+        marcos.push({ ...m, x: dunas.cx, z: dunas.cz, raio: 0, terreno: true, topo, raioCampo: dunas.raioCampo });
+      } else if (m.modulo === 'baleia' && marAberto) {
+        const a0 = aguaAng + difAng(angCam, aguaAng) * 0.45;
+        let lugar = null;
+        for (let k = 0; k < 24 && !lugar; k++) {
+          const a = a0 + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.1, d = R * (0.72 - (k % 3) * 0.05);
+          const x = Math.cos(a) * d, z = Math.sin(a) * d, sa = amostra(x, z);
+          if (sa.h < -0.2 && sa.rho < 0.84) lugar = { x, z };
+        }
+        if (lugar) marcos.push({ ...m, ...lugar, raio: 0.32, naAgua: true });
+      }
     }
 
     // --- topo (grade polar) ---
@@ -1417,6 +2127,7 @@ function criarCena(T, canvas, opcoes) {
     const cores = {
       grama0: corDe(tpl.cores.grama[0]), grama1: corDe(tpl.cores.grama[1]), areia: corDe(tpl.cores.areia), fundo: corDe(tpl.cores.fundo),
       caminho: corDe(tpl.cores.caminho), terra: corDe(tpl.cores.terra ?? tpl.cores.estratos[1]), rocha: corDe('#8d877a'),
+      areiaSombra: corDe('#c7ad7c'),
     };
     const lavouras = [];
     if (tpl.extras.includes('lavoura')) {
@@ -1429,7 +2140,8 @@ function criarCena(T, canvas, opcoes) {
         k++;
       }
     }
-    function corTopo(x, z, h, saida) {
+    function corTopo(x, z, a, saida) {
+      const h = a.h;
       if (h < NIVEL - 0.012) {
         saida.copy(cores.areia).lerp(cores.fundo, suave(-0.02, -0.24, h));
         return;
@@ -1445,8 +2157,14 @@ function criarCena(T, canvas, opcoes) {
           if (Math.floor((v + 5) / 0.09) % 2 === 0) saida.multiplyScalar(0.9);
         }
       }
-      if (h > 0.62) saida.lerp(cores.rocha, suave(0.62, 0.95, h) * 0.6);
+      if (h > 0.62) saida.lerp(cores.rocha, suave(0.62, 0.95, h) * 0.6 * (picos.length ? 0.45 : 1)); // montes de perfil: mata até o alto
       if (temAgua && h < NIVEL + praia) saida.lerp(cores.areia, 1 - suave(NIVEL + praia * 0.55, NIVEL + praia, h));
+      if (a.duna > 0) {
+        saida.lerp(cores.areia, suave(0.01, 0.05, a.duna));
+        // face de sotavento (de costas para o mar) um pouco mais escura: desenha as cristas
+        const declive = alturaDuna(x - aguaDir.x * 0.05, z - aguaDir.z * 0.05) - alturaDuna(x, z);
+        saida.lerp(cores.areiaSombra, suave(0.0, 0.035, -declive) * 0.55 * suave(0.03, 0.1, a.duna));
+      }
     }
     pos[0] = 0; pos[2] = 0;
     for (let i = 1; i <= NR; i++) {
@@ -1464,7 +2182,7 @@ function criarCena(T, canvas, opcoes) {
       const a = amostra(x, z);
       pos[v * 3 + 1] = a.h;
       alturas[v] = a.h;
-      corTopo(x, z, a.h, c);
+      corTopo(x, z, a, c);
       coresBase[v * 3] = c.r; coresBase[v * 3 + 1] = c.g; coresBase[v * 3 + 2] = c.b;
     }
     const indices = [];
@@ -1599,7 +2317,7 @@ function criarCena(T, canvas, opcoes) {
       ga.setAttribute('position', new THREE.BufferAttribute(pa, 3));
       ga.setIndex(ia);
       ga.computeVertexNormals();
-      espelho = new THREE.Mesh(ga, M.agua);
+      espelho = new THREE.Mesh(ga, marAberto ? M.aguaMar : M.agua);
       espelho.receiveShadow = true;
       espelho.renderOrder = 1;
     }
@@ -1609,6 +2327,8 @@ function criarCena(T, canvas, opcoes) {
     const livre = (x, z, r) => ocupado.every((o) => (o.x - x) ** 2 + (o.z - z) ** 2 >= (o.r + r) ** 2);
     const itens = [];
     const ponto = (raioMax = 0.88) => { const r = Math.sqrt(rnd()) * R * raioMax, a = rnd() * TAU; return { x: Math.cos(a) * r, z: Math.sin(a) * r }; };
+    for (const m of marcos) if (!m.naAgua && !m.terreno && !m.noPico) ocupado.push({ x: m.x, z: m.z, r: m.raio });
+    const naDuna = (s, limite = 0.03) => dunas && s.duna > limite;
 
     // a frente da ilha (voltada para a câmera inicial) guarda o lugar da placa
     const angFrente = Math.atan2(Math.cos(AZIMUTE), Math.sin(AZIMUTE)) + 0.5;
@@ -1616,7 +2336,7 @@ function criarCena(T, canvas, opcoes) {
     for (let k = 0; k < 24 && !placaPos; k++) {
       const a = angFrente + (k % 2 ? 1 : -1) * Math.ceil(k / 2) * 0.22;
       const d = contorno(a) * 0.62, x = Math.cos(a) * d, z = Math.sin(a) * d, s = amostra(x, z);
-      if (s.h > 0.05) placaPos = { x, z, y: s.h };
+      if (s.h > 0.05 && livre(x, z, 0.5) && !naDuna(s)) placaPos = { x, z, y: s.h };
     }
     if (!placaPos) placaPos = { x: 0, z: 0, y: Math.max(amostra(0, 0).h, NIVEL) };
     ocupado.push({ x: placaPos.x, z: placaPos.z, r: 0.75 });
@@ -1625,21 +2345,71 @@ function criarCena(T, canvas, opcoes) {
     let praca = null;
     for (let k = 0; k < 60 && !praca; k++) {
       const p = ponto(0.42), s = amostra(p.x, p.z);
-      if (s.h > 0.08 && livre(p.x, p.z, 0.3)) praca = { x: p.x, z: p.z };
+      if (s.h > 0.08 && livre(p.x, p.z, 0.3) && !naDuna(s)) praca = { x: p.x, z: p.z };
     }
     if (!praca) praca = { x: 0, z: 0 };
     ocupado.push({ x: praca.x, z: praca.z, r: 0.22 });
 
     const novoItem = (tipo, x, z, y, extra = {}) => itens.push({ tipo, x, z, y, rot: extra.rot ?? rnd() * TAU, s: extra.s ?? 1, sy: extra.sy ?? 1, cores: extra.cores ?? [], oculto: false });
+    const estilo = rec.perfil ? rec.construcoes?.estilo : null;
+    const paredes = estilo === 'acoriano' ? ['#f8f5ef', '#f4efe6', '#f6f1e7', '#eef1ee'] : estilo === 'colonial' ? ['#f6f1e7', '#f3ece3', '#efe2c4', '#f0e4d0'] : PAREDES;
+    const telhas = estilo === 'acoriano' || estilo === 'colonial' ? ['#b4623f', '#a5553a', '#b9714a'] : TELHAS;
     const nCasas = (tpl.casas ?? 0) + (info.capital ? 2 : 0);
-    for (let k = 0, tent = 0; k < nCasas && tent < 200; tent++) {
-      const a = rnd() * TAU, d = 0.32 + rnd() * 0.75;
-      const x = praca.x + Math.cos(a) * d, z = praca.z + Math.sin(a) * d, s = amostra(x, z);
-      if (s.h < 0.07 || s.rho > 0.86 || !livre(x, z, 0.24)) continue;
-      ocupado.push({ x, z, r: 0.24 });
-      const rot = Math.round((Math.atan2(x - praca.x, z - praca.z)) / (Math.PI / 2)) * (Math.PI / 2) + (rnd() - 0.5) * 0.3;
-      novoItem('casa', x, z, s.h - 0.01, { rot, s: 0.9 + rnd() * 0.25, cores: [PAREDES[Math.floor(rnd() * PAREDES.length)], TELHAS[Math.floor(rnd() * TELHAS.length)]] });
-      k++;
+    if (estilo === 'urbano') {
+      // cidade em quadras: ruas paralelas e transversais ao rio (uma passa pela ponte), casas voltadas para a rua
+      const ponteM = marcos.find((m) => m.modulo === 'ponte-urbana');
+      const centro = ponteM ?? praca;
+      const eA = rio ? rio.u : { x: -dirCam.z, z: dirCam.x }, eB = rio ? rio.v : dirCam;
+      const reta = (o, e) => [{ x: o.x - e.x * R * 1.2, z: o.z - e.z * R * 1.2 }, { x: o.x + e.x * R * 1.2, z: o.z + e.z * R * 1.2 }];
+      for (const k of [-1, 0, 1]) caminhosFixos.push(reta({ x: centro.x + eA.x * k * 0.78, z: centro.z + eA.z * k * 0.78 }, eB));
+      for (const k of [-1, 1]) caminhosFixos.push(reta({ x: centro.x + eB.x * k * 0.98, z: centro.z + eB.z * k * 0.98 }, eA));
+      const distRua = (x, z) => Math.min(...caminhosFixos.map(([A, B]) => {
+        const vx = B.x - A.x, vz = B.z - A.z, t = Math.max(0, Math.min(1, ((x - A.x) * vx + (z - A.z) * vz) / (vx * vx + vz * vz)));
+        return Math.hypot(x - A.x - vx * t, z - A.z - vz * t);
+      }));
+      const lotes = [];
+      for (const [A, B] of caminhosFixos) {
+        const len = Math.hypot(B.x - A.x, B.z - A.z), dx = (B.x - A.x) / len, dz = (B.z - A.z) / len;
+        for (let t = 0.17; t < len; t += 0.33) for (const lado of [-1, 1]) {
+          lotes.push({ x: A.x + dx * t - dz * lado * 0.2, z: A.z + dz * t + dx * lado * 0.2, rot: Math.atan2(dz * lado, -dx * lado) });
+        }
+      }
+      lotes.sort((a, b) => Math.hypot(a.x - centro.x, a.z - centro.z) - Math.hypot(b.x - centro.x, b.z - centro.z));
+      let feitas = 0, predios = 0;
+      const nPredios = rec.construcoes?.predios ?? 0;
+      for (const l of lotes) {
+        if (feitas >= nCasas + nPredios) break;
+        const s = amostra(l.x, l.z);
+        if (s.h < 0.07 || s.rho > 0.84 || s.molhado > 0.02 || !livre(l.x, l.z, 0.16) || distRua(l.x, l.z) < 0.12) continue;
+        ocupado.push({ x: l.x, z: l.z, r: 0.17 });
+        if (predios < nPredios && feitas % 3 === 1) {
+          novoItem('predio', l.x, l.z, s.h - 0.01, { rot: l.rot, s: 0.62, sy: 0.3 + rm() * 0.22, cores: [['#efeae1', '#e4ddcf', '#e9dfcc'][predios % 3]] });
+          predios++;
+        } else {
+          novoItem('casa', l.x, l.z, s.h - 0.01, { rot: l.rot, s: 0.78, cores: [paredes[Math.floor(rm() * paredes.length)], telhas[Math.floor(rm() * telhas.length)]] });
+        }
+        feitas++;
+      }
+    } else {
+      for (let k = 0, tent = 0; k < nCasas && tent < 200; tent++) {
+        const a = rnd() * TAU, d = 0.32 + rnd() * 0.75;
+        const x = praca.x + Math.cos(a) * d, z = praca.z + Math.sin(a) * d, s = amostra(x, z);
+        if (s.h < 0.07 || s.rho > 0.86 || !livre(x, z, 0.24) || naDuna(s)) continue;
+        ocupado.push({ x, z, r: 0.24 });
+        const rot = Math.round((Math.atan2(x - praca.x, z - praca.z)) / (Math.PI / 2)) * (Math.PI / 2) + (rnd() - 0.5) * 0.3;
+        novoItem('casa', x, z, s.h - 0.01, { rot, s: 0.9 + rnd() * 0.25, cores: [paredes[Math.floor(rnd() * paredes.length)], telhas[Math.floor(rnd() * telhas.length)]] });
+        k++;
+      }
+    }
+    // jardim do casarão: palmeiras e uma figueira em volta (a ficha da UDESC descreve área arborizada com palmeiras e figueiras)
+    for (const m of marcos.filter((x) => x.modulo === 'casarao')) {
+      const rot = Math.atan2(dirCam.x, dirCam.z), ca = Math.cos(rot), sa = Math.sin(rot);
+      for (const [lx, lz, tipo, esc] of [[-0.5, 0.12, 'palmeira', 1.15], [0.5, 0.1, 'palmeira', 1.05], [0.34, -0.42, 'redonda', 1.5]]) {
+        const x = m.x + lx * ca + lz * sa, z = m.z - lx * sa + lz * ca, s = amostra(x, z);
+        if (s.h < 0.06 || !livre(x, z, 0.1)) continue;
+        ocupado.push({ x, z, r: 0.14 });
+        novoItem(tipo, x, z, s.h - 0.02, { s: esc, cores: ['rgb(245,240,232)'] });
+      }
     }
     if (info.capital) {
       for (let k = 0, tent = 0; k < 5 && tent < 160; tent++) {
@@ -1746,7 +2516,10 @@ function criarCena(T, canvas, opcoes) {
       for (let k = 0, tent = 0; k < alvo && tent < alvo * 40; tent++) {
         const p = ponto(tipo === 'junco' ? 0.95 : 0.9), s = amostra(p.x, p.z);
         let ok;
-        if (tipo === 'junco') ok = s.h > -0.07 && s.h < 0.07 && s.rho < 0.97;
+        if (tipo === 'restinga') ok = s.h > 0.03 && s.rho < 0.94 && (!dunas || s.duna < 0.13);
+        else if (dunas && tipo === 'capim') ok = s.h > 0.04 && s.rho < 0.93 && s.duna < 0.09;
+        else if (naDuna(s, 0.04)) ok = false;
+        else if (tipo === 'junco') ok = s.h > -0.07 && s.h < 0.07 && s.rho < 0.97;
         else if (tipo === 'buriti') ok = s.h > 0.03 && (temAgua ? s.h < 0.2 : true);
         else if (tipo === 'palmeira' && tipoAgua === 'costa') ok = s.h > 0.04 && s.h < 0.24;
         else ok = s.h > 0.07 && s.rho < 0.92;
@@ -1823,6 +2596,57 @@ function criarCena(T, canvas, opcoes) {
 
     for (const alvo of [topo, lado, quadro, frente, verso]) { alvo.userData.ilhaId = info.id; alvosToque.push(alvo); }
 
+    // --- marcos do perfil e seus pontos de descoberta ---
+    const descobertas = [];
+    const animados = [];
+    const descartes = [];
+    const alvosMarcos = [];
+    for (const m of marcos) {
+      const feito = construirMarco(m, { amostra, rio, dirCam, rnd: rm });
+      if (!feito) continue;
+      conteudo.add(feito.objeto);
+      for (const a of feito.alvos) { a.userData.ilhaId = info.id; a.userData.descoberta = m.referencia; alvosMarcos.push(a); alvosToque.push(a); }
+      descobertas.push({ referencia: m.referencia, ancora: feito.ancora });
+      if (feito.animar) animados.push(feito.animar);
+      if (feito.descartar) descartes.push(feito.descartar);
+    }
+
+    // --- espuma na linha da praia (mar aberto): uma faixa clara que respira com a maré ---
+    let espuma = null;
+    if (marAberto) {
+      const lat = { x: -aguaDir.z, z: aguaDir.x };
+      const linha = [];
+      for (let l = -R * 1.05; l <= R * 1.05; l += 0.045) {
+        let antes = null, achou = null;
+        for (let sP = -R * 0.3; sP <= R * 1.05; sP += 0.018) {
+          const x = lat.x * l + aguaDir.x * sP, z = lat.z * l + aguaDir.z * sP;
+          const a = amostra(x, z);
+          if (a.rho > 0.97) { if (sP > 0) break; antes = null; continue; }
+          if (antes !== null && antes >= NIVEL && a.h < NIVEL) { achou = { x, z }; break; }
+          antes = a.h;
+        }
+        linha.push(achou);
+      }
+      const longe = (p, d) => ({ x: p.x + aguaDir.x * d, z: p.z + aguaDir.z * d });
+      const dentro = (q) => Math.hypot(q.x, q.z) < contorno(Math.atan2(q.z, q.x)) * 0.985;
+      const pe = [];
+      for (let k = 0; k < linha.length - 1; k++) {
+        const a = linha[k], b = linha[k + 1];
+        if (!a || !b || Math.hypot(a.x - b.x, a.z - b.z) > 0.2) continue;
+        const a0 = longe(a, 0.012), a1 = longe(a, 0.11), b0 = longe(b, 0.012), b1 = longe(b, 0.11);
+        if (!dentro(a1) || !dentro(b1)) continue;
+        pe.push(a0.x, 0, a0.z, b0.x, 0, b0.z, a1.x, 0, a1.z, b0.x, 0, b0.z, b1.x, 0, b1.z, a1.x, 0, a1.z);
+      }
+      if (pe.length) {
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(pe, 3));
+        espuma = new THREE.Mesh(geo, M.espuma);
+        espuma.position.y = NIVEL + 0.012;
+        espuma.renderOrder = 2;
+        conteudo.add(espuma);
+      }
+    }
+
     // --- caminhos até as pontes (recalculados quando o arranjo muda) ---
     const corAtual = geoTopo.attributes.color.array;
     function definirAncoras(pontos) {
@@ -1838,6 +2662,7 @@ function criarCena(T, canvas, opcoes) {
       };
       const curvaSemente = semente(hash32(info.id + ':caminhos'));
       caminhos.push(linha(praca, { x: placaPos.x * 0.92, z: placaPos.z * 0.92 }, (curvaSemente() - 0.5) * 0.3));
+      for (const c of caminhosFixos) caminhos.push(c);
       for (const p of pontos) caminhos.push(linha(praca, p, (curvaSemente() - 0.5) * 0.35));
       const distSeg = (x, z, a, b) => {
         const vx = b.x - a.x, vz = b.z - a.z, wx = x - a.x, wz = z - a.z;
@@ -1881,13 +2706,15 @@ function criarCena(T, canvas, opcoes) {
 
     const ilha = {
       id: info.id, info, grupo, conteudo, placa, raio: R, alturaBase, barcos,
-      ancoraEtiqueta, saindo: false,
+      ancoraEtiqueta, saindo: false, descobertas, animados,
       definirAncoras, pontoDeAncora,
       atualizarPlaca(novaInfo) { if (novaInfo) Object.assign(info, novaInfo); desenhar(); },
       definirProgresso(p) { progresso = p; aplicarInstancias(); },
       descartar() {
-        for (const alvo of [topo, lado, quadro, frente, verso]) { const i = alvosToque.indexOf(alvo); if (i >= 0) alvosToque.splice(i, 1); }
+        for (const alvo of [topo, lado, quadro, frente, verso, ...alvosMarcos]) { const i = alvosToque.indexOf(alvo); if (i >= 0) alvosToque.splice(i, 1); }
         geoTopo.dispose(); geoLado.dispose();
+        if (espuma) espuma.geometry.dispose();
+        for (const f of descartes) f();
         if (espelho) espelho.geometry.dispose();
         if (cerca) cerca.geometry.dispose();
         for (const { im } of instanciados) im.dispose();
@@ -2220,13 +3047,15 @@ function criarCena(T, canvas, opcoes) {
   // ---------- Toque, arrasto e foco do ponteiro ----------
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
-  function idEm(clientX, clientY) {
+  /** O que está sob o ponteiro: { id da ilha, descoberta } (descoberta = marco do perfil) ou null. O mais próximo da câmera vence. */
+  function alvoEm(clientX, clientY) {
     const r = canvas.getBoundingClientRect();
     ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
     const hit = raycaster.intersectObjects(alvosToque, false)[0];
     const id = hit?.object.userData.ilhaId;
-    return id && ilhas.has(id) && !ilhas.get(id).saindo ? id : null;
+    if (!id || !ilhas.has(id) || ilhas.get(id).saindo) return null;
+    return { id, descoberta: hit.object.userData.descoberta ?? null };
   }
   let toque = null;
   canvas.addEventListener('pointerdown', (e) => {
@@ -2240,7 +3069,7 @@ function criarCena(T, canvas, opcoes) {
     const rapido = performance.now() - toque.t < 600;
     const eraMulti = toque.multi;
     toque = null;
-    if (movimento < 8 && rapido && !eraMulti) opcoes.aoTocarIlha?.(idEm(e.clientX, e.clientY));
+    if (movimento < 8 && rapido && !eraMulti) opcoes.aoTocar?.(alvoEm(e.clientX, e.clientY));
   });
   canvas.addEventListener('pointercancel', () => { toque = null; canvas.classList.remove('arrastando'); });
   let pendenteHover = null;
@@ -2262,8 +3091,10 @@ function criarCena(T, canvas, opcoes) {
     }
   }
   const projecoes = [];
+  const projDescobertas = [];
   function projetar() {
     projecoes.length = 0;
+    projDescobertas.length = 0;
     const w = canvas.clientWidth, h = canvas.clientHeight;
     for (const id of ordem) {
       const ilha = ilhas.get(id);
@@ -2272,6 +3103,11 @@ function criarCena(T, canvas, opcoes) {
       ilha.placa.localToWorld(vt);
       vt.project(camera);
       projecoes.push({ id, x: (vt.x * 0.5 + 0.5) * w, y: (-vt.y * 0.5 + 0.5) * h, visivel: vt.z < 1 && Math.abs(vt.x) < 1.3 && Math.abs(vt.y) < 1.3 });
+      for (const d of ilha.descobertas) {
+        d.ancora.getWorldPosition(vt);
+        vt.project(camera);
+        projDescobertas.push({ id, referencia: d.referencia, x: (vt.x * 0.5 + 0.5) * w, y: (-vt.y * 0.5 + 0.5) * h, visivel: vt.z < 1 && Math.abs(vt.x) < 1.05 && Math.abs(vt.y) < 1.05 });
+      }
     }
     return projecoes;
   }
@@ -2289,17 +3125,19 @@ function criarCena(T, canvas, opcoes) {
         b.position.y = NIVEL - 0.015 + Math.sin(uTempo.value * 1.6 + b.userData.fase) * 0.012;
         b.rotation.z = Math.sin(uTempo.value * 1.2 + b.userData.fase) * 0.04;
       }
+      for (const ilha of ilhas.values()) for (const f of ilha.animados) f(uTempo.value);
+      M.espuma.opacity = 0.42 + Math.sin(uTempo.value * 1.7) * 0.2;
       if (destaque) destaque.material.opacity = 0.55 + Math.sin(uTempo.value * 2.4) * 0.2;
       if (marcador) marcador.scale.setScalar(1 + Math.sin(uTempo.value * 1.8) * 0.04);
     }
     if (pendenteHover) {
-      canvas.classList.toggle('sobre-ilha', !!idEm(pendenteHover.x, pendenteHover.y));
+      canvas.classList.toggle('sobre-ilha', !!alvoEm(pendenteHover.x, pendenteHover.y));
       pendenteHover = null;
     }
     orientarPlacas(camera);
     renderer.render(cena, camera);
     sujo = false;
-    opcoes.aoQuadro?.(projetar());
+    opcoes.aoQuadro?.(projetar(), projDescobertas);
   }
   function iniciarLaco() { if (!rafId) rafId = requestAnimationFrame(quadro); }
   function pararLaco() { cancelAnimationFrame(rafId); rafId = 0; }
@@ -2365,6 +3203,7 @@ function criarCena(T, canvas, opcoes) {
     aproximar,
     exportar,
     redesenharPlacas() { for (const ilha of ilhas.values()) ilha.atualizarPlaca(); sujo = true; },
+    redesenhar() { sujo = true; },
     definirAreaVisivel(livre) {
       const mudou = livre.direita !== area.direita || livre.base !== area.base || livre.topo !== area.topo;
       Object.assign(area, livre);
@@ -2409,6 +3248,13 @@ const el = {
   cidadeCta: $('cidade-cta'), cidadeProdutos: $('cidade-produtos'), produtosTitulo: $('produtos-titulo'), btnFecharCidade: $('btn-fechar-cidade'),
   btnCidadeAnt: $('btn-cidade-ant'), btnCidadeProx: $('btn-cidade-prox'),
   dlgRecomecar: $('dlg-recomecar'), dlgCompartilhar: $('dlg-compartilhar'), toast: $('toast'),
+  descobertas: $('descobertas'), balao: $('balao'), balaoTipo: $('balao-tipo'), balaoTitulo: $('balao-titulo'), balaoTexto: $('balao-texto'),
+  balaoNota: $('balao-nota'), btnBalaoCidade: $('btn-balao-cidade'), btnFecharBalao: $('btn-fechar-balao'),
+  cidadeFrase: $('cidade-frase'), cidadeResumo: $('cidade-resumo'), cidadeSemTexto: $('cidade-sem-texto'),
+  cidadeRefSecao: $('cidade-referencias-secao'), cidadeRefs: $('cidade-referencias'), cidadeDados: $('cidade-dados'), cidadeMais: $('cidade-mais'),
+  cidadeFontes: $('cidade-fontes'), cidadeFontesLista: $('cidade-fontes-lista'), cidadeRevisao: $('cidade-revisao'),
+  conecta: $('conecta'), conectaLista: $('conecta-lista'), incluir: $('incluir'), incluirCheck: $('incluir-lembrancas'),
+  lembrancaMontar: $('lembranca-montar'), lembrancaFicha: $('lembranca-ficha'),
 };
 
 const reduzMQ = matchMedia('(prefers-reduced-motion: reduce)');
@@ -2442,17 +3288,35 @@ function metaLugar(l) {
 }
 
 /* ----- cena: o que vai para a maquete ----- */
+/** O que a cena recebe de cada lugar: só o perfil visual (nunca texto). Sem perfil, a paisagem da curadoria regional. */
+function receitaDePerfil(perfil) {
+  const v = perfil.visual;
+  return { perfil: true, base: v.base, cores: v.cores, relevo: v.relevo, agua: v.agua, vegetacao: v.vegetacao, construcoes: v.construcoes, extras: v.extras, marcos: v.marcos };
+}
+function receitaDe(lugar) {
+  const perfil = contexto.perfil(lugar.i);
+  if (perfil && (perfil.visual.relevo || perfil.visual.agua || perfil.visual.marcos.length)) return receitaDePerfil(perfil);
+  const p = paisagemDe(lugar);
+  return { perfil: false, base: p.chave, agua: p.agua ? { modulo: p.agua } : null };
+}
 function itensDoMundo() {
   return lugaresUnicos().map(({ lugar, papeis }) => ({
-    id: lugar.i, papeis, regiao: lugar.r, capital: lugar.c, paisagem: paisagemDe(lugar), textoPlaca: lugar.n, subPlaca: lugar.u,
+    id: lugar.i, papeis, regiao: lugar.r, capital: lugar.c, receita: receitaDe(lugar), textoPlaca: lugar.n, subPlaca: lugar.u,
   }));
 }
+// A prévia da entrada mostra os três perfis do piloto (vale, rio e litoral); sem o contexto, as paisagens regionais de antes.
+const PREVIA_PILOTO = ['4211504', '4218004', '4205704'];
 function itensPrevia() {
-  return [
-    { id: 'previa:origem', papeis: [], regiao: 'sul', capital: false, paisagem: { chave: 'litoral', agua: 'costa' }, textoPlaca: TEXTOS.cena.previa.origem, subPlaca: '' },
-    { id: 'previa:presente', papeis: [], regiao: 'centro-oeste', capital: true, paisagem: { chave: 'cerrado', agua: 'vereda' }, textoPlaca: TEXTOS.cena.previa.presente, subPlaca: '' },
-    { id: 'previa:coracao', papeis: [], regiao: 'norte', capital: false, paisagem: { chave: 'amazonia', agua: 'rio-largo' }, textoPlaca: TEXTOS.cena.previa.coracao, subPlaca: '' },
+  const pilotos = PREVIA_PILOTO.map((id) => contexto.perfil(id));
+  const comPerfil = pilotos.every(Boolean);
+  const legado = [
+    { base: 'litoral', agua: { modulo: 'costa' } }, { base: 'cerrado', agua: { modulo: 'vereda' } }, { base: 'amazonia', agua: { modulo: 'rio-largo' } },
   ];
+  return ['origem', 'presente', 'coracao'].map((papel, k) => ({
+    id: `previa:${papel}`, papeis: [], regiao: ['sul', 'centro-oeste', 'norte'][k], capital: !comPerfil && k === 1,
+    receita: comPerfil ? receitaDePerfil(pilotos[k]) : { perfil: false, ...legado[k] },
+    textoPlaca: TEXTOS.cena.previa[papel], subPlaca: '',
+  }));
 }
 function sincronizarCena({ animar = true } = {}) {
   if (!mundo) return;
@@ -2477,7 +3341,7 @@ function renderEtiquetas() {
       b.className = 'etiqueta';
       b.tabIndex = -1;
       b.append(Object.assign(document.createElement('span'), { className: 'etq-papel' }), Object.assign(document.createElement('span'), { className: 'etq-nome' }));
-      b.addEventListener('click', () => aoTocarIlha(lugar.i));
+      b.addEventListener('click', () => aoTocar({ id: lugar.i, descoberta: null }));
       el.etiquetas.append(b);
       etiquetas.set(lugar.i, b);
     }
@@ -2487,6 +3351,8 @@ function renderEtiquetas() {
     b.dataset.w = b.dataset.h = ''; // medidas refeitas no próximo quadro
   }
 }
+/** Retângulos das etiquetas no último quadro (os pontos de descoberta desviam deles). */
+let retangulosEtiquetas = [];
 /** Etiquetas sempre inteiras na tela e sem se cobrir: a caixa desliza (a seta continua apontando para a placa) e sobe se esbarrar noutra. */
 function posicionarEtiquetas(projecoes) {
   const esconderTodas = estado.cidadeAberta !== null || estado.modo === 'intro';
@@ -2494,6 +3360,7 @@ function posicionarEtiquetas(projecoes) {
   const limiteTopo = largoMQ.matches ? 72 : 58; // abaixo do cabeçalho e dos botões da câmera
   const postas = [];
   const visiveis = [];
+  retangulosEtiquetas = [];
   for (const p of projecoes) {
     const b = etiquetas.get(p.id);
     if (!b) continue;
@@ -2518,6 +3385,7 @@ function posicionarEtiquetas(projecoes) {
       x = prender(p.x >= centro ? bate.dir + 6 + w / 2 : bate.esq - 6 - w / 2);
     }
     postas.push({ esq: x - w / 2, dir: x + w / 2, topo: base - h, base });
+    retangulosEtiquetas = postas;
     const seta = Math.round(Math.max(-(w / 2 - 14), Math.min(w / 2 - 14, p.x - x)));
     const chave = `${x},${base},${seta}`;
     if (b.dataset.pos === chave) continue;
@@ -2541,7 +3409,7 @@ function renderEstatico() {
     const papel = Object.assign(document.createElement('span'), { className: 'etq-papel', textContent: papeis.map((p) => TEXTOS.papeis[p].rotulo).join(' · ') });
     papel.style.color = REGIOES[lugar.r].cor;
     b.append(papel, Object.assign(document.createElement('span'), { className: 'etq-nome', textContent: nomeComUf(lugar) }));
-    b.addEventListener('click', () => aoTocarIlha(lugar.i));
+    b.addEventListener('click', () => aoTocar({ id: lugar.i, descoberta: null }));
     li.append(b);
     el.estaticoLista.append(li);
   }
@@ -2578,6 +3446,7 @@ function renderMontar() {
     el.escolhaNome.textContent = nomeComUf(lugar);
     const outros = papeisDe(id).filter((p) => p !== papel).map((p) => TEXTOS.papeis[p].rotulo.toLowerCase());
     el.escolhaMeta.textContent = metaLugar(lugar) + (outros.length ? ` · também ${outros.join(' e ')}` : '');
+    preencherLembranca(el.lembrancaMontar, id, papel);
   }
   renderAtalhos(papel);
 
@@ -2765,7 +3634,10 @@ function renderMundo() {
       Object.assign(document.createElement('span'), { className: 'lugar-papeis', textContent: papeis.map((p) => TEXTOS.papeis[p].rotulo).join(' · ') }),
       Object.assign(document.createElement('span'), { className: 'lugar-nome', textContent: nomeComUf(lugar) }),
     );
-    b.append(selo, meio, Object.assign(document.createElement('span'), { className: 'lugar-ver', textContent: `${TEXTOS.mundo.verCurto} →` }));
+    if (estado.lembrancas[lugar.i]) meio.append(Object.assign(document.createElement('span'), { className: 'lugar-lembranca', textContent: `“${estado.lembrancas[lugar.i]}”` }));
+    const ver = Object.assign(document.createElement('span'), { className: 'lugar-ver' });
+    ver.append(Object.assign(document.createElement('span'), { className: 'longo', textContent: `${TEXTOS.mundo.verCurto} ` }), Object.assign(document.createElement('span'), { className: 'curto', textContent: 'Conhecer ' }), '→');
+    b.append(selo, meio, ver);
     b.setAttribute('aria-label', `${nomeComUf(lugar)}, ${papeis.map((p) => TEXTOS.papeis[p].rotulo).join(' e ')}. ${TEXTOS.mundo.ver}`);
     b.addEventListener('click', () => abrirCidade(lugar.i));
     li.append(b);
@@ -2777,25 +3649,213 @@ function renderMundo() {
   else el.btnLink.setAttribute('aria-describedby', 'nota-link');
   el.notaLink.hidden = link;
   el.notaSalvar.hidden = !estado.salvarFalhou || estado.doLink;
+  el.incluir.hidden = !temLembranca();
+  el.incluirCheck.checked = estado.incluirLembrancas;
   renderAviso(el.avisoMundo);
+  renderConecta();
+}
+
+/* ----- o que conecta o mundo: só fatos das escolhas (quantos lugares, estados, paisagens dos perfis, distância origem–presente) ----- */
+const listaPt = (itens) => (itens.length < 2 ? itens.join('') : `${itens.slice(0, -1).join(', ')} e ${itens.at(-1)}`);
+const ICONES = {
+  mapa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-6-5.2-6-10a6 6 0 0 1 12 0c0 4.8-6 10-6 10z"/><circle cx="12" cy="11" r="2.2"/></svg>',
+  paisagem: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m3 19 6-9 4 6 3-4 5 7z"/></svg>',
+  rota: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M7.5 16.5 16.5 7.5" stroke-dasharray="2 2.6"/></svg>',
+};
+async function pontoDe(id) {
+  const p = contexto.perfil(id)?.sede;
+  if (p) return p;
+  try { return (await dados.produtos(id)).sede ?? null; } catch { return null; }
+}
+let conectaFeito = '';
+let pedidoConecta = 0;
+async function renderConecta() {
+  const lugares = lugaresUnicos();
+  const chave = PAPEIS.map((p) => estado.papeis[p] ?? '').join('|');
+  if (chave === conectaFeito) return;
+  const meu = ++pedidoConecta;
+  if (!lugares.length) { el.conecta.hidden = true; conectaFeito = chave; return; }
+  const itens = [];
+  const ufs = [...new Set(lugares.map(({ lugar }) => lugar.u))];
+  itens.push({ icone: 'mapa', texto: TEXTOS.conecta.lugares(lugares.length, ufs) });
+  const ambientes = [...new Set(lugares.flatMap(({ lugar }) => contexto.perfil(lugar.i)?.visual.ambientes ?? []))].map((a) => AMBIENTES[a]);
+  if (ambientes.length) itens.push({ icone: 'paisagem', texto: TEXTOS.conecta.paisagens(listaPt(ambientes)) });
+  const origem = estado.papeis.origem, presente = estado.papeis.presente;
+  if (origem && presente && origem === presente) itens.push({ icone: 'rota', texto: TEXTOS.conecta.mesma });
+  else if (origem && presente) {
+    const [a, b] = await Promise.all([pontoDe(origem), pontoDe(presente)]);
+    if (meu !== pedidoConecta) return;
+    if (a && b) itens.push({ icone: 'rota', texto: TEXTOS.conecta.distancia(arredondarKm(distanciaKm(a, b))), nota: TEXTOS.conecta.distanciaNota });
+  }
+  conectaFeito = chave;
+  el.conecta.hidden = false;
+  el.conectaLista.replaceChildren(...itens.map((it) => {
+    const li = document.createElement('li');
+    const icone = document.createElement('span');
+    icone.innerHTML = ICONES[it.icone]; // ícone fixo deste arquivo, nunca dado de fora
+    const texto = Object.assign(document.createElement('span'), { textContent: it.texto });
+    if (it.nota) texto.append(Object.assign(document.createElement('span'), { className: 'nota', textContent: it.nota }));
+    li.append(icone, texto);
+    return li;
+  }));
+}
+
+/* ----- lembranças: texto da pessoa, uma por cidade, salvo com o progresso ----- */
+function preencherLembranca(campo, id, papel) {
+  campo.dataset.id = id;
+  if (document.activeElement !== campo) campo.value = estado.lembrancas[id] ?? '';
+  campo.placeholder = TEXTOS.lembranca.exemplos[papel] ?? TEXTOS.lembranca.exemplos.origem;
+  contarLembranca(campo);
+}
+function contarLembranca(campo) {
+  const contador = campo.parentElement.querySelector('.contador');
+  if (contador) contador.textContent = `${[...campo.value].length}/${TEXTOS.lembranca.limite}`;
+}
+let timerLembranca = 0;
+function aoDigitarLembranca(campo) {
+  const id = campo.dataset.id;
+  if (!id) return;
+  const limpo = limparLembranca(campo.value);
+  if (limpo) estado.lembrancas[id] = limpo;
+  else delete estado.lembrancas[id];
+  contarLembranca(campo);
+  clearTimeout(timerLembranca);
+  timerLembranca = setTimeout(() => {
+    editou();
+    salvar();
+    if (estado.incluirLembrancas) { cacheImagem = null; sincronizarUrl(); }
+    if (estado.modo === 'mundo') { renderMundo(); agendarImagem(); }
+  }, 350);
 }
 
 /* ----- painel da cidade ----- */
 let retornoFoco = null;
 let pedidoCidade = 0;
-async function abrirCidade(id) {
+/** Fontes sem perfil: o ponto e a divisão regional vêm do IBGE (Localidades 2022), a mesorregião dos dados da loja (divisão do IBGE de 1990). */
+const FONTES_BASE = {
+  localidades: {
+    titulo: 'Localidades do Brasil 2022 — sedes municipais e divisão regional de 2017', publicador: 'IBGE',
+    url: 'https://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/localidades/Localidades_do_Brasil/2022/Localidades_Municipios_kml.zip',
+    referencia: 'Localidades 2022', consultadoEm: '2026-10-14',
+  },
+};
+const dataBr = (iso) => (/^\d{4}-\d{2}-\d{2}$/.test(iso ?? '') ? iso.split('-').reverse().join('/') : '');
+const grau = (v, pos, neg) => `${Math.abs(v).toLocaleString('pt-BR', { minimumFractionDigits: 4, maximumFractionDigits: 4 })}° ${v < 0 ? neg : pos}`;
+const coordenadas = (p) => `${grau(p.lat, 'N', 'S')} · ${grau(p.lon, 'L', 'O')}`;
+const referenciaDe = (id, ref) => contexto.perfil(id)?.referencias.find((r) => r.id === ref) ?? null;
+const temMarco = (id, ref) => !!mundo && !!contexto.perfil(id)?.visual.marcos.some((m) => m.referencia === ref);
+
+function renderReferencias(id, perfil) {
+  const refs = perfil?.referencias ?? [];
+  el.cidadeRefSecao.hidden = !refs.length;
+  el.cidadeRefs.replaceChildren(...refs.map((r) => {
+    const li = Object.assign(document.createElement('li'), { className: 'referencia', id: `ref-${r.id}` });
+    li.dataset.ref = r.id;
+    li.append(
+      Object.assign(document.createElement('span'), { className: 'ref-tipo', textContent: TEXTOS.tiposReferencia[r.tipo] }),
+      Object.assign(document.createElement('span'), { className: 'ref-titulo', textContent: r.titulo }),
+      Object.assign(document.createElement('p'), { className: 'ref-texto', textContent: r.texto }),
+    );
+    if (r.descoberta?.nota) li.append(Object.assign(document.createElement('p'), { className: 'ref-nota', textContent: r.descoberta.nota }));
+    if (temMarco(id, r.id)) {
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: 'link-acao ref-acao' });
+      b.innerHTML = ICONES.mapa; // ícone fixo deste arquivo
+      b.append(document.createTextNode(TEXTOS.ficha.verNaMaquete));
+      b.setAttribute('aria-label', `${TEXTOS.ficha.verNaMaquete}: ${r.titulo}`);
+      b.addEventListener('click', () => abrirDescoberta(id, r.id, { teclado: true }));
+      li.append(b);
+    }
+    return li;
+  }));
+}
+function destacarReferencia(ref) {
+  for (const li of el.cidadeRefs.children) li.classList.toggle('destacada', li.dataset.ref === ref);
+  const alvo = ref && $(`ref-${ref}`);
+  if (alvo && !el.cidade.hidden) alvo.scrollIntoView({ block: 'nearest', behavior: reduzMQ.matches ? 'auto' : 'smooth' });
+}
+/** "Mais sobre a cidade": só campos confirmados, cada um com a natureza do dado; campo sem dado não aparece. */
+function renderDadosCidade(lugar, perfil, ibge) {
+  const C = TEXTOS.ficha.campos;
+  const linhas = [];
+  const add = (rotulo, valor, detalhe) => linhas.push([rotulo, valor, detalhe]);
+  if (perfil?.gentilico) {
+    const g = perfil.gentilico;
+    add(C.gentilico, g.oficial, g.variantes.length ? `Também registrado como ${listaPt(g.variantes)} no histórico do IBGE.` : 'Conforme o IBGE.');
+  }
+  // história e identidade primeiro; população e área são complementares e vêm por último
+  for (const cur of perfil?.curiosidades ?? []) add(C.historia, cur.texto, `Fonte: ${listaPt(cur.fontes.map((f) => contexto.fonte(f)?.publicador || contexto.fonte(f)?.titulo).filter((x, k, a) => x && a.indexOf(x) === k))}.`);
+  if (lugar.t === 'ra') add(C.estado, `${TEXTOS.busca.ra}`, 'Região Administrativa: divisão do governo do DF, não um município.');
+  else add(C.estado, `${ESTADOS[lugar.u]} · Região ${perfil?.regioes?.grandeRegiao ?? REGIOES[lugar.r].nome}`, `Grande região do IBGE. Na navegação da loja: ${REGIOES[lugar.r].nome}.`);
+  const imediata = perfil?.regioes?.imediata ?? ibge?.rgi, intermediaria = perfil?.regioes?.intermediaria ?? ibge?.rgint;
+  if (imediata && intermediaria && lugar.t !== 'ra') add(C.regiaoAtual, `Região imediata de ${imediata} · intermediária de ${intermediaria}`, 'IBGE, divisão regional de 2017 (vigente).');
+  const meso = perfil?.regioes?.mesorregiao ?? lugar.m, micro = perfil?.regioes?.microrregiao;
+  if (meso && lugar.t !== 'ra') add(C.regiaoHistorica, `Mesorregião ${meso}${micro ? ` · microrregião ${micro}` : ''}`, 'IBGE, divisão de 1990, substituída em 2017.');
+  const sede = perfil?.sede ?? ibge?.sede;
+  if (sede) {
+    const ra = ibge?.sede?.tipo === 'ra' && !perfil?.sede;
+    add(ra ? C.coordenadasRa : C.coordenadas, coordenadas(sede), ra ? 'Ponto da Região Administrativa (IBGE, Localidades 2022).' : 'Ponto da sede municipal (IBGE, Localidades 2022). Não é o centro do território.');
+  }
+  if (perfil?.populacao) add(C.populacao, `${perfil.populacao.valor.toLocaleString('pt-BR')} pessoas`, `Censo Demográfico ${perfil.populacao.ano} (IBGE). Dado do censo, não estimativa.`);
+  if (perfil?.area) add(C.area, `${perfil.area.km2.toLocaleString('pt-BR', { maximumFractionDigits: 2 })} km²`, `Área territorial oficial, ${perfil.area.ano} (IBGE).`);
+  el.cidadeDados.replaceChildren(...linhas.flatMap(([rotulo, valor, detalhe]) => {
+    const dd = Object.assign(document.createElement('dd'), { textContent: valor });
+    if (detalhe) dd.append(Object.assign(document.createElement('span'), { className: 'detalhe', textContent: detalhe }));
+    return [Object.assign(document.createElement('dt'), { textContent: rotulo }), dd];
+  }));
+  el.cidadeMais.hidden = !linhas.length;
+}
+function renderFontes(perfil, ibge) {
+  const chaves = [];
+  const juntar = (lista) => { for (const k of lista ?? []) if (!chaves.includes(k)) chaves.push(k); };
+  if (perfil) {
+    juntar(perfil.fontesResumo);
+    for (const r of perfil.referencias) juntar(r.fontes);
+    for (const c of perfil.curiosidades) juntar(c.fontes);
+    juntar(perfil.gentilico?.fontes); juntar(perfil.sede?.fontes); juntar(perfil.populacao?.fontes); juntar(perfil.area?.fontes); juntar(perfil.regioes?.fontes);
+  }
+  const fontes = chaves.map((k) => contexto.fonte(k)).filter(Boolean);
+  if (!perfil?.sede && ibge?.sede) fontes.push(FONTES_BASE.localidades);
+  el.cidadeFontesLista.replaceChildren(...fontes.map((f) => {
+    const li = document.createElement('li');
+    const a = Object.assign(document.createElement('a'), { href: f.url, target: '_blank', rel: 'noopener', textContent: f.titulo });
+    li.append(a, Object.assign(document.createElement('span'), { className: 'quando', textContent: [f.publicador, f.referencia, f.consultadoEm && `consultado em ${dataBr(f.consultadoEm)}`].filter(Boolean).join(' · ') }));
+    return li;
+  }));
+  el.cidadeFontes.hidden = !fontes.length;
+  el.cidadeRevisao.hidden = !perfil;
+  el.cidadeRevisao.textContent = perfil ? `${TEXTOS.ficha.revisao} ${dataBr(perfil.revisao?.em) || dataBr(fontes[0]?.consultadoEm)}.` : '';
+}
+
+async function abrirCidade(id, { referencia = null } = {}) {
   const lugar = dados.lugar(id);
   if (!lugar) return;
   if (!estado.cidadeAberta) retornoFoco = document.activeElement;
+  const trocou = estado.cidadeAberta !== id;
   estado.cidadeAberta = id;
+  if (estado.descobertaAberta && estado.descobertaAberta.id !== id) fecharDescoberta({ semFoco: true });
   render();
+  const perfil = contexto.perfil(id);
   const cor = REGIOES[lugar.r].cor;
   el.cidade.style.setProperty('--cor-regiao', cor);
   el.cidadePapeis.replaceChildren(...papeisDe(id).map((p) => Object.assign(document.createElement('li'), { textContent: TEXTOS.papeis[p].rotulo })));
-  el.cidadeNome.textContent = lugar.n;
+  el.cidadeNome.replaceChildren(document.createTextNode(lugar.n), Object.assign(document.createElement('span'), { className: 'uf', textContent: ` · ${lugar.u}` }));
   el.cidadeEstado.textContent = lugar.t === 'ra' ? `${TEXTOS.busca.ra}` : `${ESTADOS[lugar.u]} · Região ${REGIOES[lugar.r].nome}`;
-  const pais = paisagemDe(lugar);
-  el.cidadePaisagem.textContent = TEXTOS.cidade.paisagem(PAISAGENS[pais.chave].nome, pais.ilustrativo);
+  el.cidadeFrase.hidden = !perfil?.frase;
+  el.cidadeFrase.textContent = perfil?.frase ?? '';
+  el.cidadeResumo.hidden = !perfil?.resumo;
+  el.cidadeResumo.textContent = perfil?.resumo ?? '';
+  el.cidadeSemTexto.hidden = !!perfil;
+  el.cidadeSemTexto.textContent = TEXTOS.ficha.semTexto;
+  if (perfil?.visual.rotulo) el.cidadePaisagem.textContent = TEXTOS.ficha.paisagemPerfil(perfil.visual.rotulo);
+  else {
+    const pais = paisagemDe(lugar);
+    el.cidadePaisagem.textContent = TEXTOS.cidade.paisagem(PAISAGENS[pais.chave].nome, pais.ilustrativo);
+  }
+  renderReferencias(id, perfil);
+  preencherLembranca(el.lembrancaFicha, id, papeisDe(id)[0]);
+  if (trocou) { el.cidadeMais.open = false; el.cidadeFontes.open = false; }
+  renderDadosCidade(lugar, perfil, null);
+  renderFontes(perfil, null);
   definirCta(null, lugar, 'carregando');
   // vizinhos na ordem da história
   const lugares = lugaresUnicos();
@@ -2808,8 +3868,9 @@ async function abrirCidade(id) {
   el.btnCidadeAnt.onclick = () => abrirCidade(ant.lugar.i);
   el.btnCidadeProx.onclick = () => abrirCidade(prox.lugar.i);
   mundo?.focar(id);
-  el.cidadeNome.focus({ preventScroll: true });
-  el.cidade.scrollTop = 0;
+  if (trocou) el.cidade.scrollTop = 0;
+  if (referencia) destacarReferencia(referencia);
+  else { destacarReferencia(estado.descobertaAberta?.id === id ? estado.descobertaAberta.referencia : null); el.cidadeNome.focus({ preventScroll: true }); }
 
   const meu = ++pedidoCidade;
   el.cidadeProdutos.setAttribute('aria-busy', 'true');
@@ -2817,6 +3878,8 @@ async function abrirCidade(id) {
   try {
     const r = await dados.produtos(id);
     if (meu !== pedidoCidade) return;
+    renderDadosCidade(lugar, perfil, r);
+    renderFontes(perfil, r);
     if (!r.conectado) {
       definirCta(null, lugar, 'desconectado');
       el.cidadeProdutos.replaceChildren(estadoProdutos(TEXTOS.cidade.naoConectado, TEXTOS.cidade.naoConectadoApoio));
@@ -2893,14 +3956,129 @@ function fecharCidade() {
   retornoFoco = null;
 }
 
-function aoTocarIlha(id) {
-  if (!id) return;
+/** Toque na maquete: num marco abre a descoberta; na ilha (ou placa/etiqueta) abre a ficha; na água fecha a descoberta aberta. */
+function aoTocar(alvo) {
+  if (!alvo) { fecharDescoberta({ semFoco: true }); return; }
+  const { id, descoberta } = alvo;
   if (id.startsWith('previa:')) { if (estado.modo === 'intro') comecar(); return; }
-  if (estado.modo === 'mundo') abrirCidade(id);
-  else if (estado.modo === 'montar') {
+  if (estado.modo === 'mundo') {
+    if (descoberta && referenciaDe(id, descoberta)) { abrirDescoberta(id, descoberta); return; }
+    fecharDescoberta({ semFoco: true });
+    abrirCidade(id);
+  } else if (estado.modo === 'montar') {
     const k = PAPEIS.findIndex((p) => estado.papeis[p] === id);
     if (k >= 0) irParaPasso(k);
   }
+}
+
+/* ----- descobertas: até dois marcos por ilha contam uma história curta; uma aberta por vez ----- */
+const pontos = new Map(); // `${id}|${referência}` → botão sobre o marco
+let retornoFocoBalao = null;
+function renderDescobertas() {
+  const ativos = new Set();
+  if (estado.modo === 'mundo' && mundo) {
+    for (const { lugar } of lugaresUnicos()) {
+      for (const m of contexto.perfil(lugar.i)?.visual.marcos ?? []) {
+        const r = referenciaDe(lugar.i, m.referencia);
+        if (!r) continue;
+        const chave = `${lugar.i}|${r.id}`;
+        ativos.add(chave);
+        if (pontos.has(chave)) continue;
+        const b = Object.assign(document.createElement('button'), { type: 'button', className: 'ponto-descoberta oculta', tabIndex: -1 });
+        b.innerHTML = '<span class="anel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>';
+        b.setAttribute('aria-label', TEXTOS.descoberta.rotulo(r.titulo));
+        b.dataset.id = lugar.i;
+        b.dataset.ref = r.id;
+        b.addEventListener('click', () => (estado.descobertaAberta?.id === lugar.i && estado.descobertaAberta.referencia === r.id ? fecharDescoberta() : abrirDescoberta(lugar.i, r.id)));
+        el.descobertas.append(b);
+        pontos.set(chave, b);
+      }
+    }
+  }
+  for (const [chave, b] of pontos) if (!ativos.has(chave)) { b.remove(); pontos.delete(chave); }
+  const aberta = estado.descobertaAberta;
+  if (aberta && !pontos.has(`${aberta.id}|${aberta.referencia}`)) fecharDescoberta({ semFoco: true });
+}
+function areaLivre() {
+  const painel = [el.intro, el.montar, el.mundoP, el.cidade].find((p) => !p.hidden);
+  const r = painel?.getBoundingClientRect();
+  if (largoMQ.matches) return { esq: 12, topo: 76, dir: r ? r.left - 12 : innerWidth - 12, base: innerHeight - 84 };
+  return { esq: 12, topo: 64, dir: innerWidth - 12, base: r ? r.top - 8 : innerHeight - 12 };
+}
+/** Pontos sobre os marcos: se esbarram numa etiqueta ou noutro ponto, descem para baixo dela (ou vão para o lado). */
+function posicionarDescobertas(projecoes) {
+  let ancora = null;
+  const aberta = estado.descobertaAberta;
+  const R2 = 17; // meia largura do ponto visível + folga
+  const ocupados = estado.cidadeAberta === null ? retangulosEtiquetas.map((r) => ({ ...r })) : [];
+  const ordenados = [...projecoes].sort((a, b) => b.y - a.y);
+  for (const p of ordenados) {
+    const b = pontos.get(`${p.id}|${p.referencia}`);
+    if (!b) continue;
+    const esta = aberta?.id === p.id && aberta.referencia === p.referencia;
+    const oculta = !p.visivel || (estado.cidadeAberta !== null && estado.cidadeAberta !== p.id);
+    b.classList.toggle('oculta', oculta && !esta);
+    b.classList.toggle('aberto', esta);
+    let x = p.x, y = p.y;
+    if (!oculta) {
+      for (let volta = 0; volta < 6; volta++) {
+        const bate = ocupados.find((r) => x + R2 > r.esq && x - R2 < r.dir && y + R2 > r.topo && y - R2 < r.base);
+        if (!bate) break;
+        if (volta % 2 === 0) y = bate.base + R2 + 2;
+        else x = x < (bate.esq + bate.dir) / 2 ? bate.esq - R2 - 2 : bate.dir + R2 + 2;
+      }
+      ocupados.push({ esq: x - R2, dir: x + R2, topo: y - R2, base: y + R2 });
+    }
+    const pos = `${Math.round(x)},${Math.round(y)}`;
+    if (b.dataset.pos !== pos) { b.dataset.pos = pos; b.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0)`; }
+    if (esta) ancora = { ...p, x, y };
+  }
+  if (ancora && !el.balao.hidden) posicionarBalao(ancora);
+}
+function posicionarBalao(p) {
+  const w = el.balao.offsetWidth, h = el.balao.offsetHeight;
+  const a = areaLivre();
+  let x = p.x - w / 2, y = p.y - h - 26;
+  if (y < a.topo) y = p.y + 26; // não cabe em cima do marco: vai para baixo
+  x = Math.round(Math.min(Math.max(x, a.esq), Math.max(a.esq, a.dir - w)));
+  y = Math.round(Math.min(Math.max(y, a.topo), Math.max(a.topo, a.base - h)));
+  const pos = `${x},${y}`;
+  if (el.balao.dataset.pos === pos) return;
+  el.balao.dataset.pos = pos;
+  el.balao.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+}
+function abrirDescoberta(id, ref, { teclado = false } = {}) {
+  const r = referenciaDe(id, ref), lugar = dados.lugar(id);
+  if (!r || !lugar) return;
+  if (!estado.descobertaAberta) retornoFocoBalao = document.activeElement;
+  estado.descobertaAberta = { id, referencia: ref };
+  el.balao.style.setProperty('--cor-regiao', REGIOES[lugar.r].cor);
+  el.balaoTipo.textContent = `${TEXTOS.tiposReferencia[r.tipo]} · ${lugar.n}`;
+  el.balaoTitulo.textContent = r.titulo;
+  el.balaoTexto.textContent = r.texto;
+  el.balaoNota.textContent = r.descoberta?.nota ?? '';
+  el.balaoNota.hidden = !r.descoberta?.nota;
+  el.btnBalaoCidade.textContent = TEXTOS.descoberta.conhecer(lugar.n);
+  el.btnBalaoCidade.hidden = estado.cidadeAberta === id;
+  el.balao.dataset.pos = '';
+  el.balao.style.transform = 'translate3d(-9999px, -9999px, 0)'; // o próximo quadro coloca o balão junto do marco
+  el.balao.hidden = false;
+  if (estado.cidadeAberta === id) destacarReferencia(ref);
+  mundo?.redesenhar();
+  if (teclado) el.balaoTitulo.focus({ preventScroll: true });
+}
+function fecharDescoberta({ semFoco = false } = {}) {
+  if (!estado.descobertaAberta) return;
+  estado.descobertaAberta = null;
+  const tinhaFoco = el.balao.contains(document.activeElement);
+  el.balao.hidden = true;
+  for (const b of pontos.values()) b.classList.remove('aberto');
+  mundo?.redesenhar();
+  if (!semFoco && tinhaFoco) {
+    const volta = retornoFocoBalao && document.contains(retornoFocoBalao) && !retornoFocoBalao.closest('[hidden]') ? retornoFocoBalao : el.palco;
+    volta.focus({ preventScroll: true });
+  }
+  retornoFocoBalao = null;
 }
 
 /* ----- render geral ----- */
@@ -2917,7 +4095,9 @@ function render({ animarCena = true } = {}) {
   el.seloDemo.hidden = dados.modo !== 'demonstracao';
   if (m === 'montar') renderMontar();
   if (m === 'mundo') renderMundo();
+  if (m !== 'mundo') fecharDescoberta({ semFoco: true });
   renderEtiquetas();
+  renderDescobertas();
   renderEstatico();
   el.descricao.textContent = m === 'intro' ? TEXTOS.intro.apoio : TEXTOS.cena.descricao(lugaresUnicos());
   sincronizarCena({ animar: animarCena });
@@ -2953,7 +4133,7 @@ function agendarArea() {
 const EXPORTACAO = { largura: 1080, altura: 1350, arquivo: 'meu-pequeno-mundo-use-origens.png', site: 'useorigens.com.br' };
 const espera = (ms) => new Promise((r) => setTimeout(r, ms));
 async function fontesProntas() {
-  const fontes = ['900 58px "Big Shoulders"', '800 58px "Big Shoulders"', '500 44px "Bodoni Moda"', '700 19px "Hanken Grotesk"', '600 22px "Hanken Grotesk"'];
+  const fontes = ['900 58px "Big Shoulders"', '800 58px "Big Shoulders"', '500 44px "Bodoni Moda"', 'italic 500 30px "Bodoni Moda"', '700 19px "Hanken Grotesk"', '600 22px "Hanken Grotesk"'];
   try { await Promise.race([Promise.all(fontes.map((f) => document.fonts.load(f))), espera(3500)]); } catch { /* segue com a fonte de reserva */ }
 }
 const selos = {};
@@ -2986,7 +4166,7 @@ function desenharMundo2D(g, x, y, w, h, lugares) {
   lugares.forEach(({ lugar }, k) => {
     const [px, py] = pos[k];
     const cx = x + px * w, cy = y + py * h, r = Math.min(w, h) * 0.17;
-    const pais = PAISAGENS[paisagemDe(lugar).chave];
+    const pais = PAISAGENS[receitaDe(lugar).base] ?? PAISAGENS.interior;
     g.fillStyle = pais.cores.estratos[1];
     g.beginPath(); g.ellipse(cx, cy + r * 0.28, r, r * 0.55, 0, 0, TAU); g.fill();
     g.fillStyle = pais.cores.grama[0];
@@ -2996,6 +4176,7 @@ function desenharMundo2D(g, x, y, w, h, lugares) {
 }
 async function gerarImagem() {
   await fontesProntas();
+  // a imagem sai de uma câmera própria: balão, pontos de descoberta e painéis nunca entram nela, e continuam como estavam
   mundo?.redesenharPlacas();
   const lugares = lugaresUnicos();
   const W = EXPORTACAO.largura, H = EXPORTACAO.altura;
@@ -3024,8 +4205,10 @@ async function gerarImagem() {
   g.fillText('MEU PEQUENO MUNDO', W / 2, 140);
   comEspaco('0px');
 
-  const linha = 108;
-  const blocoInferior = 60 + 36 + lugares.length * linha + 84;
+  // lembranças: só quando a pessoa escolheu incluir; cada uma fica embaixo do nome, como citação dela
+  const lembrancaDe = (id) => (estado.incluirLembrancas ? estado.lembrancas[id] ?? '' : '');
+  const alturaLinha = (id) => (lembrancaDe(id) ? 140 : 108);
+  const blocoInferior = 60 + 36 + lugares.reduce((t, { lugar }) => t + alturaLinha(lugar.i), 0) + 96;
   const cenaTopo = 160, cenaAltura = H - cenaTopo - blocoInferior;
   if (mundo) g.drawImage(mundo.exportar(W, cenaAltura, 2), 0, cenaTopo, W, cenaAltura);
   else desenharMundo2D(g, 0, cenaTopo, W, cenaAltura, lugares);
@@ -3058,18 +4241,28 @@ async function gerarImagem() {
     g.font = '700 22px "Hanken Grotesk", system-ui, sans-serif';
     g.fillStyle = '#56564f';
     g.fillText(lugar.u, xTexto + larguraNome + 14, topo + 82);
-    y += linha;
+    const lembranca = lembrancaDe(lugar.i);
+    if (lembranca) {
+      g.fillStyle = '#33332f';
+      const citacao = `“${lembranca}”`;
+      ajustarFonte(g, citacao, 'italic 500', '"Bodoni Moda", Georgia, serif', 30, 18, W - xTexto - 96);
+      g.fillText(citacao, xTexto, topo + 120);
+    }
+    y += alturaLinha(lugar.i);
   }
   g.textAlign = 'center';
   g.fillStyle = '#33332f';
   g.font = '600 22px "Hanken Grotesk", system-ui, sans-serif';
   comEspaco('1px');
-  g.fillText(EXPORTACAO.site, W / 2, H - 46);
+  g.fillText(EXPORTACAO.site, W / 2, H - 58);
   comEspaco('0px');
+  g.fillStyle = '#7a7a72';
+  g.font = '500 16px "Hanken Grotesk", system-ui, sans-serif';
+  g.fillText('Representação ilustrativa dos lugares', W / 2, H - 28);
   return new Promise((ok, falha) => tela.toBlob((b) => (b ? ok(b) : falha(new Error('toBlob'))), 'image/png'));
 }
 
-const assinaturaMundo = () => PAPEIS.map((p) => `${p}=${estado.papeis[p] ?? ''}`).join('&');
+const assinaturaMundo = () => PAPEIS.map((p) => `${p}=${estado.papeis[p] ?? ''}`).join('&') + (estado.incluirLembrancas ? `#${JSON.stringify(lembrancasDoMundo())}` : '');
 let cacheImagem = null;
 let timerImagem = 0;
 function agendarImagem() {
@@ -3166,8 +4359,9 @@ async function carregarDados() {
   estadoDados = 'carregando';
   if (location.protocol === 'file:') { await usarDemonstracao(); return; } // o navegador não deixa ler a pasta de dados a partir de file://
   const real = adaptadorCatalogo(CATALOGO.base);
+  const perfis = contexto.carregar(); // sem o arquivo de contexto, o mundo segue com o cenário regional
   try {
-    await real.carregarIndice();
+    await Promise.all([real.carregarIndice(), perfis]);
     dados = real;
     estadoDados = 'pronto';
   } catch {
@@ -3184,6 +4378,8 @@ function aplicarEstadoInicial() {
     if (PAPEIS.some((p) => link.papeis[p])) {
       estado.papeis = link.papeis;
       estado.doLink = true;
+      estado.lembrancas = link.lembrancas;
+      estado.incluirLembrancas = Object.keys(link.lembrancas).length > 0;
       if (faltando.length) {
         estado.modo = 'montar';
         estado.passo = PAPEIS.findIndex((p) => faltando.includes(p));
@@ -3203,6 +4399,8 @@ function aplicarEstadoInicial() {
     if (PAPEIS.some((p) => salvo.papeis[p])) {
       estado.papeis = salvo.papeis;
       estado.passo = salvo.passo;
+      estado.lembrancas = salvo.lembrancas;
+      estado.incluirLembrancas = salvo.incluirLembrancas;
       estado.modo = salvo.concluido && !perdeu ? 'mundo' : 'montar';
       if (perdeu && !estado.aviso) estado.aviso = { texto: TEXTOS.link.salvoInvalido };
       if (estado.modo === 'mundo') sincronizarUrl();
@@ -3241,8 +4439,8 @@ async function iniciarCena() {
   try {
     mundo = criarCena(T, el.canvas, {
       reduzMovimento: () => reduzMQ.matches,
-      aoTocarIlha,
-      aoQuadro: posicionarEtiquetas,
+      aoTocar,
+      aoQuadro: (projecoes, descobertas) => { posicionarEtiquetas(projecoes); posicionarDescobertas(descobertas); },
       aoPerderContexto: () => falhaCena(TEXTOS.cena.falhou),
     });
   } catch {
@@ -3285,6 +4483,8 @@ function ligarEventos() {
     estado.modo = 'montar';
     estado.cidadeAberta = null;
     estado.trocando = false;
+    estado.lembrancas = {};
+    estado.incluirLembrancas = false;
     editou();
     apagarSalvo();
     cacheImagem = null;
@@ -3300,6 +4500,26 @@ function ligarEventos() {
   $('dlg-link').addEventListener('click', () => { el.dlgCompartilhar.close(); copiarLink(); });
   $('dlg-fechar').addEventListener('click', () => el.dlgCompartilhar.close());
   el.btnFecharCidade.addEventListener('click', fecharCidade);
+  el.btnFecharBalao.addEventListener('click', () => fecharDescoberta());
+  el.btnBalaoCidade.addEventListener('click', () => {
+    const aberta = estado.descobertaAberta;
+    if (!aberta) return;
+    fecharDescoberta({ semFoco: true });
+    abrirCidade(aberta.id, { referencia: aberta.referencia });
+  });
+  for (const campo of [el.lembrancaMontar, el.lembrancaFicha]) {
+    campo.addEventListener('input', () => aoDigitarLembranca(campo));
+    campo.addEventListener('change', () => { campo.value = estado.lembrancas[campo.dataset.id] ?? ''; contarLembranca(campo); });
+    campo.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); campo.blur(); } });
+  }
+  el.incluirCheck.addEventListener('change', () => {
+    estado.incluirLembrancas = el.incluirCheck.checked;
+    editou();
+    cacheImagem = null;
+    salvar();
+    sincronizarUrl();
+    agendarImagem();
+  });
   el.btnRecolher.addEventListener('click', () => {
     const recolhido = el.mundoP.classList.toggle('recolhido');
     el.btnRecolher.setAttribute('aria-expanded', String(!recolhido));
@@ -3310,7 +4530,9 @@ function ligarEventos() {
   $('btn-girar-dir').addEventListener('click', () => mundo?.girar(-0.5));
   $('btn-visao-inicial').addEventListener('click', () => { if (estado.cidadeAberta) fecharCidade(); else mundo?.visaoInicial(); });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && estado.cidadeAberta && !document.querySelector('dialog[open]')) { e.preventDefault(); fecharCidade(); }
+    if (e.key !== 'Escape' || document.querySelector('dialog[open]')) return;
+    if (estado.descobertaAberta) { e.preventDefault(); fecharDescoberta(); return; } // primeiro o balão, depois a ficha
+    if (estado.cidadeAberta) { e.preventDefault(); fecharCidade(); }
   });
   el.palco.addEventListener('keydown', (e) => {
     if (e.target !== el.palco || !mundo) return;
