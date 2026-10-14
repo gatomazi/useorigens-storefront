@@ -351,3 +351,23 @@ export function trackSizeGuideOpen(params: { garmentTypeId: number; source: stri
   if (!gtagReady()) return;
   sendGtag("event", "size_guide_open", { garment_type_id: params.garmentTypeId, source: params.source });
 }
+
+// ── Meu Pequeno Mundo (GA4 custom events; docs/mundo/eventos.md) ─────────────────────────────────────────────────────────────────────
+// GA4-only, same consent gate. A CLOSED contract: only these events, only these fields, and every value is a number, a boolean or a short
+// token of [a-z0-9_+:-] — a place id of the catalog at most. Never a memory, the search text, a URL or the whole world.
+const MUNDO_EVENTOS = new Set(["mundo_entrada", "mundo_inicio", "mundo_concluido", "mundo_ficha", "mundo_camisetas", "mundo_png", "mundo_download_iniciado", "mundo_compartilhar"]);
+const MUNDO_CAMPOS = new Set(["origem", "lugares", "papeis", "lugar_id", "perfil", "via", "destino", "bloco", "acao", "resultado", "lembrancas"]);
+export type MundoCampos = Record<string, string | number | boolean>;
+
+/** One "Meu Pequeno Mundo" event. Anything outside the contract is dropped here, so the experience can never leak free text by mistake. */
+export function trackMundo(evento: string, campos: MundoCampos = {}): void {
+  if (!MUNDO_EVENTOS.has(evento) || !gtagReady()) return;
+  const params: Record<string, string | number | boolean> = {};
+  for (const [k, v] of Object.entries(campos)) {
+    if (!MUNDO_CAMPOS.has(k)) continue;
+    if (typeof v === "number" && Number.isFinite(v)) params[k] = v;
+    else if (typeof v === "boolean") params[k] = v;
+    else if (typeof v === "string" && v.length <= 40 && /^[a-z0-9_+:-]*$/i.test(v)) params[k] = v;
+  }
+  sendGtag("event", evento, params);
+}

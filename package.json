@@ -37,7 +37,9 @@
     "unificado:reconciliar": "node --conditions=react-server --import tsx scripts/ink-unificado-reconciliar.mts",
     "mockups:fila": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-mockups-fila.mts",
     "mundo:dados": "node --conditions=react-server --import tsx scripts/mini-world-export.mts",
-    "mundo:pacote": "bash scripts/mini-world-pacote.sh"
+    "mundo:prototipo": "node --import tsx scripts/mini-world-standalone.mts",
+    "mundo:pacote": "bash scripts/mini-world-pacote.sh",
+    "mundo:validar": "node --conditions=react-server --import tsx scripts/mini-world-validar.mts"
   },
   "dependencies": {
     "embla-carousel-react": "^8.6.0",
@@ -45,7 +47,8 @@
     "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8",
@@ -56,6 +59,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "sharp": "^0.35.4",
