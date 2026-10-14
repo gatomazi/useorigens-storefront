@@ -65,5 +65,6 @@ EOF
 
 mkdir -p "$SAIDA"
 rm -f "$SAIDA/$NOME.zip"
-(cd "$TMP" && zip -qr -X "$OLDPWD/$SAIDA/$NOME.zip" "$NOME" -x '*.DS_Store')
+# arquivos .zip que estiverem nas pastas de evidências (pacotes anteriores, envios) não entram no pacote
+(cd "$TMP" && zip -qr -X "$OLDPWD/$SAIDA/$NOME.zip" "$NOME" -x '*.DS_Store' -x '*.zip')
 echo "$SAIDA/$NOME.zip ($(du -h "$SAIDA/$NOME.zip" | cut -f1))"
