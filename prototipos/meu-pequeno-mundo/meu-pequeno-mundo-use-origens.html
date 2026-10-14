@@ -75,7 +75,7 @@ img { max-width: 100%; }
   --cor-regiao: var(--ink);
   position: absolute; left: 0; top: 0;
   display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
-  min-height: 44px; max-width: 46vw; padding: 5px 10px 6px 18px;
+  min-height: 44px; max-width: min(40vw, 260px); padding: 5px 10px 6px 18px;
   background: #fbf9f4; border: 1.5px solid var(--ink);
   box-shadow: 0 8px 18px rgb(50 36 12 / 0.16);
   text-align: left; pointer-events: auto; will-change: transform;
@@ -87,7 +87,7 @@ img { max-width: 100%; }
   border-radius: 50%; border: 1.5px solid var(--ink); background: #ece6db;
 }
 .etiqueta::after {
-  content: ""; position: absolute; left: 50%; bottom: -6px; width: 10px; height: 10px; margin-left: -5px;
+  content: ""; position: absolute; left: calc(50% + var(--seta, 0px)); bottom: -6px; width: 10px; height: 10px; margin-left: -5px;
   background: #fbf9f4; border-right: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); transform: rotate(45deg);
 }
 .etiqueta.oculta { opacity: 0; pointer-events: none; }
@@ -2480,25 +2480,50 @@ function renderEtiquetas() {
       b.addEventListener('click', () => aoTocarIlha(lugar.i));
       el.etiquetas.append(b);
       etiquetas.set(lugar.i, b);
-      b.dataset.x = b.dataset.y = '';
     }
     b.style.setProperty('--cor-regiao', REGIOES[lugar.r].cor);
     b.children[0].textContent = papeis.map((p) => TEXTOS.papeis[p].curto).join(' · ');
     b.children[1].textContent = lugar.n;
+    b.dataset.w = b.dataset.h = ''; // medidas refeitas no próximo quadro
   }
 }
+/** Etiquetas sempre inteiras na tela e sem se cobrir: a caixa desliza (a seta continua apontando para a placa) e sobe se esbarrar noutra. */
 function posicionarEtiquetas(projecoes) {
   const esconderTodas = estado.cidadeAberta !== null || estado.modo === 'intro';
+  const largura = el.palco.clientWidth;
+  const limiteTopo = largoMQ.matches ? 72 : 58; // abaixo do cabeçalho e dos botões da câmera
+  const postas = [];
+  const visiveis = [];
   for (const p of projecoes) {
     const b = etiquetas.get(p.id);
     if (!b) continue;
     const oculta = esconderTodas || !p.visivel;
     b.classList.toggle('oculta', oculta);
-    if (oculta) continue;
-    const x = Math.round(p.x), y = Math.round(p.y);
-    if (b.dataset.x === String(x) && b.dataset.y === String(y)) continue;
-    b.dataset.x = String(x); b.dataset.y = String(y);
-    b.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, calc(-100% - 8px))`;
+    if (!oculta) visiveis.push([p, b]);
+  }
+  visiveis.sort((a, b) => b[0].y - a[0].y); // as de baixo (mais perto) ficam no lugar; as de cima cedem
+  for (const [p, b] of visiveis) {
+    if (!b.dataset.w) { b.dataset.w = String(b.offsetWidth); b.dataset.h = String(b.offsetHeight); }
+    const w = Number(b.dataset.w), h = Number(b.dataset.h);
+    const prender = (v) => Math.round(Math.min(Math.max(v, w / 2 + 6), largura - w / 2 - 6));
+    const colide = (cx, b) => postas.find((r) => cx - w / 2 < r.dir + 4 && cx + w / 2 > r.esq - 4 && b - h < r.base + 4 && b > r.topo - 4);
+    let x = prender(p.x);
+    let base = Math.max(Math.round(p.y) - 8, limiteTopo + h); // borda de baixo da caixa
+    for (let volta = 0; volta < 4; volta++) {
+      const bate = colide(x, base);
+      if (!bate) break;
+      if (bate.topo - 6 - h >= limiteTopo) { base = bate.topo - 6; continue; } // sobe, se couber
+      // não cabe em cima: desliza para o lado em que a placa está
+      const centro = (bate.esq + bate.dir) / 2;
+      x = prender(p.x >= centro ? bate.dir + 6 + w / 2 : bate.esq - 6 - w / 2);
+    }
+    postas.push({ esq: x - w / 2, dir: x + w / 2, topo: base - h, base });
+    const seta = Math.round(Math.max(-(w / 2 - 14), Math.min(w / 2 - 14, p.x - x)));
+    const chave = `${x},${base},${seta}`;
+    if (b.dataset.pos === chave) continue;
+    b.dataset.pos = chave;
+    b.style.setProperty('--seta', `${seta}px`);
+    b.style.transform = `translate3d(${x}px, ${base}px, 0) translate(-50%, -100%)`;
   }
 }
 
@@ -2913,7 +2938,8 @@ function agendarArea() {
     else {
       // a busca aberta estica a folha; a maquete não salta por isso: o enquadramento usa a altura normal do painel
       const h = painel ? Math.min(painel.offsetHeight, altura * (painel === el.cidade ? 0.68 : 0.58)) : 0;
-      livre = { direita: 0, base: Math.round(h / 24) * 24, topo: 56 };
+      // topo: o cabeçalho e o espaço das etiquetas acima das ilhas
+      livre = { direita: 0, base: Math.round(h / 24) * 24, topo: 80 };
     }
     el.palco.style.setProperty('--livre-x', `${(el.palco.clientWidth - livre.direita) / 2}px`);
     el.palco.style.setProperty('--livre-y', `${livre.topo + (altura - livre.base - livre.topo) / 2}px`);
