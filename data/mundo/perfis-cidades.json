@@ -145,6 +145,384 @@
       "url": "https://santuariosantapaulina.org.br/historia-santuario/",
       "referencia": "Página institucional (© 2026)",
       "consultadoEm": "2026-10-14"
+    },
+    "ibge-biblioteca-curitiba": {
+      "titulo": "Biblioteca IBGE — Curitiba: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Prefeitura de Curitiba, 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4106902",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-14"
+    },
+    "cwb-turismo-a-cidade": {
+      "titulo": "A cidade",
+      "publicador": "Instituto Municipal de Turismo de Curitiba",
+      "url": "https://turismo.curitiba.pr.gov.br/conteudo/a-cidade/4",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "cwb-turismo-jardim-botanico": {
+      "titulo": "Jardim Botânico",
+      "publicador": "Instituto Municipal de Turismo de Curitiba",
+      "url": "https://turismo.curitiba.pr.gov.br/conteudo/jardim-botanico/1674",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "cwb-linha-turismo-jardim-botanico": {
+      "titulo": "Jardim Botânico — Linha Turismo",
+      "publicador": "Prefeitura de Curitiba (Linha Turismo)",
+      "url": "https://linhaturismo.curitiba.pr.gov.br/detalhes-atracao-turistica?id=5",
+      "referencia": "Página da atração (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "cwb-turismo-opera-de-arame": {
+      "titulo": "Ópera de Arame / Parque Jaime Lerner",
+      "publicador": "Instituto Municipal de Turismo de Curitiba",
+      "url": "https://turismo.curitiba.pr.gov.br/conteudo/opera-de-arameparque-jaime-lerner/1611",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "cwb-linha-turismo-opera": {
+      "titulo": "Ópera de Arame — Linha Turismo",
+      "publicador": "Prefeitura de Curitiba (Linha Turismo)",
+      "url": "https://linhaturismo.curitiba.pr.gov.br/detalhes-atracao-turistica?id=16",
+      "referencia": "Página da atração (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "cwb-especies-tipicas": {
+      "titulo": "Conheça dez espécies típicas da fauna e da flora de Curitiba",
+      "publicador": "Prefeitura de Curitiba",
+      "url": "https://www.curitiba.pr.gov.br/noticias/conheca-dez-especies-tipicas-da-fauna-e-da-flora-de-curitiba/42401",
+      "referencia": "Notícia de 09/06/2017 (o portal pode recusar acesso automático; abre no navegador)",
+      "consultadoEm": "2026-10-14"
+    },
+    "cwb-inventario-areas-verdes": {
+      "titulo": "Inventário de estoques de carbono das áreas naturais e áreas verdes",
+      "publicador": "Secretaria Municipal do Meio Ambiente de Curitiba",
+      "url": "https://meioambiente.curitiba.pr.gov.br/conteudo/inventario-de-estoques-de-carbono-das-areas-naturais-e-areas-verdes/1703",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "ibge-biblioteca-porto-alegre": {
+      "titulo": "Biblioteca IBGE — Porto Alegre: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Prefeitura de Porto Alegre, 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4314902",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-14"
+    },
+    "poa-usina-ppp-2025": {
+      "titulo": "Prefeitura lança PPP da Usina do Gasômetro e anuncia transição com atividades culturais",
+      "publicador": "Prefeitura de Porto Alegre",
+      "url": "https://prefeitura.poa.br/gp/noticias/prefeitura-lanca-ppp-da-usina-do-gasometro-e-anuncia-transicao-com-atividades-culturais",
+      "referencia": "Notícia de 23/07/2025",
+      "consultadoEm": "2026-10-14"
+    },
+    "poa-chamine-projeto-basico-2023": {
+      "titulo": "Projeto Básico — Tomada de Preços 06/2023 (recuperação da chaminé da Usina do Gasômetro)",
+      "publicador": "Prefeitura de Porto Alegre (SMAP)",
+      "url": "https://prefeitura.poa.br/sites/default/files/usu_doc/secretarias/smap/DLC/Projeto%20B%C3%A1sico%20TP%2006_2023.pdf",
+      "referencia": "Documento de 2023",
+      "consultadoEm": "2026-10-14"
+    },
+    "caurs-mercado-150": {
+      "titulo": "História: Mercado Público de Porto Alegre completa 150 anos",
+      "publicador": "Conselho de Arquitetura e Urbanismo do RS (CAU/RS)",
+      "url": "https://caurs.gov.br/historia-mercado-publico-de-porto-alegre-completa-150-anos/",
+      "referencia": "Publicação de 02/10/2019",
+      "consultadoEm": "2026-10-14"
+    },
+    "poa-mercado-149": {
+      "titulo": "Mercado Público completa 149 anos nesta quarta-feira",
+      "publicador": "Prefeitura de Porto Alegre",
+      "url": "https://prefeitura.poa.br/smde/noticias/mercado-publico-completa-149-anos-nesta-quarta-feira",
+      "referencia": "Notícia de 03/10/2018",
+      "consultadoEm": "2026-10-14"
+    },
+    "poa-mercado-150": {
+      "titulo": "Mercado Público comemora 150 anos nesta quinta-feira",
+      "publicador": "Prefeitura de Porto Alegre",
+      "url": "https://prefeitura.poa.br/smde/noticias/mercado-publico-comemora-150-anos-nesta-quinta-feira",
+      "referencia": "Notícia de 2019",
+      "consultadoEm": "2026-10-14"
+    },
+    "poa-mercado-pintura-2022": {
+      "titulo": "Pintura externa do Mercado Público iniciará nesta terça-feira",
+      "publicador": "Prefeitura de Porto Alegre",
+      "url": "https://prefeitura.poa.br/smpg/noticias/pintura-externa-do-mercado-publico-iniciara-nesta-terca-feira",
+      "referencia": "Notícia de 22/02/2022",
+      "consultadoEm": "2026-10-14"
+    },
+    "poa-orla-guaiba": {
+      "titulo": "Morre Jaime Lerner, idealizador da Orla do Guaíba",
+      "publicador": "Prefeitura de Porto Alegre",
+      "url": "https://prefeitura.poa.br/gp/noticias/morre-jaime-lerner-idealizador-da-orla-do-guaiba",
+      "referencia": "Notícia de 27/05/2021",
+      "consultadoEm": "2026-10-14"
+    },
+    "ufrgs-pet-morros": {
+      "titulo": "Morros de Porto Alegre — PET Biologia",
+      "publicador": "Universidade Federal do Rio Grande do Sul (PET Biologia)",
+      "url": "https://www.ufrgs.br/petbiologia/arquivos/95",
+      "referencia": "Página do programa (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "seapi-chimarrao": {
+      "titulo": "Chimarrão: bebida símbolo que se faz presente na vida dos gaúchos",
+      "publicador": "Secretaria da Agricultura do RS (Seapi)",
+      "url": "https://seapi.rs.gov.br/chimarrao-bebida-simbolo-que-se-faz-presente-na-vida-dos-gauchos",
+      "referencia": "Notícia de 23/04/2024",
+      "consultadoEm": "2026-10-14"
+    },
+    "ibge-biblioteca-goiania": {
+      "titulo": "Biblioteca IBGE — Goiânia: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Prefeitura de Goiânia, 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5208707",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-14"
+    },
+    "goias-turismo-art-deco": {
+      "titulo": "Art Déco Goiânia (guia)",
+      "publicador": "Goiás Turismo / Governo de Goiás",
+      "url": "https://goias.gov.br/turismo/wp-content/uploads/sites/4/2026/06/ART-DECO-GOIANIA-digital.pdf",
+      "referencia": "Guia em PDF, publicado em jun/2026 (pela URL); páginas 8, 11 e 16",
+      "consultadoEm": "2026-10-14"
+    },
+    "goias-gov-torre-relogio-2021": {
+      "titulo": "“É importante conviver com a história”, diz Caiado na entrega da restauração da Torre do Relógio",
+      "publicador": "Secretaria de Comunicação de Goiás",
+      "url": "https://goias.gov.br/e-importante-conviver-com-a-historia-diz-caiado-na-entrega-da-restauracao-da-torre-do-relogio/",
+      "referencia": "Notícia de 16/06/2021",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-parecer-286-2023": {
+      "titulo": "Parecer Técnico nº 286/2023 — Praça Cívica (Anexo 18)",
+      "publicador": "Iphan (publicado pela Secretaria de Cultura de Goiás)",
+      "url": "https://goias.gov.br/cultura/wp-content/uploads/sites/25/2024/01/Anexo-18-Autorizacao-de-Projetos-IPHAN.pdf",
+      "referencia": "Parecer de 2023",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-go-superintendencia": {
+      "titulo": "Superintendência do Iphan em Goiás",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/goias",
+      "referencia": "Página modificada em 23/01/2026",
+      "consultadoEm": "2026-10-14"
+    },
+    "oculum-setor-central-2019": {
+      "titulo": "Monumental e doméstico: uma leitura do Setor Central de Goiânia",
+      "publicador": "Oculum Ensaios (PUC-Campinas)",
+      "url": "https://seer.sis.puc-campinas.edu.br/oculum/article/download/4220/2920/18610",
+      "referencia": "Artigo, v. 16, n. 3, 2019",
+      "consultadoEm": "2026-10-14"
+    },
+    "goiania-agora-pracas-2021": {
+      "titulo": "Cinco praças para conhecer em Goiânia",
+      "publicador": "Prefeitura de Goiânia",
+      "url": "https://www.goiania.go.gov.br/agora/cinco-pracas-para-conhecer-em-goiania",
+      "referencia": "Notícia de 21/07/2021 (a página responde com código 404, mas exibe o texto)",
+      "consultadoEm": "2026-10-14"
+    },
+    "goiania-agora-curiosidades-2021": {
+      "titulo": "Goiânia 88 anos: 24 curiosidades sobre a nossa capital",
+      "publicador": "Prefeitura de Goiânia",
+      "url": "https://www.goiania.go.gov.br/agora/24-curiosidades-sobre-a-nossa-capital",
+      "referencia": "Notícia de 23/10/2021 (a página responde com código 404, mas exibe o texto)",
+      "consultadoEm": "2026-10-14"
+    },
+    "goiania-agora-brt-cerrado-2024": {
+      "titulo": "De cajá a jatobá: nomes das estações do BRT Norte-Sul homenageiam plantas do Cerrado",
+      "publicador": "Prefeitura de Goiânia",
+      "url": "https://www.goiania.go.gov.br/agora/de-caja-a-jatoba-nomes-das-estacoes-do-brt-norte-sul-homenageiam-plantas-do-cerrado",
+      "referencia": "Notícia de 28/08/2024 (a página responde com código 404, mas exibe o texto)",
+      "consultadoEm": "2026-10-14"
+    },
+    "ibge-biblioteca-campo-grande": {
+      "titulo": "Biblioteca IBGE — Campo Grande: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Arquivo Histórico de Campo Grande, 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5002704",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-14"
+    },
+    "planurb-perfil-2026": {
+      "titulo": "Perfil Socioeconômico de Campo Grande 2026",
+      "publicador": "Planurb / Prefeitura de Campo Grande",
+      "url": "https://cdn.campogrande.ms.gov.br/portal/prod/uploads/sites/18/2026/08/PERFIL-SOCIOECONOMICO-DE-CAMPO-GRANDE-2026-.pdf",
+      "referencia": "Publicação de ago/2026 (páginas 41 a 53 do PDF)",
+      "consultadoEm": "2026-10-14"
+    },
+    "imasul-desassoreamento-2024": {
+      "titulo": "Ação de desassoreamento já retirou mais de 11 mil metros cúbicos de resíduos do lago do Parque das Nações",
+      "publicador": "Imasul",
+      "url": "https://www.imasul.ms.gov.br/acao-de-desassoreamento-ja-retirou-mais-de-11-mil-metros-cubicos-de-residuos-do-lago-do-parque-das-nacoes/",
+      "referencia": "Notícia de 18/09/2024",
+      "consultadoEm": "2026-10-14"
+    },
+    "imasul-parques-urbanos-2024": {
+      "titulo": "Lazer e contemplação: governo oferece um parque urbano e duas unidades de conservação aos campo-grandenses",
+      "publicador": "Imasul",
+      "url": "https://www.imasul.ms.gov.br/lazer-e-contemplacao-governo-oferece-um-parque-urbano-e-duas-unidades-de-conservacao-aos-campo-grandenses/",
+      "referencia": "Notícia de 31/07/2024",
+      "consultadoEm": "2026-10-14"
+    },
+    "semadesc-reabertura-pni-2020": {
+      "titulo": "Estado reabre Parque das Nações Indígenas nesta quinta com rigorosas regras de biossegurança",
+      "publicador": "Semadesc / Governo de Mato Grosso do Sul",
+      "url": "https://www.semadesc.ms.gov.br/estado-reabre-parque-das-nacoes-indigenas-nesta-quinta-com-rigorosas-regras-de-biosseguranca/",
+      "referencia": "Notícia de 07/10/2020",
+      "consultadoEm": "2026-10-14"
+    },
+    "imasul-bosque-ipes-2017": {
+      "titulo": "Parque das Nações Indígenas ganha mais um bosque com 80 árvores de espécies nativas",
+      "publicador": "Imasul",
+      "url": "https://www.imasul.ms.gov.br/parque-das-nacoes-indigenas-ganha-mais-um-bosque-com-80-arvores-de-especies-nativas/",
+      "referencia": "Notícia de 27/10/2017",
+      "consultadoEm": "2026-10-14"
+    },
+    "fundac-morada-dos-bais": {
+      "titulo": "Morada dos Baís / Pensão Pimentel",
+      "publicador": "Fundac / Prefeitura de Campo Grande",
+      "url": "https://www.campogrande.ms.gov.br/fundac/sec-artigos/morada-dos-bais/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "fundac-bens-tombados": {
+      "titulo": "Bens tombados",
+      "publicador": "Fundac / Prefeitura de Campo Grande",
+      "url": "https://www.campogrande.ms.gov.br/fundac/bens-tombados/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "cgnoticias-soba-2018": {
+      "titulo": "Com 41% dos votos, sobá é eleito pela população o prato típico de Campo Grande",
+      "publicador": "Prefeitura de Campo Grande",
+      "url": "https://www.campogrande.ms.gov.br/cgnoticias/noticia/soba-e-eleito-pela-populacao-o-prato-tipico-de-campo-grande/",
+      "referencia": "Notícia de 28/02/2018",
+      "consultadoEm": "2026-10-14"
+    },
+    "cgnoticias-festival-soba-2018": {
+      "titulo": "Prefeitura participa de festival e celebra sobá como prato típico da capital",
+      "publicador": "Prefeitura de Campo Grande",
+      "url": "https://www.campogrande.ms.gov.br/cgnoticias/noticia/prefeitura-participa-de-festival-e-celebra-soba-como-prato-tipico-da-capital/",
+      "referencia": "Notícia de 10/08/2018",
+      "consultadoEm": "2026-10-14"
+    },
+    "ibge-biblioteca-belem": {
+      "titulo": "Biblioteca IBGE — Belém: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Prefeitura de Belém, 2012, e na Enciclopédia dos Municípios Brasileiros, 1957)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1501402",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-belem-conjunto": {
+      "titulo": "Belém (PA) — conjuntos urbanos tombados",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/patrimonio-cultural/patrimonio-material/bens-tombados/conjuntos-urbanos-tombados-cidades-historicas/norte/belem-pa",
+      "referencia": "Página publicada em 26/03/2026, modificada em 14/04/2026",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-pa-patrimonio-material": {
+      "titulo": "Patrimônio material — Superintendência do Iphan no Pará",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/para/patrimonio-material",
+      "referencia": "Página publicada em 10/09/2021",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-pa-patrimonio-mundial": {
+      "titulo": "Patrimônio mundial — Superintendência do Iphan no Pará",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/para/patrimonio-mundial",
+      "referencia": "Página publicada em 10/09/2021, modificada em 27/10/2021",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-sicg-theatro-da-paz": {
+      "titulo": "SICG — Theatro da Paz (bem 823)",
+      "publicador": "Iphan",
+      "url": "https://sicg.iphan.gov.br/sicg/bem/visualizar/823",
+      "referencia": "Registro de 12/06/2026",
+      "consultadoEm": "2026-10-14"
+    },
+    "secult-pa-theatro-da-paz": {
+      "titulo": "Secult inicia reforma no Theatro da Paz",
+      "publicador": "Secretaria de Cultura do Pará",
+      "url": "https://secult.pa.gov.br/noticia/1284/secult-inicia-reforma-no-theatro-da-paz",
+      "referencia": "Notícia de 27/11/2020",
+      "consultadoEm": "2026-10-14"
+    },
+    "theatro-da-paz-candidatura": {
+      "titulo": "Theatro da Paz e Teatro Amazonas poderão se tornar patrimônios mundiais nos próximos anos",
+      "publicador": "Theatro da Paz (site oficial)",
+      "url": "https://www.theatrodapaz.com.br/noticias/theatro-da-paz-e-teatro-amazonas-poder%C3%A3o-se-tornar-patrim%C3%B4nios-mundiais-nos-pr%C3%B3ximos-anos",
+      "referencia": "Notícia de 12/12/2023",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-teatros-amazonia-unesco": {
+      "titulo": "Teatros da Amazônia são reconhecidos pela Unesco como Patrimônio Mundial",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/sala-de-imprensa/notas-e-avisos-de-pauta/teatros-da-amazonia-sao-reconhecidos-pela-unesco-como-patrimonio-mundial",
+      "referencia": "Nota de 27/07/2026",
+      "consultadoEm": "2026-10-14"
+    },
+    "ufpa-conheca-belem": {
+      "titulo": "Conheça Belém",
+      "publicador": "Universidade Federal do Pará (SBPC 2024)",
+      "url": "https://sbpc.ufpa.br/dicas/conhe%C3%A7a-bel%C3%A9m",
+      "referencia": "Página sem data (contexto da reunião da SBPC de 2024)",
+      "consultadoEm": "2026-10-14"
+    },
+    "ibge-biblioteca-manaus": {
+      "titulo": "Biblioteca IBGE — Manaus: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Prefeitura de Manaus, 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1302603",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-14"
+    },
+    "cultura-am-teatro-amazonas": {
+      "titulo": "Teatro Amazonas",
+      "publicador": "Secretaria de Cultura e Economia Criativa do Amazonas",
+      "url": "https://cultura.am.gov.br/teatro-amazonas/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-14"
+    },
+    "prefeitura-manaus-o-que-ver": {
+      "titulo": "O que ver e fazer em Manaus",
+      "publicador": "Prefeitura de Manaus",
+      "url": "https://www.manaus.am.gov.br/turismo/o-que-ver-e-fazer-em-manaus/",
+      "referencia": "Página publicada em 10/10/2022, modificada em 12/11/2024",
+      "consultadoEm": "2026-10-14"
+    },
+    "prefeitura-manaus-encontro-2026": {
+      "titulo": "Obra de Oscar Niemeyer avança com concretagem no Parque Encontro das Águas",
+      "publicador": "Prefeitura de Manaus",
+      "url": "https://www.manaus.am.gov.br/noticia/infraestrutura/concretagem-obra-encontro-das-aguas/",
+      "referencia": "Notícia de 24/09/2026",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-sicg-encontro-das-aguas": {
+      "titulo": "SICG — Encontro das Águas (bem 973)",
+      "publicador": "Iphan",
+      "url": "https://sicg.iphan.gov.br/sicg/bem/visualizar/973",
+      "referencia": "Registro de 06/06/2023",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-ata-85-conselho": {
+      "titulo": "Ata da 85ª Reunião do Conselho Consultivo do Patrimônio Cultural",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/acesso-a-informacao/participacao-social/conselhos-e-orgaos-colegiados/atas-do-conselho-consultivo-do-patrimonio-cultural/de-2011-ate-2020/85a-reuniao-ordinaria-do-conselho-consultivo-27-04-2017/@@display-file/file",
+      "referencia": "Ata de 27/04/2017 (páginas 16 e 17)",
+      "consultadoEm": "2026-10-14"
+    },
+    "iphan-sicg-porto-manaus": {
+      "titulo": "SICG — Porto de Manaus (bem 710)",
+      "publicador": "Iphan",
+      "url": "https://sicg.iphan.gov.br/sicg/bem/visualizar/710",
+      "referencia": "Registro de 06/06/2023",
+      "consultadoEm": "2026-10-14"
+    },
+    "prefeitura-manaus-mercado-adolpho-lisboa": {
+      "titulo": "Série Conheça Manaus destaca o Mercado Municipal Adolpho Lisboa como atrativo do Centro Histórico",
+      "publicador": "Prefeitura de Manaus",
+      "url": "https://www.manaus.am.gov.br/noticia/manaus/serie-conheca-manaus-destaca-o-mercado-municipal-adolpho-lisboa-como-atrativo-do-centro-historico/",
+      "referencia": "Notícia de 18/09/2014",
+      "consultadoEm": "2026-10-14"
     }
   },
   "cidades": {
@@ -654,6 +1032,1051 @@
         "status": "revisão externa",
         "em": "2026-10-14",
         "observacao": "Revisão de 14/10/2026: curiosidade de 1846 reescrita para não confundir com a emancipação; avistamento de baleias descrito como possibilidade."
+      }
+    },
+    "4106902": {
+      "identidade": {
+        "id": "4106902",
+        "ibge": "4106902",
+        "nome": "Curitiba",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Num altiplano, entre parques, araucárias e uma estufa de ferro e vidro.",
+        "resumo": "Curitiba fica num altiplano a 934 metros acima do nível do mar, segundo o Instituto Municipal de Turismo. O histórico do IBGE registra a vila em 1693; a elevação a cidade veio em 1842 e, em 1854, ela passou a ser a capital da província do Paraná. As áreas verdes da cidade guardam remanescentes da Floresta com Araucárias. O Jardim Botânico, de 1991, e a Ópera de Arame, de 1992, estão entre seus endereços mais conhecidos.",
+        "fontesResumo": [
+          "cwb-turismo-a-cidade",
+          "ibge-biblioteca-curitiba",
+          "cwb-inventario-areas-verdes",
+          "cwb-turismo-jardim-botanico",
+          "cwb-turismo-opera-de-arame"
+        ],
+        "referencias": [
+          {
+            "id": "jardim-botanico",
+            "tipo": "natureza",
+            "titulo": "Jardim Botânico e a estufa",
+            "texto": "Inaugurado em 1991, o Jardim Botânico foi criado à imagem dos jardins franceses, com canteiros de flores logo na entrada e trilhas que cortam o bosque. A estufa, um dos símbolos de Curitiba, é inspirada no Palácio de Cristal inglês e expõe plantas originárias das florestas tropicais.",
+            "fontes": [
+              "cwb-turismo-jardim-botanico",
+              "cwb-linha-turismo-jardim-botanico"
+            ],
+            "descoberta": {
+              "modulo": "estufa",
+              "nota": "Na maquete, uma forma simplificada inspirada na estufa e nos jardins; proporções ilustrativas."
+            },
+            "curto": "Jardim de 1991 em estilo francês. A estufa, inspirada no Palácio de Cristal inglês, guarda plantas de florestas tropicais."
+          },
+          {
+            "id": "opera-de-arame",
+            "tipo": "cultura",
+            "titulo": "Ópera de Arame",
+            "texto": "Inaugurada em 1992, a Ópera de Arame recebe espetáculos do popular ao clássico e tem capacidade para 1.572 espectadores. Foi construída em ferro tubular e tela aramada, na cratera de uma pedreira desativada, e é rodeada por lagos.",
+            "fontes": [
+              "cwb-turismo-opera-de-arame",
+              "cwb-linha-turismo-opera"
+            ],
+            "curto": "Teatro de 1992 em ferro tubular e tela aramada, na cratera de uma pedreira desativada rodeada por lagos."
+          },
+          {
+            "id": "araucaria",
+            "tipo": "natureza",
+            "titulo": "Araucária",
+            "texto": "Também conhecida como pinheiro-do-paraná, a araucária é um símbolo do Estado, e os exemplares mais antigos podem chegar a 30 metros. Curitiba tem remanescentes da Floresta com Araucárias (Floresta Ombrófila Mista) em suas áreas naturais e áreas verdes.",
+            "fontes": [
+              "cwb-especies-tipicas",
+              "cwb-inventario-areas-verdes"
+            ],
+            "curto": "Símbolo do Paraná, a araucária pode chegar a 30 metros; Curitiba guarda remanescentes da Floresta com Araucárias."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, em texto reproduzido pelo IBGE, o nome vem de kur yt yba, que quer dizer “grande quantidade de pinheiros, pinheiral” na linguagem dos primeiros habitantes indígenas do território.",
+            "fontes": [
+              "ibge-biblioteca-curitiba"
+            ]
+          },
+          {
+            "texto": "O histórico do IBGE separa as datas: vila em 29 de março de 1693, cidade em 5 de fevereiro de 1842 e capital da província do Paraná em 26 de julho de 1854.",
+            "fontes": [
+              "ibge-biblioteca-curitiba"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "curitibano",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-curitiba"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -25.4133,
+          "lon": -49.2679,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 1773718,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 434.892,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Curitiba",
+          "intermediaria": "Curitiba",
+          "mesorregiao": "Metropolitana de Curitiba",
+          "microrregiao": "Curitiba",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano"
+        ],
+        "rotulo": "Cidade num altiplano, com araucárias, lago de parque e a estufa",
+        "base": "serra",
+        "cores": {
+          "grama": [
+            "#6f8d58",
+            "#83a065"
+          ]
+        },
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "lagoas"
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            9
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "arbusto",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 4
+        },
+        "marcos": [
+          {
+            "modulo": "estufa",
+            "referencia": "jardim-botanico"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-14",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Fontes do portal www.curitiba.pr.gov.br podem recusar acesso automático; a altitude aparece como 934 m (Turismo) e 945 m (Dados Gerais), por isso o texto atribui o número."
+      }
+    },
+    "4314902": {
+      "identidade": {
+        "id": "4314902",
+        "ibge": "4314902",
+        "nome": "Porto Alegre",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "À beira do Guaíba, entre morros de granito, a usina e o mercado.",
+        "resumo": "Porto Alegre se estende pela margem do Lago Guaíba, onde a orla revitalizada soma mais de 55 hectares. O histórico do IBGE registra o povoamento por casais açorianos em 1752 e a criação da freguesia em 26 de março de 1772, a data oficial de fundação. O município tem 44 morros de formação granítica; o Morro Santana, com 311 metros, é o ponto mais alto. A Usina do Gasômetro e o Mercado Público são patrimônio tombado.",
+        "fontesResumo": [
+          "poa-orla-guaiba",
+          "ibge-biblioteca-porto-alegre",
+          "ufrgs-pet-morros",
+          "poa-usina-ppp-2025",
+          "poa-mercado-149"
+        ],
+        "referencias": [
+          {
+            "id": "usina-do-gasometro",
+            "tipo": "patrimonio",
+            "titulo": "Usina do Gasômetro",
+            "texto": "Inaugurada em 1928 como usina termelétrica, foi tombada como patrimônio municipal em 1982 e estadual em 1983; desde 1991, o prédio abriga atividades culturais. A chaminé, concluída em 1937, tem 117 metros de altura total, sendo 104 metros aparentes.",
+            "fontes": [
+              "poa-usina-ppp-2025",
+              "poa-chamine-projeto-basico-2023"
+            ],
+            "descoberta": {
+              "modulo": "usina",
+              "nota": "Na maquete, uma forma simplificada inspirada na usina e na chaminé; cores e proporções são ilustrativas."
+            },
+            "curto": "Usina termelétrica de 1928, tombada pelo Município e pelo Estado. A chaminé tem 104 metros aparentes."
+          },
+          {
+            "id": "mercado-publico",
+            "tipo": "patrimonio",
+            "titulo": "Mercado Público",
+            "texto": "Inaugurado em 3 de outubro de 1869, o Mercado ganhou o segundo pavimento em 1912 e foi tombado pelo município em 1979. O prédio em estilo neoclássico, pintado de amarelo, é uma referência visual da cidade.",
+            "fontes": [
+              "caurs-mercado-150",
+              "poa-mercado-149",
+              "poa-mercado-150",
+              "poa-mercado-pintura-2022"
+            ],
+            "descoberta": {
+              "modulo": "mercado",
+              "nota": "Na maquete, uma forma simplificada inspirada no mercado; proporções ilustrativas."
+            },
+            "curto": "Mercado de 1869, neoclássico e amarelo, tombado pelo município em 1979."
+          },
+          {
+            "id": "chimarrao",
+            "tipo": "tradicao",
+            "titulo": "Chimarrão",
+            "texto": "A Lei estadual nº 11.929, de 20 de junho de 2003, instituiu o Dia do Chimarrão e definiu o chimarrão como bebida símbolo do Rio Grande do Sul.",
+            "fontes": [
+              "seapi-chimarrao"
+            ],
+            "curto": "Desde 2003, uma lei estadual define o chimarrão como bebida símbolo do Rio Grande do Sul."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O histórico do IBGE separa as datas: freguesia em 1772, sede do governo a partir de 24 de julho de 1773 e vila instalada em 11 de dezembro de 1810.",
+            "fontes": [
+              "ibge-biblioteca-porto-alegre"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "porto-alegrense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-porto-alegre"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -30.0282,
+          "lon": -51.2286,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 1332845,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 495.39,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Porto Alegre",
+          "intermediaria": "Porto Alegre",
+          "mesorregiao": "Metropolitana de Porto Alegre",
+          "microrregiao": "Porto Alegre",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano"
+        ],
+        "rotulo": "Cidade à beira do Guaíba, com morros ao fundo, a usina e o mercado",
+        "base": "vale",
+        "cores": {
+          "grama": [
+            "#7f9a5b",
+            "#91a868"
+          ],
+          "areia": "#d8c8a0"
+        },
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.55
+        },
+        "agua": {
+          "modulo": "costa",
+          "direcao": -0.95
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            9
+          ],
+          [
+            "arbusto",
+            6
+          ],
+          [
+            "mata",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 4
+        },
+        "marcos": [
+          {
+            "modulo": "usina",
+            "referencia": "usina-do-gasometro"
+          },
+          {
+            "modulo": "mercado",
+            "referencia": "mercado-publico"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-14",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O IBGE dá duas datas para a elevação a cidade (1812 e 1822); o texto não escolhe. A situação atual de funcionamento da usina não é afirmada."
+      }
+    },
+    "5208707": {
+      "identidade": {
+        "id": "5208707",
+        "ibge": "5208707",
+        "nome": "Goiânia",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Capital planejada no Cerrado, com avenidas em leque e prédios Art Déco.",
+        "resumo": "Goiânia foi planejada para ser a nova capital de Goiás: a pedra fundamental foi lançada em 24 de outubro de 1933, no altiplano onde hoje fica a Praça Cívica. O traçado faz as avenidas Araguaia, Goiás e Tocantins convergirem para o centro administrativo. Em volta da praça fica parte do acervo Art Déco tombado pelo Iphan. As estações do BRT Norte-Sul levam nomes de plantas nativas do Cerrado.",
+        "fontesResumo": [
+          "ibge-biblioteca-goiania",
+          "oculum-setor-central-2019",
+          "iphan-parecer-286-2023",
+          "goiania-agora-brt-cerrado-2024"
+        ],
+        "referencias": [
+          {
+            "id": "torre-do-relogio",
+            "tipo": "patrimonio",
+            "titulo": "Torre do Relógio",
+            "texto": "Ícone Art Déco, a torre marca o início da Avenida Goiás, e dos quatro lados é possível ver as horas. Foi inaugurada em julho de 1942, durante o Batismo Cultural de Goiânia, e teve a restauração entregue em 2021.",
+            "fontes": [
+              "goias-turismo-art-deco",
+              "goias-gov-torre-relogio-2021"
+            ],
+            "descoberta": {
+              "modulo": "torre-relogio",
+              "nota": "Na maquete, uma forma simplificada inspirada na torre; cores e proporções são ilustrativas."
+            },
+            "curto": "Torre Art Déco de 1942 no início da Avenida Goiás, com relógio visível dos quatro lados."
+          },
+          {
+            "id": "lago-das-rosas",
+            "tipo": "natureza",
+            "titulo": "Parque Lago das Rosas",
+            "texto": "O Iphan aponta o Lago das Rosas como o parque mais antigo de Goiânia. A mureta, construída em 1941, delimitava a represa da nascente do córrego Capim Puba, que depois virou balneário público com trampolim. Mureta e trampolim são tombados pelo Iphan como representantes da arquitetura Art Déco.",
+            "fontes": [
+              "iphan-go-superintendencia",
+              "goias-turismo-art-deco"
+            ],
+            "descoberta": {
+              "modulo": "lago-mureta",
+              "nota": "Na maquete, um lago simplificado com a mureta, o trampolim e roseiras; proporções ilustrativas."
+            },
+            "curto": "O parque mais antigo da cidade, segundo o Iphan, com mureta e trampolim Art Déco tombados."
+          },
+          {
+            "id": "praca-civica",
+            "tipo": "paisagem",
+            "titulo": "Praça Cívica e o traçado em leque",
+            "texto": "Construída em 1933, a Praça Cívica marca a construção de Goiânia e abriga a sede do Executivo estadual. Dela partem as avenidas Araguaia, Goiás e Tocantins, num traçado monumental que o urbanista comparava aos de Versalhes, Karlsruhe e Washington.",
+            "fontes": [
+              "goiania-agora-pracas-2021",
+              "oculum-setor-central-2019"
+            ],
+            "curto": "Praça de 1933, sede do governo estadual, de onde partem três avenidas em leque."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O histórico do IBGE separa as datas: o município foi criado em 2 de agosto de 1935 e instalado em 13 de dezembro de 1935; a capital foi transferida da cidade de Goiás para Goiânia por decreto de 23 de março de 1937.",
+            "fontes": [
+              "ibge-biblioteca-goiania"
+            ]
+          },
+          {
+            "texto": "Segundo a Prefeitura, o Lago das Rosas tem esse nome por causa do grande canteiro de rosas que o parque abrigava no início.",
+            "fontes": [
+              "goiania-agora-curiosidades-2021"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "goianiense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-goiania"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -16.6802,
+          "lon": -49.2565,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 1437366,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 729.296,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Goiânia",
+          "intermediaria": "Goiânia",
+          "mesorregiao": "Centro Goiano",
+          "microrregiao": "Goiânia",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Cidade planejada no Cerrado, com a torre Art Déco e o lago do parque",
+        "base": "cerrado",
+        "cores": {
+          "grama": [
+            "#a9a463",
+            "#9d9c5c"
+          ]
+        },
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "vereda",
+          "largura": 0.13
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            9
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "arbusto",
+            6
+          ],
+          [
+            "capim",
+            8
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 4
+        },
+        "marcos": [
+          {
+            "modulo": "torre-relogio",
+            "referencia": "torre-do-relogio"
+          },
+          {
+            "modulo": "lago-mureta",
+            "referencia": "lago-das-rosas"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-14",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Páginas /agora/ da Prefeitura de Goiânia respondem com código 404, mas exibem o texto. A revitalização do Lago das Rosas está em obras e não é citada como concluída."
+      }
+    },
+    "5002704": {
+      "identidade": {
+        "id": "5002704",
+        "ibge": "5002704",
+        "nome": "Campo Grande",
+        "uf": "MS",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No planalto de Maracaju, entre ipês, córregos e um parque com lago.",
+        "resumo": "Campo Grande está no planalto de Maracaju, sobre o divisor das bacias dos rios Paraná e Paraguai, com relevo suavemente ondulado entre 500 e 675 metros de altitude. O histórico do IBGE registra a chegada da expedição de José Antônio Pereira em 1875 e lembra, pela história oral, uma comunidade negra no Cascudo, hoje Bairro São Francisco. O trem chegou em 1914, e a cidade virou capital com a criação de Mato Grosso do Sul, em 1977. O Cerrado é a vegetação da região.",
+        "fontesResumo": [
+          "planurb-perfil-2026",
+          "ibge-biblioteca-campo-grande"
+        ],
+        "referencias": [
+          {
+            "id": "parque-das-nacoes-indigenas",
+            "tipo": "natureza",
+            "titulo": "Parque das Nações Indígenas",
+            "texto": "Com 116 hectares de área verde, o parque é um dos principais refúgios naturais de Campo Grande e uma homenagem às culturas indígenas. O lago principal tem cerca de 5 hectares de espelho d’água, e o parque é ligado ao Parque Estadual do Prosa, que preserva as nascentes do córrego Prosa. Em 2017, ganhou um bosque de 80 árvores nativas, 40 delas ipês.",
+            "fontes": [
+              "imasul-desassoreamento-2024",
+              "imasul-parques-urbanos-2024",
+              "semadesc-reabertura-pni-2020",
+              "imasul-bosque-ipes-2017"
+            ],
+            "descoberta": {
+              "modulo": "lago-ilha",
+              "nota": "Na maquete, um lago simplificado com ilha, deck e ipês; a figura na ilha é genérica e não reproduz a escultura do parque."
+            },
+            "curto": "Parque de 116 hectares com um lago de cerca de 5 hectares, em homenagem às culturas indígenas."
+          },
+          {
+            "id": "morada-dos-bais",
+            "tipo": "patrimonio",
+            "titulo": "Morada dos Baís",
+            "texto": "Bernardo Franco Baís começou a construir o sobrado em 1913, em alvenaria, coberto originalmente com telhas de ardósia vindas da Itália; a obra foi concluída em 1918. Em 1937, Lídia Baís pintou painéis nas paredes. O prédio foi tombado pela Prefeitura em 1986.",
+            "fontes": [
+              "fundac-morada-dos-bais",
+              "planurb-perfil-2026"
+            ],
+            "descoberta": {
+              "modulo": "sobrado",
+              "nota": "Na maquete, uma forma simplificada inspirada no sobrado; a cor da fachada é ilustrativa."
+            },
+            "curto": "Sobrado de alvenaria concluído em 1918, com painéis de Lídia Baís, tombado pela Prefeitura em 1986."
+          },
+          {
+            "id": "soba",
+            "tipo": "tradicao",
+            "titulo": "Sobá",
+            "texto": "Prato oriundo da culinária japonesa, o sobá é feito de macarrão servido com carne bovina, cebolinha e omelete em tiras. É patrimônio imaterial do município desde 2006 e, em 2018, foi eleito pela população o prato típico de Campo Grande.",
+            "fontes": [
+              "cgnoticias-soba-2018",
+              "cgnoticias-festival-soba-2018",
+              "fundac-bens-tombados"
+            ],
+            "curto": "Prato de origem japonesa, patrimônio imaterial do município desde 2006."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O histórico do IBGE separa as etapas: distrito em 1889, vila em 1899, desmembrada de Nioac, e cidade pela Lei Estadual nº 772, de 16 de julho de 1918.",
+            "fontes": [
+              "ibge-biblioteca-campo-grande"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "campo-grandense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-campo-grande"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -20.4626,
+          "lon": -54.6086,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 898100,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 8082.978,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Campo Grande",
+          "intermediaria": "Campo Grande",
+          "mesorregiao": "Centro Norte de Mato Grosso do Sul",
+          "microrregiao": "Campo Grande",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Cidade no planalto, com ipês, córrego e o lago do parque",
+        "base": "cerrado",
+        "cores": {
+          "grama": [
+            "#a7a262",
+            "#9a9a5b"
+          ]
+        },
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "vereda",
+          "largura": 0.13
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            8
+          ],
+          [
+            "ipe",
+            6
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "arbusto",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 3
+        },
+        "marcos": [
+          {
+            "modulo": "lago-ilha",
+            "referencia": "parque-das-nacoes-indigenas"
+          },
+          {
+            "modulo": "sobrado",
+            "referencia": "morada-dos-bais"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-14",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Área do parque diverge (116 ha no Imasul em 2024; 119 ha na Semadesc em 2020) e o instrumento de registro do sobá diverge (decreto de 18/07/2006 e deliberação de 08/08/2006); o texto usa o ano."
+      }
+    },
+    "1501402": {
+      "identidade": {
+        "id": "1501402",
+        "ibge": "1501402",
+        "nome": "Belém",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Entre a baía e o rio, a cidade do Ver-o-Peso e das mangueiras.",
+        "resumo": "Belém foi fundada em 12 de janeiro de 1616 por Francisco Caldeira Castelo Branco, com um forte que primeiro se chamou Presépio, hoje Forte do Castelo. O forte foi erguido na confluência do rio Guamá com a Baía do Guajará, e a cidade ganhou características de cidade portuária. Segundo o IBGE, as primeiras ruas, abertas em 1650, eram todas paralelas ao rio. Conhecida como Cidade das Mangueiras, tem a maior parte do território em ilhas, segundo a UFPA.",
+        "fontesResumo": [
+          "ibge-biblioteca-belem",
+          "iphan-belem-conjunto",
+          "ufpa-conheca-belem"
+        ],
+        "referencias": [
+          {
+            "id": "ver-o-peso",
+            "tipo": "patrimonio",
+            "titulo": "Ver-o-Peso e o Mercado de Ferro",
+            "texto": "O complexo do Ver-o-Peso ocupa 35 mil metros quadrados, com o Mercado de Ferro, o Mercado de Carne, a Praça do Relógio e a Doca, e foi tombado pelo Iphan em 1977. O Mercado de Ferro começou a ser construído em 1899, com estrutura de ferro trazida da Europa, telhas tipo Marselha e torres art nouveau cobertas com escamas de zinco.",
+            "fontes": [
+              "iphan-pa-patrimonio-material",
+              "iphan-belem-conjunto"
+            ],
+            "descoberta": {
+              "modulo": "mercado-ferro",
+              "nota": "Na maquete, uma forma simplificada inspirada no Mercado de Ferro; o número de torres e as cores são ilustrativos."
+            },
+            "curto": "Complexo de 35 mil m² tombado pelo Iphan em 1977; o Mercado de Ferro começou a ser construído em 1899."
+          },
+          {
+            "id": "theatro-da-paz",
+            "tipo": "patrimonio",
+            "titulo": "Theatro da Paz",
+            "texto": "Inaugurado em 15 de fevereiro de 1878, no antigo Largo da Pólvora, hoje Praça da República, e tombado pelo Iphan em 1963, tem fachada com frontão reto apoiado em colunas coríntias. Em 2026, entrou na Lista do Patrimônio Mundial da Unesco com o Teatro Amazonas, como Teatros da Amazônia.",
+            "fontes": [
+              "secult-pa-theatro-da-paz",
+              "theatro-da-paz-candidatura",
+              "iphan-sicg-theatro-da-paz",
+              "iphan-teatros-amazonia-unesco"
+            ],
+            "descoberta": {
+              "modulo": "teatro-frontao",
+              "nota": "Na maquete, uma forma simplificada inspirada no teatro; as cores são ilustrativas."
+            },
+            "curto": "Teatro de 1878, Patrimônio Mundial da Unesco desde 2026 junto com o Teatro Amazonas."
+          },
+          {
+            "id": "cirio-de-nazare",
+            "tipo": "tradicao",
+            "titulo": "Círio de Nazaré",
+            "texto": "O Círio de Nossa Senhora de Nazaré foi inscrito no Livro das Celebrações em 2004 e reconhecido pela Unesco como Patrimônio Cultural Imaterial da Humanidade em dezembro de 2013. O clímax é a procissão, no segundo domingo de outubro.",
+            "fontes": [
+              "iphan-pa-patrimonio-mundial"
+            ],
+            "curto": "Celebração registrada em 2004 e Patrimônio Imaterial da Humanidade desde 2013; a procissão é no segundo domingo de outubro."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O povoado que se formou ao redor do forte recebeu o nome de Feliz Lusitânia, sob a invocação de Nossa Senhora de Belém.",
+            "fontes": [
+              "ibge-biblioteca-belem"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "belenense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-belem"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -1.4554,
+          "lon": -48.5051,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 1303403,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1059.466,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Belém",
+          "intermediaria": "Belém",
+          "mesorregiao": "Metropolitana de Belém",
+          "microrregiao": "Belém",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade portuária entre a baía e o rio, com mangueiras, o mercado de ferro e o teatro",
+        "base": "amazonia",
+        "cores": {
+          "grama": [
+            "#5f8a4b",
+            "#6d9653"
+          ],
+          "areia": "#c9b78e"
+        },
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "costa",
+          "direcao": -0.95
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            11
+          ],
+          [
+            "arbusto",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "mercado-ferro",
+            "referencia": "ver-o-peso"
+          },
+          {
+            "modulo": "teatro-frontao",
+            "referencia": "theatro-da-paz"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-14",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Sites da Prefeitura de Belém estavam fora do ar na consulta; número de ilhas diverge (42 na UFPA; 39 em resumo de busca da Prefeitura), por isso o texto não dá o número."
+      }
+    },
+    "1302603": {
+      "identidade": {
+        "id": "1302603",
+        "ibge": "1302603",
+        "nome": "Manaus",
+        "uf": "AM",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na margem do Rio Negro, o teatro da cúpula colorida e o encontro de duas águas.",
+        "resumo": "Manaus fica na margem esquerda do Rio Negro. O histórico do IBGE conta que o núcleo urbano começou com o Forte da Barra de São José, em 1669, data convencionada como o nascimento da cidade. Elevada a cidade em 1848 com o nome de Barra do Rio Negro, passou a se chamar Manaus em 1856. O porto tem cais flutuantes, pensados para os desníveis entre as cheias e as vazantes do rio.",
+        "fontesResumo": [
+          "ibge-biblioteca-manaus",
+          "iphan-sicg-porto-manaus"
+        ],
+        "referencias": [
+          {
+            "id": "teatro-amazonas",
+            "tipo": "patrimonio",
+            "titulo": "Teatro Amazonas",
+            "texto": "Inaugurado em 31 de dezembro de 1896 e tombado como Patrimônio Histórico Nacional em 1966, tem fachada neoclássica rosa com detalhes brancos e uma cúpula de 36 mil escamas de cerâmica nas cores da bandeira brasileira. Em 2026, entrou na Lista do Patrimônio Mundial da Unesco com o Theatro da Paz.",
+            "fontes": [
+              "cultura-am-teatro-amazonas",
+              "prefeitura-manaus-o-que-ver",
+              "iphan-teatros-amazonia-unesco"
+            ],
+            "descoberta": {
+              "modulo": "teatro-cupula",
+              "nota": "Na maquete, uma forma simplificada inspirada no teatro; o desenho das escamas é ilustrativo."
+            },
+            "curto": "Teatro de 1896 com cúpula de 36 mil escamas de cerâmica, Patrimônio Mundial da Unesco desde 2026."
+          },
+          {
+            "id": "encontro-das-aguas",
+            "tipo": "paisagem",
+            "titulo": "Encontro das Águas",
+            "texto": "As águas escuras do Rio Negro e as águas barrentas do Rio Solimões percorrem quilômetros lado a lado antes de se misturarem. O Iphan cadastra o encontro como bem paisagístico; o tombamento, aprovado pelo seu Conselho Consultivo em 2010, foi levado à Justiça.",
+            "fontes": [
+              "prefeitura-manaus-encontro-2026",
+              "iphan-sicg-encontro-das-aguas",
+              "iphan-ata-85-conselho"
+            ],
+            "descoberta": {
+              "modulo": "encontro-aguas",
+              "nota": "Na maquete, as duas águas aparecem lado a lado no rio; a escala é ilustrativa."
+            },
+            "curto": "As águas escuras do Negro e as barrentas do Solimões correm lado a lado por quilômetros."
+          },
+          {
+            "id": "mercado-adolpho-lisboa",
+            "tipo": "patrimonio",
+            "titulo": "Mercado Adolpho Lisboa",
+            "texto": "Inaugurado em 1883 às margens do Rio Negro, seguindo as características do antigo mercado Les Halles, de Paris, tem um pavilhão central em alvenaria ladeado por dois pavilhões com estrutura de ferro fundido e forjado.",
+            "fontes": [
+              "prefeitura-manaus-o-que-ver",
+              "prefeitura-manaus-mercado-adolpho-lisboa"
+            ],
+            "curto": "Mercado de 1883 na beira do Rio Negro, com pavilhões de ferro inspirados no Les Halles, de Paris."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O pano de boca do Teatro Amazonas, feito em 1894 pelo artista Crispim do Amaral, retrata o encontro dos rios Negro e Solimões.",
+            "fontes": [
+              "cultura-am-teatro-amazonas"
+            ]
+          },
+          {
+            "texto": "Segundo a Prefeitura, em texto reproduzido pelo IBGE, o nome lembra os Manáos, povo indígena que habitava a região, e significaria “mãe dos deuses”.",
+            "fontes": [
+              "ibge-biblioteca-manaus"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "manauara",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-manaus"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -3.0922,
+          "lon": -60.0604,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 2063689,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 11401.092,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Manaus",
+          "intermediaria": "Manaus",
+          "mesorregiao": "Centro Amazonense",
+          "microrregiao": "Manaus",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade na margem do rio, com o encontro das águas e o teatro da cúpula colorida",
+        "base": "amazonia",
+        "cores": {
+          "grama": [
+            "#5f8a4b",
+            "#6b9351"
+          ]
+        },
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.5,
+          "direcao": 0
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            9
+          ],
+          [
+            "arbusto",
+            5
+          ],
+          [
+            "mata",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 4
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "teatro-cupula",
+            "referencia": "teatro-amazonas"
+          },
+          {
+            "modulo": "encontro-aguas",
+            "referencia": "encontro-das-aguas"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-14",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O tombamento do Encontro das Águas está judicializado (ata do Iphan de 2017); o texto não diz “tombado”. Capacidade do teatro diverge entre fontes (684 e 700) e não é usada."
       }
     }
   }

@@ -1,0 +1,75 @@
+{
+  "v": 1,
+  "sobre": "MODELO de perfil do Meu Pequeno Mundo. Copie o bloco da cidade para data/mundo/perfis-cidades.json (chave = ID do IBGE), troque cada PREENCHER e rode npm run mundo:validar. Guia: docs/mundo/curadoria.md.",
+  "fontes": {
+    "ibge-biblioteca-PREENCHER": {
+      "titulo": "Biblioteca IBGE — PREENCHER: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em PREENCHER)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=0000000",
+      "referencia": "Registro de AAAA",
+      "consultadoEm": "2026-10-14"
+    },
+    "PREENCHER-fonte-do-marco": {
+      "titulo": "Título da página ou do documento, como aparece na fonte",
+      "publicador": "Órgão público, universidade ou instituição responsável pelo bem",
+      "url": "https://PREENCHER",
+      "referencia": "Notícia de DD/MM/AAAA, página institucional (sem data) ou documento de AAAA",
+      "consultadoEm": "2026-10-14"
+    },
+    "ibge-localidades-api": { "titulo": "API de Localidades — municípios", "publicador": "IBGE", "url": "https://servicodados.ibge.gov.br/api/docs/localidades", "referencia": "Divisão regional vigente (2017) e divisão de 1990", "consultadoEm": "2026-10-14" },
+    "ibge-censo-2022-4714": { "titulo": "Censo Demográfico 2022 — Tabela 4714", "publicador": "IBGE (SIDRA)", "url": "https://sidra.ibge.gov.br/tabela/4714", "referencia": "Censo 2022", "consultadoEm": "2026-10-14" },
+    "ibge-localidades-2022": { "titulo": "Localidades do Brasil 2022 — sede municipal", "publicador": "IBGE", "url": "https://geoftp.ibge.gov.br/organizacao_do_territorio/estrutura_territorial/localidades/", "referencia": "Localidades 2022", "consultadoEm": "2026-10-14" }
+  },
+  "cidades": {
+    "0000000": {
+      "identidade": { "id": "0000000", "ibge": "0000000", "nome": "PREENCHER (igual ao catálogo)", "uf": "UF", "regiaoLoja": "sul" },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Uma frase curta, concreta, sem superlativo (até 160 caracteres).",
+        "resumo": "De 3 a 5 frases, até 600 caracteres. Cada fato tem fonte em fontesResumo. Datas administrativas separadas. Hipóteses de nome sempre atribuídas.",
+        "fontesResumo": ["ibge-biblioteca-PREENCHER"],
+        "referencias": [
+          {
+            "id": "marco-PREENCHER",
+            "tipo": "patrimonio",
+            "titulo": "Nome do lugar (até 80)",
+            "texto": "O texto da ficha, até 420 caracteres, só com o que as fontes dizem.",
+            "fontes": ["PREENCHER-fonte-do-marco"],
+            "descoberta": { "modulo": "sobrado", "nota": "Na maquete, uma forma simplificada inspirada no lugar; cores e proporções são ilustrativas." },
+            "curto": "Uma ou duas frases para o balão do marco (até 200)."
+          },
+          {
+            "id": "referencia-sem-marco-PREENCHER",
+            "tipo": "tradicao",
+            "titulo": "Segunda referência (só texto, sem forma na maquete)",
+            "texto": "Até 420 caracteres, com fonte.",
+            "fontes": ["PREENCHER-fonte-do-marco"]
+          }
+        ],
+        "curiosidades": [
+          { "texto": "O histórico do IBGE separa as datas: distrito em AAAA, vila em AAAA e cidade em AAAA.", "fontes": ["ibge-biblioteca-PREENCHER"] }
+        ],
+        "gentilico": { "oficial": "PREENCHER", "variantes": [], "fontes": ["ibge-biblioteca-PREENCHER"] }
+      },
+      "geografia": {
+        "sede": { "lat": 0, "lon": 0, "definicao": "Sede municipal (IBGE, Localidades 2022) — copiar de data/mundo/sedes-municipais-ibge-2022.json", "fontes": ["ibge-localidades-2022"] },
+        "populacao": { "censo": { "valor": 0, "ano": 2022, "fontes": ["ibge-censo-2022-4714"] }, "estimativa": null },
+        "area": { "km2": 0, "ano": 2022, "fontes": ["ibge-censo-2022-4714"] },
+        "regioes": { "grandeRegiao": "PREENCHER", "imediata": "PREENCHER", "intermediaria": "PREENCHER", "mesorregiao": "PREENCHER", "microrregiao": "PREENCHER", "fontes": ["ibge-localidades-api"] }
+      },
+      "visual": {
+        "ambientes": ["urbano"],
+        "rotulo": "Como a ilha aparece, em poucas palavras (até 90)",
+        "base": "interior",
+        "cores": { "grama": ["#8fa35f", "#a1b06c"] },
+        "relevo": { "modulo": "planicie" },
+        "agua": { "modulo": "vereda", "largura": 0.13 },
+        "vegetacao": [["redonda", 8], ["arbusto", 5]],
+        "construcoes": { "estilo": "urbano", "casas": 8, "predios": 3 },
+        "extras": [],
+        "marcos": [{ "modulo": "sobrado", "referencia": "marco-PREENCHER" }]
+      },
+      "revisao": { "status": "curadoria inicial", "em": "2026-10-14", "observacao": "O que falta conferir, divergências entre fontes e o que o texto evitou afirmar." }
+    }
+  }
+}
