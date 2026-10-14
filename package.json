@@ -36,7 +36,8 @@
     "unificado:ler": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-unificado-ler.mts",
     "unificado:reconciliar": "node --conditions=react-server --import tsx scripts/ink-unificado-reconciliar.mts",
     "mockups:fila": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-mockups-fila.mts",
-    "mundo:dados": "node --conditions=react-server --import tsx scripts/mini-world-export.mts"
+    "mundo:dados": "node --conditions=react-server --import tsx scripts/mini-world-export.mts",
+    "mundo:pacote": "bash scripts/mini-world-pacote.sh"
   },
   "dependencies": {
     "embla-carousel-react": "^8.6.0",

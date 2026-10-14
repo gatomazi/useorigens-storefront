@@ -57,11 +57,18 @@ async function buscarEEscolher(page, termo, esperado) {
   if (k < 0) throw new Error(`"${esperado}" não apareceu na busca por "${termo}": ${opcoes.join(", ")}`);
   await page.click(`#opcao-${k}`);
 }
+
+// No celular, Baixar, Copiar link, Editar e Começar de novo ficam em "Detalhes" (o resultado começa compacto): abre antes de clicar.
+async function noMundo(page, seletor) {
+  const fechado = await page.$eval("#btn-detalhes", (b) => getComputedStyle(b).display !== "none" && b.getAttribute("aria-expanded") === "false").catch(() => false);
+  if (fechado && (await page.$(`#detalhes-mundo ${seletor}`))) { await page.click("#btn-detalhes"); await page.waitForTimeout(300); }
+  await page.click(seletor);
+}
 const conecta = (page) => page.$$eval("#conecta-lista li", (lis) => lis.map((l) => l.textContent.replace(/\s+/g, " ").trim()));
 const pontosVisiveis = (page) => page.$$eval(".ponto-descoberta:not(.oculta)", (bs) => bs.map((b) => `${b.dataset.id}|${b.dataset.ref}`));
 const palavras = (t) => t.trim().split(/\s+/).filter(Boolean).length;
 async function baixar(page, seletor, nome) {
-  const [d] = await Promise.all([page.waitForEvent("download", { timeout: 60000 }), page.click(seletor)]);
+  const [d] = await Promise.all([page.waitForEvent("download", { timeout: 60000 }), noMundo(page, seletor)]);
   const destino = path.join(outDir, `${nome}.png`);
   await d.saveAs(destino);
   const png = readFileSync(destino); // cabeçalho IHDR: largura e altura em big-endian
@@ -101,9 +108,9 @@ for (const vp of ["desktop", "mobile"]) {
   const pequenosMundo = await alvosPequenos(page);
   checar(`[${vp}] áreas de toque ≥ 44 px no resultado`, pequenosMundo.length === 0, pequenosMundo.join("; "));
 
-  // pontos de descoberta: dois por ilha
-  const pontos = await pontosVisiveis(page);
-  checar(`[${vp}] dois pontos de descoberta em cada ilha do piloto`, Object.values(PILOTO).every((id) => pontos.filter((p) => p.startsWith(`${id}|`)).length === 2), pontos.join(", "));
+  // pontos de descoberta (v2.1): na visão geral nenhum; a cidade em exploração mostra os dela (dois por ilha do piloto)
+  const pontosGeral = await pontosVisiveis(page);
+  checar(`[${vp}] visão geral sem pontos de descoberta competindo`, pontosGeral.length === 0, pontosGeral.join(", "));
 
   // o que conecta
   const linhas = await conecta(page);
@@ -112,14 +119,17 @@ for (const vp of ["desktop", "mobile"]) {
   checar(`[${vp}] o que conecta: distância origem–presente em linha reta`, linhas.some((l) => /aproximadamente 30 km em linha reta/.test(l) && /Não é distância por estrada/.test(l)), linhas[2]);
 
   // lembrança no resultado; incluir desligado por padrão: nem URL nem imagem
-  const naLista = await page.textContent("#lista-lugares li:nth-child(1) .lugar");
+  const naLista = await page.textContent("#lista-lugares li:nth-child(1).lugar");
   checar(`[${vp}] lembrança aparece na lista do resultado`, naLista.includes("“Onde cresci, perto do santuário”"));
   checar(`[${vp}] escolha "incluir lembranças" visível e desligada`, !(await page.$eval("#incluir", (n) => n.hidden)) && !(await page.isChecked("#incluir-lembrancas")));
   checar(`[${vp}] sem incluir: a lembrança fica fora do link`, !/[?&]l[opc]=/.test(page.url()), page.url());
 
-  // descoberta: toque no ponto do santuário
-  await page.click(`.ponto-descoberta[data-ref="santuario-santa-paulina"]`);
+  // descoberta: toque no próprio marco do santuário
+  const santuario = await page.evaluate((id) => window.__meuPequenoMundo.marcoNaTela(id, "santuario-santa-paulina"), PILOTO.novaTrento);
+  await page.mouse.click(santuario.x, santuario.y);
   await page.waitForTimeout(1300);
+  const pontosNt = await pontosVisiveis(page);
+  checar(`[${vp}] a cidade em exploração mostra os dois pontos dela`, pontosNt.length === 2 && pontosNt.every((p) => p.startsWith(`${PILOTO.novaTrento}|`)), pontosNt.join(", "));
   const titulo1 = await page.textContent("#balao-titulo");
   checar(`[${vp}] descoberta do santuário abre o balão certo`, titulo1 === "Santuário Santa Paulina" && !(await page.$eval("#balao", (n) => n.hidden)), titulo1);
   await foto(page, `${vp}-04-descoberta-santuario`);
@@ -135,7 +145,7 @@ for (const vp of ["desktop", "mobile"]) {
   // fichas das três cidades
   const especifico = { "Nova Trento": /Santa Paulina/, Tijucas: /Gallotti/, Garopaba: /Siriú/ };
   for (const [k, nome] of [[1, "Nova Trento"], [2, "Tijucas"], [3, "Garopaba"]]) {
-    await page.click(`#lista-lugares li:nth-child(${k}) .lugar`);
+    await page.click(`#lista-lugares li:nth-child(${k}) .lugar-conhecer`);
     await page.waitForSelector("#cidade-produtos a.produto", { timeout: 20000 });
     await page.waitForTimeout(2600);
     const f = await page.evaluate(() => ({
@@ -170,7 +180,8 @@ for (const vp of ["desktop", "mobile"]) {
       await page.$eval("#cidade-mais", (d) => d.scrollIntoView({ block: "start" }));
       await page.waitForTimeout(500);
       await foto(page, `${vp}-06-ficha-${nome.toLowerCase().replace(" ", "-")}-mais-e-fontes`);
-      // "Ver na maquete" (teclado/leitor de tela) abre a mesma descoberta
+      // "Ver na maquete" (teclado/leitor de tela) abre a mesma descoberta; desde a v2.1 as referências ficam em "Conheça este lugar"
+      await page.click("#cidade-conheca summary");
       await page.$eval("#ref-santuario-santa-paulina", (n) => n.scrollIntoView({ block: "center" }));
       await page.click("#ref-santuario-santa-paulina .ref-acao");
       await page.waitForTimeout(1200);
@@ -178,6 +189,8 @@ for (const vp of ["desktop", "mobile"]) {
       checar(`[${vp}] "Ver na maquete" na ficha abre a descoberta e leva o foco`, (await page.textContent("#balao-titulo")) === "Santuário Santa Paulina" && foco === "balao-titulo", foco);
       await page.keyboard.press("Escape");
       await page.waitForTimeout(300);
+      // no celular a ficha deu lugar ao cartão; volta à ficha para seguir
+      if (!(await page.isVisible("#btn-fechar-cidade"))) { await page.click(`#lista-lugares li:nth-child(1) .lugar-conhecer`); await page.waitForTimeout(1500); }
     } else await foto(page, `${vp}-05-ficha-${nome.toLowerCase().replace(" ", "-")}`);
     await page.click("#btn-fechar-cidade");
     await page.waitForTimeout(1500);
@@ -186,12 +199,12 @@ for (const vp of ["desktop", "mobile"]) {
   // imagem: sem lembrança, depois com lembrança
   const sem = await baixar(page, "#btn-baixar", `${vp}-07-exportado-sem-lembranca`);
   checar(`[${vp}] PNG 1080 × 1350 sem lembrança`, sem.dim?.[0] === 1080 && sem.dim?.[1] === 1350, String(sem.dim));
-  await page.click("#incluir");
+  await noMundo(page, "#incluir");
   await page.waitForTimeout(600);
   checar(`[${vp}] incluir: a lembrança entra no link (lo)`, /[?&]lo=Onde\+cresci%2C\+perto\+do\+santu%C3%A1rio/.test(page.url()) || /[?&]lo=Onde/.test(page.url()), page.url());
   const com = await baixar(page, "#btn-baixar", `${vp}-08-exportado-com-lembranca`);
   checar(`[${vp}] PNG 1080 × 1350 com lembrança`, com.dim?.[0] === 1080 && com.dim?.[1] === 1350, String(com.dim));
-  await page.click("#btn-link");
+  await noMundo(page, "#btn-link");
   await page.waitForTimeout(400);
   const copiado = await page.evaluate(() => navigator.clipboard.readText().catch(() => ""));
   checar(`[${vp}] link copiado leva a lembrança só quando incluída`, /[?&]lo=/.test(copiado) && !/[?&]l[pc]=/.test(copiado), copiado);
@@ -201,15 +214,15 @@ for (const vp of ["desktop", "mobile"]) {
   await page.reload();
   await cenaPronta(page);
   await page.waitForTimeout(3500);
-  checar(`[${vp}] recarregar mantém lembrança e "incluir"`, (await page.textContent("#lista-lugares li:nth-child(1) .lugar")).includes("Onde cresci") && (await page.isChecked("#incluir-lembrancas")));
-  await page.click("#incluir");
+  checar(`[${vp}] recarregar mantém lembrança e "incluir"`, (await page.textContent("#lista-lugares li:nth-child(1).lugar")).includes("Onde cresci") && (await page.isChecked("#incluir-lembrancas")));
+  await noMundo(page, "#incluir");
   await page.waitForTimeout(400);
   checar(`[${vp}] desligar "incluir" tira a lembrança do link`, !/[?&]l[opc]=/.test(page.url()));
   if (vp === "desktop") {
     const memo = [];
     for (let ciclo = 0; ciclo < 2; ciclo++) {
       for (const [termo, nome] of [["bage", "Bagé · RS"], ["tijucas", "Tijucas · SC"], ["garopaba", "Garopaba · SC"], ["nova trento", "Nova Trento · SC"]]) {
-        await page.click("#btn-editar");
+        await noMundo(page, "#btn-editar");
         await page.click("#passos li:nth-child(1) button");
         await page.click("#btn-trocar");
         await buscarEEscolher(page, termo, nome);
@@ -246,17 +259,17 @@ for (const vp of ["desktop", "mobile"]) {
   await page.waitForTimeout(3500);
   const l3 = await conecta(page);
   checar("cidades sem perfil: distância a partir das sedes do IBGE", l3.some((l) => /aproximadamente [\d.]+ km em linha reta/.test(l)), l3.join(" | "));
-  await page.click("#lista-lugares li:nth-child(1) .lugar");
+  await page.click("#lista-lugares li:nth-child(1) .lugar-conhecer");
   await page.waitForSelector("#cidade-produtos a.produto", { timeout: 20000 });
   await page.waitForTimeout(2000);
   const semPerfil = await page.evaluate(() => ({
-    aviso: !document.getElementById("cidade-sem-texto").hidden,
-    refs: !document.getElementById("cidade-referencias-secao").hidden,
+    aviso: !/Ainda não temos um texto/.test(document.getElementById("painel-cidade").textContent),
+    refs: !document.getElementById("cidade-conheca").hidden,
     dados: [...document.querySelectorAll("#cidade-dados dt")].map((d) => d.textContent),
     paisagem: document.getElementById("cidade-paisagem").textContent,
     pontos: document.querySelectorAll(".ponto-descoberta:not(.oculta)").length,
   }));
-  checar("cidade sem perfil: ficha com dados do IBGE e camisetas, sem campos vazios", semPerfil.aviso && !semPerfil.refs && semPerfil.dados.includes("Sede municipal") && !semPerfil.dados.includes("População"), semPerfil.dados.join(", "));
+  checar("cidade sem perfil: ficha com dados do IBGE e camisetas, sem aviso de texto faltante nem campos vazios", semPerfil.aviso && !semPerfil.refs && semPerfil.dados.includes("Sede municipal") && !semPerfil.dados.includes("População"), semPerfil.dados.join(", "));
   checar("cidade sem perfil: cenário identificado como ilustrativo", /ilustrativ/i.test(semPerfil.paisagem), semPerfil.paisagem);
   checar("cidade sem perfil: nenhum ponto de descoberta", semPerfil.pontos === 0);
   await foto(page, "mobile-12-ficha-sem-perfil");
@@ -273,7 +286,7 @@ for (const vp of ["desktop", "mobile"]) {
   checar("link com lembrança: 'incluir' vem ligado", await page.isChecked("#incluir-lembrancas"));
   await page.goto(urlMundo({ origem: PILOTO.novaTrento, lo: "<img src=x onerror=alert(1)>" }));
   await page.waitForTimeout(3000);
-  const injetado = await page.evaluate(() => ({ img: document.querySelectorAll("#lista-lugares img:not([src^='data:'])").length, texto: document.querySelector("#lista-lugares .lugar-lembranca")?.textContent }));
+  const injetado = await page.evaluate(() => ({ img: document.querySelectorAll("#lista-lugares .lugar-lembranca img, img[src='x']").length, texto: document.querySelector("#lista-lugares .lugar-lembranca")?.textContent }));
   checar("lembrança vinda do link é texto, nunca HTML", injetado.img === 0 && injetado.texto === "“<img src=x onerror=alert(1)>”", injetado.texto);
   await ctx.close();
 }
@@ -290,14 +303,14 @@ for (const vp of ["desktop", "mobile"]) {
   await page.waitForTimeout(3500);
   checar("progresso salvo na versão anterior (v1) é restaurado", (await modo(page)) === "mundo" && (await page.$$("#lista-lugares .lugar")).length === 2);
   // qualquer ação que salva (aqui: editar e voltar ao mundo) regrava o progresso no formato novo
-  await page.click("#btn-editar");
+  await noMundo(page, "#btn-editar");
   await page.click("#btn-ver-mundo");
   await page.waitForTimeout(1500);
   const salvo = await page.evaluate(() => JSON.parse(localStorage.getItem("useorigens:meu-pequeno-mundo")));
   checar("ao salvar de novo, o progresso passa para o formato v2", salvo?.v === 2 && salvo.papeis.origem === "4211504", `v${salvo?.v}`);
   // recomeçar apaga lembranças
   await page.fill("#lembranca-ficha", "teste").catch(() => {});
-  await page.click("#btn-recomecar");
+  await noMundo(page, "#btn-recomecar");
   await page.click("#btn-recomecar-confirmar");
   await page.waitForTimeout(800);
   checar("começar de novo apaga lugares e lembranças", await page.evaluate(() => localStorage.getItem("useorigens:meu-pequeno-mundo") === null));
@@ -309,7 +322,8 @@ for (const vp of ["desktop", "mobile"]) {
   await page.goto(urlMundo({ origem: PILOTO.novaTrento, presente: PILOTO.tijucas, coracao: PILOTO.garopaba }));
   await cenaPronta(page);
   await page.waitForTimeout(2500);
-  await page.click(`.ponto-descoberta[data-ref="baleia-franca"]`);
+  const baleia = await page.evaluate((id) => window.__meuPequenoMundo.marcoNaTela(id, "baleia-franca"), PILOTO.garopaba);
+  await page.mouse.click(baleia.x, baleia.y);
   await page.waitForTimeout(600);
   checar("movimento reduzido: descoberta abre e se posiciona", !(await page.$eval("#balao", (n) => n.hidden)) && (await page.$eval("#balao", (n) => n.style.transform)) !== "translate3d(-9999px, -9999px, 0px)");
   await foto(page, "desktop-10-movimento-reduzido-baleia");

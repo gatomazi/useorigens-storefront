@@ -11,7 +11,8 @@ com fontes e uma lembrança pessoal opcional. Protótipo isolado: não altera o 
   2017 de todas as cidades dos estados da loja, extraídos do IBGE (Localidades 2022) por `scripts/mini-world-sedes.mts`.
 - `relatorio-meu-pequeno-mundo-use-origens.md` — v1: implementação, dados, validação, avaliação e próximos passos.
 - `relatorio-v2-contexto-cidades-meu-pequeno-mundo.md` — v2: perfis, fontes, cobertura real, validação e limitações.
-- `evidencias/` (v1) e `evidencias-v2/` — capturas reais (Chromium, 1440×900 e 375×812) e PNGs exportados pela própria página.
+- `relatorio-v21-acabamento-ux-meu-pequeno-mundo.md` — v2.1: acabamento de UX (resultado compacto, ficha em camadas, descobertas).
+- `evidencias/` (v1), `evidencias-v2/` e `evidencias-v21/` — capturas reais (Chromium, 1440×900 e 375×812) e PNGs exportados pela própria página.
 - `dados/` — **gerado, fora do git**: índice das cidades e um arquivo por cidade (camisetas, ponto do IBGE, regiões), exportados do catálogo local.
 
 ## Rodar
@@ -44,7 +45,16 @@ visual só aceita os módulos listados em `MODULOS` (seção 2 do HTML). O que n
 ```bash
 node scripts/qa/mini-mundo.mjs <pasta-de-saida> [url-da-previa]          # fluxos da v1 (critérios de aceite)
 node scripts/qa/mini-mundo-v2.mjs <pasta-de-saida> [url-da-previa]       # v2: perfis, fichas, descobertas, lembranças, compatibilidade
+node scripts/qa/mini-mundo-v21.mjs <pasta-de-saida> [url-da-previa]      # v2.1: resultado compacto, ficha em camadas, toque no vazio, troca
 node scripts/qa/mini-mundo-cliques.mjs <pasta-de-saida> [url-da-previa]  # mapa de cliques para o UX (capturas numeradas)
 ```
 
 Com o servidor acima no ar. Cada roteiro salva capturas, PNGs exportados e um resumo em JSON.
+
+## Pacote para avaliar fora do repositório
+
+```bash
+npm run mundo:pacote   # → prototipos/meu-pequeno-mundo/pacote/meu-pequeno-mundo-v2.1.zip (fora do git)
+```
+
+O ZIP traz HTML, `contexto/`, `dados/`, relatórios e evidências com os caminhos relativos, além de um `LEIA-ME.md`. Roda com qualquer servidor estático.

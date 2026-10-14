@@ -65,3 +65,4 @@ next-env.d.ts
 
 # protótipo "Meu Pequeno Mundo": dados exportados do catálogo local (npm run mundo:dados)
 /prototipos/meu-pequeno-mundo/dados/
+/prototipos/meu-pequeno-mundo/pacote/

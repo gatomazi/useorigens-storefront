@@ -67,6 +67,13 @@ async function buscarEEscolher(page, termo, esperado) {
   return opcoes;
 }
 
+// No celular, Baixar, Copiar link, Editar e Começar de novo ficam em "Detalhes" (o resultado começa compacto): abre antes de clicar.
+async function noMundo(page, seletor) {
+  const fechado = await page.$eval("#btn-detalhes", (b) => getComputedStyle(b).display !== "none" && b.getAttribute("aria-expanded") === "false").catch(() => false);
+  if (fechado && (await page.$(`#detalhes-mundo ${seletor}`))) { await page.click("#btn-detalhes"); await page.waitForTimeout(300); }
+  await page.click(seletor);
+}
+
 // ---------------------------------------------------------------- fluxo completo, por tamanho de tela
 for (const vp of ["mobile", "desktop"]) {
   const { ctx, page } = await novaPagina(vp);
@@ -113,14 +120,14 @@ for (const vp of ["mobile", "desktop"]) {
   await foto(page, `${vp}-05-mundo-2-lugares`);
 
   // 4. troca de cidade (presente: Florianópolis → Goiânia) = três ilhas
-  await page.click("#btn-editar");
+  await noMundo(page, "#btn-editar");
   await page.click("#passos li:nth-child(2) button");
   await page.click("#btn-trocar");
   await buscarEEscolher(page, "goiania", "Goiânia · GO");
   await page.waitForTimeout(3500);
   await page.click("#btn-ver-mundo");
   await page.waitForTimeout(3500);
-  const tres = await page.$$eval("#lista-lugares .lugar", (ns) => ns.map((n) => n.getAttribute("aria-label")));
+  const tres = await page.$$eval("#lista-lugares .lugar-conhecer", (ns) => ns.map((n) => n.getAttribute("aria-label")));
   checar(`[${vp}] troca atualiza o mundo (três lugares)`, tres.length === 3, tres.join(" | "));
   const etqTres = await etiquetasVisiveis(page);
   checar(`[${vp}] três etiquetas sobre as ilhas`, etqTres.length === 3, etqTres.join(" | "));
@@ -130,7 +137,7 @@ for (const vp of ["mobile", "desktop"]) {
   checar(`[${vp}] áreas de toque ≥ 44 px no resultado`, pequenos.length === 0, pequenos.join("; "));
 
   // 5. painel da cidade com camisetas reais
-  await page.click("#lista-lugares li:nth-child(1) .lugar");
+  await page.click("#lista-lugares li:nth-child(1) .lugar-conhecer");
   await page.waitForSelector("#cidade-produtos .produto:not(.esqueleto)", { timeout: 15000 });
   await page.waitForTimeout(2500);
   const cta = await page.getAttribute("#cidade-cta", "href");
@@ -156,7 +163,7 @@ for (const vp of ["mobile", "desktop"]) {
   }
 
   // 6. exportação (download) e compartilhamento sem suporte nativo
-  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30000 }), page.click("#btn-baixar")]);
+  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30000 }), noMundo(page, "#btn-baixar")]);
   const png = path.join(outDir, `${vp}-mundo-exportado.png`);
   await download.saveAs(png);
   const cabecalho = readFileSync(png);
@@ -177,7 +184,7 @@ for (const vp of ["mobile", "desktop"]) {
   checar(`[${vp}] URL tem versão e IDs`, /mundo=1&origem=4205407&presente=5208707&coracao=1302603/.test(urlMundo), urlMundo);
 
   // 7b. progresso no meio da construção também volta
-  await page.click("#btn-editar");
+  await noMundo(page, "#btn-editar");
   await page.click("#passos li:nth-child(3) button");
   await page.reload();
   await cenaPronta(page);
@@ -196,18 +203,18 @@ for (const vp of ["mobile", "desktop"]) {
   await outro.ctx.close();
 
   // 9. remover e recomeçar (com confirmação)
-  await page.click("#btn-editar");
+  await noMundo(page, "#btn-editar");
   await page.click("#passos li:nth-child(3) button");
   await page.click("#btn-remover");
   await page.waitForTimeout(2000);
   checar(`[${vp}] remover tira a ilha`, (await etiquetasVisiveis(page)).length === 2, (await etiquetasVisiveis(page)).join(" | "));
-  await page.click("#btn-avancar"); // no último passo, o botão principal é "Ver meu mundo"
+  await page.click("#btn-pular"); // etapa 3 vazia: "Pular e ver meu mundo" (texto, sem botão cheio que destaque pular)
   await page.waitForTimeout(1500);
-  await page.click("#btn-recomecar");
+  await noMundo(page, "#btn-recomecar");
   checar(`[${vp}] recomeçar pede confirmação`, await page.isVisible("#dlg-recomecar"));
   await page.click("#btn-recomecar-cancelar");
   checar(`[${vp}] cancelar mantém o mundo`, (await page.$$("#lista-lugares .lugar")).length === 2);
-  await page.click("#btn-recomecar");
+  await noMundo(page, "#btn-recomecar");
   await page.click("#btn-recomecar-confirmar");
   await page.waitForTimeout(1500);
   checar(`[${vp}] confirmar apaga e volta à primeira pergunta`, (await modo(page)) === "montar" && (await etiquetasVisiveis(page)).length === 0);
@@ -224,7 +231,7 @@ for (const vp of ["mobile", "desktop"]) {
   await cenaPronta(page);
   await page.waitForTimeout(5000);
   await foto(page, `${vp}-10-tres-cidades-bage-curitiba-belem`);
-  await page.click("#lista-lugares li:nth-child(3) .lugar");
+  await page.click("#lista-lugares li:nth-child(3) .lugar-conhecer");
   await page.waitForSelector("#cidade-produtos .produto:not(.esqueleto)", { timeout: 15000 });
   await page.waitForTimeout(3000);
   await foto(page, `${vp}-11-cidade-belem`);
@@ -239,13 +246,13 @@ for (const vp of ["mobile", "desktop"]) {
   await page.waitForTimeout(5000);
   await foto(page, "mobile-18-nomes-longos");
   checar("nomes longos sem rolagem horizontal", await semOverflow(page));
-  await page.click("#lista-lugares li:nth-child(3) .lugar");
+  await page.click("#lista-lugares li:nth-child(3) .lugar-conhecer");
   await page.waitForTimeout(1500);
   const paisagem = await page.textContent("#cidade-paisagem");
   checar("lugar sem curadoria mostra 'Cenário ilustrativo'", /^Cenário ilustrativo/.test(paisagem), paisagem);
   await page.click("#btn-fechar-cidade");
   await page.waitForTimeout(800);
-  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30000 }), page.click("#btn-baixar")]);
+  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30000 }), noMundo(page, "#btn-baixar")]);
   await download.saveAs(path.join(outDir, "mobile-nomes-longos-exportado.png"));
   checar("nomes longos: PNG exportado", true);
   await ctx.close();
@@ -262,7 +269,7 @@ for (const vp of ["mobile", "desktop"]) {
   const memoria = () => page.evaluate(() => window.__meuPequenoMundo.memoria());
   const inicio = await memoria();
   async function ciclo() {
-    await page.click("#btn-editar");
+    await noMundo(page, "#btn-editar");
     await page.click("#passos li:nth-child(2) button");
     for (const [termo, nome] of [["manaus", "Manaus · AM"], ["goiania", "Goiânia · GO"], ["cuiab", "Cuiabá · MT"], ["joinville", "Joinville · SC"], ["palmas", "Palmas · TO"], ["curitiba", "Curitiba · PR"]]) {
       await page.click("#btn-trocar");
@@ -345,7 +352,7 @@ for (const vp of ["mobile", "desktop"]) {
   await page.goto(`${base}?mundo=1&origem=4205407&coracao=1302603`);
   await cenaPronta(page);
   await page.waitForTimeout(4500);
-  await page.click("#btn-link");
+  await noMundo(page, "#btn-link");
   await page.waitForTimeout(400);
   const copiado = await page.evaluate(() => navigator.clipboard.readText());
   checar("copiar link coloca a URL do mundo na área de transferência", /\?mundo=1&origem=4205407&coracao=1302603$/.test(copiado), copiado);
@@ -380,7 +387,7 @@ for (const vp of ["mobile", "desktop"]) {
   await page.keyboard.press("Tab");
   const focoTab = await page.evaluate(() => document.activeElement?.textContent?.trim().slice(0, 40));
   // percorre a lista de lugares e abre um pelo teclado
-  await page.focus("#lista-lugares li:nth-child(2) .lugar");
+  await page.focus("#lista-lugares li:nth-child(2) .lugar-conhecer");
   await page.keyboard.press("Enter");
   await page.waitForTimeout(800);
   const focoPainel = await page.evaluate(() => document.activeElement?.id);
@@ -390,7 +397,7 @@ for (const vp of ["mobile", "desktop"]) {
   const voltou = await page.evaluate(() => document.activeElement?.closest?.(".lugar")?.dataset.id);
   checar("teclado: Esc devolve o foco ao lugar da lista", voltou === "5300108", String(voltou));
   // busca pelo teclado
-  await page.click("#btn-editar");
+  await noMundo(page, "#btn-editar");
   await page.click("#btn-trocar");
   await page.keyboard.type("cuiab");
   await page.keyboard.press("ArrowDown");
@@ -417,12 +424,12 @@ fase = "falhas";
   const estatico = await page.isVisible("#estatico");
   const cartoes = await page.$$("#estatico-lista button");
   checar("sem WebGL: apresentação estática com os lugares", estatico && cartoes.length === 2);
-  await page.click("#lista-lugares li:nth-child(1) .lugar");
+  await page.click("#lista-lugares li:nth-child(1) .lugar-conhecer");
   await page.waitForSelector("#cidade-produtos .produto:not(.esqueleto)", { timeout: 15000 });
   checar("sem WebGL: camisetas continuam acessíveis", (await page.$$("#cidade-produtos a.produto")).length > 0);
   await foto(page, "mobile-15-sem-webgl");
   await page.click("#btn-fechar-cidade");
-  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 20000 }), page.click("#btn-baixar")]);
+  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 20000 }), noMundo(page, "#btn-baixar")]);
   await download.saveAs(path.join(outDir, "mobile-sem-webgl-exportado.png"));
   checar("sem WebGL: imagem ainda é gerada", true, download.suggestedFilename());
   await ctx.close();
@@ -453,13 +460,13 @@ fase = "falhas";
   await page.waitForTimeout(2500);
   checar("arquivo local: selo de demonstração", await page.isVisible("#selo-demo"));
   checar("arquivo local: copiar link desabilitado e explicado", (await page.isDisabled("#btn-link")) && (await page.isVisible("#nota-link")));
-  await page.click("#lista-lugares li:nth-child(1) .lugar");
+  await page.click("#lista-lugares li:nth-child(1) .lugar-conhecer");
   await page.waitForTimeout(1200);
   const txt = await page.textContent("#cidade-produtos");
   checar("arquivo local: 'Catálogo ainda não conectado' e CTA desabilitado", /Catálogo ainda não conectado/.test(txt) && (await page.getAttribute("#cidade-cta", "aria-disabled")) === "true");
   await foto(page, "desktop-17-demonstracao-arquivo-local");
   await page.click("#btn-fechar-cidade");
-  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30000 }), page.click("#btn-baixar")]);
+  const [download] = await Promise.all([page.waitForEvent("download", { timeout: 30000 }), noMundo(page, "#btn-baixar")]);
   await download.saveAs(path.join(outDir, "desktop-demonstracao-exportado.png"));
   checar("arquivo local: download da imagem funciona", true);
   await ctx.close();
