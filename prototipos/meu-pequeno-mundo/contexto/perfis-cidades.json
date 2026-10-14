@@ -8,8 +8,23 @@
       "basico": "Sem perfil: ponto de referência e regiões do IBGE (arquivo de cada lugar) e cenário pela curadoria regional.",
       "regional": "Só o cenário regional ilustrativo; sem ponto de referência."
     },
-    "ambientes": ["vale", "litoral", "rio", "campo", "serra", "urbano", "floresta", "cerrado"],
-    "tiposReferencia": ["natureza", "cultura", "patrimonio", "tradicao", "paisagem"]
+    "ambientes": [
+      "vale",
+      "litoral",
+      "rio",
+      "campo",
+      "serra",
+      "urbano",
+      "floresta",
+      "cerrado"
+    ],
+    "tiposReferencia": [
+      "natureza",
+      "cultura",
+      "patrimonio",
+      "tradicao",
+      "paisagem"
+    ]
   },
   "fontes": {
     "ibge-localidades-api": {
@@ -123,216 +138,523 @@
       "url": "https://visitegaropaba.tur.br/o-destino/",
       "referencia": "Página do portal (© 2025)",
       "consultadoEm": "2026-10-14"
+    },
+    "santuario-historia": {
+      "titulo": "História — Santuário Santa Paulina",
+      "publicador": "Santuário Santa Paulina",
+      "url": "https://santuariosantapaulina.org.br/historia-santuario/",
+      "referencia": "Página institucional (© 2026)",
+      "consultadoEm": "2026-10-14"
     }
   },
   "cidades": {
     "4211504": {
-      "identidade": { "id": "4211504", "ibge": "4211504", "nome": "Nova Trento", "uf": "SC", "regiaoLoja": "sul" },
+      "identidade": {
+        "id": "4211504",
+        "ibge": "4211504",
+        "nome": "Nova Trento",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
       "cobertura": "completo",
       "conteudo": {
-        "frase": "Vale de imigração trentina onde nasceu o santuário da primeira santa do Brasil.",
+        "frase": "Raízes trentinas, vale entre montes e caminhos de fé.",
         "resumo": "Nova Trento começou a receber imigrantes trentinos e italianos em 1875. O primeiro grupo, cerca de 20 famílias da Valsugana e de Monza, abriu lotes em mata fechada no vale do rio Tijucas. A cidade virou município em 1892. Amábile Visintainer chegou com os pais em 1875; canonizada em 2002 como Santa Paulina, dá nome ao santuário que recebe peregrinos o ano todo.",
-        "fontesResumo": ["nt-prefeitura-historico", "nt-turismo-santuario"],
+        "fontesResumo": [
+          "nt-prefeitura-historico",
+          "nt-turismo-santuario"
+        ],
         "referencias": [
           {
             "id": "santuario-santa-paulina",
             "tipo": "patrimonio",
             "titulo": "Santuário Santa Paulina",
-            "texto": "O templo foi dedicado em 22 de janeiro de 2006, tem cerca de 7 mil m² de área construída e geometria que remete a duas mãos em oração. Santa Paulina, canonizada em 2002, foi a primeira santa do Brasil.",
-            "fontes": ["nt-prefeitura-santuario-20-anos", "nt-prefeitura-historico"],
-            "descoberta": { "modulo": "santuario", "nota": "Na maquete, uma forma simplificada inspirada no templo." }
+            "texto": "Dedicado em 22 de janeiro de 2006, no Vígolo, o templo tem 6.740 m² (o conjunto soma cerca de 9.000 m² de área construída) e geometria que remete a duas mãos em oração. Santa Paulina, canonizada em 2002, foi a primeira santa do Brasil.",
+            "fontes": [
+              "santuario-historia",
+              "nt-prefeitura-historico"
+            ],
+            "descoberta": {
+              "modulo": "santuario",
+              "nota": "Na maquete, uma forma simplificada inspirada no templo."
+            },
+            "curto": "Templo de 2006 cuja geometria remete a duas mãos em oração. Homenageia Santa Paulina, a primeira santa do Brasil."
           },
           {
             "id": "montes-do-vale",
             "tipo": "paisagem",
             "titulo": "Montes em volta do vale",
             "texto": "O histórico da prefeitura registra montes acima de mil metros, como o Barão de Charlach (1.148 m) e o Lima (1.090 m). No Morro da Cruz, com 525 m, fica o Santuário Nossa Senhora do Bom Socorro, inaugurado em 1912.",
-            "fontes": ["nt-prefeitura-historico", "alesc-vale-sagrado"],
-            "descoberta": { "modulo": "pico-cruz", "nota": "Na maquete, os montes e a cruz são ilustrativos." }
+            "fontes": [
+              "nt-prefeitura-historico",
+              "alesc-vale-sagrado"
+            ],
+            "descoberta": {
+              "modulo": "pico-cruz",
+              "nota": "Na maquete, os montes e a cruz são ilustrativos."
+            },
+            "curto": "Em volta do vale, montes passam de mil metros. No Morro da Cruz fica o Santuário Nossa Senhora do Bom Socorro."
           },
           {
             "id": "imigracao-trentina",
             "tipo": "cultura",
             "titulo": "Imigração trentina",
             "texto": "Os primeiros imigrantes vieram do antigo Império Austro-Húngaro, no atual norte da Itália, a partir de 1875. O nome da cidade foi herdado desses colonizadores, em sua maioria vindos da região de Trento.",
-            "fontes": ["nt-prefeitura-historico", "ibge-biblioteca-nova-trento"]
+            "fontes": [
+              "nt-prefeitura-historico",
+              "ibge-biblioteca-nova-trento"
+            ]
           }
         ],
         "curiosidades": [
           {
             "texto": "Nova Trento deixou de ser parte de Tijucas e virou município pela Lei nº 36, de 8 de agosto de 1892; a instalação foi em 26 de agosto daquele ano.",
-            "fontes": ["nt-prefeitura-historico", "ibge-biblioteca-nova-trento"]
+            "fontes": [
+              "nt-prefeitura-historico",
+              "ibge-biblioteca-nova-trento"
+            ]
           }
         ],
-        "gentilico": { "oficial": "nova-trentino", "variantes": ["neo-trentino"], "nota": "O histórico do IBGE registra “nova trentino ou neo-trentino”.", "fontes": ["ibge-biblioteca-nova-trento"] }
+        "gentilico": {
+          "oficial": "nova-trentino",
+          "variantes": [
+            "neo-trentino"
+          ],
+          "nota": "O histórico do IBGE registra “nova trentino ou neo-trentino”.",
+          "fontes": [
+            "ibge-biblioteca-nova-trento"
+          ]
+        }
       },
       "geografia": {
-        "sede": { "lat": -27.2863, "lon": -48.9303, "definicao": "Sede municipal (IBGE, Localidades 2022)", "fontes": ["ibge-localidades-2022"] },
-        "populacao": { "censo": { "valor": 13727, "ano": 2022, "fontes": ["ibge-censo-2022-4714"] }, "estimativa": null },
-        "area": { "km2": 402.852, "ano": 2022, "fontes": ["ibge-censo-2022-4714"] },
+        "sede": {
+          "lat": -27.2863,
+          "lon": -48.9303,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 13727,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 402.852,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
         "regioes": {
           "grandeRegiao": "Sul",
           "imediata": "Brusque",
           "intermediaria": "Blumenau",
           "mesorregiao": "Grande Florianópolis",
           "microrregiao": "Tijucas",
-          "fontes": ["ibge-localidades-api"]
+          "fontes": [
+            "ibge-localidades-api"
+          ]
         }
       },
       "visual": {
-        "ambientes": ["vale"],
+        "ambientes": [
+          "vale"
+        ],
         "rotulo": "Vale entre montes, com o santuário na encosta",
         "base": "vale",
-        "cores": { "grama": ["#6f9150", "#86a25e"] },
-        "relevo": { "modulo": "vale-montes", "altura": 1.3 },
-        "agua": { "modulo": "rio", "largura": 0.17, "direcao": -0.55 },
-        "vegetacao": [["mata", 15], ["redonda", 9], ["arbusto", 6]],
-        "construcoes": { "estilo": "colonial", "casas": 6 },
+        "cores": {
+          "grama": [
+            "#6f9150",
+            "#86a25e"
+          ]
+        },
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 1.3
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.17,
+          "direcao": -0.55
+        },
+        "vegetacao": [
+          [
+            "mata",
+            15
+          ],
+          [
+            "redonda",
+            9
+          ],
+          [
+            "arbusto",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 6
+        },
         "marcos": [
-          { "modulo": "santuario", "referencia": "santuario-santa-paulina" },
-          { "modulo": "pico-cruz", "referencia": "montes-do-vale" }
+          {
+            "modulo": "santuario",
+            "referencia": "santuario-santa-paulina"
+          },
+          {
+            "modulo": "pico-cruz",
+            "referencia": "montes-do-vale"
+          }
         ]
       },
-      "revisao": { "status": "curadoria inicial", "em": "2026-10-14", "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens." }
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-14",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens."
+      }
     },
     "4218004": {
-      "identidade": { "id": "4218004", "ibge": "4218004", "nome": "Tijucas", "uf": "SC", "regiaoLoja": "sul" },
+      "identidade": {
+        "id": "4218004",
+        "ibge": "4218004",
+        "nome": "Tijucas",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
       "cobertura": "completo",
       "conteudo": {
-        "frase": "Cidade do vale do rio Tijucas, com casarões ecléticos tombados no centro.",
+        "frase": "Um rio, casarões tombados e a memória guardada no museu.",
         "resumo": "Tijucas cresceu no vale do rio Tijucas: segundo o histórico do IBGE, o nome teria origem em Ty-Yuca, como os carijós chamavam esse vale. A povoação recebeu imigração açoriana e o comércio de madeira impulsionou o distrito. No centro, o Casarão Gallotti, concluído em 1898, abriga desde 2012 o Museu Tijucas.",
-        "fontesResumo": ["ibge-biblioteca-tijucas", "udesc-specula-gallotti", "tj-prefeitura-museu"],
+        "fontesResumo": [
+          "ibge-biblioteca-tijucas",
+          "udesc-specula-gallotti",
+          "tj-prefeitura-museu"
+        ],
         "referencias": [
           {
             "id": "casarao-gallotti",
             "tipo": "patrimonio",
             "titulo": "Casarão Gallotti",
             "texto": "Construído para a família do imigrante italiano Benjamin Gallotti e concluído em 1898, tem estilo eclético, três pavimentos com o porão alto e escadaria de acessos laterais na fachada. Tombado pelo Estado em 2002, foi restaurado em 2009 e hoje é sede do Museu Tijucas.",
-            "fontes": ["udesc-specula-gallotti", "tj-prefeitura-museu"],
-            "descoberta": { "modulo": "casarao", "nota": "Na maquete, uma forma simplificada inspirada no casarão." }
+            "fontes": [
+              "udesc-specula-gallotti",
+              "tj-prefeitura-museu"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, uma forma simplificada inspirada no casarão."
+            },
+            "curto": "Sobrado eclético concluído em 1898 para a família Gallotti. Restaurado, hoje é sede do Museu Tijucas."
           },
           {
             "id": "rio-tijucas",
             "tipo": "natureza",
             "titulo": "Rio Tijucas",
             "texto": "Em 1788, exploradores subiram o rio em busca de pinheiros e encontraram terras férteis e madeira de lei, o que atraiu novos moradores. Em 1848 foi criado o distrito de São Sebastião da Foz do Tijucas.",
-            "fontes": ["ibge-biblioteca-tijucas"],
-            "descoberta": { "modulo": "ponte-urbana", "nota": "Na maquete, o rio e a ponte são ilustrativos." }
+            "fontes": [
+              "ibge-biblioteca-tijucas"
+            ],
+            "descoberta": {
+              "modulo": "ponte-urbana",
+              "nota": "Na maquete, o rio e a ponte são ilustrativos."
+            },
+            "curto": "O rio dá forma ao vale onde a cidade cresceu. Em 1788, exploradores o subiram em busca de pinheiros."
           },
           {
             "id": "museu-tijucas",
             "tipo": "cultura",
             "titulo": "Museu Tijucas",
             "texto": "Inaugurado em 4 de maio de 2012 no espaço do Casarão Gallotti, apresenta a exposição “TY Yuca”, com salas sobre território, gente da terra, celebrações e tradições, e saberes e sabores.",
-            "fontes": ["tj-prefeitura-museu"]
+            "fontes": [
+              "tj-prefeitura-museu"
+            ]
           }
         ],
         "curiosidades": [
           {
             "texto": "O distrito de São Sebastião da Foz do Tijucas foi criado em 1848 e elevado a vila em 1859; o nome Tijucas e a categoria de cidade vieram em 1906 (Lei Estadual nº 1.123).",
-            "fontes": ["ibge-biblioteca-tijucas"]
+            "fontes": [
+              "ibge-biblioteca-tijucas"
+            ]
           }
         ],
-        "gentilico": { "oficial": "tijuquense", "variantes": [], "fontes": ["ibge-biblioteca-tijucas"] }
+        "gentilico": {
+          "oficial": "tijuquense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-tijucas"
+          ]
+        }
       },
       "geografia": {
-        "sede": { "lat": -27.2428, "lon": -48.6319, "definicao": "Sede municipal (IBGE, Localidades 2022)", "fontes": ["ibge-localidades-2022"] },
-        "populacao": { "censo": { "valor": 51592, "ano": 2022, "fontes": ["ibge-censo-2022-4714"] }, "estimativa": null },
-        "area": { "km2": 279.159, "ano": 2022, "fontes": ["ibge-censo-2022-4714"] },
+        "sede": {
+          "lat": -27.2428,
+          "lon": -48.6319,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 51592,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 279.159,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
         "regioes": {
           "grandeRegiao": "Sul",
           "imediata": "Itajaí",
           "intermediaria": "Blumenau",
           "mesorregiao": "Grande Florianópolis",
           "microrregiao": "Tijucas",
-          "fontes": ["ibge-localidades-api"]
+          "fontes": [
+            "ibge-localidades-api"
+          ]
         }
       },
       "visual": {
-        "ambientes": ["rio", "urbano"],
+        "ambientes": [
+          "rio",
+          "urbano"
+        ],
         "rotulo": "Rio atravessando a cidade, com o casarão no centro",
         "base": "vale",
-        "cores": { "grama": ["#8aa45f", "#9db06c"], "caminho": "#cfc4ae" },
-        "relevo": { "modulo": "planicie" },
-        "agua": { "modulo": "rio", "largura": 0.42, "direcao": 0.55 },
-        "vegetacao": [["redonda", 9], ["palmeira", 3], ["arbusto", 6]],
-        "construcoes": { "estilo": "urbano", "casas": 10, "predios": 3 },
+        "cores": {
+          "grama": [
+            "#8aa45f",
+            "#9db06c"
+          ],
+          "caminho": "#cfc4ae"
+        },
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.42,
+          "direcao": 0.55
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            9
+          ],
+          [
+            "palmeira",
+            3
+          ],
+          [
+            "arbusto",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 3
+        },
         "marcos": [
-          { "modulo": "casarao", "referencia": "casarao-gallotti" },
-          { "modulo": "ponte-urbana", "referencia": "rio-tijucas" }
+          {
+            "modulo": "casarao",
+            "referencia": "casarao-gallotti"
+          },
+          {
+            "modulo": "ponte-urbana",
+            "referencia": "rio-tijucas"
+          }
         ]
       },
-      "revisao": { "status": "curadoria inicial", "em": "2026-10-14", "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens." }
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-14",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens."
+      }
     },
     "4205704": {
-      "identidade": { "id": "4205704", "ibge": "4205704", "nome": "Garopaba", "uf": "SC", "regiaoLoja": "sul" },
+      "identidade": {
+        "id": "4205704",
+        "ibge": "4205704",
+        "nome": "Garopaba",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
       "cobertura": "completo",
       "conteudo": {
-        "frase": "Enseada de tradição açoriana, com dunas à beira-mar e baleias-francas entre julho e novembro.",
+        "frase": "Litoral de dunas e tradições ligadas à pesca.",
         "resumo": "Segundo o IBGE, desde 1525 a enseada de Garopaba servia de abrigo a embarcações, e em 1666 chegaram moradores de origem açoriana, dedicados à pesca e à caça da baleia. A pesca artesanal da tainha e os engenhos de farinha seguem na identidade local. Hoje, entre julho e novembro, baleias-francas são avistadas perto da costa.",
-        "fontesResumo": ["ibge-biblioteca-garopaba", "gp-turismo-destino", "gp-turismo-dunas"],
+        "fontesResumo": [
+          "ibge-biblioteca-garopaba",
+          "gp-turismo-destino",
+          "gp-turismo-dunas"
+        ],
         "referencias": [
           {
             "id": "dunas-do-siriu",
             "tipo": "natureza",
             "titulo": "Dunas do Siriú",
             "texto": "São cerca de 5 km de dunas que se movem com as estações. No verão, depois das chuvas, surgem pequenas lagoas entre elas, o que rendeu o apelido de “Lençóis Catarinenses”. Do alto se vê a Praia do Siriú.",
-            "fontes": ["gp-turismo-dunas"],
-            "descoberta": { "modulo": "dunas", "nota": "Na maquete, as dunas são uma interpretação ilustrativa." }
+            "fontes": [
+              "gp-turismo-dunas"
+            ],
+            "descoberta": {
+              "modulo": "dunas",
+              "nota": "Na maquete, as dunas são uma interpretação ilustrativa."
+            },
+            "curto": "Cerca de 5 km de dunas que mudam com as estações. No verão, lagoas surgem entre elas."
           },
           {
             "id": "baleia-franca",
             "tipo": "natureza",
             "titulo": "Baleia-franca",
             "texto": "Entre julho e novembro é possível avistar baleias-francas nadando perto da costa. A cidade, cujos primeiros moradores açorianos viveram da caça à baleia, hoje se apresenta pela preservação da espécie.",
-            "fontes": ["gp-turismo-dunas", "gp-turismo-destino", "ibge-biblioteca-garopaba"],
-            "descoberta": { "modulo": "baleia", "nota": "Na maquete, a baleia é ilustrativa." }
+            "fontes": [
+              "gp-turismo-dunas",
+              "gp-turismo-destino",
+              "ibge-biblioteca-garopaba"
+            ],
+            "descoberta": {
+              "modulo": "baleia",
+              "nota": "Na maquete, a baleia é ilustrativa."
+            },
+            "curto": "Entre julho e novembro, baleias-francas são avistadas perto da costa."
           },
           {
             "id": "pesca-e-engenhos",
             "tipo": "tradicao",
             "titulo": "Pesca da tainha e engenhos de farinha",
             "texto": "A cultura açoriana, a pesca artesanal da tainha e os engenhos de farinha mantêm viva a identidade local, segundo o portal de turismo do município.",
-            "fontes": ["gp-turismo-destino"]
+            "fontes": [
+              "gp-turismo-destino"
+            ]
           }
         ],
         "curiosidades": [
           {
             "texto": "Segundo o IBGE, Garopaba foi fundada em 19 de dezembro de 1846, com a construção da igreja matriz, do cemitério e da casa paroquial. Foi município em 1890, perdeu a condição em 1923 e voltou a ser município em 1961.",
-            "fontes": ["ibge-biblioteca-garopaba"]
+            "fontes": [
+              "ibge-biblioteca-garopaba"
+            ]
           }
         ],
-        "gentilico": { "oficial": "garopabense", "variantes": [], "fontes": ["ibge-biblioteca-garopaba"] }
+        "gentilico": {
+          "oficial": "garopabense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-garopaba"
+          ]
+        }
       },
       "geografia": {
-        "sede": { "lat": -28.0237, "lon": -48.6135, "definicao": "Sede municipal (IBGE, Localidades 2022)", "fontes": ["ibge-localidades-2022"] },
-        "populacao": { "censo": { "valor": 29959, "ano": 2022, "fontes": ["ibge-censo-2022-4714"] }, "estimativa": null },
-        "area": { "km2": 114.773, "ano": 2022, "fontes": ["ibge-censo-2022-4714"] },
+        "sede": {
+          "lat": -28.0237,
+          "lon": -48.6135,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 29959,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 114.773,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
         "regioes": {
           "grandeRegiao": "Sul",
           "imediata": "Florianópolis",
           "intermediaria": "Florianópolis",
           "mesorregiao": "Sul Catarinense",
           "microrregiao": "Tubarão",
-          "fontes": ["ibge-localidades-api"]
+          "fontes": [
+            "ibge-localidades-api"
+          ]
         }
       },
       "visual": {
-        "ambientes": ["litoral"],
+        "ambientes": [
+          "litoral"
+        ],
         "rotulo": "Enseada com dunas, restinga e mar aberto",
         "base": "litoral",
-        "cores": { "areia": "#e8d7ad" },
-        "relevo": { "modulo": "costa-dunas" },
-        "agua": { "modulo": "mar", "direcao": 0.95 },
-        "vegetacao": [["restinga", 18], ["arbusto", 7], ["capim", 16], ["redonda", 4]],
-        "construcoes": { "estilo": "acoriano", "casas": 5 },
-        "extras": ["barco"],
+        "cores": {
+          "areia": "#e8d7ad"
+        },
+        "relevo": {
+          "modulo": "costa-dunas"
+        },
+        "agua": {
+          "modulo": "mar",
+          "direcao": 0.95
+        },
+        "vegetacao": [
+          [
+            "restinga",
+            18
+          ],
+          [
+            "arbusto",
+            7
+          ],
+          [
+            "capim",
+            16
+          ],
+          [
+            "redonda",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "acoriano",
+          "casas": 5
+        },
+        "extras": [
+          "barco"
+        ],
         "marcos": [
-          { "modulo": "dunas", "referencia": "dunas-do-siriu" },
-          { "modulo": "baleia", "referencia": "baleia-franca" }
+          {
+            "modulo": "dunas",
+            "referencia": "dunas-do-siriu"
+          },
+          {
+            "modulo": "baleia",
+            "referencia": "baleia-franca"
+          }
         ]
       },
-      "revisao": { "status": "curadoria inicial", "em": "2026-10-14", "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens." }
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-14",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens."
+      }
     }
   }
 }
