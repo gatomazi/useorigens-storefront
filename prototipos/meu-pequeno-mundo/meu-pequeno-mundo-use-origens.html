@@ -556,6 +556,19 @@ html, body { margin: 0; height: 100%; overflow: hidden; background: #ece6db; }
 .mpm .sugestao-papeis .m-chip { flex-direction: column; align-items: flex-start; justify-content: center; gap: 0; }
 .mpm .sugestao-troca { font-size: 0.6875rem; font-weight: 500; color: var(--ink-mute); }
 
+/* A experiência não carregou (o pedaço de código dela falhou): aviso fixo com nova tentativa e volta à loja. */
+.mpm-falha {
+  position: fixed; inset: auto 16px 16px; z-index: 50; max-width: 420px; margin: 0 auto; padding: 16px;
+  background: #fff; border: 2px solid #000; font: 500 1rem/1.4 var(--font-body, system-ui), system-ui, sans-serif; color: #111;
+}
+.mpm-falha p + p { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.mpm-falha button, .mpm-falha a {
+  min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; border: 2px solid #000;
+  font: 700 0.875rem/1 var(--font-body, system-ui), system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.06em;
+  color: #111; background: #fff; text-decoration: none; cursor: pointer;
+}
+.mpm-falha button { background: #111; color: #fff; }
+
 </style>
 <script type="importmap">
 {
@@ -727,9 +740,27 @@ var AMBIENTES = { vale: "vale", litoral: "litoral", rio: "rio", campo: "campo", 
 var MODULOS = {
   relevo: ["vale-montes", "planicie", "costa-dunas"],
   agua: ["rio", "mar", "costa", "rio-largo", "vereda", "lagoas", "lagoas-muitas", "lago"],
-  vegetacao: ["redonda", "araucaria", "palmeira", "buriti", "mata", "cerrado", "arbusto", "capim", "junco", "restinga"],
+  vegetacao: ["redonda", "araucaria", "palmeira", "buriti", "mata", "cerrado", "arbusto", "capim", "junco", "restinga", "ipe"],
   construcoes: ["colonial", "urbano", "acoriano"],
-  marcos: ["santuario", "pico-cruz", "casarao", "ponte-urbana", "dunas", "baleia"],
+  marcos: [
+    "santuario",
+    "pico-cruz",
+    "casarao",
+    "ponte-urbana",
+    "dunas",
+    "baleia",
+    "estufa",
+    "torre-relogio",
+    "usina",
+    "mercado",
+    "sobrado",
+    "lago-mureta",
+    "lago-ilha",
+    "mercado-ferro",
+    "teatro-frontao",
+    "teatro-cupula",
+    "encontro-aguas"
+  ],
   extras: ["pier", "barco", "cerca", "silo", "lavoura"]
 };
 var REGIOES = {
@@ -1144,7 +1175,7 @@ function normalizarPerfil(id, c, fontes) {
     revisao: c.revisao ? { em: limparTexto(c.revisao.em, 20) } : null
   };
 }
-function adaptadorContexto(arquivo) {
+function adaptadorContexto() {
   let perfis = /* @__PURE__ */ new Map();
   let fontes = {};
   let carga = null;
@@ -1320,6 +1351,7 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
     marco: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.78, metalness: 0, flatShading: true }),
     agua,
     aguaMar: materialAgua(5215144, 0.86, 0.02, "mpm-agua-mar"),
+    aguaDuas: new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.14, metalness: 0.08, transparent: true, opacity: 0.86 }),
     espuma: new THREE.MeshBasicMaterial({ color: 16777215, transparent: true, opacity: 0.55, depthWrite: false, side: THREE.DoubleSide }),
     oculto: new THREE.MeshBasicMaterial({ visible: false })
     // só para o toque: área maior que o desenho (dunas, cruz, baleia)
@@ -1402,6 +1434,11 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
       pintar(cil(0.022, 0.03, 0.24).translate(0, 0.12, 0).rotateZ(-0.6).translate(-0.06, 0.25, 0), "#4e3a2c"),
       pintar(ico(0.3).scale(1, 0.4, 1).translate(0.03, 0.45, 0), "#8a9450"),
       pintar(ico(0.19).scale(1, 0.45, 1).translate(-0.17, 0.38, 0.06), "#9b9e5a")
+    ]),
+    ipe: juntar([
+      pintar(cil(0.03, 0.045, 0.4).translate(0, 0.2, 0).rotateZ(0.08), "#6b4f39"),
+      pintar(ico(0.22).scale(1, 0.75, 1).translate(0.02, 0.52, 0), "#f6f2ec"),
+      pintar(ico(0.14).scale(1, 0.8, 1).translate(-0.12, 0.47, 0.06), "#efeae2")
     ]),
     arbusto: juntar([
       pintar(ico(0.13).scale(1, 0.72, 1).translate(0, 0.08, 0), "#769855"),
@@ -1560,6 +1597,259 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
         return pintar(new THREE.ExtrudeGeometry(f, { depth: 0.016, bevelEnabled: false, curveSegments: 3 }).translate(0, 0.2, -8e-3), "#3d4850");
       };
       return juntar([pintar(new THREE.CylinderGeometry(0.022, 0.06, 0.22, 7).translate(0, 0.1, 0), "#45515a"), lobo(1), lobo(-1)]);
+    },
+    estufa() {
+      const vidro = "#a9cdcb", ferro = "#f4f1ea";
+      const partes = [];
+      const caixa = (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+      const W = 0.66, D = 0.3;
+      caixa(W + 0.1, 0.03, D + 0.1, 0, 0, 0, "#dcd5c7");
+      caixa(W, 0.15, D, 0, 0.03, 0, vidro);
+      caixa(W + 0.02, 0.016, D + 0.02, 0, 0.18, 0, ferro);
+      for (let k = 0; k <= 10; k++) for (const z of [-D / 2 - 3e-3, D / 2 + 3e-3]) caixa(8e-3, 0.15, 8e-3, -W / 2 + k * W / 10, 0.03, z, ferro);
+      for (const x of [-W / 2 - 3e-3, W / 2 + 3e-3]) for (let k = 0; k <= 4; k++) caixa(8e-3, 0.15, 8e-3, x, 0.03, -D / 2 + k * D / 4, ferro);
+      const cupula = (r, x, y0, alto) => {
+        partes.push(pintar(new THREE.SphereGeometry(r, 16, 8, 0, TAU, 0, Math.PI / 2).scale(1, alto, 1).translate(x, y0, 0), vidro));
+        for (let k = 0; k < 4; k++) partes.push(pintar(new THREE.TorusGeometry(r + 2e-3, 5e-3, 3, 14, Math.PI).scale(1, alto, 1).rotateY(k * Math.PI / 4).translate(x, y0, 0), ferro));
+      };
+      caixa(0.25, 0.05, 0.25, 0, 0.196, 0, vidro);
+      caixa(0.27, 0.012, 0.27, 0, 0.246, 0, ferro);
+      cupula(0.125, 0, 0.258, 1.3);
+      partes.push(pintar(new THREE.CylinderGeometry(0.022, 0.028, 0.05, 8).translate(0, 0.43, 0), ferro), pintar(new THREE.ConeGeometry(0.03, 0.04, 8).translate(0, 0.475, 0), ferro));
+      for (const x of [-0.235, 0.235]) cupula(0.085, x, 0.196, 1.15);
+      caixa(0.6, 0.01, 0.36, 0, 0, 0.4, "#e3d6b8");
+      for (const x of [-0.15, 0.15]) for (const z of [0.3, 0.5]) caixa(0.23, 0.02, 0.13, x, 0, z, "#7fa35a");
+      partes.push(pintar(new THREE.CylinderGeometry(0.05, 0.055, 0.03, 14).translate(0, 0.015, 0.4), "#cfcabd"), pintar(new THREE.CylinderGeometry(0.04, 0.04, 0.012, 14).translate(0, 0.027, 0.4), "#7fb3c0"));
+      return juntar(partes);
+    },
+    torreRelogio() {
+      const pedra = "#d8cfbd", friso = "#b9ae98";
+      const partes = [];
+      const caixa = (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+      partes.push(pintar(new THREE.CylinderGeometry(0.26, 0.27, 0.015, 24).translate(0, 75e-4, 0), "#ddd6c8"));
+      caixa(0.2, 0.09, 0.2, 0, 0.015, 0, pedra);
+      caixa(0.17, 0.05, 0.17, 0, 0.105, 0, friso);
+      caixa(0.13, 0.5, 0.13, 0, 0.155, 0, pedra);
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) caixa(0.022, 0.5, 0.022, sx * 0.066, 0.155, sz * 0.066, friso);
+      caixa(0.16, 0.12, 0.16, 0, 0.655, 0, pedra);
+      for (let q = 0; q < 4; q++) {
+        const face = [
+          pintar(new THREE.CylinderGeometry(0.052, 0.052, 8e-3, 18).rotateX(Math.PI / 2).translate(0, 0.715, 0.082), "#3c3a35"),
+          pintar(new THREE.CylinderGeometry(0.044, 0.044, 0.01, 18).rotateX(Math.PI / 2).translate(0, 0.715, 0.084), "#f4f1ea"),
+          pintar(new THREE.BoxGeometry(6e-3, 0.034, 4e-3).translate(0, 0.73, 0.09), "#3c3a35"),
+          pintar(new THREE.BoxGeometry(0.026, 6e-3, 4e-3).translate(0.011, 0.715, 0.09), "#3c3a35")
+        ];
+        for (const g of face) partes.push(g.rotateY(q * Math.PI / 2));
+      }
+      caixa(0.12, 0.04, 0.12, 0, 0.775, 0, friso);
+      caixa(0.085, 0.045, 0.085, 0, 0.815, 0, pedra);
+      caixa(0.045, 0.06, 0.045, 0, 0.86, 0, friso);
+      for (let q = 0; q < 4; q++) partes.push(pintar(new THREE.BoxGeometry(0.012, 0.07, 0.03).translate(0, 0.85, 0.05).rotateY(q * Math.PI / 2), pedra));
+      return juntar(partes);
+    },
+    usina() {
+      const tijolo = "#a65a43", concreto = "#dcd2c2", esquadria = "#39414a";
+      const partes = [];
+      const caixa = (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+      caixa(0.5, 0.025, 0.3, 0.06, 0, 0, concreto);
+      caixa(0.46, 0.26, 0.26, 0.06, 0.025, 0, tijolo);
+      caixa(0.48, 0.02, 0.28, 0.06, 0.285, 0, concreto);
+      for (let k = 0; k < 5; k++) caixa(0.05, 0.17, 0.01, -0.12 + k * 0.09, 0.07, 0.132, esquadria);
+      for (const z of [-0.07, 0.07]) caixa(0.01, 0.17, 0.05, 0.293, 0.07, z, esquadria);
+      caixa(0.2, 0.17, 0.2, 0.38, 0.025, -0.02, tijolo);
+      caixa(0.21, 0.015, 0.21, 0.38, 0.195, -0.02, concreto);
+      for (const x of [0.33, 0.43]) caixa(0.04, 0.1, 0.01, x, 0.06, 0.082, esquadria);
+      const cx = -0.27, cz = -0.04;
+      caixa(0.13, 0.1, 0.13, cx, 0, cz, concreto);
+      partes.push(
+        pintar(new THREE.CylinderGeometry(0.04, 0.064, 1.24, 14).translate(cx, 0.72, cz), "#9b5442"),
+        pintar(new THREE.CylinderGeometry(0.046, 0.046, 0.03, 14).translate(cx, 1.33, cz), concreto),
+        pintar(new THREE.CylinderGeometry(0.075, 0.075, 0.012, 14).translate(cx, 1.23, cz), "#5b6166")
+      );
+      return juntar(partes);
+    },
+    mercado() {
+      const parede = "#e2bd5b", friso = "#f6efe0", janela = "#4a4237";
+      const W = 0.74, D = 0.46, A = 0.12, H1 = 0.15, H2 = 0.14;
+      const partes = [];
+      const caixa = (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+      caixa(W - 2 * A, 0.015, D - 2 * A, 0, 0, 0, "#d9cdb3");
+      for (const [w, d, x, z] of [[W, A, 0, D / 2 - A / 2], [W, A, 0, -D / 2 + A / 2], [A, D - 2 * A, W / 2 - A / 2, 0], [A, D - 2 * A, -W / 2 + A / 2, 0]]) {
+        caixa(w, H1, d, x, 0, z, parede);
+        caixa(w + 0.012, 0.014, d + 0.012, x, H1, z, friso);
+        caixa(w, H2, d, x, H1 + 0.014, z, parede);
+        caixa(w + 0.02, 0.022, d + 0.02, x, H1 + H2 + 0.014, z, friso);
+      }
+      for (let k = 0; k < 9; k++) {
+        const x = -W / 2 + 0.06 + k * (W - 0.12) / 8;
+        if (k === 4) continue;
+        for (const z of [D / 2 + 3e-3, -D / 2 - 3e-3]) {
+          caixa(0.04, 0.08, 0.01, x, 0.035, z, janela);
+          caixa(0.04, 0.075, 0.01, x, H1 + 0.04, z, janela);
+        }
+      }
+      for (const x of [W / 2 + 3e-3, -W / 2 - 3e-3]) for (const z of [-0.12, 0, 0.12]) {
+        caixa(0.01, 0.08, 0.04, x, 0.035, z, janela);
+        caixa(0.01, 0.075, 0.04, x, H1 + 0.04, z, janela);
+      }
+      caixa(0.16, H1 + H2 + 0.08, 0.03, 0, 0, D / 2 + 0.01, friso);
+      caixa(0.07, 0.12, 0.012, 0, 0, D / 2 + 0.03, janela);
+      caixa(0.05, 0.075, 0.012, 0, H1 + 0.04, D / 2 + 0.03, janela);
+      const frontao = new THREE.Shape();
+      frontao.moveTo(-0.09, 0);
+      frontao.lineTo(0.09, 0);
+      frontao.lineTo(0, 0.06);
+      frontao.closePath();
+      partes.push(pintar(new THREE.ExtrudeGeometry(frontao, { depth: 0.03, bevelEnabled: false }).translate(0, H1 + H2 + 0.08, D / 2 - 5e-3), friso));
+      return juntar(partes);
+    },
+    sobrado() {
+      const parede = "#e8dfcd", friso = "#f7f2ea", janela = "#4b4038";
+      const W = 0.5, D = 0.32;
+      const partes = [];
+      const caixa = (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+      caixa(W + 0.02, 0.03, D + 0.02, 0, 0, 0, "#cbbfa8");
+      caixa(W, 0.15, D, 0, 0.03, 0, parede);
+      caixa(W + 0.016, 0.014, D + 0.016, 0, 0.18, 0, friso);
+      caixa(W, 0.14, D, 0, 0.194, 0, parede);
+      caixa(W + 0.03, 0.02, D + 0.03, 0, 0.334, 0, friso);
+      partes.push(pintar(new THREE.ConeGeometry(Math.SQRT1_2, 1, 4).rotateY(Math.PI / 4).scale(W + 0.05, 0.15, D + 0.05).translate(0, 0.354 + 0.075, 0), "#b5653f"));
+      for (let k = 0; k < 5; k++) {
+        const x = -W / 2 + 0.06 + k * (W - 0.12) / 4;
+        caixa(0.045, k === 2 ? 0.12 : 0.09, 0.01, x, k === 2 ? 0.03 : 0.065, D / 2 + 3e-3, janela);
+        caixa(0.045, 0.09, 0.01, x, 0.215, D / 2 + 3e-3, janela);
+        caixa(0.06, 0.012, 0.016, x, 0.305, D / 2 + 6e-3, friso);
+      }
+      for (const x of [W / 2 + 3e-3, -W / 2 - 3e-3]) for (const z of [-0.08, 0.08]) for (const y of [0.065, 0.215]) caixa(0.01, 0.09, 0.045, x, y, z, janela);
+      return juntar(partes);
+    },
+    lagoMureta() {
+      const r = 0.42;
+      const partes = [pintar(new THREE.CylinderGeometry(r, r, 0.012, 36).translate(0, 6e-3, 0), "#4f7d84")];
+      const perfil = [new THREE.Vector2(r, 0), new THREE.Vector2(r + 0.035, 0), new THREE.Vector2(r + 0.035, 0.065), new THREE.Vector2(r, 0.065), new THREE.Vector2(r, 0)];
+      partes.push(pintar(new THREE.LatheGeometry(perfil, 40), "#ddd5c4"));
+      partes.push(
+        pintar(new THREE.BoxGeometry(0.07, 0.17, 0.07).translate(r * 0.62, 0.085, -r * 0.62), "#ece6da"),
+        pintar(new THREE.BoxGeometry(0.17, 0.014, 0.045).translate(r * 0.62 - 0.1, 0.17, -r * 0.62 + 0.04).rotateY(0), "#f4f1ea")
+      );
+      const rosas = ["#c84a5c", "#e58aa0", "#f2ece4", "#d9647a"];
+      for (let k = 0; k < 34; k++) {
+        const a = k / 34 * TAU, d = r + 0.075;
+        if (Math.abs(Math.atan2(Math.sin(a + Math.PI / 4), Math.cos(a + Math.PI / 4))) < 0.25) continue;
+        partes.push(pintar(ico(0.03).scale(1, 0.8, 1).translate(Math.cos(a) * d, 0.03, Math.sin(a) * d), k % 2 ? "#5f8547" : rosas[(k >> 1) % rosas.length]));
+      }
+      return juntar(partes);
+    },
+    lagoMuretaAgua() {
+      return new THREE.CylinderGeometry(0.425, 0.425, 0.01, 36).translate(0, 0.045, 0);
+    },
+    lagoIlha() {
+      const partes = [pintar(new THREE.CylinderGeometry(0.5, 0.5, 0.012, 36).scale(1.15, 1, 0.85).translate(0, 6e-3, 0), "#4c7a82")];
+      const perfil = [new THREE.Vector2(0.5, 0), new THREE.Vector2(0.56, 0), new THREE.Vector2(0.53, 0.03), new THREE.Vector2(0.5, 0.03), new THREE.Vector2(0.5, 0)];
+      partes.push(pintar(new THREE.LatheGeometry(perfil, 40).scale(1.15, 1, 0.85), "#b8b585"));
+      partes.push(
+        pintar(new THREE.CylinderGeometry(0.1, 0.12, 0.05, 14).translate(0.1, 0.025, -0.06), "#7a9b55"),
+        pintar(new THREE.BoxGeometry(0.03, 0.18, 0.03).rotateZ(0.12).translate(0.1, 0.14, -0.06), "#8b8478"),
+        pintar(new THREE.BoxGeometry(0.05, 0.012, 0.28).translate(0.1, 0.05, 0.3), "#9c7b5a")
+      );
+      for (const lado of [-1, 1]) partes.push(pintar(new THREE.BoxGeometry(0.045, 0.012, 0.12).rotateY(lado * 0.6).translate(0.1 + lado * 0.034, 0.05, 0.12), "#9c7b5a"));
+      for (const x of [0.06, 0.14]) for (const z of [0.2, 0.3, 0.4]) partes.push(pintar(new THREE.CylinderGeometry(8e-3, 8e-3, 0.05, 5).translate(x, 0.025, z), "#7d6047"));
+      return juntar(partes);
+    },
+    lagoIlhaAgua() {
+      return new THREE.CylinderGeometry(0.5, 0.5, 0.01, 36).scale(1.15, 1, 0.85).translate(0, 0.035, 0);
+    },
+    mercadoFerro() {
+      const ferro = "#5f686e", painel = "#e3ddd0", telha = "#b4623f", zinco = "#9aa1a3";
+      const W = 0.62, D = 0.34;
+      const partes = [];
+      const caixa = (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+      caixa(W + 0.06, 0.025, D + 0.06, 0, 0, 0, "#d4cdbf");
+      caixa(W, 0.2, D, 0, 0.025, 0, painel);
+      for (let k = 0; k <= 8; k++) for (const z of [-D / 2 - 4e-3, D / 2 + 4e-3]) caixa(0.014, 0.2, 0.01, -W / 2 + k * W / 8, 0.025, z, ferro);
+      for (const x of [-W / 2 - 4e-3, W / 2 + 4e-3]) for (let k = 0; k <= 4; k++) caixa(0.01, 0.2, 0.014, x, 0.025, -D / 2 + k * D / 4, ferro);
+      for (const z of [-D / 2 - 4e-3, D / 2 + 4e-3]) caixa(W + 0.01, 0.016, 0.012, 0, 0.13, z, ferro);
+      caixa(W + 0.03, 0.018, D + 0.03, 0, 0.225, 0, ferro);
+      const forma = new THREE.Shape();
+      forma.moveTo(-D / 2 - 0.02, 0);
+      forma.lineTo(D / 2 + 0.02, 0);
+      forma.lineTo(0, 0.13);
+      forma.closePath();
+      partes.push(pintar(new THREE.ExtrudeGeometry(forma, { depth: W - 0.06, bevelEnabled: false }).translate(0, 0, -(W - 0.06) / 2).rotateY(Math.PI / 2).translate(0, 0.243, 0), telha));
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        const x = sx * (W / 2 - 0.01), z = sz * (D / 2 - 0.01);
+        caixa(0.08, 0.36, 0.08, x, 0.025, z, painel);
+        for (const dx of [-0.04, 0.04]) for (const dz of [-0.04, 0.04]) caixa(0.01, 0.36, 0.01, x + dx, 0.025, z + dz, ferro);
+        partes.push(pintar(new THREE.ConeGeometry(0.075, 0.16, 4).rotateY(Math.PI / 4).translate(x, 0.465, z), zinco));
+        partes.push(pintar(new THREE.CylinderGeometry(4e-3, 4e-3, 0.06, 4).translate(x, 0.575, z), ferro));
+      }
+      return juntar(partes);
+    },
+    teatroFrontao() {
+      const parede = "#efe5d3", claro = "#faf6ee", janela = "#4a4540";
+      const W = 0.58, D = 0.42;
+      const partes = [];
+      const caixa = (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+      caixa(W + 0.08, 0.03, D + 0.12, 0, 0, 0.02, "#d9d1c1");
+      caixa(W, 0.26, D, 0, 0.03, -0.02, parede);
+      caixa(W + 0.02, 0.02, D + 0.02, 0, 0.29, -0.02, claro);
+      caixa(W * 0.7, 0.14, D * 0.5, 0, 0.31, -0.08, parede);
+      caixa(W * 0.7 + 0.016, 0.016, D * 0.5 + 0.016, 0, 0.45, -0.08, claro);
+      for (const lado of [-1, 1]) for (const z of [-0.14, -0.02, 0.1]) for (const y of [0.07, 0.17]) caixa(0.01, 0.07, 0.035, lado * (W / 2 + 3e-3), y, z, janela);
+      caixa(0.36, 0.02, 0.1, 0, 0.03, D / 2 + 0.03, claro);
+      for (let k = 0; k < 6; k++) partes.push(pintar(new THREE.CylinderGeometry(0.014, 0.017, 0.2, 8).translate(-0.15 + k * 0.06, 0.15, D / 2 + 0.05), claro));
+      caixa(0.37, 0.03, 0.08, 0, 0.25, D / 2 + 0.04, claro);
+      caixa(0.37, 0.05, 0.05, 0, 0.28, D / 2 + 0.025, parede);
+      caixa(0.39, 0.012, 0.06, 0, 0.33, D / 2 + 0.025, claro);
+      caixa(0.07, 0.11, 0.01, 0, 0.03, D / 2 - 0.015, janela);
+      for (const x of [-0.12, 0.12]) caixa(0.04, 0.09, 0.01, x, 0.05, D / 2 - 0.015, janela);
+      return juntar(partes);
+    },
+    teatroCupula() {
+      const parede = "#e4a7a3", claro = "#f8f3ea", janela = "#4d4240";
+      const W = 0.62, D = 0.42;
+      const partes = [];
+      const caixa = (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+      caixa(W + 0.1, 0.03, D + 0.14, 0, 0, 0.02, "#e2ddd3");
+      caixa(W, 0.24, D, 0, 0.03, -0.02, parede);
+      caixa(W + 0.02, 0.018, D + 0.02, 0, 0.12, -0.02, claro);
+      caixa(W + 0.03, 0.022, D + 0.03, 0, 0.27, -0.02, claro);
+      for (let k = 0; k < 7; k++) {
+        const x = -W / 2 + 0.06 + k * (W - 0.12) / 6;
+        if (k >= 2 && k <= 4) continue;
+        for (const y of [0.05, 0.155]) caixa(0.04, 0.06, 0.01, x, y, D / 2 - 0.015, janela);
+      }
+      for (const lado of [-1, 1]) for (const z of [-0.16, -0.05, 0.06]) for (const y of [0.05, 0.155]) caixa(0.01, 0.06, 0.035, lado * (W / 2 + 3e-3), y, z, janela);
+      caixa(0.24, 0.02, 0.08, 0, 0.03, D / 2 + 0.02, claro);
+      for (let k = 0; k < 4; k++) partes.push(pintar(new THREE.CylinderGeometry(0.014, 0.016, 0.2, 8).translate(-0.09 + k * 0.06, 0.15, D / 2 + 0.04), claro));
+      caixa(0.25, 0.03, 0.07, 0, 0.25, D / 2 + 0.03, claro);
+      const frontao = new THREE.Shape();
+      frontao.moveTo(-0.13, 0);
+      frontao.lineTo(0.13, 0);
+      frontao.lineTo(0, 0.07);
+      frontao.closePath();
+      partes.push(pintar(new THREE.ExtrudeGeometry(frontao, { depth: 0.04, bevelEnabled: false }).translate(0, 0.28, D / 2 + 5e-3), claro));
+      const cz = -0.06;
+      partes.push(pintar(new THREE.CylinderGeometry(0.13, 0.13, 0.07, 20).translate(0, 0.325, cz), claro));
+      const cupula = new THREE.SphereGeometry(0.14, 18, 6, 0, TAU, 0, Math.PI / 2).scale(1, 1.12, 1).translate(0, 0.36, cz).toNonIndexed();
+      const paleta = ["#e2b93b", "#3f8a4f", "#2f5f9e"].map(corDe);
+      const pos = cupula.attributes.position, cores = new Float32Array(pos.count * 3);
+      for (let t = 0; t < pos.count; t += 3) {
+        let mx = 0, my = 0, mz = 0;
+        for (let v = 0; v < 3; v++) {
+          mx += pos.getX(t + v);
+          my += pos.getY(t + v);
+          mz += pos.getZ(t + v);
+        }
+        const anel = Math.min(4, Math.floor((my / 3 - 0.36) / (0.14 * 1.12) * 5));
+        const setor = Math.floor((Math.atan2(mz / 3 - cz, mx / 3) + Math.PI) / TAU * 18);
+        const cor = anel >= 4 ? paleta[2] : paleta[(setor + anel) % 2];
+        for (let v = 0; v < 3; v++) cores.set([cor.r, cor.g, cor.b], (t + v) * 3);
+      }
+      cupula.setAttribute("color", new THREE.BufferAttribute(cores, 3));
+      partes.push(cupula);
+      partes.push(pintar(new THREE.CylinderGeometry(0.022, 0.03, 0.06, 8).translate(0, 0.53, cz), claro), pintar(new THREE.ConeGeometry(0.026, 0.05, 8).translate(0, 0.585, cz), claro));
+      return juntar(partes);
     }
   };
   const geoMarco = (nome) => G[`marco:${nome}`] ??= CONSTRUTORES_MARCO[nome]();
@@ -1567,6 +1857,7 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
     restinga: { malhas: [["restinga", "veg"]], raio: 0.16 },
     redonda: { malhas: [["redonda", "veg"]], raio: 0.24 },
     araucaria: { malhas: [["araucaria", "veg"]], raio: 0.27 },
+    ipe: { malhas: [["ipe", "veg"]], raio: 0.22 },
     palmeira: { malhas: [["palmeira", "veg"]], raio: 0.2 },
     buriti: { malhas: [["buriti", "veg"]], raio: 0.2 },
     mata: { malhas: [["mata", "veg"]], raio: 0.27 },
@@ -1652,11 +1943,23 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
   const difAng = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
   const AJUSTE_RELEVO = {
     "vale-montes": { base: 0.13, amp: 0.1, freq: 1, colina: 0 },
-    planicie: { base: 0.11, amp: 0.05, freq: 0.8, colina: 0.04 },
+    planicie: { base: 0.11, amp: 0.05, freq: 0.8, colina: 0.04, chapada: 0 },
     "costa-dunas": { base: 0.12, amp: 0.08, freq: 0.9, colina: 0 }
   };
+  const EDIFICIOS = {
+    estufa: { geo: "estufa", raio: 0.56, livre: 0.42, ang: -0.25, d: 0.36, ancora: [0, 0.7, 0], centro: [0, 0.2, 0.05] },
+    "torre-relogio": { geo: "torreRelogio", raio: 0.3, livre: 0.24, ang: 1, d: 0.28, ancora: [0, 1.16, 0], centro: [0, 0.45, 0] },
+    usina: { geo: "usina", raio: 0.52, livre: 0.36, ang: -0.4, d: 0.4, beiraAgua: true, ancora: [-0.27, 1.62, -0.04], centro: [0.05, 0.15, 0.05] },
+    mercado: { geo: "mercado", raio: 0.5, livre: 0.4, ang: 1.3, d: 0.32, ancora: [0, 0.72, 0], centro: [0, 0.18, 0.1] },
+    sobrado: { geo: "sobrado", raio: 0.38, livre: 0.3, ang: 1.1, d: 0.35, ancora: [0, 0.8, 0], centro: [0, 0.2, 0.05] },
+    "lago-mureta": { geo: "lagoMureta", agua: "lagoMuretaAgua", raio: 0.58, livre: 0.5, ang: -0.75, d: 0.42, ancora: [0, 0.5, 0], centro: [0, 0.05, 0] },
+    "lago-ilha": { geo: "lagoIlha", agua: "lagoIlhaAgua", raio: 0.68, livre: 0.6, ang: -0.75, d: 0.42, ancora: [0.1, 0.56, -0.06], centro: [0.1, 0.06, -0.06] },
+    "mercado-ferro": { geo: "mercadoFerro", raio: 0.48, livre: 0.36, ang: -0.4, d: 0.4, beiraAgua: true, ancora: [0, 0.82, 0], centro: [0, 0.18, 0.05] },
+    "teatro-frontao": { geo: "teatroFrontao", raio: 0.48, livre: 0.38, ang: 1.2, d: 0.3, ancora: [0, 0.8, 0], centro: [0, 0.2, 0.1] },
+    "teatro-cupula": { geo: "teatroCupula", raio: 0.5, livre: 0.38, ang: 2.6, d: 0.4, ancora: [0, 0.96, 0], centro: [0, 0.22, 0.1] }
+  };
   function construirMarco(m, ctx) {
-    const { amostra, rio, dirCam, rnd } = ctx;
+    const { amostra, rio, dirCam, rnd, contorno } = ctx;
     const voltado = Math.atan2(dirCam.x, dirCam.z);
     const grupoM = new THREE.Group();
     const ancora = new THREE.Object3D();
@@ -1682,6 +1985,54 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
       ancora.position.set(0, m.modulo === "santuario" ? 1.48 : 0.88, 0);
       centro.position.set(0, m.modulo === "santuario" ? 0.4 : 0.24, 0.05);
       return { objeto: grupoM, alvos: [corpo], ancora, centro };
+    }
+    const ed = EDIFICIOS[m.modulo];
+    if (ed) {
+      grupoM.position.set(m.x, amostra(m.x, m.z).h - 6e-3, m.z);
+      grupoM.rotation.y = voltado;
+      const corpo = malha(geoMarco(ed.geo));
+      grupoM.add(corpo);
+      const alvos = [corpo];
+      if (ed.agua) {
+        const espelhoLago = new THREE.Mesh(geoMarco(ed.agua), M.agua);
+        espelhoLago.receiveShadow = true;
+        espelhoLago.renderOrder = 1;
+        grupoM.add(espelhoLago);
+        alvos.push(espelhoLago);
+      }
+      ancora.position.set(...ed.ancora);
+      centro.position.set(...ed.centro);
+      return { objeto: grupoM, alvos, ancora, centro };
+    }
+    if (m.modulo === "encontro-aguas" && rio) {
+      const larg = rio.larg * 1.15, y = NIVEL + 0.018;
+      const faixas = [[-larg, -larg * 0.12, "#1d2226"], [-larg * 0.12, -larg * 0.03, "#3a3530"], [-larg * 0.03, larg * 0.12, "#7a5d3d"], [larg * 0.12, larg, "#a9814f"]].map(([a, b, cor2]) => [a, b, corDe(cor2)]);
+      const pos = [], cor = [];
+      const ponto = (sP, lat) => {
+        const l = rio.off + rio.amp * Math.sin(sP * rio.freq + rio.fase) + lat;
+        return { x: rio.u.x * sP + rio.v.x * l, z: rio.u.z * sP + rio.v.z * l };
+      };
+      const dentro = (q) => Math.hypot(q.x, q.z) < contorno(Math.atan2(q.z, q.x)) * 0.97;
+      const passo = 0.06, lim = RAIO_BASE * 1.2;
+      for (let sP = -lim; sP < lim; sP += passo) for (const [a, b, c] of faixas) {
+        const q = [ponto(sP, a), ponto(sP, b), ponto(sP + passo, b), ponto(sP + passo, a)];
+        if (!q.every(dentro)) continue;
+        for (const k of [0, 1, 2, 0, 2, 3]) {
+          pos.push(q[k].x, y, q[k].z);
+          cor.push(c.r, c.g, c.b);
+        }
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+      geo.setAttribute("color", new THREE.Float32BufferAttribute(cor, 3));
+      geo.computeVertexNormals();
+      const faixa = new THREE.Mesh(geo, M.aguaDuas);
+      faixa.receiveShadow = true;
+      faixa.renderOrder = 2;
+      grupoM.add(faixa);
+      ancora.position.set(m.x, 0.5, m.z);
+      centro.position.set(m.x, NIVEL, m.z);
+      return { objeto: grupoM, alvos: [faixa], ancora, centro, descartar: () => geo.dispose() };
     }
     if (m.modulo === "pico-cruz") {
       grupoM.position.set(m.x, amostra(m.x, m.z).h - 0.03, m.z);
@@ -1872,6 +2223,40 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
       const a = amostra(x + dx, z + dz);
       return a.h > 0.06 && a.molhado < 0.05 && a.rho < 0.82;
     });
+    function lugarParaMarco(cfg) {
+      const aPlaca = angCam + 0.5, placa2 = { x: Math.cos(aPlaca) * contorno(aPlaca) * 0.62, z: Math.sin(aPlaca) * contorno(aPlaca) * 0.62 };
+      const atrasDaPlaca = (x, z, k) => {
+        const dx = x - placa2.x, dz = z - placa2.z;
+        const prof = dx * dirCam.x + dz * dirCam.z, lado2 = Math.abs(dx * -dirCam.z + dz * dirCam.x);
+        return lado2 < (0.66 + cfg.raio * 0.9) * k && prof > -(1.15 + cfg.raio) * k && prof < (0.35 + cfg.raio) * k;
+      };
+      let alvo = { x: Math.cos(angCam + cfg.ang) * R * cfg.d, z: Math.sin(angCam + cfg.ang) * R * cfg.d };
+      if (cfg.beiraAgua && tipoAgua === "costa") alvo = { x: aguaDir.x * R * 0.05 + dirCam.x * R * 0.3, z: aguaDir.z * R * 0.05 + dirCam.z * R * 0.3 };
+      else if (cfg.beiraAgua && rio) {
+        let perto = null;
+        for (let sP = -R * 0.6; sP <= R * 0.6; sP += R * 0.05) {
+          const lat = rio.off + rio.amp * Math.sin(sP * rio.freq + rio.fase);
+          const x = rio.u.x * sP + rio.v.x * lat, z = rio.u.z * sP + rio.v.z * lat;
+          const d = Math.hypot(x - dirCam.x * R * 0.3, z - dirCam.z * R * 0.3);
+          if (!perto || d < perto.d) perto = { x, z, d };
+        }
+        alvo = perto;
+      }
+      for (const [kLivre, maxMonte, kPlaca] of [[1, 0.25, 1], [0.8, 0.45, 0.7], [0.65, 0.7, 0.45]]) {
+        let melhor = null;
+        for (let rr = 0.08; rr <= 0.72; rr += 0.04) for (let k = 0; k < 48; k++) {
+          const a = k / 48 * TAU, x = Math.cos(a) * R * rr, z = Math.sin(a) * R * rr;
+          const d = Math.hypot(x - alvo.x, z - alvo.z);
+          if (melhor && d >= melhor.d) continue;
+          if (atrasDaPlaca(x, z, kPlaca)) continue;
+          if (marcos.some((o) => !o.terreno && !o.naAgua && Math.hypot(x - o.x, z - o.z) < o.raio + cfg.raio + 0.1)) continue;
+          if (seco(x, z).montanha > maxMonte || !secoEm(x, z, cfg.livre * kLivre)) continue;
+          melhor = { x, z, d };
+        }
+        if (melhor) return { x: melhor.x, z: melhor.z };
+      }
+      return null;
+    }
     for (const m of rec.perfil ? rec.marcos ?? [] : []) {
       if (m.modulo === "santuario") {
         const a = angCam - 0.62, d = R * 0.24;
@@ -1891,6 +2276,23 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
         if (!lugar) continue;
         plataformas.push({ ...lugar, r: 0.5, h: Math.max(seco(lugar.x, lugar.z).h, 0.1) });
         marcos.push({ ...m, ...lugar, raio: 0.5 });
+      } else if (EDIFICIOS[m.modulo]) {
+        const cfg = EDIFICIOS[m.modulo];
+        const lugar = lugarParaMarco(cfg);
+        if (!lugar) continue;
+        plataformas.push({ ...lugar, r: cfg.raio, h: Math.max(seco(lugar.x, lugar.z).h, 0.1) });
+        marcos.push({ ...m, ...lugar, raio: cfg.raio });
+      } else if (m.modulo === "encontro-aguas" && rio) {
+        const alvo = { x: Math.cos(angCam - 0.75) * R * 0.3, z: Math.sin(angCam - 0.75) * R * 0.3 };
+        let melhor = null;
+        for (let sP = -R * 0.6; sP <= R * 0.6; sP += R * 0.04) {
+          const lat = rio.off + rio.amp * Math.sin(sP * rio.freq + rio.fase);
+          const x = rio.u.x * sP + rio.v.x * lat, z = rio.u.z * sP + rio.v.z * lat;
+          if (Math.hypot(x, z) > R * 0.62) continue;
+          const nota = -Math.hypot(x - alvo.x, z - alvo.z);
+          if (!melhor || nota > melhor.nota) melhor = { x, z, nota };
+        }
+        if (melhor) marcos.push({ ...m, x: melhor.x, z: melhor.z, raio: 0, naAgua: true });
       } else if (m.modulo === "pico-cruz" && picos.length) {
         const p = picos.reduce((a, b) => b.h > a.h ? b : a);
         marcos.push({ ...m, x: p.x, z: p.z, raio: 0.25, noPico: true });
@@ -2341,6 +2743,11 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
         if (!ok || !livre(p.x, p.z, raio)) continue;
         ocupado.push({ x: p.x, z: p.z, r: raio * 0.85 });
         const tom = 0.88 + rnd() * 0.2;
+        if (tipo === "ipe") {
+          novoItem(tipo, p.x, p.z, s.h - 0.02, { s: 0.85 + rnd() * 0.35, cores: [rnd() < 0.5 ? "#e08bb3" : "#ecc64a"] });
+          k++;
+          continue;
+        }
         novoItem(tipo, p.x, p.z, s.h - 0.02, { s: tipo === "mata" ? 0.9 + rnd() * 0.55 : 0.8 + rnd() * 0.4, cores: [`rgb(${Math.round(255 * Math.min(1, tom * 1.02))},${Math.round(255 * Math.min(1, tom))},${Math.round(255 * Math.min(1, tom * 0.95))})`] });
         k++;
       }
@@ -2426,7 +2833,7 @@ transformed.y += sin( ondaA ) * ${amp.toFixed(4)} + sin( ondaB ) * ${(amp * 0.82
     const descartes = [];
     const alvosMarcos = [];
     for (const m of marcos) {
-      const feito = construirMarco(m, { amostra, rio, dirCam, rnd: rm });
+      const feito = construirMarco(m, { amostra, rio, dirCam, rnd: rm, contorno });
       if (!feito) continue;
       conteudo.add(feito.objeto);
       for (const a of feito.alvos) {

@@ -11,6 +11,9 @@ if (!outDir) throw new Error("uso: node scripts/qa/mini-mundo-v21.mjs <outDir> [
 mkdirSync(outDir, { recursive: true });
 
 const NT = "4211504", TJ = "4218004", GP = "4205704";
+// No protótipo, os links levam ao site público; na página da loja (/meu-pequeno-mundo), ao próprio ambiente.
+const LOJA = /\/meu-pequeno-mundo\/?$/.test(new URL(base).pathname) ? new URL(base).origin : "https://www.useorigens.com.br";
+const LOJA_RE = LOJA.replace(/[.:/]/g, (c) => `\\${c}`);
 const PILOTO = `${base}?mundo=1&origem=${NT}&presente=${TJ}&coracao=${GP}`;
 const browser = await chromium.launch({ args: ["--enable-unsafe-swiftshader", "--use-angle=swiftshader", "--ignore-gpu-blocklist"] });
 const resultado = { base, quando: new Date().toISOString(), checagens: [], consoleErros: [] };
@@ -24,6 +27,8 @@ const VIEWPORTS = {
 };
 async function novaPagina(vp, extra = {}) {
   const ctx = await browser.newContext({ ...VIEWPORTS[vp], locale: "pt-BR", acceptDownloads: true, ...extra });
+  // na loja, a escolha de cookies já feita (o banner da loja não faz parte da experiência; no protótipo, isto não tem efeito)
+  await ctx.addInitScript(() => localStorage.setItem("useorigens:consent:marketing", JSON.stringify({ choice: "accepted", version: 2, decidedAt: new Date().toISOString() })));
   const page = await ctx.newPage();
   page.on("console", (m) => { if (m.type() === "error" && !/net::ERR_FAILED/.test(m.text())) resultado.consoleErros.push(`[${vp}] ${m.text()}`); });
   page.on("pageerror", (e) => resultado.consoleErros.push(`[${vp}] pageerror: ${e.message}`));
@@ -41,7 +46,8 @@ const sobrepoe = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h
 async function alvosPequenos(page, extras = []) {
   return page.evaluate((extras) => {
     const ruins = [];
-    const lista = [...document.querySelectorAll("button, a[href], a.lugar-camisetas, input:not([type=checkbox]), [role=option], summary, label.incluir"), ...extras.flatMap((s) => [...document.querySelectorAll(s)])];
+    const raiz = document.getElementById("app") ?? document; // só a experiência (na loja, o banner de cookies é da loja)
+    const lista = [...raiz.querySelectorAll("button, a[href], a.lugar-camisetas, input:not([type=checkbox]), [role=option], summary, label.incluir"), ...extras.flatMap((s) => [...raiz.querySelectorAll(s)])];
     for (const n of new Set(lista)) {
       if (n.closest("[hidden]") || n.classList.contains("oculta") || n.closest(".oculta")) continue;
       const r = n.getBoundingClientRect();
@@ -86,8 +92,8 @@ async function arrastar(page, x, y, dx) {
     camisetas: l.querySelector(".lugar-camisetas")?.getAttribute("href"), conhecer: !!l.querySelector("button.lugar-conhecer"),
     linkEmBotao: !!l.querySelector("button a, a button"),
   })));
-  checar("[mobile] uma camiseta real por cidade, com link da estampa", cartoes.length === 3 && cartoes.every((c) => c.img?.startsWith("https://") && /useorigens\.com\.br\/sul\/sc\/[a-z-]+\/.+/.test(c.foto ?? "")), cartoes.map((c) => c.foto).join(" | "));
-  checar("[mobile] 'Conhecer' (botão) e 'Camisetas' (link da página da cidade) com destinos distintos, sem link dentro de botão", cartoes.every((c) => c.conhecer && /^https:\/\/www\.useorigens\.com\.br\/sul\/sc\/(nova-trento|tijucas|garopaba)$/.test(c.camisetas ?? "") && !c.linkEmBotao), cartoes.map((c) => c.camisetas).join(" | "));
+  checar("[mobile] uma camiseta real por cidade, com link da estampa", cartoes.length === 3 && cartoes.every((c) => c.img?.startsWith("https://") && new RegExp(`^${LOJA_RE}\\/sul\\/sc\\/[a-z-]+\\/.+`).test(c.foto ?? "")), cartoes.map((c) => c.foto).join(" | "));
+  checar("[mobile] 'Conhecer' (botão) e 'Camisetas' (link da página da cidade) com destinos distintos, sem link dentro de botão", cartoes.every((c) => c.conhecer && new RegExp(`^${LOJA_RE}\\/sul\\/sc\\/(nova-trento|tijucas|garopaba)$`).test(c.camisetas ?? "") && !c.linkEmBotao), cartoes.map((c) => c.camisetas).join(" | "));
   const etqCompacto = await etiquetas(page);
   checar("[mobile] compacto: as três etiquetas acima do painel, sem corte", etqCompacto.length === 3 && etqCompacto.every((e) => e.y >= 56 && e.y + e.h <= painel1.y && e.x >= 0 && e.x + e.w <= 375), etqCompacto.map((e) => `${Math.round(e.x)},${Math.round(e.y)}`).join(" "));
   // escala da maquete: distância na tela entre dois marcos da MESMA ilha (o arranjo das ilhas pode mudar com o formato da área livre)
@@ -158,12 +164,14 @@ async function arrastar(page, x, y, dx) {
   const cta = await rect(page, "#cidade-cta"), fechar = await rect(page, "#btn-fechar-cidade");
   checar("[mobile] ao rolar até o fim, 'Ver camisetas' e o fechar continuam na tela", cta.y >= 0 && cta.b <= 812 && fechar.y >= 0 && fechar.b <= 812, `CTA y=${Math.round(cta.y)}, fechar y=${Math.round(fechar.y)}`);
   await page.$eval("#painel-cidade", (p) => p.scrollTo(0, 0));
+  await page.waitForTimeout(400); // a ficha volta ao topo e a câmera reenquadra antes de medir o marco
   // marco com a ficha aberta: realça a referência na própria ficha (sem cartão por cima)
   const nt4 = await marco(page, NT, "santuario-santa-paulina");
+  const noPonto = await page.evaluate(([x, y]) => { const n = document.elementFromPoint(x, y); return `${n?.tagName.toLowerCase()}${n?.id ? "#" + n.id : ""}.${String(n?.className ?? "").split(" ")[0]} scrollY=${Math.round(scrollY)}`; }, [nt4.x, nt4.y]);
   await page.mouse.click(nt4.x, nt4.y);
   await page.waitForTimeout(1500);
   const destaque = await page.evaluate(() => ({ aberto: document.getElementById("cidade-conheca").open, ref: document.querySelector(".referencia.destacada")?.dataset.ref, balao: !document.getElementById("balao").hidden }));
-  checar("[mobile] marco com a ficha aberta: abre 'Conheça este lugar' e realça a referência", destaque.aberto && destaque.ref === "santuario-santa-paulina" && !destaque.balao, JSON.stringify(destaque));
+  checar("[mobile] marco com a ficha aberta: abre 'Conheça este lugar' e realça a referência", destaque.aberto && destaque.ref === "santuario-santa-paulina" && !destaque.balao, `${JSON.stringify(destaque)} (no ponto: ${noPonto})`);
   await foto(page, "mobile-06-ficha-referencia-do-marco");
   // arrasto não fecha a ficha; toque no vazio fecha e restaura o conjunto
   await arrastar(page, 40, 140, 100);
@@ -177,7 +185,9 @@ async function arrastar(page, x, y, dx) {
   checar("[mobile] ao voltar, o enquadramento do conjunto é restaurado", Math.abs(Math.hypot(nt5.x - gp5.x, nt5.y - gp5.y) - Math.hypot(nt1.x - gp1.x, nt1.y - gp1.y)) < 8);
 
   // erro de produto só no bloco afetado
-  await page.route(`**/dados/lugares/${TJ}.json`, (r) => r.abort());
+  // o protótipo lê dados/lugares/<id>.json; a página da loja, /api/mundo/lugares/<id>.json
+  const arquivoTj = new RegExp(`/(dados|api/mundo)/lugares/${TJ}\\.json`);
+  await page.route(arquivoTj, (r) => r.abort());
   await page.evaluate(() => localStorage.clear());
   await page.goto(PILOTO);
   await pronta(page);
@@ -188,7 +198,7 @@ async function arrastar(page, x, y, dx) {
   await page.$eval(`#lista-lugares [data-id="${TJ}"]`, (n) => n.scrollIntoView({ inline: "start" }));
   await page.waitForTimeout(300);
   await foto(page, "mobile-07-erro-de-produto-no-cartao");
-  await page.unroute(`**/dados/lugares/${TJ}.json`);
+  await page.unroute(arquivoTj);
   await page.click(`#lista-lugares [data-id="${TJ}"] .lugar-foto button`);
   await page.waitForTimeout(1500);
   checar("[mobile] 'Tentar de novo' recarrega só aquele cartão", (await page.$$eval("#lista-lugares a.lugar-foto img", (is) => is.length)) === 3);
