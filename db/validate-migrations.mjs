@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -130,6 +130,24 @@ await accepts("a product-link event", `insert into customization_request_event (
 await rejects("an unknown event action", `insert into customization_request_event (request_id, actor, action) values ('${ID1}','ana@x','order-paid')`);
 await accepts("audit for a note", `insert into audit_log (actor,action) values ('system','request.note')`);
 await accepts("audit for a product link", `insert into audit_log (actor,action) values ('system','request.product')`);
+
+// ── 0006: MCP OAuth (only hashes are ever stored; codes are PKCE S256; scopes are a closed set) ─────────────────────────────
+{
+  const C = "mcp_" + "c".repeat(22);
+  const FAM = "f".repeat(22);
+  await accepts("an MCP client registered by DCR", `insert into mcp_oauth_client (client_id, client_name, redirect_uris) values ($1, 'Claude', '["https://claude.ai/api/mcp/auth_callback"]'::jsonb)`, [C]);
+  await rejects("an MCP client without redirect URIs", `insert into mcp_oauth_client (client_id, redirect_uris) values ($1, '[]'::jsonb)`, ["mcp_" + "d".repeat(22)]);
+  await rejects("an MCP client id outside the issued shape", `insert into mcp_oauth_client (client_id, redirect_uris) values ('evil', '["https://claude.ai/api/mcp/auth_callback"]'::jsonb)`);
+  const code = (hash, challenge, scope = "{origens.read}") => db.query(`insert into mcp_oauth_code (code_hash, client_id, redirect_uri, code_challenge, scope, resource, subject, family_id, expires_at) values ($1, $2, 'https://claude.ai/api/mcp/auth_callback', $3, $4::text[], 'https://www.useorigens.com.br/api/mcp', $5, $6, now() + interval '1 minute')`, [hash, C, challenge, scope, ULID_A, FAM]);
+  try { await code("1".repeat(64), "A".repeat(43)); ok("an authorization code stored as a hash with an S256 challenge"); } catch (e) { bad("code", e.message); }
+  try { await code("plain-code", "A".repeat(43)); bad("code in clear", "was accepted"); } catch { ok("an authorization code stored in clear is rejected"); }
+  try { await code("2".repeat(64), "short"); bad("plain PKCE", "was accepted"); } catch { ok("a non-S256 (plain) challenge is rejected"); }
+  try { await code("3".repeat(64), "A".repeat(43), "{origens.write}"); bad("unknown scope", "was accepted"); } catch { ok("a scope outside origens.read/offline_access is rejected"); }
+  await accepts("an access token stored as a hash", `insert into mcp_oauth_token (token_hash, kind, family_id, client_id, subject, scope, resource, expires_at) values ($1, 'access', $2, $3, $4, '{origens.read}', 'https://www.useorigens.com.br/api/mcp', now() + interval '1 hour')`, ["4".repeat(64), FAM, C, ULID_A]);
+  await rejects("a token stored in clear", `insert into mcp_oauth_token (token_hash, kind, family_id, client_id, subject, scope, resource, expires_at) values ('tok', 'access', $1, $2, $3, '{origens.read}', 'r', now())`, [FAM, C, ULID_A]);
+  await rejects("a token of an unknown kind", `insert into mcp_oauth_token (token_hash, kind, family_id, client_id, subject, scope, resource, expires_at) values ($1, 'id', $2, $3, $4, '{origens.read}', 'r', now())`, ["5".repeat(64), FAM, C, ULID_A]);
+  await accepts("audit for an MCP authorization", `insert into audit_log (actor,action) values ('system','mcp.authorize')`);
+}
 
 // ── 0004 → 0005 on data that already exists: nothing is lost, statuses are renamed in place ────────────────────────────────
 {

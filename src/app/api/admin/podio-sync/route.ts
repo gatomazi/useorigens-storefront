@@ -3,7 +3,8 @@
 // publishes podio/<region>/latest.json atomically, then revalidates the region home and its state pages (the only pages that show it).
 //
 // A normal run is a handful of GETs (~5 pages for the three stores at 1.5 s), so the answer carries the result directly, like
-// umapenca-sync. A second POST while one runs gets 409.
+// umapenca-sync. A second POST while one runs gets 409. A region whose pódio is switched off (panel, or PODIO_PUBLIC=off) is skipped
+// without touching INK and answers `skipped: "disabled"` — still a 200, so the cron does not report a failure.
 //
 // POST only, Bearer ADMIN_SYNC_TOKEN (unset => 503, never open). No body.
 import { revalidatePath } from "next/cache";
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
     throw err;
   }
   for (const r of results) {
-    if (!r.ok) continue;
+    if (!r.ok || "skipped" in r) continue;
     revalidatePath(`/${r.region}`);
     for (const uf of REGIONS[r.region].ufs) revalidatePath(`/${r.region}/${uf.toLowerCase()}`);
   }

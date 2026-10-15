@@ -1,10 +1,11 @@
 import { effectiveMenu, menuPositionOf, type MenuPosition } from "../site-config/collection-menu";
 import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlockConfig } from "../site-config/navigation";
+import { podioEnabledIn } from "../site-config/podio-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "podio"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
@@ -46,7 +47,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft), ...podioChanges(published, draft));
   return changes;
 }
 
@@ -118,11 +119,19 @@ function navigationChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
 
 /** The store-wide buy button of the product cards (global scope). Pure. */
 function cardsChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
-  const was = published.cards?.buyLabel;
-  const now = draft.cards?.buyLabel;
-  if (was === now) return [];
-  const text = (label: string | undefined) => (label ? `botão “${label}” em todos os cards` : "cada seção decide");
+  const was = published.cards;
+  const now = draft.cards;
+  if (was?.buyLabel === now?.buyLabel && was?.buyStyle === now?.buyStyle) return [];
+  const text = (cards: typeof was) => (cards ? `${cards.buyStyle === "fab" ? "carrinho na imagem" : "botão"} “${cards.buyLabel}” em todos os cards` : "cada seção decide");
   return [{ kind: "theme", sectionId: "cards:buy", text: `Botão nos cards de produto: ${text(was)} → ${text(now)}` }];
+}
+
+/** "O Pódio" switched on or off in the region (it belongs to the document, not to a section). Pure. */
+function podioChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const was = podioEnabledIn(published);
+  const now = podioEnabledIn(draft);
+  if (was === now) return [];
+  return [{ kind: "podio", sectionId: "podio", text: now ? "O Pódio volta para a home e as páginas de estado, e o cálculo diário desta região volta a rodar" : "O Pódio sai da home e das páginas de estado, e o cálculo diário desta região para" }];
 }
 
 const modeText = (doc: ScopeDoc): string => (doc.theme ? (doc.theme.mode === "inherit" ? "herda a paleta da Use Origens" : "paleta própria") : "visual atual (sem configuração)");

@@ -19,7 +19,7 @@ import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { firstImageSectionId, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
-import { cardButtonOf } from "@/lib/site-config/cards-schema";
+import { cardBuy, cardButtonOf, type CardBuy } from "@/lib/site-config/cards-schema";
 import type { Fill, Page, PublishedBundle, Section } from "@/lib/site-config/schema";
 import { Pagination } from "@/components/catalog/Pagination";
 import { numberPt } from "@/lib/format";
@@ -97,7 +97,7 @@ export function HomeSections({
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
                 </div>
-                <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buyLabel={cardButton} />
+                <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buy={cardButton} />
               </>
             );
             const visual = hasImage(bg) || bg.fill.kind !== "none";
@@ -136,8 +136,8 @@ export function HomeSections({
                 />
                 {/* "Meu Pequeno Mundo" right after the state chooser, on the home only, when its entries are on (src/lib/mundo/flag.ts). */}
                 {!page && mundoEntradasAtivas() && <MundoBlocoHome region={region} />}
-                {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage) — docs/storefront/podio.md. */}
-                {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf))} />}
+                {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage), unless the region switched it off — docs/storefront/podio.md. */}
+                {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf), doc)} />}
               </Fragment>
             );
           }
@@ -243,8 +243,8 @@ function CarouselSection({
   region: RegionSlug;
   /** The automatic collection page: the grid's own heading is left out (the page header already names the collection and counts its products). */
   compact?: boolean;
-  /** The store-wide buy button (global `cards.buyLabel`); the section's own text wins. */
-  cardButton?: string;
+  /** The store-wide buy button (global `cards`); the section's own button (text and style) wins. */
+  cardButton?: CardBuy;
   /** The address of the collection page this paged grid is on, live (never in the panel's preview): it gets the mini search. */
   searchSlug?: string;
   /** The ground of the page the section is on, when that page has one of its own (PageGround). */
@@ -285,7 +285,7 @@ function CarouselSection({
   // Carousel (a row that scrolls) or grid (every card on the page): same heading, cards and click tracking.
   const Display = s.layout.display === "grid" ? ProductGrid : ProductCarousel;
   const pages = paged?.status === "ok" ? paged : null;
-  const buyLabel = s.layout.buyLabel ?? cardButton;
+  const buy = cardBuy(s.layout.buyLabel, s.layout.buyStyle) ?? cardButton;
   const pagedGrid = pages && {
     poster: variant === "poster",
     tone,
@@ -293,7 +293,7 @@ function CarouselSection({
     title: s.title,
     intro: s.subtitle,
     sourceSection: SOURCES[s.analyticsSource],
-    buyLabel,
+    buy,
     tags: s.layout.tags,
     solidCards: hasImage(bg),
   };
@@ -327,7 +327,7 @@ function CarouselSection({
       viewAllHref={href ?? undefined}
       viewAllLabel={s.cta?.label}
       sourceSection={SOURCES[s.analyticsSource]}
-      buyLabel={buyLabel}
+      buy={buy}
       tags={s.layout.tags}
       solidCards={hasImage(bg)}
     />

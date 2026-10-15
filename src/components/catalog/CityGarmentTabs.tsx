@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { CardBuy } from "@/lib/site-config/cards-schema";
 import type { FamilyCardModel } from "@/lib/catalog/family-card";
 import type { GarmentTabOption } from "@/lib/catalog/repository";
 import { FamilyGridView } from "./FamilyGridView";
@@ -18,7 +19,7 @@ import { FamilyGridView } from "./FamilyGridView";
  * - `panels` are plain card models (src/lib/catalog/family-card.ts): a piece's grid is mounted the first time it is chosen and kept mounted
  *   afterwards (hidden), so switching back never re-fetches its images, and the HTML carries one grid instead of ten.
  */
-export function CityGarmentTabs({ tabs, panels, buyLabel }: { tabs: GarmentTabOption[]; panels: Record<number, FamilyCardModel[]>; buyLabel?: string }) {
+export function CityGarmentTabs({ tabs, panels, buy }: { tabs: GarmentTabOption[]; panels: Record<number, FamilyCardModel[]>; buy?: CardBuy }) {
   const [selectedId, setSelectedId] = useState(tabs[0].id);
   const [mounted, setMounted] = useState<number[]>([tabs[0].id]);
   const [stuck, setStuck] = useState(false);
@@ -139,7 +140,7 @@ export function CityGarmentTabs({ tabs, panels, buyLabel }: { tabs: GarmentTabOp
         .filter((tab) => mounted.includes(tab.id))
         .map((tab) => (
           <div key={tab.id} role="tabpanel" id={`garment-panel-${tab.slug}`} aria-labelledby={`garment-tab-${tab.slug}`} hidden={tab.id !== selected.id}>
-            <FamilyGridView cards={panels[tab.id] ?? []} buyLabel={buyLabel} />
+            <FamilyGridView cards={panels[tab.id] ?? []} buy={buy} />
           </div>
         ))}
     </div>

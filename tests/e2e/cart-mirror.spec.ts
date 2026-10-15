@@ -77,7 +77,8 @@ test.describe("Cart mirror consumer: capturing cart_ref", () => {
     expect(search(page)).toBe("?utm_source=x&q=1");
     expect(page.url()).not.toContain(REF);
     const { session, local } = await storage(page);
-    expect(session).toEqual({ "origens:cart_ref": REF });
+    // The token alone from the cart; the UTM is the visit's campaign, kept on its own for the links to INK (src/lib/analytics/campaign.ts).
+    expect(session).toEqual({ "origens:cart_ref": REF, "origens:campaign": "utm_source=x" });
     expect(Object.keys(local).filter((k) => !k.startsWith("useorigens:consent"))).toEqual([]);
     expect(JSON.stringify(session) + JSON.stringify(local)).not.toContain("Serra Catarinense"); // never the snapshot
     expect(requests).toHaveLength(1);

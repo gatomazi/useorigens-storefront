@@ -1,5 +1,6 @@
 import { familyCardModel } from "@/lib/catalog/family-card";
 import type { CityFamilyEntry } from "@/lib/catalog/repository";
+import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { FamilyGridView } from "./FamilyGridView";
 
 /**
@@ -18,7 +19,7 @@ export function FamilyGrid({
   directToInk = false,
   pieceLabel,
   garmentTypeId,
-  buyLabel,
+  buy,
 }: {
   entries: CityFamilyEntry[];
   hrefBase: string;
@@ -30,10 +31,10 @@ export function FamilyGrid({
   pieceLabel?: string;
   /** With `pieceLabel`: the tab's INK `product_type.id`. */
   garmentTypeId?: number;
-  /** The store-wide buy button (global `cards.buyLabel`) under every card. */
-  buyLabel?: string;
+  /** The store-wide buy button (global `cards`) on every card. */
+  buy?: CardBuy;
 }) {
   if (entries.length === 0) return null;
   const cards = entries.map((entry) => familyCardModel(entry, { href: `${hrefBase}/${entry.family.id}`, cityName, stateUf, sourceSection, directToInk, pieceLabel, garmentTypeId }));
-  return <FamilyGridView cards={cards} buyLabel={buyLabel} />;
+  return <FamilyGridView cards={cards} buy={buy} />;
 }

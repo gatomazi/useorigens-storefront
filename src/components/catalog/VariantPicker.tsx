@@ -43,6 +43,7 @@ export function VariantPicker({
   familyId,
   productName,
   sourceSection = "pdp",
+  after,
 }: {
   options: VariantOption[];
   alt: string;
@@ -56,6 +57,8 @@ export function VariantPicker({
   /** GA4-only: the family's real display name (e.g. "Ponto de Origem") — go_to_ink/select_item's product name. */
   productName?: string;
   sourceSection?: string;
+  /** Rendered under the purchase block (after the CTA and its notes): the guided help's invite. Never above price, versions or the CTA. */
+  after?: React.ReactNode;
 }) {
   const [selectedId, setSelectedId] = useState(options[0].id);
   const selected = options.find((o) => o.id === selectedId) ?? options[0];
@@ -130,6 +133,7 @@ export function VariantPicker({
           {/* Sharing is secondary: after the purchase CTA, for the version selected now (its own INK product page). */}
           {selected.share && <ShareButton key={selected.id} share={selected.share} variant="inline" className="mt-2 -ml-0.5" />}
         </div>
+        {after && <div className="order-4 lg:order-none">{after}</div>}
       </div>
     </div>
   );

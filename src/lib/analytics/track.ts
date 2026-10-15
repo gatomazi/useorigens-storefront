@@ -373,3 +373,25 @@ export function trackMundo(evento: string, campos: MundoCampos = {}): void {
   // (mundo_entrada) wait for it like the storefront's arrival event, for ~10 s at most, and are dropped after that.
   whenAnalyticsReady(() => sendGtag("event", evento, params));
 }
+
+export type GuideEvent = "origens_guide_view" | "origens_guide_open" | "origens_guide_dismiss" | "origens_guide_city_select" | "origens_guide_results" | "origens_guide_product_click" | "origens_guide_error";
+export type GuideParams = {
+  guide_path?: "city" | "prints" | "city_context" | "reopen";
+  guide_step?: string;
+  city_slug?: string;
+  uf?: string;
+  result_count?: number;
+  has_results?: boolean;
+  position?: number;
+  target_product_id?: string;
+};
+/**
+ * The guided help on a design page (`src/components/catalog/PdpGuide.tsx`), GA4 only — the same event names and parameters the Worker sends
+ * from the INK product page (docs/analytics-origens-events.md, "Guia da página de produto"), told apart by `surface`/`entry_point`. Never the
+ * text typed in the search; `product_slug` is the INK slug of the product the page is about, when it has one.
+ */
+export function trackGuide(event: GuideEvent, params: GuideParams & { region: string; productSlug: string | null }): void {
+  if (!gtagReady()) return;
+  const { region, productSlug, ...rest } = params;
+  sendGtag("event", event, { ...rest, region, surface: "storefront", entry_point: "storefront_design_page", feature_version: "guide_v1", ...(productSlug ? { product_slug: productSlug } : {}), ...(event === "origens_guide_product_click" ? { transport_type: "beacon" } : {}) });
+}

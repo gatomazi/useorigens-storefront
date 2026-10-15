@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, setSectionActive } from "@/app/admin/actions";
+import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, setPodioAction, setSectionActive } from "@/app/admin/actions";
 import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
 import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
@@ -14,6 +14,12 @@ import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
 import { toComboEntries } from "@/lib/admin/combo";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
+import { podioEnabledIn } from "@/lib/site-config/podio-schema";
+import { podioPublicEnabled } from "@/lib/config/env";
+import type { RegionSlug } from "@/lib/geo/regions";
+import { freshnessOf } from "@/lib/podio/public";
+import { readLatestSnapshot, readRunState } from "@/lib/podio/snapshot";
+import { PODIO_TZ } from "@/lib/podio/window";
 import type { Section } from "@/lib/site-config/schema";
 import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
@@ -42,6 +48,39 @@ function RowForm({ action, rev, scope, id, extra, children, danger = false, labe
       {Object.entries(extra ?? {}).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
       <button type="submit" aria-label={label} title={label} className={`a-btn sm ${danger ? "danger" : "ghost"}`}>{children}</button>
     </form>
+  );
+}
+
+const podioWhen = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: PODIO_TZ });
+
+/** "O Pódio" is not a section (it follows "Estados" on the home and sits on every state page), so it gets a switch of its own, saved in the draft. */
+function PodioCard({ scope, rev, draft, live }: { scope: RegionSlug; rev: number | null; draft: boolean; live: boolean }) {
+  const run = readRunState(scope);
+  const fresh = freshnessOf(readLatestSnapshot(scope), run, new Date());
+  return (
+    <section id="podio" className="a-card p-5" aria-labelledby="podio-titulo">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-3xl">
+          <h2 id="podio-titulo" className="a-h2">O Pódio</h2>
+          <p className="a-muted mt-1 text-[0.875rem]">Os lugares e as estampas mais vestidos nos últimos 30 dias: “Quem está no pódio?” na home, logo depois de Estados, e “O Pódio” na página de cada estado. Desligado, some dos dois lugares e o cálculo diário (04:00) deixa de ler os pedidos da INK de {scopeName(scope)}.</p>
+        </div>
+        <form action={setPodioAction}>
+          <input type="hidden" name="rev" value={rev ?? "null"} />
+          <input type="hidden" name="scope" value={scope} />
+          <input type="hidden" name="enabled" value={String(!draft)} />
+          <button type="submit" className="a-btn sm">{draft ? "Desligar o pódio" : "Ligar o pódio"}</button>
+        </form>
+      </div>
+      <p className="mt-3 flex flex-wrap items-center gap-2 text-[0.9375rem]" data-testid="podio-status">
+        Na loja: {live ? <span className="a-badge ok">Ligado</span> : <span className="a-badge">Desligado</span>}
+        {draft !== live && <span className="a-badge warn">No rascunho: {draft ? "ligado" : "desligado"} (falta publicar)</span>}
+      </p>
+      <p className="a-muted mt-2 text-[0.8125rem]">
+        Último cálculo: {run?.lastSuccess ? podioWhen.format(new Date(run.lastSuccess.at)) : "nenhum"}.
+        {draft && !fresh.visible && " Sem cálculo recente: depois de publicar, o pódio só aparece na loja após o próximo cálculo diário."}
+      </p>
+      {!podioPublicEnabled() && <p className="a-flash err mt-3">Desligado no servidor (<code>PODIO_PUBLIC=off</code>) para todas as regiões: enquanto essa variável existir, o pódio não aparece nem é calculado, seja qual for a escolha aqui.</p>}
+    </section>
   );
 }
 
@@ -112,7 +151,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                       <span className="a-badge">{typeLabel(s)}</span>
                       {custom && <span className="a-badge ok">Criada aqui</span>}
                       {s.nav && <span className="a-badge ok" title="Aparece no menu do topo da loja">Menu: {s.nav.label}</span>}
-                      {s.layout?.buyLabel && <span className="a-badge ok">Botão “{s.layout.buyLabel}”</span>}
+                      {s.layout?.buyLabel && <span className="a-badge ok">{s.layout.buyStyle === "fab" ? "Carrinho" : "Botão"} “{s.layout.buyLabel}”</span>}
                       {s.layout?.tags && <span className="a-badge ok">Etiquetas: {[s.layout.tags.discount ? "% OFF" : null, s.layout.tags.text ? `“${s.layout.tags.text}”` : null].filter(Boolean).join(" + ")}</span>}
                       {s.appearance.image && <span className="a-badge">Com imagem</span>}
                       {!s.appearance.image && s.appearance.fill.kind !== "none" && <span className="a-badge">Cor de fundo</span>}
@@ -142,6 +181,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         />
       </div>
       )}
+
+      <PodioCard scope={scope} rev={rev} draft={podioEnabledIn(ws.doc)} live={podioEnabledIn(ws.baseDoc)} />
 
       {ws.doc.home && (
       <section className="a-card p-5" aria-labelledby="nova-secao">

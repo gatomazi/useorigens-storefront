@@ -70,7 +70,7 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
 
       <section id="botao-cards" className="a-card scroll-mt-4 p-5" aria-labelledby="cards-title" data-testid="cards-setting">
         <h2 id="cards-title" className="a-h2">Botão nos cards de produto · todas as regiões</h2>
-        <p className="a-muted mt-1 max-w-3xl text-[0.9375rem]">Ligado, todo card de produto da loja ganha um botão com este texto: seções de produtos, páginas de coleção, estilos da cidade, resultados da busca e artigos da Uma Penca. O botão abre a mesma página do produto que o card já abre. Uma seção que tem o próprio texto de botão continua com ele. Desligado, cada seção decide, como antes.</p>
+        <p className="a-muted mt-1 max-w-3xl text-[0.9375rem]">Ligado, todo card de produto da loja ganha um botão com este texto, embaixo do card ou como um carrinho na imagem: seções de produtos, páginas de coleção, estilos da cidade, resultados da busca e artigos da Uma Penca. O botão abre a mesma página do produto que o card já abre. Uma seção que tem o próprio texto de botão continua com ele. Desligado, cada seção decide, como antes.</p>
         {(() => {
           const draft = global.doc.cards;
           const live = global.baseDoc.cards;
@@ -85,7 +85,21 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
                 <label className="a-label" htmlFor="cards_buy_label">Texto do botão</label>
                 <input id="cards_buy_label" name="cards_buy_label" className="a-input" defaultValue={draft?.buyLabel ?? DEFAULT_BUY_LABEL} maxLength={MAX_BUY_LABEL} disabled={!owner} data-testid="cards-buy-label" />
               </div>
-              <p className="text-[0.875rem]" data-testid="cards-live"><strong>Na loja agora:</strong> {live ? `botão “${live.buyLabel}” em todos os cards` : "cada seção decide"}.{JSON.stringify(draft ?? null) !== JSON.stringify(live ?? null) && " O rascunho tem outra escolha: publique a configuração global abaixo."}</p>
+              <fieldset className="space-y-2">
+                <legend className="a-label">Formato</legend>
+                <div className="flex flex-wrap gap-3">
+                  {([
+                    ["button", "Botão embaixo", "Uma barra com o texto, no pé de cada card."],
+                    ["fab", "Carrinho na imagem", "Um botão redondo de carrinho no canto da foto; o texto vira o nome dele para leitores de tela."],
+                  ] as const).map(([value, label, help]) => (
+                    <label key={value} className="flex max-w-xs cursor-pointer gap-2 border border-black/20 p-3 has-[:checked]:border-black has-[:checked]:bg-white">
+                      <input type="radio" name="cards_buy_style" value={value} defaultChecked={(draft?.buyStyle ?? "button") === value} disabled={!owner} className="mt-1" data-testid={`cards-buy-style-${value}`} />
+                      <span><span className="block font-bold">{label}</span><span className="a-muted block text-[0.8125rem]">{help}</span></span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <p className="text-[0.875rem]" data-testid="cards-live"><strong>Na loja agora:</strong> {live ? `${live.buyStyle === "fab" ? "carrinho na imagem" : "botão"} “${live.buyLabel}” em todos os cards` : "cada seção decide"}.{JSON.stringify(draft ?? null) !== JSON.stringify(live ?? null) && " O rascunho tem outra escolha: publique a configuração global abaixo."}</p>
               {owner ? <button type="submit" className="a-btn" data-testid="save-cards">Salvar rascunho do botão</button> : <p className="a-muted">Só o owner altera.</p>}
             </form>
           );

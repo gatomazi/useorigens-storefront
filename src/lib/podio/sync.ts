@@ -4,16 +4,21 @@ import type { UnrankedBinding } from "../catalog/types";
 import { REGIONS, REGION_SLUGS, type RegionSlug } from "../geo/regions";
 import { fetchStorePaidOrders } from "../ink/orders-client";
 import { computePodioSnapshot } from "./compute";
+import { podioEnabled } from "./enabled";
 import { publishSnapshot, readDatedSnapshot, readRunState, writeRunState } from "./snapshot";
 import type { PodioOrder } from "./types";
 import { addDays, windowFor } from "./window";
 
 export type RegionPodioResult =
   | { region: RegionSlug; ok: true; referenceDate: string; requests: number; ordersFetched: number; unitsEligible: number; unitsMapped: number; states: string[]; comparedWith: string | null }
-  | { region: RegionSlug; ok: false; referenceDate: string; error: string };
+  | { region: RegionSlug; ok: false; referenceDate: string; error: string }
+  /** The region's pódio is switched off (panel or PODIO_PUBLIC=off): nothing was read from INK, nothing was written. */
+  | { region: RegionSlug; ok: true; skipped: "disabled" };
 
 export type PodioSyncDeps = {
   now?: () => Date;
+  /** Whether the region's pódio is on (default: the published configuration and PODIO_PUBLIC, see enabled.ts). */
+  enabled?: (region: RegionSlug) => boolean;
   fetchOrders?: (region: RegionSlug, range: { beginDate: string; endDate: string }) => Promise<{ orders: PodioOrder[]; requests: number }>;
   bindings?: (region: RegionSlug) => Promise<UnrankedBinding[] | null>;
   baseDir?: string;
@@ -89,12 +94,16 @@ export class PodioSyncRunningError extends Error {
   }
 }
 
-/** Regions run one after another (one store at a time against INK). A second call while one runs is refused, never queued. */
+/**
+ * Regions run one after another (one store at a time against INK). A second call while one runs is refused, never queued. A region whose pódio is
+ * switched off is skipped before anything is read: its last files stay on the Volume untouched (they are hidden anyway, and age out after 72 h).
+ */
 export async function syncPodio(regions: readonly RegionSlug[] = REGION_SLUGS, deps: PodioSyncDeps = {}): Promise<RegionPodioResult[]> {
   if (running) throw new PodioSyncRunningError();
+  const enabled = deps.enabled ?? ((region: RegionSlug) => podioEnabled(region));
   running = (async () => {
     const results: RegionPodioResult[] = [];
-    for (const region of regions) results.push(await syncRegionPodio(region, deps));
+    for (const region of regions) results.push(enabled(region) ? await syncRegionPodio(region, deps) : { region, ok: true, skipped: "disabled" });
     return results;
   })();
   try {

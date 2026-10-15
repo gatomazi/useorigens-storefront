@@ -11,7 +11,25 @@ Contexto e rollout: `use-origens-workers/docs/expansao-cinco-produtos-analytics.
 | `origens_native_cart_opened` | drawer **nativo** visivelmente aberto depois de `?origens_open_cart=1` (nunca pela simples presença do parâmetro) | INK | `storefront_return` | `entry_point`, `region`, `product_slug`, (`send_to`, `transport_type`) |
 | `origens_explore_storefront_click` | clique (ou botão do meio) em **qualquer link nosso** para o storefront: `Explorar todas as estampas` (página do produto, drawer pós-adição e drawer do carrinho), resultados da busca do bloco e, só como plano B, o link simples da página do produto | INK | `ink_product_detail` (bloco "Continue explorando" na página do produto), `ink_post_add`, `ink_cart_drawer` ou `ink_product_return` (plano B / link antigo) | `entry_point`, `region`, `product_slug`, (`send_to`, `transport_type`) |
 | `origens_discovery_search_open` | toque em **Buscar cidade ou estado** que expande a busca do bloco (intenção; nunca o texto digitado, uma vez por toque) | INK | `ink_product_detail` ou `ink_cart_drawer` | `entry_point`, `region`, `product_slug`, (`send_to`, `transport_type`) |
-| `origens_storefront_arrived` | landing real no storefront vinda de um link nosso (marcador `origens_src`); **uma vez**, depois do fato | storefront | os quatro `ink_*` acima | `entry_point`, `region`, `product_slug` (só um dos cinco slugs verificados) |
+| `origens_storefront_arrived` | landing real no storefront vinda de um link nosso (marcador `origens_src`); **uma vez**, depois do fato | storefront | os quatro `ink_*` acima | `entry_point`, `region`, `product_slug` (qualquer slug com o formato de catálogo `^[a-z0-9][a-z0-9_-]{0,127}$`; até 13/10/2026 só os cinco slugs do piloto eram aceitos e o loader já rodava em todas as PDPs, então a dimensão ficava vazia para o resto) |
+
+### Guia da página de produto (`pdp-guide`, Worker; rodada de 13/10/2026)
+
+Eventos próprios do guia "Procurando sua cidade ou outra estampa?", todos na INK, pelo mesmo caminho e com as mesmas regras acima (gtag da própria INK, só após o aceite do aviso dela, `transport_type: beacon`). Parâmetros comuns: `entry_point=ink_product_detail`, `region`, `surface=ink`, `feature_version=guide_v1`, `product_slug`. Nunca o texto digitado. Contrato completo e comparação de variantes: `use-origens-workers/docs/pdp-guide.md`.
+
+| Evento | Quando | Parâmetros próprios |
+|---|---|---|
+| `origens_guide_view` | convite ≥ 50 % visível, uma vez por página | — |
+| `origens_guide_open` | painel aberto por toque | `guide_path` (`city`, `prints`, `city_context`, `reopen`) |
+| `origens_guide_dismiss` | ✕ no convite (lembrado 30 dias no navegador) | — |
+| `origens_guide_city_select` | cidade escolhida na busca | `city_slug`, `uf` |
+| `origens_guide_results` | resultados desenhados | `guide_path`, `result_count`, `has_results` |
+| `origens_guide_product_click` | produto do guia clicado (abre a PDP da INK) | `guide_path`, `position`, `target_product_id` |
+| `origens_guide_error` | busca ou API do guia falhou | `guide_step` |
+
+Os links do guia para o storefront ("Ver todas as estampas de…", "Ver a coleção completa", rodapé) continuam `origens_explore_storefront_click` → `origens_storefront_arrived` com `entry_point=ink_product_detail`.
+
+**O mesmo guia na página da estampa do storefront** (`/<região>/<uf>/<cidade>/<família>`, `src/components/catalog/PdpGuide.tsx`, `trackGuide` em `src/lib/analytics/track.ts`): mesmos sete eventos e parâmetros, pelo caminho único do storefront (`window.gtag` atrás do consentimento), com `surface=storefront` e `entry_point=storefront_design_page`; `product_slug` é o slug INK do produto principal da página. Diferença de semântica: `origens_guide_open` com `guide_path=city_context` ("Mais estampas de <cidade>") rola até "Outros estilos de <cidade>" da própria página em vez de abrir painel. O clique num produto do guia dispara, além de `origens_guide_product_click`, o `GoToInk`/`select_item`+`go_to_ink` de sempre com `source_section` `pdp_guia_cidade` ou `pdp_guia_colecao` — nunca `PageView`, `ViewContent`, `AddToCart` ou `Purchase`. Dimensões novas a criar no painel do GA4 (escopo evento): `feature_version`, `guide_path`, `guide_step`, `city_slug`, `uf`, `result_count`, `has_results`, `position`, `target_product_id`.
 
 Buckets: `cart_items_bucket` = total de **peças** do snapshot (`0`, `1`, `2`, `3_5`, `6_plus`; as faixas de promoção da INK são por peça); `mirror_age_bucket` = `under_1m`, `1_5m`, `5_30m`. **Proibido** em qualquer evento: `cart_ref`, corpo do snapshot, ids de sessão/cliente, e-mail/nome, texto de busca, URL com query, `page_location`/`link_url` com token.
 
@@ -40,4 +58,4 @@ Consentimento negado/ignorado, bloqueadores de anúncio, transições e o gate d
 
 1. Funil do espelho: `origens_cart_mirror_view` → `origens_go_to_cart_click` → `origens_native_cart_opened` (mesma sessão, por `cart_items_bucket`).
 2. Ida: `origens_explore_storefront_click` → `origens_storefront_arrived`, quebrado por `entry_point`. A razão arrived/click <1 é esperada (consentimento, adblock, o gate do aviso da INK, abas fechadas); é um piso, não uma taxa de conversão.
-3. Volume por `product_slug` nas cinco páginas (só eventos originados na INK).
+3. Volume por `product_slug` por página de produto (só eventos originados na INK).

@@ -25,6 +25,10 @@ for (const r of results) {
     console.error(`podio ${r.region}: FAILED (${r.referenceDate}) — ${r.error}`);
     continue;
   }
+  if ("skipped" in r) {
+    console.log(`podio ${r.region}: skipped — the pódio is switched off (panel: Home · Seções, or PODIO_PUBLIC=off)`);
+    continue;
+  }
   console.log(
     `podio ${r.region}: ok ${r.referenceDate} — ${r.ordersFetched} paid orders read, ${r.unitsMapped}/${r.unitsEligible} eligible units mapped, ${r.requests} GETs, states with data: ${r.states.join(", ") || "none"}${r.comparedWith ? `, compared with ${r.comparedWith}` : ", no previous day (no movement)"}`,
   );

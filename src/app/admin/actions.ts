@@ -165,6 +165,15 @@ export async function setSectionActive(fd: FormData) {
   return run(fd, { type: "set-active", id: text(fd, "id"), active }, active ? "Seção ativada." : "Seção ocultada.", "/admin/home");
 }
 
+/** "O Pódio" of the region on/off, as a DRAFT. Once published, off hides it (home and state pages) and the daily calculation skips the region. */
+export async function setPodioAction(fd: FormData) {
+  const enabled = text(fd, "enabled") === "true";
+  const ok = enabled
+    ? "Rascunho salvo: O Pódio ligado. Publique para valer na loja."
+    : "Rascunho salvo: O Pódio desligado. Publique para ele sair da loja e o cálculo diário parar.";
+  return run(fd, { type: "set-podio", enabled }, ok, "/admin/home#podio");
+}
+
 /** Adds one structured home component (city styles, state chooser, regional campaign) to the DRAFT of the region the form was rendered for. */
 export async function addStructuredSection(fd: FormData) {
   const template = text(fd, "template");
@@ -555,11 +564,12 @@ export async function saveCardsAction(fd: FormData) {
   const actor = await requireAdmin({ mutation: true, owner: true });
   const on = fd.get("cards_buy") === "on";
   const label = text(fd, "cards_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL;
-  const outcome = await applyAndSave("global", { type: "set-cards", cards: on ? { buyLabel: label } : null }, revNumber(fd), actor);
+  const fab = text(fd, "cards_buy_style") === "fab";
+  const outcome = await applyAndSave("global", { type: "set-cards", cards: on ? { buyLabel: label, ...(fab ? { buyStyle: "fab" as const } : {}) } : null }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back("/admin/aparencia", { err: outcome.errors.map((e) => (e.includes("buyLabel") ? `O texto do botão precisa ter de 1 a ${MAX_BUY_LABEL} caracteres, sem espaço nas pontas.` : e)) });
   await audit(actor, "draft.save", "global", "set-cards");
-  back("/admin/aparencia#botao-cards", { ok: on ? `Rascunho salvo: botão “${label}” em todos os cards. Publique a configuração global para valer na loja.` : "Rascunho salvo: cada seção volta a decidir o próprio botão. Publique a configuração global para valer na loja." });
+  back("/admin/aparencia#botao-cards", { ok: on ? `Rascunho salvo: ${fab ? "carrinho na imagem" : "botão"} “${label}” em todos os cards. Publique a configuração global para valer na loja.` : "Rascunho salvo: cada seção volta a decidir o próprio botão. Publique a configuração global para valer na loja." });
 }
 
 export async function discardGlobalThemeAction() {

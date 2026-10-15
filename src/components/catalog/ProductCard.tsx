@@ -4,7 +4,8 @@ import type { ReactNode } from "react";
 import { trackGoToInk, trackGoToUmaPenca } from "@/lib/analytics/track";
 import type { ProductTags } from "@/lib/site-config/schema";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
-import { CardButton } from "./CardButton";
+import type { CardBuy } from "@/lib/site-config/cards-schema";
+import { CardButton, CardFab } from "./CardButton";
 import { ProductPhoto } from "./ProductPhoto";
 import { PriceText } from "./PriceText";
 
@@ -127,10 +128,10 @@ export function CustomizerCardLink({ card, poster, dark, sizes, asButton = false
 
 /**
  * One product: photo, name and price, opening the real store page (INK or Uma Penca) and reporting the click with the section's `sourceSection`.
- * `buyLabel`: the section's buy button ("Ver produto", or the text the owner set) at the foot of the card. The picture is contained, never cropped:
+ * `buy`: the section's buy button ("Ver produto", or the text the owner set) at the foot of the card, or as a cart on the picture (`CardFab`). The picture is contained, never cropped:
  * INK mockups (800×820) fill the frame exactly; a photo of another shape keeps its proportions on the frame's grey.
  */
-export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSection, buyLabel, tags }: { item: CarouselItem; poster: boolean; dark: boolean; sizes: string; priority: boolean; sourceSection: string; buyLabel?: string; tags?: ProductTags }) {
+export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSection, buy, tags }: { item: CarouselItem; poster: boolean; dark: boolean; sizes: string; priority: boolean; sourceSection: string; buy?: CardBuy; tags?: ProductTags }) {
   return (
     <a
       href={item.href}
@@ -150,7 +151,9 @@ export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSec
         sizes={sizes}
         priority={priority}
         className="photo-contain"
-      />
+      >
+        {buy?.style === "fab" && <CardFab label={buy.label} />}
+      </ProductPhoto>
       <CardTags discount={tags?.discount ? item.discount : undefined} text={tags?.text} />
       <div className={INFO}>
         {item.eyebrow && <p className="mb-1 font-display text-[1.6rem] font-extrabold leading-none">{item.eyebrow}</p>}
@@ -158,7 +161,7 @@ export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSec
         {item.context && <p className={`t-place mt-1 text-[0.95rem] ${dark ? "text-white/80" : "text-ink-mute"}`}>{item.context}</p>}
         <div className={FOOT}>
           {item.price && <p className="text-base font-semibold leading-tight tabular-nums md:text-lg"><PriceText price={item.price} listPrice={item.listPrice} /></p>}
-          {buyLabel && <CardButton label={buyLabel} dark={dark} />}
+          {buy?.style === "button" && <CardButton label={buy.label} dark={dark} />}
         </div>
       </div>
     </a>

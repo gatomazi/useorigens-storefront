@@ -18,9 +18,9 @@ describe("extractArrival — the one-time marker is a closed enum, consumed and 
   test("given each of the four entry points, then all are accepted", () => {
     for (const value of ["ink_cart_drawer", "ink_post_add", "ink_product_detail", "ink_product_return"]) expect(extractArrival(`?origens_src=${value}`).entryPoint).toBe(value);
   });
-  test("given an unknown/injected entry point or a slug outside the five, then nothing is accepted but both parameters are still removed", () => {
+  test("given an unknown/injected entry point or a slug that is not shaped like a catalog slug, then nothing is accepted but both parameters are still removed", () => {
     for (const bad of ["storefront_cart_mirror", "INK_CART_DRAWER", "ink_cart_drawer,x", "<script>", "", "https://evil.example", TOKEN]) {
-      const r = extractArrival(`?origens_src=${encodeURIComponent(bad)}&origens_p=nao-e-um-dos-cinco`);
+      const r = extractArrival(`?origens_src=${encodeURIComponent(bad)}&origens_p=${encodeURIComponent("Não É Slug")}`);
       expect(r.entryPoint).toBeNull();
       expect(r.productSlug).toBeNull();
       expect(r.present).toBe(true);
@@ -34,7 +34,9 @@ describe("extractArrival — the one-time marker is a closed enum, consumed and 
     expect(extractArrival("?a=1")).toEqual({ entryPoint: null, productSlug: null, present: false, search: "?a=1" });
     expect(extractArrival("")).toEqual({ entryPoint: null, productSlug: null, present: false, search: "" });
   });
-  test("the five verified slugs are distinct and shaped like the Worker's allowlist entries", () => {
+  test("any catalog-shaped slug is accepted (the loader runs on every product page), never free text, uppercase, paths or tokens", () => {
+    for (const slug of ["feito-em-florianopolis", "goiania-origem-go", ...ORIGENS_PRODUCT_SLUGS]) expect(extractArrival(`?origens_src=ink_product_detail&origens_p=${slug}`).productSlug).toBe(slug);
+    for (const bad of ["Feito-Em", "a/b", "x y", "", "é", TOKEN + "!", "a".repeat(129)]) expect(extractArrival(`?origens_src=ink_product_detail&origens_p=${encodeURIComponent(bad)}`).productSlug).toBeNull();
     expect(new Set(ORIGENS_PRODUCT_SLUGS).size).toBe(5);
     for (const slug of ORIGENS_PRODUCT_SLUGS) expect(slug).toMatch(/^[a-z0-9][a-z0-9_-]{0,127}$/);
   });

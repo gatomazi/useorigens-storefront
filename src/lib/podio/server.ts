@@ -1,8 +1,9 @@
 import "server-only";
 import { getCatalog } from "../catalog/repository";
-import { podioPublicEnabled } from "../config/env";
 import { localityById } from "../geo/localities";
 import type { RegionSlug } from "../geo/regions";
+import type { ScopeDoc } from "../site-config/schema";
+import { podioEnabled } from "./enabled";
 import { freshnessOf, projectLeaders, projectPodium, type PodioCatalogView, type PodiumLeader, type PublicPodium } from "./public";
 import { readLatestSnapshot, readRunState } from "./snapshot";
 
@@ -35,16 +36,16 @@ function logIfHidden(region: RegionSlug): void {
   console.warn(`[podio] ${region}: hidden (${fresh.reason === "missing" ? "no snapshot yet" : `snapshot from ${snapshot?.computedAt} is older than 72 h`})`);
 }
 
-/** The state page's podium. Null = render nothing (flag off, no snapshot, stale, or no eligible sales in this UF). */
+/** The state page's podium. Null = render nothing (switched off, no snapshot, stale, or no eligible sales in this UF). */
 export function getStatePodium(region: RegionSlug, uf: string): PublicPodium | null {
-  if (!podioPublicEnabled()) return null;
+  if (!podioEnabled(region)) return null;
   logIfHidden(region);
   return projectPodium(readLatestSnapshot(region), readRunState(region), region, uf, catalogView(), new Date());
 }
 
-/** The home teaser's leaders — same snapshot, same projection as the state page. */
-export function getPodiumLeaders(region: RegionSlug, ufs: readonly string[]): PodiumLeader[] {
-  if (!podioPublicEnabled()) return [];
+/** The home teaser's leaders — same snapshot, same projection as the state page. `doc`: the document being rendered (a draft, in the admin preview); omitted = the published one. */
+export function getPodiumLeaders(region: RegionSlug, ufs: readonly string[], doc?: ScopeDoc): PodiumLeader[] {
+  if (!podioEnabled(region, doc)) return [];
   logIfHidden(region);
   return projectLeaders(readLatestSnapshot(region), readRunState(region), region, ufs, catalogView(), new Date());
 }
