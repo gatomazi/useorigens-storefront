@@ -64,7 +64,8 @@ function Line({ item }: { item: CartMirrorItem }) {
  * → nothing is rendered and nothing is fetched. It never edits, never computes a price and never checkouts: the official cart is
  * INK's, reached through "Ir para meu carrinho". The snapshot lives in memory only (never in browser storage).
  */
-export function CartMirrorMenu({ region }: { region: RegionSlug }) {
+/** `region`: the cart's (the store that sells, commerce-mode.ts `cartRegionFor`); `navRegion`: the region being browsed, for analytics. */
+export function CartMirrorMenu({ region, navRegion = region }: { region: RegionSlug; navRegion?: RegionSlug }) {
   // The snapshot getters close over the region: each region's INK cart (and Worker) is its own.
   const readToken = useCallback(() => getToken(region), [region]);
   const token = useSyncExternalStore(subscribeToken, readToken, () => null);
@@ -122,8 +123,8 @@ export function CartMirrorMenu({ region }: { region: RegionSlug }) {
     }
     if (state.status !== "ok" || reportedRef.current) return;
     reportedRef.current = true;
-    trackCartMirrorView({ cartItemsBucket: cartItemsBucket(units), mirrorAgeBucket: mirrorAgeBucket(ageSeconds) });
-  }, [open, state.status, units, ageSeconds]);
+    trackCartMirrorView({ region: navRegion, cartItemsBucket: cartItemsBucket(units), mirrorAgeBucket: mirrorAgeBucket(ageSeconds) });
+  }, [open, state.status, units, ageSeconds, navRegion]);
 
   if (!token || state.status === "idle") return null;
 
@@ -227,7 +228,7 @@ export function CartMirrorMenu({ region }: { region: RegionSlug }) {
             className="btn"
             data-testid="cart-mirror-go"
             // Best-effort measurement only: the navigation is the anchor's own and never waits for, or depends on, analytics.
-            onClick={() => trackGoToCartClick({ cartItemsBucket: cartItemsBucket(units) })}
+            onClick={() => trackGoToCartClick({ region: navRegion, cartItemsBucket: cartItemsBucket(units) })}
           >
             Ir para meu carrinho
           </a>

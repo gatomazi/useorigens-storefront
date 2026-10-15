@@ -3,6 +3,7 @@ import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { catalogSnapshotDir, commerceModeSetting, commerceSimulationAllowed, commerceStorePriorityOverride } from "../config/env";
 import { REGIONS, REGION_SLUGS, SINGLE_STORE_KEY, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { LEGACY_STORE_URLS } from "../site";
 import type { CatalogSource } from "./types";
 
 /**
@@ -175,6 +176,16 @@ function report(plan: CommercePlan): CommercePlan {
 
 /** Shorthands for the effective plan. */
 export const storeForRegion = (region: RegionSlug): CommerceStoreKey => storeForRegionIn(commercePlan().effective, region);
+
+/**
+ * How the storefront names and links the store where a region's purchase is finished (announcement bar, footer). Regional mode: the region's own
+ * store ("loja Use Norte", usenorte). Single-store mode: the single store, named neutrally, since it sells the three regions (the checkout's own
+ * name and logo are the `checkout-theme` dependency).
+ */
+export function checkoutStoreFor(region: RegionSlug): { finishIn: string; linkLabel: string; url: string } {
+  if (commercePlan().effective === "single-store") return { finishIn: "na nossa loja online", linkLabel: "Loja online", url: LEGACY_STORE_URLS.sul };
+  return { finishIn: `na loja Use ${REGIONS[region].name}`, linkLabel: `Loja Use ${REGIONS[region].name}`, url: LEGACY_STORE_URLS[region] };
+}
 export const regionsOfStore = (store: CommerceStoreKey): RegionSlug[] => regionsOfStoreIn(commercePlan().effective, store);
 export const cartRegionFor = (region: RegionSlug): RegionSlug => cartRegionIn(commercePlan().effective, region);
 export const servedDataDir = (): string => commercePlan().dataDir;

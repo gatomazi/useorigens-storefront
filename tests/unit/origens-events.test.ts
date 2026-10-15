@@ -81,13 +81,13 @@ describe("the three events — consent-gated, closed parameter set, no token/URL
   });
 
   test("given consent, then each event carries exactly its documented parameters", () => {
-    trackGoToCartClick({ cartItemsBucket: "3_5" });
-    trackCartMirrorView({ cartItemsBucket: "2", mirrorAgeBucket: "1_5m" });
+    trackGoToCartClick({ region: "sul", cartItemsBucket: "3_5" });
+    trackCartMirrorView({ region: "norte", cartItemsBucket: "2", mirrorAgeBucket: "1_5m" });
     trackStorefrontArrived({ entryPoint: "ink_post_add", productSlug: SERRA });
     trackStorefrontArrived({ entryPoint: "ink_product_return", productSlug: null });
     expect(calls).toEqual([
       ["event", "origens_go_to_cart_click", { entry_point: "storefront_cart_mirror", region: "sul", cart_items_bucket: "3_5", transport_type: "beacon" }],
-      ["event", "origens_cart_mirror_view", { entry_point: "storefront_cart_mirror", region: "sul", cart_items_bucket: "2", mirror_age_bucket: "1_5m" }],
+      ["event", "origens_cart_mirror_view", { entry_point: "storefront_cart_mirror", region: "norte", cart_items_bucket: "2", mirror_age_bucket: "1_5m" }],
       ["event", "origens_storefront_arrived", { entry_point: "ink_post_add", region: "sul", product_slug: SERRA }],
       ["event", "origens_storefront_arrived", { entry_point: "ink_product_return", region: "sul" }],
     ]);
@@ -96,21 +96,21 @@ describe("the three events — consent-gated, closed parameter set, no token/URL
 
   test("given consent NOT granted, then nothing is sent, even though gtag exists", () => {
     consent.granted = false;
-    trackGoToCartClick({ cartItemsBucket: "1" });
-    trackCartMirrorView({ cartItemsBucket: "1", mirrorAgeBucket: "under_1m" });
+    trackGoToCartClick({ region: "sul", cartItemsBucket: "1" });
+    trackCartMirrorView({ region: "sul", cartItemsBucket: "1", mirrorAgeBucket: "under_1m" });
     trackStorefrontArrived({ entryPoint: "ink_cart_drawer", productSlug: SERRA });
     expect(calls).toEqual([]);
   });
 
   test("given a gtag that throws (blocked/broken), then the caller never sees it (navigation stays intact)", () => {
     vi.stubGlobal("window", { gtag: () => { throw new Error("blocked"); } });
-    expect(() => trackGoToCartClick({ cartItemsBucket: "1" })).not.toThrow();
+    expect(() => trackGoToCartClick({ region: "sul", cartItemsBucket: "1" })).not.toThrow();
     expect(() => trackStorefrontArrived({ entryPoint: "ink_post_add", productSlug: null })).not.toThrow();
   });
 
   test("given no gtag at all, then the events are silent no-ops", () => {
     vi.stubGlobal("window", {});
-    expect(() => trackGoToCartClick({ cartItemsBucket: "1" })).not.toThrow();
+    expect(() => trackGoToCartClick({ region: "sul", cartItemsBucket: "1" })).not.toThrow();
   });
 });
 
