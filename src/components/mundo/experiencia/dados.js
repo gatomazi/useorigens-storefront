@@ -165,7 +165,8 @@ export function distanciaKm(a, b) {
 export const arredondarKm = (km) => (km < 20 ? Math.max(1, Math.round(km)) : km < 200 ? Math.round(km / 5) * 5 : Math.round(km / 10) * 10);
 
 /**
- * CONTEXTO DAS CIDADES — perfis curados (contexto/perfis-cidades.json). Carregado uma vez; uma cidade sem perfil segue com o
+ * CONTEXTO DAS CIDADES — perfis curados, um arquivo por cidade (contexto/perfis/<chave>.json; na loja, /api/mundo/perfis/), buscado
+ * só para os lugares do mundo. Uma cidade sem perfil segue com o
  * cenário regional e os dados do IBGE. Tudo é conferido aqui: textos viram texto puro, módulos da cena só de uma lista fechada,
  * referência sem fonte não entra, e a cena recebe apenas o perfil visual (nunca o texto).
  */
@@ -235,36 +236,43 @@ export function normalizarPerfil(id, c, fontes) {
   };
 }
 export function adaptadorContexto() {
-  let perfis = new Map();
-  let fontes = {};
-  let carga = null;
+  const perfis = new Map(); // id → perfil normalizado, ou null quando o lugar não tem perfil (ou o arquivo não veio)
+  const fontes = {};
+  const pedidos = new Map();
+  function absorver(d) {
+    if (!d || d.v !== 1 || typeof d.cidades !== 'object' || typeof d.fontes !== 'object') throw new Error('contexto: formato desconhecido');
+    for (const [chave, x] of Object.entries(d.fontes)) {
+      const url = urlFonte(x?.url);
+      const titulo = limparTexto(x?.titulo, 200);
+      if (url && titulo) fontes[chave] = { titulo, publicador: limparTexto(x.publicador, 120), url, referencia: limparTexto(x.referencia, 120), consultadoEm: limparTexto(x.consultadoEm, 20) };
+    }
+    for (const [id, c] of Object.entries(d.cidades)) {
+      if (!ID_VALIDO.test(id)) continue;
+      const perfil = normalizarPerfil(id, c, fontes);
+      if (perfil) perfis.set(id, perfil);
+    }
+  }
+  /** Busca o perfil de um lugar uma vez só; sem resposta em 8 s, ou com erro, o lugar segue com o cenário regional. */
+  function buscar(id) {
+    if (perfis.has(id) || !ID_VALIDO.test(id)) return Promise.resolve();
+    if (!pedidos.has(id)) {
+      const url = new URL(CONTEXTO.lugar(chaveArquivo(id)), new URL(CONTEXTO.base, location.href));
+      const pedido = Promise.race([
+        fetch(url).then(async (r) => { if (r.ok) absorver(await r.json()); }),
+        new Promise((resolver) => setTimeout(resolver, 8000)),
+      ])
+        .catch(() => {})
+        .then(() => { if (!perfis.has(id)) perfis.set(id, null); });
+      pedidos.set(id, pedido);
+    }
+    return pedidos.get(id);
+  }
   return {
-    carregar() {
-      carga ??= (async () => {
-        const resposta = await fetch(new URL(CONTEXTO.arquivo, location.href), { cache: 'no-cache' });
-        if (!resposta.ok) throw new Error(`contexto ${resposta.status}`);
-        const d = await resposta.json();
-        if (!d || d.v !== 1 || typeof d.cidades !== 'object' || typeof d.fontes !== 'object') throw new Error('contexto: formato desconhecido');
-        const f = {};
-        for (const [chave, x] of Object.entries(d.fontes)) {
-          const url = urlFonte(x?.url);
-          const titulo = limparTexto(x?.titulo, 200);
-          if (url && titulo) f[chave] = { titulo, publicador: limparTexto(x.publicador, 120), url, referencia: limparTexto(x.referencia, 120), consultadoEm: limparTexto(x.consultadoEm, 20) };
-        }
-        const p = new Map();
-        for (const [id, c] of Object.entries(d.cidades)) {
-          if (!ID_VALIDO.test(id)) continue;
-          const perfil = normalizarPerfil(id, c, f);
-          if (perfil) p.set(id, perfil);
-        }
-        fontes = f;
-        perfis = p;
-      })().catch(() => { perfis = new Map(); }); // sem contexto, o mundo funciona com o cenário regional
-      return carga;
-    },
+    /** Garante os perfis destes lugares antes de a cena criar as ilhas (a ilha nasce com o cenário do perfil). Nunca falha. */
+    garantir: (ids) => Promise.all([...new Set(ids.filter(Boolean))].map(buscar)),
+    conhecido: (id) => perfis.has(id),
     perfil: (id) => perfis.get(id) ?? null,
     fonte: (chave) => fontes[chave] ?? null,
-    get total() { return perfis.size; },
   };
 }
 export const urlFonte = (valor) => { try { const u = new URL(String(valor)); return u.protocol === 'https:' ? u.href : null; } catch { return null; } };

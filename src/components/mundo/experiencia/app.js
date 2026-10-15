@@ -478,8 +478,12 @@ function renderSugestao(alvo) {
 }
 function aceitarSugestao(papel) {
   const id = estado.sugestao;
-  const lugar = id && dados.lugar(id);
-  if (!lugar) return;
+  if (!id || !dados.lugar(id)) return;
+  comPerfil(id, () => aceitarSugestaoAgora(papel, id));
+}
+function aceitarSugestaoAgora(papel, id) {
+  const lugar = dados.lugar(id);
+  if (!lugar || estado.sugestao !== id) return;
   estado.sugestao = null;
   estado.papeis[papel] = id;
   estado.trocando = false;
@@ -523,6 +527,7 @@ function atualizarBusca() {
   }
   if (!normalizar(q)) { pintarResultados([]); return; }
   resultados = dados.buscar(q, 8);
+  contexto.garantir(resultados.slice(0, 4).map((r) => r.lugar.i)); // adianta os perfis prováveis: a ilha já nasce com o cenário certo
   ativo = resultados.length ? 0 : -1;
   pintarResultados(resultados);
   if (!resultados.length) el.buscaStatus.textContent = TEXTOS.busca.vazio(q.trim().slice(0, 40));
@@ -563,7 +568,20 @@ function editou() {
   estado.doLink = false;
   estado.aviso = null;
 }
-function escolher(id, { teclado = false } = {}) {
+/** Espera o perfil do lugar (um arquivo pequeno, quase sempre já adiantado pela busca) antes de mudar o mundo: a cena não troca o
+ * cenário de uma ilha que já existe. Um segundo clique durante a espera não faz nada. */
+let esperandoPerfil = null;
+function comPerfil(id, acao) {
+  if (contexto.conhecido(id)) { acao(); return; }
+  if (esperandoPerfil === id) return;
+  esperandoPerfil = id;
+  contexto.garantir([id]).then(() => { if (esperandoPerfil === id) { esperandoPerfil = null; acao(); } });
+}
+function escolher(id, opcoes = {}) {
+  if (!dados.lugar(id)) return;
+  comPerfil(id, () => escolherAgora(id, opcoes));
+}
+function escolherAgora(id, { teclado = false } = {}) {
   const lugar = dados.lugar(id);
   if (!lugar) return;
   const papel = PAPEIS[estado.passo];
@@ -1519,7 +1537,7 @@ async function carregarDados() {
   estadoDados = 'carregando';
   if (location.protocol === 'file:') { await usarDemonstracao(); return; } // o navegador não deixa ler a pasta de dados a partir de file://
   const real = adaptadorCatalogo(CATALOGO.base);
-  const perfis = contexto.carregar(); // sem o arquivo de contexto, o mundo segue com o cenário regional
+  const perfis = contexto.garantir(PREVIA_PILOTO); // a prévia da entrada; sem os perfis, o mundo segue com o cenário regional
   try {
     await Promise.all([real.carregarIndice(), perfis]);
     dados = real;
@@ -1752,6 +1770,11 @@ async function iniciar() {
   await carregarDados();
   aplicarEstadoInicial();
   aplicarSugestao();
+  // as ilhas do link ou do mundo salvo nascem com o perfil: até ele chegar, a cena (que pode ficar pronta nesse meio-tempo) não cria ilhas
+  const modo = estado.modo;
+  estado.modo = 'carregando';
+  await contexto.garantir([...PAPEIS.map((p) => estado.papeis[p]), estado.sugestao]);
+  estado.modo = modo;
   OPCOES.registrar('mundo_entrada', { origem: OPCOES.entrada ?? (estado.doLink ? 'link' : 'direto') });
   sincronizarUrl();
   render();
@@ -1776,7 +1799,7 @@ export async function iniciarMundo(opcoes = {}) {
   if (iniciado) return;
   iniciado = true;
   if (opcoes.dados) Object.assign(CATALOGO, opcoes.dados);
-  if (opcoes.contexto) CONTEXTO.arquivo = opcoes.contexto;
+  if (opcoes.contexto) CONTEXTO.base = opcoes.contexto;
   for (const k of ['registrar', 'entrada', 'cidadeSugerida', 'carregarThree', 'urlNaBarra', 'lojaHref', 'consulta']) if (opcoes[k] !== undefined) OPCOES[k] = opcoes[k];
   lerFontes(el.app);
   await iniciar();

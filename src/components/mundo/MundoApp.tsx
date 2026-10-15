@@ -28,7 +28,7 @@ export function MundoApp({ lojaHref }: { lojaHref: string }) {
       if (!vivo) return;
       iniciarMundo({
         dados: { base: "/api/mundo/", indice: "indice", lugar: (chave: string) => `lugares/${chave}.json` },
-        contexto: "/api/mundo/perfis",
+        contexto: "/api/mundo/perfis/",
         registrar: (evento: string, campos: MundoCampos) => trackMundo(evento, campos),
         urlNaBarra: false,
         lojaHref,

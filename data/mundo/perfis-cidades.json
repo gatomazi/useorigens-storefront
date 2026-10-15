@@ -1,6 +1,6 @@
 {
   "v": 1,
-  "atualizadoEm": "2026-10-14",
+  "atualizadoEm": "2026-10-15",
   "sobre": "Perfis de contexto do protótipo Meu Pequeno Mundo. Cada cidade tem identidade, conteúdo editorial, geografia e números, perfil visual (lido pela cena 3D) e proveniência. Só entra fato com fonte; o que não foi verificado fica fora. A geometria não lê textos: para mudar um texto ou um perfil, edite este arquivo.",
   "regras": {
     "cobertura": {
@@ -523,6 +523,937 @@
       "url": "https://www.manaus.am.gov.br/noticia/manaus/serie-conheca-manaus-destaca-o-mercado-municipal-adolpho-lisboa-como-atrativo-do-centro-historico/",
       "referencia": "Notícia de 18/09/2014",
       "consultadoEm": "2026-10-14"
+    },
+    "porto-velho-secom-ro-espacos-historicos": {
+      "titulo": "Espaços históricos ilustram o desenvolvimento de Porto Velho em 106 anos de criação",
+      "publicador": "Governo do Estado de Rondônia (Secom)",
+      "url": "https://rondonia.ro.gov.br/espacos-historicos-ilustram-o-desenvolvimento-de-porto-velho-em-106-anos-de-criacao/",
+      "referencia": "Notícia de 02/10/2020",
+      "consultadoEm": "2026-10-15"
+    },
+    "porto-velho-sejucel-efmm-109-anos": {
+      "titulo": "Estrada de Ferro Madeira-Mamoré, em Porto Velho, completa 109 anos; Governo contribui para preservar patrimônio histórico",
+      "publicador": "Governo do Estado de Rondônia (Sejucel)",
+      "url": "https://rondonia.ro.gov.br/estrada-de-ferro-madeira-mamore-em-porto-velho-completa-109-anos-governo-contribui-para-preservar-patrimonio-historico/",
+      "referencia": "Notícia de 02/08/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "porto-velho-plano-diretor-2008": {
+      "titulo": "Plano Diretor de Porto Velho — documento técnico (anexo único)",
+      "publicador": "Prefeitura de Porto Velho",
+      "url": "https://www.portovelho.ro.gov.br/uploads/docman/anexounico-documentotecnicodoplanodiretor.pdf",
+      "referencia": "Documento de 2008",
+      "consultadoEm": "2026-10-15"
+    },
+    "porto-velho-sejucel-flor-do-maracuja": {
+      "titulo": "Arraial Flor do Maracujá cresceu nas quadras escolares e mantém viva a tradição do boi-bumbá, que vem de 1920 em Porto Velho",
+      "publicador": "Governo do Estado de Rondônia (Sejucel)",
+      "url": "https://rondonia.ro.gov.br/arraial-flor-do-maracuja-cresceu-nas-quadras-escolares-e-mantem-viva-a-tradicao-do-boi-bumba-que-vem-de-1920-em-porto-velho/",
+      "referencia": "Notícia de 13/05/2019",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-porto-velho-ro": {
+      "titulo": "Biblioteca IBGE — Porto Velho: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em PORTO VELHO (RO). Prefeitura)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1100205",
+      "referencia": "Registro de 2008",
+      "consultadoEm": "2026-10-15"
+    },
+    "porto-velho-mpf-tombamento-efmm": {
+      "titulo": "MPF requer que estado de Rondônia conclua tombamento definitivo da Estrada de Ferro Madeira-Mamoré",
+      "publicador": "Ministério Público Federal (Procuradoria da República em Rondônia)",
+      "url": "https://www.mpf.mp.br/o-mpf/unidades/pr-ro/noticias/mpf-requer-que-estado-de-rondonia-conclua-tombamento-definitivo-da-estrada-de-ferro-madeira-mamore",
+      "referencia": "Notícia de 04/11/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "porto-velho-semdestur-portaria-49-2024": {
+      "titulo": "Portaria nº 49/SEMDESTUR/2024 — Museu do Complexo da Estrada de Ferro Madeira-Mamoré",
+      "publicador": "Prefeitura de Porto Velho (Semdestur)",
+      "url": "https://semtel.portovelho.ro.gov.br/uploads/editor/files/SEMDESTUR_MUSEU.pdf",
+      "referencia": "Portaria de 02/05/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "porto-velho-sepat-tres-caixas": {
+      "titulo": "Três Caixas d’Água e a praça no entorno são símbolos culturais e patrimônio do estado de Rondônia",
+      "publicador": "Governo do Estado de Rondônia (Sepat)",
+      "url": "https://rondonia.ro.gov.br/tres-caixas-dagua-e-a-praca-no-entorno-sao-simbolos-culturais-e-patrimonio-do-estado-de-rondonia/",
+      "referencia": "Notícia de 02/02/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "porto-velho-lei-249-1983": {
+      "titulo": "Lei nº 249, de 11 de outubro de 1983 — institui os Símbolos Municipais",
+      "publicador": "Prefeitura de Porto Velho",
+      "url": "https://www.portovelho.ro.gov.br/uploads/docman/lei_n_249_de_11.10.1983.pdf",
+      "referencia": "Lei municipal de 11/10/1983",
+      "consultadoEm": "2026-10-15"
+    },
+    "porto-velho-iphan-superintendencia-ro": {
+      "titulo": "Superintendência do Iphan em Rondônia",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/rondonia",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "porto-velho-ro-ficha-saneamento": {
+      "titulo": "Aspectos específicos dos sistemas de abastecimento de água e esgotamento sanitário e proposições — Município: Porto Velho",
+      "publicador": "Governo do Estado de Rondônia",
+      "url": "https://rondonia.ro.gov.br/wp-content/uploads/2026/06/1.30.-Porto-Velho-Ficha-Croqui.pdf",
+      "referencia": "Documento publicado em jun/2026 (ficha municipal do plano de saneamento)",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-branco-prefeitura-coracao-do-acre-2025": {
+      "titulo": "Rio Branco: coração do Acre, terra de resistência e de encantos",
+      "publicador": "Prefeitura de Rio Branco (Secom)",
+      "url": "https://www.riobranco.ac.gov.br/turismo/rio-branco-coracao-do-acre-terra-de-resistencia-e-de-encantos/",
+      "referencia": "Reportagem de 28/12/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-branco-iphan-ac-patrimonio-material": {
+      "titulo": "Patrimônio Material — Superintendência do Iphan no Acre",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/acre/patrimonio-material",
+      "referencia": "Página publicada em 10/09/2021, modificada em 25/10/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-branco-prefeitura-emancipacao-gameleira-2025": {
+      "titulo": "Prefeitura de Rio Branco participa das comemorações dos 63 anos de emancipação política do Acre",
+      "publicador": "Prefeitura de Rio Branco (Secom)",
+      "url": "https://www.riobranco.ac.gov.br/noticias/prefeitura-de-rio-branco-participa-das-comemoracoes-dos-63-anos-de-emancipacao-politica-do-acre/",
+      "referencia": "Notícia de 16/06/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-branco-ufac-palacio-2015": {
+      "titulo": "Patrimônio histórico e poder: arte e política no ordenamento espetacular da “acreanidade”",
+      "publicador": "Universidade Federal do Acre (revista Muiraquitã, v. 3, n. 1; artigo de Ana Carla Clementino de Lima)",
+      "url": "https://periodicos.ufac.br/index.php/mui/article/download/628/341",
+      "referencia": "Artigo de 2015",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-branco-prefeitura-140-anos-2022": {
+      "titulo": "Prefeitura parabeniza Rio Branco pelos 140 anos de fundação",
+      "publicador": "Prefeitura de Rio Branco (Secom)",
+      "url": "https://www.riobranco.ac.gov.br/noticias/prefeitura-parabeniza-rio-branco-pelos-140-anos-de-fundacao/",
+      "referencia": "Notícia de 28/12/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-rio-branco-ac": {
+      "titulo": "Biblioteca IBGE — Rio Branco: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em RIO BRANCO (AC). Prefeitura)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1200401",
+      "referencia": "Registro de 2008",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-branco-prefeitura-mercado-93-anos-2022": {
+      "titulo": "Pela primeira vez na história de Rio Branco Prefeitura celebra aniversário do Novo Mercado Velho",
+      "publicador": "Prefeitura de Rio Branco (Secom)",
+      "url": "https://www.riobranco.ac.gov.br/noticias/pela-primeira-vez-na-historia-de-rio-branco-prefeitura-celebra-aniversario-do-novo-mercado-velho/",
+      "referencia": "Notícia de 15/06/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-branco-iphan-ac-superintendencia": {
+      "titulo": "Superintendência do Iphan no Acre",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/acre",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "boa-vista-diocese-padroeira-carmo": {
+      "titulo": "Boa Vista celebra a padroeira Nossa Senhora do Carmo nesta quarta-feira, 16",
+      "publicador": "Diocese de Roraima",
+      "url": "https://diocesederoraima.org.br/boa-vista-celebra-a-padroeira-nossa-senhora-do-carmo-nesta-quarta-feira-16/",
+      "referencia": "Notícia de 16 de julho (o ano não aparece na página)",
+      "consultadoEm": "2026-10-15"
+    },
+    "boa-vista-uft-amazonia-moderna": {
+      "titulo": "Revista Amazônia Moderna — apresentação do número sobre Boa Vista",
+      "publicador": "Universidade Federal do Tocantins (Revista Amazônia Moderna)",
+      "url": "https://sistemas.uft.edu.br/periodicos/index.php/amazoniamoderna/article/download/8498/16470/38267",
+      "referencia": "Apresentação de número da revista (data não indicada no texto extraído)",
+      "consultadoEm": "2026-10-15"
+    },
+    "boa-vista-pmbv-plano-diretor-propostas": {
+      "titulo": "Revisão do Plano Diretor de Boa Vista — Produto 9: Diretrizes e propostas pactuadas",
+      "publicador": "Prefeitura de Boa Vista (com IBAM)",
+      "url": "https://boavista.rr.gov.br/storage/paginas/plano-diretor/P9-propostas-rev08-11.pdf",
+      "referencia": "Documento de 2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "boa-vista-pmbv-plano-diretor-relatorio-2": {
+      "titulo": "Revisão do Plano Diretor de Boa Vista — Produto 14: Relatório de Acompanhamento, Volume II (Anexo 4, patrimônio)",
+      "publicador": "Prefeitura de Boa Vista (com IBAM)",
+      "url": "https://boavista.rr.gov.br/storage/paginas/plano-diretor/fase3/p14-volume2-rev.pdf",
+      "referencia": "Documento de 2024 (sem data exata)",
+      "consultadoEm": "2026-10-15"
+    },
+    "boa-vista-pmbv-plano-diretor-relatorio-1": {
+      "titulo": "Revisão do Plano Diretor de Boa Vista — Produto 14: Relatório de Acompanhamento, Volume I",
+      "publicador": "Prefeitura de Boa Vista (com IBAM)",
+      "url": "https://boavista.rr.gov.br/storage/paginas/plano-diretor/fase3/p14-volume1-rev.pdf",
+      "referencia": "Documento de 2024 (sem data exata)",
+      "consultadoEm": "2026-10-15"
+    },
+    "boa-vista-pmbv-parque-do-rio-branco": {
+      "titulo": "Parque do Rio Branco",
+      "publicador": "Prefeitura de Boa Vista",
+      "url": "https://boavista.rr.gov.br/turismo/parque-do-rio-branco",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "boa-vista-diocese-300-anos": {
+      "titulo": "Memória religiosa: 300 anos de evangelização e o legado missionário em Roraima",
+      "publicador": "Diocese de Roraima",
+      "url": "https://diocesederoraima.org.br/memoria-religiosa-300-anos-de-evangelizacao-e-o-legado-missionario-em-roraima/",
+      "referencia": "Notícia de 2025 (sem data exata)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-boa-vista-rr": {
+      "titulo": "Biblioteca IBGE — Boa Vista: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em BOA VISTA (RR). Prefeitura. [200?])",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1400100",
+      "referencia": "Registro de 2008",
+      "consultadoEm": "2026-10-15"
+    },
+    "boa-vista-ibge-minha-boa-vista": {
+      "titulo": "Minha Boa Vista (RR) — Coleção Minha Capital, n. 15",
+      "publicador": "IBGE, Centro de Documentação e Disseminação de Informações",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv101835.pdf",
+      "referencia": "Publicação de 2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "ananindeua-plano-municipal-turismo-2026": {
+      "titulo": "Plano Municipal de Turismo 2026–2029 — Ananindeua Viva: turismo e lazer para todos",
+      "publicador": "Prefeitura de Ananindeua",
+      "url": "https://www.ananindeua.pa.gov.br/midias/anexos/2719_pmt_ananindeua_para_2026-2029.pdf",
+      "referencia": "Documento de 2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "ananindeua-inventario-oferta-turistica-2026": {
+      "titulo": "Inventário da Oferta Turística do Município de Ananindeua – PA (2026)",
+      "publicador": "Secretaria de Estado de Turismo do Pará (Setur), publicado no portal da Prefeitura de Ananindeua",
+      "url": "https://www.ananindeua.pa.gov.br/midias/anexos/2679_iot_ananindeua_2026.pdf",
+      "referencia": "Documento de 2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-ananindeua-pa": {
+      "titulo": "Biblioteca IBGE — Ananindeua: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Prefeitura de Ananindeua, 2012, e na Enciclopédia dos Municípios Brasileiros, 1957)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1500800",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-15"
+    },
+    "macapa-iphan-bcr-marabaixo": {
+      "titulo": "Marabaixo — Bens Culturais Registrados",
+      "publicador": "Iphan",
+      "url": "https://bcr.iphan.gov.br/bens-culturais/marabaixo/",
+      "referencia": "Ficha do bem registrado em 08/11/2018 (página sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "macapa-pmm-262-anos": {
+      "titulo": "262 anos de Macapá: pontos turísticos, referências e identidades da capital amapaense",
+      "publicador": "Prefeitura Municipal de Macapá",
+      "url": "https://macapa.ap.gov.br/262-anos-de-macapa-pontos-turisticos-referencias-e-identidades-da-capital-amapaense/",
+      "referencia": "Notícia de 28/01/2020",
+      "consultadoEm": "2026-10-15"
+    },
+    "macapa-iphan-ap-patrimonio-material": {
+      "titulo": "Patrimônio Material — Superintendência do Iphan no Amapá",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/amapa/patrimonio-material",
+      "referencia": "Página publicada em 10/09/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "macapa-unifap-planejamento-urbano": {
+      "titulo": "Planejamento Urbano Regional no Estado do Amapá",
+      "publicador": "Editora da Universidade Federal do Amapá (org. José Alberto Tostes)",
+      "url": "https://www2.unifap.br/editora/files/2018/12/Planejamento-Urbano-Regional-no-Estado-do-Amapa3.pdf",
+      "referencia": "Livro de 2018",
+      "consultadoEm": "2026-10-15"
+    },
+    "macapa-embrapa-ressaca-bioparque": {
+      "titulo": "Florística e estrutura de uma Área de Preservação Permanente do Bioparque da Amazônia",
+      "publicador": "Embrapa Amapá (resumos da VII Jornada Científica da Embrapa Amapá)",
+      "url": "https://www.alice.cnptia.embrapa.br/alice/bitstream/doc/1158175/1/Floristica-e-estrutura.pdf",
+      "referencia": "Resumo publicado em 2022 (jornada de 2021)",
+      "consultadoEm": "2026-10-15"
+    },
+    "macapa-pmm-viva-macapa-2025": {
+      "titulo": "Viva Macapá: Descubra os pontos turísticos da capital do Meio do Mundo",
+      "publicador": "Prefeitura Municipal de Macapá (Secretaria Municipal de Comunicação Social)",
+      "url": "https://agencia.macapa.ap.gov.br/viva-macapa-descubra-os-pontos-turisticos-da-capital-do-meio-do-mundo/",
+      "referencia": "Notícia de 04/09/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-macapa-ap": {
+      "titulo": "Biblioteca IBGE — Macapá: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Confederação Nacional de Municípios e Governo do Estado do Amapá, 2011)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1600303",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-15"
+    },
+    "macapa-ibge-minha-macapa": {
+      "titulo": "Minha Macapá (AP) — Coleção Minha Capital, n. 3",
+      "publicador": "IBGE (Centro de Documentação e Disseminação de Informações)",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv101781.pdf",
+      "referencia": "Livro de 2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "palmas-prefeitura-praia-da-graciosa": {
+      "titulo": "Praia da Graciosa — Conheça Palmas",
+      "publicador": "Prefeitura de Palmas (portal institucional anterior)",
+      "url": "https://portal2013.palmas.to.gov.br/conheca_palmas/praias-palmenses/praia-da-graciosa/",
+      "referencia": "Página institucional (sem data; cita a revitalização do primeiro semestre de 2016)",
+      "consultadoEm": "2026-10-15"
+    },
+    "palmas-prefeitura-33-anos-2022": {
+      "titulo": "Palmas 33 anos: Capital floresce entre as serras e o rio, compartilhando suas belezas com todos",
+      "publicador": "Prefeitura de Palmas",
+      "url": "https://www.palmas.to.gov.br/core/noticias/palmas-33-anos-capital-floresce-entre-as-serras-e-o-rio-compartilhando-suas-belezas-com-todos/",
+      "referencia": "Notícia de 20/05/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "palmas-prefeitura-praca-dos-girassois": {
+      "titulo": "Praça dos Girassóis — Conheça Palmas",
+      "publicador": "Prefeitura de Palmas (portal institucional anterior)",
+      "url": "https://portal2013.palmas.to.gov.br/conheca_palmas/visite-palmas/praca-dos-girassois/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "palmas-fcp-taquarucu-berco-historico-2026": {
+      "titulo": "Taquaruçu: o berço histórico que antecedeu Palmas",
+      "publicador": "Fundação Cultural de Palmas (Gerência de Patrimônio Cultural) / Prefeitura de Palmas",
+      "url": "https://www.palmas.to.gov.br/media/arquivo/pagina_arquivo/Taquaru%C3%A7u_placa__ber%C3%A7o_historico_FCP-Patrimonio_cultural___26.08.2026._2.pdf",
+      "referencia": "Documento de 26/08/2026 (PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "palmas-prefeitura-conheca-palmas": {
+      "titulo": "Conheça Palmas",
+      "publicador": "Prefeitura de Palmas (portal institucional anterior)",
+      "url": "https://portal2013.palmas.to.gov.br/conheca_palmas/visite-palmas/conheca-palmas/",
+      "referencia": "Página institucional (sem data; cita estimativa populacional de 2016 e eventos de 2017)",
+      "consultadoEm": "2026-10-15"
+    },
+    "palmas-agtur-turismo-ecologico-2023": {
+      "titulo": "Agtur ressalta a importância das paisagens naturais da Capital no Dia Mundial do Turismo Ecológico",
+      "publicador": "Agência Municipal de Turismo (Agtur) / Prefeitura de Palmas",
+      "url": "https://www.palmas.to.gov.br/core/noticias/agtur-ressalta-a-importancia-das-paisagens-naturais-da-capital-no-dia-mundial-do-turismo-ecologico/",
+      "referencia": "Notícia de 01/03/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "palmas-decreto-230-2011-casa-vitor": {
+      "titulo": "Decreto nº 230, de 15 de setembro de 2011 — tombamento da Casa Vitor e criação do Museu Casa Vitor",
+      "publicador": "Prefeitura de Palmas",
+      "url": "https://legislativo.palmas.to.gov.br/media/leis/DECRETO%20N%C2%BA%20230-2011%20de%2015-09-2011%2011-13-46.pdf",
+      "referencia": "Decreto de 15/09/2011, publicado no Diário Oficial do Município nº 364, de 16/09/2011",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-palmas-to": {
+      "titulo": "Biblioteca IBGE — Palmas: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Palmas (TO). Governo do Estado. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1721000",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-15"
+    },
+    "palmas-naturatins-parque-estadual-do-lajeado": {
+      "titulo": "Áreas Protegidas — Parque Estadual do Lajeado",
+      "publicador": "Naturatins / Governo do Tocantins (sistema Gesto)",
+      "url": "https://gesto.to.gov.br/uc/50/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ponta-grossa-iat-parque-vila-velha": {
+      "titulo": "Parque Estadual de Vila Velha (PEVV)",
+      "publicador": "Instituto Água e Terra (IAT) / Governo do Paraná",
+      "url": "https://www.iat.pr.gov.br/Pagina/Parque-Estadual-de-Vila-Velha-PEVV",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ponta-grossa-prefeitura-localizacao": {
+      "titulo": "Localização da Cidade",
+      "publicador": "Prefeitura Municipal de Ponta Grossa",
+      "url": "https://www.pontagrossa.pr.gov.br/localizacao-da-cidade/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ponta-grossa-cpc-pr-capela-santa-barbara": {
+      "titulo": "Capela Santa Bárbara do Pitangui - Ponta Grossa",
+      "publicador": "Coordenação do Patrimônio Cultural / Secretaria da Cultura do Paraná",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Capela-Santa-Barbara-do-Pitangui-Ponta-Grossa",
+      "referencia": "Página institucional (sem data); inscrição no Livro do Tombo em 10/10/2000",
+      "consultadoEm": "2026-10-15"
+    },
+    "ponta-grossa-cpc-pr-vila-velha": {
+      "titulo": "01-I: Parque Vila Velha, Furnas e Lagoa Dourada - Ponta Grossa",
+      "publicador": "Coordenação do Patrimônio Cultural / Secretaria da Cultura do Paraná",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Parque-Vila-Velha-Furnas-e-Lagoa-Dourada-Ponta-Grossa",
+      "referencia": "Página institucional (sem data); inscrição no Livro do Tombo em 18/01/1966",
+      "consultadoEm": "2026-10-15"
+    },
+    "ponta-grossa-prefeitura-historia": {
+      "titulo": "História da Cidade",
+      "publicador": "Prefeitura Municipal de Ponta Grossa",
+      "url": "https://www.pontagrossa.pr.gov.br/historia-da-cidade/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ponta-grossa-cpc-pr-estacoes-ferroviarias": {
+      "titulo": "100-II: Estações de passageiros da Estrada de Ferro de Ponta Grossa",
+      "publicador": "Coordenação do Patrimônio Cultural / Secretaria da Cultura do Paraná",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Estacoes-de-passageiros-da-Estrada-de-Ferro-de-Ponta-Grossa",
+      "referencia": "Página institucional (sem data); inscrição no Livro do Tombo em 30/05/1990",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-ponta-grossa-pr": {
+      "titulo": "Biblioteca IBGE — Ponta Grossa: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Ponta Grossa (PR). Prefeitura. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4119905",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "blumenau-turismo-vila-germanica": {
+      "titulo": "Parque Vila Germânica",
+      "publicador": "Secretaria de Turismo e Lazer de Blumenau (Turismo Blumenau)",
+      "url": "https://www.turismoblumenau.com.br/atracoes/parque-vila-germanica/",
+      "referencia": "Página de atração de 12/11/2021, atualizada em 25/08/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "blumenau-prefeitura-dados-geograficos": {
+      "titulo": "Dados Geográficos",
+      "publicador": "Prefeitura de Blumenau",
+      "url": "https://www.blumenau.sc.gov.br/secao/dados-geograficos",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-blumenau-sc": {
+      "titulo": "Biblioteca IBGE — Blumenau: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Blumenau (SC). Prefeitura. 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4202404",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "blumenau-turismo-familia-colonial": {
+      "titulo": "Museu da Família Colonial",
+      "publicador": "Secretaria de Turismo e Lazer de Blumenau (Turismo Blumenau)",
+      "url": "https://www.turismoblumenau.com.br/atracoes/museu-da-familia-colonial/",
+      "referencia": "Página de atração de 28/10/2021, atualizada em 05/07/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "blumenau-prefeitura-historia": {
+      "titulo": "História do Município",
+      "publicador": "Prefeitura de Blumenau",
+      "url": "https://www.blumenau.sc.gov.br/secao/historia",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "blumenau-icmbio-parna-serra-do-itajai": {
+      "titulo": "Informações Sobre Visitação - Parna da Serra do Itajaí",
+      "publicador": "ICMBio",
+      "url": "https://www.gov.br/icmbio/pt-br/assuntos/biodiversidade/unidade-de-conservacao/unidades-de-biomas/mata-atlantica/lista-de-ucs/parna-da-serra-do-itajai/informacoes-sobre-visitacao-parna-da-serra-do-itajai",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "blumenau-museusbr-familia-colonial": {
+      "titulo": "Museu da Família Colonial",
+      "publicador": "Ibram — Cadastro Nacional de Museus (MuseusBr)",
+      "url": "https://cadastro.museus.gov.br/museus/museu-da-familia-colonial/",
+      "referencia": "Cadastro atualizado em 16/09/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "blumenau-oktoberfest-historia": {
+      "titulo": "História da Oktoberfest de Blumenau",
+      "publicador": "Oktoberfest Blumenau (site oficial do evento)",
+      "url": "https://oktoberfestblumenau.com.br/a-festa-experiencias/historia-da-oktoberfest-de-blumenau/",
+      "referencia": "Página institucional de 22/08/2024, atualizada em 29/06/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "blumenau-turismo-ponte-de-ferro": {
+      "titulo": "Ponte de Ferro - Ponte Aldo Pereira de Andrade",
+      "publicador": "Secretaria de Turismo e Lazer de Blumenau (Turismo Blumenau)",
+      "url": "https://www.turismoblumenau.com.br/atracoes/ponte-aldo-pereira-de-andrade-ponte-de-ferro/",
+      "referencia": "Página de atração de 11/11/2021, atualizada em 07/12/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "blumenau-fcc-bens-tombados": {
+      "titulo": "Bens Tombados",
+      "publicador": "Fundação Catarinense de Cultura (FCC) / Governo de Santa Catarina",
+      "url": "https://www.cultura.sc.gov.br/a-fcc/patrimoniocultural/patrimonio-material/listagem-de-bens-tombados",
+      "referencia": "Página institucional (sem data); trecho de Blumenau",
+      "consultadoEm": "2026-10-15"
+    },
+    "florianopolis-alesc-ponte-100-anos": {
+      "titulo": "Alesc promove sessão especial em homenagem aos 100 anos da Ponte Hercílio Luz",
+      "publicador": "Assembleia Legislativa do Estado de Santa Catarina",
+      "url": "https://alesc.sc.gov.br/imprensa/noticia/alesc-promove-sessao-especial-em-homenagem-aos-100-anos-da-ponte-hercilio-luz/",
+      "referencia": "Notícia de mai/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "florianopolis-ufsc-guia-ponta-grossa": {
+      "titulo": "Guia de Visitação — Fortaleza de São José da Ponta Grossa",
+      "publicador": "Projeto Fortalezas / UFSC",
+      "url": "https://fortalezas.paginas.ufsc.br/files/2011/04/Clique-aqui-para-fazer-o-download-do-Guia-da-Fortaleza-de-S%C3%A3o-Jos%C3%A9-da-Ponta-Grossa.pdf",
+      "referencia": "Folheto de fev/2010",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-florianopolis-sc": {
+      "titulo": "Biblioteca IBGE — Florianópolis: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Florianópolis (SC). Prefeitura. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4205407",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "florianopolis-ufsc-ponte-seculo-20": {
+      "titulo": "Ponte Hercílio Luz possibilitou travessia de Florianópolis para o século 20",
+      "publicador": "Agecom / UFSC",
+      "url": "https://noticias.ufsc.br/2026/05/ponte-hercilio-luz-possibilitou-travessia-de-florianopolis-para-o-seculo-20/",
+      "referencia": "Notícia de mai/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "florianopolis-floram-areas-preservacao": {
+      "titulo": "Áreas de Preservação",
+      "publicador": "Floram — Fundação Municipal do Meio Ambiente / Prefeitura de Florianópolis",
+      "url": "https://www.pmf.sc.gov.br/entidades/floram/index.php?cms=areas+de+preservacao&menu=0",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "florianopolis-sc-conheca-geografia": {
+      "titulo": "Conheça Santa Catarina — Geografia (municípios)",
+      "publicador": "Governo do Estado de Santa Catarina",
+      "url": "https://estado.sc.gov.br/conheca-sc/geografia/",
+      "referencia": "Página institucional (sem data; dados de 2010)",
+      "consultadoEm": "2026-10-15"
+    },
+    "joinville-cidade-em-dados-2025-ambiente-natural": {
+      "titulo": "Joinville Cidade em Dados 2025 — Ambiente Natural",
+      "publicador": "Secretaria de Desenvolvimento Econômico e Inovação / Prefeitura de Joinville",
+      "url": "https://www.joinville.sc.gov.br/wp-content/uploads/2025/12/Joinville-Cidade-em-Dados-2025-%E2%80%93-Ambiente-Natural.pdf",
+      "referencia": "Publicação de dez/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-joinville-sc": {
+      "titulo": "Biblioteca IBGE — Joinville: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Joinville (SC). Prefeitura. 2010)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4209102",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "joinville-servico-estacao-da-memoria": {
+      "titulo": "Visitar Estação da Memória",
+      "publicador": "Prefeitura de Joinville",
+      "url": "https://www.joinville.sc.gov.br/servicos/visitar-estacao-da-memoria/",
+      "referencia": "Carta de serviço atualizada em 05/11/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "joinville-noticia-cidade-das-flores": {
+      "titulo": "Como Joinville se tornou a Cidade das Flores e preserva a tradição do cuidado com os jardins",
+      "publicador": "Prefeitura de Joinville",
+      "url": "https://www.joinville.sc.gov.br/noticias/como-joinville-se-tornou-a-cidade-das-flores-e-preserva-a-tradicao-do-cuidado-com-os-jardins/",
+      "referencia": "Notícia (sem data na página; cita a 86ª Festa das Flores)",
+      "consultadoEm": "2026-10-15"
+    },
+    "joinville-secult-estacao-da-memoria": {
+      "titulo": "Estação da Memória – SECULT.UPM.EME",
+      "publicador": "Secretaria de Cultura e Turismo / Prefeitura de Joinville",
+      "url": "https://www.joinville.sc.gov.br/institucional/secult/upm/eme/",
+      "referencia": "Página institucional atualizada em 21/12/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "joinville-cidade-em-dados-2025-ambiente-construido": {
+      "titulo": "Joinville Cidade em Dados 2025 — Ambiente Construído",
+      "publicador": "Secretaria de Desenvolvimento Econômico e Inovação / Prefeitura de Joinville",
+      "url": "https://www.joinville.sc.gov.br/wp-content/uploads/2025/12/Joinville-Cidade-em-Dados-2025-Ambiente-Construido.pdf",
+      "referencia": "Publicação de dez/2025 (capítulo 4, Patrimônio Cultural)",
+      "consultadoEm": "2026-10-15"
+    },
+    "joinville-servico-mirante": {
+      "titulo": "Visitar Mirante de Joinville",
+      "publicador": "Prefeitura de Joinville",
+      "url": "https://www.joinville.sc.gov.br/servicos/visitar-mirante-de-joinville/",
+      "referencia": "Carta de serviço atualizada em 06/11/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "canela-prefeitura-conheca-canela": {
+      "titulo": "Conheça Canela",
+      "publicador": "Prefeitura Municipal de Canela",
+      "url": "https://canela.rs.gov.br/sitenovo/conheca-canela/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "canela-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 33 (Rio Grande do Sul) — verbete Canela",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_33.pdf",
+      "referencia": "Publicação de 1959 (verbete nas páginas 102 a 105 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-canela-rs": {
+      "titulo": "Biblioteca IBGE — Canela: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em CANELA (RS). Prefeitura)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4304408",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "canela-turismo-parque-do-caracol": {
+      "titulo": "Parque do Caracol",
+      "publicador": "Secretaria Municipal de Turismo e Cultura / Prefeitura de Canela (portal canela.com.br)",
+      "url": "https://canela.com.br/atrativos/parque-do-caracol/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "canela-turismo-sinos-da-catedral": {
+      "titulo": "Sinos da Catedral",
+      "publicador": "Secretaria Municipal de Turismo e Cultura / Prefeitura de Canela (portal canela.com.br)",
+      "url": "https://canela.com.br/atrativos/sinos-da-catedral/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "canela-turismo-flona": {
+      "titulo": "Floresta Nacional de Canela – FLONA Canela",
+      "publicador": "Secretaria Municipal de Turismo e Cultura / Prefeitura de Canela (portal canela.com.br)",
+      "url": "https://canela.com.br/atrativos/floresta-nacional-de-canela-flona-canela/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "canela-turismo-catedral-de-pedra": {
+      "titulo": "Catedral de Pedra – Paróquia Nossa Senhora de Lourdes",
+      "publicador": "Secretaria Municipal de Turismo e Cultura / Prefeitura de Canela (portal canela.com.br)",
+      "url": "https://canela.com.br/atrativos/catedral-de-pedra-paroquia-nossa-senhora-de-lourdes/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "gramado-camara-parque-lago-negro-2025": {
+      "titulo": "Câmara aprova alteração na lei que regulamenta concessões no Lago Negro",
+      "publicador": "Câmara Municipal de Vereadores de Gramado",
+      "url": "https://www.gramado.rs.leg.br/institucional/noticias/camara-aprova-alteracao-na-lei-que-regulamenta-concessoes-no-lago-negro",
+      "referencia": "Notícia de 26/02/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "gramado-festival-o-festival": {
+      "titulo": "O Festival — Festival de Cinema de Gramado",
+      "publicador": "Festival de Cinema de Gramado (site oficial; realização Gramadotur)",
+      "url": "https://www.festivaldecinemadegramado.com/o-festival",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "gramado-camara-historia": {
+      "titulo": "História de Gramado — Gramado: Jardim das Hortênsias do Rio Grande do Sul",
+      "publicador": "Câmara Municipal de Vereadores de Gramado (texto da historiadora Marilia Daros)",
+      "url": "https://www.gramado.rs.leg.br/institucional/historia-de-gramado",
+      "referencia": "Página publicada em 09/10/2024, modificada em 05/10/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "gramado-gramadotur-sobre": {
+      "titulo": "Gramadotur | Turismo e Cultura – Autarquia Municipal de Turismo",
+      "publicador": "Gramadotur — Autarquia Municipal de Turismo e Cultura de Gramado",
+      "url": "https://gramadotur.rs.gov.br/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-gramado-rs": {
+      "titulo": "Biblioteca IBGE — Gramado: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em GRAMADO (RS). In: ENCICLOPÉDIA dos municípios brasileiros. Rio de Janeiro: IBGE, 1959. v. 33. p. 243-244)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4309100",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "gramado-gramadotur-festa-da-colonia": {
+      "titulo": "Festa da Colônia",
+      "publicador": "Gramadotur — Autarquia Municipal de Turismo e Cultura de Gramado",
+      "url": "https://gramadotur.rs.gov.br/festa-da-colonia/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "gramado-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 33 (Rio Grande do Sul) — verbete Gramado",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_33.pdf",
+      "referencia": "Publicação de 1959 (verbete nas páginas 236 a 239 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-prefeitura-historia": {
+      "titulo": "História",
+      "publicador": "Prefeitura Municipal de Bonito",
+      "url": "https://www.bonito.ms.gov.br/historia",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-prefeitura-bacia-rio-formoso-2026": {
+      "titulo": "Levantamento ambiental da Bacia do Rio Formoso entra na reta final",
+      "publicador": "Prefeitura Municipal de Bonito",
+      "url": "https://www.bonito.ms.gov.br/2026/06/02/levantamento-ambiental-da-bacia-do-rio-formoso-entra-na-reta-final/",
+      "referencia": "Notícia de 02/06/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-prefeitura-decks-balneario-2026": {
+      "titulo": "Balneário Municipal conclui construção e reforma dos decks",
+      "publicador": "Prefeitura Municipal de Bonito",
+      "url": "https://www.bonito.ms.gov.br/2026/09/23/balneario-municipal-conclui-construcao-e-reforma-dos-decks/",
+      "referencia": "Notícia de 23/09/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-prefeitura-entrada-balneario-2023": {
+      "titulo": "Esclarecimentos sobre a entrada no Balneário Municipal de Bonito",
+      "publicador": "Prefeitura Municipal de Bonito",
+      "url": "https://www.bonito.ms.gov.br/2023/09/26/esclarecimentos-sobre-a-entrada-no-balneario-municipal-de-bonito/",
+      "referencia": "Notícia de 26/09/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-prefeitura-voucher-digital-2021": {
+      "titulo": "Está em funcionamento a nova versão do voucher único",
+      "publicador": "Prefeitura Municipal de Bonito",
+      "url": "https://www.bonito.ms.gov.br/2021/08/11/esta-em-funcionamento-a-nova-versao-do-voucher-unico/",
+      "referencia": "Notícia de 11/08/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-icmbio-parna-serra-da-bodoquena": {
+      "titulo": "Parque Nacional da Serra da Bodoquena",
+      "publicador": "ICMBio",
+      "url": "https://www.gov.br/icmbio/pt-br/assuntos/biodiversidade/unidade-de-conservacao/unidades-de-biomas/cerrado/lista-de-ucs/parna-da-serra-da-bodoquena",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-bonito-ms": {
+      "titulo": "Biblioteca IBGE — Bonito: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Bonito (MS). 2014. Prefeitura)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5002209",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-fundtur-cessao-gruta-2021": {
+      "titulo": "União autoriza cessão da Gruta do Lago Azul ao município de Bonito",
+      "publicador": "Fundtur / Governo de Mato Grosso do Sul",
+      "url": "https://www.turismo.ms.gov.br/uniao-autoriza-cessao-da-gruta-do-lago-azul-ao-municipio-de-bonito/",
+      "referencia": "Notícia de 21/01/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-prefeitura-monitoramento-rio-formoso-2021": {
+      "titulo": "SEMA e SECTUR instalam instrumentos de acompanhamento para medição de pluviometria, turbidez e visibilidade da água do Rio Formoso no Balneário Municipal",
+      "publicador": "Prefeitura Municipal de Bonito",
+      "url": "https://www.bonito.ms.gov.br/2021/05/05/sema-e-sectur-instalam-instrumentos-de-acompanhamento-para-medicao-de-pluviometria-turbidez-e-visibilidade-da-agua-do-rio-formoso-no-balneario-municipal/",
+      "referencia": "Notícia de 05/05/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-imasul-monumento-gruta-do-lago-azul": {
+      "titulo": "Monumento Natural Gruta do Lago Azul",
+      "publicador": "Imasul / Governo de Mato Grosso do Sul",
+      "url": "https://www.imasul.ms.gov.br/monumento-natural-gruta-do-lago-azul/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "bonito-prefeitura-voucher-balneario-2014": {
+      "titulo": "Balneário Municipal: Prefeitura adota voucher único, e moraliza atrativo.",
+      "publicador": "Prefeitura Municipal de Bonito",
+      "url": "https://www.bonito.ms.gov.br/2014/04/21/balneario-municipal-prefeitura-adota-voucher-unico-e-moraliza-atrativo/",
+      "referencia": "Notícia de 21/04/2014",
+      "consultadoEm": "2026-10-15"
+    },
+    "cuiaba-camara-igreja-do-rosario": {
+      "titulo": "Igreja de Nossa Senhora do Rosário e São Benedito",
+      "publicador": "Câmara Municipal de Cuiabá",
+      "url": "https://www.camaracuiaba.mt.gov.br/node/3341",
+      "referencia": "Página de pontos turísticos publicada em 14/10/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "cuiaba-turismo-a-cidade": {
+      "titulo": "A Cidade — Portal Turismo",
+      "publicador": "Prefeitura de Cuiabá",
+      "url": "https://turismo.cuiaba.mt.gov.br/cidade",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "cuiaba-camara-centro-geodesico": {
+      "titulo": "Centro Geodésico",
+      "publicador": "Câmara Municipal de Cuiabá",
+      "url": "https://www.camaracuiaba.mt.gov.br/centrogeodesico",
+      "referencia": "Página institucional criada em 08/10/2025, atualizada em 07/10/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "cuiaba-iphan-viola-de-cocho": {
+      "titulo": "Modo de Fazer Viola-de-Cocho Associado ao Complexo Cultural do Cururu e do Siriri",
+      "publicador": "Iphan (Bens Culturais Registrados)",
+      "url": "https://bcr.iphan.gov.br/bens-culturais/modo-de-fazer-viola-de-cocho/",
+      "referencia": "Registro de 14/01/2005, revalidado em 2021; nome atualizado em 2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-cuiaba-mt": {
+      "titulo": "Biblioteca IBGE — Cuiabá: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Cuiabá (MT). Prefeitura. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5103403",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "cuiaba-sema-mae-bonifacia-resumo-2013": {
+      "titulo": "Parque Estadual Mãe Bonifácia — Resumo Executivo do Plano de Manejo",
+      "publicador": "Sema-MT (Governo de Mato Grosso)",
+      "url": "https://www.sema.mt.gov.br/site/phocadownload/LEGISLACOES_PLANOS_MANEJOS_CONSELHOS_UCS/PE_MAE_BONIFACIA_URBANO/Resumo_Executivo_2013_11_22.pdf",
+      "referencia": "Documento de novembro de 2013",
+      "consultadoEm": "2026-10-15"
+    },
+    "cuiaba-camara-horto-florestal": {
+      "titulo": "Horto Florestal de Cuiabá — Parque Tote Garcia",
+      "publicador": "Câmara Municipal de Cuiabá",
+      "url": "https://www.camaracuiaba.mt.gov.br/node/3401",
+      "referencia": "Página de pontos turísticos publicada em 29/10/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "cuiaba-ipdu-patrimonio-historico-2010": {
+      "titulo": "Patrimônio Histórico de Cuiabá: federal, estadual, municipal",
+      "publicador": "IPDU / Prefeitura de Cuiabá",
+      "url": "https://www.cuiaba.mt.gov.br/upload/arquivo/patrimonio_historico_legislacao.pdf",
+      "referencia": "Documento de agosto de 2010",
+      "consultadoEm": "2026-10-15"
+    },
+    "cuiaba-iphan-mt-patrimonio-material": {
+      "titulo": "Patrimônio Material — Superintendência do Iphan em Mato Grosso",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/mato-grosso/patrimonio-material",
+      "referencia": "Página institucional publicada em 10/09/2021, modificada em 14/03/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "anapolis-prefeitura-praca-santana": {
+      "titulo": "Praça Santana",
+      "publicador": "Prefeitura de Anápolis",
+      "url": "https://www.anapolis.go.gov.br/turismo/praca-santanna/",
+      "referencia": "Página institucional de turismo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "anapolis-prefeitura-museu-historico": {
+      "titulo": "Museu Histórico de Anápolis Alderico Borges de Carvalho",
+      "publicador": "Prefeitura de Anápolis",
+      "url": "https://www.anapolis.go.gov.br/turismo/museu-historico-de-anapolis-alderico-borges-de-carvalho/",
+      "referencia": "Página institucional de turismo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "anapolis-prefeitura-diagnostico-legislacao-2026": {
+      "titulo": "Diagnóstico da Legislação Urbanística e Ambiental (Estudo de Macroestruturação Urbana, produto P5)",
+      "publicador": "Prefeitura de Anápolis",
+      "url": "https://www.anapolis.go.gov.br/wp-content/uploads/2026/08/144_P5_DIAGNOSTICO-DA-LEGISLACAO-URBANISTICA-E-AMBIENTAL_V4.pdf",
+      "referencia": "Documento de 2026 (versão 4, publicado em agosto de 2026 pela URL)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-anapolis-go": {
+      "titulo": "Biblioteca IBGE — Anápolis: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Anápolis (GO). Prefeitura. 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5201108",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "anapolis-prefeitura-estacao-ferroviaria": {
+      "titulo": "Estação Ferroviária de Anápolis Prefeito José Fernandes Valente",
+      "publicador": "Prefeitura de Anápolis",
+      "url": "https://www.anapolis.go.gov.br/turismo/estacao-ferroviaria-de-anapolis-prefeito-jose-fernandes-valente/",
+      "referencia": "Página institucional de turismo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-aparecida-de-goiania-go": {
+      "titulo": "Biblioteca IBGE — Aparecida de Goiânia: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Aparecida de Goiânia (GO). Prefeitura. 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5201405",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "aparecida-de-goiania-santuario-restauracao-2024": {
+      "titulo": "Após restauração, Santuário Nossa Senhora Aparecida é entregue à comunidade",
+      "publicador": "Prefeitura de Aparecida de Goiânia",
+      "url": "https://aparecida.go.gov.br/apos-restauracao-santuario-nossa-senhora-aparecida-e-entregue-a-comunidade/",
+      "referencia": "Notícia de 03/06/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "aparecida-de-goiania-catireiros-2023": {
+      "titulo": "Encontro de catireiros resgata atividades culturais em Aparecida de Goiânia",
+      "publicador": "Prefeitura de Aparecida de Goiânia",
+      "url": "https://aparecida.go.gov.br/encontro-de-catireiros-resgata-atividades-culturais-de-aparecida-de-goiania/",
+      "referencia": "Notícia de 25/09/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "aparecida-de-goiania-serra-da-areia-ibama-2024": {
+      "titulo": "Semma e Ibama articulam ações para proteção da Serra da Areia",
+      "publicador": "Prefeitura de Aparecida de Goiânia",
+      "url": "https://aparecida.go.gov.br/semma-e-ibama-articulam-acoes-para-protecao-da-serra-da-areia/",
+      "referencia": "Notícia de 28/02/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "aparecida-de-goiania-folia-de-reis-2024": {
+      "titulo": "Grupo mantém tradição da Folia de Reis em Aparecida de Goiânia",
+      "publicador": "Prefeitura de Aparecida de Goiânia",
+      "url": "https://aparecida.go.gov.br/aparecida-de-goiania-folia-de-reis/",
+      "referencia": "Notícia de 03/12/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "aparecida-de-goiania-apa-serra-da-areia-2025": {
+      "titulo": "Prefeitura de Aparecida lança Plano de Contingência de Incêndio da APA Serra da Areia",
+      "publicador": "Prefeitura de Aparecida de Goiânia",
+      "url": "https://aparecida.go.gov.br/prefeitura-de-aparecida-lanca-plano-de-contingencia-de-incendio-da-apa-serra-da-areia/",
+      "referencia": "Notícia de 04/06/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "aparecida-de-goiania-santuario-elevacao-2018": {
+      "titulo": "Paróquia Nossa Senhora Aparecida é elevada à Santuário no dia do aniversário da cidade",
+      "publicador": "Prefeitura de Aparecida de Goiânia",
+      "url": "https://aparecida.go.gov.br/paroquia-nossa-senhora-aparecida-e-elevada-santuario-no-dia-do-aniversario-da-cidade/",
+      "referencia": "Notícia de 12/05/2018",
+      "consultadoEm": "2026-10-15"
+    },
+    "aparecida-de-goiania-prefeitura-a-cidade": {
+      "titulo": "A Cidade — Aparecida de Goiânia",
+      "publicador": "Prefeitura de Aparecida de Goiânia",
+      "url": "https://www.aparecida.go.gov.br/municipio/a-cidade",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "brasilia-ra-planaltina-conheca": {
+      "titulo": "Conheça a RA",
+      "publicador": "Administração Regional de Planaltina (GDF)",
+      "url": "https://www.planaltina.df.gov.br/conheca-a-ra",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "brasilia-setur-historia-da-cidade": {
+      "titulo": "História da Cidade",
+      "publicador": "Secretaria de Turismo do Distrito Federal",
+      "url": "https://www.turismo.df.gov.br/historia-da-cidade",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "brasilia-secec-patrimonio-material": {
+      "titulo": "Patrimônio Material (lista de bens tombados no DF)",
+      "publicador": "Secretaria de Estado de Cultura e Economia Criativa do Distrito Federal",
+      "url": "https://www.cultura.df.gov.br/patrimonio-material",
+      "referencia": "Página institucional, atualizada em 29/07/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "brasilia-unb-pedra-fundamental-2022": {
+      "titulo": "Colocando uma pedra em cima do assunto: a Pedra Fundamental de Planaltina",
+      "publicador": "Universidade de Brasília (Repositório Institucional; artigo na revista Em Questão, UFRGS)",
+      "url": "https://www.repositorio.unb.br/bitstream/10482/45101/1/ARTIGO_ColocandoPedraCima.pdf",
+      "referencia": "Artigo de 2022 (Em Questão, v. 28, n. 4)",
+      "consultadoEm": "2026-10-15"
+    },
+    "brasilia-setur-pontos-turisticos": {
+      "titulo": "Pontos Turísticos",
+      "publicador": "Secretaria de Turismo do Distrito Federal",
+      "url": "https://www.turismo.df.gov.br/mais-pontos-turisticos",
+      "referencia": "Página institucional, atualizada em 24/06/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "brasilia-secec-patrimonio-cultural": {
+      "titulo": "Patrimônio Cultural",
+      "publicador": "Secretaria de Estado de Cultura e Economia Criativa do Distrito Federal",
+      "url": "https://www.cultura.df.gov.br/patrimonio-cultural/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-brasilia-df": {
+      "titulo": "Biblioteca IBGE — Brasília: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Brasília (DF). Administração Regional de Brasília. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5300108",
+      "referencia": "Registro de 2014",
+      "consultadoEm": "2026-10-15"
+    },
+    "brasilia-ipedf-panorama-aguas-2020": {
+      "titulo": "Um Panorama das Águas no Distrito Federal",
+      "publicador": "Codeplan (hoje IPEDF), Governo do Distrito Federal",
+      "url": "https://ipe.df.gov.br/documents/d/ipedf/estudo-um-panorama-das-aguas-no-distrito-federal-pdf",
+      "referencia": "Estudo de junho de 2020",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -2077,6 +3008,3005 @@
         "status": "curadoria inicial",
         "em": "2026-10-14",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O tombamento do Encontro das Águas está judicializado (ata do Iphan de 2017); o texto não diz “tombado”. Capacidade do teatro diverge entre fontes (684 e 700) e não é usada."
+      }
+    },
+    "1100205": {
+      "identidade": {
+        "id": "1100205",
+        "ibge": "1100205",
+        "nome": "Porto Velho",
+        "uf": "RO",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na margem do rio Madeira, a cidade que nasceu com a ferrovia Madeira-Mamoré.",
+        "resumo": "Porto Velho fica na margem direita do rio Madeira, em terreno plano a suavemente ondulado, e a cidade é cortada por muitos igarapés. Segundo o histórico do IBGE, surgiu por volta de 1907, em torno do porto usado na construção da Estrada de Ferro Madeira-Mamoré. Um dos bairros da época, Barbadoes Town, abrigava sobretudo trabalhadores negros vindos das ilhas britânicas do Caribe, chamados barbadianos. Vila e município em 1914, instalada em 1915, virou capital do Território Federal em 1943 e manteve o posto com a criação do estado, em 1981.",
+        "fontesResumo": [
+          "ibge-biblioteca-porto-velho-ro",
+          "porto-velho-ro-ficha-saneamento",
+          "porto-velho-plano-diretor-2008"
+        ],
+        "referencias": [
+          {
+            "id": "complexo-madeira-mamore",
+            "tipo": "patrimonio",
+            "titulo": "Complexo da Estrada de Ferro Madeira-Mamoré",
+            "texto": "A ferrovia que liga Porto Velho a Guajará-Mirim foi inaugurada em 1º de agosto de 1912 e desativada em 1972. Em 2007, o Iphan tombou parte do pátio ferroviário de Porto Velho, os trilhos, as Três Caixas d’Água e o Cemitério da Candelária. No complexo, os galpões 1 e 2 abrigam o museu da ferrovia.",
+            "fontes": [
+              "porto-velho-sejucel-efmm-109-anos",
+              "porto-velho-mpf-tombamento-efmm",
+              "porto-velho-iphan-superintendencia-ro",
+              "porto-velho-semdestur-portaria-49-2024"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação genérica com plataforma, trilho e locomotiva pequena; galpões e cores são ilustrativos."
+            },
+            "curto": "Pátio da ferrovia inaugurada em 1912, tombado em parte pelo Iphan em 2007; os galpões abrigam o museu."
+          },
+          {
+            "id": "catedral-sagrado-coracao",
+            "tipo": "patrimonio",
+            "titulo": "Catedral do Sagrado Coração de Jesus",
+            "texto": "A pedra fundamental foi lançada em 1917, mas a obra só começou de fato em 1927; as telhas chegaram em 1929 no navio Madeira-Mamoré. Primeiro se ergueram a nave central e o campanário, e a ampliação veio a partir de 1945. Fica no antigo bairro Caiari, com pinturas internas do padre Ângelo Cerri e de Afonso Ligório e vitrais da Via Sacra doados pela comunidade.",
+            "fontes": [
+              "porto-velho-secom-ro-espacos-historicos"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica com uma torre sineira; posição da torre, proporções e cores são ilustrativas."
+            },
+            "curto": "Obra iniciada em 1927, com telhas trazidas pelo navio Madeira-Mamoré em 1929, no antigo bairro Caiari."
+          },
+          {
+            "id": "tres-caixas-dagua",
+            "tipo": "patrimonio",
+            "titulo": "Três Caixas d’Água",
+            "texto": "Também chamadas de Três Marias, foram projetadas e construídas pela Chicago Bridge & Iron Works e instaladas em 1910 e 1912, servindo à população e às obras da ferrovia até a década de 1950. Estão na bandeira e no brasão do município, instituídos em 1983, e foram tombadas pelo Iphan em 2007.",
+            "fontes": [
+              "porto-velho-sepat-tres-caixas",
+              "porto-velho-lei-249-1983",
+              "porto-velho-mpf-tombamento-efmm"
+            ],
+            "curto": "Reservatórios instalados em 1910 e 1912, hoje na bandeira e no brasão de Porto Velho."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O histórico do IBGE conta que, no começo, havia como duas cidades: a área de concessão da ferrovia, onde se falava muito inglês e espanhol, e a área pública. A linha entre elas era a Avenida Divisória, hoje Avenida Presidente Dutra.",
+            "fontes": [
+              "ibge-biblioteca-porto-velho-ro"
+            ]
+          },
+          {
+            "texto": "O Arraial Flor do Maracujá começou nos anos 1980 em quadras esportivas de escolas. O nome homenageia uma das primeiras quadrilhas juninas de que se tem notícia em Porto Velho, e o boi-bumbá acompanha a festa.",
+            "fontes": [
+              "porto-velho-sejucel-flor-do-maracuja"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "porto-velhense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-porto-velho-ro"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -9.6462,
+          "lon": -63.9599,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 460434,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 34090.952,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Porto Velho",
+          "intermediaria": "Porto Velho",
+          "mesorregiao": "Madeira-Guaporé",
+          "microrregiao": "Porto Velho",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade na beira do rio Madeira, com a estação da ferrovia, a catedral e igarapés",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.45
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            10
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "complexo-madeira-mamore"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "catedral-sagrado-coracao"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A frase do IBGE sobre o rio Madeira usa superlativo ('o maior afluente da margem direita'), deixado de fora. O histórico do IBGE chama Percival Farquhar de 'verdadeiro fundador'; o texto evita data de fundação e usa só as datas administrativas. Fontes da Prefeitura sobre o museu e a litorina citam o prefeito atual e horários; não foram usadas para fatos. A forma da torre da catedral (campanário único) vem do texto da Secom; a posição da torre na fachada não foi conferida. O tombamento federal de 2007 é citado pela nota do MPF (Portaria Iphan nº 231/2007); não achei a página do Iphan com a portaria."
+      }
+    },
+    "1200401": {
+      "identidade": {
+        "id": "1200401",
+        "ibge": "1200401",
+        "nome": "Rio Branco",
+        "uf": "AC",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Às margens do rio Acre, a capital que nasceu de um seringal junto à Gameleira.",
+        "resumo": "Rio Branco fica às margens do rio Acre, em relevo plano de planícies fluviais, com clima equatorial e vegetação de Floresta Amazônica. Segundo o histórico do IBGE, Neutel Maia fundou o Seringal Empresa em 28 de dezembro de 1882, na volta do rio onde está a Gameleira, quando o Acre ainda era tido como território boliviano. Na margem oposta surgiu a Empresa Nova, depois Vila Rio Branco, sede que virou capital do território em 1929. A culinária mistura heranças indígenas, nordestinas, árabes e amazônicas, do tacacá ao quibe de arroz.",
+        "fontesResumo": [
+          "rio-branco-prefeitura-coracao-do-acre-2025",
+          "ibge-biblioteca-rio-branco-ac"
+        ],
+        "referencias": [
+          {
+            "id": "gameleira",
+            "tipo": "paisagem",
+            "titulo": "Gameleira e o calçadão à beira do rio",
+            "texto": "Árvore centenária na margem do rio Acre, a Gameleira serviu de ponto de referência para o seringal fundado em 1882, de onde nasceu a cidade. Tombada como patrimônio histórico em 1981, hoje integra o Calçadão da Gameleira, lugar de encontro e convivência que recebe celebrações cívicas, como as da emancipação política do Acre.",
+            "fontes": [
+              "rio-branco-prefeitura-coracao-do-acre-2025",
+              "rio-branco-prefeitura-emancipacao-gameleira-2025",
+              "ibge-biblioteca-rio-branco-ac"
+            ]
+          },
+          {
+            "id": "palacio-rio-branco",
+            "tipo": "patrimonio",
+            "titulo": "Palácio Rio Branco",
+            "texto": "Erguido em alvenaria no lugar da antiga sede de madeira do governo, o palácio foi inaugurado em 1930, ainda parcialmente acabado, e concluído na década de 1940. Tem linhas clássicas e art déco, foi tombado pelo governo do Acre em 1999 e, depois da revitalização de 2002, passou a abrigar um museu que conta a história do estado.",
+            "fontes": [
+              "rio-branco-ufac-palacio-2015",
+              "rio-branco-prefeitura-coracao-do-acre-2025"
+            ],
+            "descoberta": {
+              "modulo": "palacio",
+              "nota": "Na maquete, um palácio clássico simplificado; colunas, escadaria e cores são ilustrativas."
+            },
+            "curto": "Palácio inaugurado em 1930 e concluído nos anos 1940; desde a revitalização de 2002, abriga um museu sobre a história do Acre."
+          },
+          {
+            "id": "novo-mercado-velho",
+            "tipo": "cultura",
+            "titulo": "Novo Mercado Velho",
+            "texto": "Fundado em 1929, o mercado fica às margens do rio Acre, na região por onde o comércio da cidade começou a se expandir. Hoje chamado Novo Mercado Velho, é ponto de encontro de moradores e visitantes, com comércio variado e pratos da região, como pato no tucupi, tacacá e baixaria.",
+            "fontes": [
+              "rio-branco-prefeitura-coracao-do-acre-2025",
+              "rio-branco-prefeitura-140-anos-2022",
+              "rio-branco-prefeitura-mercado-93-anos-2022"
+            ],
+            "descoberta": {
+              "modulo": "mercado",
+              "nota": "Na maquete, um mercado genérico; pavimentos, torres e cores são ilustrativos e não reproduzem o prédio."
+            },
+            "curto": "Mercado de 1929 às margens do rio Acre, ponto de encontro com pratos como tacacá e baixaria."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o IBGE, a sede chegou a passar para a vila de Penápolis, nome que homenageava o presidente Afonso Pena, e voltou a se chamar Rio Branco em 1912. O nome lembra o Barão do Rio Branco, ministro que negociou o Tratado de Petrópolis, de 1903, pelo qual o Acre foi integrado ao Brasil.",
+            "fontes": [
+              "ibge-biblioteca-rio-branco-ac",
+              "rio-branco-prefeitura-140-anos-2022",
+              "rio-branco-iphan-ac-patrimonio-material"
+            ]
+          },
+          {
+            "texto": "Antes dos seringais, a região era habitada por povos originários, que deixaram geoglifos: sítios arqueológicos que, segundo a Prefeitura, mostram uma Amazônia pré-colombiana e que o Iphan cita como registros da identidade da civilização amazônica.",
+            "fontes": [
+              "rio-branco-prefeitura-coracao-do-acre-2025",
+              "rio-branco-iphan-ac-superintendencia"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "rio-branquense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-rio-branco-ac"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -9.9724,
+          "lon": -67.8101,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 364756,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 8835.154,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Rio Branco",
+          "intermediaria": "Rio Branco",
+          "mesorregiao": "Vale do Acre",
+          "microrregiao": "Rio Branco",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Capital à beira do rio Acre, com a Gameleira, o palácio e o mercado",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.3
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            9
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "palmeira",
+            3
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "palacio",
+            "referencia": "palacio-rio-branco"
+          },
+          {
+            "modulo": "mercado",
+            "referencia": "novo-mercado-velho"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Conclusão do Palácio Rio Branco diverge: a Prefeitura diz 'construído em 1930'; o artigo da Ufac diz inaugurado parcialmente acabado em 1930 e concluído na década de 1940 (o texto segue a Ufac). O IBGE traz datas internas divergentes para a condição de cidade (decreto do prefeito de 07/09/1904 na formação administrativa; decreto federal de 23/10/1912 no histórico), e a Prefeitura diz que a cidade se consolidou como capital em 3/10/1912, enquanto o IBGE registra a sede elevada a capital do território em 1929; o texto usa só o registro de 1929 e não dá data de cidade. A Prefeitura chama 28/12/1882 de fundação da cidade; o texto trata a data como fundação do seringal, como o IBGE. A margem da Gameleira varia entre fontes (a Prefeitura diz margem esquerda) e foi omitida, assim como o bairro. O texto não cita geoglifo específico (o tombamento do Jacó Sá pelo Iphan não foi conferido em página oficial). O portal de notícias do governo do Acre estava fora do ar por legislação eleitoral. Em 2024 a Defesa Civil interditou parte do calçadão do Novo Mercado Velho por erosão; o texto não fala de funcionamento."
+      }
+    },
+    "1400100": {
+      "identidade": {
+        "id": "1400100",
+        "ibge": "1400100",
+        "nome": "Boa Vista",
+        "uf": "RR",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "À beira do rio Branco, no lavrado de lagos e buritis, a capital desenhada em leque a partir do Centro Cívico.",
+        "resumo": "Boa Vista cresceu junto ao rio Branco, numa paisagem de lavrado: áreas abertas, vegetação baixa, relevo plano e lagos que se multiplicam na estação chuvosa. Segundo o histórico do IBGE, a cidade nasceu da sede de uma fazenda do século XIX, em torno da qual surgiu a Freguesia de Nossa Senhora do Carmo. Em 1943, virou capital do Território Federal do Rio Branco, chamado Roraima a partir de 1962. Entre 1944 e 1946, ganhou um traçado radial de Darcy Aleixo Derenusson, com as principais avenidas convergindo para o Centro Cívico, em forma de leque.",
+        "fontesResumo": [
+          "boa-vista-pmbv-plano-diretor-propostas",
+          "ibge-biblioteca-boa-vista-rr",
+          "boa-vista-uft-amazonia-moderna",
+          "boa-vista-ibge-minha-boa-vista"
+        ],
+        "referencias": [
+          {
+            "id": "orla-taumanan",
+            "tipo": "paisagem",
+            "titulo": "Orla Taumanan e o rio Branco",
+            "texto": "A Orla Taumanan é um píer apoiado em duas plataformas suspensas sobre o rio Branco, que a Prefeitura apresenta como o principal rio de Roraima. Segundo o IBGE, entre outubro e março surgem praias de água doce nas margens do rio, como a Praia Grande, que só é alcançada de barco.",
+            "fontes": [
+              "boa-vista-ibge-minha-boa-vista",
+              "boa-vista-pmbv-parque-do-rio-branco"
+            ],
+            "descoberta": {
+              "modulo": "trapiche",
+              "nota": "Na maquete, um píer genérico com quiosque; a orla real tem duas plataformas, e formas e cores são ilustrativas."
+            },
+            "curto": "Píer sobre duas plataformas suspensas no rio Branco, de onde se vê o principal rio de Roraima."
+          },
+          {
+            "id": "matriz-nossa-senhora-do-carmo",
+            "tipo": "patrimonio",
+            "titulo": "Igreja Matriz de Nossa Senhora do Carmo",
+            "texto": "Segundo a Diocese de Roraima, uma capela maior foi construída em 1856 e, dois anos depois, elevada a Matriz de Nossa Senhora do Carmo, padroeira da cidade. A igreja tem arquitetura de inspiração germânica, foi restaurada na década de 2000 e aparece entre os bens tombados pelo Município na revisão do Plano Diretor.",
+            "fontes": [
+              "boa-vista-diocese-padroeira-carmo",
+              "boa-vista-diocese-300-anos",
+              "boa-vista-pmbv-plano-diretor-relatorio-2"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre central; proporções, torre e cores são ilustrativas e não reproduzem a Matriz."
+            },
+            "curto": "Matriz da padroeira de Boa Vista desde 1858, de inspiração germânica, tombada pelo Município."
+          },
+          {
+            "id": "lavrado",
+            "tipo": "natureza",
+            "titulo": "Lavrado, lagos e buritizais",
+            "texto": "O lavrado é formado por áreas abertas naturais, com vegetação sobretudo arbustiva e relevo plano; lembra o cerrado, mas tem particularidades próprias, segundo a revisão do Plano Diretor. Nas chuvas, os lagos crescem e se ligam em áreas alagadas, e na seca muitos desaparecem. Na zona oeste, o Igarapé Tauari, no bairro Alvorada, guarda uma área de buritizal.",
+            "fontes": [
+              "boa-vista-pmbv-plano-diretor-propostas",
+              "boa-vista-pmbv-plano-diretor-relatorio-1"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Pelo histórico do IBGE, a vila criada em 1890 se chamava Boa Vista do Rio Branco e virou cidade em 1926; o nome foi simplificado para Boa Vista só em 1938.",
+            "fontes": [
+              "ibge-biblioteca-boa-vista-rr"
+            ]
+          },
+          {
+            "texto": "Segundo a coleção Minha Capital, do IBGE, Boa Vista fica inteiramente no hemisfério norte.",
+            "fontes": [
+              "boa-vista-ibge-minha-boa-vista"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "boa-vistense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-boa-vista-rr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": 2.8212,
+          "lon": -60.673,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 413486,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 5687.037,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Boa Vista",
+          "intermediaria": "Boa Vista",
+          "mesorregiao": "Norte de Roraima",
+          "microrregiao": "Boa Vista",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio",
+          "campo"
+        ],
+        "rotulo": "Capital em leque à beira do rio Branco, com lavrado, buritis e a orla sobre o rio",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo"
+        },
+        "vegetacao": [
+          [
+            "capim",
+            12
+          ],
+          [
+            "arbusto",
+            8
+          ],
+          [
+            "buriti",
+            6
+          ],
+          [
+            "redonda",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 2
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "trapiche",
+            "referencia": "orla-taumanan"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "matriz-nossa-senhora-do-carmo"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O histórico do IBGE diz que o Território foi criado em 1940, mas a formação administrativa do mesmo registro dá o Decreto-lei nº 5.812, de 13/09/1943; o texto usa 1943. O histórico também diz 'município' em 1926, e a formação diz 'cidade'; o texto segue a formação. A Diocese data a primeira capela carmelita de 1725, antes da fazenda que o IBGE situa no século XIX; o texto evita 1725 e cita só 1856/1858, atribuídos à Diocese. O nome Taumanan ('paz' em macuxi, em fontes secundárias) ficou de fora por falta de fonte primária. A fonte do traçado radial é a apresentação de um número da revista da UFT (universidade pública), não documento da Prefeitura. O mirante do Parque do Rio Branco foi deixado de fora por envolver homenagem política recente. A lista de bens tombados vem de um anteprojeto do Plano Diretor (revisão de 2024)."
+      }
+    },
+    "1500800": {
+      "identidade": {
+        "id": "1500800",
+        "ibge": "1500800",
+        "nome": "Ananindeua",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Cidade nascida à beira da Estrada de Ferro de Bragança, com igarapés e ilhas de várzea ao norte.",
+        "resumo": "Ananindeua tem relevo quase plano, com cota média em torno de 16 metros, e é cortada por igarapés que deságuam em furos e rios; ao norte, ilhas com floresta de terra firme, várzea, mangue e igapó formam a região insular. Segundo o histórico do IBGE, a cidade tem origem ribeirinha e começou a ser povoada a partir da Estrada de Ferro de Bragança. Distrito de Belém e, depois, de Santa Isabel, foi elevada a município em 1943 e instalada em 1944. Segundo a Prefeitura, em texto reproduzido pelo IBGE, o nome vem da árvore anani, que crescia à margem do igarapé chamado Ananindeua.",
+        "fontesResumo": [
+          "ananindeua-inventario-oferta-turistica-2026",
+          "ibge-biblioteca-ananindeua-pa"
+        ],
+        "referencias": [
+          {
+            "id": "regiao-insular",
+            "tipo": "natureza",
+            "titulo": "Região insular",
+            "texto": "Ao norte do município, ilhas fluviomarinhas como a de João Pilatos reúnem floresta de terra firme, várzea, mangue e igapó, entre rios, furos e igarapés, como o rio Maguari. Os moradores vivem da pesca, da coleta de crustáceos e do extrativismo, com destaque para o açaí, e circulam de barco, com porto e trapiches comunitários.",
+            "fontes": [
+              "ananindeua-inventario-oferta-turistica-2026",
+              "ananindeua-plano-municipal-turismo-2026"
+            ],
+            "descoberta": {
+              "modulo": "trapiche",
+              "nota": "Na maquete, um trapiche genérico de madeira; quiosque e proporções são ilustrativos."
+            },
+            "curto": "Ilhas de várzea, mangue e igapó ao norte, entre rios e furos, onde o barco é o caminho."
+          },
+          {
+            "id": "quilombo-do-abacatal",
+            "tipo": "tradicao",
+            "titulo": "Quilombo do Abacatal",
+            "texto": "Na área rural ao sul, o Quilombo do Abacatal é um território ancestral marcado pela resistência, pela memória e pela identidade de sua comunidade. Lá fica o Caminho de Pedras, construído por pessoas escravizadas entre cerca de 1710 e 1790, do igarapé Uriboquinha à casa do Conde; segundo o inventário turístico, ele virou símbolo da escravidão e do território.",
+            "fontes": [
+              "ananindeua-plano-municipal-turismo-2026",
+              "ananindeua-inventario-oferta-turistica-2026"
+            ]
+          },
+          {
+            "id": "curtume-maguari",
+            "tipo": "patrimonio",
+            "titulo": "Ruínas do Curtume Maguari",
+            "texto": "Em 1916, o inglês Claude Saunders e o sócio Arthur Davids compraram um antigo curtume chamado Maguary e o transformaram numa indústria de curtimento de couro. Restam a chaminé e a caixa d’água, preservadas no Parque Cultural Vila Maguari; o casarão erguido por volta de 1975 abriga hoje restaurante e galeria de arte.",
+            "fontes": [
+              "ananindeua-inventario-oferta-turistica-2026",
+              "ananindeua-plano-municipal-turismo-2026"
+            ],
+            "descoberta": {
+              "modulo": "usina",
+              "nota": "Na maquete, um galpão genérico com chaminé de tijolo; forma, posição junto à água e cores são ilustrativas."
+            },
+            "curto": "Chaminé e caixa d’água de um curtume comprado em 1916, preservadas no Parque Cultural Vila Maguari."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico do IBGE, a anani é uma árvore de flores escarlates, e dela se tira uma resina usada para vedar as fendas das embarcações.",
+            "fontes": [
+              "ibge-biblioteca-ananindeua-pa"
+            ]
+          },
+          {
+            "texto": "Nas ilhas, como registra o IBGE, a estrada é o próprio rio: produtores, alunos, professores e visitantes vão e vêm de canoa e de pô-pô-pô. O inventário turístico cita uma linha regular de barco até a comunidade de Nova Esperança, na Ilha de João Pilatos.",
+            "fontes": [
+              "ibge-biblioteca-ananindeua-pa",
+              "ananindeua-inventario-oferta-turistica-2026"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "ananindeuense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-ananindeua-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -1.3665,
+          "lon": -48.372,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 478778,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 190.581,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Belém",
+          "intermediaria": "Belém",
+          "mesorregiao": "Metropolitana de Belém",
+          "microrregiao": "Belém",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio",
+          "floresta"
+        ],
+        "rotulo": "Cidade plana entre igarapés, com ilhas de várzea, trapiche e a chaminé do curtume",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo"
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            8
+          ],
+          [
+            "mata",
+            7
+          ],
+          [
+            "palmeira",
+            5
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 2
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "trapiche",
+            "referencia": "regiao-insular"
+          },
+          {
+            "modulo": "usina",
+            "referencia": "curtume-maguari"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O número de ilhas diverge: 14 no histórico do IBGE (texto da Prefeitura de 2012); 9 no inventário turístico de 2026 e no Plano Municipal de Turismo 2026–2029 (o inventário lista só 8 nomes). O texto não dá o número. O inventário chama o curtume de 'a maior indústria de curtimento de couro do Norte'; o superlativo ficou de fora. O inventário diz que o povoamento ganhou dinamismo como freguesia e distrito, mas que não achou os instrumentos de elevação; o texto usa só as datas de município (1943) e instalação (1944) do IBGE. A visita ao Caminho de Pedras depende de autorização da associação quilombola, segundo o inventário; o texto não promete visita. Sites da Câmara de Ananindeua não responderam. A forma 'Maguary/Maguari' segue a grafia de cada trecho."
+      }
+    },
+    "1600303": {
+      "identidade": {
+        "id": "1600303",
+        "ibge": "1600303",
+        "nome": "Macapá",
+        "uf": "AP",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "À beira do rio Amazonas e sobre a linha do Equador, a cidade da fortaleza e do Marabaixo.",
+        "resumo": "Macapá é plana, fica à beira do rio Amazonas e é recortada por igarapés e ressacas, áreas úmidas ligadas ao rio por canais e afetadas pelas marés. Em volta das ressacas há várzea, cerrado e restos de floresta de terra firme. Segundo o IBGE, nasceu de um destacamento militar instalado a partir de 1740, recebeu colonos dos Açores e virou vila em 1758. Foi elevada a cidade em 1856 e é capital desde 1944, do Território Federal do Amapá e, desde 1988, do estado. A linha do Equador cruza a cidade, e o nome, segundo o IBGE, viria do tupi macapaba, “lugar de muitas bacabas”.",
+        "fontesResumo": [
+          "macapa-unifap-planejamento-urbano",
+          "macapa-embrapa-ressaca-bioparque",
+          "macapa-pmm-262-anos",
+          "ibge-biblioteca-macapa-ap",
+          "macapa-ibge-minha-macapa"
+        ],
+        "referencias": [
+          {
+            "id": "fortaleza-de-sao-jose",
+            "tipo": "patrimonio",
+            "titulo": "Fortaleza de São José de Macapá",
+            "texto": "Erguida entre 1764 e 1782, com mão de obra negra e indígena, a fortaleza foi projetada pelo engenheiro Antônio Henrique Gallúcio e inaugurada em 19 de março de 1782. Tem formato de estrela e obras externas de defesa como fosso, revelim e caminho coberto. Foi tombada pelo Iphan em 1950 e tem no entorno o Parque do Forte.",
+            "fontes": [
+              "macapa-pmm-262-anos",
+              "macapa-iphan-ap-patrimonio-material",
+              "ibge-biblioteca-macapa-ap",
+              "macapa-ibge-minha-macapa"
+            ],
+            "descoberta": {
+              "modulo": "forte",
+              "nota": "Na maquete, uma fortaleza baixa simplificada; o desenho das muralhas, os baluartes e as cores são ilustrativos."
+            },
+            "curto": "Fortaleza erguida entre 1764 e 1782 com mão de obra negra e indígena, tombada pelo Iphan em 1950."
+          },
+          {
+            "id": "marco-zero-do-equador",
+            "tipo": "paisagem",
+            "titulo": "Marco Zero do Equador",
+            "texto": "O monumento marca a latitude zero, por onde passa a linha imaginária que divide o planeta nos hemisférios Norte e Sul. No alto, a 30 metros, há um círculo aberto: segundo a Prefeitura, nos equinócios de março e setembro a luz do sol se encaixa nele e projeta a linha do Equador sobre o chão.",
+            "fontes": [
+              "macapa-pmm-262-anos",
+              "macapa-ibge-minha-macapa"
+            ],
+            "descoberta": {
+              "modulo": "monumento",
+              "nota": "Na maquete, um obelisco genérico numa praça; não reproduz o monumento real nem o círculo aberto no alto."
+            },
+            "curto": "Marca a latitude zero; nos equinócios de março e setembro, a luz do sol passa pelo círculo do alto e projeta a linha no chão."
+          },
+          {
+            "id": "marabaixo",
+            "tipo": "tradicao",
+            "titulo": "Marabaixo",
+            "texto": "Tradição afro-amapaense de canto, tambor e dança, praticada sobretudo por famílias negras em bairros de Macapá como Laguinho, Santa Rita e Favela, e em Mazagão Velho. As caixas, tambores de madeira e couro, dão o ritmo dos ladrões, versos cantados em coro, e as mulheres conduzem as rodas. O Iphan o registrou como Patrimônio Cultural do Brasil em 8 de novembro de 2018.",
+            "fontes": [
+              "macapa-iphan-bcr-marabaixo",
+              "macapa-ibge-minha-macapa"
+            ],
+            "curto": "Canto, tambor e dança da tradição afro-amapaense, registrado como Patrimônio Cultural do Brasil em 2018."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "No Estádio Milton de Souza Corrêa, o Zerão, inaugurado em 1990, a linha do meio de campo coincide com a linha do Equador: cada time joga num hemisfério.",
+            "fontes": [
+              "macapa-pmm-262-anos",
+              "macapa-ibge-minha-macapa"
+            ]
+          },
+          {
+            "texto": "O Trapiche Eliezer Levy, construído entre 1936 e 1945, substituiu como atracadouro a antiga Pedra do Guindaste. Ao lado do trapiche, a pedra é um pilar de concreto no rio Amazonas que sustenta a estátua de São José, padroeiro da cidade.",
+            "fontes": [
+              "macapa-pmm-viva-macapa-2025",
+              "macapa-ibge-minha-macapa"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "macapaense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-macapa-ap"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": 0.0407,
+          "lon": -51.0574,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 442933,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 6563.849,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Macapá",
+          "intermediaria": "Macapá",
+          "mesorregiao": "Sul do Amapá",
+          "microrregiao": "Macapá",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade plana à beira do rio Amazonas, com ressacas, a fortaleza e o Marco Zero",
+        "base": "amazonia",
+        "cores": {
+          "grama": [
+            "#68904f",
+            "#789c59"
+          ]
+        },
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.55
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            8
+          ],
+          [
+            "palmeira",
+            5
+          ],
+          [
+            "buriti",
+            3
+          ],
+          [
+            "cerrado",
+            3
+          ],
+          [
+            "arbusto",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "extras": [
+          "pier",
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "forte",
+            "referencia": "fortaleza-de-sao-jose"
+          },
+          {
+            "modulo": "monumento",
+            "referencia": "marco-zero-do-equador"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Fontes oficiais chamam Macapá de 'única capital' banhada pelo Amazonas e cortada pelo Equador; o superlativo ficou fora. O nome tem duas traduções no IBGE ('lugar de muitas bacabas' no histórico; 'terra das bacabas' no livro Minha Macapá); o texto usa a do histórico, atribuída. A notícia da Prefeitura de 2020 dá 1671 para a inauguração da Igreja de São José, incompatível com o século XVIII citado no mesmo trecho; a igreja ficou fora. O projetista da fortaleza (Gallúcio) vem só da Prefeitura; o IBGE cita outros autores para o fortim de 1740, obra anterior. A ficha do Marabaixo no BCR do Iphan avisa que o texto foi feito com auxílio de IA e revisado por especialistas. O relevo plano e a vegetação das ressacas vêm de livro da Unifap e de resumo da Embrapa Amapá (não achei página da Prefeitura sobre isso; a cota de buscas na web acabou durante a pesquisa). Páginas gov.br do Ministério do Turismo e de notícias do Iphan pediram login (401). O Trapiche aparece só como píer ilustrativo e na curiosidade; o livro do IBGE (2021) dizia que estava fechado para obras, e o texto não fala de funcionamento."
+      }
+    },
+    "1721000": {
+      "identidade": {
+        "id": "1721000",
+        "ibge": "1721000",
+        "nome": "Palmas",
+        "uf": "TO",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Entre as serras e o lago do Tocantins, uma capital planejada no meio do Cerrado.",
+        "resumo": "Palmas cresceu no Cerrado, entre as serras do Carmo e do Lajeado e o rio Tocantins, que, represado pela usina de Lajeado, formou junto à cidade um lago de 8 quilômetros de largura. Segundo o IBGE, foi planejada para ser a capital do Tocantins: criada em 20 de maio de 1989, foi instalada em 1º de janeiro de 1990, quando a capital deixou Miracema, sede provisória. A sede do município veio de Taquarussu do Porto, que no fim de 1989 passou a distrito de Palmas. A cidade atraiu gente de todos os estados, e suas praias de água doce, parques e praças são de acesso livre.",
+        "fontesResumo": [
+          "palmas-prefeitura-33-anos-2022",
+          "ibge-biblioteca-palmas-to",
+          "palmas-prefeitura-conheca-palmas"
+        ],
+        "referencias": [
+          {
+            "id": "praia-da-graciosa",
+            "tipo": "paisagem",
+            "titulo": "Praia da Graciosa e o Lago de Palmas",
+            "texto": "O represamento do Tocantins deixou na área urbana mais de 13 quilômetros de margem, com quatro praias de água doce estruturadas para o lazer. A Graciosa, a mais central, tem 520 metros de orla com bares, quadras, marina e píer, além de ciclovia e pista de cooper, e vista para a Ponte da Amizade. Ali se concentram dezenas de embarcações de passeio pelo lago.",
+            "fontes": [
+              "palmas-prefeitura-33-anos-2022",
+              "palmas-prefeitura-praia-da-graciosa"
+            ],
+            "descoberta": {
+              "modulo": "trapiche",
+              "nota": "Na maquete, um píer genérico sobre o lago; a orla, o quiosque e as proporções são ilustrativos."
+            },
+            "curto": "Praia de água doce no lago formado pelo Tocantins, com 520 metros de orla, marina e píer."
+          },
+          {
+            "id": "taquarucu",
+            "tipo": "natureza",
+            "titulo": "Taquaruçu e as cachoeiras da Serra do Carmo",
+            "texto": "Distrito a 32 km da cidade, cercado pela Serra do Carmo, Taquaruçu tem mais de 80 cachoeiras; em 2023, 11 tinham estrutura para visitantes, segundo a Agência Municipal de Turismo, e a do Roncador tem 70 metros de queda. A partir dos anos 1940, o lugar recebeu migrantes do Maranhão, do Piauí e do norte goiano, que viviam em casas de adobe. A Casa Vitor, dos anos 1950, foi tombada em 2011 e virou museu.",
+            "fontes": [
+              "palmas-agtur-turismo-ecologico-2023",
+              "palmas-fcp-taquarucu-berco-historico-2026",
+              "palmas-decreto-230-2011-casa-vitor"
+            ],
+            "descoberta": {
+              "modulo": "cachoeira",
+              "nota": "Na maquete, uma queda d'água genérica com poço; paredão, altura e vegetação são ilustrativos e não reproduzem uma cachoeira específica."
+            },
+            "curto": "Distrito na Serra do Carmo com mais de 80 cachoeiras; a do Roncador tem 70 metros de queda."
+          },
+          {
+            "id": "praca-dos-girassois",
+            "tipo": "cultura",
+            "titulo": "Praça dos Girassóis",
+            "texto": "Com 571 mil metros quadrados, a praça reúne as sedes dos poderes Executivo, Legislativo e Judiciário do Tocantins. Monumentos e obras de arte lembram a história do estado, como o Cruzeiro, onde foi celebrada a primeira missa, o Relógio do Sol e a Rosa dos Ventos do Centro Geodésico do Brasil. No fim da tarde, recebe quem caminha, e quiosques servem comidas regionais.",
+            "fontes": [
+              "palmas-prefeitura-praca-dos-girassois"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico do IBGE, o nome Palmas homenageia a comarca de São João da Palma, sede do primeiro movimento separatista do norte goiano, e lembra a grande quantidade de palmeiras da região.",
+            "fontes": [
+              "ibge-biblioteca-palmas-to"
+            ]
+          },
+          {
+            "texto": "Criado em maio de 2001, o Parque Estadual do Lajeado protege 9.931 hectares da Serra do Lajeado, com formações campestres, savânicas e florestais. Fica a cerca de 32 km da capital e também protege mananciais que abastecem a cidade.",
+            "fontes": [
+              "palmas-naturatins-parque-estadual-do-lajeado"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "palmense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-palmas-to"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -10.1845,
+          "lon": -48.3337,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 302692,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 2227.329,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Palmas",
+          "intermediaria": "Palmas",
+          "mesorregiao": "Oriental do Tocantins",
+          "microrregiao": "Porto Nacional",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado",
+          "serra"
+        ],
+        "rotulo": "Capital planejada no Cerrado, entre a serra e o lago do Tocantins",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.6
+        },
+        "agua": {
+          "modulo": "lago"
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            9
+          ],
+          [
+            "palmeira",
+            4
+          ],
+          [
+            "arbusto",
+            5
+          ],
+          [
+            "capim",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 3
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "trapiche",
+            "referencia": "praia-da-graciosa"
+          },
+          {
+            "modulo": "cachoeira",
+            "referencia": "taquarucu"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O texto não chama 20/05/1989 de fundação: o IBGE fala em criação (data do lançamento da pedra fundamental, segundo a Fundação Cultural de Palmas) e instalação em 01/01/1990; a formação administrativa do IBGE registra ainda o município de Taquarussu do Porto (lei de 1988, instalado em 01/06/1989) e a mudança de sede em 29/12/1989. Ficaram de fora os superlativos das fontes (\"maior praça da América Latina\", \"última capital planejada do século XX\", \"pôr do sol mais lindo do Brasil\"). A página do Naturatins traz o número da lei de criação do Parque do Lajeado de duas formas (1.244 e 1.224) e a área como 9.931 ha e 9.930,92 ha; o texto usa só o mês e o ano. O número de cachoeiras com estrutura (11) é de 2023 e vem atribuído. Praia, praça e Taquaruçu vêm de páginas do portal antigo da Prefeitura (sem data). Páginas de notícia do Governo do Tocantins (to.gov.br/secom) não abriram pela ferramenta (só JavaScript) e não foram usadas."
+      }
+    },
+    "4119905": {
+      "identidade": {
+        "id": "4119905",
+        "ibge": "4119905",
+        "nome": "Ponta Grossa",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Nos Campos Gerais, entre arenitos, capões de araucária e a ferrovia que fez a cidade crescer.",
+        "resumo": "Ponta Grossa fica no Segundo Planalto Paranaense, nos Campos Gerais, de relevo ondulado, com campos nativos e capões de araucária. Segundo o histórico do IBGE, o povoado surgiu de um pouso de tropeiros no Caminho das Tropas e foi elevado a freguesia em 1823, a vila em 1855 e a cidade em 1862. Os trilhos chegaram em 1894, e a cidade virou entroncamento ferroviário. Vieram então imigrantes: russos-alemães a partir de 1877, e depois poloneses, alemães, italianos, sírios e outros grupos.",
+        "fontesResumo": [
+          "ponta-grossa-prefeitura-localizacao",
+          "ponta-grossa-cpc-pr-vila-velha",
+          "ponta-grossa-iat-parque-vila-velha",
+          "ibge-biblioteca-ponta-grossa-pr",
+          "ponta-grossa-prefeitura-historia"
+        ],
+        "referencias": [
+          {
+            "id": "estacao-saudade",
+            "tipo": "patrimonio",
+            "titulo": "Estação Saudade e as estações ferroviárias",
+            "texto": "A primeira estação, a Estação Paraná, foi inaugurada em 1894 como ponta da linha que vinha de Paranaguá e Curitiba. A segunda, erguida entre 1899 e 1900 para a Estrada de Ferro São Paulo-Rio Grande, ficou conhecida como Estação Saudade. Tombadas pelo Estado em 1990, as duas ganharam usos culturais e institucionais depois que os trilhos saíram da área central.",
+            "fontes": [
+              "ponta-grossa-cpc-pr-estacoes-ferroviarias"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação genérica com plataforma, trilho e locomotiva; os trilhos já saíram do centro, e forma e cores são ilustrativas."
+            },
+            "curto": "Estação erguida entre 1899 e 1900 para a linha São Paulo-Rio Grande, tombada pelo Estado em 1990."
+          },
+          {
+            "id": "vila-velha",
+            "tipo": "natureza",
+            "titulo": "Parque Estadual de Vila Velha",
+            "texto": "Criado em 1953 e tombado pelo Estado em 1966, o parque tem cerca de 3,1 mil hectares de arenitos esculpidos pela erosão, furnas com paredes de até 100 metros de profundidade e a Lagoa Dourada. Algumas rochas lembram figuras, como a Taça. Para os Kaingang, as formações têm sentido espiritual; o lugar também é chamado de Itacueretaba.",
+            "fontes": [
+              "ponta-grossa-iat-parque-vila-velha",
+              "ponta-grossa-cpc-pr-vila-velha"
+            ]
+          },
+          {
+            "id": "capela-santa-barbara-do-pitangui",
+            "tipo": "patrimonio",
+            "titulo": "Capela Santa Bárbara do Pitangui",
+            "texto": "Ligada à presença dos jesuítas nos Campos Gerais no século XVIII, a capela da antiga Fazenda Pitangui é uma construção simples, com paredes grossas de arenito, assentada sobre um grande bloco da mesma pedra. Fica a 14 quilômetros do centro e foi tombada pelo Estado em 2000.",
+            "fontes": [
+              "ponta-grossa-cpc-pr-capela-santa-barbara",
+              "ibge-biblioteca-ponta-grossa-pr"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico do IBGE, o nome é geográfico: vem de uma colina larga coberta por um capão de mato, visível de longe por quem viajava pela região. Os tropeiros diriam: “Estamos próximos ao Capão da Ponta Grossa”.",
+            "fontes": [
+              "ibge-biblioteca-ponta-grossa-pr"
+            ]
+          },
+          {
+            "texto": "Pela tradição registrada no IBGE, fazendeiros soltaram um casal de pombos para escolher o lugar da capela de Sant'Ana. A colina escolhida para a capela da freguesia é onde hoje está a Catedral de Sant'Ana. Em 1871, o município chegou a se chamar Pitangui, e o nome Ponta Grossa voltou em 1872.",
+            "fontes": [
+              "ibge-biblioteca-ponta-grossa-pr"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "ponta-grossense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-ponta-grossa-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -25.0964,
+          "lon": -50.1722,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 358371,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 2054.732,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Ponta Grossa",
+          "intermediaria": "Ponta Grossa",
+          "mesorregiao": "Centro Oriental Paranaense",
+          "microrregiao": "Ponta Grossa",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "campo",
+          "urbano"
+        ],
+        "rotulo": "Cidade nos Campos Gerais, entre campos, capões de araucária e a estação",
+        "base": "campos",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.4
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.12
+        },
+        "vegetacao": [
+          [
+            "capim",
+            14
+          ],
+          [
+            "araucaria",
+            8
+          ],
+          [
+            "mata",
+            4
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "estacao-saudade"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Só um marco: Vila Velha não tem módulo de arenito, a capela não tem torre (o módulo igreja a deturparia) e o Buraco do Padre só aparece em notícias da Prefeitura sem descrição do lugar, por isso ficou de fora. O texto não usa os superlativos e ordinais das fontes ('primeira unidade de conservação do Paraná', 'principal entroncamento do Sul', 'mais importante do interior'). A página do IAT fala em 'últimos 600 milhões de anos' para os arenitos, e a da Coordenação do Patrimônio Cultural dá outras idades geológicas; o texto não dá idade. Área do parque: 3.122,11 ha (IAT) e 'superior a 3.000 hectares' (CPC); o texto diz cerca de 3,1 mil. A capela: a página do patrimônio cita oratório de 1710 e capela de 1729; o texto diz só século XVIII. O IBGE registra outras versões para o nome (Manoel Cirillo Ferreira, Nestor Victor); a curiosidade usa a versão geográfica que o próprio histórico adota. A Münchenfest foi considerada, mas as páginas oficiais encontradas só tratam de trânsito."
+      }
+    },
+    "4202404": {
+      "identidade": {
+        "id": "4202404",
+        "ibge": "4202404",
+        "nome": "Blumenau",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na curva do Itajaí-Açu, entre morros de Mata Atlântica, casas enxaimel e a Oktoberfest.",
+        "resumo": "Blumenau se espalha por morros e vales ao longo do Itajaí-Açu, com serras ao sul, vales ao norte e vegetação de Mata Atlântica. Antes da colônia, a região era habitada pelos povos Kaingang e Xokleng, e já havia famílias nas margens do ribeirão Garcia e do Itajaí-Açu. Em 2 de setembro de 1850, 17 colonos chegaram à colônia agrícola de Hermann Blumenau, elevada a vila, separada de Itajaí, em 1880 e instalada em 1883. A colonização alemã, seguida pela italiana e pela polonesa, deixou marcas como as casas enxaimel.",
+        "fontesResumo": [
+          "blumenau-prefeitura-dados-geograficos",
+          "blumenau-prefeitura-historia",
+          "ibge-biblioteca-blumenau-sc",
+          "blumenau-fcc-bens-tombados"
+        ],
+        "referencias": [
+          {
+            "id": "museu-da-familia-colonial",
+            "tipo": "patrimonio",
+            "titulo": "Casas enxaimel do Museu da Família Colonial",
+            "texto": "No antigo centro da colônia, a Residência Dietrich, de 1858, e a Casa Victor Gartner, de 1864, são casas geminadas em enxaimel, com vigas escuras aparentes e paredes de tijolo. Tombadas pelo Estado em 1996, formam com uma terceira casa o Museu da Família Colonial, aberto em 1967, que guarda cerca de 6.200 peças e um horto com árvores plantadas pelo Dr. Blumenau.",
+            "fontes": [
+              "blumenau-fcc-bens-tombados",
+              "blumenau-museusbr-familia-colonial",
+              "blumenau-turismo-familia-colonial"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, uma casa simplificada de beiral e janelas em série; não reproduz a trama do enxaimel, e as cores são ilustrativas."
+            },
+            "curto": "Casas enxaimel de 1858 e 1864, tombadas pelo Estado em 1996, que abrigam o Museu da Família Colonial."
+          },
+          {
+            "id": "curva-do-itajai-e-ponte-de-ferro",
+            "tipo": "paisagem",
+            "titulo": "A curva do Itajaí-Açu e a Ponte de Ferro",
+            "texto": "Na curva do rio onde hoje fica a Praça Hercílio Luz, escolhida por Hermann Blumenau para assentar os colonos, desembarcaram os primeiros imigrantes; a praça foi tombada pelo Estado em 1996. Sobre o rio, a Ponte de Ferro começou a ser construída em 1929, com material vindo da Alemanha, e foi inaugurada em 1931 para a Estrada de Ferro Santa Catarina. Restaurada em 1991, passou a receber carros e pedestres.",
+            "fontes": [
+              "blumenau-fcc-bens-tombados",
+              "blumenau-turismo-ponte-de-ferro"
+            ],
+            "descoberta": {
+              "modulo": "ponte-urbana",
+              "nota": "Na maquete, uma ponte genérica sobre o rio; não reproduz a estrutura de ferro, e a largura do rio é ilustrativa."
+            },
+            "curto": "Na curva do rio desembarcaram os primeiros colonos; a Ponte de Ferro, de 1931, serviu à ferrovia e hoje recebe carros e pedestres."
+          },
+          {
+            "id": "oktoberfest",
+            "tipo": "tradicao",
+            "titulo": "Oktoberfest",
+            "texto": "Discutida desde 1977 entre poder público e comércio, a festa ganhou força depois de uma grande enchente e teve a primeira edição em 1984, nos moldes da de Munique, com 102 mil pessoas no antigo pavilhão da Proeb, hoje Parque Vila Germânica. Os clubes de caça e tiro deram forma aos desfiles e popularizaram os trajes típicos, que passaram a ser regra entre o público.",
+            "fontes": [
+              "blumenau-oktoberfest-historia",
+              "blumenau-turismo-vila-germanica"
+            ],
+            "curto": "Festa inspirada na de Munique, com primeira edição em 1984 no atual Parque Vila Germânica."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "A lei que separou a colônia de Itajaí é de fevereiro de 1880, mas em outubro daquele ano uma grande enchente destruiu pontes e estradas, e a instalação do município só aconteceu em 10 de janeiro de 1883.",
+            "fontes": [
+              "ibge-biblioteca-blumenau-sc"
+            ]
+          },
+          {
+            "texto": "O Parque Nacional da Serra do Itajaí, criado em 2004, protege cerca de 57 mil hectares de Mata Atlântica em oito municípios catarinenses, Blumenau entre eles.",
+            "fontes": [
+              "blumenau-icmbio-parna-serra-do-itajai"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "blumenauense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-blumenau-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -26.9144,
+          "lon": -49.0693,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 361261,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 518.619,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Blumenau",
+          "intermediaria": "Blumenau",
+          "mesorregiao": "Vale do Itajaí",
+          "microrregiao": "Blumenau",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "vale",
+          "rio",
+          "urbano"
+        ],
+        "rotulo": "Cidade entre morros na curva do Itajaí-Açu, com casas enxaimel e a ponte sobre o rio",
+        "base": "vale",
+        "cores": {
+          "grama": [
+            "#5f8a4b",
+            "#74985a"
+          ]
+        },
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 1.0
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.3,
+          "direcao": 0.6
+        },
+        "vegetacao": [
+          [
+            "mata",
+            14
+          ],
+          [
+            "redonda",
+            8
+          ],
+          [
+            "palmeira",
+            3
+          ],
+          [
+            "arbusto",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "marcos": [
+          {
+            "modulo": "casarao",
+            "referencia": "museu-da-familia-colonial"
+          },
+          {
+            "modulo": "ponte-urbana",
+            "referencia": "curva-do-itajai-e-ponte-de-ferro"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Divergências: o histórico do IBGE chama o Dr. Blumenau de filósofo, e a página atual da Prefeitura, de químico e farmacêutico (o texto omite a profissão); o histórico diz que Blumenau passou a cidade em 1928, e a formação administrativa do IBGE dá a Lei Estadual nº 197, de 28/07/1894 (o texto não dá a data de cidade); o IBGE lista Kaingang, Xokleng e Botocudos como três povos, e a Prefeitura diz que os Xokleng eram também chamados Botocudos (o texto cita só Kaingang e Xokleng, com a grafia usual; as fontes escrevem Kaigangs). O site de turismo diz que as casas de 1858 e 1864 foram tombadas pelo Iphan e pelo Estado em 29/10/1996 (Decreto 1.294); a FCC registra só o tombamento estadual de 1996, e o texto não cita o Iphan. A página da Ponte de Ferro diz que a ferrovia ligava Blumenau a Itajaí; o texto cita só a Estrada de Ferro Santa Catarina. A fonte da Oktoberfest é o site oficial do evento (o organizador não aparece em texto na página); o Parque Vila Germânica vem do site da Secretaria de Turismo. Evitados superlativos das fontes ('maior festa alemã das Américas', 'um dos maiores empreendimentos colonizadores')."
+      }
+    },
+    "4205407": {
+      "identidade": {
+        "id": "4205407",
+        "ibge": "4205407",
+        "nome": "Florianópolis",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Ilha e continente entre baías, com morros de mata, lagoas, dunas, fortalezas e a ponte pênsil.",
+        "resumo": "Florianópolis reúne a Ilha de Santa Catarina e uma parte continental; na ilha, morros com mata se alternam com planícies de restinga e manguezal, dunas e lagoas. O histórico do IBGE cita sambaquis com registros de 4.800 a.C. e o início do povoado de Nossa Senhora do Desterro por Francisco Dias Velho, por volta de 1675. Desterro foi vila em 1726 e cidade em 1823 e, em 1894, passou a se chamar Florianópolis. A ilha foi fortificada a partir de 1737, e a renda de bilro, de tradição açoriana, segue como herança desse passado.",
+        "fontesResumo": [
+          "florianopolis-sc-conheca-geografia",
+          "florianopolis-floram-areas-preservacao",
+          "ibge-biblioteca-florianopolis-sc"
+        ],
+        "referencias": [
+          {
+            "id": "fortaleza-ponta-grossa",
+            "tipo": "patrimonio",
+            "titulo": "Fortaleza de São José da Ponta Grossa",
+            "texto": "No norte da ilha, entre as praias do Forte e de Jurerê, a fortaleza idealizada pelo brigadeiro José da Silva Paes começou a ser erguida em 1740 e formava, com Anhatomirim e Ratones, a defesa triangular da Barra Norte. Os edifícios ficam em três terraplenos ligados por rampas de pedra. Tombada em 1938, já em ruínas, foi restaurada em 1991 e 1992 e passou a ser gerida pela UFSC.",
+            "fontes": [
+              "florianopolis-ufsc-guia-ponta-grossa"
+            ],
+            "descoberta": {
+              "modulo": "forte",
+              "nota": "Na maquete, uma fortaleza simplificada; muralhas, guaritas e cores são ilustrativas."
+            },
+            "curto": "Fortaleza iniciada em 1740 para defender a Barra Norte, tombada em 1938 e restaurada em 1991 e 1992."
+          },
+          {
+            "id": "ponte-hercilio-luz",
+            "tipo": "patrimonio",
+            "titulo": "Ponte Hercílio Luz",
+            "texto": "Inaugurada em 13 de maio de 1926, a ponte pênsil de 821 metros, com sistema de barras de olhal, foi por décadas a principal ligação entre a ilha e o continente. Interditada em 1982, passou por uma restauração que trocou cerca de 40% da estrutura metálica e foi reaberta ao tráfego em dezembro de 2019. O tombamento pelo Iphan foi concluído em 5 de agosto de 1998.",
+            "fontes": [
+              "florianopolis-alesc-ponte-100-anos",
+              "florianopolis-ufsc-ponte-seculo-20"
+            ],
+            "descoberta": {
+              "modulo": "ponte-pensil",
+              "nota": "Na maquete, uma ponte pênsil genérica com duas torres e cabos; não reproduz as barras de olhal nem as proporções da Hercílio Luz."
+            },
+            "curto": "Ponte pênsil de 1926 entre a ilha e o continente, tombada pelo Iphan em 1998 e reaberta em 2019."
+          },
+          {
+            "id": "renda-de-bilro",
+            "tipo": "tradicao",
+            "titulo": "Renda de bilro",
+            "texto": "A renda de bilro, de tradição açoriana, é característica dos arredores da Lagoa da Conceição, segundo o governo do estado. O histórico do IBGE a cita, ao lado da farinha de mandioca artesanal, entre os resquícios do período colonial em que prosperaram a agricultura e a manufatura de algodão e linho. O guia da Fortaleza de Ponta Grossa, da UFSC, menciona um Atelier das Rendeiras no antigo Quartel da Tropa.",
+            "fontes": [
+              "florianopolis-sc-conheca-geografia",
+              "ibge-biblioteca-florianopolis-sc",
+              "florianopolis-ufsc-guia-ponta-grossa"
+            ],
+            "curto": "Renda de tradição açoriana, característica dos arredores da Lagoa da Conceição."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Floram, a Praia da Galheta tem sítios arqueológicos com inscrições rupestres, oficinas líticas e afiadores, sinais da presença de povos naquela área há cerca de 6 mil anos.",
+            "fontes": [
+              "florianopolis-floram-areas-preservacao"
+            ]
+          },
+          {
+            "texto": "Em meados do século XVIII, segundo o histórico do IBGE, foi implantada no Pântano do Sul uma armação para a pesca da baleia; o óleo era vendido pela Coroa fora de Santa Catarina.",
+            "fontes": [
+              "ibge-biblioteca-florianopolis-sc"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "florianopolitano",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-florianopolis-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -27.5975,
+          "lon": -48.5497,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 537211,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 674.844,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Florianópolis",
+          "intermediaria": "Florianópolis",
+          "mesorregiao": "Grande Florianópolis",
+          "microrregiao": "Florianópolis",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "litoral",
+          "floresta"
+        ],
+        "rotulo": "Ilha de morros com mata entre baías, com fortaleza, ponte pênsil e casario açoriano",
+        "base": "litoral",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.7
+        },
+        "agua": {
+          "modulo": "mar"
+        },
+        "vegetacao": [
+          [
+            "mata",
+            12
+          ],
+          [
+            "restinga",
+            7
+          ],
+          [
+            "redonda",
+            4
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "acoriano",
+          "casas": 10
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "forte",
+            "referencia": "fortaleza-ponta-grossa"
+          },
+          {
+            "modulo": "ponte-pensil",
+            "referencia": "ponte-hercilio-luz"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Extensão da ponte diverge (821 m na Alesc, 2026; 820 m no portal do estado); o texto usa 821 m. O portal do estado diz que a parte continental foi incorporada em 1927 e que o povoamento começou em 1637 com bandeirantes; o texto não usa essas datas e segue o IBGE (por volta de 1675). A interdição da ponte teve etapas (1982, reabertura parcial em 1988, fechamento total em 1991, segundo a Alesc em 2016); o texto usa 1982. O estilo açoriano das casas vem da tradição açoriana citada pelo portal do estado; a cidade é uma capital urbana, o que a revisão pode preferir mostrar com estilo urbano. A Fortaleza de Anhatomirim fica em Governador Celso Ramos, por isso o marco é a de Ponta Grossa. Páginas da Prefeitura de turismo ('A Cidade', 'História') estavam fora do ar e a notícia do Iphan sobre os 100 anos da ponte exigiu login."
+      }
+    },
+    "4209102": {
+      "identidade": {
+        "id": "4209102",
+        "ibge": "4209102",
+        "nome": "Joinville",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Entre a Serra do Mar e a Baía da Babitonga, a cidade dos sambaquis, das flores e da antiga estação.",
+        "resumo": "Joinville se estende dos contrafortes da Serra do Mar, a oeste, até uma planície a leste, com manguezais na Lagoa do Saguaçu e na Baía da Babitonga. Sambaquis, colinas de conchas erguidas por povos que viviam junto a mangues, lagoas e rios entre 5 mil e 2 mil anos atrás, estão entre os sítios arqueológicos da região. Segundo o histórico do IBGE, a Colônia Dona Francisca começou em 9 de março de 1851, com imigrantes da Alemanha, da Suíça e da Noruega, que se juntaram a portugueses e indígenas já estabelecidos. O distrito foi criado em 1858 e a cidade, em 1877.",
+        "fontesResumo": [
+          "joinville-cidade-em-dados-2025-ambiente-natural",
+          "joinville-cidade-em-dados-2025-ambiente-construido",
+          "ibge-biblioteca-joinville-sc"
+        ],
+        "referencias": [
+          {
+            "id": "mirante-de-joinville",
+            "tipo": "paisagem",
+            "titulo": "Mirante de Joinville",
+            "texto": "No Morro da Boa Vista, que chega a 220 metros e é protegido como Área de Relevante Interesse Ecológico, uma torre de concreto oficialmente chamada Higino Aguiar permite ver parte da cidade, a Baía da Babitonga a leste e a Serra do Mar a oeste. O trajeto até o alto tem 2,3 km e pode ser feito a pé, de bicicleta ou de ônibus.",
+            "fontes": [
+              "joinville-servico-mirante",
+              "joinville-cidade-em-dados-2025-ambiente-natural"
+            ],
+            "descoberta": {
+              "modulo": "mirante",
+              "nota": "Na maquete, uma torre de observação genérica; a forma e as proporções da torre do Morro da Boa Vista são ilustrativas."
+            },
+            "curto": "Torre no Morro da Boa Vista, com vista para a Baía da Babitonga e a Serra do Mar."
+          },
+          {
+            "id": "estacao-ferroviaria",
+            "tipo": "patrimonio",
+            "titulo": "Antiga Estação Ferroviária",
+            "texto": "O prédio da antiga Estação Ferroviária de Joinville foi construído em 1906 e tombado como patrimônio arquitetônico brasileiro em 2008. Hoje abriga a Estação da Memória, que conta a história da cidade pela arquitetura, pelos trilhos e por objetos de época. Anexo a ela fica o Memorial da Bicicleta, com cerca de 50 modelos, sobre como a bicicleta se tornou um símbolo da cidade.",
+            "fontes": [
+              "joinville-servico-estacao-da-memoria",
+              "joinville-secult-estacao-da-memoria"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação ferroviária genérica com plataforma e locomotiva pequena; fachada e cores são ilustrativas."
+            },
+            "curto": "Estação de 1906, tombada em 2008, hoje Estação da Memória e Memorial da Bicicleta."
+          },
+          {
+            "id": "cidade-das-flores",
+            "tipo": "tradicao",
+            "titulo": "Cidade das Flores",
+            "texto": "Segundo a Prefeitura, o cuidado com os jardins veio com os imigrantes europeus do século XIX. Em 1906, o presidente Afonso Pena, que veio inaugurar a estação ferroviária, teria chamado Joinville de jardim do Brasil, origem do título de Cidade das Flores. A Exposição de Flores e Artes Domiciliar, criada em 1936, tornou-se a Festa das Flores, organizada pela agremiação de orquidófilos fundada em 1938.",
+            "fontes": [
+              "joinville-noticia-cidade-das-flores"
+            ],
+            "curto": "Tradição de jardins trazida pelos imigrantes, celebrada na Festa das Flores desde 1936."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Os sítios mais antigos da região são líticos, com objetos de pedra lascada; um deles, achado no aterro sanitário de Joinville, foi datado em 8 mil anos antes do presente, segundo a Prefeitura.",
+            "fontes": [
+              "joinville-cidade-em-dados-2025-ambiente-construido"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "joinvilense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-joinville-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -26.3012,
+          "lon": -48.841,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 616317,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1127.947,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Joinville",
+          "intermediaria": "Joinville",
+          "mesorregiao": "Norte Catarinense",
+          "microrregiao": "Joinville",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "serra",
+          "litoral"
+        ],
+        "rotulo": "Cidade na planície entre a Serra do Mar e a baía, com mangue, mirante e estação",
+        "base": "litoral",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.9
+        },
+        "agua": {
+          "modulo": "costa"
+        },
+        "vegetacao": [
+          [
+            "mata",
+            12
+          ],
+          [
+            "junco",
+            6
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "marcos": [
+          {
+            "modulo": "mirante",
+            "referencia": "mirante-de-joinville"
+          },
+          {
+            "modulo": "estacao",
+            "referencia": "estacao-ferroviaria"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A formação administrativa do IBGE traz datas incoerentes para a vila (Lei Provincial de 15-03-1886, instalada em 07-01-1869, antes da cidade, de 1877); o texto omite a vila. A frase 'jardim do Brasil' vem de citação do secretário de Cultura em notícia da Prefeitura, por isso aparece como 'teria chamado'. A estação aguardava obras de restauro aprovadas pelo Iphan (páginas de 2021); o texto não promete visitação ao prédio. O portal do Museu Nacional de Imigração e Colonização estava fora do ar, por isso ele ficou de fora. 'Junco' representa o manguezal, que não tem módulo próprio."
+      }
+    },
+    "4304408": {
+      "identidade": {
+        "id": "4304408",
+        "ibge": "4304408",
+        "nome": "Canela",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Entre matas de araucária e vales, a cascata do Caracol e a igreja de pedra no centro.",
+        "resumo": "Canela fica na encosta do planalto, a cerca de 830 metros de altitude, com matas nativas, morros, vales e quedas d'água. Segundo a Prefeitura, em texto reproduzido pelo IBGE, o nome viria de uma caneleira perto da atual Praça João Corrêa, ponto de encontro e pouso de tropeiros. A partir de 1913, a estrada de ferro até Taquara, concluída em 1924, e a exploração de pinheiros perto do Caracol movimentaram o povoado. Distrito de Taquara em 1926, Canela foi elevada a município em 1944 e instalada em 1º de janeiro de 1945.",
+        "fontesResumo": [
+          "canela-ibge-enciclopedia-1959",
+          "canela-prefeitura-conheca-canela",
+          "ibge-biblioteca-canela-rs"
+        ],
+        "referencias": [
+          {
+            "id": "cascata-do-caracol",
+            "tipo": "natureza",
+            "titulo": "Cascata do Caracol",
+            "texto": "A cascata fica no Parque do Caracol, junto à Estrada do Caracol (RS-466), em área de mata nativa com trilhas e mirantes. A Enciclopédia dos Municípios do IBGE, de 1959, registrava uma queda de 110 metros; a Prefeitura cita hoje quedas d'água de 131 metros no município. As águas da cascata estão no brasão de Canela, adotado em 1963.",
+            "fontes": [
+              "canela-turismo-parque-do-caracol",
+              "canela-ibge-enciclopedia-1959",
+              "canela-prefeitura-conheca-canela"
+            ],
+            "descoberta": {
+              "modulo": "cachoeira",
+              "nota": "Na maquete, um paredão simplificado com queda d'água e poço; altura, cor da pedra e vegetação são ilustrativas."
+            },
+            "curto": "Cascata do Parque do Caracol, cujas águas aparecem no brasão de Canela."
+          },
+          {
+            "id": "catedral-de-pedra",
+            "tipo": "patrimonio",
+            "titulo": "Catedral de Pedra",
+            "texto": "A primeira capela do município, de Nossa Senhora de Lourdes, começou a ser erguida em 1928, foi inaugurada em 1932 e virou paróquia em 1937. A igreja atual, conhecida como Catedral de Pedra, segue o estilo gótico inglês, tem vitrais, nave para 800 pessoas e uma torre com carrilhão de 12 sinos de bronze, alcançado por 154 degraus.",
+            "fontes": [
+              "canela-ibge-enciclopedia-1959",
+              "canela-turismo-catedral-de-pedra",
+              "canela-turismo-sinos-da-catedral"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada com uma torre central; paredes claras e proporções são ilustrativas (a real é de pedra)."
+            },
+            "curto": "Igreja de pedra em estilo gótico inglês, com torre e carrilhão de 12 sinos de bronze."
+          },
+          {
+            "id": "floresta-nacional-de-canela",
+            "tipo": "natureza",
+            "titulo": "Floresta Nacional de Canela",
+            "texto": "Unidade de conservação de uso sustentável a cerca de 6,4 km ao norte do centro, marcada por matas com araucária na transição para os Campos de Cima da Serra. Faz parte da Reserva da Biosfera da Mata Atlântica como área núcleo, tem três trilhas e um centro de visitantes com museu sobre a história da Flona desde 1946.",
+            "fontes": [
+              "canela-turismo-flona"
+            ],
+            "curto": "Floresta nacional com matas de araucária e trilhas, ao norte do centro."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O brasão de Canela, adotado por lei municipal em 1963, traz uma caneleira, três montes verdes com as águas da Cascata do Caracol e torres ligadas por um fio elétrico, que simbolizam o sistema de Canastra, de usinas hidrelétricas do Estado.",
+            "fontes": [
+              "canela-prefeitura-conheca-canela",
+              "canela-ibge-enciclopedia-1959"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "canelense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-canela-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -29.3625,
+          "lon": -50.8111,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 48946,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 253.002,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Caxias do Sul",
+          "intermediaria": "Caxias do Sul",
+          "mesorregiao": "Metropolitana de Porto Alegre",
+          "microrregiao": "Gramado-Canela",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "serra",
+          "floresta"
+        ],
+        "rotulo": "Cidade serrana entre araucárias, com a cascata no vale e a igreja de pedra",
+        "base": "serra",
+        "cores": {
+          "grama": [
+            "#5f8448",
+            "#6e9152"
+          ]
+        },
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 1.3
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.12,
+          "direcao": 0.7
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            14
+          ],
+          [
+            "mata",
+            10
+          ],
+          [
+            "capim",
+            5
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 8
+        },
+        "marcos": [
+          {
+            "modulo": "cachoeira",
+            "referencia": "cascata-do-caracol"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "catedral-de-pedra"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Divergências: altura da Cascata do Caracol (110 m na Enciclopédia do IBGE de 1959; 131 m na Prefeitura), por isso o texto atribui cada número; o ato que criou o distrito em 1926 aparece como nº 302 (Prefeitura e Enciclopédia) e nº 309 (Biblioteca IBGE), por isso o texto dá só o ano; a Prefeitura chama 28/12/1944 de 'fundação', o texto usa elevação a município. A Enciclopédia de 1959 traz outra versão do primeiro morador (Gabriel de Souza) e diz que o nome vem de uma árvore abundante; o resumo usa a versão da Prefeitura, atribuída. A data de construção da Catedral de Pedra atual não foi encontrada em fonte oficial legível e ficou de fora. Fontes de turismo são do portal canela.com.br, mantido pela Prefeitura (Secretaria de Turismo e Cultura)."
+      }
+    },
+    "4309100": {
+      "identidade": {
+        "id": "4309100",
+        "ibge": "4309100",
+        "nome": "Gramado",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na encosta do planalto, entre hortênsias, araucárias, o lago do parque e o festival de cinema.",
+        "resumo": "Gramado fica na encosta nordeste do planalto gaúcho, sobre rocha basáltica, com nascentes que correm para as bacias dos rios Caí e dos Sinos. Segundo o IBGE, os primeiros moradores chegaram em 1875, seguidos por descendentes de imigrantes alemães e italianos. O distrito de Linha Nova, criado em 1904 em Taquara, passou a se chamar Gramado em 1913; o município foi criado em 1954 e instalado em 1955. Segundo a Câmara Municipal, o nome lembra um pequeno campo com água e árvores onde tropeiros descansavam. Hoje a cidade vive do turismo e de eventos como o Festival de Cinema.",
+        "fontesResumo": [
+          "gramado-camara-historia",
+          "gramado-ibge-enciclopedia-1959",
+          "ibge-biblioteca-gramado-rs"
+        ],
+        "referencias": [
+          {
+            "id": "lago-negro",
+            "tipo": "paisagem",
+            "titulo": "Lago Negro",
+            "texto": "O Lago Negro já aparecia entre as atrações turísticas de Gramado na Enciclopédia dos Municípios do IBGE, de 1959, ao lado da Cascata dos Narcisos, do Parque Hotel e do Tênis Clube. Hoje a área forma o Parque do Lago Negro, espaço público do município.",
+            "fontes": [
+              "gramado-ibge-enciclopedia-1959",
+              "gramado-camara-parque-lago-negro-2025"
+            ],
+            "descoberta": {
+              "modulo": "lago-ilha",
+              "nota": "Na maquete, um lago simplificado com ilha, deck e árvores; a ilha, o deck e as árvores são ilustrativos."
+            },
+            "curto": "Lago de parque já citado pelo IBGE em 1959 entre as atrações turísticas de Gramado."
+          },
+          {
+            "id": "festival-de-cinema",
+            "tipo": "cultura",
+            "titulo": "Festival de Cinema de Gramado",
+            "texto": "Reconhecido pelo Instituto Nacional do Cinema, o festival estreou em janeiro de 1973, organizado pela prefeitura com parceiros. O troféu Kikito, escultura de Elizabeth Rosenfeld, nasceu nessa primeira edição. Desde 1992 o festival mantém uma mostra ibero-americana e, desde 2014, é administrado pela autarquia municipal Gramadotur.",
+            "fontes": [
+              "gramado-festival-o-festival"
+            ],
+            "curto": "Festival de cinema criado em 1973, que entrega o troféu Kikito."
+          },
+          {
+            "id": "festa-da-colonia",
+            "tipo": "tradicao",
+            "titulo": "Festa da Colônia",
+            "texto": "Organizada pela Gramadotur, autarquia municipal de turismo e cultura, a festa reúne desfile cultural de carretas, feiras de produtos artesanais e locais, cozinhas alemãs e italianas, grupos folclóricos e bandinhas. A Câmara Municipal a cita entre os eventos anuais da cidade, ao lado do Festival de Cinema e do Natal Luz.",
+            "fontes": [
+              "gramado-gramadotur-festa-da-colonia",
+              "gramado-gramadotur-sobre",
+              "gramado-camara-historia"
+            ],
+            "curto": "Festa anual com desfile de carretas, cozinhas alemãs e italianas e grupos folclóricos."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico do IBGE, quando a sede do distrito foi transferida, em 1913, chegou a ser escolhido o nome Dinizópolis, em homenagem a Diniz Martins Rangel, intendente de Taquara; prevaleceu Gramado.",
+            "fontes": [
+              "ibge-biblioteca-gramado-rs"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "gramadense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-gramado-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -29.3788,
+          "lon": -50.871,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 40134,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 239.341,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Caxias do Sul",
+          "intermediaria": "Caxias do Sul",
+          "mesorregiao": "Metropolitana de Porto Alegre",
+          "microrregiao": "Gramado-Canela",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "serra",
+          "urbano"
+        ],
+        "rotulo": "Cidade na encosta da serra, com araucárias, hortênsias e o lago do parque",
+        "base": "serra",
+        "cores": {
+          "grama": [
+            "#6f9150",
+            "#7f9c5c"
+          ]
+        },
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.8
+        },
+        "agua": {
+          "modulo": "lago"
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            9
+          ],
+          [
+            "mata",
+            7
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "arbusto",
+            8
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 2
+        },
+        "marcos": [
+          {
+            "modulo": "lago-ilha",
+            "referencia": "lago-negro"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Divergências: o IBGE (Biblioteca) diz que os trilhos chegaram em 1919 e a Enciclopédia de 1959 diz 1922; a Câmara numera o distrito de Linha Nova como 4º e o IBGE como 5º; por isso o texto não dá a data do trem nem o número do distrito. O site da Prefeitura de Gramado só carrega por JavaScript e não pôde ser citado; não achei fonte oficial legível para a origem do Lago Negro (versões sobre incêndio e mudas da Floresta Negra ficaram de fora). O Natal Luz só entrou como citação da Câmara. A Gramadotur também organiza o Natal Luz; a referência à Festa da Colônia não tem número de visitantes de propósito."
+      }
+    },
+    "5002209": {
+      "identidade": {
+        "id": "5002209",
+        "ibge": "5002209",
+        "nome": "Bonito",
+        "uf": "MS",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na Serra da Bodoquena, entre rios de água clara, grutas e cachoeiras, à beira do Rio Formoso.",
+        "resumo": "Bonito fica na região da Serra da Bodoquena, onde o Cerrado guarda um trecho de Mata Atlântica e rios de águas esverdeadas e azuladas correm entre cachoeiras, cânions e sumidouros. O Rio Formoso, com banhados e nascentes, é o eixo da paisagem e do turismo da cidade. O núcleo urbano começou em terras da Fazenda Rincão Bonito, onde o capitão Luiz da Costa Leite Falcão se estabeleceu em 1869. Bonito foi distrito de Miranda a partir de 1915 e virou município em 1948, com instalação em 1949.",
+        "fontesResumo": [
+          "bonito-icmbio-parna-serra-da-bodoquena",
+          "bonito-prefeitura-bacia-rio-formoso-2026",
+          "ibge-biblioteca-bonito-ms",
+          "bonito-prefeitura-historia"
+        ],
+        "referencias": [
+          {
+            "id": "gruta-do-lago-azul",
+            "tipo": "natureza",
+            "titulo": "Gruta do Lago Azul",
+            "texto": "Tombada pelo Iphan em 1978 e protegida como monumento natural estadual desde 2001, a gruta tem um salão de piso inclinado que desce até um lago subterrâneo com mais de 50 metros de extensão. A luz do sol entra pela boca, de cerca de 40 metros de diâmetro, e deixa a água azul intensa entre setembro e fevereiro. No lago foram achados fósseis de animais extintos do Pleistoceno, como preguiças gigantes.",
+            "fontes": [
+              "bonito-fundtur-cessao-gruta-2021",
+              "bonito-imasul-monumento-gruta-do-lago-azul"
+            ],
+            "curto": "Gruta com lago subterrâneo de águas azuis, tombada pelo Iphan em 1978 e monumento natural desde 2001."
+          },
+          {
+            "id": "balneario-municipal",
+            "tipo": "paisagem",
+            "titulo": "Balneário Municipal no Rio Formoso",
+            "texto": "O Balneário Municipal fica às margens do Rio Formoso e tem decks de acesso às áreas de banho, reformados e ampliados pela Prefeitura em 2026. A licença ambiental do Imasul limita a visitação para reduzir os impactos no rio: em 2023, eram 1.500 pessoas por dia, 800 vagas gratuitas para moradores e 700 para turistas com voucher.",
+            "fontes": [
+              "bonito-prefeitura-monitoramento-rio-formoso-2021",
+              "bonito-prefeitura-decks-balneario-2026",
+              "bonito-prefeitura-entrada-balneario-2023"
+            ],
+            "descoberta": {
+              "modulo": "trapiche",
+              "nota": "Na maquete, um deck simplificado sobre o rio; não reproduz o balneário, e o quiosque e as cores são ilustrativos."
+            },
+            "curto": "Área de banho no Rio Formoso, com decks e visitação limitada pela licença ambiental; moradores entram de graça."
+          },
+          {
+            "id": "serra-da-bodoquena",
+            "tipo": "natureza",
+            "titulo": "Parque Nacional da Serra da Bodoquena",
+            "texto": "Criado em 2000, o parque tem cerca de 77 mil hectares em Bonito, Bodoquena e Jardim. Segundo o ICMBio, é um trecho de Mata Atlântica em meio ao Cerrado, com rios de águas esverdeadas e azuladas, cachoeiras, matas ciliares, cânions, sumidouros e ressurgências. A visita aos atrativos do parque exige condutor credenciado pelo ICMBio.",
+            "fontes": [
+              "bonito-icmbio-parna-serra-da-bodoquena"
+            ],
+            "descoberta": {
+              "modulo": "cachoeira",
+              "nota": "Na maquete, uma queda d'água genérica num paredão; não representa uma cachoeira específica do parque."
+            },
+            "curto": "Parque de cerca de 77 mil hectares, criado em 2000, com cachoeiras, cânions e rios de água clara."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Turistas entram no Balneário Municipal com voucher comprado nas agências da cidade, sistema que o atrativo adotou em 2014; desde 2021, o check-in na Gruta do Lago Azul e no balneário é digital.",
+            "fontes": [
+              "bonito-prefeitura-voucher-balneario-2014",
+              "bonito-prefeitura-voucher-digital-2021"
+            ]
+          },
+          {
+            "texto": "Segundo o histórico do IBGE, o distrito passou a se chamar Rincão em 1944, quando a área esteve ligada ao Território Federal de Ponta Porã, e retomou o nome Bonito ao virar município, em 1948.",
+            "fontes": [
+              "ibge-biblioteca-bonito-ms"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "bonitense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-bonito-ms"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -21.1277,
+          "lon": -56.4872,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 23659,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 5373.016,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Jardim",
+          "intermediaria": "Corumbá",
+          "mesorregiao": "Sudoeste de Mato Grosso do Sul",
+          "microrregiao": "Bodoquena",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "rio",
+          "cerrado",
+          "serra"
+        ],
+        "rotulo": "Cidade pequena entre a serra e o Rio Formoso, com mata ciliar, cerrado, deck e cachoeira",
+        "base": "cerrado",
+        "cores": {
+          "grama": [
+            "#8fa35a",
+            "#7f9a52"
+          ]
+        },
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.6
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.2,
+          "direcao": -0.4
+        },
+        "vegetacao": [
+          [
+            "mata",
+            10
+          ],
+          [
+            "cerrado",
+            8
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 0
+        },
+        "marcos": [
+          {
+            "modulo": "trapiche",
+            "referencia": "balneario-municipal"
+          },
+          {
+            "modulo": "cachoeira",
+            "referencia": "serra-da-bodoquena"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O histórico do IBGE dá a lei de criação do distrito como de 11/11/1915, e a página da Prefeitura, de 11/06/1915 (o texto usa só o ano); a Prefeitura diz ainda que Bonito 'foi fundada em 1927', data que o IBGE não registra e o texto não usa. O tombamento da Gruta do Lago Azul pelo Iphan em 1978 vem de notícia da Fundtur (2021); vale conferir na lista de bens tombados do Iphan. Números do Balneário (1.500 por dia, 800 vagas gratuitas) são de setembro de 2023 e estão datados no texto; podem ter mudado. A coloração azul da gruta entre setembro e fevereiro é descrita pela Fundtur; o texto não promete a cor na visita. A Prefeitura não tem página de turismo com texto histórico próprio; Rio da Prata e Buraco das Araras ficam em Jardim e foram deixados de fora. Não há marco de gruta na maquete, por isso a Gruta do Lago Azul ficou só com texto."
+      }
+    },
+    "5103403": {
+      "identidade": {
+        "id": "5103403",
+        "ibge": "5103403",
+        "nome": "Cuiabá",
+        "uf": "MT",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "À beira do rio Cuiabá, um centro histórico nascido do ouro, o obelisco do centro geodésico e a viola de cocho.",
+        "resumo": "Cuiabá está na Depressão Cuiabana, de superfícies aplainadas, às margens do rio Cuiabá, que a une a Várzea Grande, e do rio Coxipó; parques urbanos guardam trechos de Cerrado. Segundo o histórico do IBGE, a bandeira de Pascoal Moreira Cabral encontrou ouro na região e assinou a ata de fundação em 8 de abril de 1719, junto ao Coxipó. O lugar foi elevado a vila em 1727, a cidade em 1818 e a capital da província de Mato Grosso em 1835. O centro histórico tombado pelo Iphan reúne cerca de 400 edificações e o traçado colonial junto ao córrego da Prainha.",
+        "fontesResumo": [
+          "cuiaba-sema-mae-bonifacia-resumo-2013",
+          "cuiaba-turismo-a-cidade",
+          "cuiaba-camara-horto-florestal",
+          "ibge-biblioteca-cuiaba-mt",
+          "cuiaba-iphan-mt-patrimonio-material"
+        ],
+        "referencias": [
+          {
+            "id": "igreja-do-rosario-e-sao-benedito",
+            "tipo": "patrimonio",
+            "titulo": "Igreja de Nossa Senhora do Rosário e São Benedito",
+            "texto": "Construída em terra perto do córrego da Prainha, onde estavam as primeiras minas de ouro, a igreja ganhou a configuração atual ainda no século XVIII. A fachada é simples, e os altares do interior têm talha dourada e prateada. Foi tombada pelo Iphan em 1975 e pelo Estado em 1987, e é o palco da Festa de São Benedito.",
+            "fontes": [
+              "cuiaba-camara-igreja-do-rosario",
+              "cuiaba-ipdu-patrimonio-historico-2010"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada; a posição da torre, a capela lateral e as cores são ilustrativas."
+            },
+            "curto": "Igreja de terra do século XVIII junto ao córrego da Prainha, tombada pelo Iphan em 1975 e palco da Festa de São Benedito."
+          },
+          {
+            "id": "marco-do-centro-geodesico",
+            "tipo": "patrimonio",
+            "titulo": "Marco do Centro Geodésico da América do Sul",
+            "texto": "Na Praça Pascoal Moreira Cabral, o antigo Campo d’Ourique, fica o ponto que Cândido Rondon calculou em 1909 como centro geodésico da América do Sul, confirmado pelo Exército em 1975. O marco de alvenaria feito pelo artesão Júlio Caetano em 1909 está protegido por vidros sob um obelisco de mármore de cerca de 20 metros, erguido em 1973.",
+            "fontes": [
+              "cuiaba-iphan-mt-patrimonio-material",
+              "cuiaba-camara-centro-geodesico"
+            ],
+            "descoberta": {
+              "modulo": "monumento",
+              "nota": "Na maquete, um obelisco genérico numa praça; altura e proporções são ilustrativas."
+            },
+            "curto": "Obelisco de mármore de cerca de 20 metros sobre o marco de 1909, ponto que Rondon calculou como centro geodésico da América do Sul."
+          },
+          {
+            "id": "viola-de-cocho-cururu-siriri",
+            "tipo": "tradicao",
+            "titulo": "Viola de cocho, cururu e siriri",
+            "texto": "A viola de cocho é escavada numa tora de madeira, com a mesma técnica dos cochos de alimentar o gado, e acompanha o cururu e o siriri ao lado do ganzá e do mocho. No cururu, os homens cantam louvores a santos; o siriri é dançado em pares. O modo de fazer foi registrado pelo Iphan em 2005, e Cuiabá está entre os municípios do registro.",
+            "fontes": [
+              "cuiaba-iphan-viola-de-cocho",
+              "cuiaba-turismo-a-cidade"
+            ],
+            "curto": "Viola escavada numa tora de madeira que acompanha o cururu e o siriri; modo de fazer registrado pelo Iphan em 2005."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, em texto reproduzido pelo IBGE, há várias versões para o nome. Uma o liga à palavra bororo Ikuiapá, “lugar da ikuia”, a flecha de pescar; outra, ao guarani Kyyaverá, “rio de lontra brilhante”; uma terceira, às árvores de cuia à beira do rio.",
+            "fontes": [
+              "ibge-biblioteca-cuiaba-mt"
+            ]
+          },
+          {
+            "texto": "O Parque Estadual Mãe Bonifácia, com 77 hectares de Cerrado dentro da cidade, homenageia uma curandeira escravizada que viveu no século XIX num quilombo nos arredores de Cuiabá; o nome dela também batiza o córrego que atravessa o parque.",
+            "fontes": [
+              "cuiaba-sema-mae-bonifacia-resumo-2013"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "cuiabano (papa peixe)",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-cuiaba-mt"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -15.5676,
+          "lon": -56.075,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 650877,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 4327.448,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Cuiabá",
+          "intermediaria": "Cuiabá",
+          "mesorregiao": "Centro-Sul Mato-grossense",
+          "microrregiao": "Cuiabá",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio",
+          "cerrado"
+        ],
+        "rotulo": "Cidade à beira do rio, com a igreja do Rosário e o obelisco do centro geodésico",
+        "base": "cerrado",
+        "cores": {
+          "grama": [
+            "#a5a060",
+            "#979657"
+          ]
+        },
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.28,
+          "direcao": 0.6
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            8
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "arbusto",
+            5
+          ],
+          [
+            "capim",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-do-rosario-e-sao-benedito"
+          },
+          {
+            "modulo": "monumento",
+            "referencia": "marco-do-centro-geodesico"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A data de construção da Igreja do Rosário diverge (por volta de 1730 na Câmara Municipal; 1750 a 1751 na tabela do IPDU/Sedtur de 2010); o texto diz só século XVIII. A data do tombamento do centro histórico diverge (Iphan: provisório em 1987, definitivo em 1988 e homologado em 1992; Câmara: 24/03/1993); o texto não dá data. O registro da viola de cocho aparece com data de 14/01/2005 e, na descrição do Iphan, como de 2004 (aprovação do Conselho em 01/12/2004); o texto usa 2005. Ficaram de fora o superlativo da Câmara sobre a talha da igreja e a 'mais longa festa religiosa do estado'. A coordenada de longitude do marco difere entre o Iphan/Câmara (56º06’55”) e o portal de turismo; o texto não dá coordenadas. Páginas de notícia do Iphan sobre o Largo do Rosário exigem login (401) e não foram usadas."
+      }
+    },
+    "5201108": {
+      "identidade": {
+        "id": "5201108",
+        "ibge": "5201108",
+        "nome": "Anápolis",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No Vale das Antas, a cidade que nasceu de uma capela a Sant'Ana no caminho dos tropeiros.",
+        "resumo": "Anápolis fica numa região cortada pelos cursos d'água João Cezário, Góis e Antas, que serviam de pouso e orientação aos tropeiros a caminho das lavras de ouro de Goiás no século XVIII. Com o fim do ouro, muitos viajantes se fixaram às margens do Antas. Em 1870, moradores doaram terras para o Patrimônio de Nossa Senhora de Santana, e a capela foi erguida no ano seguinte. Hoje o município se organiza pelas bacias de rios como o das Antas e o Piancó, com áreas de proteção para a água e para o Cerrado.",
+        "fontesResumo": [
+          "ibge-biblioteca-anapolis-go",
+          "anapolis-prefeitura-diagnostico-legislacao-2026"
+        ],
+        "referencias": [
+          {
+            "id": "estacao-ferroviaria",
+            "tipo": "patrimonio",
+            "titulo": "Estação Ferroviária Prefeito José Fernandes Valente",
+            "texto": "Projetada pelo engenheiro Wenefredo Barcelar Portela, a estação fica em frente à Praça Americano do Brasil e foi inaugurada em agosto de 1933, segundo a Prefeitura. Entre 1978 e 1985 abrigou o Tiro de Guerra do Exército e foi tombada como patrimônio histórico por lei municipal de 1991.",
+            "fontes": [
+              "anapolis-prefeitura-estacao-ferroviaria"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação genérica com plataforma e locomotiva; forma, cores e trilho são ilustrativos."
+            },
+            "curto": "Estação inaugurada em 1933, em frente à Praça Americano do Brasil, tombada pelo município em 1991."
+          },
+          {
+            "id": "museu-historico",
+            "tipo": "patrimonio",
+            "titulo": "Museu Histórico Alderico Borges de Carvalho",
+            "texto": "Casa em estilo colonial construída por volta de 1892, com paredes de adobe e telhas de barro, que foi residência e comércio de José da Silva Batista, o Zeca Batista, primeiro intendente da Vila de Sant'Anna das Antas. O neto Alderico Borges de Carvalho recuperou o imóvel, e o museu foi aberto à comunidade em julho de 1975. O prédio é tombado por lei municipal de 1991.",
+            "fontes": [
+              "anapolis-prefeitura-museu-historico"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão colonial simplificado; número de janelas e cores são ilustrativos."
+            },
+            "curto": "Casarão colonial de cerca de 1892, aberto como museu em 1975 e tombado pelo município."
+          },
+          {
+            "id": "praca-e-festa-de-santana",
+            "tipo": "tradicao",
+            "titulo": "Praça e festa de Sant'Ana",
+            "texto": "O antigo Largo de Sant'Ana, hoje Praça Santana, é tido pela Prefeitura como a gênese do município. A capela recebeu a bênção em 3 de novembro de 1871, e a paróquia foi criada em 1873. A festa e a novena em devoção a Sant'Ana, padroeira da cidade, nasceram praticamente junto com a capela.",
+            "fontes": [
+              "anapolis-prefeitura-praca-santana"
+            ],
+            "curto": "Largo onde a cidade começou, com a capela de 1871 e a festa da padroeira Sant'Ana."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, conta-se que em 1859 o burrico que levava a imagem de Sant'Ana de dona Ana das Dores de Almeida empacou no Vale das Antas; anos depois, o filho dela, Gomes de Souza Ramos, ajudou a fundar a capela.",
+            "fontes": [
+              "anapolis-prefeitura-praca-santana"
+            ]
+          },
+          {
+            "texto": "O histórico do IBGE separa as etapas: distrito de Santana de Campos Ricos em 1873, vila de Santana das Antas em 1887 (instalada em 1892) e cidade com o nome Anápolis em 31 de julho de 1907.",
+            "fontes": [
+              "ibge-biblioteca-anapolis-go"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "anapolino",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-anapolis-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -16.328,
+          "lon": -48.9573,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 398869,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 935.672,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Anápolis",
+          "intermediaria": "Goiânia",
+          "mesorregiao": "Centro Goiano",
+          "microrregiao": "Anápolis",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado",
+          "rio"
+        ],
+        "rotulo": "Cidade do Cerrado goiano à beira do córrego das Antas, com a estação e o casarão do museu",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "vereda",
+          "largura": 0.13
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            9
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "arbusto",
+            5
+          ],
+          [
+            "capim",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "estacao-ferroviaria"
+          },
+          {
+            "modulo": "casarao",
+            "referencia": "museu-historico"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A página da Prefeitura data a inauguração da estação José Fernandes Valente em agosto de 1933, mas a mesma página diz que o ramal ferroviário chegou a Anápolis em 1935 (16 anos antes de 1951); o texto atribui a data à Prefeitura. A Prefeitura chama a festa de Sant'Ana de 'a mais antiga da região' (superlativo deixado de fora). A lenda do burrico vai como relato atribuído. Não achei fonte primária para relevo e altitude; o relevo plano é escolha genérica de planalto e deve ser conferido. A origem do nome Anápolis não foi incluída por falta de fonte primária acessível."
+      }
+    },
+    "5201405": {
+      "identidade": {
+        "id": "5201405",
+        "ibge": "5201405",
+        "nome": "Aparecida de Goiânia",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Cidade que cresceu em volta de uma igreja de 1922 e de um cruzeiro de aroeira, com Cerrado e nascentes na Serra da Areia.",
+        "resumo": "Aparecida de Goiânia fica ao sul da capital goiana, ligada ao Sudeste pela BR-153, e guarda Cerrado, nascentes e o ribeirão Lages na APA Serra da Areia. Segundo a Prefeitura, em texto reproduzido pelo IBGE, a história começa em 1922, quando fazendeiros doaram terras para um patrimônio da Igreja e um cruzeiro de aroeira marcou a primeira missa campal. A capela e depois a igreja foram erguidas com ajuda dos moradores, e o lugar passou a ser chamado de Arraial de Aparecida. Foi distrito de Goialândia a partir de 1958 e virou município, desmembrado de Goiânia, em 1963.",
+        "fontesResumo": [
+          "aparecida-de-goiania-prefeitura-a-cidade",
+          "aparecida-de-goiania-apa-serra-da-areia-2025",
+          "ibge-biblioteca-aparecida-de-goiania-go"
+        ],
+        "referencias": [
+          {
+            "id": "santuario-nossa-senhora-aparecida",
+            "tipo": "patrimonio",
+            "titulo": "Santuário Nossa Senhora Aparecida (Igreja Matriz)",
+            "texto": "Erguida a partir de 1922 pelo carpinteiro João Batista de Toledo, com madeira, adobe e telha doados pelos moradores, a igreja teve a primeira missa no interior em 1924. Tem paredes de adobe, madeira de aroeira e detalhes em branco e azul, e é monumento histórico e cultural por lei municipal de 1985. Em frente, na Praça Matriz, fica a cruz de aroeira dos fundadores. Virou santuário em 2018.",
+            "fontes": [
+              "aparecida-de-goiania-santuario-restauracao-2024",
+              "aparecida-de-goiania-santuario-elevacao-2018",
+              "aparecida-de-goiania-prefeitura-a-cidade"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada; torre, proporções e cores são ilustrativas."
+            },
+            "curto": "Igreja começada em 1922, de adobe e aroeira, com a cruz dos fundadores em frente; monumento municipal desde 1985."
+          },
+          {
+            "id": "apa-serra-da-areia",
+            "tipo": "natureza",
+            "titulo": "APA Serra da Areia",
+            "texto": "Área de Proteção Ambiental criada por lei municipal em 2015, com cerca de 59,66 km² de Cerrado, fauna e flora nativas, nascentes e cursos d’água como o ribeirão Lages, que abastece cerca de 40 bairros. Não é parque público: reúne 136 glebas privadas cujos donos devem preservar os recursos naturais.",
+            "fontes": [
+              "aparecida-de-goiania-apa-serra-da-areia-2025",
+              "aparecida-de-goiania-serra-da-areia-ibama-2024"
+            ]
+          },
+          {
+            "id": "folia-de-reis-e-catira",
+            "tipo": "tradicao",
+            "titulo": "Folia de Reis e catira",
+            "texto": "A catira e a Folia de Reis animavam as festas da padroeira na Praça Matriz e nas fazendas. Segundo a Prefeitura, o grupo Folia Aparecidense atua há mais de cem anos: os foliões percorrem as ruas cantando e rezando e entram nas casas que aceitam receber a Bandeira de Santo Reis. A Associação dos Catireiros reúne catira, folia e fiandeiras em encontros na cidade.",
+            "fontes": [
+              "aparecida-de-goiania-catireiros-2023",
+              "aparecida-de-goiania-folia-de-reis-2024"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O histórico do IBGE separa as datas: o município foi criado com o nome de Aparecida de Goiânia, ex-Goialândia, pela Lei Estadual nº 4.927, de 14 de novembro de 1963, e instalado em 1º de janeiro de 1964; o distrito de Vila Brasília foi criado em 1968.",
+            "fontes": [
+              "ibge-biblioteca-aparecida-de-goiania-go"
+            ]
+          },
+          {
+            "texto": "O cruzeiro de aroeira da primeira missa campal, de 3 de maio de 1922, foi levado a pé por uma multidão da Fazenda Santo Antônio até a frente da Igreja Matriz.",
+            "fontes": [
+              "ibge-biblioteca-aparecida-de-goiania-go",
+              "aparecida-de-goiania-prefeitura-a-cidade"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "aparecidense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-aparecida-de-goiania-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -16.8227,
+          "lon": -49.2447,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 527796,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 279.954,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Goiânia",
+          "intermediaria": "Goiânia",
+          "mesorregiao": "Centro Goiano",
+          "microrregiao": "Goiânia",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Cidade no Cerrado, com a igreja da Praça Matriz e a Serra da Areia",
+        "base": "cerrado",
+        "cores": {
+          "grama": [
+            "#a8a362",
+            "#9b9a5a"
+          ]
+        },
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.4
+        },
+        "agua": {
+          "modulo": "vereda",
+          "largura": 0.12
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            9
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "arbusto",
+            5
+          ],
+          [
+            "capim",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 2
+        },
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "santuario-nossa-senhora-aparecida"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A Serra da Areia é área privada (136 glebas), sem visitação pública; o texto não convida a visitar e por isso não virou marco. A edição do Encontro de Catireiros aparece como 25ª em 2023 e em 2024 nas notícias da Prefeitura; o texto não dá número. A primeira missa aparece em 3/5/1922 (cruzeiro, no histórico do IBGE) e em 11/5/1922 (notícia de 2018, ao redor da cruz); o texto usa só o ano e cita o cruzeiro. Ficou de fora o museu ITAME, que só abre em novembro de 2026. O nome da Serra aparece como 'da Areia' (Prefeitura) e 'das Areias' em notícias antigas; o texto usa 'Serra da Areia'."
+      }
+    },
+    "5300108": {
+      "identidade": {
+        "id": "5300108",
+        "ibge": "5300108",
+        "nome": "Brasília",
+        "uf": "DF",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No Planalto Central, entre o Cerrado, o Lago Paranoá e os eixos do Plano Piloto.",
+        "resumo": "Brasília ocupa o Distrito Federal no Planalto Central, em pleno Cerrado, num divisor natural de três grandes regiões hidrográficas: Tocantins-Araguaia, São Francisco e Paraná. O clima tem uma estação chuvosa, de novembro a março, e outra seca. Antes da nova capital, o território tinha fazendas e vilas goianas como Planaltina e Brazlândia. A construção começou em 1956, e a cidade foi inaugurada em 21 de abril de 1960; os primeiros moradores ficaram conhecidos como candangos. A população se formou com migrantes de várias regiões do país.",
+        "fontesResumo": [
+          "brasilia-ipedf-panorama-aguas-2020",
+          "brasilia-setur-historia-da-cidade",
+          "brasilia-secec-patrimonio-cultural",
+          "ibge-biblioteca-brasilia-df"
+        ],
+        "referencias": [
+          {
+            "id": "plano-piloto",
+            "tipo": "patrimonio",
+            "titulo": "Plano Piloto, patrimônio da humanidade",
+            "texto": "O traçado saiu de um concurso público vencido por Lucio Costa: dois eixos que se cruzam em ângulo reto, com as superquadras das Asas Sul e Norte no Eixo Rodoviário. A organização em quatro escalas (monumental, residencial, gregária e bucólica) marca o conjunto, tombado pelo Distrito Federal em 1987 e pelo Iphan em 1992, e inscrito pela Unesco na Lista do Patrimônio da Humanidade em dezembro de 1987.",
+            "fontes": [
+              "ibge-biblioteca-brasilia-df",
+              "brasilia-setur-historia-da-cidade",
+              "brasilia-secec-patrimonio-material"
+            ],
+            "curto": "Traçado de Lucio Costa com dois eixos em cruz, inscrito pela Unesco em 1987."
+          },
+          {
+            "id": "lago-paranoa",
+            "tipo": "paisagem",
+            "titulo": "Lago Paranoá",
+            "texto": "Lago artificial idealizado pela Missão Cruls, em 1894, e concretizado na construção de Brasília. Envolve os eixos do Plano Piloto e foi criado também para amenizar o clima seco da região. O acesso à orla é livre em pontos como o Pontão do Lago Sul, o Deck Sul, a Ermida Dom Bosco e o Calçadão do Lago Norte.",
+            "fontes": [
+              "brasilia-ipedf-panorama-aguas-2020",
+              "brasilia-setur-historia-da-cidade",
+              "brasilia-setur-pontos-turisticos"
+            ],
+            "descoberta": {
+              "modulo": "trapiche",
+              "nota": "Na maquete, um píer genérico de madeira sobre o lago; não reproduz nenhum deck ou obra específica da orla."
+            },
+            "curto": "Lago artificial idealizado pela Missão Cruls em 1894 e formado na construção de Brasília."
+          },
+          {
+            "id": "pedra-fundamental",
+            "tipo": "patrimonio",
+            "titulo": "Pedra Fundamental, em Planaltina",
+            "texto": "Um decreto de 18 de janeiro de 1922 determinou o assentamento da Pedra Fundamental da futura capital, lançada em 7 de setembro de 1922, no centenário da Independência, no Morro do Centenário, em Planaltina. O monumento tem a forma de um obelisco piramidal e é tombado pelo Distrito Federal desde 1982.",
+            "fontes": [
+              "brasilia-ra-planaltina-conheca",
+              "brasilia-unb-pedra-fundamental-2022",
+              "brasilia-setur-pontos-turisticos",
+              "brasilia-secec-patrimonio-material"
+            ],
+            "descoberta": {
+              "modulo": "monumento",
+              "nota": "Na maquete, um obelisco genérico sobre pedestal; a praça em volta e as proporções são ilustrativas."
+            },
+            "curto": "Obelisco lançado em 7 de setembro de 1922 em Planaltina, tombado pelo Distrito Federal em 1982."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico reproduzido pelo IBGE, José Bonifácio propôs em 1823 uma nova capital no interior do Brasil e já sugeria o nome Brasília.",
+            "fontes": [
+              "ibge-biblioteca-brasilia-df"
+            ]
+          },
+          {
+            "texto": "Até uma árvore entrou na lista de bens tombados do Distrito Federal: o buriti da Praça Municipal, por decreto de 30 de maio de 1985.",
+            "fontes": [
+              "brasilia-secec-patrimonio-material"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "brasiliense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-brasilia-df"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -15.7843,
+          "lon": -47.9081,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 2817381,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 5760.784,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Distrito Federal",
+          "intermediaria": "Distrito Federal",
+          "mesorregiao": "Distrito Federal",
+          "microrregiao": "Brasília",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Cidade planejada no Cerrado do Planalto Central, à beira do lago, com o obelisco de 1922",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "lago"
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            9
+          ],
+          [
+            "redonda",
+            7
+          ],
+          [
+            "arbusto",
+            5
+          ],
+          [
+            "capim",
+            6
+          ],
+          [
+            "buriti",
+            2
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 6,
+          "predios": 5
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "trapiche",
+            "referencia": "lago-paranoa"
+          },
+          {
+            "modulo": "monumento",
+            "referencia": "pedra-fundamental"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Município de Brasília coincide com o Distrito Federal; o texto trata do DF inteiro. Plano de Lucio Costa e edifícios de Oscar Niemeyer são obras autorais: o Plano Piloto ficou só com texto (sem marco) e nenhum prédio de Niemeyer (nem a Torre de TV, de Lucio Costa) foi usado como forma. O píer do lago é genérico (a fonte só cita Deck Sul e Pontão como acessos). Fontes oficiais usam superlativos ('primeiro bem moderno' na Unesco, 'mais antiga RA' para Planaltina), deixados de fora. A Setur diz que a Unesco inscreveu Brasília em dezembro de 1987; o tombamento distrital é de 14/10/1987 e o do Iphan, Portaria 314/1992. Agência Brasília e UNESCO (whc) recusaram acesso (403)."
       }
     }
   }

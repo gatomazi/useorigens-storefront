@@ -8,9 +8,11 @@
 //   <out>/indice.json            every place with at least one design (search index)
 //   <out>/lugares/<key>.json     one file per place (store page, one product per design family, IBGE point and regions)
 //   prototipos/meu-pequeno-mundo/contexto/perfis-cidades.json   copy of data/mundo/perfis-cidades.json (gitignored there)
+//   prototipos/meu-pequeno-mundo/contexto/perfis/<key>.json     one profile per file, as /api/mundo/perfis/<key>.json serves it
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileKey, indiceDoMundo, lugarDoMundo } from "../src/lib/mundo/catalogo";
+import { idsComPerfil, perfilDoMundo } from "../src/lib/mundo/perfis";
 import { REGION_SLUGS, isRegionSlug, type RegionSlug } from "../src/lib/geo/regions";
 import { readSnapshotSync } from "../src/lib/catalog/snapshot-file";
 
@@ -45,6 +47,9 @@ writeFileSync(path.join(outDir, "indice.json"), JSON.stringify({ v: 1, geradoEm:
 const contexto = path.resolve("prototipos/meu-pequeno-mundo/contexto");
 mkdirSync(contexto, { recursive: true });
 copyFileSync(path.resolve("data/mundo/perfis-cidades.json"), path.join(contexto, "perfis-cidades.json"));
+rmSync(path.join(contexto, "perfis"), { recursive: true, force: true });
+mkdirSync(path.join(contexto, "perfis"));
+for (const id of idsComPerfil()) writeFileSync(path.join(contexto, "perfis", `${fileKey(id)}.json`), JSON.stringify(perfilDoMundo(fileKey(id))));
 
 console.log(`${index.length} lugares, ${products} produtos, ${comPonto} com ponto do IBGE → ${path.relative(process.cwd(), outDir)}`);
 for (const region of regions) console.log(`  ${region}: ${index.filter((p) => p.r === region).length}`);

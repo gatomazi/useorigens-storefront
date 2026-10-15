@@ -68,7 +68,7 @@ const esperarEvento = async (coletas, nome, filtro = () => true, ms = 20000) => 
 // ---------------------------------------------------------------- 1. flag nos três modos (HTTP, sem navegador)
 for (const [modo, base] of [["off", OFF], ["pagina", PAGINA], ["on", ON]]) {
   if (!base) continue;
-  const pagina = await status(`${base}/meu-pequeno-mundo`), indice = await status(`${base}/api/mundo/indice`), perfis = await status(`${base}/api/mundo/perfis`);
+  const pagina = await status(`${base}/meu-pequeno-mundo`), indice = await status(`${base}/api/mundo/indice`), perfis = await status(`${base}/api/mundo/perfis/4106902.json`);
   const home = await html(`${base}/sul`), cidade = await html(`${base}/sul/pr/curitiba`);
   const temEntradas = { home: home.includes("entrada=home"), rodape: home.includes("entrada=rodape"), cidade: cidade.includes(`entrada=cidade&amp;cidade=${CWB}`) || cidade.includes(`entrada=cidade&cidade=${CWB}`) };
   if (modo === "off") {

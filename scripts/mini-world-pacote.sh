@@ -75,7 +75,7 @@ Ativação e reversão: \`documentacao/ativacao.md\`.
 | Caminho | O que é |
 | --- | --- |
 | \`meu-pequeno-mundo-use-origens.html\` | O protótipo (HTML, CSS e JS num arquivo; Three.js pelo import map) |
-| \`contexto/perfis-cidades.json\` | Os 9 perfis curados, com a fonte de cada fato |
+| \`contexto/perfis-cidades.json\` e \`contexto/perfis/\` | Os perfis curados, com a fonte de cada fato (a página lê um arquivo por cidade) |
 | \`dados/indice.json\`, \`dados/lugares/*.json\` | Índice de busca e um arquivo por lugar (camisetas, página da loja, ponto do IBGE) |
 | \`relatorio-*.md\` | Relatórios das rodadas: v1, v2, v2.1 e v3 (integração à loja e curadoria) |
 | \`documentacao/\` | Guia de curadoria, modelo de perfil, cobertura dos perfis, ativação e reversão, eventos de analytics |

@@ -3,7 +3,7 @@
 //   src/components/mundo/MundoMarkup.tsx → static HTML (react-dom/server)
 //   src/components/mundo/mundo.css       → inlined
 //   src/components/mundo/experiencia/*   → one ES module (esbuild); Three.js stays external, resolved by the import map (jsDelivr, pinned)
-// The standalone page reads ./dados/ (npm run mundo:dados) and ./contexto/perfis-cidades.json (copied by the same command), keeps the world
+// The standalone page reads ./dados/ (npm run mundo:dados) and ./contexto/perfis/<key>.json (written by the same command), keeps the world
 // in the address bar like v1/v2 and has no analytics. Opened from disk (file://) it falls back to the demonstration data.
 // Usage: npm run mundo:prototipo
 import { readFileSync, writeFileSync } from "node:fs";

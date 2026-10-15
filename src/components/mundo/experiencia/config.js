@@ -155,7 +155,8 @@ export const CATALOGO = {
 export const PAPEIS = ['origem', 'presente', 'coracao'];
 
 /** Contexto das cidades (perfis curados, com fontes). Arquivo próprio, versionado com o protótipo — fica fora da pasta gerada `dados/`. */
-export const CONTEXTO = { arquivo: './contexto/perfis-cidades.json' }; // na loja: /api/mundo/perfis
+// Um arquivo por cidade com perfil (a página só baixa os dos lugares do mundo). Na loja, a base é /api/mundo/perfis/.
+export const CONTEXTO = { base: './contexto/perfis/', lugar: (chave) => `${chave}.json` };
 /** Ambientes que um perfil pode declarar, com o rótulo mostrado na tela. */
 export const AMBIENTES = { vale: 'vale', litoral: 'litoral', rio: 'rio', campo: 'campo', serra: 'serra', urbano: 'área urbana', floresta: 'floresta', cerrado: 'cerrado' };
 /** Módulos da cena que um perfil pode pedir (a cena ignora qualquer outro nome). */
