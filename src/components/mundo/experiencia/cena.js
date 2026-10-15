@@ -297,6 +297,38 @@ export function criarCena(T, canvas, opcoes) {
 
   // ---------- Marcos: formas simplificadas inspiradas em lugares reais — nunca reproduções ----------
   // Cada uma é modelada com a frente em +z (a ilha gira o marco para a câmera inicial) e a base em y = 0.
+  const caixaDe = (partes) => (w, h, d, x, y, z, cor) => partes.push(pintar(new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z), cor));
+  /** Telhado de duas águas com a base em y = 0; a cumeeira corre ao longo de `eixo` ('x' ou 'z'), com `comp` de comprimento. */
+  function duasAguas(larg, alto, comp, eixo, cor) {
+    const forma = new THREE.Shape();
+    forma.moveTo(-larg / 2, 0); forma.lineTo(larg / 2, 0); forma.lineTo(0, alto); forma.closePath();
+    const g = new THREE.ExtrudeGeometry(forma, { depth: comp, bevelEnabled: false }).translate(0, 0, -comp / 2);
+    return pintar(eixo === 'x' ? g.rotateY(Math.PI / 2) : g, cor);
+  }
+  /** Ponte pênsil ao longo de x, centrada na origem: tabuleiro, duas torres de aço, cabos em curva e pendurais. */
+  function geoPontePensil(comp) {
+    const aco = '#9aa3a8', cabo = '#7d868b';
+    const partes = [pintar(new THREE.BoxGeometry(comp, 0.035, 0.22), '#cbc5b8')];
+    for (const lado of [-1, 1]) partes.push(pintar(new THREE.BoxGeometry(comp, 0.03, 0.012).translate(0, 0.035, lado * 0.105), aco));
+    const tx = comp * 0.3, alto = 0.48;
+    for (const sx of [-1, 1]) {
+      for (const lado of [-1, 1]) partes.push(pintar(new THREE.BoxGeometry(0.03, alto + 0.22, 0.03).translate(sx * tx, (alto + 0.22) / 2 - 0.22, lado * 0.11), aco));
+      for (const y of [0.18, alto - 0.03]) partes.push(pintar(new THREE.BoxGeometry(0.028, 0.025, 0.25).translate(sx * tx, y, 0), aco));
+      partes.push(pintar(new THREE.BoxGeometry(0.1, 0.3, 0.26).translate(sx * tx, -0.19, 0), '#b9b3a6'));
+    }
+    const yCabo = (x) => {
+      const ax = Math.abs(x);
+      return ax <= tx ? 0.06 + (alto - 0.06) * (ax / tx) ** 2 : alto - (alto - 0.04) * ((ax - tx) / (comp / 2 - tx));
+    };
+    const N = 26;
+    for (const lado of [-1, 1]) for (let k = 0; k < N; k++) {
+      const x0 = -comp / 2 + (k * comp) / N, x1 = -comp / 2 + ((k + 1) * comp) / N;
+      const y0 = yCabo(x0), y1 = yCabo(x1);
+      partes.push(pintar(new THREE.BoxGeometry(Math.hypot(x1 - x0, y1 - y0), 0.01, 0.01).rotateZ(Math.atan2(y1 - y0, x1 - x0)).translate((x0 + x1) / 2, (y0 + y1) / 2, lado * 0.11), cabo));
+      if (Math.abs(x0) < tx - 0.02 && k % 2 === 0 && y0 > 0.04) partes.push(pintar(new THREE.BoxGeometry(0.005, y0 - 0.02, 0.005).translate(x0, (y0 + 0.02) / 2, lado * 0.11), cabo));
+    }
+    return juntar(partes);
+  }
   const CONSTRUTORES_MARCO = {
     santuario() {
       // planta central, laterais côncavas que sobem até a torre com a cruz (a prefeitura descreve "duas mãos em oração")
@@ -623,6 +655,306 @@ export function criarCena(T, canvas, opcoes) {
       partes.push(pintar(new THREE.CylinderGeometry(0.022, 0.03, 0.06, 8).translate(0, 0.53, cz), claro), pintar(new THREE.ConeGeometry(0.026, 0.05, 8).translate(0, 0.585, cz), claro));
       return juntar(partes);
     },
+
+    // --- formas genéricas (servem a muitas cidades; a nota de cada perfil diz o que é ilustrativo) ---
+    igreja() {
+      // igreja de nave única com a torre sineira no meio da fachada, frontão e telhado de duas águas
+      const parede = '#f3eee4', friso = '#dcc184', telha = '#b5653f', escuro = '#4a4038';
+      const W = 0.3, D = 0.5, H = 0.26, F = D / 2 - 0.02;
+      const partes = [];
+      const caixa = caixaDe(partes);
+      caixa(W + 0.12, 0.03, D + 0.16, 0, 0, 0.02, '#d9d1c1');
+      caixa(W, H, D, 0, 0.03, -0.02, parede);
+      partes.push(duasAguas(W + 0.04, 0.13, D + 0.02, 'z', telha).translate(0, 0.03 + H, -0.02));
+      partes.push(duasAguas(W + 0.03, 0.14, 0.025, 'z', parede).translate(0, 0.03 + H, F + 0.005));
+      caixa(W + 0.03, 0.014, 0.03, 0, 0.03 + H - 0.007, F + 0.005, friso);
+      for (const sx of [-1, 1]) caixa(0.025, H, 0.025, sx * (W / 2), 0.03, F, friso);
+      for (const sx of [-1, 1]) caixa(0.035, 0.07, 0.01, sx * 0.1, 0.13, F + 0.006, escuro);
+      for (const sx of [-1, 1]) for (const z of [-0.16, -0.02, 0.12]) caixa(0.01, 0.08, 0.035, sx * (W / 2 + 0.003), 0.11, z, escuro);
+      // torre
+      const tz = F + 0.035;
+      caixa(0.13, 0.62, 0.13, 0, 0.03, tz, parede);
+      for (const y of [0.31, 0.5]) caixa(0.145, 0.016, 0.145, 0, y, tz, friso);
+      for (let q = 0; q < 4; q++) partes.push(pintar(new THREE.BoxGeometry(0.045, 0.075, 0.01).translate(0, 0.565, 0.066).rotateY((q * Math.PI) / 2).translate(0, 0, tz), escuro));
+      caixa(0.15, 0.016, 0.15, 0, 0.65, tz, friso);
+      partes.push(pintar(new THREE.ConeGeometry(0.1, 0.13, 4).rotateY(Math.PI / 4).translate(0, 0.666 + 0.065, tz), telha));
+      caixa(0.012, 0.08, 0.012, 0, 0.79, tz, friso);
+      caixa(0.045, 0.012, 0.012, 0, 0.84, tz, friso);
+      caixa(0.06, 0.12, 0.01, 0, 0.03, tz + 0.066, escuro);
+      return juntar(partes);
+    },
+    catedral() {
+      // nave longa com duas torres simétricas de flecha na fachada, rosácea e portal alto
+      const parede = '#ebe4d6', pedra = '#cdbfa6', telha = '#9c5a43', flecha = '#6f7d84', escuro = '#463f3a';
+      const W = 0.36, D = 0.62, H = 0.3, F = D / 2 - 0.03;
+      const partes = [];
+      const caixa = caixaDe(partes);
+      caixa(W + 0.2, 0.03, D + 0.14, 0, 0, 0.02, '#d9d1c1');
+      caixa(W, H, D, 0, 0.03, -0.03, parede);
+      partes.push(duasAguas(W + 0.04, 0.16, D, 'z', telha).translate(0, 0.03 + H, -0.03));
+      partes.push(duasAguas(W, 0.17, 0.03, 'z', parede).translate(0, 0.03 + H, F));
+      for (const sx of [-1, 1]) for (const z of [-0.2, -0.06, 0.08]) caixa(0.01, 0.12, 0.035, sx * (W / 2 + 0.003), 0.1, z, escuro);
+      partes.push(
+        pintar(new THREE.CylinderGeometry(0.05, 0.05, 0.012, 16).rotateX(Math.PI / 2).translate(0, 0.25, F + 0.017), pedra),
+        pintar(new THREE.CylinderGeometry(0.038, 0.038, 0.014, 16).rotateX(Math.PI / 2).translate(0, 0.25, F + 0.019), '#3f4f6b'),
+      );
+      caixa(0.08, 0.15, 0.012, 0, 0.03, F + 0.017, escuro);
+      for (const sx of [-1, 1]) {
+        const x = sx * (W / 2 + 0.02), z = F - 0.04;
+        caixa(0.14, 0.64, 0.14, x, 0.03, z, parede);
+        for (const y of [0.33, 0.52]) caixa(0.155, 0.016, 0.155, x, y, z, pedra);
+        for (let q = 0; q < 4; q++) partes.push(pintar(new THREE.BoxGeometry(0.04, 0.08, 0.01).translate(0, 0.6, 0.071).rotateY((q * Math.PI) / 2).translate(x, 0, z), escuro));
+        caixa(0.16, 0.018, 0.16, x, 0.67, z, pedra);
+        partes.push(pintar(new THREE.ConeGeometry(0.085, 0.24, 4).rotateY(Math.PI / 4).translate(x, 0.688 + 0.12, z), flecha));
+        caixa(0.01, 0.06, 0.01, x, 0.928, z, pedra);
+        caixa(0.035, 0.01, 0.01, x, 0.965, z, pedra);
+      }
+      return juntar(partes);
+    },
+    ruinas() {
+      // ruínas de igreja de pedra avermelhada: fachada com portal, paredes laterais interrompidas, torre incompleta e bases de colunas
+      const pedra = '#a9654a', pedra2 = '#bd7c5c', escuro = '#5a3b2e';
+      const W = 0.46, D = 0.6, F = D / 2;
+      const partes = [];
+      const caixa = caixaDe(partes);
+      caixa(W + 0.1, 0.012, D + 0.08, 0, 0, 0, '#86a05f');
+      caixa(0.15, 0.42, 0.06, -W / 2 + 0.075, 0.012, F, pedra);
+      caixa(0.15, 0.4, 0.06, W / 2 - 0.075, 0.012, F, pedra);
+      caixa(W - 0.3, 0.17, 0.06, 0, 0.252, F, pedra);
+      caixa(0.3, 0.06, 0.06, -0.04, 0.432, F, pedra2);
+      caixa(0.14, 0.05, 0.06, -0.06, 0.49, F, pedra2);
+      for (const sx of [-1, 1]) caixa(0.04, 0.07, 0.01, sx * 0.15, 0.24, F + 0.031, escuro);
+      for (const sx of [-1, 1]) for (const [h, z] of [[0.3, -0.21], [0.2, -0.06], [0.1, 0.08], [0.25, 0.2]]) caixa(0.05, h, 0.13, sx * (W / 2 - 0.025), 0.012, z, (sx > 0) !== (z > 0) ? pedra : pedra2);
+      caixa(0.15, 0.5, 0.15, W / 2 + 0.08, 0.012, F - 0.09, pedra2);
+      caixa(0.07, 0.07, 0.15, W / 2 + 0.115, 0.512, F - 0.09, pedra2);
+      caixa(0.035, 0.06, 0.01, W / 2 + 0.08, 0.33, F - 0.014, escuro);
+      for (const x of [-0.1, 0.1]) for (const [z, h] of [[-0.15, 0.12], [0, 0.18], [0.14, 0.08]]) partes.push(pintar(cil(0.022, 0.025, h, 8).translate(x, 0.012 + h / 2, z), pedra2));
+      for (const [x, z, r] of [[-0.3, 0.38, 0.035], [0.12, 0.42, 0.028], [-0.2, -0.36, 0.03], [0.34, -0.2, 0.025]]) partes.push(pintar(ico(r).scale(1.3, 0.7, 1).translate(x, 0.02, z), pedra));
+      return juntar(partes);
+    },
+    palacio() {
+      // prédio público clássico de dois pavimentos: pórtico de quatro colunas com frontão, escadaria, janelas em série e mastro
+      const parede = '#efe6d2', claro = '#faf6ee', janela = '#4a4540';
+      const W = 0.68, D = 0.34, F = D / 2;
+      const partes = [];
+      const caixa = caixaDe(partes);
+      caixa(W + 0.08, 0.03, D + 0.18, 0, 0, 0.04, '#d9d1c1');
+      caixa(W, 0.16, D, 0, 0.03, 0, parede);
+      caixa(W + 0.016, 0.016, D + 0.016, 0, 0.19, 0, claro);
+      caixa(W, 0.14, D, 0, 0.206, 0, parede);
+      caixa(W + 0.024, 0.02, D + 0.024, 0, 0.346, 0, claro);
+      caixa(W, 0.035, D, 0, 0.366, 0, parede);
+      for (let k = 0; k < 9; k++) {
+        const x = -W / 2 + 0.05 + (k * (W - 0.1)) / 8;
+        if (k >= 3 && k <= 5) continue;
+        caixa(0.04, 0.08, 0.01, x, 0.07, F + 0.003, janela);
+        caixa(0.04, 0.08, 0.01, x, 0.235, F + 0.003, janela);
+      }
+      for (const sx of [-1, 1]) for (const z of [-0.08, 0.08]) for (const y of [0.07, 0.235]) caixa(0.01, 0.08, 0.04, sx * (W / 2 + 0.003), y, z, janela);
+      caixa(0.27, 0.02, 0.09, 0, 0.03, F + 0.045, claro);
+      for (let k = 0; k < 4; k++) partes.push(pintar(cil(0.015, 0.018, 0.29, 8).translate(-0.09 + k * 0.06, 0.05 + 0.145, F + 0.065), claro));
+      caixa(0.28, 0.035, 0.09, 0, 0.34, F + 0.045, claro);
+      partes.push(duasAguas(0.3, 0.07, 0.09, 'z', claro).translate(0, 0.375, F + 0.045));
+      caixa(0.07, 0.12, 0.01, 0, 0.05, F + 0.002, janela);
+      for (let k = 0; k < 3; k++) caixa(0.3 - k * 0.02, 0.01, 0.035, 0, 0.0 + k * 0.01, F + 0.11 - k * 0.022, '#e3dccd');
+      partes.push(pintar(cil(0.005, 0.006, 0.26, 5).translate(0, 0.401 + 0.13, -0.05), '#9a9fa3'));
+      caixa(0.075, 0.045, 0.004, 0.04, 0.6, -0.05, '#f4f1ea');
+      return juntar(partes);
+    },
+    coreto() {
+      // coreto octogonal com guarda-corpo e telhado de oito águas, numa praça com canteiros e árvores
+      const branco = '#f4f1ea', telha = '#5b7d6a';
+      const partes = [];
+      const caixa = caixaDe(partes);
+      caixa(0.74, 0.012, 0.74, 0, 0, 0, '#e1d5b9');
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        caixa(0.18, 0.025, 0.18, sx * 0.25, 0.012, sz * 0.25, '#7fa35a');
+        partes.push(pintar(cil(0.014, 0.02, 0.16, 5).translate(sx * 0.25, 0.037 + 0.08, sz * 0.25), '#6b4f39'));
+        partes.push(pintar(ico(0.085).scale(1, 0.85, 1).translate(sx * 0.25, 0.25, sz * 0.25), sx === sz ? '#5e8a47' : '#6b9450'));
+      }
+      partes.push(pintar(new THREE.CylinderGeometry(0.17, 0.18, 0.07, 8).translate(0, 0.012 + 0.035, 0), '#e9e3d6'));
+      caixa(0.09, 0.035, 0.07, 0, 0.012, 0.19, '#e9e3d6');
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * TAU + Math.PI / 8;
+        partes.push(pintar(cil(0.008, 0.008, 0.17, 5).translate(Math.cos(a) * 0.15, 0.082 + 0.085, Math.sin(a) * 0.15), branco));
+      }
+      partes.push(pintar(new THREE.CylinderGeometry(0.155, 0.155, 0.025, 8, 1, true).translate(0, 0.082 + 0.04, 0), branco));
+      partes.push(pintar(new THREE.CylinderGeometry(0.165, 0.165, 0.015, 8).translate(0, 0.252 + 0.0075, 0), branco));
+      partes.push(pintar(new THREE.ConeGeometry(0.2, 0.11, 8).translate(0, 0.267 + 0.055, 0), telha));
+      partes.push(pintar(cil(0.006, 0.01, 0.05, 6).translate(0, 0.377 + 0.025, 0), branco), pintar(ico(0.012).translate(0, 0.43, 0), branco));
+      return juntar(partes);
+    },
+    monumento() {
+      // obelisco genérico sobre pedestal escalonado numa praça circular com canteiros (não reproduz monumento específico)
+      const granito = '#ece6da';
+      const partes = [];
+      const caixa = caixaDe(partes);
+      partes.push(pintar(new THREE.CylinderGeometry(0.32, 0.32, 0.012, 28).translate(0, 0.006, 0), '#ddd3bf'));
+      caixa(0.24, 0.03, 0.24, 0, 0.012, 0, '#cfc6b3');
+      caixa(0.17, 0.04, 0.17, 0, 0.042, 0, '#d7cfbd');
+      caixa(0.11, 0.1, 0.11, 0, 0.082, 0, granito);
+      caixa(0.125, 0.014, 0.125, 0, 0.182, 0, '#d7cfbd');
+      partes.push(pintar(new THREE.CylinderGeometry(0.024 * Math.SQRT2, 0.04 * Math.SQRT2, 0.62, 4).rotateY(Math.PI / 4).translate(0, 0.196 + 0.31, 0), granito));
+      partes.push(pintar(new THREE.ConeGeometry(0.024 * Math.SQRT2, 0.05, 4).rotateY(Math.PI / 4).translate(0, 0.816 + 0.025, 0), '#d7cfbd'));
+      for (let k = 0; k < 10; k++) {
+        const a = (k / 10) * TAU;
+        partes.push(pintar(ico(0.03).scale(1, 0.7, 1).translate(Math.cos(a) * 0.27, 0.03, Math.sin(a) * 0.27), k % 2 ? '#6f9a4f' : '#c9a64a'));
+      }
+      return juntar(partes);
+    },
+    mirante() {
+      // torre de observação: fuste de concreto, plataforma com guarda-corpo, cabine e antena (forma genérica)
+      const concreto = '#d9d4ca';
+      const partes = [];
+      partes.push(pintar(new THREE.CylinderGeometry(0.16, 0.18, 0.04, 12).translate(0, 0.02, 0), '#cfc8bb'));
+      partes.push(pintar(new THREE.CylinderGeometry(0.045, 0.062, 0.9, 10).translate(0, 0.04 + 0.45, 0), concreto));
+      partes.push(pintar(new THREE.CylinderGeometry(0.15, 0.12, 0.05, 14).translate(0, 0.94 + 0.025, 0), '#bfc3c4'));
+      partes.push(pintar(new THREE.CylinderGeometry(0.15, 0.15, 0.04, 14, 1, true).translate(0, 0.99 + 0.02, 0), '#8f989b'));
+      partes.push(pintar(new THREE.CylinderGeometry(0.08, 0.08, 0.07, 10).translate(0, 0.99 + 0.035, 0), '#e9e5dd'));
+      partes.push(pintar(new THREE.ConeGeometry(0.1, 0.045, 10).translate(0, 1.06 + 0.0225, 0), '#8f989b'));
+      partes.push(pintar(cil(0.005, 0.008, 0.22, 4).translate(0, 1.105 + 0.11, 0), '#9a9fa3'));
+      for (const y of [0.3, 0.6]) partes.push(pintar(new THREE.CylinderGeometry(0.066, 0.066, 0.012, 10).translate(0, y, 0), '#c6c0b5'));
+      return juntar(partes);
+    },
+    estacao() {
+      // estação ferroviária: prédio com beiral sobre a plataforma, trilho na frente e uma locomotiva pequena (genérica)
+      const parede = '#ead9b0', telha = '#9e4f37', escuro = '#463e37', ferro = '#33393e';
+      const W = 0.6, D = 0.2;
+      const partes = [];
+      const caixa = caixaDe(partes);
+      caixa(W + 0.12, 0.05, 0.36, 0, 0, 0.03, '#cfc6b3');
+      caixa(W, 0.18, D, 0, 0.05, -0.05, parede);
+      caixa(W + 0.016, 0.014, D + 0.016, 0, 0.23, -0.05, '#f7f0e0');
+      partes.push(duasAguas(D + 0.06, 0.09, W + 0.04, 'x', telha).translate(0, 0.244, -0.05));
+      caixa(W + 0.04, 0.012, 0.15, 0, 0.21, 0.12, telha);
+      for (let k = 0; k < 5; k++) partes.push(pintar(cil(0.007, 0.007, 0.16, 5).translate(-W / 2 + 0.02 + (k * (W - 0.04)) / 4, 0.05 + 0.08, 0.18), '#5d6266'));
+      for (let k = 0; k < 6; k++) caixa(0.04, k % 2 ? 0.08 : 0.11, 0.01, -W / 2 + 0.06 + (k * (W - 0.12)) / 5, 0.07, 0.053, escuro);
+      for (const z of [0.27, 0.33]) caixa(1.0, 0.012, 0.01, 0, 0.012, z, '#6b6e70');
+      for (let k = 0; k < 12; k++) caixa(0.03, 0.008, 0.12, -0.46 + k * 0.083, 0.004, 0.3, '#7a5d41');
+      caixa(0.26, 0.03, 0.09, 0.2, 0.024, 0.3, ferro);
+      partes.push(pintar(cil(0.035, 0.035, 0.17, 10).rotateZ(Math.PI / 2).translate(0.15, 0.09, 0.3), ferro));
+      caixa(0.08, 0.1, 0.1, 0.3, 0.054, 0.3, ferro);
+      caixa(0.1, 0.012, 0.11, 0.3, 0.154, 0.3, '#8d3b2f');
+      partes.push(pintar(cil(0.014, 0.018, 0.06, 8).translate(0.09, 0.15, 0.3), '#2a2d30'));
+      for (const x of [0.1, 0.18, 0.28]) for (const z of [0.25, 0.35]) partes.push(pintar(cil(0.025, 0.025, 0.012, 10).rotateX(Math.PI / 2).translate(x, 0.035, z), '#8d3b2f'));
+      return juntar(partes);
+    },
+    forte() {
+      // fortaleza baixa de pedra: muralha quadrada com baluartes nos cantos, guaritas, portão, um quartel e o mastro (genérica)
+      const pedra = '#c8b9a0', pedra2 = '#b3a389', claro = '#efe8da';
+      const L = 0.56, T = 0.05, H = 0.13;
+      const partes = [];
+      const caixa = caixaDe(partes);
+      caixa(L, 0.015, L, 0, 0, 0, '#8ea768');
+      for (const s of [-1, 1]) {
+        caixa(L, H, T, 0, 0, s * L / 2, pedra);
+        caixa(T, H, L, s * L / 2, 0, 0, pedra);
+        caixa(L + 0.01, 0.015, T + 0.012, 0, H, s * L / 2, pedra2);
+        caixa(T + 0.012, 0.015, L + 0.01, s * L / 2, H, 0, pedra2);
+      }
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        partes.push(pintar(new THREE.BoxGeometry(0.15, H + 0.015, 0.15).rotateY(Math.PI / 4).translate(sx * L / 2, (H + 0.015) / 2, sz * L / 2), pedra));
+        const gx = sx * (L / 2 + 0.06), gz = sz * (L / 2 + 0.06);
+        partes.push(pintar(cil(0.024, 0.027, 0.07, 8).translate(gx, H + 0.015 + 0.035, gz), claro));
+        partes.push(pintar(new THREE.ConeGeometry(0.034, 0.04, 8).translate(gx, H + 0.085 + 0.02, gz), pedra2));
+      }
+      caixa(0.07, 0.09, 0.012, 0, 0, L / 2 + T / 2 + 0.002, '#4a4038');
+      caixa(0.1, 0.02, 0.014, 0, 0.09, L / 2 + T / 2 + 0.003, claro);
+      caixa(0.26, 0.11, 0.12, -0.05, 0.015, -0.1, claro);
+      partes.push(duasAguas(0.14, 0.06, 0.28, 'x', '#a9573c').translate(-0.05, 0.125, -0.1));
+      partes.push(pintar(cil(0.005, 0.006, 0.32, 5).translate(0.15, 0.015 + 0.16, 0.12), '#9a9fa3'));
+      return juntar(partes);
+    },
+    farol() {
+      // farol de torre listrada sobre rochedo, com galeria, lanterna e a casa do faroleiro (listras e cores ilustrativas)
+      const partes = [];
+      const caixa = caixaDe(partes);
+      partes.push(
+        pintar(ico(0.2).scale(1.3, 0.5, 1.1).translate(0, 0.03, 0), '#8b877e'),
+        pintar(ico(0.13).scale(1, 0.6, 1).translate(0.16, 0.02, 0.1), '#9a958b'),
+        pintar(ico(0.1).scale(1, 0.6, 1).translate(-0.18, 0.02, -0.08), '#7f7b73'),
+      );
+      for (let k = 0; k < 6; k++) {
+        const r0 = 0.075 - k * 0.0045, r1 = 0.075 - (k + 1) * 0.0045;
+        partes.push(pintar(new THREE.CylinderGeometry(r1, r0, 0.1, 12).translate(0, 0.1 + k * 0.1 + 0.05, 0), k % 2 ? '#c8463d' : '#f4f1ea'));
+      }
+      partes.push(pintar(new THREE.CylinderGeometry(0.075, 0.075, 0.018, 12).translate(0, 0.709, 0), '#3f4448'));
+      partes.push(pintar(new THREE.CylinderGeometry(0.042, 0.042, 0.07, 10).translate(0, 0.718 + 0.035, 0), '#f2e6a0'));
+      partes.push(pintar(new THREE.SphereGeometry(0.048, 10, 5, 0, TAU, 0, Math.PI / 2).translate(0, 0.788, 0), '#c8463d'));
+      partes.push(pintar(cil(0.004, 0.006, 0.05, 4).translate(0, 0.86, 0), '#3f4448'));
+      caixa(0.16, 0.09, 0.12, -0.17, 0.06, 0.04, '#f1ece2');
+      partes.push(duasAguas(0.14, 0.06, 0.18, 'x', '#b5653f').translate(-0.17, 0.15, 0.04));
+      caixa(0.03, 0.05, 0.01, -0.17, 0.06, 0.103, '#4a4038');
+      return juntar(partes);
+    },
+    trapiche() {
+      // píer de madeira que avança sobre a água (+x), com guarda-corpo baixo e um quiosque na ponta (genérico)
+      const madeira = '#8a6949', claro = '#a3825f';
+      const L = 0.9, Wd = 0.12;
+      const partes = [];
+      const caixa = caixaDe(partes);
+      caixa(L, 0.025, Wd, L / 2, 0.03, 0, madeira);
+      for (let x = 0.1; x < L; x += 0.15) for (const z of [-0.05, 0.05]) partes.push(pintar(cil(0.012, 0.012, 0.42, 5).translate(x, -0.17, z), '#6e5238'));
+      for (const z of [-(Wd / 2 - 0.004), Wd / 2 - 0.004]) {
+        caixa(L - 0.16, 0.01, 0.008, (L - 0.16) / 2 + 0.02, 0.1, z, claro);
+        for (let x = 0.04; x < L - 0.12; x += 0.15) caixa(0.008, 0.045, 0.008, x, 0.055, z, claro);
+      }
+      caixa(0.26, 0.025, 0.26, L + 0.1, 0.03, 0, madeira);
+      for (const dx of [-0.1, 0.1]) for (const dz of [-0.1, 0.1]) partes.push(pintar(cil(0.008, 0.008, 0.14, 5).translate(L + 0.1 + dx, 0.055 + 0.07, dz), claro));
+      for (const dx of [-0.1, 0.1]) for (const dz of [-0.1, 0.1]) partes.push(pintar(cil(0.012, 0.012, 0.42, 5).translate(L + 0.1 + dx, -0.17, dz), '#6e5238'));
+      partes.push(pintar(new THREE.ConeGeometry(0.2, 0.09, 4).rotateY(Math.PI / 4).translate(L + 0.1, 0.195 + 0.045, 0), '#9e4f37'));
+      return juntar(partes);
+    },
+    pontePensilCosta() {
+      // a mesma ponte pênsil, saindo da margem (+x) até um rochedo no mar
+      const comp = 1.3;
+      return juntar([
+        geoPontePensil(comp).translate(comp / 2, 0, 0),
+        pintar(ico(0.2).scale(1.2, 0.6, 1).translate(comp + 0.14, -0.04, 0), '#8b877e'),
+        pintar(ico(0.12).scale(1, 0.5, 1).translate(comp + 0.14, 0.06, 0.02), '#6f8f52'),
+      ]);
+    },
+    cachoeira() {
+      // paredão de pedra com uma queda d'água que cai num poço cercado de pedras e mata (o espelho do poço é outra malha)
+      const pedra = ['#7f766a', '#8d8376', '#6f685e'];
+      const partes = [];
+      for (const [x, y, z, sx, sy, sz, c] of [
+        [-0.25, 0.2, -0.18, 0.2, 0.4, 0.16, 0], [0, 0.26, -0.24, 0.2, 0.52, 0.14, 1], [0.25, 0.2, -0.18, 0.2, 0.42, 0.16, 2],
+        [-0.11, 0.34, -0.22, 0.14, 0.33, 0.12, 2], [0.12, 0.34, -0.22, 0.14, 0.35, 0.12, 0], [-0.36, 0.08, 0.0, 0.1, 0.16, 0.12, 1], [0.36, 0.08, 0.02, 0.1, 0.14, 0.12, 0],
+      ]) partes.push(pintar(ico(1).scale(sx, sy, sz).translate(x, y, z), pedra[c]));
+      for (const [x, z, r] of [[-0.25, -0.2, 0.12], [0.24, -0.2, 0.13], [0, -0.26, 0.1]]) partes.push(pintar(ico(r).scale(1, 0.5, 1).translate(x, 0.58 - Math.abs(x) * 0.5, z), '#5f8148'));
+      for (const [x, z] of [[-0.3, -0.26], [0.32, -0.24]]) {
+        partes.push(pintar(cil(0.02, 0.03, 0.2, 5).translate(x, 0.62, z), '#57402f'));
+        partes.push(pintar(ico(0.13).translate(x, 0.78, z), '#3f6c3b'));
+      }
+      partes.push(pintar(new THREE.BoxGeometry(0.1, 0.5, 0.02).translate(0, 0.29, -0.1), '#cfe7ea'));
+      partes.push(pintar(new THREE.BoxGeometry(0.035, 0.5, 0.022).translate(0.01, 0.29, -0.098), '#eef7f7'));
+      for (let k = 0; k < 7; k++) partes.push(pintar(ico(0.03 + (k % 3) * 0.008).translate(-0.08 + k * 0.027, 0.045, -0.06 + (k % 2) * 0.03), '#f2f7f6'));
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI + 0.1;
+        partes.push(pintar(ico(0.03 + (k % 3) * 0.01).scale(1.2, 0.7, 1).translate(Math.cos(a) * 0.32, 0.03, 0.1 + Math.sin(a) * 0.23), pedra[k % 3]));
+      }
+      return juntar(partes);
+    },
+    cachoeiraAgua() {
+      return new THREE.CylinderGeometry(0.3, 0.3, 0.01, 24).scale(1, 1, 0.7).translate(0, 0.035, 0.08);
+    },
+    vinhedo() {
+      // fileiras de parreiras em espaldeira sobre terra e uma pequena casa de pedra (desenho genérico)
+      const partes = [];
+      const caixa = caixaDe(partes);
+      caixa(0.86, 0.012, 0.62, 0, 0, 0, '#9a7a55');
+      for (let r = 0; r < 5; r++) {
+        const z = -0.24 + r * 0.12;
+        caixa(0.64, 0.07, 0.045, -0.05, 0.03, z, r % 2 ? '#6b9a4c' : '#5d8a45');
+        for (const x of [-0.37, -0.05, 0.27]) caixa(0.01, 0.1, 0.01, x, 0.012, z, '#7a5d41');
+        for (const x of [-0.28, -0.14, 0.04, 0.18]) partes.push(pintar(ico(0.014).translate(x + (r % 2) * 0.03, 0.045, z + 0.026), '#5a3557'));
+      }
+      caixa(0.16, 0.12, 0.13, 0.35, 0.012, 0.2, '#b9ab93');
+      partes.push(duasAguas(0.15, 0.07, 0.18, 'x', '#a9573c').translate(0.35, 0.132, 0.2));
+      caixa(0.03, 0.06, 0.01, 0.35, 0.012, 0.268, '#4a4038');
+      return juntar(partes);
+    },
   };
   const geoMarco = (nome) => (G[`marco:${nome}`] ??= CONSTRUTORES_MARCO[nome]());
 
@@ -727,6 +1059,23 @@ export function criarCena(T, canvas, opcoes) {
     'mercado-ferro': { geo: 'mercadoFerro', raio: 0.48, livre: 0.36, ang: -0.4, d: 0.4, beiraAgua: true, ancora: [0, 0.82, 0], centro: [0, 0.18, 0.05] },
     'teatro-frontao': { geo: 'teatroFrontao', raio: 0.48, livre: 0.38, ang: 1.2, d: 0.3, ancora: [0, 0.8, 0], centro: [0, 0.2, 0.1] },
     'teatro-cupula': { geo: 'teatroCupula', raio: 0.5, livre: 0.38, ang: 2.6, d: 0.4, ancora: [0, 0.96, 0], centro: [0, 0.22, 0.1] },
+    igreja: { geo: 'igreja', raio: 0.42, livre: 0.34, ang: -0.3, d: 0.3, ancora: [0, 1.12, 0.26], centro: [0, 0.2, 0.08] },
+    catedral: { geo: 'catedral', raio: 0.5, livre: 0.38, ang: -0.3, d: 0.32, ancora: [0, 1.2, 0.2], centro: [0, 0.22, 0.05] },
+    ruinas: { geo: 'ruinas', raio: 0.48, livre: 0.38, ang: -0.5, d: 0.34, ancora: [0, 0.9, 0.2], centro: [0, 0.2, 0.2] },
+    palacio: { geo: 'palacio', raio: 0.5, livre: 0.4, ang: 1.2, d: 0.32, ancora: [0, 0.92, 0], centro: [0, 0.2, 0.1] },
+    coreto: { geo: 'coreto', raio: 0.42, livre: 0.36, ang: 1.0, d: 0.26, ancora: [0, 0.74, 0], centro: [0, 0.18, 0] },
+    monumento: { geo: 'monumento', raio: 0.36, livre: 0.3, ang: 0.9, d: 0.22, ancora: [0, 1.12, 0], centro: [0, 0.3, 0] },
+    mirante: { geo: 'mirante', raio: 0.3, livre: 0.24, ang: 1.45, d: 0.42, ancora: [0, 1.56, 0], centro: [0, 0.5, 0] },
+    estacao: { geo: 'estacao', raio: 0.56, livre: 0.42, ang: -0.6, d: 0.38, ancora: [0, 0.68, 0], centro: [0, 0.15, 0.05] },
+    forte: { geo: 'forte', raio: 0.5, livre: 0.42, ang: -0.5, d: 0.42, beiraAgua: true, ancora: [0, 0.62, 0], centro: [0, 0.1, 0] },
+    farol: { geo: 'farol', raio: 0.34, livre: 0.26, ang: -0.6, d: 0.45, naCosta: true, ancora: [0, 1.14, 0], centro: [0, 0.4, 0] },
+    cachoeira: { geo: 'cachoeira', agua: 'cachoeiraAgua', raio: 0.5, livre: 0.4, ang: 0.95, d: 0.42, ancora: [0, 0.98, -0.1], centro: [0, 0.25, -0.08] },
+    vinhedo: { geo: 'vinhedo', raio: 0.56, livre: 0.44, ang: -1.25, d: 0.42, ancora: [0, 0.56, 0], centro: [0, 0.06, 0] },
+  };
+  // Marcos que saem da margem para dentro d'água: o x local aponta da margem para a água.
+  const NA_MARGEM = {
+    trapiche: { geo: 'trapiche', ancora: [1.0, 0.64, 0], centro: [0.5, 0.05, 0] },
+    'ponte-pensil': { geo: 'pontePensilCosta', ancora: [0.65, 0.86, 0], centro: [0.65, 0.05, 0] },
   };
 
   /** Monta um marco na ilha. Devolve o objeto, o que responde ao toque, a âncora do ponto de descoberta e, se houver, animação e descarte. */
@@ -765,6 +1114,16 @@ export function criarCena(T, canvas, opcoes) {
       ancora.position.set(...ed.ancora);
       centro.position.set(...ed.centro);
       return { objeto: grupoM, alvos, ancora, centro };
+    }
+    if (m.margem != null) {
+      const cfg = NA_MARGEM[m.modulo];
+      grupoM.position.set(m.x, Math.max(NIVEL + 0.03, amostra(m.x, m.z).h - 0.02), m.z);
+      grupoM.rotation.y = -m.margem; // o x local aponta para a água
+      const corpo = malha(geoMarco(cfg.geo));
+      grupoM.add(corpo);
+      ancora.position.set(...cfg.ancora);
+      centro.position.set(...cfg.centro);
+      return { objeto: grupoM, alvos: [corpo], ancora, centro };
     }
     if (m.modulo === 'encontro-aguas' && rio) {
       // duas águas lado a lado ao longo de todo o rio: a escura de um lado, a barrenta do outro, com uma faixa estreita de mistura
@@ -805,6 +1164,18 @@ export function criarCena(T, canvas, opcoes) {
       ancora.position.set(0, 0.66, 0);
       centro.position.set(0, 0.14, 0);
       return { objeto: grupoM, alvos: [cruz, alvo], ancora, centro };
+    }
+    if (m.modulo === 'ponte-pensil' && rio) {
+      const comp = rio.larg * 2.7 + 0.6;
+      const geo = geoPontePensil(comp);
+      const ponte = malha(geo);
+      const pontas = [-1, 1].map((k) => amostra(m.x + rio.v.x * k * comp * 0.5, m.z + rio.v.z * k * comp * 0.5).h);
+      grupoM.position.set(m.x, Math.max(0.1, ...pontas) + 0.004, m.z);
+      grupoM.rotation.y = -Math.atan2(rio.v.z, rio.v.x);
+      grupoM.add(ponte);
+      ancora.position.set(0, 0.86, 0);
+      centro.position.set(0, 0.02, 0);
+      return { objeto: grupoM, alvos: [ponte], ancora, centro, descartar: () => geo.dispose() };
     }
     if (m.modulo === 'ponte-urbana' && rio) {
       const comp = rio.larg * 2.7 + 0.34;
@@ -998,7 +1369,8 @@ export function criarCena(T, canvas, opcoes) {
         return lado < (0.66 + cfg.raio * 0.9) * k && prof > -(1.15 + cfg.raio) * k && prof < (0.35 + cfg.raio) * k;
       };
       let alvo = { x: Math.cos(angCam + cfg.ang) * R * cfg.d, z: Math.sin(angCam + cfg.ang) * R * cfg.d };
-      if (cfg.beiraAgua && tipoAgua === 'costa') alvo = { x: aguaDir.x * R * 0.05 + dirCam.x * R * 0.3, z: aguaDir.z * R * 0.05 + dirCam.z * R * 0.3 };
+      if (cfg.naCosta && tipoAgua === 'costa') alvo = { x: aguaDir.x * R * 0.5 + dirCam.x * R * 0.2, z: aguaDir.z * R * 0.5 + dirCam.z * R * 0.2 };
+      else if (cfg.beiraAgua && tipoAgua === 'costa') alvo = { x: aguaDir.x * R * 0.05 + dirCam.x * R * 0.3, z: aguaDir.z * R * 0.05 + dirCam.z * R * 0.3 };
       else if (cfg.beiraAgua && rio) {
         let perto = null;
         for (let sP = -R * 0.6; sP <= R * 0.6; sP += R * 0.05) {
@@ -1025,8 +1397,51 @@ export function criarCena(T, canvas, opcoes) {
       }
       return null;
     }
+    /** Ponto seco na margem mais perto de um ponto dentro d'água à frente da câmera, e o ângulo da margem para a água. */
+    function naMargem() {
+      let w = null;
+      if (tipoAgua === 'costa') w = { x: aguaDir.x * R * 0.62 + dirCam.x * R * 0.22, z: aguaDir.z * R * 0.62 + dirCam.z * R * 0.22 };
+      else if (rio) {
+        const alvo = { x: Math.cos(angCam - 0.75) * R * 0.32, z: Math.sin(angCam - 0.75) * R * 0.32 };
+        for (let sP = -R * 0.6; sP <= R * 0.6; sP += R * 0.04) {
+          const lat = rio.off + rio.amp * Math.sin(sP * rio.freq + rio.fase);
+          const x = rio.u.x * sP + rio.v.x * lat, z = rio.u.z * sP + rio.v.z * lat;
+          if (Math.hypot(x, z) > R * 0.62) continue;
+          const d = Math.hypot(x - alvo.x, z - alvo.z);
+          if (!w || d < w.d) w = { x, z, d };
+        }
+      } else if (lagoas.length) {
+        const frente = { x: dirCam.x * R * 0.4, z: dirCam.z * R * 0.4 };
+        w = lagoas.reduce((a, b) => (Math.hypot(b.x - frente.x, b.z - frente.z) < Math.hypot(a.x - frente.x, a.z - frente.z) ? b : a));
+      }
+      if (!w) return null;
+      let melhor = null;
+      for (let rr = 0.06; rr <= 0.76; rr += 0.03) for (let k = 0; k < 64; k++) {
+        const a = (k / 64) * TAU, x = Math.cos(a) * R * rr, z = Math.sin(a) * R * rr;
+        const d = Math.hypot(x - w.x, z - w.z);
+        if (melhor && d >= melhor.d) continue;
+        if (!secoEm(x, z, 0.1)) continue;
+        if (marcos.some((o) => !o.terreno && !o.naAgua && Math.hypot(x - o.x, z - o.z) < o.raio + 0.3)) continue;
+        melhor = { x, z, d };
+      }
+      return melhor && { x: melhor.x, z: melhor.z, margem: Math.atan2(w.z - melhor.z, w.x - melhor.x) };
+    }
     for (const m of rec.perfil ? rec.marcos ?? [] : []) {
-      if (m.modulo === 'santuario') {
+      if (NA_MARGEM[m.modulo] && !(m.modulo === 'ponte-pensil' && rio)) {
+        const lugar = naMargem();
+        if (lugar) marcos.push({ ...m, ...lugar, raio: 0.3 });
+      } else if (m.modulo === 'ponte-pensil' && rio) {
+        const alvo = { x: Math.cos(angCam - 0.75) * R * 0.32, z: Math.sin(angCam - 0.75) * R * 0.32 };
+        let melhor = null;
+        for (let sP = -R * 0.6; sP <= R * 0.6; sP += R * 0.04) {
+          const lat = rio.off + rio.amp * Math.sin(sP * rio.freq + rio.fase);
+          const x = rio.u.x * sP + rio.v.x * lat, z = rio.u.z * sP + rio.v.z * lat;
+          if (Math.hypot(x, z) > R * 0.62) continue;
+          const nota = -Math.hypot(x - alvo.x, z - alvo.z);
+          if (!melhor || nota > melhor.nota) melhor = { x, z, nota };
+        }
+        if (melhor) marcos.push({ ...m, x: melhor.x, z: melhor.z, raio: 0.4, naAgua: true });
+      } else if (m.modulo === 'santuario') {
         const a = angCam - 0.62, d = R * 0.24;
         const x = Math.cos(a) * d, z = Math.sin(a) * d;
         plataformas.push({ x, z, r: 0.58, h: Math.max(seco(x, z).h, 0.16) });

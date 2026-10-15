@@ -106,6 +106,9 @@ const MARCO_PEDE: Record<string, (v: any) => boolean> = {
   baleia: (v) => v.agua?.modulo === "mar",
   dunas: (v) => v.relevo?.modulo === "costa-dunas",
   "pico-cruz": (v) => v.relevo?.modulo === "vale-montes",
+  farol: (v) => ["mar", "costa"].includes(v.agua?.modulo),
+  "ponte-pensil": (v) => ["rio", "rio-largo", "mar", "costa"].includes(v.agua?.modulo),
+  trapiche: (v) => ["mar", "costa", "rio", "rio-largo", "lago", "lagoas", "lagoas-muitas"].includes(v.agua?.modulo),
 };
 const STATUS = ["curadoria inicial", "revisão externa", "aprovado"];
 const editorial: { id: string; nome: string; estrutura: boolean; status: string; em: string; obs: string }[] = [];

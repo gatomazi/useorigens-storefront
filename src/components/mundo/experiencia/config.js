@@ -167,6 +167,7 @@ export const MODULOS = {
   marcos: [
     'santuario', 'pico-cruz', 'casarao', 'ponte-urbana', 'dunas', 'baleia',
     'estufa', 'torre-relogio', 'usina', 'mercado', 'sobrado', 'lago-mureta', 'lago-ilha', 'mercado-ferro', 'teatro-frontao', 'teatro-cupula', 'encontro-aguas',
+    'igreja', 'catedral', 'ruinas', 'palacio', 'coreto', 'monumento', 'mirante', 'estacao', 'forte', 'farol', 'trapiche', 'ponte-pensil', 'cachoeira', 'vinhedo',
   ],
   extras: ['pier', 'barco', 'cerca', 'silo', 'lavoura'],
 };
