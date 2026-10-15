@@ -2763,6 +2763,223 @@
       "url": "https://www.pmpf.rs.gov.br/turismo/galeria/parque-da-gare/",
       "referencia": "Página institucional (sem data)",
       "consultadoEm": "2026-10-15"
+    },
+    "palhoca-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 32 (Paraná e Santa Catarina) — verbete Palhoça",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_32.pdf",
+      "referencia": "Publicação de 1959 (verbete nas páginas 258 a 266 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "palhoca-fcc-bens-tombados": {
+      "titulo": "Listagem de bens tombados",
+      "publicador": "Fundação Catarinense de Cultura (FCC)",
+      "url": "https://www.cultura.sc.gov.br/a-fcc/patrimoniocultural/patrimonio-material/listagem-de-bens-tombados",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-palhoca-sc": {
+      "titulo": "Biblioteca IBGE — Palhoça: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Palhoça (SC). Prefeitura. 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4211900",
+      "referencia": "Registro de 2004",
+      "consultadoEm": "2026-10-15"
+    },
+    "palhoca-ima-serra-do-tabuleiro": {
+      "titulo": "Parque Estadual da Serra do Tabuleiro",
+      "publicador": "Instituto do Meio Ambiente de Santa Catarina (IMA)",
+      "url": "https://www.ima.sc.gov.br/parque-estadual-da-serra-do-tabuleiro/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-nova-petropolis-rs": {
+      "titulo": "Biblioteca IBGE — Nova Petrópolis: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Nova Petrópolis (RS). Prefeitura. 2011)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4313201",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "nova-petropolis-turismo-aldeia-do-imigrante": {
+      "titulo": "Parque Aldeia do Imigrante | O Que Fazer | Atrativos",
+      "publicador": "Prefeitura de Nova Petrópolis — Secretaria de Turismo e Cultura",
+      "url": "https://turismo.novapetropolis.rs.gov.br/locais/parque-aldeia-do-imigrante",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "nova-petropolis-turismo-paisagens-do-vale": {
+      "titulo": "Paisagens do Vale | O Que Fazer | Atrativos",
+      "publicador": "Prefeitura de Nova Petrópolis — Secretaria de Turismo e Cultura",
+      "url": "https://turismo.novapetropolis.rs.gov.br/locais/paisagens-do-vale",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "nova-petropolis-turismo-cooperativismo": {
+      "titulo": "Capital Nacional do Cooperativismo",
+      "publicador": "Prefeitura de Nova Petrópolis — Secretaria de Turismo e Cultura",
+      "url": "https://turismo.novapetropolis.rs.gov.br/pagina/capital-nacional-do-cooperativismo",
+      "referencia": "Página institucional (sem data), texto de Bianca Hennemann",
+      "consultadoEm": "2026-10-15"
+    },
+    "nova-petropolis-turismo-igreja-evangelica": {
+      "titulo": "Igreja Evangélica do Centro (IECLB) | O Que Fazer | Atrativos",
+      "publicador": "Prefeitura de Nova Petrópolis — Secretaria de Turismo e Cultura",
+      "url": "https://turismo.novapetropolis.rs.gov.br/locais/igreja-evangelica-do-centro-ieclb",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "nova-petropolis-ibge-enciclopedia-municipios-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XXXIII (Rio Grande do Sul) — Nova Petrópolis",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_33.pdf",
+      "referencia": "Publicação de 1959 (verbete nas páginas 357 a 361 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "nova-petropolis-turismo-monte-malakoff": {
+      "titulo": "Monte Malakoff | O Que Fazer | Atrativos",
+      "publicador": "Prefeitura de Nova Petrópolis — Secretaria de Turismo e Cultura",
+      "url": "https://turismo.novapetropolis.rs.gov.br/locais/morro-malakoff",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "nova-petropolis-turismo-pinheiro-multissecular": {
+      "titulo": "Pinheiro Multissecular | O Que Fazer | Atrativos",
+      "publicador": "Prefeitura de Nova Petrópolis — Secretaria de Turismo e Cultura",
+      "url": "https://turismo.novapetropolis.rs.gov.br/locais/pinheiro-multissecular",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "nova-petropolis-turismo-labirinto-verde": {
+      "titulo": "Labirinto Verde | O Que Fazer | Atrativos",
+      "publicador": "Prefeitura de Nova Petrópolis — Secretaria de Turismo e Cultura",
+      "url": "https://turismo.novapetropolis.rs.gov.br/locais/labirinto-verde",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "pelotas-setur-rs-theatro-sete-de-abril": {
+      "titulo": "Theatro Sete de Abril",
+      "publicador": "Secretaria de Turismo do Rio Grande do Sul",
+      "url": "https://www.turismo.rs.gov.br/turismo/atrativo/visualizar/4376",
+      "referencia": "Ficha de atrativo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "pelotas-setur-rs-museu-do-doce": {
+      "titulo": "Museu do Doce - Casarão 8",
+      "publicador": "Secretaria de Turismo do Rio Grande do Sul",
+      "url": "https://www.turismo.rs.gov.br/turismo/atrativo/visualizar/7174",
+      "referencia": "Ficha de atrativo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "pelotas-setur-rs-balneario-valverde": {
+      "titulo": "Praia Balneário Valverde",
+      "publicador": "Secretaria de Turismo do Rio Grande do Sul",
+      "url": "https://www.turismo.rs.gov.br/turismo/atrativo/visualizar/7187",
+      "referencia": "Ficha de atrativo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "pelotas-setur-rs-municipio": {
+      "titulo": "Pelotas — A cidade",
+      "publicador": "Secretaria de Turismo do Rio Grande do Sul",
+      "url": "https://www.turismo.rs.gov.br/turismo/municipio/visualizar/4",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "pelotas-setur-rs-praca-coronel-pedro-osorio": {
+      "titulo": "Praça Coronel Pedro Osório",
+      "publicador": "Secretaria de Turismo do Rio Grande do Sul",
+      "url": "https://www.turismo.rs.gov.br/turismo/atrativo/visualizar/4368",
+      "referencia": "Ficha de atrativo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "pelotas-ibge-enciclopedia-municipios-v34": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 34 (Rio Grande do Sul) — verbete Pelotas",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_34.pdf",
+      "referencia": "Publicação de 1959 (verbete nas páginas 26 a 44 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "pelotas-setur-rs-colonia-z3": {
+      "titulo": "Colônia dos pescadores - Z3",
+      "publicador": "Secretaria de Turismo do Rio Grande do Sul",
+      "url": "https://www.turismo.rs.gov.br/turismo/atrativo/visualizar/926",
+      "referencia": "Ficha de atrativo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-pelotas-rs": {
+      "titulo": "Biblioteca IBGE — Pelotas: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Pelotas (RS). Prefeitura. 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4314407",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "pelotas-iphan-registro-tradicoes-doceiras": {
+      "titulo": "Registro das Tradições Doceiras na Região de Pelotas e Antiga Pelotas como Patrimônio Cultural do Brasil",
+      "publicador": "Instituto do Patrimônio Histórico e Artístico Nacional (Iphan) — plataforma Bem Brasileiro",
+      "url": "https://bcr.iphan.gov.br/acoes-de-salvaguarda/registro-das-tradicoes-doceiras-na-regiao-de-pelotas-e-antiga-pelotas-morro-redondo-turucu-capao-do-leao-e-arroio-do-padre-como-patrimonio-cultural-do-brasil/",
+      "referencia": "Ficha de ação de salvaguarda (registro aprovado em 15/05/2018)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sinop-prefeitura-dia-da-arvore-2026": {
+      "titulo": "Dia da Árvore: cerca de 560 pessoas participam de programação especial no Parque Florestal de Sinop",
+      "publicador": "Prefeitura Municipal de Sinop",
+      "url": "https://www.sinop.mt.gov.br/portal/noticias/0/3/13876/dia-da-arvore-cerca-de-560-pessoas-participam-de-programacao-especial-no-parque-florestal-de-sinop",
+      "referencia": "Notícia de 19/09/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "sinop-turismo-catedral": {
+      "titulo": "Catedral Sagrado Coração de Jesus",
+      "publicador": "Prefeitura Municipal de Sinop (portal Conheça Sinop)",
+      "url": "https://conheca.sinop.mt.gov.br/turismo/catedral-sagrado-coracao-de-jesus/12",
+      "referencia": "Página de turismo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sinop-turismo-parque-florestal": {
+      "titulo": "Parque Florestal de Sinop",
+      "publicador": "Prefeitura Municipal de Sinop (portal Conheça Sinop)",
+      "url": "https://conheca.sinop.mt.gov.br/turismo/parque-florestal-de-sinop/7",
+      "referencia": "Página de turismo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sinop-turismo-usina": {
+      "titulo": "Usina Hidrelétrica de Sinop",
+      "publicador": "Prefeitura Municipal de Sinop (portal Conheça Sinop)",
+      "url": "https://conheca.sinop.mt.gov.br/turismo/usina-hidreletrica-de-sinop/131",
+      "referencia": "Página de turismo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-sinop-mt": {
+      "titulo": "Biblioteca IBGE — Sinop: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Sinop (MT). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5107909",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "sinop-turismo-pesca": {
+      "titulo": "Pesca Esportiva",
+      "publicador": "Prefeitura Municipal de Sinop (portal Conheça Sinop)",
+      "url": "https://conheca.sinop.mt.gov.br/turismo/pesca-esportiva/10",
+      "referencia": "Página de turismo (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sinop-camara-historia": {
+      "titulo": "História",
+      "publicador": "Câmara Municipal de Sinop",
+      "url": "https://www.sinop.mt.leg.br/pag/historia",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sinop-prefeitura-calcada-parque-2026": {
+      "titulo": "Prefeitura e Sinop Energia entregam nova calçada em frente ao Parque Florestal",
+      "publicador": "Prefeitura Municipal de Sinop",
+      "url": "https://www.sinop.mt.gov.br/portal/noticias/0/3/13736/prefeitura-e-sinop-energia-entregam-nova-calcada-em-frente-ao-parque-florestal",
+      "referencia": "Notícia de 17/08/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "sinop-turismo-arte-sacra": {
+      "titulo": "Rota de Artes Sacras - Caminhos da Arte Sacra com Mari Bueno",
+      "publicador": "Prefeitura Municipal de Sinop (portal Conheça Sinop)",
+      "url": "https://conheca.sinop.mt.gov.br/turismo/rota-de-artes-sacras---caminhos-da-arte-sacra-com-mari-bueno/409",
+      "referencia": "Página de turismo (sem data)",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -12362,6 +12579,701 @@
         "status": "curadoria inicial",
         "em": "2026-10-15",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Data de cidade: a formação administrativa do IBGE dá Ato de 10-04-1890; o histórico da Prefeitura reproduzido pelo IBGE diz 1891. O resumo usa 1890, da formação administrativa. A Enciclopédia de 1959 chama a criação de 1847 de freguesia; a Biblioteca do IBGE, de distrito; o texto usa distrito. A Enciclopédia data a estrada de ferro de 1897 e a Biblioteca diz 'década de 1890'; o texto usa a década. O texto não afirma que o nome da cidade vem do pouso dos tropeiros (a Enciclopédia só diz que pernoitavam no chamado 'passo fundo'). Primeiro morador: a Enciclopédia cita o alferes Rodrigo Felix Martins (1827) no município e Manoel José das Neves na cidade; a Prefeitura chama o Cabo Neves de primeiro morador branco; a referência atribui à Prefeitura. A Prefeitura chama a Jornada de 'um dos maiores eventos do gênero na América Latina' e o Parque da Gare de 'maior parque'; os superlativos ficaram de fora. Não há data de início da Jornada em fonte oficial lida (página da UPF redireciona para a home). A página da lei no Planalto vem com acentos perdidos na extração; os trechos de evidência foram escolhidos sem acentos. Igreja: não foi conferido o número de torres da Matriz; a nota diz que a forma é ilustrativa."
+      }
+    },
+    "4211900": {
+      "identidade": {
+        "id": "4211900",
+        "ibge": "4211900",
+        "nome": "Palhoça",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na terra firme diante da Ilha de Santa Catarina, entre o mar, a restinga e as serras do Tabuleiro.",
+        "resumo": "Palhoça fica no continente, diante da Ilha de Santa Catarina, entre o mar, manguezais, restingas e as serras de Mata Atlântica do Parque Estadual da Serra do Tabuleiro. Segundo a Prefeitura, em texto reproduzido pelo IBGE, o povoado começou em 1793, quando o governo mandou erguer palhoças para guardar farinha na estrada para Lages, como refúgio contra novas invasões da Ilha. Pelos registros do IBGE, foi freguesia em 1882, vila em 1894, desmembrada de São José, e cidade em 1919. O histórico cita portugueses, açorianos, madeirenses, alemães, italianos, negros e indígenas na formação do povo.",
+        "fontesResumo": [
+          "palhoca-ima-serra-do-tabuleiro",
+          "ibge-biblioteca-palhoca-sc"
+        ],
+        "referencias": [
+          {
+            "id": "igreja-nossa-senhora-do-rosario-enseada-de-brito",
+            "tipo": "patrimonio",
+            "titulo": "Igreja de Nossa Senhora do Rosário, na Enseada de Brito",
+            "texto": "Na Enseada de Brito, onde, segundo o histórico do IBGE, os primeiros portugueses se estabeleceram, a igreja segue a implantação típica das vilas do litoral catarinense, voltada para a praça e para o mar. Tem planta retangular e uma torre de três estágios na fachada, coroada por uma cruz, onde fica o sino. Foi tombada pela Fundação Catarinense de Cultura em 1998.",
+            "fontes": [
+              "palhoca-fcc-bens-tombados",
+              "ibge-biblioteca-palhoca-sc"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada com uma torre central e paredes claras; cores, proporções e entorno são ilustrativos."
+            },
+            "curto": "Igreja da Enseada de Brito voltada para a praça e para o mar, tombada pelo Estado em 1998."
+          },
+          {
+            "id": "baixada-do-maciambu",
+            "tipo": "natureza",
+            "titulo": "Baixada do Maciambu e Parque da Serra do Tabuleiro",
+            "texto": "O Parque Estadual da Serra do Tabuleiro, criado em 1975, tem sede em Palhoça, na Baixada do Maciambu, com centro de visitantes e trilhas educativas. A baixada é uma planície de restinga formada por cordões de areia em semicírculo, deixados pelas oscilações do nível do mar ao longo de milhares de anos. O nome do parque vem de uma serra de cume achatado, visível da região de Florianópolis.",
+            "fontes": [
+              "palhoca-ima-serra-do-tabuleiro"
+            ],
+            "curto": "Planície de restinga com cordões de areia em semicírculo, onde fica a sede do Parque da Serra do Tabuleiro."
+          },
+          {
+            "id": "festas-e-boi-de-mamao",
+            "tipo": "tradicao",
+            "titulo": "Festas religiosas e Boi de Mamão",
+            "texto": "A Enciclopédia dos Municípios do IBGE, de 1959, registra como principais manifestações populares de Palhoça as festas religiosas: a do Senhor Bom Jesus de Nazaré, padroeiro da antiga freguesia, a procissão do Encontro no Domingo de Ramos e a festa do Divino Espírito Santo. No folclore, a mesma obra cita o Boi de Mamão.",
+            "fontes": [
+              "palhoca-ibge-enciclopedia-1959",
+              "ibge-biblioteca-palhoca-sc"
+            ],
+            "curto": "Festas do Senhor Bom Jesus de Nazaré e do Divino e o Boi de Mamão, registrados pelo IBGE em 1959."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, em texto reproduzido pelo IBGE, o nome viria de casas de pau a pique cobertas de palha, as palhoças, no atual bairro Ponte do Imaruim. A Enciclopédia de 1959 registra duas versões: choças deixadas por indígenas ou as primeiras construções dos colonizadores.",
+            "fontes": [
+              "ibge-biblioteca-palhoca-sc",
+              "palhoca-ibge-enciclopedia-1959"
+            ]
+          },
+          {
+            "texto": "O território de Palhoça já foi bem maior: pelos registros do IBGE, Santo Amaro da Imperatriz, Anitápolis, Paulo Lopes, Garopaba e São Bonifácio saíram dele entre 1958 e 1962 para formar municípios próprios.",
+            "fontes": [
+              "ibge-biblioteca-palhoca-sc"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "palhocense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-palhoca-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -27.6457,
+          "lon": -48.6676,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 222598,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 394.85,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Florianópolis",
+          "intermediaria": "Florianópolis",
+          "mesorregiao": "Grande Florianópolis",
+          "microrregiao": "Florianópolis",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "litoral",
+          "urbano"
+        ],
+        "rotulo": "Cidade na beira da baía, com restinga, serra ao fundo e a igreja voltada para o mar",
+        "base": "litoral",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "costa"
+        },
+        "vegetacao": [
+          [
+            "restinga",
+            8
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "redonda",
+            4
+          ],
+          [
+            "junco",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 3
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-nossa-senhora-do-rosario-enseada-de-brito"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O site da Prefeitura (palhoca.atende.net) carrega o conteúdo por JavaScript e não pôde ser lido; a história municipal vem do texto da Prefeitura reproduzido na Biblioteca do IBGE e da Enciclopédia de 1959. Datas: o histórico da Prefeitura no IBGE dá a fundação do povoado em 31/07/1793 (ofício do governador) e o distrito policial em 1873; a Enciclopédia registra a resolução de 30/12/1872 e as nomeações de 1873; o texto não cita o distrito policial. A Enciclopédia fala de uma primeira capela por volta de 1864 e da segunda iniciada em 1868; o histórico da Prefeitura dá 1868 para a primeira igreja — ficou de fora. O histórico usa 'raças' e 'índios'; o texto diz 'negros e indígenas' e omite libaneses, gregos e japoneses por espaço. Ficaram de fora o superlativo do IMA ('maior unidade de conservação de proteção integral do Estado', 'uma das mais expressivas paisagens de restinga') e horários de visitação. A festa do Bom Jesus e o Boi de Mamão estão registrados só na Enciclopédia de 1959; a revisão pode querer uma fonte atual (o site da Prefeitura tem uma página 'Folclore' que não carregou). Só um marco: não achei fonte legível para um segundo lugar com forma disponível."
+      }
+    },
+    "4313201": {
+      "identidade": {
+        "id": "4313201",
+        "ibge": "4313201",
+        "nome": "Nova Petrópolis",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Antiga colônia de imigrantes alemães na encosta da serra gaúcha, entre araucárias, vales e arroios que descem ao rio Caí.",
+        "resumo": "Nova Petrópolis fica na encosta inferior nordeste do planalto gaúcho, entre vales e montanhas onde, segundo a Prefeitura, araucárias e jerivás ainda marcam a paisagem, e arroios que descem ao rio Caí. A colônia provincial foi fundada em 7 de setembro de 1858 e recebeu sobretudo pomeranos, saxões, renanos e boêmios. Segundo o histórico do IBGE, o nome homenagearia D. Pedro II e lembraria Petrópolis, no Rio de Janeiro. Distrito de São Sebastião do Caí, virou município em 1954, instalado em 1955, e desde 2010 tem por lei federal o título de Capital Nacional do Cooperativismo.",
+        "fontesResumo": [
+          "nova-petropolis-ibge-enciclopedia-municipios-1959",
+          "nova-petropolis-turismo-paisagens-do-vale",
+          "ibge-biblioteca-nova-petropolis-rs",
+          "nova-petropolis-turismo-cooperativismo"
+        ],
+        "referencias": [
+          {
+            "id": "igreja-evangelica-do-centro",
+            "tipo": "patrimonio",
+            "titulo": "Igreja Evangélica do Centro",
+            "texto": "A igreja luterana da Comunidade Evangélica Trindade foi erguida em 1905 pelo construtor Lourenço Dala Barba, sob a liderança do Pastor Hunsche. Na esquina em frente, uma casa enxaimel conhecida desde 1917 como Casa Comercial de Christiano Spier Filho acolhia famílias vindas de longe para casamentos e festas, e seus donos tocaram os sinos da igreja por 45 anos.",
+            "fontes": [
+              "nova-petropolis-turismo-igreja-evangelica"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre central; não reproduz o templo luterano, e forma e cores são ilustrativas."
+            },
+            "curto": "Templo luterano erguido em 1905; por 45 anos, os donos da casa enxaimel em frente tocaram seus sinos."
+          },
+          {
+            "id": "parque-aldeia-do-imigrante",
+            "tipo": "cultura",
+            "titulo": "Parque Aldeia do Imigrante",
+            "texto": "A ideia nasceu em 1974, num desfile pelos 150 anos da imigração alemã no Rio Grande do Sul, em que a comunidade expôs trajes, utensílios e móveis. O parque foi fundado pela Prefeitura em 12 de janeiro de 1985, em dez hectares, a maior parte de mata nativa. Na Aldeia Histórica, edificações dos anos de 1870 a 1910 foram reconstruídas para retratar uma comunidade alemã típica.",
+            "fontes": [
+              "nova-petropolis-turismo-aldeia-do-imigrante"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão antigo genérico; não reproduz as casas enxaimel da Aldeia, e forma e cores são ilustrativas."
+            },
+            "curto": "Parque fundado em 1985, com casas de 1870 a 1910 reconstruídas como uma aldeia alemã típica."
+          },
+          {
+            "id": "labirinto-verde",
+            "tipo": "paisagem",
+            "titulo": "Labirinto Verde",
+            "texto": "Na Praça das Flores, no centro, o labirinto de ciprestes foi inaugurado em 1989 onde antes havia uma quadra esportiva de concreto. A ideia foi de Hans Hesse, morador alemão da cidade, inspirado num labirinto do Park Schönbusch, em Aschaffenburg; o desenho é do arquiteto Lauro Alberto Schuch. Replantado em 2011 com mais de 1.700 mudas, tem 28 metros de diâmetro.",
+            "fontes": [
+              "nova-petropolis-turismo-labirinto-verde"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Na comunidade de Linha Imperial, perto da Praça Padre Theodor Amstad, fica o Pinheiro Multissecular: uma araucária com idade estimada pela Prefeitura em 1.000 anos e 45 metros de altura, cujo tronco equivale ao círculo de sete adultos de mãos dadas.",
+            "fontes": [
+              "nova-petropolis-turismo-pinheiro-multissecular"
+            ]
+          },
+          {
+            "texto": "Segundo a Prefeitura, imigrantes que tinham lutado na Guerra da Crimeia viram na grande muralha de basalto de Linha Brasil Fundos uma lembrança da fortaleza de Malakoff, em Sebastopol, e deram esse nome ao monte. O vilarejo do outro lado do rio Caí, hoje em Caxias do Sul, recebeu o nome de Sebastopol.",
+            "fontes": [
+              "nova-petropolis-turismo-monte-malakoff"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "nova-petropolitano",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-nova-petropolis-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -29.3759,
+          "lon": -51.1129,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 23300,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 290.164,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Caxias do Sul",
+          "intermediaria": "Caxias do Sul",
+          "mesorregiao": "Metropolitana de Porto Alegre",
+          "microrregiao": "Gramado-Canela",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "serra",
+          "vale",
+          "floresta"
+        ],
+        "rotulo": "Colônia alemã na encosta da serra, entre araucárias, jerivás e vales",
+        "base": "serra",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 1.0
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.15
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            14
+          ],
+          [
+            "palmeira",
+            4
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "redonda",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 10
+        },
+        "extras": [
+          "lavoura",
+          "cerca"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-evangelica-do-centro"
+          },
+          {
+            "modulo": "casarao",
+            "referencia": "parque-aldeia-do-imigrante"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Data de distrito diverge: o histórico da Prefeitura diz que Nova Petrópolis virou distrito de São Sebastião do Caí em 1875 (a Enciclopédia diz que ficou anexada a Caí com a emancipação deste, em 1875, antes sendo 7.º distrito de São Leopoldo), enquanto a formação administrativa do IBGE cita Lei Provincial n.º 1.805, de 28/06/1889, e atos municipais de 1892 e 1898; o texto diz só 'distrito de São Sebastião do Caí', sem data. A Enciclopédia (1959) dá outra versão do nome ('para outros, por sua semelhança com a região de Petrópolis'); o texto atribui ao histórico do IBGE. A Prefeitura chama a Caixa Rural de 1902 de 'primeira Cooperativa de Crédito do Brasil e da América latina' e o monumento Força Cooperativa de 'o primeiro e o mais representativo monumento ao cooperativismo do mundo'; ficaram de fora (superlativos). O Labirinto é chamado de 'atrativo turístico mais famoso'; ficou de fora. A idade de 1.000 anos do Pinheiro é estimativa da Prefeitura e está atribuída. A Prefeitura chama a muralha de basalto de 'enorme' e diz que o Monte tem mais de 100 m; o texto só diz 'grande muralha'. Horários e ingressos ficaram de fora. Os povos indígenas (antepassados dos Kaingang e dos Guarani) aparecem na fonte de paisagem, mas não entraram no texto por falta de espaço; podem ser considerados na revisão."
+      }
+    },
+    "4314407": {
+      "identidade": {
+        "id": "4314407",
+        "ibge": "4314407",
+        "nome": "Pelotas",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na planície entre a Serra dos Tapes, o canal São Gonçalo e a Laguna dos Patos, a cidade do charque e dos doces.",
+        "resumo": "Pelotas está na planície do litoral lagunar, entre as encostas da Serra dos Tapes e o canal São Gonçalo, perto da Laguna dos Patos. O histórico do IBGE registra em 1758 a doação de terras à beira da lagoa a Thomáz Luiz Osório, onde depois se abrigaram refugiados de Rio Grande e da Colônia do Sacramento. Em 1780, José Pinto Martins abriu às margens do arroio Pelotas a primeira charqueada, e outras vieram em seguida. Foi freguesia em 1812, vila instalada em 1832 e cidade em 1835. O comércio do charque aproximou a cidade da cultura europeia, e seus doces são patrimônio do Brasil.",
+        "fontesResumo": [
+          "pelotas-ibge-enciclopedia-municipios-v34",
+          "ibge-biblioteca-pelotas-rs",
+          "pelotas-setur-rs-municipio",
+          "pelotas-iphan-registro-tradicoes-doceiras"
+        ],
+        "referencias": [
+          {
+            "id": "tradicoes-doceiras",
+            "tipo": "tradicao",
+            "titulo": "Tradições doceiras",
+            "texto": "Registradas pelo Iphan como Patrimônio Cultural do Brasil em 2018, no Livro dos Saberes, as tradições doceiras têm duas vertentes: na cidade, os doces finos, de confeitaria; no campo de Pelotas e do antigo território, os doces coloniais, como compotas e conservas de frutas da região. As receitas passaram sobretudo pelo trabalho de mulheres doceiras. O Casarão 8, na praça central, abriga o Museu do Doce, da UFPel.",
+            "fontes": [
+              "pelotas-iphan-registro-tradicoes-doceiras",
+              "pelotas-setur-rs-museu-do-doce"
+            ],
+            "descoberta": {
+              "modulo": "sobrado",
+              "nota": "Na maquete, um sobrado eclético genérico que lembra os casarões da praça, como o do Museu do Doce; fachada e cores são ilustrativas."
+            },
+            "curto": "Doces finos e coloniais, registrados pelo Iphan como Patrimônio Cultural do Brasil em 2018."
+          },
+          {
+            "id": "theatro-sete-de-abril",
+            "tipo": "patrimonio",
+            "titulo": "Theatro Sete de Abril",
+            "texto": "Na Praça Coronel Pedro Osório, no centro histórico, o teatro foi tombado pelo Iphan em 1961, segundo o governo do estado. Em 1959, a Enciclopédia dos Municípios do IBGE o listava como cine-teatro de 846 lugares. A praça em volta também é protegida pelo Iphan e recebe eventos como a Feira do Livro.",
+            "fontes": [
+              "pelotas-setur-rs-theatro-sete-de-abril",
+              "pelotas-setur-rs-praca-coronel-pedro-osorio",
+              "pelotas-ibge-enciclopedia-municipios-v34"
+            ],
+            "descoberta": {
+              "modulo": "teatro-frontao",
+              "nota": "Na maquete, um teatro neoclássico genérico com frontão e colunas; não reproduz a fachada real, e cores e proporções são ilustrativas."
+            },
+            "curto": "Teatro da Praça Coronel Pedro Osório, tombado pelo Iphan em 1961."
+          },
+          {
+            "id": "laranjal-e-laguna-dos-patos",
+            "tipo": "paisagem",
+            "titulo": "Laranjal e Laguna dos Patos",
+            "texto": "A Praia do Laranjal, na Laguna dos Patos, reúne três balneários, entre eles o Valverde. Também na margem da laguna fica a Colônia de Pescadores Z3, fundada em 29 de junho de 1921, quando 40 famílias viviam da pesca, que segue como principal atividade econômica do lugar.",
+            "fontes": [
+              "pelotas-setur-rs-balneario-valverde",
+              "pelotas-setur-rs-colonia-z3"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico do IBGE, o nome vem das pelotas, embarcações de varas de corticeira forradas de couro usadas para atravessar os rios no tempo das charqueadas.",
+            "fontes": [
+              "ibge-biblioteca-pelotas-rs"
+            ]
+          },
+          {
+            "texto": "A Enciclopédia dos Municípios do IBGE, de 1959, conta que em certos períodos funcionaram ao mesmo tempo 42 charqueadas no município.",
+            "fontes": [
+              "pelotas-ibge-enciclopedia-municipios-v34"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "pelotense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-pelotas-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -31.7196,
+          "lon": -52.3424,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 325685,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1608.78,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Pelotas",
+          "intermediaria": "Pelotas",
+          "mesorregiao": "Sudeste Rio-grandense",
+          "microrregiao": "Pelotas",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "litoral",
+          "campo"
+        ],
+        "rotulo": "Cidade da planície à beira da Laguna dos Patos, com teatro e casarões na praça",
+        "base": "campos",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "costa"
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            7
+          ],
+          [
+            "capim",
+            7
+          ],
+          [
+            "junco",
+            5
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 3
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "sobrado",
+            "referencia": "tradicoes-doceiras"
+          },
+          {
+            "modulo": "teatro-frontao",
+            "referencia": "theatro-sete-de-abril"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O site da Prefeitura (pelotas.rs.gov.br/cidade/historia) não traz o texto no HTML; as fontes atuais são do Iphan e da Secretaria de Turismo do RS. A data da vila diverge: a Secretaria de Turismo diz 07/07/1832, a Biblioteca do IBGE diz instalação em 07/04/1832 (decreto de 07/12/1830); o texto usa só o ano 1832. A freguesia aparece como 'fundada em 07/07/1812' (histórico) e 'Resolução Régia de 31-01-1812' (formação administrativa); o texto usa só o ano. Superlativos deixados de fora: 'o teatro mais antigo do Rio Grande do Sul' e 'Capital Nacional do Doce' (Secretaria de Turismo). As fontes consultadas não detalham o trabalho escravizado nas charqueadas (a Enciclopédia de 1959 trata do tema de forma romantizada); a revisão pode querer acrescentar esse ponto com fonte adequada (ex.: Iphan ou UFPel, cujo site recusou o acesso). O sobrado do marco está ligado à referência dos doces pelo Casarão 8 (Museu do Doce), que é uma relação indireta; conferir se faz sentido."
+      }
+    },
+    "5107909": {
+      "identidade": {
+        "id": "5107909",
+        "ibge": "5107909",
+        "nome": "Sinop",
+        "uf": "MT",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No norte de Mato Grosso, a cidade planejada dos anos 1970, com um parque de mata nativa no meio das ruas e o Teles Pires por perto.",
+        "resumo": "Sinop fica no norte de Mato Grosso, em ambiente amazônico, num município banhado pelo Rio Teles Pires. A cidade nasceu da política federal de ocupação da Amazônia Legal nos anos 1970, como projeto da Sociedade Imobiliária Noroeste do Paraná, cujas iniciais deram o nome. As famílias pioneiras vieram sobretudo do Paraná, de Santa Catarina e do Rio Grande do Sul, a partir de 1972. Foi distrito de Chapada dos Guimarães em 1976 e virou município em 1979, instalado em 1981. No meio das ruas, o Parque Florestal guarda mata nativa e é chamado pela Prefeitura de cartão-postal.",
+        "fontesResumo": [
+          "sinop-turismo-usina",
+          "sinop-turismo-catedral",
+          "sinop-turismo-pesca",
+          "ibge-biblioteca-sinop-mt",
+          "sinop-camara-historia",
+          "sinop-turismo-parque-florestal",
+          "sinop-prefeitura-dia-da-arvore-2026"
+        ],
+        "referencias": [
+          {
+            "id": "parque-florestal",
+            "tipo": "natureza",
+            "titulo": "Parque Florestal de Sinop",
+            "texto": "No Jardim Primaveras, o Parque Natural Municipal Florestal tem 100 hectares de mata nativa, com trilhas, lago, biblioteca e áreas de lazer. Virou unidade de conservação em 2014, pela Lei nº 2.067. Segundo a Prefeitura, vive ali o macaco-aranha-da-cara-branca, espécie ameaçada de extinção, e a UFMT faz trilhas guiadas sobre a fauna e a flora do parque.",
+            "fontes": [
+              "sinop-turismo-parque-florestal",
+              "sinop-prefeitura-calcada-parque-2026",
+              "sinop-prefeitura-dia-da-arvore-2026"
+            ],
+            "descoberta": {
+              "modulo": "lago-ilha",
+              "nota": "Na maquete, um lago genérico com ilha, deck e árvores; a ilha e o deck são ilustrativos."
+            },
+            "curto": "100 hectares de mata nativa no meio da cidade, com trilhas e lago; unidade de conservação desde 2014."
+          },
+          {
+            "id": "catedral-sagrado-coracao",
+            "tipo": "cultura",
+            "titulo": "Catedral Sagrado Coração de Jesus",
+            "texto": "Inaugurada em 2007, no jubileu de prata da Diocese de Sinop, a catedral tem 4.800 m², lugar para 2.500 pessoas e pedras naturais na parte externa. Dentro, o painel central \"Bom Pastor da Floresta\", de 7 por 14 metros, é da artista Mari Bueno, que também pintou outras igrejas da cidade, reunidas no roteiro Caminhos da Arte Sacra.",
+            "fontes": [
+              "sinop-turismo-catedral",
+              "sinop-turismo-arte-sacra"
+            ],
+            "descoberta": {
+              "modulo": "catedral",
+              "nota": "Na maquete, uma catedral genérica de duas torres; não reproduz a arquitetura moderna do templo nem o painel."
+            },
+            "curto": "Catedral de 2007, com o painel \"Bom Pastor da Floresta\", de Mari Bueno, no altar."
+          },
+          {
+            "id": "rio-teles-pires",
+            "tipo": "paisagem",
+            "titulo": "Rio Teles Pires",
+            "texto": "Com 1.370 km entre Mato Grosso e o Pará, o Teles Pires se junta ao Juruena para formar o Tapajós. É procurado para a pesca esportiva, com peixes como matrinxã, tucunaré, pacu e cachara. Entre Sinop e Itaúba, a Usina Hidrelétrica de Sinop formou no rio um reservatório de 342 km² e tem programa de visitas com agendamento.",
+            "fontes": [
+              "sinop-turismo-pesca",
+              "sinop-turismo-usina"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Câmara Municipal, a fundação, em 14 de setembro de 1974, teve descerramento de placa, missa, desfile cívico escolar e almoço oferecido pela colonizadora. A data virou feriado municipal por uma lei de 1983, registra o IBGE.",
+            "fontes": [
+              "sinop-camara-historia",
+              "ibge-biblioteca-sinop-mt"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "sinopense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-sinop-mt"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -11.8573,
+          "lon": -55.5083,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 196312,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 3990.87,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Sinop",
+          "intermediaria": "Sinop",
+          "mesorregiao": "Norte Mato-grossense",
+          "microrregiao": "Sinop",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "floresta",
+          "rio"
+        ],
+        "rotulo": "Cidade planejada com parque de mata nativa, lago e o rio largo ao lado",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.34,
+          "direcao": 0.6
+        },
+        "vegetacao": [
+          [
+            "mata",
+            12
+          ],
+          [
+            "redonda",
+            8
+          ],
+          [
+            "palmeira",
+            3
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "lago-ilha",
+            "referencia": "parque-florestal"
+          },
+          {
+            "modulo": "catedral",
+            "referencia": "catedral-sagrado-coracao"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A Câmara diz que o município criado em 1979 incluía os distritos de Vera, Santa Carmem, Cláudia e Marcelândia, mas o IBGE registra o distrito de Cláudia só em 1986; o texto não cita distritos. O IBGE chama 14/09/1974 de fundação, e a Câmara descreve a cerimônia daquele dia; o texto trata a data como cerimônia de fundação, não como data administrativa. Não achei fonte oficial em texto sobre relevo nem bioma (Cerrado/Amazônia) de Sinop: a cartilha turística e os folders da Prefeitura são PDFs só de imagem; \"ambiente amazônico\" vem da página da Catedral. Ficaram de fora \"14ª cidade mais arborizada do Brasil\" (fala de secretária, superlativo) e \"uma das mais reconhecidas artistas sacras\". A presença do macaco-aranha está atribuída à Prefeitura, sem promessa de avistamento. Vale conferir o uso da imagem da catedral (duas torres) com foto real."
       }
     }
   }
