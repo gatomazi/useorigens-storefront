@@ -295,3 +295,28 @@ Quando os ajustes de mockup e os cadastros manuais terminarem:
 3. levar o resultado à decisão de ativação junto com preço e merch.
 
 A meta é Norte/CO com as oito famílias perto do legado, merch recriado e coleções regionais na `use-sul`.
+
+## 10. Leitura de 15/10/2026 (produtos de Norte e Centro-Oeste na Sul)
+
+Leitura nova completa, só de consulta (`unificado:ler --dir=…/unificado-20261015`): 160.804 produtos na Sul, 30.836 no Norte e 38.417 no
+Centro-Oeste. A geração foi feita nos dois modos com o código deste PR.
+
+| Simulação (bases ativadas) | Sul | Norte | Centro-Oeste |
+|---|---|---|---|
+| Desenhos (legado → loja única) | 9.446 → 9.446 | 3.582 → **3.598** | 3.814 → **3.954** |
+| Municípios / localidades | 1.191 → 1.191 | 450 → 450 | 468 / 503 → 468 / 503 |
+| Peças por tipo | 71.629 → 71.629 | 27.005 → 29.760 | 33.282 → 33.354 |
+| Merch | 261 → 251 | 80 → 0 | 95 → 0 |
+| Desenhos só no legado / só na loja única | 0 / 0 | 2 / 18 | 15 / 155 |
+
+- As oito famílias de Norte e Centro-Oeste estão completas e com imagem: 3.598 + 3.956 bases. As 1.654 + 1.610 sem imagem de 06/10 foram
+  resolvidas.
+- Merch novo: 134 produtos (81 do Norte, 53 do Centro-Oeste), todos em `ZZ - NO` / `ZZ - CO`, com imagem, ocultos e `approval: waiting`.
+  Entram sozinhos quando forem ativados.
+- Coleções: 11 coleções por estado (Acre…Mato Grosso) na Sul, todas internas (`isAvailable: false`). Para virarem carrossel ou página, ou ficam
+  públicas na INK, ou são ligadas como internas no painel da região.
+- Em `--modo=producao`, Norte e Centro-Oeste ficam vazios até a ativação. O sync de produção só lê produto visível e publicado.
+- Ativar as camisetas na Sul antes da virada não aparece no site com três lojas: o indexador regional da `use-sul` exclui estampa de UF de
+  fora (`uf-mismatch`). Elas aparecem só na própria usesul.com.br.
+- Ativação: `orgulhoregional/scripts/migracao-ativar.mjs` (piloto de 1 produto, depois em lote, com registro e retomada). A lista sai desta
+  leitura (`ativacao-lista.json`).
