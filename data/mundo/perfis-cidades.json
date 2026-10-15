@@ -4030,6 +4030,174 @@
       "url": "https://www.toledo.pr.gov.br/noticias/meio-ambiente/prefeitura-de-toledo-instala-chafariz-aerador-no-parque-ecologico-diva-paim",
       "referencia": "Notícia de 10/11/2025",
       "consultadoEm": "2026-10-15"
+    },
+    "balneario-camboriu-fcbc-safra-tainha-2025": {
+      "titulo": "Safra da Tainha em nove pontos das praias de Balneário Camboriú começa nesta quinta",
+      "publicador": "Fundação Cultural de Balneário Camboriú",
+      "url": "https://culturabc.com.br/2025/04/30/safra-da-tainha-em-nove-pontos-das-praias-de-balneario-camboriu-comeca-nesta-quinta/",
+      "referencia": "Notícia de 30/04/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "balneario-camboriu-sectur-dicas": {
+      "titulo": "Dicas - Secretaria de Turismo de Balneário Camboriú",
+      "publicador": "Secretaria de Turismo e Desenvolvimento Econômico / Prefeitura de Balneário Camboriú",
+      "url": "https://www.secturbc.com.br/turismo/pt-br/dicas",
+      "referencia": "Página institucional (sem data; cita taxas válidas em 2026)",
+      "consultadoEm": "2026-10-15"
+    },
+    "balneario-camboriu-fcbc-raizes-de-taquaras-2023": {
+      "titulo": "Festa Raízes de Taquaras movimenta região das Praias Agrestes a partir desta quinta",
+      "publicador": "Fundação Cultural de Balneário Camboriú",
+      "url": "https://culturabc.com.br/2023/06/06/festa-raizes-de-taquaras-movimenta-regiao-das-praias-agrestes-a-partir-desta-quinta/",
+      "referencia": "Notícia de 06/06/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "balneario-camboriu-fcbc-parque-raimundo-malta-2025": {
+      "titulo": "Parque Raimundo Malta terá programação especial neste sábado",
+      "publicador": "Fundação Cultural de Balneário Camboriú",
+      "url": "https://culturabc.com.br/2025/12/19/parque-raimundo-malta-tera-programacao-especial-neste-sabado/",
+      "referencia": "Notícia de 19/12/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "balneario-camboriu-fcbc-capela-santo-amaro-2014": {
+      "titulo": "Comissão acompanha restauro e conservação da Capela de Santo Amaro",
+      "publicador": "Fundação Cultural de Balneário Camboriú",
+      "url": "https://culturabc.com.br/2014/02/21/comissao-acompanha-restauro-e-conservacao-da-capela-de-santo-amaro/",
+      "referencia": "Notícia de 21/02/2014",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-balneario-camboriu-sc": {
+      "titulo": "Biblioteca IBGE — Balneário Camboriú: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Balneário Camboriú (SC). Prefeitura. Secretaria de Turismo e Desenvolvimento Econômico. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4202008",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "balneario-camboriu-fcbc-capela-manutencao-2016": {
+      "titulo": "Capela de Santo Amaro passa por manutenção",
+      "publicador": "Fundação Cultural de Balneário Camboriú",
+      "url": "https://culturabc.com.br/2016/01/22/capela-de-santo-amaro-passa-por-manutencao/",
+      "referencia": "Notícia de 22/01/2016",
+      "consultadoEm": "2026-10-15"
+    },
+    "balneario-camboriu-sectur-atracoes": {
+      "titulo": "Atrações - Secretaria de Turismo de Balneário Camboriú",
+      "publicador": "Secretaria de Turismo e Desenvolvimento Econômico / Prefeitura de Balneário Camboriú",
+      "url": "https://www.secturbc.com.br/turismo/pt-br/guia/atracoes",
+      "referencia": "Guia de atrações (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "balneario-camboriu-fcbc-abertura-safra-2025": {
+      "titulo": "Ato simbólico na Praia Central marca início da Safra da Tainha",
+      "publicador": "Fundação Cultural de Balneário Camboriú",
+      "url": "https://culturabc.com.br/2025/05/05/ato-simbolico-na-praia-central-marca-inicio-da-safra-da-tainha/",
+      "referencia": "Notícia de 05/05/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "cachoeirinha-prefeitura-localizacao": {
+      "titulo": "Localização da Cidade",
+      "publicador": "Prefeitura Municipal de Cachoeirinha",
+      "url": "https://cachoeirinha.atende.net/cidadao/pagina/localizacao-da-cidade",
+      "referencia": "Página institucional (sem data; cita população de 2010)",
+      "consultadoEm": "2026-10-15"
+    },
+    "cachoeirinha-prefeitura-patrimonio-cultural": {
+      "titulo": "Patrimônio Cultural",
+      "publicador": "Prefeitura Municipal de Cachoeirinha — Setor de Patrimônio Cultural",
+      "url": "https://cachoeirinha.atende.net/cidadao/pagina/patrimonio-cultural",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-cachoeirinha-rs": {
+      "titulo": "Biblioteca IBGE — Cachoeirinha: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Cachoeirinha (RS). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4303103",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "cachoeirinha-prefeitura-horto-municipal": {
+      "titulo": "Horto Municipal",
+      "publicador": "Prefeitura Municipal de Cachoeirinha",
+      "url": "https://cachoeirinha.atende.net/cidadao/pagina/horto-municipal",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "cachoeirinha-prefeitura-historia": {
+      "titulo": "História de Cachoeirinha RS",
+      "publicador": "Prefeitura Municipal de Cachoeirinha",
+      "url": "https://cachoeirinha.atende.net/cidadao/pagina/historia-de-cachoeirinha-rs",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "cachoeirinha-sema-bacia-gravatai": {
+      "titulo": "G010 - Bacia Hidrográfica do Rio Gravataí",
+      "publicador": "Secretaria do Meio Ambiente e Infraestrutura do Rio Grande do Sul (Sema)",
+      "url": "https://sema.rs.gov.br/g010-bh-gravatai",
+      "referencia": "Página institucional (sem data; população da bacia de 2020)",
+      "consultadoEm": "2026-10-15"
+    },
+    "cachoeirinha-prefeitura-parque-tancredo-neves": {
+      "titulo": "Parque Tancredo Neves",
+      "publicador": "Prefeitura Municipal de Cachoeirinha",
+      "url": "https://cachoeirinha.atende.net/cidadao/pagina/parque-tancredo-neves",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "corumba-enciclopedia-ibge-v35": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 35 (Mato Grosso) — verbete Corumbá",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_35.pdf",
+      "referencia": "Volume publicado em 1958",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-corumba-ms": {
+      "titulo": "Biblioteca IBGE — Corumbá: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Corumbá (MS). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5003207",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "corumba-iphan-banho-de-sao-joao": {
+      "titulo": "Banho de São João de Corumbá e Ladário (MS) — Bem Brasileiro",
+      "publicador": "Iphan (plataforma Bens Culturais Registrados)",
+      "url": "https://bcr.iphan.gov.br/bens-culturais/banho-de-sao-joao-de-corumba-e-ladario-ms/",
+      "referencia": "Página institucional (sem data); registro de 2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "corumba-iphan-ms-patrimonio-material": {
+      "titulo": "Patrimônio Material — Superintendência do Iphan em Mato Grosso do Sul",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/mato-grosso-do-sul/patrimonio-material",
+      "referencia": "Página publicada em 10/09/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "parintins-prefeitura-historia": {
+      "titulo": "História de Parintins (Breve histórico)",
+      "publicador": "Prefeitura Municipal de Parintins",
+      "url": "https://parintins.am.gov.br/categoria/breve-historico",
+      "referencia": "Notícia de 17/07/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "parintins-ibge-enciclopedia-1957": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XIV (Amazonas) — Parintins",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_14.pdf",
+      "referencia": "Livro de 1957",
+      "consultadoEm": "2026-10-15"
+    },
+    "parintins-iphan-boi-bumba": {
+      "titulo": "Complexo cultural do boi-bumbá do Médio Amazonas e Parintins",
+      "publicador": "Instituto do Patrimônio Histórico e Artístico Nacional (Iphan) — Bens Culturais Registrados",
+      "url": "https://bcr.iphan.gov.br/bens-culturais/complexo-cultural-do-boi-bumba-do-medio-amazonas-e-parintins/",
+      "referencia": "Página institucional; registro de 08/11/2018",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-parintins-am": {
+      "titulo": "Biblioteca IBGE — Parintins: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em PARINTINS. In: ENCICLOPÉDIA dos municípios brasileiros. Rio de Janeiro: IBGE, 1957. v. 14, p. 220-226)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1303403",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -18059,6 +18227,696 @@
         "status": "curadoria inicial",
         "em": "2026-10-15",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O histórico do IBGE (texto da Câmara) e a Prefeitura dizem que Toledo virou município sem ser distrito, desmembrado de Foz do Iguaçu; a Enciclopédia de 1959 diz 'desmembrado do de Cascavel' num trecho e, noutro, que Toledo era povoado do distrito de Cascavel, de Foz do Iguaçu. O texto não cita de qual município se desmembrou. A Enciclopédia diz que a primeira viagem saiu de Cascavel em abril de 1946 e levou trinta dias; a Prefeitura dá a chegada em 27 de março de 1946; o texto usa a data da Prefeitura e não fala da viagem. A Enciclopédia de 1959 afirma que não havia habitantes na região, sem mencionar povos indígenas; o texto não reproduz isso. A origem do nome por um senhor Toledo, dono do pouso, é 'relato dos pioneiros' na página da Prefeitura; o texto fica com a forma 'viria do Pouso Toledo'. Ficaram de fora superlativos: 'Capital do Agronegócio', 'um dos maiores produtores de grãos', Teatro Municipal 'maior do Interior', Parque Temático das Águas 'único', e o tombamento da Festa do Porco como patrimônio imaterial, citado só na fala de um dirigente do clube. Os saltos e cachoeiras do rio São Francisco aparecem só numa lista da Prefeitura, sem detalhe; ficaram de fora. A Viaje Paraná grafa 'Museu Histórico Willy Barty'; a Prefeitura grafa 'Willy Barth', usada no texto. Só um marco: o museu não tem descrição do prédio nas fontes."
+      }
+    },
+    "4202008": {
+      "identidade": {
+        "id": "4202008",
+        "ibge": "4202008",
+        "nome": "Balneário Camboriú",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Praia aberta para o Atlântico, com a velha Barra do rio Camboriú, ranchos de tainha e as Praias Agrestes ao sul.",
+        "resumo": "Balneário Camboriú fica no Litoral Norte catarinense, voltada para o Atlântico, com a Praia Central, as Praias Agrestes ao sul e o rio Camboriú, que tem ilhas fluviais perto da Barra. Segundo o histórico do IBGE, indígenas viviam ali pela pesca farta, e há relatos de famílias na margem esquerda do rio desde 1758. Por volta de 1840 surgiu, com a igreja, o Arraial do Bom Sucesso, na Barra. Casas de veraneio de moradores de Blumenau apareceram em 1926 e o turismo ganhou força nos anos 1960. O lugar foi distrito de Camboriú em 1954 e virou município em 1964.",
+        "fontesResumo": [
+          "balneario-camboriu-sectur-dicas",
+          "balneario-camboriu-sectur-atracoes",
+          "balneario-camboriu-fcbc-safra-tainha-2025",
+          "ibge-biblioteca-balneario-camboriu-sc"
+        ],
+        "referencias": [
+          {
+            "id": "capela-de-santo-amaro",
+            "tipo": "patrimonio",
+            "titulo": "Capela de Santo Amaro",
+            "texto": "Antiga Igreja Matriz Nossa Senhora do Bom Sucesso, a capela fica numa colina no bairro da Barra e foi erguida no século 19, ligada à formação dos povoados da costa. Tem frontão reto com um óculo e nave única, e as paredes deixam ver as pedras empilhadas da construção. É tombada pelo Município e pelo Estado desde 1998 e foi restaurada em 2008.",
+            "fontes": [
+              "balneario-camboriu-fcbc-capela-santo-amaro-2014",
+              "balneario-camboriu-fcbc-capela-manutencao-2016"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de uma torre; a capela real tem frontão reto com óculo, e cores e proporções são ilustrativas."
+            },
+            "curto": "Antiga matriz do Bom Sucesso, numa colina da Barra, do século 19, tombada pelo Município e pelo Estado desde 1998."
+          },
+          {
+            "id": "pesca-artesanal-da-tainha",
+            "tipo": "tradicao",
+            "titulo": "Pesca artesanal da tainha",
+            "texto": "Cerca de 200 famílias vivem da pesca artesanal da tainha, declarada patrimônio cultural imaterial do município por lei de 2019. Na safra, ranchos na Praia Central, na Praia do Pinho e nas Praias Agrestes vigiam os cardumes, e a abertura costuma ter a saída de uma canoa ao mar. Em 2024, dois ranchos de Taquaras, o do Neu e o do Eládio, foram tombados como patrimônio material.",
+            "fontes": [
+              "balneario-camboriu-fcbc-safra-tainha-2025",
+              "balneario-camboriu-fcbc-abertura-safra-2025"
+            ],
+            "curto": "Patrimônio imaterial desde 2019, com ranchos de pesca na Praia Central e nas Praias Agrestes."
+          },
+          {
+            "id": "parque-raimundo-malta",
+            "tipo": "natureza",
+            "titulo": "Parque Natural Municipal Raimundo Gonçalez Malta",
+            "texto": "Unidade de conservação de proteção integral no meio da cidade, o parque guarda remanescentes de mangue e de Mata Atlântica, com trechos de Floresta Ombrófila Densa Aluvial. Os visitantes podem percorrer 3.200 metros de caminhos, divididos em seis trilhas.",
+            "fontes": [
+              "balneario-camboriu-fcbc-parque-raimundo-malta-2025",
+              "balneario-camboriu-sectur-atracoes"
+            ],
+            "curto": "Unidade de conservação com mangue e Mata Atlântica, e seis trilhas que somam 3.200 metros."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico do IBGE, foram os alemães do Vale do Itajaí que trouxeram o banho de mar como lazer; antes, ele servia para tratamento ou pesca, e os colonos achavam ofensivo mandar alguém para a praia. O mesmo texto diz que o nome, de origem tupi, significaria rio de muito robalo.",
+            "fontes": [
+              "ibge-biblioteca-balneario-camboriu-sc"
+            ]
+          },
+          {
+            "texto": "Em Taquaras, nas Praias Agrestes, funciona um engenho de farinha de mandioca onde os moradores se reúnem todo ano para a farinhada, segundo a Fundação Cultural, que chama a prática de tradição em extinção no litoral catarinense.",
+            "fontes": [
+              "balneario-camboriu-fcbc-raizes-de-taquaras-2023"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "balneocamboriuense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-balneario-camboriu-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -26.9908,
+          "lon": -48.6343,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 139155,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 45.214,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Itajaí",
+          "intermediaria": "Blumenau",
+          "mesorregiao": "Vale do Itajaí",
+          "microrregiao": "Itajaí",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "litoral",
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Praia urbana entre morros, com a foz do rio, a capela da Barra e canoas de tainha",
+        "base": "litoral",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.7
+        },
+        "agua": {
+          "modulo": "mar"
+        },
+        "vegetacao": [
+          [
+            "mata",
+            9
+          ],
+          [
+            "junco",
+            4
+          ],
+          [
+            "redonda",
+            4
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 6,
+          "predios": 6
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "capela-de-santo-amaro"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O histórico do IBGE diz que a igreja foi autorizada 'por volta de 1840', e a Fundação Cultural fala em 'início do século 19'; o texto usa 'por volta de 1840' para o arraial e só 'século 19' para a capela. O histórico também diz 'Em 1959, foi elevada a Distrito', mas a formação administrativa traz o distrito de Praia de Camboriú pela Lei Municipal nº 18, de 20-10-1954; o texto usa 1954. A Fundação Cultural chama a capela de 'única edificação de arquitetura colonial remanescente' na cidade; o superlativo ficou de fora. As datas da safra (1º/05 a 31/07) são de 2025 e não foram publicadas como calendário. O site novo da Prefeitura (bc.sc.gov.br) só carrega com JavaScript; as fontes são da Secretaria de Turismo e da Fundação Cultural. Só um marco: a pesca e o parque não têm forma adequada entre os módulos (rancho de pesca não é trapiche)."
+      }
+    },
+    "4303103": {
+      "identidade": {
+        "id": "4303103",
+        "ibge": "4303103",
+        "nome": "Cachoeirinha",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "À beira do rio Gravataí, a 17 km de Porto Alegre, a antiga Cidade do Leite que ganhou nome de uma pequena cachoeira.",
+        "resumo": "Cachoeirinha fica a 17 km de Porto Alegre, e 82% do seu território está na bacia do rio Gravataí, segundo a Secretaria estadual do Meio Ambiente. Segundo o histórico do IBGE, o nome viria de uma pequena queda d'água no rio, perto da ponte, que atrapalhava a navegação e foi dinamitada em 1928. As terras foram do coronel João Batista Soares da Silveira e Souza, e a venda feita pelos herdeiros abriu o primeiro loteamento, a Vila Cachoeirinha. Foi distrito de Gravataí em 1957, município em 1965 e instalado em 1966. A produção de leite rendeu à cidade o título de Cidade do Leite.",
+        "fontesResumo": [
+          "cachoeirinha-prefeitura-localizacao",
+          "cachoeirinha-sema-bacia-gravatai",
+          "ibge-biblioteca-cachoeirinha-rs",
+          "cachoeirinha-prefeitura-historia"
+        ],
+        "referencias": [
+          {
+            "id": "casa-do-leite",
+            "tipo": "patrimonio",
+            "titulo": "Casa do Leite",
+            "texto": "Erguida por João Brochado Smith em terras da antiga Fazenda da Cachoeira, a casa foi arrendada em 1935 à família Brambilla, que criava gado leiteiro e vendia leite. Em 1967 foi comprada pela Corlac para uma usina de leite, projeto que a crise do setor inviabilizou. Depois de décadas em ruínas, foi reformada após um acordo de 2006 e abriga o Memorial e Espaço Cultural Casa do Leite e o setor de Patrimônio Cultural.",
+            "fontes": [
+              "cachoeirinha-prefeitura-patrimonio-cultural"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão genérico de beiral; não reproduz a Casa do Leite, e forma e cores são ilustrativas."
+            },
+            "curto": "Antiga sede de tambo de leite, arrendada em 1935 e reformada a partir de 2006; hoje é memorial e espaço cultural."
+          },
+          {
+            "id": "rio-gravatai-ponte-de-ferro",
+            "tipo": "paisagem",
+            "titulo": "Rio Gravataí e a ponte de ferro",
+            "texto": "Segundo o histórico do IBGE, a pequena queda d'água ficava cerca de um quilômetro acima da ponte sobre o rio Gravataí e foi dinamitada em 1928, nas obras de dragagem do canal. O rio ligava por barco Santo Antônio da Patrulha, Gravataí e Porto Alegre. A ponte de ferro de 1925, de uma só mão, virou símbolo da cidade mesmo depois de desmontada e vendida como ferro-velho.",
+            "fontes": [
+              "ibge-biblioteca-cachoeirinha-rs",
+              "cachoeirinha-prefeitura-historia"
+            ],
+            "descoberta": {
+              "modulo": "ponte-urbana",
+              "nota": "Na maquete, uma ponte baixa genérica sobre o rio; a ponte de ferro de 1925 não existe mais e não é reproduzida."
+            },
+            "curto": "A ponte de ferro de 1925, de uma mão, virou símbolo da cidade; a queda d'água que inspirou o nome foi dinamitada em 1928."
+          },
+          {
+            "id": "parque-tancredo-neves",
+            "tipo": "natureza",
+            "titulo": "Parque Natural Municipal Tancredo Neves",
+            "texto": "No bairro Granja Esperança, o parque foi reconhecido como unidade de conservação pela Lei Municipal nº 811, de 1985, para preservar fauna, flora e a nascente do arroio Passinho. É de proteção integral e soma hoje 19,35 hectares. Abriga o Centro de Educação Ambiental Francisco de Medeiros, inaugurado em 1995.",
+            "fontes": [
+              "cachoeirinha-prefeitura-parque-tancredo-neves"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O Horto Municipal, no bairro Jardim Betânia, foi fundado em 1989. Segundo a Prefeitura, reúne mais de 50 mil mudas de 480 espécies, com sementeira, estufa, herbário de plantas medicinais e cactário.",
+            "fontes": [
+              "cachoeirinha-prefeitura-horto-municipal"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "cachoeirinhense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-cachoeirinha-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -29.9475,
+          "lon": -51.0922,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 136258,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 43.778,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Porto Alegre",
+          "intermediaria": "Porto Alegre",
+          "mesorregiao": "Metropolitana de Porto Alegre",
+          "microrregiao": "Porto Alegre",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade baixa à beira do rio Gravataí, com o parque, a ponte e a Casa do Leite",
+        "base": "campos",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.28
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            9
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "capim",
+            6
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 12,
+          "predios": 3
+        },
+        "extras": [
+          "cerca"
+        ],
+        "marcos": [
+          {
+            "modulo": "casarao",
+            "referencia": "casa-do-leite"
+          },
+          {
+            "modulo": "ponte-urbana",
+            "referencia": "rio-gravatai-ponte-de-ferro"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O portal da Prefeitura (cachoeirinha.atende.net) só mostra o conteúdo com JavaScript e serve a página em ISO-8859-1; os textos foram lidos no navegador e as evidências dessas páginas estão como MANUAL (conferir à mão). A Câmara não respondeu. Divergências: o histórico do IBGE dá 1923 para a morte do coronel João Batista, e a página do Patrimônio Cultural diz 1924 (o texto não dá o ano). O histórico (IBGE e Prefeitura) diz que a segunda comissão emancipacionista foi 'no fim dos anos 60', antes da vitória de 1965, o que é incoerente; o texto deixou as tentativas de fora. A Prefeitura cita a 'Lei Municipal nº 5090/65' e o IBGE a Lei Estadual nº 5.090; o texto só dá o ano. A página do Horto parece antiga (fala de um anfiteatro 'que será inaugurado'); a curiosidade só usa fundação e acervo, que convém confirmar. 'Cidade do Leite': a história da Prefeitura diz que a cidade foi reconhecida assim; a página do Patrimônio diz que se intitulava 'A cidade do Leite' na década de 70; o texto não dá a década. Não há fonte oficial atual sobre relevo."
+      }
+    },
+    "5003207": {
+      "identidade": {
+        "id": "5003207",
+        "ibge": "5003207",
+        "nome": "Corumbá",
+        "uf": "MS",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na margem do rio Paraguai, sobre o calcário que lhe deu o apelido de cidade branca, a porta do Pantanal na fronteira com a Bolívia.",
+        "resumo": "Corumbá fica na margem direita do rio Paraguai, sobre uma formação de calcário, num município em grande parte pantaneiro e com morros como o Urucum. Segundo o histórico do IBGE, o nome viria do tupi-guarani Curupah, \"lugar distante\", e o apelido de cidade branca vem da cor clara do solo. O arraial de Nossa Senhora da Conceição de Albuquerque, de 1778, guardava a fronteira; o lugar virou distrito em 1838 e cidade, já como Corumbá, em 1878. Ocupada por tropas paraguaias em 1865, durante a guerra, a cidade foi reconstruída e cresceu com o comércio pelo rio.",
+        "fontesResumo": [
+          "corumba-enciclopedia-ibge-v35",
+          "ibge-biblioteca-corumba-ms"
+        ],
+        "referencias": [
+          {
+            "id": "forte-coimbra",
+            "tipo": "patrimonio",
+            "titulo": "Forte Coimbra",
+            "texto": "Erguido às margens do rio Paraguai, no território de Corumbá, perto da fronteira com a Bolívia e o Paraguai, o forte fazia parte de uma rede de fortificações do século XVIII. O núcleo original, o Presídio de Nova Coimbra, é de 1775. O conjunto tem capela, casa de pólvora, alojamento, pátios internos e muralha com baluartes. Foi tombado pelo Iphan em 1974, o primeiro bem protegido pelo instituto em Mato Grosso do Sul.",
+            "fontes": [
+              "corumba-iphan-ms-patrimonio-material"
+            ],
+            "descoberta": {
+              "modulo": "forte",
+              "nota": "Na maquete, uma fortaleza baixa genérica; o traçado das muralhas, as guaritas e as cores são ilustrativos."
+            },
+            "curto": "Fortificação do século XVIII no rio Paraguai, com núcleo de 1775, tombada pelo Iphan em 1974."
+          },
+          {
+            "id": "conjunto-historico",
+            "tipo": "patrimonio",
+            "titulo": "Conjunto histórico de Corumbá",
+            "texto": "O conjunto histórico, arquitetônico e paisagístico de Corumbá foi tombado pelo Iphan em 1993, com 119 edificações no perímetro tombado e cerca de três mil no entorno. Ele guarda a memória da cidade que se tornou centro de comércio, principalmente com a Bolívia, e escala obrigatória de quem navegava pelos rios Paraguai, São Lourenço e Cuiabá.",
+            "fontes": [
+              "corumba-iphan-ms-patrimonio-material"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão genérico de paredes claras representa o conjunto tombado; não reproduz um prédio específico."
+            },
+            "curto": "Conjunto urbano tombado pelo Iphan em 1993, com 119 edificações, ligado ao comércio pelo rio Paraguai."
+          },
+          {
+            "id": "banho-de-sao-joao",
+            "tipo": "tradicao",
+            "titulo": "Banho de São João",
+            "texto": "Na passagem de 23 para 24 de junho, procissões saem de vários bairros de Corumbá e Ladário e descem ao rio Paraguai para banhar a imagem do santo, no Porto Geral e no Porto de Ladário. Católicos, umbandistas, candomblecistas e espíritas participam, e há quem veja em São João a presença de Xangô. Com raízes no século XIX, após a Guerra do Paraguai, a festa foi registrada como Patrimônio Cultural do Brasil em 2021.",
+            "fontes": [
+              "corumba-iphan-banho-de-sao-joao"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "A Enciclopédia dos Municípios do IBGE, dos anos 1950, já registrava a festa de São João \"concluída com o banho do Santo\" no rio Paraguai, ao lado da festa de Nossa Senhora da Candelária, padroeira de Corumbá.",
+            "fontes": [
+              "corumba-enciclopedia-ibge-v35"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "corumbaense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-corumba-ms"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -19.0058,
+          "lon": -57.6746,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 96268,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 64432.45,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Corumbá",
+          "intermediaria": "Corumbá",
+          "mesorregiao": "Pantanais Sul Mato-grossense",
+          "microrregiao": "Baixo Pantanal",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "rio",
+          "urbano",
+          "campo"
+        ],
+        "rotulo": "Cidade branca no barranco do rio Paraguai, diante dos campos alagáveis do Pantanal",
+        "base": "alagado",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.4
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.45
+        },
+        "vegetacao": [
+          [
+            "capim",
+            14
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "arbusto",
+            5
+          ],
+          [
+            "junco",
+            5
+          ],
+          [
+            "palmeira",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 10
+        },
+        "extras": [
+          "barco",
+          "pier"
+        ],
+        "marcos": [
+          {
+            "modulo": "forte",
+            "referencia": "forte-coimbra"
+          },
+          {
+            "modulo": "casarao",
+            "referencia": "conjunto-historico"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Divergências de data: o histórico do IBGE fala em fundação do arraial em 1778, enquanto o Iphan diz que a cidade foi 'construída em 1869 sobre o sítio da antiga Vila de Nossa Senhora da Conceição de Albuquerque'; o texto atribui 1778 ao IBGE e não usa 1869. A retomada da cidade aparece 'a partir de 1870' no histórico do IBGE e em 13/06/1867 na Enciclopédia (1958); o texto não dá data da retomada. A formação administrativa também registra vila em 1850, extinta em 1869 e recriada em 1871 (instalada em 1872); o texto cita só distrito (1838) e cidade (1878). Ficaram de fora: 'terceiro maior porto da América Latina até 1930' e 'maior sistema inundado contínuo de água doce do mundo' (superlativos), e o número de 60% do território no Pantanal (o resumo diz só 'em grande parte pantaneiro', com base nesse dado do histórico do IBGE). O Forte Coimbra fica longe da sede, no território do município. O site da Prefeitura de Corumbá não respondeu na consulta."
+      }
+    },
+    "1303403": {
+      "identidade": {
+        "id": "1303403",
+        "ibge": "1303403",
+        "nome": "Parintins",
+        "uf": "AM",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Ilha no meio do Amazonas onde o boi-bumbá de Caprichoso e Garantido pinta as ruas de azul e vermelho.",
+        "resumo": "Parintins fica numa ilha na margem direita do rio Amazonas, onde a Enciclopédia do IBGE de 1957 descrevia igarapés, lagos e campos naturais de areia clara com vegetação baixa. Segundo o histórico do IBGE, o capitão José Pedro Cordovil se fixou na ilha em 1796 e a chamou de Tupinambarana, numa região habitada por povos como os Sapupés e os Maués. Foi distrito em 1803, vila de Vila Bela da Imperatriz em 1848, com instalação em 1853, e cidade com o nome de Parintins em 1880. Com os bois Caprichoso e Garantido, é referência do boi-bumbá, registrado pelo Iphan em 2018.",
+        "fontesResumo": [
+          "parintins-ibge-enciclopedia-1957",
+          "ibge-biblioteca-parintins-am",
+          "parintins-iphan-boi-bumba",
+          "parintins-prefeitura-historia"
+        ],
+        "referencias": [
+          {
+            "id": "boi-bumba",
+            "tipo": "tradicao",
+            "titulo": "Boi-bumbá: Caprichoso e Garantido",
+            "texto": "O complexo cultural do boi-bumbá do Médio Amazonas e Parintins foi registrado pelo Iphan em 2018 no Livro das Celebrações. A festa junta música, dança, teatro e saberes tradicionais e aparece como boi de terreiro, de rua e de arena; nesta, surgida nos festivais de Parintins, o Caprichoso e o Garantido disputam a plateia. Segundo a Prefeitura, artistas, costureiras e músicos passam meses nos galpões dos bois.",
+            "fontes": [
+              "parintins-iphan-boi-bumba",
+              "parintins-prefeitura-historia"
+            ]
+          },
+          {
+            "id": "catedral-nossa-senhora-do-carmo",
+            "tipo": "patrimonio",
+            "titulo": "Catedral de Nossa Senhora do Carmo",
+            "texto": "Para quem chega pelo rio, a Catedral de Nossa Senhora do Carmo se destaca na silhueta da cidade, segundo a Prefeitura. Nossa Senhora do Carmo é a padroeira de Parintins; em 1957, o IBGE registrava a festa da padroeira de 6 a 16 de julho, com uma procissão que atraía gente dos municípios vizinhos.",
+            "fontes": [
+              "parintins-prefeitura-historia",
+              "parintins-ibge-enciclopedia-1957"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada de torre central; fachada, torre, proporções e cores são ilustrativas."
+            },
+            "curto": "A catedral da padroeira, Nossa Senhora do Carmo, se destaca na silhueta da cidade para quem chega pelo rio."
+          },
+          {
+            "id": "porto-e-orla-do-amazonas",
+            "tipo": "paisagem",
+            "titulo": "O porto e a orla no Amazonas",
+            "texto": "Cercada pelas águas do Amazonas, a ilha recebe barcos de linha, lanchas e cruzeiros, e o porto e a orla são lugar de encontros e despedidas, segundo a Prefeitura. Em 1957, o IBGE anotava praias nos rios vizinhos à cidade e uma praia que aparece em pleno Amazonas, em frente a Parintins, quando a seca é grande.",
+            "fontes": [
+              "parintins-prefeitura-historia",
+              "parintins-ibge-enciclopedia-1957"
+            ],
+            "descoberta": {
+              "modulo": "trapiche",
+              "nota": "Na maquete, um píer de madeira genérico representa o porto; forma, tamanho e quiosque são ilustrativos."
+            },
+            "curto": "Porto e orla da ilha, cercada pelo Amazonas, onde chegam barcos de linha, lanchas e cruzeiros."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, imigrantes japoneses do projeto dos Koutakuseis, liderados por Tsukasa Uyetsuka, implantaram a juta na Vila Amazônia, e o agrônomo Ryota Oyama adaptou a planta ao solo amazônico. Em 1956, o IBGE atribuía à juta mais de 90% do valor da produção agrícola do município. A antiga estrutura da Fabril Juta abriga hoje a Cidade Garantido.",
+            "fontes": [
+              "parintins-prefeitura-historia",
+              "parintins-ibge-enciclopedia-1957"
+            ]
+          },
+          {
+            "texto": "Segundo a Prefeitura, a ilha já se chamou Las Picotas, São Francisco Xavier dos Tupinambaranas, Tupinambarana, Vila Nova da Rainha e Vila Bela da Imperatriz, até receber o nome de Parintins, em homenagem aos indígenas Parintintin.",
+            "fontes": [
+              "parintins-prefeitura-historia"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "parintinense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-parintins-am"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -2.6264,
+          "lon": -56.7349,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 96372,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 5956.047,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Parintins",
+          "intermediaria": "Parintins",
+          "mesorregiao": "Centro Amazonense",
+          "microrregiao": "Parintins",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "rio",
+          "urbano"
+        ],
+        "rotulo": "Cidade numa ilha do rio Amazonas, com a catedral, o porto e lagos",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.55
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            8
+          ],
+          [
+            "mata",
+            5
+          ],
+          [
+            "palmeira",
+            4
+          ],
+          [
+            "capim",
+            5
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 1
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "catedral-nossa-senhora-do-carmo"
+          },
+          {
+            "modulo": "trapiche",
+            "referencia": "porto-e-orla-do-amazonas"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A Prefeitura chama o festival de 'maior espetáculo cultural da Amazônia' e diz que o município teve 'o maior rebanho bovino do Amazonas'; o texto não usa superlativos. A Prefeitura dá 15/10/1852 como elevação a município (lei provincial do Amazonas que confirmou a criação); o texto segue o IBGE: vila em 1848 (lei do Pará), instalação em 1853, cidade em 1880. O histórico do IBGE grafa 'Vila Bela do Imperatriz'; a Enciclopédia de 1957 e a Prefeitura grafam 'da Imperatriz', usado no texto. O histórico do IBGE descreve os Parintintins como antropófagos; o texto deixa isso de fora e cita só, pela Prefeitura, a homenagem do nome. A Prefeitura situa a juta no 'início do século XX', sem data; o texto não data a chegada. Não foi achada fonte oficial sobre a arquitetura da catedral nem sobre a data do prédio atual; a igreja-matriz fotografada em 1957 pode não ser o mesmo prédio. A festa de julho é citada como registro de 1957, sem promessa. Não há marco para o boi (nenhum módulo corresponde ao Bumbódromo)."
       }
     }
   }
