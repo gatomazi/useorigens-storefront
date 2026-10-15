@@ -1,0 +1,75 @@
+OK   [on] página, índice e perfis respondem 200 — 200/200/200
+OK   [on] canonical sem parâmetros — https://www.useorigens.com.br/meu-pequeno-mundo
+OK   [on] metadados da página sem noindex próprio — (sem meta robots)
+OK   [on] as três entradas aparecem (home, rodapé, cidade) — {"home":true,"rodape":true,"cidade":true}
+PULADO [on] home /norte com o bloco — a configuração local da home desta região não tem a seção de estados
+OK   [on] rodapé de /norte com o link e a loja certa
+PULADO [on] home /centro-oeste com o bloco — a configuração local da home desta região não tem a seção de estados
+OK   [on] rodapé de /centro-oeste com o link e a loja certa
+OK   link antigo do protótipo redireciona com os parâmetros — 307 → /meu-pequeno-mundo?mundo=1&origem=4106902&presente=5208707
+OK   [desktop] home: bloco "Os lugares que fazem parte de você" com "Montar meu mundo"
+OK   [desktop] home: botão com 44 px ou mais — 52 px
+OK   [desktop] home: imagem estática carregada — http://localhost:3300/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Filhas-piloto.38_g_wgf12b
+OK   [desktop] rodapé: link "Meu Pequeno Mundo" com 44 px ou mais
+OK   [desktop] home: nada do mundo carregado (nem prefetch, nem dados, nem 3D)
+OK   [desktop] home: botão alcançável pelo teclado, com foco visível — solid 2px
+OK   [desktop] home → mundo: barra limpa — http://localhost:3300/meu-pequeno-mundo
+OK   [desktop] home → mundo: entrada registrada como "home" — home
+OK   [desktop] "Voltar à loja" leva para /sul
+OK   [desktop] cidade: convite "Curitiba faz parte da sua história?"
+OK   [desktop] cidade: link com cidade=4106902 e loja=sul, 44 px ou mais
+OK   [desktop] cidade: o convite fica abaixo dos produtos — 12 links da loja
+OK   [desktop] cidade: nada do mundo carregado
+OK   [desktop] cidade → mundo sem progresso: a sugestão aparece e nada é escolhido sozinho — {"origem":null,"presente":null,"coracao":null}
+OK   [desktop] cidade → mundo: entrada registrada como "cidade"
+OK   [desktop] escolher "Meu presente" põe Curitiba só no presente
+OK   [mobile] home: bloco "Os lugares que fazem parte de você" com "Montar meu mundo"
+OK   [mobile] home: botão com 44 px ou mais — 52 px
+OK   [mobile] home: imagem estática carregada — http://localhost:3300/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Filhas-piloto.38_g_wgf12b
+OK   [mobile] rodapé: link "Meu Pequeno Mundo" com 44 px ou mais
+OK   [mobile] home: nada do mundo carregado (nem prefetch, nem dados, nem 3D)
+OK   [mobile] home → mundo: barra limpa — http://localhost:3300/meu-pequeno-mundo
+OK   [mobile] home → mundo: entrada registrada como "home" — home
+OK   [mobile] "Voltar à loja" leva para /sul
+OK   [mobile] cidade: convite "Curitiba faz parte da sua história?"
+OK   [mobile] cidade: link com cidade=4106902 e loja=sul, 44 px ou mais
+OK   [mobile] cidade: o convite fica abaixo dos produtos — 12 links da loja
+OK   [mobile] cidade: nada do mundo carregado
+OK   [mobile] cidade → mundo sem progresso: a sugestão aparece e nada é escolhido sozinho — {"origem":null,"presente":null,"coracao":null}
+OK   [mobile] cidade → mundo: entrada registrada como "cidade"
+OK   [mobile] escolher "Meu presente" põe Curitiba só no presente
+OK   com progresso salvo (v2): nada é trocado sozinho — {"origem":"4205407","presente":null,"coracao":null}
+OK   com progresso salvo: a sugestão aparece no resultado
+OK   escolher "Meu lugar do coração" mantém a origem salva — {"origem":"4205407","presente":null,"coracao":"4106902"}
+OK   progresso salvo no formato da v1 continua abrindo — {"origem":"4211504","presente":"4205407","coracao":null}
+OK   "Agora não" fecha a sugestão sem mudar nada — {"origem":"4211504","presente":"4205407","coracao":null}
+OK   link completo com cidade: o mundo do link prevalece e não há sugestão — {"origem":"4106902","presente":"5208707","coracao":"1302603"}
+OK   mundo por link: barra limpa — http://localhost:3300/meu-pequeno-mundo
+OK   mundo por link não grava por cima do mundo salvo da pessoa
+OK   "Voltar à loja" leva para a loja de chegada (/norte)
+OK   recarregar a página mantém o mundo aberto pelo link
+OK   links de cidade e produto são do próprio ambiente — http://localhost:3300/sul/pr/curitiba/ponto-de-origem http://localhost:3300/sul/pr/curitiba http://localhost:3300/centro-oeste/go/goiania/ponto-de-origem http://localhost:3300/centro-oeste/go/goiania
+OK   PNG sem lembranças: 1080 × 1350 — 1080 × 1350, 1123 KB
+OK   PNG com lembranças: 1080 × 1350 — 1080 × 1350, 1135 KB
+OK   copiar link: URL do próprio ambiente, sem entrada, cidade ou loja — http://localhost:3300/meu-pequeno-mundo?mundo=1&origem=4106902&presente=5208707&coracao=1302603&lo=Minha+av%C3%B3+%F0%9F%8C%8A+fazia+p%C3%A3o+aqui+todo+domingo
+OK   compartilhar cancelado na janela nativa: sem erro e sem diálogo — Link copiado.
+OK   compartilhar cancelado registrado como "nativo_cancelado"
+OK   analytics: evento page_view enviado
+OK   analytics: evento mundo_entrada enviado
+OK   analytics: evento mundo_ficha enviado
+OK   analytics: evento mundo_png enviado
+OK   analytics: evento mundo_download_iniciado enviado
+OK   analytics: evento mundo_compartilhar enviado
+OK   analytics: evento mundo_camisetas enviado
+OK   analytics: page_view só com o caminho, sem consulta — http://localhost:3300/meu-pequeno-mundo
+OK   analytics: nenhuma lembrança, texto de busca ou mundo nas coletas
+OK   analytics: mundo_concluido nunca leva os IDs juntos — 3
+OK   nenhum Meta Pixel ou Clarity na rota do mundo
+OK   consentimento recusado: o mundo segue a mesma regra da loja — loja carrega GA4: true; mundo: true
+OK   3D não carregou: aviso e apresentação plana, com os lugares — Não foi possível carregar a maquete 3D. Seus lugares e as camisetas continuam aqui. (3 lugares)
+OK   código da experiência não chegou: aviso com "Tentar de novo" e "Voltar à loja" — Não foi possível abrir o Meu Pequeno Mundo agora.Tentar de novoVoltar à loja
+OK   índice indisponível: aviso na busca com nova tentativa — Não foi possível carregar as cidades. Tentar de novoUsar cidades de exemplo
+OK   perfis indisponíveis: o mundo abre mesmo assim
+OK   sem WebGL: apresentação plana, sem erro de script
+
+71/71 checagens ok; 2 pulada(s); erros de console: 0
