@@ -14,7 +14,7 @@ import { formatListPrice, formatPrice, numberPt } from "@/lib/format";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { cleanQuery, MAX_QUERY_CHARS, parsePage, searchDocs } from "@/lib/search/catalog-search";
-import { CardButton } from "@/components/catalog/CardButton";
+import { CardButton, CardFab } from "@/components/catalog/CardButton";
 import { storeCardButton } from "@/lib/site-config/cards";
 
 // Every query is its own page: never prerendered nor ISR-cached (the region layout above is generateStaticParams/ISR, and reading `searchParams` alone
@@ -50,7 +50,7 @@ export default async function SearchPage({ params, searchParams }: Props) {
   const q = cleanQuery(sp.q);
   const result = q ? searchDocs(regionSearchDocs(region), q, { page: parsePage(sp.page) }) : null;
   // The store-wide buy button (Aparência, global): on the results' cards too.
-  const buyLabel = storeCardButton();
+  const buy = storeCardButton();
   const regionName = REGIONS[region].name;
 
   return (
@@ -117,15 +117,17 @@ export default async function SearchPage({ params, searchParams }: Props) {
                   <TrackedInkLink
                     href={item.href}
                     params={{ productId: item.id, sourceSection: SOURCES.search, state: item.uf ?? undefined, value: item.price ?? undefined, productName: item.title, destinationUrl: item.href }}
-                    className={buyLabel ? "flex h-full flex-col" : "block"}
+                    className={buy?.style === "button" ? "flex h-full flex-col" : "block"}
                   >
-                    <ProductPhoto src={item.imageUrl} alt={item.context ? `${item.title}, ${item.context}` : item.title} sizes="(min-width: 1024px) 22vw, (min-width: 768px) 30vw, 46vw" priority={i < 4} />
+                    <ProductPhoto src={item.imageUrl} alt={item.context ? `${item.title}, ${item.context}` : item.title} sizes="(min-width: 1024px) 22vw, (min-width: 768px) 30vw, 46vw" priority={i < 4}>
+                      {buy?.style === "fab" && <CardFab label={buy.label} />}
+                    </ProductPhoto>
                     <div className="mt-3">
                       <h2 className="t-h3 link-line inline">{item.title}</h2>
                       {item.context && <p className="t-place mt-1 text-[0.95rem] text-ink-mute">{item.context}</p>}
                       {formatPrice(item.price) && <p className="t-small mt-0.5 font-semibold"><PriceText price={formatPrice(item.price)!} listPrice={formatListPrice(item)} /></p>}
                     </div>
-                    {buyLabel && <CardButton label={buyLabel} className="mt-auto" />}
+                    {buy?.style === "button" && <CardButton label={buy.label} className="mt-auto" />}
                   </TrackedInkLink>
                 </li>
               );

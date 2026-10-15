@@ -206,6 +206,8 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     const surface = surfaceRaw === "paper" || surfaceRaw === "region-primary" ? surfaceRaw : "plain";
     // The buy button: the checkbox and its text (empty = "Ver produto"); a form without the block keeps what is saved.
     const buyLabel = f.get("layout_buy_present") === null ? section.layout?.buyLabel : f.get("layout_buy") !== null ? str(f, "layout_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL : undefined;
+    // Its style: under the price (never stored) or the cart on the picture; it goes with the label.
+    const buyStyle = !buyLabel ? undefined : f.get("layout_buy_present") === null ? section.layout?.buyStyle : str(f, "layout_buy_style") === "fab" ? ("fab" as const) : undefined;
     // Tags on the pictures: the "% OFF" of a promotion and/or the section's own text (an empty text is no tag); a form without the block keeps them.
     let tags: ProductTags | undefined = section.layout?.tags;
     if (f.get("tags_present") !== null) {
@@ -213,7 +215,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
       const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text } : {}) };
       tags = next.discount || next.text ? next : undefined;
     }
-    patch.layout = { variant, tone, surface, ...(display === "grid" || display === "paged" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(tags ? { tags } : {}) };
+    patch.layout = { variant, tone, surface, ...(display === "grid" || display === "paged" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(buyStyle ? { buyStyle } : {}), ...(tags ? { tags } : {}) };
   }
   if (section.template === "page-hero") {
     patch.cta = parseCta(f);

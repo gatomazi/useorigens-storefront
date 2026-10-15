@@ -1,6 +1,7 @@
 "use client";
 
 import useEmblaCarousel from "embla-carousel-react";
+import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { useCallback, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import type { ProductTags } from "@/lib/site-config/schema";
 import { CustomizerCardLink, ProductCardLink, ProductSectionHeading, SOLID_CARDS } from "./ProductCard";
@@ -78,7 +79,7 @@ export function ProductCarousel({
   viewAllLabel = "Ver todos",
   sourceSection,
   leading,
-  buyLabel,
+  buy,
   tags,
   toolbar,
   resetKey,
@@ -104,8 +105,8 @@ export function ProductCarousel({
   /** Changing it scrolls the row back to the first card (the items were swapped in place, e.g. another style chosen). */
   resetKey?: string;
   sourceSection: string;
-  /** The section's buy button ("Comprar") under every product card; absent = none. */
-  buyLabel?: string;
+  /** The section's buy button ("Comprar") on every product card, under the price or as a cart on the picture; absent = none. */
+  buy?: CardBuy;
   /** The section's tags on the product pictures (`layout.tags`); absent = none. */
   tags?: ProductTags;
   /** Opaque light cards (`SOLID_CARDS`), for a section on a photo: the picture behind would show through the cards otherwise. */
@@ -146,12 +147,12 @@ export function ProductCarousel({
         <ul className={`-ml-3 flex touch-pan-y sm:-ml-4 lg:-ml-6 ${solidCards ? SOLID_CARDS : ""}`}>
           {leading && (
             <li key="customizer-card" data-customizer-card className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
-              <CustomizerCardLink card={leading} poster={poster} dark={cardDark} sizes={CARD_SIZES} asButton={Boolean(buyLabel)} />
+              <CustomizerCardLink card={leading} poster={poster} dark={cardDark} sizes={CARD_SIZES} asButton={buy?.style === "button"} />
             </li>
           )}
           {items.map((item, i) => (
             <li key={item.id} className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
-              <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} tags={tags} />
+              <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buy={buy} tags={tags} />
             </li>
           ))}
         </ul>

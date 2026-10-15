@@ -7,7 +7,7 @@
  * final URL and dimensions, so rendering never needs the database or the storage API).
  */
 import { isAllowedMediaSrc } from "./media-hosts";
-import { DEFAULT_BUY_LABEL, MAX_BUY_LABEL, validateCards, type CardsConfig } from "./cards-schema";
+import { CARD_BUY_STYLES, DEFAULT_BUY_LABEL, MAX_BUY_LABEL, validateCards, type CardBuyStyle, type CardsConfig } from "./cards-schema";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
@@ -105,6 +105,7 @@ export const MAX_FEATURED = 3;
  * `limit` per page and links to the other pages (an INK collection only, on a parent-category landing only, once per page: the collection page).
  * `buyLabel` (product sections only): a buy button under every product card, with this text; absent = no button. It is part of the card's own
  * link, so it opens the same store page (where size and colour are chosen) and reports the same click. The suggested text says just that: "Ver produto".
+ * `buyStyle` (with `buyLabel` only): "fab" = a cart button on the picture instead of the bar under the price; absent = the bar.
  */
 export const PRODUCT_DISPLAYS = ["carousel", "grid", "paged"] as const;
 export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
@@ -115,7 +116,7 @@ export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
  */
 export type ProductTags = { discount?: true; text?: string };
 export const MAX_TAG_TEXT = 24;
-export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string; tags?: ProductTags };
+export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string; buyStyle?: CardBuyStyle; tags?: ProductTags };
 export { DEFAULT_BUY_LABEL, MAX_BUY_LABEL };
 /** Cards of a product section: a carousel scrolls through at most 24; a grid lays out up to 48 (every product an INK collection keeps for showcases),
  * and a paged grid shows up to 48 per page. */
@@ -522,6 +523,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     } else {
       if (l.display !== undefined && (v.template !== "product-carousel" || !(PRODUCT_DISPLAYS as readonly unknown[]).includes(l.display))) c.fail(`${path}.layout.display`, `product sections only: ${PRODUCT_DISPLAYS.join(" | ")}`);
       if (l.buyLabel !== undefined && (v.template !== "product-carousel" || !isStr(l.buyLabel, MAX_BUY_LABEL) || l.buyLabel.trim() !== l.buyLabel)) c.fail(`${path}.layout.buyLabel`, `product sections only: 1..${MAX_BUY_LABEL} chars, no leading or trailing spaces`);
+      if (l.buyStyle !== undefined && (l.buyLabel === undefined || !(CARD_BUY_STYLES as readonly unknown[]).includes(l.buyStyle))) c.fail(`${path}.layout.buyStyle`, `with a buyLabel only: ${CARD_BUY_STYLES.join(" | ")}`);
       if (l.tags !== undefined) {
         const t = l.tags;
         const ok =
