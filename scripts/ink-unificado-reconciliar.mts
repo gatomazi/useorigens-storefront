@@ -27,12 +27,12 @@ import {
   COLECAO_ZZ_CO,
   COLECAO_ZZ_NO,
   MAPA_VERSAO,
-  montarIndiceSombra,
   problemaDeVariantes,
   reconciliar,
   type LinhaMapa,
 } from "../src/lib/catalog/unificado/reconciliar";
 import { snapshotPath } from "../src/lib/catalog/snapshot-file";
+import { montarLojaUnica } from "../src/lib/catalog/unificado/loja-unica";
 
 const argv = process.argv.slice(2);
 const opt = (n: string) => argv.find((a) => a.startsWith(`--${n}=`))?.split("=").slice(1).join("=");
@@ -84,7 +84,12 @@ const mapa = reconciliar({
 
 // 3. Índice sombra.
 const agora = new Date().toISOString();
-const sombra = montarIndiceSombra(sul, agora);
+const lojaUnica = montarLojaUnica(sul, { modo: "simulacao", syncedAt: agora, fonte: { runId: "reconciliacao", generatedAt: agora, mapVersion: MAPA_VERSAO, identitySha256: hashEstado } });
+const sombra = {
+  snapshot: lojaUnica.catalogo as { version: 1; stores: { "use-sul": NonNullable<(typeof lojaUnica.catalogo.stores)["use-sul"]> } },
+  simulados: lojaUnica.situacoes.filter((l) => l.situacao === "simulado").map((l) => l.id),
+  foraPorImagem: lojaUnica.situacoes.filter((l) => l.situacao === "sem-imagem" && l.tipo === 1 && (l.regiao === "norte" || l.regiao === "centro-oeste")).map((l) => l.id),
+};
 
 // ─── Verificações direcionadas ───────────────────────────────────────────────────────────────────────────────────────────────────
 const verificacoes: Record<string, unknown> = {};

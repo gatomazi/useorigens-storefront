@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { MeusLugaresView } from "@/components/favorites/MeusLugaresView";
+import { commercePlan, storeForRegion } from "@/lib/catalog/commerce-mode";
+import { REGIONS } from "@/lib/geo/regions";
 
 type Props = { params: Promise<{ region: string }> };
 
@@ -22,7 +24,8 @@ export default async function MeusLugaresPage({ params }: Props) {
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   return (
     <div className="wrap py-10 lg:py-16">
-      <MeusLugaresView region={region} />
+      {/* Single-store mode: the single store sells, but the list is shown under the region being browsed (navigation ≠ supplying store). */}
+      <MeusLugaresView region={region} storeLabels={commercePlan().effective === "single-store" ? { [storeForRegion(region)]: REGIONS[region].name } : {}} />
     </div>
   );
 }

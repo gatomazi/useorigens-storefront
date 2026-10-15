@@ -1,7 +1,8 @@
 import "server-only";
 import { statSync } from "node:fs";
 import { purchaseUrl } from "../catalog/commerce";
-import { categoryLookup, collectionPageSlug } from "../catalog/collection-source";
+import { categoryLookup, collectionPageSlug, collectionsForRegion } from "../catalog/collection-source";
+import { storeForRegion } from "../catalog/commerce-mode";
 import { MIN_USABLE_PRODUCTS, type CollectionRecord } from "../catalog/collections";
 import { getStoreCollections } from "../catalog/collections-file";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
@@ -12,7 +13,7 @@ import { getCatalog, getGarmentIndex, type Catalog } from "../catalog/repository
 import type { MerchProduct } from "../catalog/types";
 import { formatPrice } from "../format";
 import { localitiesOfRegion, localityKindLabel, localitySubtitle } from "../geo/localities";
-import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
+import { REGIONS, STATE_NAMES, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { normalizeText } from "../geo/text";
 import { getRegionHome } from "../home";
 import { launchedRegions } from "../regions/launched";
@@ -43,6 +44,8 @@ export type GlobalIndexInputs = {
   doc?: ScopeDoc;
   media?: PublishedBundle["media"];
   collections: readonly CollectionRecord[];
+  /** Store whose public collection pages the `collections` link to (the region's store under the effective commerce mode). */
+  collectionStore?: CommerceStoreKey;
   /** Resolves a home carousel's source the way the home does, so a carousel that renders nothing is never a result. */
   carouselItems?: (source: CarouselSource) => number;
   umaPencaArticles: number;
@@ -94,7 +97,8 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
 
     for (const entry of catalog.cityFamilies(place.id)) {
       const primary = entry.primary;
-      if (!purchaseUrl(primary)) continue; // never a design without a real destination
+      // Never a design without a real destination. A simulated one (single-store preview only) links to its storefront page, which shows it is not for sale yet.
+      if (!purchaseUrl(primary) && !primary.simulated) continue;
       const { types, prices } = clusterPieces(input.garmentIndex, primary.commerceStoreKey, primary.productClusterId);
       const all = [primary.price, ...prices].filter((p): p is number => typeof p === "number" && p > 0);
       const minPrice = all.length > 0 ? Math.min(...all) : undefined;
@@ -156,7 +160,7 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
 
   // Public INK collections with enough real products: their page on the storefront (the INK one only without the CMS, which draws that page). An
   // internal collection is never searched by name: its name is an internal segmentation, not a word a customer types.
-  const store = REGIONS[region].storeKey;
+  const store = input.collectionStore ?? REGIONS[region].storeKey;
   for (const c of input.collections) {
     if (!c.isAvailable || c.matchedCount < MIN_USABLE_PRODUCTS) continue;
     const ours = input.doc ? collectionPageSlug(input.doc, store, c.id) : null;
@@ -241,7 +245,7 @@ export function globalSearchIndex(): Built {
   const regions = launchedRegions();
   const cms = siteConfigHomeEnabled() ? readPublished() : null;
   const published = cms && cms.source === "published" ? cms : null;
-  const collectionsKey = regions.map((r) => getStoreCollections(REGIONS[r].storeKey)?.syncedAt ?? "-").join("|");
+  const collectionsKey = regions.map((r) => `${storeForRegion(r)}:${getStoreCollections(storeForRegion(r))?.syncedAt ?? "-"}`).join("|");
   const key = [catalog.syncedAt, garmentIndexMtimeMs(), published?.checksum ?? (cms ? "seed" : "off"), collectionsKey, mtime(umaPencaSnapshotPath()), regions.join(",")].join("#");
   if (built && built.key === key) return built;
 
@@ -254,15 +258,16 @@ export function globalSearchIndex(): Built {
   let approxBytes = 0;
   for (const region of regions) {
     const doc = bundle?.docs[region];
-    const store = getStoreCollections(REGIONS[region].storeKey);
-    const categories = categoryLookup((s) => catalog.productsOfStore(s), (s) => enabledInternalIds(doc, s), undefined, (src) => arrangementOf(doc, src.store, src.collectionId, src));
+    const collectionStore = storeForRegion(region);
+    const store = getStoreCollections(collectionStore);
+    const categories = categoryLookup((s) => catalog.productsOfStore(s), (s) => enabledInternalIds(doc, s), undefined, (src) => arrangementOf(doc, src.store, src.collectionId, src), region);
     const editorial = doc ? editorialItems(region) : null;
     const carouselItems = (source: CarouselSource): number => {
       if (!editorial) return 0;
       const result: SourceResult = resolveSource(source, editorial, categories, umaPencaLookup(region));
       return result.status === "ok" ? result.items.length : 0;
     };
-    const docs = buildGlobalDocs({ region, catalog, garmentIndex, doc, media: bundle?.media, collections: store?.collections ?? [], carouselItems, umaPencaArticles: umaPenca });
+    const docs = buildGlobalDocs({ region, catalog, garmentIndex, doc, media: bundle?.media, collections: store ? collectionsForRegion(region, (s) => catalog.productsOfStore(s)) : [], collectionStore, carouselItems, umaPencaArticles: umaPenca });
     for (const d of docs) {
       byKind[d.kind] = (byKind[d.kind] ?? 0) + 1;
       approxBytes += JSON.stringify(d).length;

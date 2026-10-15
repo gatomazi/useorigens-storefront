@@ -21,6 +21,7 @@ import { HeaderShell } from "./HeaderShell";
 import { MobileMenu } from "./MobileMenu";
 import { PriorityLinks } from "./PriorityLinks";
 import { CartMirrorMenu } from "../cart-mirror/CartMirrorMenu";
+import { cartRegionFor, checkoutStoreFor } from "@/lib/catalog/commerce-mode";
 import { FavoritesMenu } from "../favorites/FavoritesMenu";
 import { SearchDialog } from "../search/SearchDialog";
 
@@ -28,7 +29,7 @@ export function AnnouncementBar({ region, cityCount }: { region: RegionSlug; cit
   return (
     <div className="on-ink">
       <p className="wrap py-2 text-center text-[0.8125rem] font-medium leading-snug sm:text-[0.875rem]">
-        {numberPt.format(cityCount)} cidades do {REGIONS[region].name} em camiseta.<span className="hidden sm:inline"> Você escolhe aqui e finaliza a compra na loja Use {REGIONS[region].name}.</span>
+        {numberPt.format(cityCount)} cidades do {REGIONS[region].name} em camiseta.<span className="hidden sm:inline"> Você escolhe aqui e finaliza a compra {checkoutStoreFor(region).finishIn}.</span>
       </p>
     </div>
   );
@@ -151,7 +152,7 @@ export function Header({ region }: { region: RegionSlug }) {
             </HeaderDropdown>
           )}
           <FavoritesMenu region={region} />
-          <CartMirrorMenu region={region} />
+          <CartMirrorMenu region={cartRegionFor(region)} navRegion={region} />
           <SearchDialog region={region} />
         </div>
       </div>
@@ -161,6 +162,7 @@ export function Header({ region }: { region: RegionSlug }) {
 
 export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: string | null }) {
   const r = REGIONS[region];
+  const checkout = checkoutStoreFor(region);
   const others = (Object.values(REGIONS) as (typeof REGIONS)[RegionSlug][]).filter((x) => x.slug !== region);
   const launched = launchedRegions();
   const updated = syncedAt ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "America/Sao_Paulo" }).format(new Date(syncedAt)) : null;
@@ -203,8 +205,8 @@ export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: str
           <p className="t-label mb-3">Loja</p>
           <ul className="space-y-0">
             <li>
-              <a href={LEGACY_STORE_URLS[region]} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]">
-                Loja Use {r.name}
+              <a href={checkout.url} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]">
+                {checkout.linkLabel}
               </a>
             </li>
             <li>
@@ -232,7 +234,7 @@ export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: str
       <div className="wrap border-t border-line py-6">
         <p className="t-small max-w-xl text-ink-soft">A experiência regional da Use {r.name}, agora dentro da Use Origens.</p>
         <p className="t-caption mt-3 max-w-3xl">
-          Você escolhe a cidade e o estilo aqui e finaliza a compra na loja Use {r.name}, onde ficam tamanho, cor, frete e pagamento.
+          Você escolhe a cidade e o estilo aqui e finaliza a compra {checkout.finishIn}, onde ficam tamanho, cor, frete e pagamento.
           {updated ? ` Preços e disponibilidade atualizados em ${updated}.` : ""}
         </p>
       </div>

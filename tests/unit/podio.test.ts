@@ -179,6 +179,18 @@ describe("pódio — geography and families", () => {
   });
 });
 
+describe("pódio — single store (one store sells the three regions)", () => {
+  it("a Norte design sold by the single store counts for Norte by the region's own UFs, and never for Sul", () => {
+    const list = orders(rawOrder([{ productId: "990", name: "Belém | Território PA" }, { productId: "101", name: "x" }]));
+    const norte = compute("norte", list);
+    expect(norte.states.PA.localities[0].id).toBe(cityId("Belém", "PA"));
+    expect(Object.keys(norte.states)).toEqual(["PA"]);
+    const sul = compute("sul", list);
+    expect(Object.keys(sul.states)).toEqual(["SC"]);
+    expect(sul.unmapped.map((u) => [u.productId, u.reason])).toEqual([["990", "outside-region"]]);
+  });
+});
+
 describe("pódio — order, ties and movement", () => {
   it("ties keep yesterday's relative order, then fall back to the canonical id", () => {
     const units = new Map([["b", 2], ["a", 2], ["c", 5]]);

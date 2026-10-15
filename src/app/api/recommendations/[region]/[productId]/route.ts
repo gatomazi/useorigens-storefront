@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { lookupRecommendations } from "@/lib/recommendations/build";
-import { readRecommendationsIndex } from "@/lib/recommendations/index-file";
+import { readRecommendationsIndex, recommendationsIndexPath } from "@/lib/recommendations/index-file";
+import { servedDataDir, storeForRegion } from "@/lib/catalog/commerce-mode";
 
 const PRODUCT_ID = /^[1-9][0-9]{0,15}$/;
 
@@ -16,8 +17,8 @@ const PRODUCT_ID = /^[1-9][0-9]{0,15}$/;
 export async function GET(_request: Request, { params }: { params: Promise<{ region: string; productId: string }> }) {
   const { region, productId } = await params;
   if (!isRegionSlug(region) || !PRODUCT_ID.test(productId)) return new NextResponse(null, { status: 404 });
-  const index = readRecommendationsIndex();
-  const items = lookupRecommendations(index, region, productId);
+  const index = readRecommendationsIndex(recommendationsIndexPath(servedDataDir()));
+  const items = lookupRecommendations(index, region, productId, storeForRegion(region));
   return NextResponse.json(
     { v: 1, region, productId, status: index ? "ok" : "no-index", items },
     { headers: { "Cache-Control": "public, max-age=0, s-maxage=300, stale-while-revalidate=3600" } },

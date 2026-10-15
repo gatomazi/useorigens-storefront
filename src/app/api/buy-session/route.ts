@@ -35,17 +35,23 @@ export async function POST(request: Request) {
   if (!Array.isArray(body.inkProductIds) || body.inkProductIds.length === 0) return json({ error: "bad_request" }, 400);
   const requestedIds = body.inkProductIds.filter((id): id is string => typeof id === "string" && /^[A-Za-z0-9_-]{1,40}$/.test(id)).slice(0, MAX_ITEMS);
 
+  // The session is minted for the store that SELLS the items and with their served ids: in single-store mode an old regional list resolves
+  // to the single store (old → new map), so the Worker of the store the buyer lands on can read it. One session, one store: an item that
+  // resolves to another store than the first eligible one is left out (cannot happen in either mode, kept as a guard).
   const eligible: string[] = [];
+  let sellingStore: CommerceStoreKey | null = null;
   let firstProductUrl: string | null = null;
   for (const id of requestedIds) {
     const display = resolveProductDisplay(storeKey as CommerceStoreKey, id);
     if (!display?.url) continue;
-    eligible.push(id);
+    sellingStore ??= display.commerceStoreKey;
+    if (display.commerceStoreKey !== sellingStore || eligible.includes(display.inkProductId)) continue;
+    eligible.push(display.inkProductId);
     if (!firstProductUrl) firstProductUrl = display.url;
   }
-  if (eligible.length === 0 || !firstProductUrl) return json({ error: "no_eligible_items" }, 422);
+  if (eligible.length === 0 || !firstProductUrl || !sellingStore) return json({ error: "no_eligible_items" }, 422);
 
-  const sessionId = mintListSession(storeKey as CommerceStoreKey, eligible);
+  const sessionId = mintListSession(sellingStore, eligible);
   if (!sessionId) return json({ error: "not_configured" }, 501);
 
   return json({ sessionId, firstProductUrl, total: eligible.length }, 201);

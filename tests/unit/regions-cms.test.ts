@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { applyOp } from "@/lib/admin/draft-ops";
 import { publishRelease, seedForEnv, type PublishDeps } from "@/lib/admin/publishing";
 import type { PublishedBundle, Section } from "@/lib/site-config/schema";
@@ -19,7 +20,7 @@ const heroFooter = (): Section[] => {
   const sul = seedForEnv().docs.sul.home!.sections;
   return [sul[0], sul[sul.length - 1]].map((s) => structuredClone(s));
 };
-const carousel = (store: "use-norte" | "use-sul"): Section => ({
+const carousel = (store: CommerceStoreKey): Section => ({
   id: "custom-a1", anchor: "colecao-a1", headingId: "colecao-a1-title", template: "product-carousel", active: true, title: "Coleção",
   layout: { variant: "standard", tone: "light", surface: "plain" },
   source: { kind: "ink-category", store, collectionId: 1, order: "category", limit: 6 }, analyticsSource: "homeCollection",
@@ -54,12 +55,15 @@ describe("schema rules that keep regions apart", () => {
     expect(validateScopeDoc(global).ok).toBe(true);
   });
 
-  test("given a Norte section fed by Sul's store, when validated, then it is rejected; fed by Norte's own store it passes", () => {
+  test("given a Norte section fed by Centro-Oeste's store, when validated, then it is rejected; fed by Norte's own store or by the single store it passes", () => {
     const doc = structuredClone(seedForEnv().docs.norte);
-    doc.home = { sections: [heroFooter()[0], carousel("use-sul"), heroFooter()[1]] };
+    doc.home = { sections: [heroFooter()[0], carousel("use-centro"), heroFooter()[1]] };
     const wrong = validateScopeDoc(doc);
     expect(wrong.ok).toBe(false);
     doc.home = { sections: [heroFooter()[0], carousel("use-norte"), heroFooter()[1]] };
+    expect(validateScopeDoc(doc).ok).toBe(true);
+    // The single store (use-sul) sells Norte in single-store mode: a document re-pointed to it stays valid in both modes (the storefront serves one).
+    doc.home = { sections: [heroFooter()[0], carousel("use-sul"), heroFooter()[1]] };
     expect(validateScopeDoc(doc).ok).toBe(true);
   });
 });

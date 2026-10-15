@@ -2,10 +2,11 @@ import "server-only";
 import { effectiveMenu, menuPositionOf } from "../site-config/collection-menu";
 import { collectionPagePath, collectionUrl } from "../site-config/sources";
 import type { CollectionRef, ScopeDoc } from "../site-config/schema";
-import { REGIONS, type RegionSlug } from "../geo/regions";
+import type { RegionSlug } from "../geo/regions";
 import type { CollectionRecord } from "./collections";
 import { getStoreCollections } from "./collections-file";
-import { collectionPageSlug } from "./collection-source";
+import { collectionPageSlug, regionShowsCollection } from "./collection-source";
+import { storeForRegion } from "./commerce-mode";
 
 /** One collection of the menu with the places it can link to: our page (when the region can show it) and its INK page (when it is public). */
 export type MenuEntry = { ref: CollectionRef; record: CollectionRecord; position: "top" | "more"; pagePath: string | null; inkUrl: string | null };
@@ -16,9 +17,10 @@ export type MenuEntry = { ref: CollectionRef; record: CollectionRecord; position
  * A chosen collection that can no longer be linked silently drops out; the choice stays in the document.
  */
 export function collectionMenuEntries(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): { top: MenuEntry[]; more: MenuEntry[]; own: boolean } {
-  const store = REGIONS[region].storeKey;
+  // The store that sells in the region (commerce-mode.ts); in single-store mode only the collections that are the region's (collection-source.ts).
+  const store = storeForRegion(region);
   const { menu, own } = effectiveMenu(doc);
-  const records = getStoreCollections(store, filePath)?.collections ?? [];
+  const records = (getStoreCollections(store, filePath)?.collections ?? []).filter((c) => regionShowsCollection(region, c));
   const entry = (record: CollectionRecord, position: MenuEntry["position"]): MenuEntry => {
     const pageSlug = collectionPageSlug(doc, store, record.id, filePath);
     return {

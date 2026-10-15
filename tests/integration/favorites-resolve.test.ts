@@ -31,7 +31,7 @@ describe("GET /api/favorites/resolve", () => {
 
   test("given a known id, then it comes back available with live title/price/url", async () => {
     const data = await (await get("?store=use-sul&ids=111")).json();
-    expect(data.items).toEqual([{ inkProductId: "111", title: "Ponto de Origem", context: `${city.name} · ${city.uf}`, imageUrl: binding.imageUrl, price: 109.9, url: binding.storeProductUrl, available: true }]);
+    expect(data.items).toEqual([{ inkProductId: "111", title: "Ponto de Origem", context: `${city.name} · ${city.uf}`, imageUrl: binding.imageUrl, price: 109.9, url: binding.storeProductUrl, available: true, purchaseId: "111", purchaseStoreKey: "use-sul" }]);
   });
 
   test("given a removed/unknown id, then it comes back unavailable, never a 500", async () => {

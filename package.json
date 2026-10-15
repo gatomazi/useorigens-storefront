@@ -35,6 +35,7 @@
     "cms:check": "node --env-file-if-exists=.env.local --import tsx scripts/cms-check.mts",
     "unificado:ler": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-unificado-ler.mts",
     "unificado:reconciliar": "node --conditions=react-server --import tsx scripts/ink-unificado-reconciliar.mts",
+    "unificado:gerar": "node --max-old-space-size=8192 --conditions=react-server --import tsx scripts/ink-unificado-gerar.mts",
     "mockups:fila": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-mockups-fila.mts",
     "mundo:dados": "node --conditions=react-server --import tsx scripts/mini-world-export.mts",
     "mundo:prototipo": "node --import tsx scripts/mini-world-standalone.mts",

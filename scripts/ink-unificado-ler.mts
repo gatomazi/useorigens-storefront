@@ -5,6 +5,7 @@
 //   npm run unificado:ler -- use-sul                       # só a Sul (base da loja unificada)
 //   npm run unificado:ler -- --max-paginas=50              # para depois de 50 páginas por loja; rodar de novo retoma
 //   npm run unificado:ler -- --dir=/caminho/absoluto       # outro diretório (recusado se for o de produção)
+//   npm run unificado:ler -- --so-colecoes                 # só as coleções (1–2 GET por loja), sem reler os produtos
 //
 // Grava em data/unificado/leitura/<loja>.jsonl (+ colecoes-<loja>.json). Nunca toca data/generated/ (catálogo servido, índice de
 // peças, coleções, last-known-good). Sem flag de escrita: este script não sabe escrever na INK.
@@ -28,10 +29,15 @@ const log = (m: string) => console.log(`${new Date().toISOString().slice(11, 19)
 // Coleções primeiro (poucas requisições): segmentação regional (ZZ - CO, ZZ - NO, SUL…) com os product_ids, inclusive de ocultos.
 for (const loja of alvo) {
   if (argv.includes("--sem-colecoes")) break;
-  const { todas, membros } = await lerColecoes(loja, (nome) => /^(ZZ|SUL|NORTE|CENTRO|CO|NO)\b/i.test(nome) || nome === "Seu Lugar");
-  writeFileSync(path.join(dir, `colecoes-${loja}.json`), JSON.stringify({ lidoEm: new Date().toISOString(), todas, membros }));
+  const lidoEm = new Date().toISOString();
+  const { todas, membros, paginas } = await lerColecoes(loja, (nome) => /^(ZZ|SUL|NORTE|CENTRO|CO|NO)\b/i.test(nome) || nome === "Seu Lugar");
+  // Com --so-colecoes a segmentação já gravada (a que casa com a leitura de produtos) é preservada: só as páginas brutas são acrescentadas.
+  if (!argv.includes("--so-colecoes")) writeFileSync(path.join(dir, `colecoes-${loja}.json`), JSON.stringify({ lidoEm, todas, membros }));
+  // Páginas brutas: a geração da loja única (unificado:gerar) monta collections-snapshot.json a partir delas.
+  writeFileSync(path.join(dir, `colecoes-paginas-${loja}.json`), JSON.stringify({ lidoEm, paginas }));
   log(`${loja}: ${todas.length} coleções, ${membros.length} de segmentação gravadas com product_ids`);
 }
+if (argv.includes("--so-colecoes")) process.exit(0);
 
 const resultados = await Promise.allSettled(alvo.map((loja) => lerLojaInteira(loja, dir, { maxPaginas, log })));
 resultados.forEach((r, i) => {

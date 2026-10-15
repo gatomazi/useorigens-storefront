@@ -14,6 +14,7 @@ const run = (doc: ScopeDoc, op: DraftOp) => {
   return r;
 };
 const SUL_COLLECTION = { store: "use-sul", collectionId: 152188 } as const;
+const CENTRO_COLLECTION = { store: "use-centro", collectionId: 139344 } as const;
 const PIC = { assetId: "legacy:sul/fala-daqui-desktop", alt: "", decorative: true };
 
 describe("pages in the region document", () => {
@@ -59,7 +60,7 @@ describe("pages in the region document", () => {
 
   test("given a page section from another region's store or a button to another region, when saved, then it is refused", () => {
     let doc = run(start("norte"), { type: "create-page", kind: "hotpage", title: "Amazônia" }).doc;
-    const foreign = applyOp(doc, { type: "in-page", page: doc.pages![0].id, op: { type: "add-carousel", title: "Sul", source: { kind: "ink-category", ...SUL_COLLECTION, order: "category", limit: 6 } } }, ctx());
+    const foreign = applyOp(doc, { type: "in-page", page: doc.pages![0].id, op: { type: "add-carousel", title: "Centro-Oeste", source: { kind: "ink-category", ...CENTRO_COLLECTION, order: "category", limit: 6 } } }, ctx());
     expect(foreign.ok).toBe(false);
     doc = run(doc, { type: "in-page", page: doc.pages![0].id, op: { type: "add-structured", template: "campaign" } }).doc;
     const campaign = doc.pages![0].sections[1];
@@ -101,7 +102,7 @@ describe("personalization models", () => {
   test("given a region, when a model is created, then it is a draft (inactive), of the region's own store, with a stable id and slug", () => {
     const doc = base();
     expect(model(doc)).toMatchObject({ slug: "pai-paranaense", active: false, version: 1, previewMode: "mockupWithTextSummary", source: SUL_COLLECTION });
-    expect(applyOp(start("norte"), { type: "create-customizer", name: "X", source: SUL_COLLECTION }, ctx()).ok).toBe(false); // Sul's collection in Norte
+    expect(applyOp(start("norte"), { type: "create-customizer", name: "X", source: CENTRO_COLLECTION }, ctx()).ok).toBe(false); // Centro-Oeste's collection in Norte
   });
 
   test("given a model, when fields and a line group are configured, then limits are enforced: up to 10 fields, min ≤ initial ≤ max, an active model needs its mockup", () => {

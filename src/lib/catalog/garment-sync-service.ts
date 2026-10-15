@@ -4,9 +4,9 @@ import { fetchGarmentSourceProducts, type GarmentFetchDeps, type GarmentPageProg
 import { requireAtLeastOneInkToken } from "../config/env";
 import { INK_STORES, tokenFor } from "../ink/config";
 import { linkGarmentBindings, type GarmentLinkStats } from "./garments-link";
-import { readGarmentCheckpoint, writeGarmentCheckpoint, type GarmentExclusionTotals, type GarmentSyncStoreCheckpoint } from "./garment-checkpoint";
-import { countPieces, readGarmentIndex, upsertPieces, writeGarmentIndex, type GarmentTuple } from "./garment-index-file";
-import { readSnapshot } from "./snapshot-file";
+import { garmentCheckpointPath, readGarmentCheckpoint, writeGarmentCheckpoint, type GarmentExclusionTotals, type GarmentSyncStoreCheckpoint } from "./garment-checkpoint";
+import { countPieces, garmentIndexPath, readGarmentIndex, upsertPieces, writeGarmentIndex, type GarmentTuple } from "./garment-index-file";
+import { readSnapshot, snapshotPath } from "./snapshot-file";
 
 export type GarmentSyncOutcome =
   | {
@@ -37,6 +37,12 @@ export type GarmentSyncRunOptions = {
   forceFull?: boolean;
   onProgress?: GarmentPageProgress;
   deps?: GarmentFetchDeps;
+  /**
+   * Data set to read the canonical catalog from and write the piece index + checkpoint to. Default: the snapshot directory (regional
+   * mode). The single store passes its own directory (commerce-mode.ts `singleStoreDataDir()`): same crawl, same linker, linked against
+   * the single-store catalog — the regional files are never touched.
+   */
+  dataDir?: string;
 };
 
 export type GarmentSyncRunResult = { startedAt: string; finishedAt: string; outcomes: GarmentSyncOutcome[] };
@@ -91,9 +97,12 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
     (key) => (!options.storeKeys || options.storeKeys.length === 0 || options.storeKeys.includes(key)) && tokenFor(key),
   );
 
-  const snapshot = await readSnapshot();
-  const checkpointDoc = await readGarmentCheckpoint();
-  const garmentIndex = await readGarmentIndex();
+  const files = options.dataDir
+    ? { snapshot: snapshotPath(options.dataDir), checkpoint: garmentCheckpointPath(options.dataDir), index: garmentIndexPath(options.dataDir) }
+    : { snapshot: undefined, checkpoint: undefined, index: undefined };
+  const snapshot = await readSnapshot(files.snapshot);
+  const checkpointDoc = await readGarmentCheckpoint(files.checkpoint);
+  const garmentIndex = await readGarmentIndex(files.index);
 
   const settled = await Promise.allSettled(
     keys.map(async (storeKey) => {
@@ -181,8 +190,8 @@ export async function runGarmentSync(options: GarmentSyncRunOptions): Promise<Ga
   // above, so its prior index/checkpoint entries are written back completely unchanged. Index first: a crash
   // between the two leaves the checkpoint behind the index, and re-reading a few pages is idempotent.
   if (outcomes.some((o) => o.ok)) {
-    await writeGarmentIndex(garmentIndex);
-    await writeGarmentCheckpoint(checkpointDoc);
+    await writeGarmentIndex(garmentIndex, files.index);
+    await writeGarmentCheckpoint(checkpointDoc, files.checkpoint);
   }
 
   return { startedAt, finishedAt: new Date().toISOString(), outcomes };

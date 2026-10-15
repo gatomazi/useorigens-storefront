@@ -8,6 +8,7 @@ import { effectiveNavbarGroups } from "./navbar-groups";
 import { DEFAULT_CATEGORIES_BLOCK_LABEL } from "./navigation";
 import { MAX_NAVBAR_GROUP, type CollectionRef, type ScopeDoc } from "./schema";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
+import { storeForRegion } from "../catalog/commerce-mode";
 
 /**
  * The lean, PUBLIC navbar configuration the Worker turns into the header it draws on the INK product pages: the region's collection menu (`top` on the
@@ -49,7 +50,9 @@ function menuNavbar(region: RegionSlug, doc: ScopeDoc, states: NavbarState[]): N
 
 /** A document from before the collection menu: exactly what the Worker always received (the older INK navbar choice, INK links). */
 function legacyNavbar(region: RegionSlug, doc: ScopeDoc | undefined, states: NavbarState[]): NavbarConfig {
-  const store = REGIONS[region].storeKey;
+  // The region's store under the effective commerce mode: in single-store mode a published ref to use-norte/use-centro is dropped (its
+  // collection does not exist in the single store and its URL would send the buyer to the old store) until the CMS is re-pointed.
+  const store = storeForRegion(region);
   const { groups, legacy } = effectiveNavbarGroups(doc);
 
   const resolve = (refs: readonly CollectionRef[]): NavbarEntry[] => {

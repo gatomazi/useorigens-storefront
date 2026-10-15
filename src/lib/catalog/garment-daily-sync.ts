@@ -1,10 +1,23 @@
 import "server-only";
+import { existsSync } from "node:fs";
+import path from "node:path";
 import type { CommerceStoreKey } from "../geo/regions";
 import { INK_STORES, tokenFor } from "../ink/config";
 import { GARMENT_REVALIDATE_STORES, garmentRevalidationPathsForClusters } from "./garment-revalidate";
 import { runIncrementalGarmentSync, type IncrementalOptions, type IncrementalResult } from "./garment-incremental-sync";
 import { acquireGarmentSyncLock } from "./garment-sync-state";
 import { syncCatalog, type SyncResult } from "./sync-service";
+import { runGarmentSync } from "./garment-sync-service";
+import { SINGLE_STORE_KEY, singleStoreDataDir } from "./commerce-mode";
+import { IDENTITY_FILE, syncLojaUnica, type LojaUnicaSyncResult } from "./unificado/sync-loja-unica";
+
+/** INK requests the single store's piece crawl may spend per daily run (it resumes from its checkpoint the next day). */
+const LOJA_UNICA_GARMENT_REQUESTS = 300;
+
+/** The single store is kept in sync once it has been prepared on this Volume (its migrated-products identity is there), in both modes. */
+export const lojaUnicaPreparada = (): boolean => existsSync(path.join(singleStoreDataDir(), IDENTITY_FILE));
+
+export type LojaUnicaDailyStep = { catalog: LojaUnicaSyncResult; garments: { ok: boolean; error?: string; truncated?: boolean; newGarmentBindings?: number } | null };
 
 export type DailyGarmentSyncResult =
   | { status: "skipped-locked"; startedAt: string; finishedAt: string }
@@ -17,6 +30,8 @@ export type DailyGarmentSyncResult =
       inkRequests: number;
       catalog: { changed: boolean; requests: number; failedStores: CommerceStoreKey[] };
       garments: IncrementalResult;
+      /** The single store (<snapshot dir>/loja-unica/), when prepared: its catalog + collections, then a capped, resumable piece crawl. */
+      lojaUnica?: LojaUnicaDailyStep;
       /** True when every store finished its pass (unchanged or promoted) and nothing was left parked or failed. */
       clean: boolean;
     };
@@ -32,7 +47,22 @@ export type DailyGarmentSyncOptions = {
   maxRequestsPerStore?: number;
   minPieces?: number;
   log?: (event: string, fields: Record<string, unknown>) => void;
+  /** Tests: the single store's step (default: run it only when `lojaUnicaPreparada()`). */
+  lojaUnicaImpl?: (() => Promise<LojaUnicaDailyStep>) | null;
 };
+
+/** The single store's daily step. Never throws: a failure is reported and leaves its last-known-good files in place. */
+async function syncLojaUnicaDaily(): Promise<LojaUnicaDailyStep> {
+  const catalog = await syncLojaUnica();
+  if (!catalog.ok) return { catalog, garments: null };
+  try {
+    const run = await runGarmentSync({ storeKeys: [SINGLE_STORE_KEY], maxRequestsPerStore: LOJA_UNICA_GARMENT_REQUESTS, dataDir: singleStoreDataDir() });
+    const o = run.outcomes[0];
+    return { catalog, garments: !o ? { ok: false, error: "no outcome" } : o.ok ? { ok: true, truncated: o.truncated, newGarmentBindings: o.newGarmentBindings } : { ok: false, error: o.error } };
+  } catch (err) {
+    return { catalog, garments: { ok: false, error: err instanceof Error ? err.message : String(err) } };
+  }
+}
 
 /** One JSON line per event: Railway's log stream is the only history of these runs (nothing is persisted per run). */
 export function logGarmentSync(event: string, fields: Record<string, unknown>): void {
@@ -82,8 +112,16 @@ export async function runDailyGarmentSync(options: DailyGarmentSyncOptions): Pro
       else log("store", { store: store.storeKey, status: "failed", error: store.error });
     }
 
+    const lojaUnicaStep = options.lojaUnicaImpl === undefined ? (lojaUnicaPreparada() ? syncLojaUnicaDaily : null) : options.lojaUnicaImpl;
+    const lojaUnica = lojaUnicaStep ? await lojaUnicaStep() : undefined;
+    if (lojaUnica) {
+      if (lojaUnica.catalog.ok && lojaUnica.catalog.changed) options.onCatalogChanged();
+      log("loja-unica", { catalog: lojaUnica.catalog, garments: lojaUnica.garments });
+    }
+
     const garmentRequests = garments.stores.reduce((sum, s) => sum + (s.ok ? s.metrics.requests : 0), 0);
-    const clean = failedStores.length === 0 && !garments.revalidationError && garments.stores.every((s) => s.ok && s.status !== "deferred");
+    const lojaUnicaOk = !lojaUnica || (lojaUnica.catalog.ok && lojaUnica.garments?.ok === true);
+    const clean = failedStores.length === 0 && !garments.revalidationError && garments.stores.every((s) => s.ok && s.status !== "deferred") && lojaUnicaOk;
     const result: DailyGarmentSyncResult = {
       status: "done",
       startedAt,
@@ -92,6 +130,7 @@ export async function runDailyGarmentSync(options: DailyGarmentSyncOptions): Pro
       inkRequests: catalogRequests + garmentRequests,
       catalog: { changed: catalogChanged, requests: catalogRequests, failedStores },
       garments,
+      ...(lojaUnica ? { lojaUnica } : {}),
       clean,
     };
     log("end", {

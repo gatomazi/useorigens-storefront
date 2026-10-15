@@ -12,8 +12,11 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   void reconcilePublishedAtBoot();
-  const { snapshotStatus } = await import("./lib/catalog/snapshot-file");
-  const status = snapshotStatus();
+  const { snapshotPath, snapshotStatus } = await import("./lib/catalog/snapshot-file");
+  const { commercePlan } = await import("./lib/catalog/commerce-mode");
+  const plan = commercePlan();
+  console.log(`[boot] commerce: requested ${plan.requested}, serving ${plan.effective}${plan.simulation ? " (SIMULATION)" : ""} from ${plan.dataDir}${plan.diagnostics.length ? ` — ${plan.diagnostics.join("; ")}` : ""}`);
+  const status = snapshotStatus(snapshotPath(plan.dataDir));
   if (!status.present) {
     console.warn(
       `[boot] catalog snapshot: NOT FOUND at ${status.path} — every city will show as having no products until one exists. ` +

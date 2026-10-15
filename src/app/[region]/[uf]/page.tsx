@@ -12,7 +12,8 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { stateShowcase } from "@/lib/editorial/state-showcase";
 import { stateStyles } from "@/lib/editorial/state-styles";
-import { getStoreCollections } from "@/lib/catalog/collections-file";
+import { collectionsForRegion } from "@/lib/catalog/collection-source";
+import { storeForRegion } from "@/lib/catalog/commerce-mode";
 import { StateStyles } from "@/components/catalog/StateStyles";
 import { SOURCES } from "@/lib/analytics/sources";
 import { numberPt } from "@/lib/format";
@@ -113,8 +114,8 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
     uf,
     cities: hasRegions ? cities.filter((c) => c.type === "administrative_region") : cities,
     catalog,
-    store: REGIONS[region].storeKey,
-    collections: getStoreCollections(REGIONS[region].storeKey)?.collections ?? [],
+    store: storeForRegion(region),
+    collections: collectionsForRegion(region, (s) => catalog.productsOfStore(s)),
     capitalSlug: hasRegions ? undefined : STATE_CAPITAL_SLUG[uf],
   });
 

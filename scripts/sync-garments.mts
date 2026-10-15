@@ -7,6 +7,7 @@
 //   npm run garments:sync -- --store use-sul --max-requests-per-store 40
 //   npm run garments:sync -- --max-requests-per-store 40          # all 3 stores, in parallel
 //   npm run garments:sync -- --max-requests-per-store 40 --force-full
+//   npm run garments:sync -- --loja-unica --max-requests-per-store 40  # single store: links against <snapshot dir>/loja-unica/ (use-sul only)
 //
 // Order of a real run: download/update -> validate -> promote garment-index.json (atomic) -> ask the running
 // storefront to revalidate the affected city pages (POST /api/admin/garment-index/revalidate). The last step
@@ -23,6 +24,7 @@ import { readGarmentCheckpoint } from "../src/lib/catalog/garment-checkpoint";
 import { revalidateAfterPromotion } from "../src/lib/catalog/garment-revalidate-client";
 import { readSnapshot } from "../src/lib/catalog/snapshot-file";
 import type { CommerceStoreKey } from "../src/lib/geo/regions";
+import { SINGLE_STORE_KEY, singleStoreDataDir } from "../src/lib/catalog/commerce-mode";
 
 // Measured live against INK on 2026-09-27 (docs/storefront/city-garment-catalog-rollout.md) — total product
 // counts with no `visible_in_store` filter, at per_page=100. The catalog grows over time (Sul alone gained
@@ -36,7 +38,7 @@ const KNOWN_TOTAL_PAGES_2026_09_27: Partial<Record<CommerceStoreKey, number>> = 
 const PACE_S = 1.5;
 
 function parseArgs(argv: string[]) {
-  const args = { plan: false, store: undefined as CommerceStoreKey | undefined, maxRequestsPerStore: undefined as number | undefined, forceFull: false, noRevalidate: false };
+  const args = { lojaUnica: false, plan: false, store: undefined as CommerceStoreKey | undefined, maxRequestsPerStore: undefined as number | undefined, forceFull: false, noRevalidate: false };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--plan") args.plan = true;
@@ -44,6 +46,7 @@ function parseArgs(argv: string[]) {
     else if (a === "--max-requests-per-store") args.maxRequestsPerStore = Number(argv[++i]);
     else if (a === "--force-full") args.forceFull = true;
     else if (a === "--no-revalidate") args.noRevalidate = true;
+    else if (a === "--loja-unica") args.lojaUnica = true;
   }
   return args;
 }
@@ -86,8 +89,13 @@ if (args.maxRequestsPerStore === undefined || !Number.isFinite(args.maxRequestsP
   process.exit(1);
 }
 
+if (args.lojaUnica && args.store && args.store !== SINGLE_STORE_KEY) {
+  console.error(`--loja-unica only syncs ${SINGLE_STORE_KEY}`);
+  process.exit(1);
+}
 const result = await runGarmentSync({
-  storeKeys: args.store ? [args.store] : [],
+  storeKeys: args.lojaUnica ? [SINGLE_STORE_KEY] : args.store ? [args.store] : [],
+  ...(args.lojaUnica ? { dataDir: singleStoreDataDir() } : {}),
   maxRequestsPerStore: args.maxRequestsPerStore,
   forceFull: args.forceFull,
   onProgress: ({ storeKey, page, totalPages, requestsUsedThisCall }) => {

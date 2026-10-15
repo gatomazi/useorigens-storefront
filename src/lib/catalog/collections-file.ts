@@ -3,13 +3,17 @@ import { mkdir, rename, writeFile } from "node:fs/promises";
 import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { catalogSnapshotDir } from "../config/env";
+import { servedDataDir } from "./commerce-mode";
 import type { CommerceStoreKey } from "../geo/regions";
 import { EMPTY_COLLECTIONS, normalizeCollectionsSnapshot, type CollectionRecord, type CollectionsSnapshot, type StoreCollections } from "./collections";
 
 /** Next to the catalog snapshot, in its own file: the catalog format is untouched, and deleting this file restores today's behaviour. */
-export function collectionsPath(): string {
-  return path.join(catalogSnapshotDir(), "collections-snapshot.json");
+export function collectionsPath(dir: string = catalogSnapshotDir()): string {
+  return path.join(dir, "collections-snapshot.json");
 }
+
+/** The collections the storefront serves: those of the effective commerce mode's data set (commerce-mode.ts). The syncs keep `collectionsPath()`. */
+export const servedCollectionsPath = (): string => collectionsPath(servedDataDir());
 
 /**
  * Missing, unreadable or invalid file ⇒ "no collections" (never throws, never breaks a page). The previous (v1) format is read and
@@ -35,8 +39,8 @@ export async function writeCollectionsFile(snapshot: CollectionsSnapshot, filePa
 
 let cache: { mtimeMs: number; filePath: string; snapshot: CollectionsSnapshot } | null = null;
 
-/** Cached by mtime, like `getCatalog()`. */
-export function getCollections(filePath: string = collectionsPath()): CollectionsSnapshot {
+/** Cached by mtime, like `getCatalog()`. Readers default to the SERVED data set. */
+export function getCollections(filePath: string = servedCollectionsPath()): CollectionsSnapshot {
   let mtimeMs = 0;
   try {
     mtimeMs = statSync(filePath).mtimeMs;

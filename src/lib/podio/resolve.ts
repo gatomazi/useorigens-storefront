@@ -41,7 +41,8 @@ export function resolveSoldProduct(
   if (parsed.kind === "unclassified") return { ok: false, reason: "unclassified-family" };
 
   const storeKey = REGIONS[region].storeKey;
-  const resolution = resolveCity(parsed, { tags: product.tags, storeKey });
+  // The region's own UFs, not the store's: in single-store mode one store sells the three regions.
+  const resolution = resolveCity(parsed, { tags: product.tags, storeKey }, regionUfs);
   if (resolution.ok) {
     const uf = resolution.city.uf;
     if (!regionUfs.includes(uf)) return { ok: false, reason: "outside-region" };

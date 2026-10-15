@@ -224,24 +224,27 @@ export function trackPageView(params: PageViewParams): void {
 // ── Use Origens cart-bridge events v1 (GA4 custom events, docs/expansao-cinco-produtos-analytics.md) ───────────────────────────────
 // GA4-only (no Meta equivalent, and never a Meta Purchase/InitiateCheckout: the visitor only opened the cart). Same consent gate and
 // best-effort rule as everything above. The parameters are a closed set of low-cardinality enums: never the cart token, the snapshot,
-// a URL, free text or an identifier. `transport_type: "beacon"` lets a click that leaves the domain still deliver its event.
-const REGION = "sul";
+// a URL, free text or an identifier. `transport_type: "beacon"` lets a click that leaves the domain still deliver its event. `region` is the
+// region the visitor is browsing (in single-store mode the cart itself is the single store's, whatever the region).
 
-export function trackGoToCartClick(params: { cartItemsBucket: CartItemsBucket }): void {
+export function trackGoToCartClick(params: { region: string; cartItemsBucket: CartItemsBucket }): void {
   if (!gtagReady()) return;
-  sendGtag("event", "origens_go_to_cart_click", { entry_point: "storefront_cart_mirror", region: REGION, cart_items_bucket: params.cartItemsBucket, transport_type: "beacon" });
+  sendGtag("event", "origens_go_to_cart_click", { entry_point: "storefront_cart_mirror", region: params.region, cart_items_bucket: params.cartItemsBucket, transport_type: "beacon" });
 }
 
 /** One per opening of "Meu carrinho" with a valid snapshot on screen (the denominator of the click above); never the neutral/error state. */
-export function trackCartMirrorView(params: { cartItemsBucket: CartItemsBucket; mirrorAgeBucket: MirrorAgeBucket }): void {
+export function trackCartMirrorView(params: { region: string; cartItemsBucket: CartItemsBucket; mirrorAgeBucket: MirrorAgeBucket }): void {
   if (!gtagReady()) return;
-  sendGtag("event", "origens_cart_mirror_view", { entry_point: "storefront_cart_mirror", region: REGION, cart_items_bucket: params.cartItemsBucket, mirror_age_bucket: params.mirrorAgeBucket });
+  sendGtag("event", "origens_cart_mirror_view", { entry_point: "storefront_cart_mirror", region: params.region, cart_items_bucket: params.cartItemsBucket, mirror_age_bucket: params.mirrorAgeBucket });
 }
+
+/** The five verified INK links (and their return) are Sul's: an arrival is always reported for Sul. */
+const ARRIVAL_REGION = "sul";
 
 /** A real landing from one of our INK links. `productSlug` only when it is one of the five verified slugs (validated by the caller). */
 export function trackStorefrontArrived(params: { entryPoint: OrigensEntryPoint; productSlug: string | null }): void {
   if (!gtagReady()) return;
-  sendGtag("event", "origens_storefront_arrived", { entry_point: params.entryPoint, region: REGION, ...(params.productSlug ? { product_slug: params.productSlug } : {}) });
+  sendGtag("event", "origens_storefront_arrived", { entry_point: params.entryPoint, region: ARRIVAL_REGION, ...(params.productSlug ? { product_slug: params.productSlug } : {}) });
 }
 
 /**

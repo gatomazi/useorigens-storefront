@@ -2,6 +2,7 @@ import "server-only";
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import { collectionMenuEntries, type MenuEntry } from "../catalog/collection-menu";
 import { categoryProps, collectionForPage } from "../catalog/collection-source";
+import { storeForRegion } from "../catalog/commerce-mode";
 import { findCollection } from "../catalog/collections-file";
 import { purchaseUrl } from "../catalog/commerce";
 import { localityOfBinding } from "../catalog/locality-binding";
@@ -108,7 +109,7 @@ const publishedDoc = (region: RegionSlug): ScopeDoc | undefined => readPublished
 
 /** The place the product on the INK page is about (a municipality or a DF administrative region), when it is a city design of the region's store. */
 export function guideProductContext(region: RegionSlug, productId: string): { v: 1; region: RegionSlug; productId: string; city: GuideCity | null } {
-  const binding = getCatalog().productsOfStore(REGIONS[region].storeKey).cityDesigns.get(productId);
+  const binding = getCatalog().productsOfStore(storeForRegion(region)).cityDesigns.get(productId);
   const place = binding ? localityOfBinding(binding) : undefined;
   const city = place && place.regionSlug === region && getCatalog().cityFamilies(place.id).length > 0 ? guideCityOf(region, place) : null;
   return { v: 1, region, productId, city };
@@ -125,7 +126,7 @@ export function guideCity(region: RegionSlug, uf: string, slug: string, excludeP
 /** The collections the guide offers for "Ver outras estampas", each with a real photo (its first product as the region arranges it). */
 export function guideCollections(region: RegionSlug): { v: 1; region: RegionSlug; collections: GuideCollection[] } {
   const doc = publishedDoc(region);
-  const store = REGIONS[region].storeKey;
+  const store = storeForRegion(region);
   const { top, more } = collectionMenuEntries(region, doc);
   const catalog = getCatalog();
   const { categories } = categoryProps((s) => catalog.productsOfStore(s), doc);
@@ -140,7 +141,7 @@ export function guideCollections(region: RegionSlug): { v: 1; region: RegionSlug
 /** A few products of one collection (as the region arranges it) and the link to its full page. Null = the region has no such collection page. */
 export function guideCollection(region: RegionSlug, slug: string): { v: 1; region: RegionSlug; collection: GuideCollection; items: GuideItem[]; total: number } | null {
   const doc = publishedDoc(region);
-  const store = REGIONS[region].storeKey;
+  const store = storeForRegion(region);
   // The collection behind the address: the region's own collection with that slug or, for a landing the owner published there, the collection of its grid.
   let record = collectionForPage(region, doc, slug);
   if (!record) {

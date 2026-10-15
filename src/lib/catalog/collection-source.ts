@@ -4,7 +4,9 @@ import { arrangementOf, enabledInternalIds } from "../site-config/collections-en
 import { PAGE_SLUG, RESERVED_SLUGS, type ScopeDoc } from "../site-config/schema";
 import { arrangeMembers, type CategoryArrangement, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type InkCategorySource, type UnavailableReason } from "../site-config/sources";
 import { discountPercent, formatListPrice, formatPrice } from "../format";
-import { isRegionSlug, REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { isRegionSlug, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { commercePlan, storeForRegion } from "./commerce-mode";
+import { getCatalog } from "./repository";
 import { purchaseUrl } from "./commerce";
 import { collectionState, completeMembers, MIN_USABLE_PRODUCTS, type CollectionReason, type CollectionRecord } from "./collections";
 import { findCollection, getStoreCollections } from "./collections-file";
@@ -85,6 +87,44 @@ function storeItem(products: StoreProducts, id: string): CarouselItem | null {
   return design ? cityDesignItem(design) : null;
 }
 
+/** The region a catalog product is about (a city design's locality, a merch item's own region), or null when unknown. */
+export function regionOfStoreProduct(products: StoreProducts, id: string): RegionSlug | null {
+  const merch = products.merch.get(id);
+  if (merch) return merch.regionSlug;
+  const design = products.cityDesigns.get(id);
+  return design ? (localityOfBinding(design)?.regionSlug ?? null) : null;
+}
+
+/** A store product's card, or null when it is not in the catalog or (with `region`) is about another region: a no-op for a regional store; in
+ * single-store mode one store holds the three regions. */
+const regionItem = (products: StoreProducts, id: string, region: RegionSlug | undefined): CarouselItem | null =>
+  region && regionOfStoreProduct(products, id) !== region ? null : storeItem(products, id);
+
+/**
+ * The collections a region may show (search results, collection pages): those of the region's store under the effective commerce mode. In
+ * single-store mode one store's collections serve three regions, so a collection belongs to a region only when EVERY member known in the
+ * catalog is a product of that region (evidence from the products themselves, never from the collection's name); mixed or unknown ones are
+ * left out. In the regional mode every collection of the region's own store qualifies, as before.
+ */
+export function collectionsForRegion(region: RegionSlug, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): CollectionRecord[] {
+  const store = storeForRegion(region);
+  const all = getStoreCollections(store, filePath)?.collections ?? [];
+  if (commercePlan().effective !== "single-store") return all;
+  const products = productsOf(store);
+  return all.filter((c) => belongsToRegion(c, products, region));
+}
+
+function belongsToRegion(c: CollectionRecord, products: StoreProducts, region: RegionSlug): boolean {
+  const ids = completeMembers(c) ?? c.memberIds;
+  return ids.length > 0 && ids.every((id) => regionOfStoreProduct(products, id) === region);
+}
+
+/** Whether a collection of the region's selling store is the region's (`collectionsForRegion`'s rule, one record): always in the regional mode. */
+export function regionShowsCollection(region: RegionSlug, c: CollectionRecord): boolean {
+  if (commercePlan().effective !== "single-store") return true;
+  return belongsToRegion(c, getCatalog().productsOfStore(storeForRegion(region)), region);
+}
+
 type Resolved = { status: "ok"; collection: CollectionRecord; ids: string[] } | { status: "unavailable"; reason: UnavailableReason };
 
 /**
@@ -118,14 +158,17 @@ export function categoryLookup(
   enabled: (store: CommerceStoreKey) => ReadonlySet<number>,
   filePath?: string,
   arrange: (source: InkCategorySource) => CategoryArrangement | undefined = arrangementIn(undefined),
+  region?: RegionSlug,
 ): CategoryLookup {
   return (source) => {
+    // A region's document may keep refs to its own store and to the single store; only the one that sells there now resolves.
+    if (region && source.store !== storeForRegion(region)) return { status: "unavailable", reason: "collection-not-found" };
     const found = resolveCollection(source.store, source.collectionId, enabled(source.store), arrange(source), filePath);
     if (found.status !== "ok") return found;
     const products = productsOf(source.store);
     const items: CarouselItem[] = [];
     for (const id of found.ids) {
-      const item = storeItem(products, id);
+      const item = regionItem(products, id, region);
       if (item) items.push(item);
       if (items.length >= source.limit) break;
     }
@@ -156,12 +199,15 @@ export function collectionPageLookup(
   enabled: (store: CommerceStoreKey) => ReadonlySet<number>,
   filePath?: string,
   arrange: (source: InkCategorySource) => CategoryArrangement | undefined = arrangementIn(undefined),
+  region?: RegionSlug,
 ): CollectionPageLookup {
   return (source, page) => {
+    // A region's document may keep refs to its own store and to the single store; only the one that sells there now resolves.
+    if (region && source.store !== storeForRegion(region)) return { status: "unavailable", reason: "collection-not-found" };
     const found = resolveCollection(source.store, source.collectionId, enabled(source.store), arrange(source), filePath);
     if (found.status !== "ok") return found;
     const products = productsOf(source.store);
-    const all = found.ids.map((id) => storeItem(products, id)).filter((item): item is CarouselItem => item !== null);
+    const all = found.ids.map((id) => regionItem(products, id, region)).filter((item): item is CarouselItem => item !== null);
     if (all.length === 0) return { status: "unavailable", reason: "collection-has-no-products" };
     const perPage = Math.max(1, source.limit);
     const pageCount = Math.ceil(all.length / perPage);
@@ -184,30 +230,34 @@ const pageAddress = (slug: string): boolean => PAGE_SLUG.test(slug) && slug.leng
  */
 export function collectionForPage(region: RegionSlug, doc: ScopeDoc | undefined, slug: string, filePath?: string): CollectionRecord | null {
   if (!pageAddress(slug)) return null;
-  const store = REGIONS[region].storeKey;
+  const store = storeForRegion(region);
   const collection = getStoreCollections(store, filePath)?.collections.find((c) => c.slug === slug);
-  return collection && collectionState(collection, enabledInternalIds(doc, store)).selectable ? collection : null;
+  // Single store: a collection of another region (or a mixed one) is not a page of this region.
+  return collection && collectionState(collection, enabledInternalIds(doc, store)).selectable && regionShowsCollection(region, collection) ? collection : null;
 }
 
 /** The address of a collection's page in the region of `doc`, or null when the region cannot show it (same rule as `collectionForPage`). */
 export function collectionPageSlug(doc: ScopeDoc | undefined, store: CommerceStoreKey, collectionId: number, filePath?: string): string | null {
   const region = doc && isRegionSlug(doc.scope) ? doc.scope : null;
-  if (!region || REGIONS[region].storeKey !== store) return null;
+  if (!region || storeForRegion(region) !== store) return null;
   const collection = findCollection(store, collectionId, filePath);
   if (!collection || !pageAddress(collection.slug)) return null;
-  return collectionState(collection, enabledInternalIds(doc, store)).selectable ? collection.slug : null;
+  return collectionState(collection, enabledInternalIds(doc, store)).selectable && regionShowsCollection(region, collection) ? collection.slug : null;
 }
+
+const regionOfDoc = (doc: ScopeDoc | undefined): RegionSlug | undefined => (doc && isRegionSlug(doc.scope) ? doc.scope : undefined);
 
 /** What `HomeSections` needs to render collection-backed (and Uma Penca) sections for a document (the published one, or a draft in the preview). */
 export function categoryProps(productsOf: (store: CommerceStoreKey) => StoreProducts, doc: ScopeDoc | undefined) {
   const enabled = (store: CommerceStoreKey) => enabledInternalIds(doc, store);
   const links: CollectionLinks = {
-    inkSlug: (store, collectionId) => publicCollectionSlug(store, collectionId),
+    // A button to the INK page of a collection of a store that does not sell in the region now (an old or a re-pointed ref): no link.
+    inkSlug: (store, collectionId) => (regionOfDoc(doc) && storeForRegion(regionOfDoc(doc)!) !== store ? null : publicCollectionSlug(store, collectionId)),
     pageSlug: (store, collectionId) => collectionPageSlug(doc, store, collectionId),
   };
   return {
-    categories: categoryLookup(productsOf, enabled, undefined, arrangementIn(doc)),
-    collectionPage: collectionPageLookup(productsOf, enabled, undefined, arrangementIn(doc)),
+    categories: categoryLookup(productsOf, enabled, undefined, arrangementIn(doc), regionOfDoc(doc)),
+    collectionPage: collectionPageLookup(productsOf, enabled, undefined, arrangementIn(doc), regionOfDoc(doc)),
     links,
     umapenca: umaPencaLookup(doc?.scope ?? ""),
   };

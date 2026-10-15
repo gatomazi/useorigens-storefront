@@ -1,6 +1,7 @@
 import "server-only";
 import { getCatalog } from "./repository";
-import { snapshotStatus } from "./snapshot-file";
+import { snapshotPath, snapshotStatus } from "./snapshot-file";
+import { commercePlan, SINGLE_STORE_DEPENDENCIES, type CommercePlan } from "./commerce-mode";
 import { citiesOfRegion } from "../geo/cities";
 import type { RegionSlug } from "../geo/regions";
 
@@ -35,13 +36,24 @@ export type CatalogReadiness = {
   reason: string | null;
   regions: RegionReadiness[];
   snapshot: ReturnType<typeof snapshotStatus>;
+  /** The commerce mode actually served and why (commerce-mode.ts). */
+  commerce: Pick<CommercePlan, "requested" | "effective" | "simulation" | "diagnostics"> & { runId: string | null; pendingDependencies: string[] };
 };
 
 /** Never touches INK or IBGE — only the local snapshot file and the build-time-bundled geo dataset. */
 export function catalogReadiness(regions: readonly RegionSlug[]): CatalogReadiness {
-  const snapshot = snapshotStatus();
+  const plan = commercePlan();
+  const commerce = {
+    requested: plan.requested,
+    effective: plan.effective,
+    simulation: plan.simulation,
+    diagnostics: plan.diagnostics,
+    runId: plan.source?.runId ?? null,
+    pendingDependencies: SINGLE_STORE_DEPENDENCIES.filter((d) => !d.ready).map((d) => d.id),
+  };
+  const snapshot = snapshotStatus(snapshotPath(plan.dataDir));
   if (!snapshot.present) {
-    return { ready: false, reason: "no catalog snapshot on disk (never synced)", regions: [], snapshot };
+    return { ready: false, reason: "no catalog snapshot on disk (never synced)", regions: [], snapshot, commerce };
   }
   const regionResults = regions.map(regionReadiness);
   const notReady = regionResults.filter((r) => !r.ready);
@@ -52,7 +64,8 @@ export function catalogReadiness(regions: readonly RegionSlug[]): CatalogReadine
       reason: `insufficient catalog coverage — ${detail} (need >= ${Math.round(READY_COVERAGE_THRESHOLD * 100)}%) — looks like a partial sync`,
       regions: regionResults,
       snapshot,
+      commerce,
     };
   }
-  return { ready: true, reason: null, regions: regionResults, snapshot };
+  return { ready: true, reason: null, regions: regionResults, snapshot, commerce };
 }

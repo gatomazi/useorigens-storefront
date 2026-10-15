@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { REGIONS, isRegionSlug, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { siteConfigHomeEnabled, homeBundle } from "../site-config/flag";
 import { collectionForPage, collectionPageLookup } from "../catalog/collection-source";
+import { storeForRegion } from "../catalog/commerce-mode";
 import type { CollectionRecord } from "../catalog/collections";
 import { getCatalog } from "../catalog/repository";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
@@ -58,7 +59,7 @@ export function findCollectionLanding(regionParam: string, slug: string): { regi
   const page = livePage(doc, "categoryLanding", slug);
   if (page) return { ...found, page, automatic: false };
   const collection = collectionForPage(found.region, doc, slug);
-  return collection ? { ...found, page: collectionLanding(collection, REGIONS[found.region].storeKey), automatic: true } : null;
+  return collection ? { ...found, page: collectionLanding(collection, storeForRegion(found.region)), automatic: true } : null;
 }
 
 /** The page's paged grid, if it has one, with the lookup of its collection as the region shows it (same arrangement as the page itself). */
@@ -67,7 +68,7 @@ function pagedGrid(region: RegionSlug, bundle: PublishedBundle, page: Page): { s
   if (grid?.source?.kind !== "ink-category") return null;
   const doc = bundle.docs[region];
   const catalog = getCatalog();
-  const lookup = collectionPageLookup((store) => catalog.productsOfStore(store), (store) => enabledInternalIds(doc, store), undefined, (src) => arrangementOf(doc, src.store, src.collectionId, src));
+  const lookup = collectionPageLookup((store) => catalog.productsOfStore(store), (store) => enabledInternalIds(doc, store), undefined, (src) => arrangementOf(doc, src.store, src.collectionId, src), region);
   return { source: grid.source, lookup };
 }
 

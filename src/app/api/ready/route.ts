@@ -25,6 +25,7 @@ export function GET() {
       totalProducts: result.snapshot.totalProducts,
       stores: result.snapshot.stores.map((s) => ({ storeKey: s.storeKey, productCount: s.productCount, syncedAt: s.syncedAt })),
     },
+    commerce: result.commerce,
     coverageByRegion: Object.fromEntries(result.regions.map((r) => [r.region, { coveredCities: r.coveredCities, totalCities: r.totalCities, ratio: r.ratio }])),
   };
   return Response.json(body, { status: body.ready ? 200 : 503 });

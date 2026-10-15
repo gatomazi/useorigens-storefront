@@ -1,0 +1,362 @@
+{
+  "runId": "20261006012624-sim-e2cb14409",
+  "modo": "simulacao",
+  "geradoEm": "2026-10-06T01:26:24.680Z",
+  "entradas": {
+    "estado": {
+      "arquivo": "data/unificado/estado/migracao-estado-f5901c1ddcfb1dbf.jsonl",
+      "complemento": "docs/migracao-ink/estado-complementar-20261005050850-ef5901c1d.jsonl.gz",
+      "sha256": "2cb144092b2a26c5a92533184e4a0db25e028cde5f8e2c53ff3c6be8b72790d0",
+      "linhas": 90370
+    },
+    "leitura": {
+      "use-sul": {
+        "produtos": 160662,
+        "paginas": 1607,
+        "totalPages": 1607
+      },
+      "use-norte": {
+        "produtos": 30816,
+        "paginas": 309,
+        "totalPages": 309
+      },
+      "use-centro": {
+        "produtos": 38403,
+        "paginas": 385,
+        "totalPages": 385
+      }
+    },
+    "segmentacaoLidaEm": "2026-10-05T02:46:49.645Z"
+  },
+  "lojaUnica": {
+    "vinculos": 13819,
+    "merch": 244,
+    "excluidos": 59,
+    "pecas": 110249,
+    "statsPecas": {
+      "candidates": 138337,
+      "linked": 110249,
+      "classicType": 81,
+      "noClusterId": 1328,
+      "unknownType": 0,
+      "noCanonicalForCluster": 26679,
+      "noPrice": 0,
+      "unsellableUrl": 0,
+      "urlShape": 0
+    },
+    "referenciasAntigas": {
+      "use-norte": 30575,
+      "use-centro": 37306
+    }
+  },
+  "situacoesPorRegiao": {
+    "sul": {
+      "publicado": 9774,
+      "excluido-indexador": 59,
+      "sem-imagem": 1
+    },
+    "norte": {
+      "simulado": 1944,
+      "sem-imagem": 1654
+    },
+    "centro-oeste": {
+      "simulado": 2345,
+      "sem-imagem": 1610
+    },
+    "desconhecida": {
+      "regiao-pendente": 110
+    }
+  },
+  "mapaPorLoja": {
+    "use-norte": {
+      "ausente": 24,
+      "confirmado": 30575,
+      "sem-chave": 197,
+      "ambiguo": 20
+    },
+    "use-centro": {
+      "sem-chave": 835,
+      "ausente": 262,
+      "confirmado": 37306
+    }
+  },
+  "cobertura": {
+    "sul": {
+      "legado": {
+        "desenhos": 9446,
+        "municipios": 1191,
+        "localidades": 1191,
+        "merch": 254,
+        "pecasPorTipo": 71638,
+        "colecoesUsaveis": 11
+      },
+      "lojaUnica": {
+        "desenhos": 9446,
+        "desenhosSimulados": 0,
+        "municipios": 1191,
+        "localidades": 1191,
+        "merch": 244,
+        "pecasPorTipo": 71638,
+        "colecoesUsaveis": 9,
+        "colecoes": [
+          "Do Nosso Jeito",
+          "Da Nossa Terra",
+          "Feito Para Você",
+          "Fala Daqui",
+          "Pré-treino Raiz",
+          "Personalizados",
+          "Santa Catarina",
+          "Paraná",
+          "Novidades"
+        ]
+      },
+      "desenhosEmAmbos": 9446,
+      "desenhosSoNoLegado": 0,
+      "desenhosSoNaLojaUnica": 0,
+      "porFamilia": {
+        "ponto-de-origem": {
+          "legado": 1184,
+          "lojaUnica": 1184,
+          "soNoLegado": 0
+        },
+        "feito-em": {
+          "legado": 1162,
+          "lojaUnica": 1162,
+          "soNoLegado": 0
+        },
+        "coordenadas": {
+          "legado": 1170,
+          "lojaUnica": 1170,
+          "soNoLegado": 0
+        },
+        "legado": {
+          "legado": 1189,
+          "lojaUnica": 1189,
+          "soNoLegado": 0
+        },
+        "territorio": {
+          "legado": 1189,
+          "lojaUnica": 1189,
+          "soNoLegado": 0
+        },
+        "tipografia": {
+          "legado": 1183,
+          "lojaUnica": 1183,
+          "soNoLegado": 0
+        },
+        "traco": {
+          "legado": 1190,
+          "lojaUnica": 1190,
+          "soNoLegado": 0
+        },
+        "gentilico": {
+          "legado": 1179,
+          "lojaUnica": 1179,
+          "soNoLegado": 0
+        }
+      },
+      "tiposDePeca": {
+        "legado": {
+          "2": 7966,
+          "8": 7970,
+          "23": 7953,
+          "28": 7960,
+          "72": 7961,
+          "119": 7958,
+          "120": 7961,
+          "165": 7952,
+          "178": 7957
+        },
+        "lojaUnica": {
+          "2": 7966,
+          "8": 7970,
+          "23": 7953,
+          "28": 7960,
+          "72": 7961,
+          "119": 7958,
+          "120": 7961,
+          "165": 7952,
+          "178": 7957
+        }
+      }
+    },
+    "norte": {
+      "legado": {
+        "desenhos": 3582,
+        "municipios": 450,
+        "localidades": 450,
+        "merch": 60,
+        "pecasPorTipo": 27005,
+        "colecoesUsaveis": 19
+      },
+      "lojaUnica": {
+        "desenhos": 1944,
+        "desenhosSimulados": 1944,
+        "municipios": 450,
+        "localidades": 450,
+        "merch": 0,
+        "pecasPorTipo": 17488,
+        "colecoesUsaveis": 0,
+        "colecoes": []
+      },
+      "desenhosEmAmbos": 1930,
+      "desenhosSoNoLegado": 1652,
+      "desenhosSoNaLojaUnica": 14,
+      "porFamilia": {
+        "ponto-de-origem": {
+          "legado": 445,
+          "lojaUnica": 350,
+          "soNoLegado": 99
+        },
+        "feito-em": {
+          "legado": 449,
+          "lojaUnica": 0,
+          "soNoLegado": 449
+        },
+        "coordenadas": {
+          "legado": 447,
+          "lojaUnica": 246,
+          "soNoLegado": 202
+        },
+        "legado": {
+          "legado": 450,
+          "lojaUnica": 0,
+          "soNoLegado": 450
+        },
+        "territorio": {
+          "legado": 449,
+          "lojaUnica": 448,
+          "soNoLegado": 2
+        },
+        "tipografia": {
+          "legado": 450,
+          "lojaUnica": 450,
+          "soNoLegado": 0
+        },
+        "traco": {
+          "legado": 442,
+          "lojaUnica": 450,
+          "soNoLegado": 0
+        },
+        "gentilico": {
+          "legado": 450,
+          "lojaUnica": 0,
+          "soNoLegado": 450
+        }
+      },
+      "tiposDePeca": {
+        "legado": {
+          "2": 3006,
+          "8": 3002,
+          "23": 3004,
+          "28": 2999,
+          "72": 3000,
+          "119": 3001,
+          "120": 2999,
+          "165": 2996,
+          "178": 2998
+        },
+        "lojaUnica": {
+          "2": 1942,
+          "8": 1944,
+          "23": 1944,
+          "28": 1944,
+          "72": 1942,
+          "119": 1944,
+          "120": 1942,
+          "165": 1944,
+          "178": 1942
+        }
+      }
+    },
+    "centro-oeste": {
+      "legado": {
+        "desenhos": 3814,
+        "municipios": 468,
+        "localidades": 503,
+        "merch": 81,
+        "pecasPorTipo": 33282,
+        "colecoesUsaveis": 19
+      },
+      "lojaUnica": {
+        "desenhos": 2344,
+        "desenhosSimulados": 2345,
+        "municipios": 468,
+        "localidades": 503,
+        "merch": 0,
+        "pecasPorTipo": 21096,
+        "colecoesUsaveis": 0,
+        "colecoes": []
+      },
+      "desenhosEmAmbos": 2230,
+      "desenhosSoNoLegado": 1584,
+      "desenhosSoNaLojaUnica": 114,
+      "porFamilia": {
+        "ponto-de-origem": {
+          "legado": 498,
+          "lojaUnica": 376,
+          "soNoLegado": 124
+        },
+        "feito-em": {
+          "legado": 502,
+          "lojaUnica": 1,
+          "soNoLegado": 501
+        },
+        "coordenadas": {
+          "legado": 498,
+          "lojaUnica": 470,
+          "soNoLegado": 30
+        },
+        "legado": {
+          "legado": 460,
+          "lojaUnica": 0,
+          "soNoLegado": 460
+        },
+        "territorio": {
+          "legado": 459,
+          "lojaUnica": 498,
+          "soNoLegado": 0
+        },
+        "tipografia": {
+          "legado": 466,
+          "lojaUnica": 496,
+          "soNoLegado": 7
+        },
+        "traco": {
+          "legado": 465,
+          "lojaUnica": 499,
+          "soNoLegado": 0
+        },
+        "gentilico": {
+          "legado": 466,
+          "lojaUnica": 4,
+          "soNoLegado": 462
+        }
+      },
+      "tiposDePeca": {
+        "legado": {
+          "2": 3702,
+          "8": 3701,
+          "23": 3698,
+          "28": 3700,
+          "72": 3689,
+          "119": 3700,
+          "120": 3692,
+          "165": 3700,
+          "178": 3700
+        },
+        "lojaUnica": {
+          "2": 2343,
+          "8": 2345,
+          "23": 2345,
+          "28": 2345,
+          "72": 2343,
+          "119": 2345,
+          "120": 2342,
+          "165": 2345,
+          "178": 2343
+        }
+      }
+    }
+  }
+}

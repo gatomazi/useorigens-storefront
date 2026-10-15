@@ -12,7 +12,7 @@ import { validateMundo, type MundoConfig } from "./mundo-schema";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
-import { REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { REGIONS, regionMayUseStore, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS, type ArticleKind } from "../umapenca/types";
 
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
@@ -747,8 +747,8 @@ export function validatePage(input: unknown, scope: Scope, path = "page"): Valid
 export function validateCustomizer(input: unknown, scope: Scope, path = "customizer"): ValidationResult<Customizer> {
   const c = new Collector();
   checkCustomizer(c, path, input);
-  const own = REGIONS[scope as RegionSlug]?.storeKey;
-  if (isRecord(input) && isRecord(input.source) && input.source.kind !== "umapenca" && own && input.source.store !== own) c.fail(`${path}.source.store`, "belongs to another region's INK store");
+  const own = REGIONS[scope as RegionSlug] ? (scope as RegionSlug) : null;
+  if (isRecord(input) && isRecord(input.source) && input.source.kind !== "umapenca" && own && !regionMayUseStore(own, input.source.store)) c.fail(`${path}.source.store`, "belongs to another region's INK store");
   return c.errors.length === 0 ? { ok: true, value: input as Customizer } : { ok: false, errors: c.errors };
 }
 
@@ -759,15 +759,15 @@ function checkRegionRules(c: Collector, base: string, sections: unknown[], sc: S
   sections.forEach((s, i) => {
     if (!isRecord(s)) return;
     const at = `${base}.sections[${i}]`;
-    if (isRecord(s.source) && s.source.kind === "ink-category" && s.source.store !== region.storeKey) c.fail(`${at}.source.store`, "belongs to another region's INK store");
+    if (isRecord(s.source) && s.source.kind === "ink-category" && !regionMayUseStore(sc as RegionSlug, s.source.store)) c.fail(`${at}.source.store`, "belongs to another region's INK store");
     for (const [name, dest] of [["cta", isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null], ["nav", isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null]] as const) {
       if (!dest) continue;
-      if ((dest.kind === "ink-collection" || dest.kind === "collection-page") && dest.store !== region.storeKey) c.fail(`${at}.${name}.dest.store`, "belongs to another region's INK store");
+      if ((dest.kind === "ink-collection" || dest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, dest.store)) c.fail(`${at}.${name}.dest.store`, "belongs to another region's INK store");
       if (dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`${at}.${name}.dest.path`, "must be a page of this region");
     }
     if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(region.ufs as readonly string[]).includes(uf)) c.fail(`${at}.stateCovers.${uf}`, "not a state of this region");
     checkTileRegion(c, at, s.tiles, sc);
-    if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && ref.store !== region.storeKey) c.fail(`${at}.featured[${j}].store`, "belongs to another region's INK store"); });
+    if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`${at}.featured[${j}].store`, "belongs to another region's INK store"); });
   });
 }
 
@@ -778,7 +778,7 @@ function checkTileRegion(c: Collector, at: string, tiles: unknown, sc: Scope): v
   tiles.forEach((t, j) => {
     const dest = isRecord(t) && isRecord(t.dest) ? t.dest : null;
     if (!dest) return;
-    if ((dest.kind === "ink-collection" || dest.kind === "collection-page") && dest.store !== region.storeKey) c.fail(`${at}.tiles[${j}].dest.store`, "belongs to another region's INK store");
+    if ((dest.kind === "ink-collection" || dest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, dest.store)) c.fail(`${at}.tiles[${j}].dest.store`, "belongs to another region's INK store");
     if (dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`${at}.tiles[${j}].dest.path`, "must be a page of this region");
   });
 }
@@ -911,7 +911,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
         for (const [key, list] of lists) {
           if (!Array.isArray(list)) continue;
           list.forEach((ref, i) => {
-            if (isRecord(ref) && ref.store !== REGIONS[sc as RegionSlug]?.storeKey) c.fail(`doc.collections.${key}[${i}].store`, "belongs to another region's INK store");
+            if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`doc.collections.${key}[${i}].store`, "belongs to another region's INK store");
           });
         }
       }
@@ -928,16 +928,16 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
       if (ownStore) {
         sections.forEach((s, i) => {
           if (!isRecord(s)) return;
-          if (isRecord(s.source) && s.source.kind === "ink-category" && s.source.store !== ownStore) c.fail(`doc.home.sections[${i}].source.store`, "belongs to another region's INK store");
+          if (isRecord(s.source) && s.source.kind === "ink-category" && !regionMayUseStore(sc as RegionSlug, s.source.store)) c.fail(`doc.home.sections[${i}].source.store`, "belongs to another region's INK store");
           const dest = isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null;
-          if (dest && (dest.kind === "ink-collection" || dest.kind === "collection-page") && dest.store !== ownStore) c.fail(`doc.home.sections[${i}].cta.dest.store`, "belongs to another region's INK store");
+          if (dest && (dest.kind === "ink-collection" || dest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, dest.store)) c.fail(`doc.home.sections[${i}].cta.dest.store`, "belongs to another region's INK store");
           if (isRecord(s.layout) && s.layout.display === "paged") c.fail(`doc.home.sections[${i}].layout.display`, "a paged grid belongs to a parent-category landing");
           // A state cover belongs to a state of THIS region.
           if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(REGIONS[sc as RegionSlug]?.ufs as readonly string[] | undefined)?.includes(uf)) c.fail(`doc.home.sections[${i}].stateCovers.${uf}`, "not a state of this region");
           // The hero's cards are products of THIS region's own INK store (a Norte card can never be a Sul product).
-          if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && ref.store !== ownStore) c.fail(`doc.home.sections[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
+          if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`doc.home.sections[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
           const navDest = isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null;
-          if (navDest && (navDest.kind === "ink-collection" || navDest.kind === "collection-page") && navDest.store !== ownStore) c.fail(`doc.home.sections[${i}].nav.dest.store`, "belongs to another region's INK store");
+          if (navDest && (navDest.kind === "ink-collection" || navDest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, navDest.store)) c.fail(`doc.home.sections[${i}].nav.dest.store`, "belongs to another region's INK store");
           if (navDest && navDest.kind === "route" && typeof navDest.path === "string" && navDest.path !== `/${sc}` && !navDest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].nav.dest.path`, "must be a page of this region");
           if (s.template === "page-hero") c.fail(`doc.home.sections[${i}].template`, "the page hero belongs to pages, not to the home");
           checkTileRegion(c, `doc.home.sections[${i}]`, s.tiles, sc);
@@ -996,7 +996,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
       input.customizers.forEach((m, i) => {
         checkCustomizer(c, `doc.customizers[${i}]`, m);
         if (!isRecord(m)) return;
-        if (isRecord(m.source) && m.source.kind !== "umapenca" && own && m.source.store !== own) c.fail(`doc.customizers[${i}].source.store`, "belongs to another region's INK store");
+        if (isRecord(m.source) && m.source.kind !== "umapenca" && own && !regionMayUseStore(sc as RegionSlug, m.source.store)) c.fail(`doc.customizers[${i}].source.store`, "belongs to another region's INK store");
         if (typeof m.id === "string") {
           if (ids.has(m.id)) c.fail(`doc.customizers[${i}].id`, "duplicate id");
           ids.add(m.id);

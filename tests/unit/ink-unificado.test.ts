@@ -9,10 +9,10 @@ import {
   classificarDesenhosSul,
   classificarRegioesSul,
   corteDaMigracao,
-  montarIndiceSombra,
   reconciliar,
   type ColecoesRegionais,
 } from "@/lib/catalog/unificado/reconciliar";
+import { montarLojaUnica } from "@/lib/catalog/unificado/loja-unica";
 
 let seq = 1000;
 function produto(name: string, extra: Partial<ProdutoBruto> = {}): ProdutoBruto {
@@ -151,9 +151,10 @@ describe("reconciliação", () => {
   });
 
   test("then o índice sombra só tem a base simulada e o que já é público; desconhecido e conflito ficam fora", () => {
-    const s = montarIndiceSombra(sul, "t");
-    expect(s.simulados).toEqual([base.id]);
-    const ids = [...s.snapshot.stores["use-sul"].bindings.map((b) => b.inkProductId), ...s.snapshot.stores["use-sul"].merch.map((m) => m.inkProductId)];
+    const s = montarLojaUnica(sul, { modo: "simulacao", syncedAt: "t", fonte: { runId: "r", generatedAt: "t", mapVersion: 1, identitySha256: "x" } });
+    const loja = s.catalogo.stores["use-sul"]!;
+    expect(s.situacoes.filter((l) => l.situacao === "simulado").map((l) => l.id)).toEqual([base.id]);
+    const ids = [...loja.bindings.map((b) => b.inkProductId), ...loja.merch.map((m) => m.inkProductId)];
     expect(ids.sort()).toEqual([base.id, sulProprio.id].sort());
   });
 });
