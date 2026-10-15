@@ -165,6 +165,15 @@ export async function setSectionActive(fd: FormData) {
   return run(fd, { type: "set-active", id: text(fd, "id"), active }, active ? "Seção ativada." : "Seção ocultada.", "/admin/home");
 }
 
+/** "O Pódio" of the region on/off, as a DRAFT. Once published, off hides it (home and state pages) and the daily calculation skips the region. */
+export async function setPodioAction(fd: FormData) {
+  const enabled = text(fd, "enabled") === "true";
+  const ok = enabled
+    ? "Rascunho salvo: O Pódio ligado. Publique para valer na loja."
+    : "Rascunho salvo: O Pódio desligado. Publique para ele sair da loja e o cálculo diário parar.";
+  return run(fd, { type: "set-podio", enabled }, ok, "/admin/home#podio");
+}
+
 /** Adds one structured home component (city styles, state chooser, regional campaign) to the DRAFT of the region the form was rendered for. */
 export async function addStructuredSection(fd: FormData) {
   const template = text(fd, "template");

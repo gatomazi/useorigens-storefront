@@ -87,8 +87,18 @@ Escrita sempre temp + rename. Falha (INK, paginação, catálogo ausente, disco)
 
 ## Desligar / reverter
 
-- **Desligar a exibição**: variável `PODIO_PUBLIC=off` no storefront (lida em tempo de execução) — some da home e dos estados no
-  próximo render/revalidação. Pausar o cálculo: remover a schedule do `podio-sync-cron`.
+- **Desligar uma região (painel)**: Home · Seções → cartão **O Pódio** → "Desligar o pódio" (salva no rascunho) → **Publicar**. O campo
+  `podio: { enabled: false }` vai no documento publicado da região e desliga as duas coisas juntas:
+  - **exibição**: some "Quem está no pódio?" da home (nas duas homes, código e CMS) e "O Pódio" das páginas de estado da região, assim que
+    a publicação revalida as páginas;
+  - **cálculo**: o `POST /api/admin/podio-sync` (e o `npm run podio:sync`) pula a região antes de qualquer GET na INK e responde
+    `{ "region": "sul", "ok": true, "skipped": "disabled" }` — continua 200, então o `podio-sync-cron` não acusa falha. Nada é escrito no
+    Volume; os arquivos antigos ficam onde estão e envelhecem (ocultos de qualquer forma).
+  - A prévia do rascunho no painel já mostra a home sem o pódio. Ausente (ou religado, que apaga o campo) = ligado, como antes.
+  - **Religar**: "Ligar o pódio" → Publicar. Se o último cálculo tiver mais de 72 h, o pódio só volta depois do próximo cálculo diário
+    (04:00) — ou rode o `curl` do cron à mão. O comparativo (`↑1`, `NOVO`) precisa de D−1: no primeiro dia depois de religado, sem badges.
+- **Desligar tudo (servidor)**: variável `PODIO_PUBLIC=off` no storefront (lida em tempo de execução) — vale para todas as regiões,
+  independe do painel e também para o cálculo. Some da home e dos estados no próximo render/revalidação.
 - **Reverter só a feature**: reverter o(s) commit(s) da branch `feature/podio`; os arquivos em `podio/` no Volume podem ser apagados
   sem afetar nada.
 

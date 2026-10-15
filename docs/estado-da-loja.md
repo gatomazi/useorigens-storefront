@@ -343,7 +343,8 @@ O proxy não passa pelas rotas `/api`, então elas não têm a trava de catálog
 - **Cupons:** vêm do CMS, não da INK. "Copiar" só copia o código; o cupom é aplicado na INK.
 - **Recomendações:** índice construído a partir dos snapshots e do CMS publicado (`recommendations-index.json`). O build é manual.
 - **Uma Penca:** feed XML de canecas e ecobags (`UMAPENCA_FEED_URL`), que alimenta `/outros-artigos` e o carrossel da home; os cards levam para umapenca.com.
-- **Pódio:** ranking de vendas a partir dos pedidos pagos da INK, sem dados pessoais. Pode ser desligado com `PODIO_PUBLIC=off`.
+- **Pódio:** ranking de vendas a partir dos pedidos pagos da INK, sem dados pessoais. Desliga por região no painel (Home · Seções → O Pódio,
+  depois Publicar), o que tira a exibição e para o cálculo diário daquela região; `PODIO_PUBLIC=off` desliga em todas.
 - **Personalização:**
   - os pedidos ficam no Postgres;
   - limite de 10 envios a cada 10 min por IP;

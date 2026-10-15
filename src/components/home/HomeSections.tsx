@@ -132,8 +132,8 @@ export function HomeSections({
                   className={darkPage ? "on-light" : undefined}
                   covers={resolveStateCovers(s, media)}
                 />
-                {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage) — docs/storefront/podio.md. */}
-                {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf))} />}
+                {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage), unless the region switched it off — docs/storefront/podio.md. */}
+                {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf), doc)} />}
               </Fragment>
             );
           }
