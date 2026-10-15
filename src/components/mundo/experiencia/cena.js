@@ -885,7 +885,7 @@ export function criarCena(T, canvas, opcoes) {
       caixa(0.16, 0.09, 0.12, -0.17, 0.06, 0.04, '#f1ece2');
       partes.push(duasAguas(0.14, 0.06, 0.18, 'x', '#b5653f').translate(-0.17, 0.15, 0.04));
       caixa(0.03, 0.05, 0.01, -0.17, 0.06, 0.103, '#4a4038');
-      return juntar(partes);
+      return juntar(partes).scale(1.35, 1.35, 1.35);
     },
     trapiche() {
       // píer de madeira que avança sobre a água (+x), com guarda-corpo baixo e um quiosque na ponta (genérico)
@@ -1059,18 +1059,18 @@ export function criarCena(T, canvas, opcoes) {
     'mercado-ferro': { geo: 'mercadoFerro', raio: 0.48, livre: 0.36, ang: -0.4, d: 0.4, beiraAgua: true, ancora: [0, 0.82, 0], centro: [0, 0.18, 0.05] },
     'teatro-frontao': { geo: 'teatroFrontao', raio: 0.48, livre: 0.38, ang: 1.2, d: 0.3, ancora: [0, 0.8, 0], centro: [0, 0.2, 0.1] },
     'teatro-cupula': { geo: 'teatroCupula', raio: 0.5, livre: 0.38, ang: 2.6, d: 0.4, ancora: [0, 0.96, 0], centro: [0, 0.22, 0.1] },
-    igreja: { geo: 'igreja', raio: 0.42, livre: 0.34, ang: -0.3, d: 0.3, ancora: [0, 1.12, 0.26], centro: [0, 0.2, 0.08] },
-    catedral: { geo: 'catedral', raio: 0.5, livre: 0.38, ang: -0.3, d: 0.32, ancora: [0, 1.2, 0.2], centro: [0, 0.22, 0.05] },
-    ruinas: { geo: 'ruinas', raio: 0.48, livre: 0.38, ang: -0.5, d: 0.34, ancora: [0, 0.9, 0.2], centro: [0, 0.2, 0.2] },
-    palacio: { geo: 'palacio', raio: 0.5, livre: 0.4, ang: 1.2, d: 0.32, ancora: [0, 0.92, 0], centro: [0, 0.2, 0.1] },
-    coreto: { geo: 'coreto', raio: 0.42, livre: 0.36, ang: 1.0, d: 0.26, ancora: [0, 0.74, 0], centro: [0, 0.18, 0] },
-    monumento: { geo: 'monumento', raio: 0.36, livre: 0.3, ang: 0.9, d: 0.22, ancora: [0, 1.12, 0], centro: [0, 0.3, 0] },
-    mirante: { geo: 'mirante', raio: 0.3, livre: 0.24, ang: 1.45, d: 0.42, ancora: [0, 1.56, 0], centro: [0, 0.5, 0] },
-    estacao: { geo: 'estacao', raio: 0.56, livre: 0.42, ang: -0.6, d: 0.38, ancora: [0, 0.68, 0], centro: [0, 0.15, 0.05] },
-    forte: { geo: 'forte', raio: 0.5, livre: 0.42, ang: -0.5, d: 0.42, beiraAgua: true, ancora: [0, 0.62, 0], centro: [0, 0.1, 0] },
-    farol: { geo: 'farol', raio: 0.34, livre: 0.26, ang: -0.6, d: 0.45, naCosta: true, ancora: [0, 1.14, 0], centro: [0, 0.4, 0] },
-    cachoeira: { geo: 'cachoeira', agua: 'cachoeiraAgua', raio: 0.5, livre: 0.4, ang: 0.95, d: 0.42, ancora: [0, 0.98, -0.1], centro: [0, 0.25, -0.08] },
-    vinhedo: { geo: 'vinhedo', raio: 0.56, livre: 0.44, ang: -1.25, d: 0.42, ancora: [0, 0.56, 0], centro: [0, 0.06, 0] },
+    igreja: { geo: 'igreja', raio: 0.42, livre: 0.34, ang: -0.3, d: 0.3, folga: 0.2, ancora: [0, 1.12, 0.26], centro: [0, 0.2, 0.08] },
+    catedral: { geo: 'catedral', raio: 0.5, livre: 0.38, ang: -0.3, d: 0.32, folga: 0.2, ancora: [0, 1.2, 0.2], centro: [0, 0.22, 0.05] },
+    ruinas: { geo: 'ruinas', raio: 0.48, livre: 0.38, ang: -0.5, d: 0.34, folga: 0.2, ancora: [0, 0.9, 0.2], centro: [0, 0.2, 0.2] },
+    palacio: { geo: 'palacio', raio: 0.5, livre: 0.4, ang: 1.2, d: 0.32, folga: 0.2, ancora: [0, 0.92, 0], centro: [0, 0.2, 0.1] },
+    coreto: { geo: 'coreto', raio: 0.42, livre: 0.36, ang: 1.0, d: 0.26, folga: 0.2, ancora: [0, 0.74, 0], centro: [0, 0.18, 0] },
+    monumento: { geo: 'monumento', raio: 0.36, livre: 0.3, ang: -0.9, d: 0.3, folga: 0.2, ancora: [0, 1.12, 0], centro: [0, 0.3, 0] },
+    mirante: { geo: 'mirante', raio: 0.3, livre: 0.24, ang: 1.45, d: 0.42, folga: 0.2, ancora: [0, 1.56, 0], centro: [0, 0.5, 0] },
+    estacao: { geo: 'estacao', raio: 0.56, livre: 0.42, ang: -0.6, d: 0.38, folga: 0.2, ancora: [0, 0.68, 0], centro: [0, 0.15, 0.05] },
+    forte: { geo: 'forte', raio: 0.5, livre: 0.42, ang: -0.5, d: 0.42, beiraAgua: true, folga: 0.2, ancora: [0, 0.62, 0], centro: [0, 0.1, 0] },
+    farol: { geo: 'farol', raio: 0.4, livre: 0.3, ang: -0.6, d: 0.45, naCosta: true, folga: 0.2, ancora: [0, 1.45, 0], centro: [0, 0.5, 0] },
+    cachoeira: { geo: 'cachoeira', agua: 'cachoeiraAgua', raio: 0.5, livre: 0.4, ang: 0.95, d: 0.42, folga: 0.2, ancora: [0, 0.98, -0.1], centro: [0, 0.25, -0.08] },
+    vinhedo: { geo: 'vinhedo', raio: 0.56, livre: 0.44, ang: -1.25, d: 0.42, folga: 0.2, ancora: [0, 0.56, 0], centro: [0, 0.06, 0] },
   };
   // Marcos que saem da margem para dentro d'água: o x local aponta da margem para a água.
   const NA_MARGEM = {
@@ -1465,7 +1465,7 @@ export function criarCena(T, canvas, opcoes) {
         const lugar = lugarParaMarco(cfg);
         if (!lugar) continue;
         plataformas.push({ ...lugar, r: cfg.raio, h: Math.max(seco(lugar.x, lugar.z).h, 0.1) });
-        marcos.push({ ...m, ...lugar, raio: cfg.raio });
+        marcos.push({ ...m, ...lugar, raio: cfg.raio, folga: cfg.folga ?? 0 });
       } else if (m.modulo === 'encontro-aguas' && rio) {
         // o ponto de descoberta fica no trecho do rio mais perto de um ponto à frente e à direita (a placa fica à esquerda)
         const alvo = { x: Math.cos(angCam - 0.75) * R * 0.3, z: Math.sin(angCam - 0.75) * R * 0.3 };
@@ -1718,7 +1718,13 @@ export function criarCena(T, canvas, opcoes) {
     const livre = (x, z, r) => ocupado.every((o) => (o.x - x) ** 2 + (o.z - z) ** 2 >= (o.r + r) ** 2);
     const itens = [];
     const ponto = (raioMax = 0.88) => { const r = Math.sqrt(rnd()) * R * raioMax, a = rnd() * TAU; return { x: Math.cos(a) * r, z: Math.sin(a) * r }; };
-    for (const m of marcos) if (!m.naAgua && !m.terreno && !m.noPico) ocupado.push({ x: m.x, z: m.z, r: m.raio });
+    // `folga`: as formas genéricas afastam também as árvores altas, que as escondiam na visão inicial
+    for (const m of marcos) {
+      if (m.naAgua || m.terreno || m.noPico) continue;
+      ocupado.push({ x: m.x, z: m.z, r: m.raio + (m.folga ?? 0) });
+      // e deixam livre a faixa entre o marco e a câmera inicial (uma mata na frente tapava a igreja)
+      if (m.folga) for (const k of [0.55, 0.95]) ocupado.push({ x: m.x + dirCam.x * k, z: m.z + dirCam.z * k, r: 0.3 });
+    }
     const naDuna = (s, limite = 0.03) => dunas && s.duna > limite;
 
     // a frente da ilha (voltada para a câmera inicial) guarda o lugar da placa
