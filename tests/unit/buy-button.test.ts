@@ -44,4 +44,19 @@ describe("buy button on product cards (layout.buyLabel)", () => {
     const patch = parseSectionForm(form(layoutForm({ layout_display: "grid", layout_buy_present: "1", layout_buy: "on", layout_buy_label: "Comprar" })), terra());
     expect(patch.layout).toEqual({ variant: "standard", tone: "light", surface: "plain", display: "grid", buyLabel: "Comprar" });
   });
+
+  test("given the cart style, when parsed, then it is stored with the label; the bar is never stored; no label, no style", () => {
+    const fab = parseSectionForm(form(layoutForm({ layout_buy_present: "1", layout_buy: "on", layout_buy_label: "Comprar", layout_buy_style: "fab" })), terra());
+    expect(fab.layout).toMatchObject({ buyLabel: "Comprar", buyStyle: "fab" });
+    expect(validateSection({ ...terra(), layout: fab.layout }).ok).toBe(true);
+    expect(parseSectionForm(form(layoutForm({ layout_buy_present: "1", layout_buy: "on", layout_buy_label: "Comprar", layout_buy_style: "button" })), terra()).layout).not.toHaveProperty("buyStyle");
+    expect(parseSectionForm(form(layoutForm({ layout_buy_present: "1", layout_buy_style: "fab" })), terra()).layout).not.toHaveProperty("buyStyle");
+    const saved: Section = { ...terra(), layout: { ...terra().layout!, buyLabel: "Comprar", buyStyle: "fab" } };
+    expect(parseSectionForm(form(layoutForm({})), saved).layout).toMatchObject({ buyLabel: "Comprar", buyStyle: "fab" });
+  });
+
+  test("given a style without a label or an unknown style, when validated, then it is refused", () => {
+    expect(validateSection({ ...terra(), layout: { ...terra().layout!, buyStyle: "fab" } }).ok).toBe(false);
+    expect(validateSection({ ...terra(), layout: { ...terra().layout!, buyLabel: "Comprar", buyStyle: "x" as never } }).ok).toBe(false);
+  });
 });

@@ -1,0 +1,496 @@
+{
+  "base": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html",
+  "quando": "2026-10-14T14:35:52.099Z",
+  "checagens": [
+    {
+      "nome": "[mobile] entrada abre com a prévia animada",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] sem rolagem horizontal na entrada",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] busca mostra \"Cidade · UF\"",
+      "ok": true,
+      "detalhe": "Florianópolis · SC | Floriano Peixoto · RS"
+    },
+    {
+      "nome": "[mobile] busca sem resultado explica",
+      "ok": true,
+      "detalhe": "Nenhuma cidade encontrada para “xyzxyz”. A Use Origens tem cidades do Sul, do Norte e do Centro-Oeste."
+    },
+    {
+      "nome": "[mobile] primeira ilha construída",
+      "ok": true,
+      "detalhe": "OrigemFlorianópolis"
+    },
+    {
+      "nome": "[mobile] oferece adicionar onde vive hoje",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] mesma cidade em dois papéis = uma ilha",
+      "ok": true,
+      "detalhe": "Origem · PresenteFlorianópolis"
+    },
+    {
+      "nome": "[mobile] conclui com duas ilhas",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] troca atualiza o mundo (três lugares)",
+      "ok": true,
+      "detalhe": "Florianópolis · SC, Minha origem. Conhecer o lugar e ver as camisetas | Goiânia · GO, Meu presente. Conhecer o lugar e ver as camisetas | Manaus · AM, Meu lugar do coração. Conhecer o lugar e ver as camisetas"
+    },
+    {
+      "nome": "[mobile] três etiquetas sobre as ilhas",
+      "ok": true,
+      "detalhe": "OrigemFlorianópolis | CoraçãoManaus | PresenteGoiânia"
+    },
+    {
+      "nome": "[mobile] sem rolagem horizontal no resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] áreas de toque ≥ 44 px no resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] painel da cidade: CTA para a página real",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/sul/sc/florianopolis"
+    },
+    {
+      "nome": "[mobile] painel da cidade: camisetas com links reais",
+      "ok": true,
+      "detalhe": "8 produtos"
+    },
+    {
+      "nome": "[mobile] áreas de toque ≥ 44 px no painel da cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] Esc fecha o painel da cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] tocar na placa abre o painel",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] PNG exportado em 1080 × 1350",
+      "ok": true,
+      "detalhe": "1080×1350, meu-pequeno-mundo-use-origens.png"
+    },
+    {
+      "nome": "[mobile] sem compartilhamento nativo: oferece baixar",
+      "ok": true,
+      "detalhe": "diálogo aberto"
+    },
+    {
+      "nome": "[mobile] recarregar restaura o mundo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] URL tem versão e IDs",
+      "ok": true,
+      "detalhe": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html?mundo=1&origem=4205407&presente=5208707&coracao=1302603"
+    },
+    {
+      "nome": "[mobile] recarregar no meio da construção volta ao passo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] link reconstrói o mundo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] remover tira a ilha",
+      "ok": true,
+      "detalhe": "OrigemFlorianópolis | PresenteGoiânia"
+    },
+    {
+      "nome": "[mobile] recomeçar pede confirmação",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] cancelar mantém o mundo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] confirmar apaga e volta à primeira pergunta",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] depois de recomeçar, recarregar abre a entrada",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] entrada abre com a prévia animada",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] sem rolagem horizontal na entrada",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] busca mostra \"Cidade · UF\"",
+      "ok": true,
+      "detalhe": "Florianópolis · SC | Floriano Peixoto · RS"
+    },
+    {
+      "nome": "[desktop] busca sem resultado explica",
+      "ok": true,
+      "detalhe": "Nenhuma cidade encontrada para “xyzxyz”. A Use Origens tem cidades do Sul, do Norte e do Centro-Oeste."
+    },
+    {
+      "nome": "[desktop] primeira ilha construída",
+      "ok": true,
+      "detalhe": "OrigemFlorianópolis"
+    },
+    {
+      "nome": "[desktop] oferece adicionar onde vive hoje",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] mesma cidade em dois papéis = uma ilha",
+      "ok": true,
+      "detalhe": "Origem · PresenteFlorianópolis"
+    },
+    {
+      "nome": "[desktop] conclui com duas ilhas",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] troca atualiza o mundo (três lugares)",
+      "ok": true,
+      "detalhe": "Florianópolis · SC, Minha origem. Conhecer o lugar e ver as camisetas | Goiânia · GO, Meu presente. Conhecer o lugar e ver as camisetas | Manaus · AM, Meu lugar do coração. Conhecer o lugar e ver as camisetas"
+    },
+    {
+      "nome": "[desktop] três etiquetas sobre as ilhas",
+      "ok": true,
+      "detalhe": "OrigemFlorianópolis | CoraçãoManaus | PresenteGoiânia"
+    },
+    {
+      "nome": "[desktop] sem rolagem horizontal no resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] áreas de toque ≥ 44 px no resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] painel da cidade: CTA para a página real",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/sul/sc/florianopolis"
+    },
+    {
+      "nome": "[desktop] painel da cidade: camisetas com links reais",
+      "ok": true,
+      "detalhe": "8 produtos"
+    },
+    {
+      "nome": "[desktop] áreas de toque ≥ 44 px no painel da cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] Esc fecha o painel da cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] tocar na placa abre o painel",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] PNG exportado em 1080 × 1350",
+      "ok": true,
+      "detalhe": "1080×1350, meu-pequeno-mundo-use-origens.png"
+    },
+    {
+      "nome": "[desktop] sem compartilhamento nativo: oferece baixar",
+      "ok": true,
+      "detalhe": "diálogo aberto"
+    },
+    {
+      "nome": "[desktop] recarregar restaura o mundo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] URL tem versão e IDs",
+      "ok": true,
+      "detalhe": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html?mundo=1&origem=4205407&presente=5208707&coracao=1302603"
+    },
+    {
+      "nome": "[desktop] recarregar no meio da construção volta ao passo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] link reconstrói o mundo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] remover tira a ilha",
+      "ok": true,
+      "detalhe": "OrigemFlorianópolis | PresenteGoiânia"
+    },
+    {
+      "nome": "[desktop] recomeçar pede confirmação",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] cancelar mantém o mundo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] confirmar apaga e volta à primeira pergunta",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] depois de recomeçar, recarregar abre a entrada",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "nomes longos sem rolagem horizontal",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "lugar sem curadoria mostra 'Cenário ilustrativo'",
+      "ok": true,
+      "detalhe": "Cenário ilustrativo · Cerrado"
+    },
+    {
+      "nome": "nomes longos: PNG exportado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "o mesmo ciclo de 6 trocas + 1 remoção, repetido, não acumula nada na GPU nem na cena",
+      "ok": true,
+      "detalhe": "início {\"geometrias\":33,\"texturas\":6,\"programas\":15,\"objetos\":71,\"ilhas\":3,\"animacoes\":0} · após 1º ciclo {\"geometrias\":36,\"texturas\":6,\"programas\":16,\"objetos\":71,\"ilhas\":3,\"animacoes\":0} · após 2º ciclo {\"geometrias\":36,\"texturas\":6,\"programas\":16,\"objetos\":71,\"ilhas\":3,\"animacoes\":0}"
+    },
+    {
+      "nome": "link inválido (desconhecida) mostra aviso e não quebra",
+      "ok": true,
+      "detalhe": "Não encontramos um lugar deste link (minha origem). Escolha de novo para completar o mundo."
+    },
+    {
+      "nome": "cidade desconhecida leva a escolher de novo o papel certo",
+      "ok": true,
+      "detalhe": "Onde sua história começou?"
+    },
+    {
+      "nome": "link inválido (versao) mostra aviso e não quebra",
+      "ok": true,
+      "detalhe": "Este link de mundo usa um formato que não reconhecemos. Monte o seu abaixo."
+    },
+    {
+      "nome": "link inválido (formato) mostra aviso e não quebra",
+      "ok": true,
+      "detalhe": "Não encontramos um lugar deste link (minha origem). Escolha de novo para completar o mundo."
+    },
+    {
+      "nome": "link inválido (vazio) mostra aviso e não quebra",
+      "ok": true,
+      "detalhe": "Este link não tem lugares válidos. Monte o seu abaixo."
+    },
+    {
+      "nome": "compartilhamento nativo recebe o PNG",
+      "ok": true,
+      "detalhe": "{\"nome\":\"meu-pequeno-mundo-use-origens.png\",\"tipo\":\"image/png\",\"tamanho\":1126507,\"texto\":\"Esses lugares fazem parte de mim.\"}"
+    },
+    {
+      "nome": "cancelar a janela nativa mantém o resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "copiar link coloca a URL do mundo na área de transferência",
+      "ok": true,
+      "detalhe": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html?mundo=1&origem=4205407&coracao=1302603"
+    },
+    {
+      "nome": "arrastar gira a maquete sem abrir a cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "tocar na ilha abre a cidade",
+      "ok": true,
+      "detalhe": "Florianópolis · SC"
+    },
+    {
+      "nome": "teclado: Enter na lista abre a cidade e o foco vai para o nome",
+      "ok": true,
+      "detalhe": "Use Origens → cidade-nome"
+    },
+    {
+      "nome": "teclado: Esc devolve o foco ao lugar da lista",
+      "ok": true,
+      "detalhe": "5300108"
+    },
+    {
+      "nome": "teclado: setas e Enter escolhem na busca",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "sem WebGL: apresentação estática com os lugares",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "sem WebGL: camisetas continuam acessíveis",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "sem WebGL: imagem ainda é gerada",
+      "ok": true,
+      "detalhe": "meu-pequeno-mundo-use-origens.png"
+    },
+    {
+      "nome": "falha ao carregar o Three.js mostra aviso",
+      "ok": true,
+      "detalhe": "Não foi possível carregar a maquete 3D. Seus lugares e as camisetas continuam aqui."
+    },
+    {
+      "nome": "falha do 3D não impede escolher",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "arquivo local: selo de demonstração",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "arquivo local: copiar link desabilitado e explicado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "arquivo local: 'Catálogo ainda não conectado' e CTA desabilitado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "arquivo local: download da imagem funciona",
+      "ok": true,
+      "detalhe": ""
+    }
+  ],
+  "consoleErros": [],
+  "consoleErrosEsperados": [
+    "[mobile] THREE.WebGLRenderer: THREE.WebGLRenderer: Error creating WebGL context.",
+    "[mobile] Failed to load resource: net::ERR_FAILED",
+    "[mobile] Failed to load resource: net::ERR_FAILED",
+    "[mobile] Failed to load resource: net::ERR_FAILED"
+  ],
+  "produtosFlorianopolis": [
+    {
+      "href": "https://www.useorigens.com.br/sul/sc/florianopolis/ponto-de-origem",
+      "nome": "Ponto de Origem",
+      "img": "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/78488e3299f21dd624f1372078e67f03.jpg"
+    },
+    {
+      "href": "https://www.useorigens.com.br/sul/sc/florianopolis/feito-em",
+      "nome": "Feito em",
+      "img": "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/eca95d3db843ce4dd57b87604389559d.jpg"
+    },
+    {
+      "href": "https://www.useorigens.com.br/sul/sc/florianopolis/coordenadas",
+      "nome": "Coordenadas",
+      "img": "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/facd74dce1548e51a150f68a6871e8a5.jpg"
+    },
+    {
+      "href": "https://www.useorigens.com.br/sul/sc/florianopolis/legado",
+      "nome": "Legado",
+      "img": "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/0604b99f17529d907756eb01190ebdc3.jpg"
+    },
+    {
+      "href": "https://www.useorigens.com.br/sul/sc/florianopolis/territorio",
+      "nome": "Território",
+      "img": "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/79595ffb4752b281498ca20236058fd4.jpg"
+    },
+    {
+      "href": "https://www.useorigens.com.br/sul/sc/florianopolis/tipografia",
+      "nome": "Tipografia",
+      "img": "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/97aaa1c511f85cdc3b2c7d1b74c18cbf.jpg"
+    },
+    {
+      "href": "https://www.useorigens.com.br/sul/sc/florianopolis/traco",
+      "nome": "Traço",
+      "img": "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/5254b1296e9f1f23abd3f7409a1bacd8.jpg"
+    },
+    {
+      "href": "https://www.useorigens.com.br/sul/sc/florianopolis/gentilico",
+      "nome": "Gentílico",
+      "img": "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/917d8367da740ab41d0d785619eecff2.jpg"
+    }
+  ],
+  "memoria": {
+    "inicio": {
+      "geometrias": 33,
+      "texturas": 6,
+      "programas": 15,
+      "objetos": 71,
+      "ilhas": 3,
+      "animacoes": 0
+    },
+    "antes": {
+      "geometrias": 36,
+      "texturas": 6,
+      "programas": 16,
+      "objetos": 71,
+      "ilhas": 3,
+      "animacoes": 0
+    },
+    "depois": {
+      "geometrias": 36,
+      "texturas": 6,
+      "programas": 16,
+      "objetos": 71,
+      "ilhas": 3,
+      "animacoes": 0
+    }
+  },
+  "resumo": {
+    "total": 82,
+    "falhas": 0,
+    "consoleErros": 0
+  }
+}

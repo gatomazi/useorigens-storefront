@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { ProductTags } from "@/lib/site-config/schema";
+import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { CustomizerCardLink, ProductCardLink, ProductSectionHeading, SOLID_CARDS } from "./ProductCard";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
 
@@ -23,7 +24,7 @@ export function ProductGrid({
   viewAllLabel = "Ver todos",
   sourceSection,
   leading,
-  buyLabel,
+  buy,
   tags,
   solidCards = false,
   aside,
@@ -50,8 +51,8 @@ export function ProductGrid({
   viewAllHref?: string;
   viewAllLabel?: string;
   sourceSection: string;
-  /** The section's buy button ("Comprar") under every product card; absent = none. */
-  buyLabel?: string;
+  /** The section's buy button ("Comprar") on every product card, under the price or as a cart on the picture; absent = none. */
+  buy?: CardBuy;
   /** The section's tags on the product pictures (`layout.tags`); absent = none. */
   tags?: ProductTags;
   /** Opaque light cards (`SOLID_CARDS`), for a section on a photo. */
@@ -79,12 +80,12 @@ export function ProductGrid({
       <ul className={`grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 ${solidCards ? SOLID_CARDS : ""}`}>
         {leading && (
           <li key="customizer-card" data-customizer-card>
-            <CustomizerCardLink card={leading} poster={poster} dark={cardDark} sizes={CARD_SIZES} asButton={Boolean(buyLabel)} />
+            <CustomizerCardLink card={leading} poster={poster} dark={cardDark} sizes={CARD_SIZES} asButton={buy?.style === "button"} />
           </li>
         )}
         {items.map((item, i) => (
           <li key={item.id}>
-            <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buyLabel={buyLabel} tags={tags} />
+            <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buy={buy} tags={tags} />
           </li>
         ))}
       </ul>

@@ -2,6 +2,12 @@ import type { NextConfig } from "next";
 import { UMAPENCA_IMAGE_HOSTS } from "./src/lib/umapenca/hosts";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // The standalone prototype's file name: a link made with it opens the same world on the store (the query — world, roles, memories — is kept).
+      { source: "/meu-pequeno-mundo-use-origens.html", destination: "/meu-pequeno-mundo", permanent: false },
+    ];
+  },
   experimental: {
     // Server Actions are capped at 1 MB by default, which rejected every CMS image upload ("Body exceeded 1 MB limit"). Uploads are validated
     // at 8 MB (src/lib/admin/media/process.ts); the extra room is the multipart overhead. Only the admin has Server Actions.

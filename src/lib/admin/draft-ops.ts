@@ -15,6 +15,7 @@ import { newCollectionLanding, newPage, uniqueSlug } from "../site-config/pages"
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import type { PromotionsConfig } from "../site-config/promotions-schema";
 import type { CardsConfig } from "../site-config/cards-schema";
+import type { MundoModo } from "../site-config/mundo-schema";
 import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid">;
@@ -62,6 +63,7 @@ export type DraftOp =
   | { type: "set-promotions"; promotions: PromotionsConfig }
   /** GLOBAL only: a buy button on every product card of the store (`cards.buyLabel`), or `null` to leave it to each section again. */
   | { type: "set-cards"; cards: CardsConfig | null }
+  | { type: "set-mundo"; modo: MundoModo | null }
   /** REGION only: switches "O Pódio" on or off (home teaser, state pages and the daily calculation); on removes the setting (the default). */
   | { type: "set-podio"; enabled: boolean }
   /** Launches / recalls a region publicly (takes effect only when published). */
@@ -164,6 +166,13 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     if (doc.scope !== "global") return fail("the cards' setting belongs to the global scope");
     const next: ScopeDoc = { ...doc, cards: op.cards ?? undefined };
     if (!op.cards) delete next.cards;
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-mundo") {
+    if (doc.scope !== "global") return fail("the Meu Pequeno Mundo switch belongs to the global scope");
+    const next: ScopeDoc = { ...doc, mundo: op.modo ? { modo: op.modo } : undefined };
+    if (!op.modo) delete next.mundo;
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }

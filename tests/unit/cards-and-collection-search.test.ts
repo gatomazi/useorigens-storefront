@@ -54,7 +54,9 @@ describe("store-wide buy button on the product cards (global scope)", () => {
     const bundle = seed();
     expect(cardButtonOf(bundle)).toBeUndefined();
     const raw = { ...bundle, releaseId: "r1", docs: { ...bundle.docs, global: { ...bundle.docs.global, cards: { buyLabel: "Comprar" } } } };
-    expect(cardButtonOf(sanitizeBundle(raw, bundle).bundle)).toBe("Comprar");
+    expect(cardButtonOf(sanitizeBundle(raw, bundle).bundle)).toEqual({ label: "Comprar", style: "button" });
+    const fab = { ...raw, docs: { ...raw.docs, global: { ...raw.docs.global, cards: { buyLabel: "Comprar", buyStyle: "fab" } } } };
+    expect(cardButtonOf(sanitizeBundle(fab, bundle).bundle)).toEqual({ label: "Comprar", style: "fab" });
     const bad = { ...raw, docs: { ...raw.docs, global: { ...raw.docs.global, cards: { buyLabel: "" } } } };
     const read = sanitizeBundle(bad, bundle);
     expect(cardButtonOf(read.bundle)).toBeUndefined();
@@ -67,6 +69,14 @@ describe("store-wide buy button on the product cards (global scope)", () => {
     const on = ok(global, { type: "set-cards", cards: { buyLabel: "Comprar" } });
     expect(diffDocs(global, on).map((c) => c.text)).toEqual(["Botão nos cards de produto: cada seção decide → botão “Comprar” em todos os cards"]);
     expect(diffDocs(on, on)).toEqual([]);
+    const fab = ok(on, { type: "set-cards", cards: { buyLabel: "Comprar", buyStyle: "fab" } });
+    expect(diffDocs(on, fab).map((c) => c.text)).toEqual(["Botão nos cards de produto: botão “Comprar” em todos os cards → carrinho na imagem “Comprar” em todos os cards"]);
+  });
+
+  test("given the style of the button, when validated, then the cart on the picture and the bar pass, anything else is refused", () => {
+    expect(validateCards({ buyLabel: "Ver produto", buyStyle: "fab" }, "global").ok).toBe(true);
+    expect(validateCards({ buyLabel: "Ver produto", buyStyle: "button" }, "global").ok).toBe(true);
+    expect(validateCards({ buyLabel: "Ver produto", buyStyle: "floating" }, "global").ok).toBe(false);
   });
 });
 

@@ -110,7 +110,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   // "Escolha o estilo": the same places, grouped by style (src/lib/editorial/state-styles.ts). "Ver todos" only where the store has the
   // style-and-state navigation collection.
   // The store-wide buy button (Aparência, global): on these cards too.
-  const buyLabel = storeCardButton();
+  const buy = storeCardButton();
   const styles = stateStyles({
     uf,
     cities: hasRegions ? cities.filter((c) => c.type === "administrative_region") : cities,
@@ -202,7 +202,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
             title={`Destaques de ${STATE_NAMES[uf]}`}
             intro={hasRegions ? "Camisetas reais das localidades do Distrito Federal e da identidade do estado — a compra sempre continua na loja." : "Camisetas reais de cidades e da identidade do estado — a compra sempre continua na loja."}
             sourceSection={SOURCES.stateShowcase}
-            buyLabel={buyLabel}
+            buy={buy}
           />
         </section>
       )}
@@ -221,7 +221,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
 
       {styles.length > 0 && (
         <section id="estilos" className="wrap pb-10 lg:pb-14" aria-labelledby="styles-title">
-          <StateStyles stateName={STATE_NAMES[uf]} styles={styles} sourceSection={SOURCES.stateStyles} buyLabel={buyLabel} />
+          <StateStyles stateName={STATE_NAMES[uf]} styles={styles} sourceSection={SOURCES.stateStyles} buy={buy} />
         </section>
       )}
 

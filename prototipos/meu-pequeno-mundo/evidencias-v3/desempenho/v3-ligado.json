@@ -1,0 +1,167 @@
+{
+  "rotulo": "v3-ligado",
+  "base": "http://localhost:3300",
+  "quando": "2026-10-14T20:58:29.549Z",
+  "paginas": [
+    {
+      "viewport": "desktop",
+      "pagina": "home Sul",
+      "caminho": "/sul",
+      "status": 200,
+      "tempoAteOcioso": 1367,
+      "navegacao": {
+        "dcl": 62,
+        "load": 177
+      },
+      "requisicoes": 63,
+      "bytesTransferidos": 1899812,
+      "bytesJs": 667147,
+      "scripts": 15,
+      "scripts3d": [],
+      "linksParaOMundo": [
+        "/meu-pequeno-mundo?entrada=home&loja=sul",
+        "/meu-pequeno-mundo?entrada=home&loja=sul",
+        "/meu-pequeno-mundo?entrada=rodape&loja=sul"
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "pagina": "cidade (Florianópolis)",
+      "caminho": "/sul/sc/florianopolis",
+      "status": 200,
+      "tempoAteOcioso": 1294,
+      "navegacao": {
+        "dcl": 112,
+        "load": 145
+      },
+      "requisicoes": 39,
+      "bytesTransferidos": 1169363,
+      "bytesJs": 659907,
+      "scripts": 14,
+      "scripts3d": [],
+      "linksParaOMundo": [
+        "/meu-pequeno-mundo?entrada=cidade&cidade=4205407&loja=sul",
+        "/meu-pequeno-mundo?entrada=rodape&loja=sul"
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "pagina": "produto (Ponto de Origem, Florianópolis)",
+      "caminho": "/sul/sc/florianopolis/ponto-de-origem",
+      "status": 200,
+      "tempoAteOcioso": 1285,
+      "navegacao": {
+        "dcl": 59,
+        "load": 103
+      },
+      "requisicoes": 36,
+      "bytesTransferidos": 878733,
+      "bytesJs": 659574,
+      "scripts": 14,
+      "scripts3d": [],
+      "linksParaOMundo": [
+        "/meu-pequeno-mundo?entrada=rodape&loja=sul"
+      ]
+    },
+    {
+      "viewport": "desktop",
+      "pagina": "cidade (Tijucas)",
+      "caminho": "/sul/sc/tijucas",
+      "status": 200,
+      "tempoAteOcioso": 1395,
+      "navegacao": {
+        "dcl": 109,
+        "load": 142
+      },
+      "requisicoes": 37,
+      "bytesTransferidos": 1156631,
+      "bytesJs": 659948,
+      "scripts": 14,
+      "scripts3d": [],
+      "linksParaOMundo": [
+        "/meu-pequeno-mundo?entrada=cidade&cidade=4218004&loja=sul",
+        "/meu-pequeno-mundo?entrada=rodape&loja=sul"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "pagina": "home Sul",
+      "caminho": "/sul",
+      "status": 200,
+      "tempoAteOcioso": 1389,
+      "navegacao": {
+        "dcl": 92,
+        "load": 148
+      },
+      "requisicoes": 56,
+      "bytesTransferidos": 1048043,
+      "bytesJs": 667125,
+      "scripts": 15,
+      "scripts3d": [],
+      "linksParaOMundo": [
+        "/meu-pequeno-mundo?entrada=home&loja=sul",
+        "/meu-pequeno-mundo?entrada=home&loja=sul",
+        "/meu-pequeno-mundo?entrada=rodape&loja=sul"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "pagina": "cidade (Florianópolis)",
+      "caminho": "/sul/sc/florianopolis",
+      "status": 200,
+      "tempoAteOcioso": 1369,
+      "navegacao": {
+        "dcl": 108,
+        "load": 139
+      },
+      "requisicoes": 39,
+      "bytesTransferidos": 944435,
+      "bytesJs": 659926,
+      "scripts": 14,
+      "scripts3d": [],
+      "linksParaOMundo": [
+        "/meu-pequeno-mundo?entrada=cidade&cidade=4205407&loja=sul",
+        "/meu-pequeno-mundo?entrada=rodape&loja=sul"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "pagina": "produto (Ponto de Origem, Florianópolis)",
+      "caminho": "/sul/sc/florianopolis/ponto-de-origem",
+      "status": 200,
+      "tempoAteOcioso": 1242,
+      "navegacao": {
+        "dcl": 60,
+        "load": 103
+      },
+      "requisicoes": 36,
+      "bytesTransferidos": 847286,
+      "bytesJs": 659585,
+      "scripts": 14,
+      "scripts3d": [],
+      "linksParaOMundo": [
+        "/meu-pequeno-mundo?entrada=rodape&loja=sul"
+      ]
+    },
+    {
+      "viewport": "mobile",
+      "pagina": "cidade (Tijucas)",
+      "caminho": "/sul/sc/tijucas",
+      "status": 200,
+      "tempoAteOcioso": 1248,
+      "navegacao": {
+        "dcl": 105,
+        "load": 137
+      },
+      "requisicoes": 37,
+      "bytesTransferidos": 936830,
+      "bytesJs": 659900,
+      "scripts": 14,
+      "scripts3d": [],
+      "linksParaOMundo": [
+        "/meu-pequeno-mundo?entrada=cidade&cidade=4218004&loja=sul",
+        "/meu-pequeno-mundo?entrada=rodape&loja=sul"
+      ]
+    }
+  ]
+}

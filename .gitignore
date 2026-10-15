@@ -62,3 +62,8 @@ next-env.d.ts
 
 # leitura em modo sombra da loja INK unificada (docs/migracao-ink/origens-ink-reconciliacao.md)
 /data/unificado/
+
+# protótipo "Meu Pequeno Mundo": dados exportados do catálogo local (npm run mundo:dados)
+/prototipos/meu-pequeno-mundo/dados/
+/prototipos/meu-pequeno-mundo/pacote/
+/prototipos/meu-pequeno-mundo/contexto/

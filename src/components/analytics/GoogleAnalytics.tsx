@@ -46,8 +46,9 @@ declare global {
  * track.ts) is the single controlled place that ever sends one, so there is no double-counting between GA4's
  * automatic config-time page_view and this component's own manual one.
  */
-/** `measurementId`: see `MetaPixel` — `undefined` keeps the build-time env fallback. */
-export function GoogleAnalytics({ measurementId: resolved }: { measurementId?: string | null } = {}) {
+/** `measurementId`: see `MetaPixel` — `undefined` keeps the build-time env fallback. `semConsulta`: the page_view carries the path only
+ * (no query string) — used by /meu-pequeno-mundo, whose shared links carry the visitor's places and memories in the query. */
+export function GoogleAnalytics({ measurementId: resolved, semConsulta = false }: { measurementId?: string | null; semConsulta?: boolean } = {}) {
   const measurementId = resolved === undefined ? gaMeasurementId() : resolved;
   const { record } = useConsent();
   const accepted = measurementAllowed(record); // true from the start unless the strict consent gate is on (src/lib/consent/policy.ts)
@@ -58,7 +59,7 @@ export function GoogleAnalytics({ measurementId: resolved }: { measurementId?: s
   const revokedThisSession = useRef(false);
 
   const query = withoutCartRef(searchParams?.toString() ?? ""); // the cart token never reaches analytics
-  const currentPath = pathname + (query ? `?${query}` : "");
+  const currentPath = pathname + (query && !semConsulta ? `?${query}` : "");
   // `window` doesn't exist during SSR — the component always renders null there anyway (consent is never
   // "accepted" on the server, see ConsentProvider's `getServerConsentSnapshot`), but this computation itself
   // runs on every render including that first server pass, so it needs its own guard.
