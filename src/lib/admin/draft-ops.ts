@@ -62,6 +62,8 @@ export type DraftOp =
   | { type: "set-promotions"; promotions: PromotionsConfig }
   /** GLOBAL only: a buy button on every product card of the store (`cards.buyLabel`), or `null` to leave it to each section again. */
   | { type: "set-cards"; cards: CardsConfig | null }
+  /** REGION only: switches "O Pódio" on or off (home teaser, state pages and the daily calculation); on removes the setting (the default). */
+  | { type: "set-podio"; enabled: boolean }
   /** Launches / recalls a region publicly (takes effect only when published). */
   | { type: "set-launched"; launched: boolean }
   // ── Pages (hotpages and parent-category landings) ──
@@ -164,6 +166,12 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     if (!op.cards) delete next.cards;
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-podio") {
+    if (doc.scope === "global") return fail("the pódio belongs to a region");
+    const next: ScopeDoc = { ...doc, podio: { enabled: false } };
+    if (op.enabled) delete next.podio;
+    return { ok: true, doc: next };
   }
   if (op.type === "set-launched") {
     if (doc.scope === "global" || doc.scope === "sul") return fail("only Norte and Centro-Oeste are launched separately (Sul is always public)");
