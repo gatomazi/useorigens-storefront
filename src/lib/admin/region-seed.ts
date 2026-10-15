@@ -1,6 +1,7 @@
 import "server-only";
 import { getCatalog } from "../catalog/repository";
 import { libraryEntries } from "../catalog/collection-source";
+import { storeForRegion } from "../catalog/commerce-mode";
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import { getRegionHome } from "../home";
 import type { Section } from "../site-config/schema";
@@ -21,7 +22,7 @@ export type RegionSeed = { sections: Section[]; notes: string[]; collections: nu
  * public on INK (an internal one would get none). An empty region gets just the hero and the footer, and says so in `notes`.
  */
 export function buildRegionSeed(region: Exclude<RegionSlug, "sul">, maxCarousels = 3): RegionSeed {
-  const store = REGIONS[region].storeKey;
+  const store = storeForRegion(region);
   const name = REGIONS[region].name;
   const notes: string[] = [];
   const catalogPresent = getCatalog().productsOfStore(store).merch.size + getCatalog().productsOfStore(store).cityDesigns.size > 0;

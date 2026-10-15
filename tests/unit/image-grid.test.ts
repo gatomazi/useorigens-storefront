@@ -46,9 +46,9 @@ describe("image grid in the schema", () => {
     expect(mediaRefsOfDoc(withGrid(structuredClone(seed.docs.sul), pictured)).map((r) => r.assetId)).toContain("01JTILE");
   });
 
-  test("given a Norte grid, when a tile opens a Sul collection or a Sul route, then the region rules reject it on the home and on a page", () => {
+  test("given a Norte grid, when a tile opens a Centro-Oeste collection or a Sul route, then the region rules reject it on the home and on a page", () => {
     const norte = structuredClone(seed.docs.norte);
-    const sulCollection = grid("norte", { tiles: [tile({ dest: { kind: "ink-collection", store: "use-sul", collectionId: 1 } }), tile({ dest: { kind: "route", path: "/norte/busca" } })] });
+    const sulCollection = grid("norte", { tiles: [tile({ dest: { kind: "ink-collection", store: "use-centro", collectionId: 1 } }), tile({ dest: { kind: "route", path: "/norte/busca" } })] });
     const sulRoute = grid("norte", { tiles: [tile({ dest: { kind: "route", path: "/sul/sc" } }), tile({ dest: { kind: "route", path: "/norte/busca" } })] });
     const home = (s: Section) => ({ ...norte, home: { sections: [...seed.docs.sul.home!.sections.slice(0, 1), s, ...seed.docs.sul.home!.sections.slice(-1)] } });
     expect(validateScopeDoc(home(sulCollection)).ok).toBe(false);

@@ -5,7 +5,8 @@ import { findCollection } from "../catalog/collections-file";
 import type { OrderMember } from "@/components/admin/CollectionOrder";
 import { getCatalog } from "../catalog/repository";
 import { getRegionHome } from "../home";
-import { REGIONS, type RegionSlug } from "../geo/regions";
+import type { RegionSlug } from "../geo/regions";
+import { storeOf } from "./scope";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
 import { isUmaPencaSource, type Customizer, type Page, type ScopeDoc, type Section, type Source } from "../site-config/schema";
 import { groundReadability, readability, type ReadabilityIssue } from "./contrast";
@@ -91,7 +92,7 @@ export function collectionOrderArrangement(section: Section, doc: ScopeDoc): { p
 export function sourceProblem(source: Source, doc: ScopeDoc): string | null {
   if (source.kind !== "ink-category") return null;
   // A region only uses collections of ITS OWN INK store: never another region's, whatever the form said.
-  if (doc.scope !== "global" && source.store !== REGIONS[doc.scope as RegionSlug].storeKey) return "Essa coleção pertence a outra loja da INK: cada região usa só as coleções da própria loja.";
+  if (doc.scope !== "global" && source.store !== storeOf(doc.scope as RegionSlug)) return "Essa coleção pertence a outra loja da INK: cada região usa só as coleções da loja que vende nela.";
   const entry = libraryEntries(source.store, enabledInternalIds(doc, source.store)).find((e) => e.id === source.collectionId);
   if (!entry) return "Essa coleção não existe no snapshot sincronizado.";
   if (entry.selectable) return null;
@@ -161,7 +162,7 @@ export function customizerProblems(doc: ScopeDoc, model: Customizer): string[] {
   const out: string[] = [];
   const name = `"${model.name}"`;
   if (doc.scope === "global") return [`${name}: modelos pertencem a uma região`];
-  const store = REGIONS[doc.scope as RegionSlug].storeKey;
+  const store = storeOf(doc.scope as RegionSlug);
   const source = model.source;
   // An Uma Penca model ("Crie a sua" caneca/ecobag) has no INK collection or product to check: only the page requirements below apply.
   if (isUmaPencaSource(source)) {

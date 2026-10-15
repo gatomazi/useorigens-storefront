@@ -70,3 +70,12 @@ export const STATE_CAPITAL_SLUG: Readonly<Record<string, string>> = {
   MS: "campo-grande",
   MT: "cuiaba",
 };
+
+/** The INK store that becomes the single store (docs/migracao-ink/origens-ink-reconciliacao.md). */
+export const SINGLE_STORE_KEY: CommerceStoreKey = "use-sul";
+
+/**
+ * The INK stores a region's document may point at: its own store and the single store (which sells the three regions in single-store mode).
+ * Which one the storefront actually serves depends on the commerce mode (commerce-mode.ts `storeForRegion`); a ref to the other is dropped.
+ */
+export const regionMayUseStore = (region: RegionSlug, store: unknown): boolean => store === REGIONS[region].storeKey || store === SINGLE_STORE_KEY;

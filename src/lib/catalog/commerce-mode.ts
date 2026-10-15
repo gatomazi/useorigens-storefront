@@ -2,7 +2,7 @@ import "server-only";
 import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { catalogSnapshotDir, commerceModeSetting, commerceSimulationAllowed, commerceStorePriorityOverride } from "../config/env";
-import { REGIONS, REGION_SLUGS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { REGIONS, REGION_SLUGS, SINGLE_STORE_KEY, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import type { CatalogSource } from "./types";
 
 /**
@@ -28,8 +28,7 @@ import type { CatalogSource } from "./types";
 
 export type CommerceMode = "multi-store" | "single-store";
 
-/** The INK store that becomes the single store (docs/migracao-ink/origens-ink-reconciliacao.md). */
-export const SINGLE_STORE_KEY: CommerceStoreKey = "use-sul";
+export { SINGLE_STORE_KEY };
 
 /** Sub-directory of the snapshot directory (the Volume) that holds the single-store data set. */
 export const SINGLE_STORE_DIR = "loja-unica";

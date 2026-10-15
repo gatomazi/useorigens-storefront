@@ -4,7 +4,7 @@ import { arrangementOf, enabledInternalIds } from "../site-config/collections-en
 import { PAGE_SLUG, RESERVED_SLUGS, type ScopeDoc } from "../site-config/schema";
 import { arrangeMembers, type CategoryArrangement, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type InkCategorySource, type UnavailableReason } from "../site-config/sources";
 import { discountPercent, formatListPrice, formatPrice } from "../format";
-import { isRegionSlug, REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { isRegionSlug, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { commercePlan, storeForRegion } from "./commerce-mode";
 import { getCatalog } from "./repository";
 import { purchaseUrl } from "./commerce";
@@ -161,6 +161,8 @@ export function categoryLookup(
   region?: RegionSlug,
 ): CategoryLookup {
   return (source) => {
+    // A region's document may keep refs to its own store and to the single store; only the one that sells there now resolves.
+    if (region && source.store !== storeForRegion(region)) return { status: "unavailable", reason: "collection-not-found" };
     const found = resolveCollection(source.store, source.collectionId, enabled(source.store), arrange(source), filePath);
     if (found.status !== "ok") return found;
     const products = productsOf(source.store);
@@ -200,6 +202,8 @@ export function collectionPageLookup(
   region?: RegionSlug,
 ): CollectionPageLookup {
   return (source, page) => {
+    // A region's document may keep refs to its own store and to the single store; only the one that sells there now resolves.
+    if (region && source.store !== storeForRegion(region)) return { status: "unavailable", reason: "collection-not-found" };
     const found = resolveCollection(source.store, source.collectionId, enabled(source.store), arrange(source), filePath);
     if (found.status !== "ok") return found;
     const products = productsOf(source.store);
@@ -247,7 +251,8 @@ const regionOfDoc = (doc: ScopeDoc | undefined): RegionSlug | undefined => (doc 
 export function categoryProps(productsOf: (store: CommerceStoreKey) => StoreProducts, doc: ScopeDoc | undefined) {
   const enabled = (store: CommerceStoreKey) => enabledInternalIds(doc, store);
   const links: CollectionLinks = {
-    inkSlug: (store, collectionId) => publicCollectionSlug(store, collectionId),
+    // A button to the INK page of a collection of a store that does not sell in the region now (an old or a re-pointed ref): no link.
+    inkSlug: (store, collectionId) => (regionOfDoc(doc) && storeForRegion(regionOfDoc(doc)!) !== store ? null : publicCollectionSlug(store, collectionId)),
     pageSlug: (store, collectionId) => collectionPageSlug(doc, store, collectionId),
   };
   return {

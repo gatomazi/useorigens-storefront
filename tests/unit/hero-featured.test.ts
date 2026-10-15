@@ -124,7 +124,7 @@ describe("the hero's featured references in the document", () => {
   });
 
   test("given a reference of another region's store, four cards, a duplicate or a bad id, when saved, then it is rejected and nothing changes", () => {
-    expect(set([{ store: "use-sul", productId: "9001" }]).ok).toBe(false);
+    expect(set([{ store: "use-centro", productId: "9001" }]).ok).toBe(false);
     expect(set([1, 2, 3, 4].map((n) => ({ store: "use-norte", productId: `70${n}` }))).ok).toBe(false);
     expect(set([{ store: "use-norte", productId: "7001" }, { store: "use-norte", productId: "7001" }]).ok).toBe(false);
     expect(set([{ store: "use-norte", productId: "abc" }]).ok).toBe(false);

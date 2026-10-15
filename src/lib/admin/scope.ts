@@ -1,6 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
 import { REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { storeForRegion } from "../catalog/commerce-mode";
 import type { Scope } from "../site-config/schema";
 import { canEdit, type Actor } from "./store/ports";
 
@@ -14,7 +15,8 @@ export const REGION_SCOPES: readonly RegionSlug[] = ["sul", "norte", "centro-oes
 export const SCOPE_COOKIE = "uo_admin_scope";
 
 export const isRegionScope = (v: unknown): v is RegionSlug => typeof v === "string" && (REGION_SCOPES as readonly string[]).includes(v);
-export const storeOf = (scope: RegionSlug): CommerceStoreKey => REGIONS[scope].storeKey;
+/** The INK store whose collections and products the region's screens offer: the one that sells there under the effective commerce mode. */
+export const storeOf = (scope: RegionSlug): CommerceStoreKey => storeForRegion(scope);
 export const scopeName = (scope: Scope): string => (scope === "global" ? "Global" : REGIONS[scope].name);
 
 /** A history entry's `scopesChanged` item as text: a region/global, or a page / model marker (`page:hotpage/slug`, `customizer:slug`). */

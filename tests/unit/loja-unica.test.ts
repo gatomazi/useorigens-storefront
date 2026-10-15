@@ -8,10 +8,10 @@ import type { ProdutoBruto } from "@/lib/catalog/unificado/produto-bruto";
 import { classificarDesenhosSul, classificarRegioesSul, COLECAO_SUL, COLECAO_ZZ_CO, COLECAO_ZZ_NO } from "@/lib/catalog/unificado/reconciliar";
 import { montarColecoes, montarLojaUnica } from "@/lib/catalog/unificado/loja-unica";
 import { syncLojaUnica, IDENTITY_FILE } from "@/lib/catalog/unificado/sync-loja-unica";
-import { collectionsForRegion } from "@/lib/catalog/collection-source";
+import { categoryLookup, collectionsForRegion, regionShowsCollection } from "@/lib/catalog/collection-source";
 import { SINGLE_STORE_DIR } from "@/lib/catalog/commerce-mode";
 import { getCatalog } from "@/lib/catalog/repository";
-import { writeCollectionsFile, collectionsPath } from "@/lib/catalog/collections-file";
+import { getStoreCollections, writeCollectionsFile, collectionsPath } from "@/lib/catalog/collections-file";
 import type { InkProductNormalized } from "@/lib/catalog/types";
 
 let seq = 7000;
@@ -154,6 +154,22 @@ describe("coleções da loja única", () => {
       expect(nomes("sul")).toEqual(["Sul Puro"]);
       expect(nomes("norte")).toEqual(["Norte Puro"]);
       expect(nomes("centro-oeste")).toEqual([]);
+    });
+
+    test("then a collection page, the menu and the guide follow the same rule, and a ref to a store that does not sell in the region resolves to nothing", async () => {
+      const r = montarLojaUnica(classificar(), { modo: "simulacao", syncedAt: "t", fonte: FONTE });
+      const d = path.join(dir, SINGLE_STORE_DIR);
+      mkdirSync(d, { recursive: true });
+      writeFileSync(path.join(d, "catalog-snapshot.json"), JSON.stringify(r.catalogo));
+      await writeCollectionsFile({ version: 2, stores: { "use-sul": montarColecoes("use-sul", paginas({ "Norte Puro": [belem.id], Mista: [curitiba.id, belem.id] }), r.catalogo.stores["use-sul"]!, "t") } }, collectionsPath(d));
+      const byName = (n: string) => getStoreCollections("use-sul")!.collections.find((c) => c.name === n)!;
+      expect(regionShowsCollection("norte", byName("Norte Puro"))).toBe(true);
+      expect(regionShowsCollection("sul", byName("Norte Puro"))).toBe(false);
+      expect(regionShowsCollection("norte", byName("Mista"))).toBe(false);
+      const c = getCatalog();
+      // A Norte document still pointing at the old regional store: the single store sells Norte now, so that section has nothing to show.
+      const lookup = categoryLookup((s) => c.productsOfStore(s), () => new Set(), undefined, undefined, "norte");
+      expect(lookup({ kind: "ink-category", store: "use-norte", collectionId: 141902, order: "category", limit: 6 })).toEqual({ status: "unavailable", reason: "collection-not-found" });
     });
   });
 });
