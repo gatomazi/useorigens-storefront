@@ -6,6 +6,7 @@ import { PriceText } from "@/components/catalog/PriceText";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
 import { SOURCES } from "@/lib/analytics/sources";
+import { carryCampaign } from "@/lib/analytics/campaign";
 import { trackGoToInk } from "@/lib/analytics/track";
 import { formatListPrice, formatPrice } from "@/lib/format";
 import { withListSession } from "@/lib/favorites/buy-session-url";
@@ -79,7 +80,7 @@ export function MeusLugaresView({ region }: { region: RegionSlug }) {
         const data = (await response.json()) as { sessionId: string; firstProductUrl: string };
         const destination = withListSession(data.firstProductUrl, data.sessionId);
         trackGoToInk({ productId: eligible[0].inkProductId, sourceSection: SOURCES.meusLugares, destinationUrl: data.firstProductUrl, value: eligible[0].price ?? undefined });
-        window.location.assign(destination);
+        window.location.assign(carryCampaign(destination));
         return;
       }
     } catch {
@@ -88,7 +89,7 @@ export function MeusLugaresView({ region }: { region: RegionSlug }) {
     // No session (feature not configured, all ineligible on the server, or a network error): open the first
     // product exactly like a normal purchase link, never announcing that the "next item" card is active.
     const first = resolved.get(groupKey(storeKey, eligible[0].inkProductId));
-    if (first?.available) window.location.assign(first.url);
+    if (first?.available) window.location.assign(carryCampaign(first.url));
     setBuying(null);
   }
 

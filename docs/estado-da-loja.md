@@ -181,7 +181,7 @@ O proxy não passa pelas rotas `/api`, então elas não têm a trava de catálog
   - ponte com a INK: `origens_storefront_arrived`, `origens_go_to_cart_click`, `origens_cart_mirror_view`;
   - outros: eventos de cupons, `podio_click`, `share`, `size_guide_open`.
 - **Origem do clique:** cada link para a INK leva um `source` que diz de qual seção veio, como `hero_search`, `city_styles`, `colecao_pagina` ou `pdp` (`src/lib/analytics/sources.ts`).
-- **Links sem UTM:** os links para a INK saem sem UTM, porque o rastreio acontece no clique.
+- **Campanha repassada à INK (desde 14/10/2026):** o site não cria UTM próprio, mas leva para a INK a campanha com que o visitante chegou. `utm_*`, `fbclid`, `gclid`, `gbraid`, `wbraid` e `ttclid` ficam guardados na visita (sessionStorage) e são somados ao link da INK na hora do clique, sem trocar parâmetro que o link já tenha (`ls`, `origens_open_cart`). Assim o Pixel e o GA4 da própria INK veem o anúncio em vez de um referral do site. Segue a mesma regra de consentimento do Meta/GA4. O redirect `/` → `/sul` também passou a manter a query (`src/lib/analytics/campaign.ts`).
 
 ---
 

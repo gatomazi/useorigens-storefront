@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { CartRefCapture } from "@/components/cart-mirror/CartRefCapture";
+import { CampaignCarry } from "@/components/analytics/CampaignCarry";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
 import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
@@ -53,6 +54,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
   return (
     <ConsentProvider>
       <CartRefCapture region={region} />
+      <CampaignCarry />
       <div data-region={region} style={{ ...regionThemeStyle(region), ...cssVars, ...(cssVars["--ground"] ? { background: "var(--ground)" } : {}), ...(cssVars["--ink"] ? { color: "var(--ink)" } : {}) }} className="relative">
         <AnnouncementBar region={region} cityCount={catalog.coveredCityIds(region).size} />
         <Header region={region} />
