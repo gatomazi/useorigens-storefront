@@ -214,7 +214,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
             labelledBy={`state-collection-${row.collection.id}`}
             title={`${row.collection.name.replace(/\s+/g, " ").trim()} · ${STATE_NAMES[uf]}`}
             sourceSection={SOURCES.stateCollection}
-            buyLabel={buyLabel}
+            buy={buy}
           />
         </section>
       ))}
