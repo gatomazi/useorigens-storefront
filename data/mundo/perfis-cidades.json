@@ -2574,6 +2574,195 @@
       "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5003702",
       "referencia": "Registro de 2002",
       "consultadoEm": "2026-10-15"
+    },
+    "santarem-ibge-enciclopedia-1957": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XIV — Santarém",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_14.pdf",
+      "referencia": "Livro de 1957",
+      "consultadoEm": "2026-10-15"
+    },
+    "santarem-prefeitura-historia": {
+      "titulo": "História de Santarém",
+      "publicador": "Prefeitura Municipal de Santarém",
+      "url": "https://santarem.pa.gov.br/institucional/historia-de-santarem",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "santarem-setur-inventario-oferta-turistica-2018": {
+      "titulo": "Inventário da Oferta Turística de Santarém",
+      "publicador": "Secretaria de Estado de Turismo do Pará (Setur-PA), com informações da Secretaria Municipal de Turismo de Santarém",
+      "url": "https://www.setur.pa.gov.br/sites/default/files/iot_santarem_18_12_18-ilovepdf-compressed.pdf",
+      "referencia": "Documento de 2018",
+      "consultadoEm": "2026-10-15"
+    },
+    "santarem-prefeitura-alter-do-chao": {
+      "titulo": "Alter do Chão",
+      "publicador": "Prefeitura Municipal de Santarém (portal do Sairé)",
+      "url": "https://saire.santarem.pa.gov.br/alter-do-chao",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "santarem-prefeitura-o-saire": {
+      "titulo": "O Sairé",
+      "publicador": "Prefeitura Municipal de Santarém (portal do Sairé)",
+      "url": "https://saire.santarem.pa.gov.br/o-saire",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "santarem-setur-polo-tapajos": {
+      "titulo": "Polo Tapajós",
+      "publicador": "Secretaria de Estado de Turismo do Pará (Setur-PA)",
+      "url": "https://www.setur.pa.gov.br/polo-tapajos",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-santarem-pa": {
+      "titulo": "Biblioteca IBGE — Santarém: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Santarém (PA). Prefeitura. 2017)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1506807",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-15"
+    },
+    "foz-do-iguacu-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 31 (Paraná) — Foz do Iguaçu",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_31.pdf",
+      "referencia": "Livro de 1959",
+      "consultadoEm": "2026-10-15"
+    },
+    "foz-do-iguacu-prefeitura-cronologia": {
+      "titulo": "Cronologia",
+      "publicador": "Prefeitura de Foz do Iguaçu",
+      "url": "https://www.foz.pr.gov.br/cronologia/",
+      "referencia": "Página institucional de 22/09/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "foz-do-iguacu-itaipu-nossa-historia": {
+      "titulo": "Nossa história — Itaipu Binacional",
+      "publicador": "Itaipu Binacional",
+      "url": "https://www.itaipu.gov.br/institucional/sobre-itaipu/nossa-historia",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "foz-do-iguacu-viaje-parana": {
+      "titulo": "Foz do Iguaçu — Viaje Paraná",
+      "publicador": "Secretaria de Estado do Turismo do Paraná (Viaje Paraná)",
+      "url": "https://www.viajeparana.com/Foz-do-Iguacu",
+      "referencia": "Página institucional (sem data; cita dados de 2023)",
+      "consultadoEm": "2026-10-15"
+    },
+    "foz-do-iguacu-prefeitura-parques-naturais-2023": {
+      "titulo": "Prefeito assina decretos que criam seis parques naturais municipais em Foz",
+      "publicador": "Prefeitura de Foz do Iguaçu",
+      "url": "https://www.foz.pr.gov.br/prefeito-assina-decretos-que-criam-seis-parques-naturais-municipais-em-foz/",
+      "referencia": "Notícia de 02/05/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-foz-do-iguacu-pr": {
+      "titulo": "Biblioteca IBGE — Foz do Iguaçu: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Foz do Iguaçu (PR). Prefeitura. 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4108304",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "foz-do-iguacu-prefeitura-sobre-a-cidade": {
+      "titulo": "Sobre a cidade",
+      "publicador": "Prefeitura de Foz do Iguaçu",
+      "url": "https://www.foz.pr.gov.br/sobre-a-cidade/",
+      "referencia": "Página institucional de 22/09/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "viamao-prefeitura-historia": {
+      "titulo": "História",
+      "publicador": "Prefeitura Municipal de Viamão",
+      "url": "https://www.viamao.rs.gov.br/portal/servicos/1002/historia/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-viamao-rs": {
+      "titulo": "Biblioteca IBGE — Viamão: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Viamão (RS). Prefeitura. 2011)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4323002",
+      "referencia": "Registro de 2008",
+      "consultadoEm": "2026-10-15"
+    },
+    "viamao-sema-banhado-dos-pachecos": {
+      "titulo": "Refúgio de Vida Silvestre Banhado dos Pachecos",
+      "publicador": "Secretaria do Meio Ambiente e Infraestrutura do Rio Grande do Sul (Sema)",
+      "url": "https://sema.rs.gov.br/refugio-de-vida-silvestre-banhado-dos-pachecos",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "viamao-prefeitura-atrativos": {
+      "titulo": "Turismo — Atrativos",
+      "publicador": "Prefeitura Municipal de Viamão",
+      "url": "https://www.viamao.rs.gov.br/portal/turismo/0/9/2802/atrativos",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "viamao-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XXXIV (Rio Grande do Sul) — Viamão",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_34.pdf",
+      "referencia": "Livro de 1959",
+      "consultadoEm": "2026-10-15"
+    },
+    "viamao-sema-parque-estadual-itapua": {
+      "titulo": "Parque Estadual de Itapuã",
+      "publicador": "Secretaria do Meio Ambiente e Infraestrutura do Rio Grande do Sul (Sema)",
+      "url": "https://sema.rs.gov.br/parque-estadual-de-itapua",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "passo-fundo-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 34 (Rio Grande do Sul) — verbete Passo Fundo",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_34.pdf",
+      "referencia": "Publicação de 1959 (verbete nas páginas 17 a 24 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "passo-fundo-lei-11264-2006": {
+      "titulo": "Lei nº 11.264, de 2 de janeiro de 2006 — confere ao município de Passo Fundo o título de \"Capital Nacional da Literatura\"",
+      "publicador": "Presidência da República — Casa Civil",
+      "url": "https://www.planalto.gov.br/ccivil_03/_ato2004-2006/2006/lei/l11264.htm",
+      "referencia": "Lei de 02/01/2006",
+      "consultadoEm": "2026-10-15"
+    },
+    "passo-fundo-prefeitura-largo-da-literatura": {
+      "titulo": "Largo da Literatura",
+      "publicador": "Prefeitura Municipal de Passo Fundo — Turismo",
+      "url": "https://www.pmpf.rs.gov.br/turismo/galeria/largo-da-literatura/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "passo-fundo-prefeitura-chafariz-mae-preta": {
+      "titulo": "Chafariz da Mãe Preta",
+      "publicador": "Prefeitura Municipal de Passo Fundo — Turismo",
+      "url": "https://www.pmpf.rs.gov.br/turismo/galeria/chafariz-da-mae-preta/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-passo-fundo-rs": {
+      "titulo": "Biblioteca IBGE — Passo Fundo: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em PASSO FUNDO (RS). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4314100",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "passo-fundo-prefeitura-praca-tamandare": {
+      "titulo": "Praça Tamandaré",
+      "publicador": "Prefeitura Municipal de Passo Fundo — Turismo",
+      "url": "https://www.pmpf.rs.gov.br/turismo/galeria/praca-tamandare/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "passo-fundo-prefeitura-parque-da-gare": {
+      "titulo": "Parque da Gare",
+      "publicador": "Prefeitura Municipal de Passo Fundo — Turismo",
+      "url": "https://www.pmpf.rs.gov.br/turismo/galeria/parque-da-gare/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -11458,6 +11647,721 @@
         "status": "curadoria inicial",
         "em": "2026-10-15",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Divergências: a criação da Colônia Agrícola Nacional é de 1943 na Prefeitura e no IBGE (Biblioteca) e de 1942 na Enciclopédia de 1958 — o texto diz 'anos 1940'; o histórico do IBGE diz ainda que a colônia 'passou a integrar Dourados em 1935', o que não fecha com a data de criação, e foi deixado de fora. A primeira capela é de 1925 para a Prefeitura e de 1924 para a Enciclopédia; o texto atribui as duas. A Enciclopédia data o distrito de 1914 (Lei 658, igual ao IBGE) mas também cita 1911; o texto usa 1914. A Prefeitura cita a Colônia Militar de Dourados (1861) e Antônio João Ribeiro; o texto não usa a colônia militar porque não ficou claro se ficava no território atual. A Reserva Indígena aparece com 'fundada em 1925' na Prefeitura; a Enciclopédia fala de um decreto de 1915 que reservou 3.600 ha para o patrimônio da vila — por isso o texto não dá o ano da reserva; vale conferir na Funai. Monumento ao Colono é obra escultórica: o marco é um obelisco genérico. Não foi achada fonte oficial sobre a vegetação atual; a 'mata' do cenário vem das matas virgens da Enciclopédia."
+      }
+    },
+    "1506807": {
+      "identidade": {
+        "id": "1506807",
+        "ibge": "1506807",
+        "nome": "Santarém",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na foz do Tapajós, diante do encontro com o Amazonas, a cidade que nasceu da aldeia dos Tapajós.",
+        "resumo": "Santarém fica na foz do Tapajós, e em frente à cidade as águas verde-azuladas desse rio e as barrentas do Amazonas correm lado a lado por alguns quilômetros. O município reúne várzeas que o Amazonas inunda, ao norte, planaltos ao sul e floresta em boa parte do território. Segundo a Prefeitura, a origem é a missão instalada em 1661 pelo jesuíta João Felipe Bettendorf na aldeia dos Tapajós; o IBGE registra a vila em 1758 e a cidade em 1848. Conhecida como Pérola do Tapajós, reúne descendentes de indígenas, portugueses, estadunidenses e nordestinos.",
+        "fontesResumo": [
+          "santarem-setur-polo-tapajos",
+          "santarem-setur-inventario-oferta-turistica-2018",
+          "santarem-prefeitura-historia",
+          "ibge-biblioteca-santarem-pa",
+          "santarem-ibge-enciclopedia-1957"
+        ],
+        "referencias": [
+          {
+            "id": "catedral-nossa-senhora-da-conceicao",
+            "tipo": "patrimonio",
+            "titulo": "Catedral de Nossa Senhora da Conceição",
+            "texto": "A primeira igreja foi erguida em 1661 no antigo Largo do Pelourinho, hoje Praça Rodrigues dos Santos. A construção da atual começou em 1761, no centenário da fundação; as torres chegaram a cair e o prédio passou por várias mudanças. Ao lado, um museu aberto em 2003 guarda cerca de mil peças. Nossa Senhora da Conceição é a padroeira da cidade.",
+            "fontes": [
+              "santarem-setur-inventario-oferta-turistica-2018"
+            ],
+            "descoberta": {
+              "modulo": "catedral",
+              "nota": "Na maquete, uma fachada genérica de duas torres; não reproduz a catedral, e proporções e cores são ilustrativas."
+            },
+            "curto": "Igreja iniciada em 1761, no centenário da fundação, dedicada à padroeira da cidade."
+          },
+          {
+            "id": "centro-cultural-joao-fona",
+            "tipo": "patrimonio",
+            "titulo": "Centro Cultural João Fona",
+            "texto": "O prédio da Praça Barão de Santarém começou a ser erguido em 1853 e foi inaugurado em 1868, em estilo colonial brasileiro. Já abrigou os poderes Executivo, Legislativo e Judiciário do município e virou centro cultural em 1991. Expõe peças arqueológicas, como cerâmicas dos povos indígenas que habitaram Santarém, além de imagens sacras e móveis da antiga Câmara.",
+            "fontes": [
+              "santarem-setur-inventario-oferta-turistica-2018"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão colonial genérico; não reproduz o prédio, e janelas e cores são ilustrativas."
+            },
+            "curto": "Prédio inaugurado em 1868 que já sediou os três poderes do município; hoje guarda acervo arqueológico."
+          },
+          {
+            "id": "saire-alter-do-chao",
+            "tipo": "tradicao",
+            "titulo": "Sairé, em Alter do Chão",
+            "texto": "Na vila de Alter do Chão, à beira do Tapajós e de praias fluviais de areia branca, o Sairé une a celebração indígena com cantos e danças à fé cristã trazida pelos jesuítas no século XVII, com elementos africanos. A presença Borari inspira símbolos e grafismos da festa. Desde 1997, o festival dos botos Cor de Rosa e Tucuxi faz parte da programação, no Lago dos Botos.",
+            "fontes": [
+              "santarem-prefeitura-o-saire",
+              "santarem-prefeitura-alter-do-chao",
+              "santarem-setur-inventario-oferta-turistica-2018"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Uma tradução atribuída a Barbosa Rodrigues, de 1890, lê o nome Sairé como Sai + eré, “Salve, tu o dizes!”. Outros autores registram sentidos como “coroa”, “cordão de giro” e “dança de crianças”, segundo a página da festa mantida pela Prefeitura.",
+            "fontes": [
+              "santarem-prefeitura-o-saire"
+            ]
+          },
+          {
+            "texto": "A Praça Rodrigues dos Santos é chamada de berço de Santarém: ali era a ocara, a praça da aldeia dos Tapajós, onde o padre Bettendorf encontrou os chefes indígenas e decidiu erguer a primeira capela. Onde hoje passa a Avenida Tapajós havia uma praia.",
+            "fontes": [
+              "santarem-setur-inventario-oferta-turistica-2018"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "santareno",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-santarem-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -2.4385,
+          "lon": -54.7157,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 331942,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 17898.389,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Santarém",
+          "intermediaria": "Santarém",
+          "mesorregiao": "Baixo Amazonas",
+          "microrregiao": "Santarém",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "rio",
+          "urbano",
+          "floresta"
+        ],
+        "rotulo": "Cidade na beira do Tapajós, diante do encontro com o Amazonas",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.55
+        },
+        "vegetacao": [
+          [
+            "mata",
+            10
+          ],
+          [
+            "palmeira",
+            6
+          ],
+          [
+            "redonda",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 3
+        },
+        "extras": [
+          "barco",
+          "pier"
+        ],
+        "marcos": [
+          {
+            "modulo": "catedral",
+            "referencia": "catedral-nossa-senhora-da-conceicao"
+          },
+          {
+            "modulo": "casarao",
+            "referencia": "centro-cultural-joao-fona"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Datas divergentes: a Prefeitura e a Setur falam em fundação em 22/06/1661 (missão de Bettendorf); a Enciclopédia diz que o padre Antônio Vieira enviou Bettendorf em 1661; o histórico do IBGE dá vila em 1758, mas a formação administrativa do IBGE diz 'vila em 1754 ou em 1756, pela Carta Régia de 06-06-1755, instalado em 1829' — o texto usa 1758 (comum ao histórico do IBGE, à Prefeitura e à Enciclopédia) e cidade em 1848. O texto atribui a origem em 1661 à Prefeitura e não chama nenhuma data de fundação. O Inventário (2018) chama tanto a Praça Rodrigues dos Santos quanto a Praça Barão de Santarém de 'marco zero'; o texto não usa o termo. Ficaram de fora os superlativos ('Caribe Brasileiro', 'praia de água doce mais bonita do mundo', 'um dos mais belos espetáculos', 'segundo prédio mais antigo') e a promessa de ver o encontro das águas 'diariamente'. A página do Sairé cita uma lei que reconhece a festa como manifestação da cultura nacional, sem número; ficou de fora. As torres da catedral 'caíram' segundo o Inventário, sem data; o marco usa duas torres genéricas. Santarém é cidade, não floresta: o cenário é urbano na beira do rio, com mata ao fundo. Fonte da Enciclopédia: o volume XIV traz dados de 1956 (publicação de 1957)."
+      }
+    },
+    "4108304": {
+      "identidade": {
+        "id": "4108304",
+        "ibge": "4108304",
+        "nome": "Foz do Iguaçu",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na confluência do Iguaçu com o Paraná, a cidade das cataratas, do marco das três fronteiras e de umas 80 nacionalidades.",
+        "resumo": "Foz do Iguaçu fica no extremo oeste do Paraná, na confluência dos rios Iguaçu e Paraná, na divisa com o Paraguai e a Argentina. A região era coberta de florestas, e a cidade ainda guarda fragmentos de mata atlântica, que em 2023 viraram seis parques naturais municipais. Segundo o histórico do IBGE, a ocupação brasileira efetiva começou com a Colônia Militar, fundada em 1889; o lugar virou distrito em 1910, vila e município em 1914 e cidade em 1917. Segundo a Prefeitura, vivem ali cerca de 80 nacionalidades, sobretudo de libaneses, chineses, paraguaios e argentinos.",
+        "fontesResumo": [
+          "foz-do-iguacu-prefeitura-sobre-a-cidade",
+          "foz-do-iguacu-ibge-enciclopedia-1959",
+          "foz-do-iguacu-prefeitura-parques-naturais-2023",
+          "ibge-biblioteca-foz-do-iguacu-pr"
+        ],
+        "referencias": [
+          {
+            "id": "cataratas-do-iguacu",
+            "tipo": "natureza",
+            "titulo": "Cataratas do Iguaçu e Parque Nacional",
+            "texto": "As cataratas reúnem 275 quedas ao longo de quase cinco quilômetros do rio Iguaçu. Segundo o histórico do IBGE, a história do parque começa em 1916, quando Santos Dumont passou pela vila e pediu ao governo do Paraná que a área fosse desapropriada; o Parque Nacional do Iguaçu foi criado em 1939 e inscrito pela Unesco como Patrimônio Natural da Humanidade em 1986.",
+            "fontes": [
+              "foz-do-iguacu-viaje-parana",
+              "ibge-biblioteca-foz-do-iguacu-pr",
+              "foz-do-iguacu-prefeitura-cronologia"
+            ],
+            "descoberta": {
+              "modulo": "cachoeira",
+              "nota": "Na maquete, uma única queda d'água num paredão de pedra; o conjunto de quedas, a altura e a forma são ilustrativos."
+            },
+            "curto": "São 275 quedas ao longo de quase 5 km do rio Iguaçu, no Parque Nacional criado em 1939 e reconhecido pela Unesco em 1986."
+          },
+          {
+            "id": "marco-das-tres-fronteiras",
+            "tipo": "patrimonio",
+            "titulo": "Marco das Três Fronteiras",
+            "texto": "Na confluência dos rios Paraná e Iguaçu, os marcos brasileiro e argentino foram inaugurados em 20 de julho de 1903, segundo a cronologia da Prefeitura. O conjunto tem três estruturas, uma em cada país, pintadas com as cores de cada bandeira, como sinal de união entre os três povos.",
+            "fontes": [
+              "foz-do-iguacu-prefeitura-cronologia",
+              "foz-do-iguacu-viaje-parana"
+            ],
+            "descoberta": {
+              "modulo": "monumento",
+              "nota": "Na maquete, um obelisco genérico numa praça; não reproduz os três marcos, e cores e proporções são ilustrativas."
+            },
+            "curto": "Marcos inaugurados em 1903 na confluência do Paraná com o Iguaçu, um em cada país e com as cores de cada bandeira."
+          },
+          {
+            "id": "itaipu",
+            "tipo": "paisagem",
+            "titulo": "Itaipu e o rio Paraná",
+            "texto": "Brasil e Paraguai assinaram a Ata do Iguaçu em 1966 e o Tratado de Itaipu em 1973; a obra começou em 1974 e exigiu escavar um desvio de 2 km para o rio Paraná. O lago da usina cobriu a região do Salto de Sete Quedas. Segundo a Itaipu, em dez anos a população de Foz passou de cerca de 20 mil para mais de 100 mil habitantes.",
+            "fontes": [
+              "foz-do-iguacu-itaipu-nossa-historia"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Enciclopédia dos Municípios do IBGE, de 1959, Iguaçu vem do guarani Y guaçu, rio grande. Já Itaipu, nome do trecho do rio onde a usina foi construída, quer dizer em tupi \"a pedra que canta\", segundo a Itaipu Binacional.",
+            "fontes": [
+              "foz-do-iguacu-ibge-enciclopedia-1959",
+              "foz-do-iguacu-itaipu-nossa-historia"
+            ]
+          },
+          {
+            "texto": "Em 1959, o IBGE registrava como principal festa popular a de São João Batista, padroeiro do município, de 15 a 24 de junho, que atraía moradores de Puerto Presidente Franco, no Paraguai, e de Puerto Iguazú, na Argentina.",
+            "fontes": [
+              "foz-do-iguacu-ibge-enciclopedia-1959"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "iguaçuense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-foz-do-iguacu-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -25.5468,
+          "lon": -54.5884,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 285415,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 609.192,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Foz do Iguaçu",
+          "intermediaria": "Cascavel",
+          "mesorregiao": "Oeste Paranaense",
+          "microrregiao": "Foz do Iguaçu",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio",
+          "floresta"
+        ],
+        "rotulo": "Cidade entre o Iguaçu e o Paraná, com cachoeira, mata e o marco das três fronteiras",
+        "base": "interior",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.4,
+          "direcao": -0.8
+        },
+        "vegetacao": [
+          [
+            "mata",
+            12
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "ipe",
+            3
+          ],
+          [
+            "araucaria",
+            2
+          ],
+          [
+            "capim",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 4
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "cachoeira",
+            "referencia": "cataratas-do-iguacu"
+          },
+          {
+            "modulo": "monumento",
+            "referencia": "marco-das-tres-fronteiras"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Mudança de nome diverge: o IBGE dá a elevação a cidade com o nome Foz do Iguaçu pela Lei 1.658, de 03-03-1917; a cronologia e o 'Sobre a cidade' da Prefeitura dizem que o nome Foz do Iguaçu veio em 1918 (Lei 1.783). O texto diz só 'cidade em 1917' (IBGE) e não data a troca de nome. A data do decreto estadual de 1916 diverge entre IBGE (utilidade pública 'no mesmo ano') e cronologia (28/07/1916, 1.008 ha); o texto não dá número. O texto evitou superlativos da Viaje Paraná e da Itaipu ('maior usina do mundo', 'maior conjunto de quedas', 'Maravilha Mundial', 'mais visitado', mesquita 'maior do Brasil'). Os 80 nacionalidades e a lista de origens são da Prefeitura. A notícia de 2023 dos parques naturais traz o nome do prefeito da época; o texto não cita. Página do ICMBio sobre o Parque Nacional carrega sem conteúdo; o fato da Unesco vem da cronologia da Prefeitura. A festa de São João é registro de 1959, no passado."
+      }
+    },
+    "4323002": {
+      "identidade": {
+        "id": "4323002",
+        "ibge": "4323002",
+        "nome": "Viamão",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Entre o Guaíba e a Laguna dos Patos, a antiga sede do governo da capitania guarda uma matriz de 1770 e o farol de Itapuã.",
+        "resumo": "Viamão fica a leste de Porto Alegre, entre o rio Gravataí, o Guaíba e a Laguna dos Patos, e em Itapuã reúne morros, praias, dunas, lagoas e banhados. Segundo o histórico do IBGE, Cosme da Silveira teria se fixado nesses campos por volta de 1725, e em 1741 Francisco Carvalho da Cunha ergueu na Estância Grande uma capela a Nossa Senhora da Conceição. Por ali passavam rebanhos rumo a Laguna, e os casais açorianos deram impulso ao povoado, que foi sede do governo da capitania de 1763 a 1773. Foi freguesia em 1747, vila desmembrada de Porto Alegre em 1880 e cidade em 1939.",
+        "fontesResumo": [
+          "viamao-ibge-enciclopedia-1959",
+          "viamao-sema-parque-estadual-itapua",
+          "ibge-biblioteca-viamao-rs",
+          "viamao-prefeitura-historia"
+        ],
+        "referencias": [
+          {
+            "id": "igreja-matriz-nossa-senhora-da-conceicao",
+            "tipo": "patrimonio",
+            "titulo": "Igreja Matriz Nossa Senhora da Conceição",
+            "texto": "Na Praça Cônego Bernardo Machado, a matriz foi inaugurada em 1770, em estilo barroco rococó, e é tombada pelo Iphan. Em 1959, o IBGE registrava paredes de dois metros de espessura, feitas com marisco moído e concha do mar moída no lugar de cimento e cal, e a procissão da padroeira em 8 de dezembro, realizada havia mais de cem anos.",
+            "fontes": [
+              "viamao-prefeitura-atrativos",
+              "viamao-ibge-enciclopedia-1959"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada de torre central; fachada, proporções e cores são ilustrativas."
+            },
+            "curto": "Matriz inaugurada em 1770, em estilo barroco rococó, tombada pelo Iphan; paredes de dois metros de espessura."
+          },
+          {
+            "id": "parque-estadual-de-itapua",
+            "tipo": "natureza",
+            "titulo": "Parque Estadual de Itapuã e o farol",
+            "texto": "Unidade de conservação de proteção integral do Estado, a 57 km de Porto Alegre, no encontro do Guaíba com a Laguna dos Patos, com morros, praias, dunas, lagoas e banhados. Protege o bugio-ruivo, a lontra e o gato-maracajá. O Farol de Itapuã, concluído em 1860, marca o encontro das águas, e há marcas da Revolução Farroupilha no Morro da Fortaleza, na Ilha do Junco e na Ferraria dos Farrapos.",
+            "fontes": [
+              "viamao-sema-parque-estadual-itapua",
+              "viamao-prefeitura-atrativos"
+            ],
+            "descoberta": {
+              "modulo": "farol",
+              "nota": "Na maquete, um farol listrado genérico sobre um rochedo; listras, cores e proporções são ilustrativas."
+            },
+            "curto": "Farol de 1860 no encontro do Guaíba com a Laguna dos Patos, dentro do parque estadual de morros, dunas e banhados."
+          },
+          {
+            "id": "banhado-dos-pachecos",
+            "tipo": "natureza",
+            "titulo": "Banhado dos Pachecos",
+            "texto": "Refúgio de Vida Silvestre do Estado no distrito de Águas Claras, parte do Sistema Banhado Grande, conjunto de áreas alagadas onde ficam as principais nascentes do rio Gravataí. É uma turfeira de vegetação palustre densa e um dos últimos refúgios do cervo-do-pantanal no Rio Grande do Sul. Recebe atividades científicas e educativas com agendamento.",
+            "fontes": [
+              "viamao-sema-banhado-dos-pachecos",
+              "viamao-prefeitura-atrativos"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "A origem do nome é controversa. Segundo a Prefeitura, em texto reproduzido pelo IBGE, uma versão diz que de certo ponto do Guaíba se veem cinco rios formando uma mão espalmada, daí \"vi a mão\"; outras ligam o nome a \"ibiamon\", terra de íbias (pássaros), a via-monte, passagem entre montes, ou a Viamara, antigo nome da província de Guimarães, em Portugal.",
+            "fontes": [
+              "ibge-biblioteca-viamao-rs",
+              "viamao-prefeitura-historia"
+            ]
+          },
+          {
+            "texto": "Na Lomba Tarumã, perto da RS-118, ficam resquícios de trincheiras da Revolução Farroupilha, assinalados por um monumento construído em 1935, no centenário da revolução.",
+            "fontes": [
+              "viamao-prefeitura-atrativos"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "viamonense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-viamao-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -30.0822,
+          "lon": -51.0258,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 224112,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1496.506,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Porto Alegre",
+          "intermediaria": "Porto Alegre",
+          "mesorregiao": "Metropolitana de Porto Alegre",
+          "microrregiao": "Porto Alegre",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "campo",
+          "litoral",
+          "urbano"
+        ],
+        "rotulo": "Campos e banhados à beira da Laguna dos Patos, com a matriz e o farol de Itapuã",
+        "base": "campos",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.5
+        },
+        "agua": {
+          "modulo": "costa"
+        },
+        "vegetacao": [
+          [
+            "capim",
+            10
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "mata",
+            5
+          ],
+          [
+            "junco",
+            6
+          ],
+          [
+            "restinga",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 1
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-matriz-nossa-senhora-da-conceicao"
+          },
+          {
+            "modulo": "farol",
+            "referencia": "parque-estadual-de-itapua"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A Prefeitura chama a matriz de 'segunda igreja mais antiga do Estado' e a Enciclopédia de 1959 de 'a mais antiga do Rio Grande do Sul' ('segundo consta'); o texto não usa nenhum dos dois superlativos nem liga a matriz de 1770 à capela de 1741. A Prefeitura chama o Banhado dos Pachecos de 'único espaço do RS' com o cervo-do-pantanal, e a Sema de 'um dos últimos refúgios'; usado o texto da Sema. Segundo a Sema, hoje só a Praia das Pombas e o minimuseu estão abertos à visitação no Parque de Itapuã; o texto não convida a visitar o farol. A procissão de 8 de dezembro é citada como registro de 1959, sem promessa de data atual. A Prefeitura ainda escreve 'tombado pelo IPHAM' (erro de digitação); a Enciclopédia confirma o tombamento pelo então Serviço do Patrimônio Histórico e Artístico Nacional. Água 'costa' representa a margem da Laguna dos Patos e do Guaíba (laguna e lago, não mar)."
+      }
+    },
+    "4314100": {
+      "identidade": {
+        "id": "4314100",
+        "ibge": "4314100",
+        "nome": "Passo Fundo",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No Planalto, onde nasce o rio Passo Fundo, a cidade que começou como pouso de tropeiros e hoje sedia a Jornada Nacional de Literatura.",
+        "resumo": "Passo Fundo fica no Planalto gaúcho, em coxilhas verdes com capões de mato, sobre o divisor de águas entre as bacias do Uruguai e do Jacuí; na cidade nasce o rio Passo Fundo. A região, habitada por povos indígenas como os caingangues, era pouso de tropeiros a caminho de São Paulo, que pernoitavam num lugar alto e com boa aguada chamado passo fundo. Distrito em 1847, virou vila em 1857, instalada no mesmo ano, e cidade em 1890. A ferrovia, na década de 1890, e a chegada de imigrantes ajudaram a cidade a crescer.",
+        "fontesResumo": [
+          "passo-fundo-ibge-enciclopedia-1959",
+          "ibge-biblioteca-passo-fundo-rs"
+        ],
+        "referencias": [
+          {
+            "id": "parque-da-gare",
+            "tipo": "patrimonio",
+            "titulo": "Parque da Gare",
+            "texto": "Parque público entregue à população em 2016 em torno dos prédios históricos da antiga estação férrea, a Gare, num ramal que chegou à cidade na década de 1890. Tem ciclovia, espaço para caminhadas, anfiteatro, pistas de skate e de bicicleta, um lago abastecido por nascentes e o prédio da Feira do Produtor Rural.",
+            "fontes": [
+              "passo-fundo-prefeitura-parque-da-gare",
+              "ibge-biblioteca-passo-fundo-rs"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação simplificada com plataforma coberta, trilho e locomotiva; cores e proporções são ilustrativas."
+            },
+            "curto": "Parque em torno dos prédios da antiga estação férrea, com lago de nascentes e feira do produtor."
+          },
+          {
+            "id": "praca-tamandare-matriz",
+            "tipo": "patrimonio",
+            "titulo": "Praça Tamandaré e Igreja Matriz",
+            "texto": "Primeira praça do município, chamada no início de praça da Igreja e tida como berço da cidade: ali teria morado o Cabo Neves, apontado como o primeiro morador branco. Na face norte fica a Igreja Matriz Nossa Senhora da Conceição, inaugurada em 1892. A praça é arborizada com plátanos e ganhou o nome de Tamandaré em 1913.",
+            "fontes": [
+              "passo-fundo-prefeitura-praca-tamandare"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma matriz simplificada com uma torre; torres, cores e proporções da igreja real são ilustrativas."
+            },
+            "curto": "A primeira praça da cidade, com a Igreja Matriz Nossa Senhora da Conceição, inaugurada em 1892."
+          },
+          {
+            "id": "jornada-e-largo-da-literatura",
+            "tipo": "tradicao",
+            "titulo": "Jornada Nacional de Literatura",
+            "texto": "Passo Fundo é sede da Jornada Nacional de Literatura, e uma lei federal de 2006 declarou o município Capital Nacional da Literatura. Pela cidade há monumentos ligados a essa marca, como letras gigantes e túneis da literatura. O Largo da Literatura, na Avenida Brasil Leste, perto do rio Passo Fundo, abriga a escultura Árvore das Letras.",
+            "fontes": [
+              "passo-fundo-lei-11264-2006",
+              "passo-fundo-prefeitura-largo-da-literatura"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Enciclopédia dos Municípios do IBGE, de 1959, a Câmara Municipal proclamou em sessão solene, em 28 de setembro de 1884, a liberdade de 300 pessoas escravizadas, quatro anos antes da Lei Áurea. Uma sociedade local pela libertação de meninas havia sido fundada em 1871.",
+            "fontes": [
+              "passo-fundo-ibge-enciclopedia-1959"
+            ]
+          },
+          {
+            "texto": "No centro da cidade, o Chafariz da Mãe Preta guarda uma lenda: segundo a Prefeitura, a fonte teria brotado das lágrimas de Mariana, uma mulher escravizada.",
+            "fontes": [
+              "passo-fundo-prefeitura-chafariz-mae-preta"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "passo-fundense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-passo-fundo-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -28.2516,
+          "lon": -52.3956,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 206215,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 784.407,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Passo Fundo",
+          "intermediaria": "Passo Fundo",
+          "mesorregiao": "Noroeste Rio-grandense",
+          "microrregiao": "Passo Fundo",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "campo"
+        ],
+        "rotulo": "Cidade do Planalto entre coxilhas, lavouras e a nascente do rio Passo Fundo",
+        "base": "campos",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.45
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.1,
+          "direcao": 0.6
+        },
+        "vegetacao": [
+          [
+            "capim",
+            10
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "redonda",
+            7
+          ],
+          [
+            "araucaria",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 4
+        },
+        "extras": [
+          "lavoura",
+          "silo"
+        ],
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "parque-da-gare"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "praca-tamandare-matriz"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Data de cidade: a formação administrativa do IBGE dá Ato de 10-04-1890; o histórico da Prefeitura reproduzido pelo IBGE diz 1891. O resumo usa 1890, da formação administrativa. A Enciclopédia de 1959 chama a criação de 1847 de freguesia; a Biblioteca do IBGE, de distrito; o texto usa distrito. A Enciclopédia data a estrada de ferro de 1897 e a Biblioteca diz 'década de 1890'; o texto usa a década. O texto não afirma que o nome da cidade vem do pouso dos tropeiros (a Enciclopédia só diz que pernoitavam no chamado 'passo fundo'). Primeiro morador: a Enciclopédia cita o alferes Rodrigo Felix Martins (1827) no município e Manoel José das Neves na cidade; a Prefeitura chama o Cabo Neves de primeiro morador branco; a referência atribui à Prefeitura. A Prefeitura chama a Jornada de 'um dos maiores eventos do gênero na América Latina' e o Parque da Gare de 'maior parque'; os superlativos ficaram de fora. Não há data de início da Jornada em fonte oficial lida (página da UPF redireciona para a home). A página da lei no Planalto vem com acentos perdidos na extração; os trechos de evidência foram escolhidos sem acentos. Igreja: não foi conferido o número de torres da Matriz; a nota diz que a forma é ilustrativa."
       }
     }
   }
