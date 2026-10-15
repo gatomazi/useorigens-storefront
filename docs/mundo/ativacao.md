@@ -1,6 +1,7 @@
 # Meu Pequeno Mundo — ativação e reversão
 
-A experiência fica em `/meu-pequeno-mundo` e é controlada por **uma variável de runtime**, `MEU_PEQUENO_MUNDO` (`src/lib/mundo/flag.ts`).
+A experiência fica em `/meu-pequeno-mundo` e é controlada por **uma variável de runtime**, `MEU_PEQUENO_MUNDO` (`src/lib/mundo/flag.ts`),
+e pelo **painel** dentro do limite dessa variável (abaixo).
 O padrão é desligado: sem a variável, a produção fica exatamente como antes. A variável é lida na renderização, não no build: o valor
 não fica embutido no código.
 
@@ -16,6 +17,23 @@ entradas usam ISR de 1 hora e não são geradas no build. Então:
 | *(não definida)* ou qualquer outro valor | 404 | nenhuma | — |
 | `pagina` | respondem; mundos compartilhados abrem | nenhuma | `noindex` |
 | `on` | respondem | as três | indexável, com canonical sem parâmetros |
+
+## Pelo painel, sem deploy
+
+Em **Admin → Aparência → Meu Pequeno Mundo** (só o owner), o painel escolhe entre *Ligado*, *Só a página*, *Desligado* e *Seguir o
+servidor*. A escolha fica no documento global e vale ao clicar em **Publicar configuração global**. Publicar refaz as páginas das regiões,
+então as entradas aparecem ou somem na próxima visita, sem esperar o cache de 1 hora.
+
+A variável continua sendo o **limite**: o painel só abre até onde ela permite.
+
+| Variável | O painel pode escolher |
+|---|---|
+| `on` | qualquer estado (o painel decide tudo) |
+| `pagina` | *Só a página* ou *Desligado* |
+| *(não definida)* | nada: fica desligado, qualquer que seja a escolha do painel |
+
+Sem escolha publicada (*Seguir o servidor*), vale só a variável, como antes. Para operar pelo painel, deixe `MEU_PEQUENO_MUNDO=on` uma vez
+no Railway e use o painel daí em diante; para uma trava de emergência que o painel não reabre, remova a variável.
 
 ## Antes de ligar
 

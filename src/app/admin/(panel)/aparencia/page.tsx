@@ -1,4 +1,4 @@
-import { discardGlobalThemeAction, publishGlobalThemeAction, saveCardsAction, saveThemeAction } from "@/app/admin/actions";
+import { discardGlobalThemeAction, publishGlobalThemeAction, saveCardsAction, saveMundoAction, saveThemeAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { ThemeEditor } from "@/components/admin/ThemeEditor";
 import { requireAdmin } from "@/lib/admin/auth/guard";
@@ -11,6 +11,16 @@ import { siteCollectionMenu } from "@/lib/catalog/collection-menu";
 import { coveredUfs } from "@/lib/site-config/chrome";
 import { navData, type NavData } from "@/lib/site-config/navigation";
 import { DEFAULT_BUY_LABEL, MAX_BUY_LABEL } from "@/lib/site-config/schema";
+import { modoMundoServidor } from "@/lib/mundo/flag";
+import { modoEfetivo, MUNDO_MODOS, type MundoModo } from "@/lib/site-config/mundo-schema";
+
+const MUNDO_OPCOES: readonly [MundoModo | "segue", string, string][] = [
+  ["on", "Ligado", "A página /meu-pequeno-mundo e as três entradas da loja: bloco na home, convite nas páginas de cidade e link no rodapé."],
+  ["pagina", "Só a página", "A página e os links compartilhados funcionam, mas a loja não mostra nenhuma entrada."],
+  ["off", "Desligado", "A página responde 404 e nada aparece na loja."],
+  ["segue", "Seguir o servidor", "Sem escolha no painel: vale só a variável MEU_PEQUENO_MUNDO do servidor."],
+];
+const MUNDO_ROTULO: Record<MundoModo, string> = { on: "ligado (página e entradas)", pagina: "só a página", off: "desligado" };
 
 export default async function AppearancePage({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
   const actor = await requireAdmin();
@@ -106,10 +116,43 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
         })()}
       </section>
 
+      <section id="meu-pequeno-mundo" className="a-card scroll-mt-4 p-5" aria-labelledby="mundo-title" data-testid="mundo-setting">
+        <h2 id="mundo-title" className="a-h2">Meu Pequeno Mundo · todas as regiões</h2>
+        {(() => {
+          const servidor = modoMundoServidor();
+          const draft = global.doc.mundo?.modo;
+          const live = global.baseDoc.mundo?.modo;
+          const acima = (m: MundoModo) => MUNDO_MODOS.indexOf(m) > MUNDO_MODOS.indexOf(servidor);
+          return (
+            <>
+              <p className="a-muted mt-1 max-w-3xl text-[0.9375rem]">Liga e desliga a experiência sem deploy. O servidor continua sendo o limite: o painel só abre até onde a variável <code>MEU_PEQUENO_MUNDO</code> permite (hoje: <strong>{MUNDO_ROTULO[servidor]}</strong>). Para o painel decidir tudo, a variável fica em <code>on</code>.</p>
+              <form action={saveMundoAction} className="mt-4 space-y-4">
+                <input type="hidden" name="rev" value={String(global.record?.rev ?? "null")} />
+                <fieldset className="flex flex-wrap gap-3">
+                  <legend className="sr-only">Estado do Meu Pequeno Mundo</legend>
+                  {MUNDO_OPCOES.map(([value, label, help]) => {
+                    const bloqueado = value !== "segue" && acima(value);
+                    return (
+                      <label key={value} className="flex max-w-xs cursor-pointer gap-2 border border-black/20 p-3 has-[:checked]:border-black has-[:checked]:bg-white">
+                        <input type="radio" name="mundo_modo" value={value} defaultChecked={(draft ?? "segue") === value} disabled={!owner || bloqueado} className="mt-1" data-testid={`mundo-modo-${value}`} />
+                        <span><span className="block font-bold">{label}</span><span className="a-muted block text-[0.8125rem]">{bloqueado ? "O servidor não permite: a variável MEU_PEQUENO_MUNDO está abaixo disso." : help}</span></span>
+                      </label>
+                    );
+                  })}
+                </fieldset>
+                <p className="text-[0.875rem]" data-testid="mundo-live"><strong>Na loja agora:</strong> {MUNDO_ROTULO[modoEfetivo(servidor, servidor === "off" ? undefined : live)]}.{(draft ?? null) !== (live ?? null) && " O rascunho tem outra escolha: publique a configuração global abaixo."}</p>
+                <p className="a-muted text-[0.8125rem]">Ao publicar, as páginas das regiões são refeitas: o bloco da home, o convite e o link aparecem ou somem na próxima visita, junto com a página.</p>
+                {owner ? <button type="submit" className="a-btn" data-testid="save-mundo">Salvar rascunho</button> : <p className="a-muted">Só o owner altera.</p>}
+              </form>
+            </>
+          );
+        })()}
+      </section>
+
       {owner && (
         <section className="a-card p-5" aria-label="Publicar a configuração global">
           <form action={publishGlobalThemeAction} className="space-y-3">
-            <p className="a-muted text-[0.875rem]">Publica o documento global: a paleta, o botão dos cards e, se houver rascunho, o tracking global. Para o tracking, a confirmação dos IDs efetivos continua na tela Tracking.</p>
+            <p className="a-muted text-[0.875rem]">Publica o documento global: a paleta, o botão dos cards, o Meu Pequeno Mundo e, se houver rascunho, o tracking global. Para o tracking, a confirmação dos IDs efetivos continua na tela Tracking.</p>
             <button type="submit" className="a-btn" disabled={!global.dirty} data-testid="publish-global-theme">Publicar configuração global</button>
             {!global.dirty && <span className="a-muted ml-3 text-[0.875rem]">Nada a publicar: o rascunho é igual ao publicado.</span>}
           </form>
