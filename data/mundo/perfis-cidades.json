@@ -2980,6 +2980,566 @@
       "url": "https://conheca.sinop.mt.gov.br/turismo/rota-de-artes-sacras---caminhos-da-arte-sacra-com-mari-bueno/409",
       "referencia": "Página de turismo (sem data)",
       "consultadoEm": "2026-10-15"
+    },
+    "castanhal-ibge-enciclopedia-1957": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, volume XIV (verbete Castanhal)",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_14.pdf",
+      "referencia": "Publicação de 1957 (verbete nas páginas 351 a 353 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "castanhal-prefeitura-cirio-macapazinho-2025": {
+      "titulo": "Círio de Macapazinho é reconhecido Patrimônio Cultural e Imaterial de Castanhal",
+      "publicador": "Prefeitura Municipal de Castanhal",
+      "url": "https://castanhal.pa.gov.br/cirio-de-macapazinho-e-reconhecido-como-patrimonio-cultural-e-imaterial-de-castanhal/",
+      "referencia": "Notícia de 04/08/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "castanhal-prefeitura-historia": {
+      "titulo": "História",
+      "publicador": "Prefeitura Municipal de Castanhal",
+      "url": "https://castanhal.pa.gov.br/historia/",
+      "referencia": "Página institucional (publicada em 15/04/2025)",
+      "consultadoEm": "2026-10-15"
+    },
+    "castanhal-prefeitura-romaria-2025": {
+      "titulo": "Romaria 2025 reúne cerca de 250 mil fiéis em Castanhal",
+      "publicador": "Prefeitura Municipal de Castanhal",
+      "url": "https://castanhal.pa.gov.br/romaria-2025-reune-cerca-de-250-mil-fieis-em-castanhal/",
+      "referencia": "Notícia de 21/10/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "castanhal-prefeitura-maria-fumaca-2026": {
+      "titulo": "Prefeitura de Castanhal dá início as obras de revitalização e modernização da Maria Fumaça",
+      "publicador": "Prefeitura Municipal de Castanhal",
+      "url": "https://castanhal.pa.gov.br/monumento-da-maria-fumaca-passa-por-revitalizacao-para-resgatar-a-historia-da-estrada-de-ferro-belem-braganca/",
+      "referencia": "Notícia de 28/04/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-castanhal-pa": {
+      "titulo": "Biblioteca IBGE — Castanhal: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Castanhal (PA). Prefeitura. 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1502400",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-15"
+    },
+    "guarapuava-prefeitura-turismo": {
+      "titulo": "Secretaria de Turismo e Eventos",
+      "publicador": "Prefeitura Municipal de Guarapuava",
+      "url": "https://www.guarapuava.pr.gov.br/administracao-direta/turismo/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "guarapuava-prefeitura-historia": {
+      "titulo": "História de Guarapuava",
+      "publicador": "Prefeitura Municipal de Guarapuava",
+      "url": "https://www.guarapuava.pr.gov.br/turista/historia/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "guarapuava-cpc-pr-casa-do-visconde": {
+      "titulo": "Casa do Visconde de Guarapuava",
+      "publicador": "Coordenação do Patrimônio Cultural / Secretaria da Cultura do Paraná",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Casa-do-Visconde-de-Guarapuava",
+      "referencia": "Página institucional (sem data); inscrição no Livro do Tombo em 18/01/1974",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-guarapuava-pr": {
+      "titulo": "Biblioteca IBGE — Guarapuava: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Guarapuava (PR). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4109401",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-15"
+    },
+    "guarapuava-prefeitura-sobre": {
+      "titulo": "Sobre Guarapuava",
+      "publicador": "Prefeitura Municipal de Guarapuava",
+      "url": "https://guarapuava.pr.gov.br/sobre/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "lapa-patrimonio-pr-setor-historico": {
+      "titulo": "Setor Histórico da Lapa",
+      "publicador": "Governo do Paraná — Secretaria da Cultura, Coordenação do Patrimônio Cultural",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Pagina/Setor-Historico-da-Lapa",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "lapa-viaje-parana": {
+      "titulo": "Lapa | Viaje Paraná",
+      "publicador": "Viaje Paraná (agência de turismo do Governo do Paraná)",
+      "url": "https://www.viajeparana.com/Lapa",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "lapa-patrimonio-pr-teatro-sao-joao": {
+      "titulo": "Teatro São João - Lapa",
+      "publicador": "Governo do Paraná — Secretaria da Cultura, Coordenação do Patrimônio Cultural",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Teatro-Sao-Joao-Lapa",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-lapa-pr": {
+      "titulo": "Biblioteca IBGE — Lapa: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Lapa (PR). Prefeitura. 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4113205",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-15"
+    },
+    "lapa-iat-parque-monge": {
+      "titulo": "Parque Estadual do Monge (PEM)",
+      "publicador": "Instituto Água e Terra (IAT), Governo do Paraná",
+      "url": "https://www.iat.pr.gov.br/Pagina/Parque-Estadual-do-Monge",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "lapa-patrimonio-pr-matriz": {
+      "titulo": "Igreja de Santo Antônio - Matriz da Lapa",
+      "publicador": "Governo do Paraná — Secretaria da Cultura, Coordenação do Patrimônio Cultural",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Igreja-de-Santo-Antonio-Matriz-da-Lapa",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "lages-noticia-predio-prefeitura": {
+      "titulo": "Município executa pintura de reparo em pontos específicos do prédio da Prefeitura de Lages, tombado como patrimônio histórico e símbolo da gestão pública da cidade",
+      "publicador": "Prefeitura de Lages",
+      "url": "https://www.lages.sc.gov.br/noticia-descricao/8790/municipio-executa-pintura-de-reparo-em-pontos-especificos-do-predio-da-prefeitura-de-lages-tombado-como-patrimonio-historico-e-simbolo-da-gestao-publica-da-cidade",
+      "referencia": "Notícia de 24/11/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "lages-noticia-coxilha-rica-rota-tropeiros": {
+      "titulo": "Tradição tropeira: Secretaria Municipal do Turismo realiza 1ª Oficina do Roteiro Agroturístico da Coxilha Rica - Rota Caminho dos Tropeiros, em parceria com Sebrae",
+      "publicador": "Prefeitura de Lages",
+      "url": "https://www.lages.sc.gov.br/noticia-descricao/10700/tradicao-tropeira:-secretaria-municipal-do-turismo-realiza-1ª-oficina-do-roteiro-agroturistico-da-coxilha-rica-rota-caminho-dos-tropeiros-em-parceria-com-sebrae",
+      "referencia": "Notícia de 25/08/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "lages-noticia-rancho-pinhao": {
+      "titulo": "Rancho Pinhão resgata memórias e encanta visitantes no coração da Festa Nacional do Pinhão",
+      "publicador": "Prefeitura de Lages",
+      "url": "https://www.lages.sc.gov.br/noticia-descricao/10077/rancho-pinhao-resgata-memorias-e-encanta-visitantes-no-coracao-da-festa-nacional-do-pinhao",
+      "referencia": "Notícia de 30/05/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-lages-sc": {
+      "titulo": "Biblioteca IBGE — Lages: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Lages (SC). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4209300",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "lages-enciclopedia-ibge-v32": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 32 (Paraná e Santa Catarina) — verbete Lajes",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_32.pdf",
+      "referencia": "Volume publicado em 1959",
+      "consultadoEm": "2026-10-15"
+    },
+    "lages-noticia-contraturno-festa-pinhao": {
+      "titulo": "36ª Festa Nacional do Pinhão inspira atividades do Programa Contraturno + Movimento em Lages",
+      "publicador": "Prefeitura de Lages",
+      "url": "https://www.lages.sc.gov.br/noticia-descricao/10124/36ª-festa-nacional-do-pinhao-inspira-atividades-do-programa-contraturno-+-movimento-em-lages",
+      "referencia": "Notícia de 03/06/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "lages-noticia-patrimonios-restauro": {
+      "titulo": "Patrimônios históricos de Lages avançam em processos de restauro e revitalização",
+      "publicador": "Prefeitura de Lages / Fundação Cultural de Lages",
+      "url": "https://www.lages.sc.gov.br/noticia-descricao/10371/patrimonios-historicos-de-lages-avancam-em-processos-de-restauro-e-revitalizacao",
+      "referencia": "Notícia de 09/07/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-leopoldo-prefeitura-museu-do-trem": {
+      "titulo": "Museu do Trem",
+      "publicador": "Prefeitura Municipal de São Leopoldo — Cultura e Turismo",
+      "url": "https://www.saoleopoldo.rs.gov.br/conteudo/1647/1/1243?titulo=MUSEU+DO+TREM",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-sao-leopoldo-rs": {
+      "titulo": "Biblioteca IBGE — São Leopoldo: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em São Leopoldo (RS). Prefeitura. 2013)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4318705",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-leopoldo-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 34 (Rio Grande do Sul) — verbete São Leopoldo",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_34.pdf",
+      "referencia": "Publicação de 1959 (verbete a partir da página 266 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-miguel-das-missoes-prefeitura-portico": {
+      "titulo": "Pórtico do município - RS 536",
+      "publicador": "Prefeitura Municipal de São Miguel das Missões",
+      "url": "https://www.saomiguel.rs.gov.br/site/conteudos/2067-portico",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-miguel-das-missoes-ibram-museu-das-missoes": {
+      "titulo": "Museu das Missões",
+      "publicador": "Instituto Brasileiro de Museus (Ibram)",
+      "url": "https://www.gov.br/museus/pt-br/museus-ibram/museu-das-missoes",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-miguel-das-missoes-prefeitura-sitio-historico": {
+      "titulo": "Sítio Histórico São Miguel Arcanjo",
+      "publicador": "Prefeitura Municipal de São Miguel das Missões",
+      "url": "https://www.saomiguel.rs.gov.br/site/conteudos/2066-siacutetio-histoacuterico-satildeo-miguel-arcanjo",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-miguel-das-missoes-prefeitura-historia": {
+      "titulo": "História",
+      "publicador": "Prefeitura Municipal de São Miguel das Missões",
+      "url": "https://www.saomiguel.rs.gov.br/site/conteudos/501-historia",
+      "referencia": "Página institucional publicada em 10/10/2020",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-miguel-das-missoes-prefeitura-fonte-missioneira": {
+      "titulo": "Fonte Missioneira",
+      "publicador": "Prefeitura Municipal de São Miguel das Missões",
+      "url": "https://www.saomiguel.rs.gov.br/site/conteudos/2074-fonte-missioneira",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-sao-miguel-das-missoes-rs": {
+      "titulo": "Biblioteca IBGE — São Miguel das Missões: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em São Miguel das Missões (RS). Prefeitura. 2011)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4319158",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-miguel-das-missoes-iphan-tava": {
+      "titulo": "Tava: lugar de referência para o povo Guarani",
+      "publicador": "Iphan — Bens Culturais Registrados",
+      "url": "https://bcr.iphan.gov.br/bens-culturais/tava-lugar-de-referencia-para-o-povo-guarani/",
+      "referencia": "Registro de 03/12/2014 (página sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-miguel-das-missoes-prefeitura-museus": {
+      "titulo": "Museus",
+      "publicador": "Prefeitura Municipal de São Miguel das Missões",
+      "url": "https://www.saomiguel.rs.gov.br/site/conteudos/2069-museus",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sao-miguel-das-missoes-iphan-superintendencia-rs": {
+      "titulo": "Superintendência do Iphan no Rio Grande do Sul",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/rio-grande-do-sul",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-verde-167-anos-programacao-2015": {
+      "titulo": "Rio Verde 167 anos de progresso e desenvolvimento",
+      "publicador": "Prefeitura Municipal de Rio Verde",
+      "url": "https://www.rioverde.go.gov.br/rio-verde-167-anos-de-progresso-e-desenvolvimento/",
+      "referencia": "Notícia de 2015 (aniversário de 167 anos)",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-verde-barriguda-muda-2016": {
+      "titulo": "Muda de Barriguda é plantada no local da antiga árvore",
+      "publicador": "Prefeitura Municipal de Rio Verde",
+      "url": "https://www.rioverde.go.gov.br/muda-de-barriguda-e-plantada-no-local-da-antiga-arvore/",
+      "referencia": "Notícia de 05/02/2016",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-rio-verde-go": {
+      "titulo": "Biblioteca IBGE — Rio Verde: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Rio Verde (GO). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5218805",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-verde-seis-patrimonios-tombados-2014": {
+      "titulo": "Mais seis patrimônios culturais tombados",
+      "publicador": "Prefeitura Municipal de Rio Verde",
+      "url": "https://www.rioverde.go.gov.br/mais-seis-patrimonios-culturais-tombados/",
+      "referencia": "Notícia de 26/08/2014",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-verde-casa-dona-ambrosina-2014": {
+      "titulo": "Imóvel é tombado como patrimônio histórico e artístico do município",
+      "publicador": "Prefeitura Municipal de Rio Verde",
+      "url": "https://www.rioverde.go.gov.br/imovel-e-tombado-como-patrimonio-historico-e-artistico-do-municipio/",
+      "referencia": "Notícia de 14/02/2014",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-verde-prefeitura-historia": {
+      "titulo": "História de Rio Verde",
+      "publicador": "Prefeitura Municipal de Rio Verde",
+      "url": "https://www.rioverde.go.gov.br/a-cidade/historia-de-rio-verde/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-verde-ibge-enciclopedia-1958": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XXXVI (Goiás) — Rio Verde",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_36.pdf",
+      "referencia": "Livro de 1958",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-verde-barriguda-fogo-2016": {
+      "titulo": "Fogo destrói Barriguda simbolo de Rio Verde",
+      "publicador": "Prefeitura Municipal de Rio Verde",
+      "url": "https://www.rioverde.go.gov.br/fogo-destroi-barriguda-simbolo-de-rio-verde/",
+      "referencia": "Notícia de 04/02/2016",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-folia-de-reis-2023": {
+      "titulo": "Senador Canedo inicia celebrações de folia de reis, reforçando tradição na cidade.",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/enador-canedo-inicia-celebracoes-de-folia-de-reis-reforcando-tradicao-na-cidade/",
+      "referencia": "Notícia de 09/01/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-cristo-in-concert-2026": {
+      "titulo": "Cristo in Concert celebra música caipira e talentos de Senador Canedo no Morro do Cristo",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/cristo-in-concert-celebra-musica-caipira-e-talentos-de-senador-canedo-no-morro-do-cristo/",
+      "referencia": "Notícia de 11/09/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-34-anos-2023": {
+      "titulo": "Senador Canedo completa 34 anos nesta semana",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/senador-canedo-completa-34-anos-nesta-semana/",
+      "referencia": "Notícia de 29/05/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-prefeitura-cidade": {
+      "titulo": "Cidade — Prefeitura Municipal de Senador Canedo",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/cidade/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-complexo-turistico-2023": {
+      "titulo": "Senador Canedo inaugura Complexo Turístico após 9 anos de obras",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/senador-canedo-inaugura-complexo-turistico-apos-9-anos-de-obras/",
+      "referencia": "Notícia de 15/12/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-iphan-ferroviario-2026": {
+      "titulo": "Senador Canedo visa parceria com o IPHAN para preservação do patrimônio ferroviário",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/senador-canedo-visa-parceria-com-o-iphan-para-preservacao-do-patrimonio-ferroviario/",
+      "referencia": "Notícia de 12/08/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-folia-de-reis-2025": {
+      "titulo": "Folia de Reis: uma festa que move tradição, fé e cultura em Senador Canedo",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/folia-de-reis-uma-festa-que-move-tradicao-fe-e-cultura-em-senador-canedo/",
+      "referencia": "Notícia de 18/01/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-senador-canedo-go": {
+      "titulo": "Biblioteca IBGE — Senador Canedo: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Senador Canedo (GO). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5220454",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-cristo-revitalizado-2023": {
+      "titulo": "Revitalizado, Cristo será entregue neste sábado em Senador Canedo",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/revitalizado-cristo-sera-entregue-neste-sabado-em-senador-canedo/",
+      "referencia": "Notícia de 13/12/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-trilha-cerrado-2025": {
+      "titulo": "Guardiões Ambientais descobrem riquezas do cerrado em trilha da Transpetro",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/guardioes-ambientais-descobrem-riquezas-do-cerrado-em-trilha-da-transpetro/",
+      "referencia": "Notícia de 13/08/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-mudas-cerrado-2022": {
+      "titulo": "Senador Canedo recebe doação de mudas de espécies do Cerrado para recompor área degradada no município",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/senador-canedo-recebe-doacao-de-mudas-de-especies-do-cerrado-para-recompor-area-degradada-no-municipio/",
+      "referencia": "Notícia de 25/04/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-morro-santo-antonio-2025": {
+      "titulo": "Manutenção no Morro Santo Antônio garante um espaço sempre pronto para lazer e contemplação",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/manutencao-no-morro-santo-antonio-garante-um-espaco-sempre-pronto-para-lazer-e-contemplacao/",
+      "referencia": "Notícia de 14/02/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-ufg-meia-ponte-2025": {
+      "titulo": "Estudantes da UFG visitam Aterro Sanitário e áreas verdes de Senador Canedo em ação de educação ambiental",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/estudantes-da-ufg-visitam-aterro-sanitario-e-areas-verdes-de-senador-canedo-em-acao-de-educacao-ambiental/",
+      "referencia": "Notícia de 27/05/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "senador-canedo-30-anos-2019": {
+      "titulo": "Senador Canedo festeja 30 anos de emancipação política",
+      "publicador": "Prefeitura Municipal de Senador Canedo",
+      "url": "https://senadorcanedo.go.gov.br/senador-canedo-festeja-30-anos-de-emancipacao-politica/",
+      "referencia": "Notícia de 23/05/2019",
+      "consultadoEm": "2026-10-15"
+    },
+    "valparaiso-de-goias-prefeitura-nome-parque-2018": {
+      "titulo": "População de Valparaíso poderá escolher nome do Parque Ecológico. Participe!",
+      "publicador": "Prefeitura Municipal de Valparaíso de Goiás — Secretaria de Meio Ambiente",
+      "url": "https://valparaisodegoias.go.gov.br/populacao-de-valparaiso-podera-escolher-nome-do-parque-ecologico-participe/",
+      "referencia": "Notícia de 05/11/2018",
+      "consultadoEm": "2026-10-15"
+    },
+    "valparaiso-de-goias-prefeitura-feira-do-produtor": {
+      "titulo": "Feira do Produtor de Valparaíso nasce para se tornar uma tradição local",
+      "publicador": "Prefeitura Municipal de Valparaíso de Goiás",
+      "url": "https://valparaisodegoias.go.gov.br/feira-do-produtor-de-valparaiso-nasce-para-se-tornar-uma-tradicao-local/",
+      "referencia": "Notícia de 08/06/2015",
+      "consultadoEm": "2026-10-15"
+    },
+    "valparaiso-de-goias-prefeitura-historia": {
+      "titulo": "História da Cidade",
+      "publicador": "Prefeitura Municipal de Valparaíso de Goiás",
+      "url": "https://valparaisodegoias.go.gov.br/cidade/historia-da-cidade/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-valparaiso-de-goias-go": {
+      "titulo": "Biblioteca IBGE — Valparaíso de Goiás: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Valparaíso de Goiás (GO). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5221858",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "valparaiso-de-goias-prefeitura-31-anos": {
+      "titulo": "Valparaíso de Goiás celebra 31 anos de história, crescimento e transformação",
+      "publicador": "Prefeitura Municipal de Valparaíso de Goiás — SECOM",
+      "url": "https://valparaisodegoias.go.gov.br/valparaiso-de-goias-celebra-31-anos-de-historia-crescimento-e-transformacao/",
+      "referencia": "Notícia de 09/06/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "valparaiso-de-goias-prefeitura-casa-da-cultura": {
+      "titulo": "Casa da Cultura Mestre Sabá",
+      "publicador": "Prefeitura Municipal de Valparaíso de Goiás — Secretaria de Cultura e Esporte",
+      "url": "https://valparaisodegoias.go.gov.br/secretaria/secretaria-de-cultura-e-esporte/casa-da-cultura-mestre-saba/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "valparaiso-de-goias-prefeitura-parque-ecologico-2021": {
+      "titulo": "Parque Ecológico: lazer ideal para reunir familiares e amigos",
+      "publicador": "Prefeitura Municipal de Valparaíso de Goiás — Assessoria de Comunicação",
+      "url": "https://valparaisodegoias.go.gov.br/parque-ecologico-lazer-ideal-para-reunir-familiares-e-amigos/",
+      "referencia": "Notícia de 10/09/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "valparaiso-de-goias-prefeitura-nascente-da-bica": {
+      "titulo": "Meio Ambiente realiza o plantio de mudas na Nascente da Bica",
+      "publicador": "Prefeitura Municipal de Valparaíso de Goiás — Secretaria de Meio Ambiente",
+      "url": "https://valparaisodegoias.go.gov.br/meio-ambiente-realiza-o-plantio-de-mudas-na-nascente-da-bica/",
+      "referencia": "Notícia de 21/11/2017",
+      "consultadoEm": "2026-10-15"
+    },
+    "valparaiso-de-goias-prefeitura-padroeiro": {
+      "titulo": "Missa Solene celebra Padroeiro de Valparaíso de Goiás",
+      "publicador": "Prefeitura Municipal de Valparaíso de Goiás — Assessoria de Comunicação",
+      "url": "https://valparaisodegoias.go.gov.br/missa-solene-celebra-padroeiro-de-valparaiso-de-goias/",
+      "referencia": "Notícia de 05/10/2017",
+      "consultadoEm": "2026-10-15"
+    },
+    "valparaiso-de-goias-prefeitura-corrego-mangal": {
+      "titulo": "Margem do Córrego Mangal ganha mudas de árvores",
+      "publicador": "Prefeitura Municipal de Valparaíso de Goiás — Secretaria de Meio Ambiente",
+      "url": "https://valparaisodegoias.go.gov.br/margem-do-corrego-mangal-ganha-mudas-de-arvores/",
+      "referencia": "Notícia de 09/06/2017",
+      "consultadoEm": "2026-10-15"
+    },
+    "morretes-cpc-pr-serra-do-mar": {
+      "titulo": "Serra do Mar",
+      "publicador": "Governo do Paraná — Secretaria da Cultura, Coordenação do Patrimônio Cultural",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Serra-do-Mar",
+      "referencia": "Página de bem tombado (inscrição de 13/08/1986)",
+      "consultadoEm": "2026-10-15"
+    },
+    "morretes-cpc-pr-igreja-sao-benedito": {
+      "titulo": "Igreja de São Benedito - Morretes",
+      "publicador": "Governo do Paraná — Secretaria da Cultura, Coordenação do Patrimônio Cultural",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Igreja-de-Sao-Benedito-Morretes",
+      "referencia": "Página de bem tombado (inscrição de 13/07/1985)",
+      "consultadoEm": "2026-10-15"
+    },
+    "morretes-cpc-pr-igreja-sao-sebastiao": {
+      "titulo": "Igreja de São Sebastião de Porto de Cima - Morretes",
+      "publicador": "Governo do Paraná — Secretaria da Cultura, Coordenação do Patrimônio Cultural",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Igreja-de-Sao-Sebastiao-de-Porto-de-Cima-Morretes",
+      "referencia": "Página de bem tombado (inscrição de 14/03/1963)",
+      "consultadoEm": "2026-10-15"
+    },
+    "morretes-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 31 (Paraná) — verbete Morretes",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_31.pdf",
+      "referencia": "Publicação de 1959 (verbete nas páginas 327 a 330 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-morretes-pr": {
+      "titulo": "Biblioteca IBGE — Morretes: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Morretes (PR). Prefeitura)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4116208",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-15"
+    },
+    "morretes-cpc-pr-conjunto-historico": {
+      "titulo": "28-I e 180-II: Conjunto Histórico, Urbanístico e Paisagístico de Morretes",
+      "publicador": "Governo do Paraná — Secretaria da Cultura, Coordenação do Patrimônio Cultural",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Pagina/28-I-e-180-II-Conjunto-Historico-Urbanistico-e-Paisagistico-de-Morretes",
+      "referencia": "Página de bem tombado (inscrição de 18/07/2022)",
+      "consultadoEm": "2026-10-15"
+    },
+    "goias-ibge-enciclopedia-municipios": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 36 (Goiás) — verbete Goiás",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_36.pdf",
+      "referencia": "Publicação de 1958 (verbete nas páginas 195 a 200 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "goias-iphan-patrimonio-mundial": {
+      "titulo": "Patrimônio Mundial — Superintendência do Iphan em Goiás",
+      "publicador": "Instituto do Patrimônio Histórico e Artístico Nacional (Iphan)",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/goias/patrimonio-mundial",
+      "referencia": "Página publicada em 10/09/2021, modificada em 27/10/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-goias-go": {
+      "titulo": "Biblioteca IBGE — Goiás: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Goiás (GO). Prefeitura. 2017)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5208905",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "goias-semad-go-parque-serra-dourada": {
+      "titulo": "Parque Estadual da Serra Dourada (PESD)",
+      "publicador": "Secretaria de Estado de Meio Ambiente e Desenvolvimento Sustentável de Goiás (Semad)",
+      "url": "https://goias.gov.br/meioambiente/parque-estadual-da-serra-dourada/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "goias-governo-go-procissao-do-fogareu": {
+      "titulo": "Procissão do Fogaréu",
+      "publicador": "Governo do Estado de Goiás — Secretaria de Cultura",
+      "url": "https://goias.gov.br/cultura/procissao-do-fogareu/",
+      "referencia": "Página institucional (sem data); cita a Lei estadual nº 21.855, de 2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "goias-prefeitura-projeto-300-anos": {
+      "titulo": "Projeto 300 Anos",
+      "publicador": "Prefeitura Municipal da Cidade de Goiás",
+      "url": "https://www.goias.go.gov.br/projeto-300-anos",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -13274,6 +13834,1891 @@
         "status": "curadoria inicial",
         "em": "2026-10-15",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A Câmara diz que o município criado em 1979 incluía os distritos de Vera, Santa Carmem, Cláudia e Marcelândia, mas o IBGE registra o distrito de Cláudia só em 1986; o texto não cita distritos. O IBGE chama 14/09/1974 de fundação, e a Câmara descreve a cerimônia daquele dia; o texto trata a data como cerimônia de fundação, não como data administrativa. Não achei fonte oficial em texto sobre relevo nem bioma (Cerrado/Amazônia) de Sinop: a cartilha turística e os folders da Prefeitura são PDFs só de imagem; \"ambiente amazônico\" vem da página da Catedral. Ficaram de fora \"14ª cidade mais arborizada do Brasil\" (fala de secretária, superlativo) e \"uma das mais reconhecidas artistas sacras\". A presença do macaco-aranha está atribuída à Prefeitura, sem promessa de avistamento. Vale conferir o uso da imagem da catedral (duas torres) com foto real."
+      }
+    },
+    "1502400": {
+      "identidade": {
+        "id": "1502400",
+        "ibge": "1502400",
+        "nome": "Castanhal",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No nordeste do Pará, a cidade que cresceu na beira dos trilhos da Belém-Bragança, entre igarapés, romarias e a Maria Fumaça da praça.",
+        "resumo": "Castanhal fica no nordeste do Pará, a cerca de 65 km de Belém, em terras baixas de clima equatorial, cortadas por rios como o Apeú e o Inhangapi. Segundo o histórico do IBGE, o núcleo cresceu com colonos e imigrantes nordestinos ao longo da Estrada de Ferro de Bragança, cujos trilhos chegaram perto do Apeú em 1885. Foi elevado a vila em 1899, instalada em 1901, e virou município em 1932, desmembrado de Belém. Em 1902, a área foi dividida em colônias agrícolas; a José de Alencar corresponde hoje ao centro. A Praça do Estrela, onde fica a Maria Fumaça, é um dos cartões-postais da cidade.",
+        "fontesResumo": [
+          "castanhal-prefeitura-historia",
+          "castanhal-ibge-enciclopedia-1957",
+          "ibge-biblioteca-castanhal-pa",
+          "castanhal-prefeitura-maria-fumaca-2026"
+        ],
+        "referencias": [
+          {
+            "id": "maria-fumaca",
+            "tipo": "patrimonio",
+            "titulo": "Maria Fumaça da Praça do Estrela",
+            "texto": "Na Praça do Estrela, uma locomotiva Maria Fumaça e um vagão lembram a Estrada de Ferro Belém-Bragança, que impulsionou o nordeste do Pará e deu origem à cidade. Em 2026, a Prefeitura iniciou uma obra de restauro da locomotiva e do vagão, com exposição sobre a história da ferrovia prevista no projeto.",
+            "fontes": [
+              "castanhal-prefeitura-maria-fumaca-2026",
+              "castanhal-ibge-enciclopedia-1957"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação genérica com plataforma, trilho e locomotiva pequena; não reproduz a praça nem a locomotiva de Castanhal."
+            },
+            "curto": "Locomotiva e vagão na Praça do Estrela lembram a Estrada de Ferro Belém-Bragança, que deu origem à cidade."
+          },
+          {
+            "id": "romaria-de-castanhal",
+            "tipo": "tradicao",
+            "titulo": "Romaria de Castanhal",
+            "texto": "Em outubro, devotos de Nossa Senhora de Nazaré saem em procissão da Paróquia Matriz de São José até a Catedral Santa Maria Mãe de Deus e depois seguem cerca de seis quilômetros até o Santuário do Apeú. A berlinda vai sobre uma réplica da locomotiva Maria Fumaça. A 27ª edição, em 19 de outubro de 2025, reuniu cerca de 250 mil fiéis, segundo estimativa do Corpo de Bombeiros.",
+            "fontes": [
+              "castanhal-prefeitura-romaria-2025"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de uma torre; não reproduz a Matriz de São José, a Catedral nem o Santuário do Apeú."
+            },
+            "curto": "Procissão de Nossa Senhora de Nazaré que vai até o Santuário do Apeú, com a berlinda sobre uma réplica da Maria Fumaça."
+          },
+          {
+            "id": "cirio-de-macapazinho",
+            "tipo": "tradicao",
+            "titulo": "Círio de Macapazinho",
+            "texto": "Na comunidade quilombola de Macapazinho, o Círio de Nossa Senhora de Nazaré começa com missa na Agrovila Boa Vista, de onde sai uma romaria fluvial, e termina em procissão pelas ruas da comunidade. Em 2025, na 98ª edição, o Círio foi reconhecido por lei como patrimônio cultural e imaterial de Castanhal.",
+            "fontes": [
+              "castanhal-prefeitura-cirio-macapazinho-2025"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, em texto reproduzido pelo IBGE, há duas versões para o nome: uma homenagem às castanheiras, embora a área nunca tenha sido marcada por elas, ou uma frondosa castanheira que fazia sombra sobre uma estação da ferrovia.",
+            "fontes": [
+              "ibge-biblioteca-castanhal-pa",
+              "castanhal-ibge-enciclopedia-1957"
+            ]
+          },
+          {
+            "texto": "Em 1903, o governo do Pará trouxe famílias espanholas para trabalhar nas colônias agrícolas, mas elas não se adaptaram e voltaram; quem povoou a região foram sobretudo os imigrantes nordestinos, segundo o IBGE.",
+            "fontes": [
+              "castanhal-ibge-enciclopedia-1957",
+              "ibge-biblioteca-castanhal-pa"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "castanhalense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-castanhal-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -1.2941,
+          "lon": -47.9264,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 192256,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1029.3,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Castanhal",
+          "intermediaria": "Castanhal",
+          "mesorregiao": "Metropolitana de Belém",
+          "microrregiao": "Castanhal",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade baixa entre igarapés, com a estação da antiga ferrovia e a igreja da romaria",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.2,
+          "direcao": -0.6
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            9
+          ],
+          [
+            "mata",
+            7
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "maria-fumaca"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "romaria-de-castanhal"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Datas: a Enciclopédia de 1957 e o histórico da Prefeitura dão vila pela Lei 646 de 06/06/1899 (instalada em 15/08/1901), mas a formação administrativa do IBGE registra Castanhal como distrito de Belém em 1920 e não menciona a vila; o texto usa a vila atribuível às duas fontes e o município de 1932 (IBGE). O histórico da Prefeitura diz que 1899 foi \"cinco meses antes da Proclamação da República\", o que não fecha; não usado. Governador da divisão em colônias diverge (Augusto Montenegro na Prefeitura, José Paes de Carvalho na Enciclopédia) e o ano da vinda dos espanhóis aparece só na Enciclopédia (1903); o texto não nomeia governador. \"Equatorial superúmido\" vem da Enciclopédia de 1957. Ficaram de fora \"metrópole\", \"cidade modelo\", \"polo industrial\" e \"um dos maiores atos religiosos\". A obra da Maria Fumaça tinha conclusão prevista para o fim de 2026; o texto não promete reabertura (conferir situação). A lei que reconheceu o Círio de Macapazinho não tem número na notícia; o nome do prefeito foi omitido."
+      }
+    },
+    "4109401": {
+      "identidade": {
+        "id": "4109401",
+        "ibge": "4109401",
+        "nome": "Guarapuava",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No Planalto de Guarapuava, entre araucárias, rios de planalto e o salto que cai num cânion da Serra da Esperança.",
+        "resumo": "Guarapuava fica no terceiro planalto paranaense, de clima subtropical úmido, com invernos de geada, solo de basalto e rios como o Jordão. A ocupação colonial veio de expedições iniciadas no século XVIII: a Real Expedição, que chegou em 1810, ergueu o Fortim Atalaia em terras de povos indígenas que ali viviam. A freguesia de Nossa Senhora de Belém foi instalada em 1819; a vila foi criada em 1849, extinta e restaurada em 1852, e a cidade veio em 1871. O aniversário é em 9 de dezembro, data da freguesia.",
+        "fontesResumo": [
+          "guarapuava-prefeitura-sobre",
+          "guarapuava-prefeitura-historia",
+          "ibge-biblioteca-guarapuava-pr",
+          "guarapuava-prefeitura-turismo"
+        ],
+        "referencias": [
+          {
+            "id": "salto-sao-francisco",
+            "tipo": "natureza",
+            "titulo": "Salto São Francisco",
+            "texto": "Na Serra da Esperança, na divisa com Prudentópolis e Turvo, o salto despenca em queda livre de cerca de 200 metros no meio de um cânion coberto de mata e araucárias, e a água vira névoa antes de chegar ao chão. Do lado de Guarapuava, a Prefeitura criou o Parque Municipal São Francisco da Esperança, com trilhas e mirante, a cerca de 46 quilômetros da cidade.",
+            "fontes": [
+              "guarapuava-prefeitura-turismo",
+              "guarapuava-prefeitura-sobre"
+            ],
+            "descoberta": {
+              "modulo": "cachoeira",
+              "nota": "Na maquete, um paredão genérico com queda d'água e poço; o salto fica longe do centro, e altura e forma são ilustrativas."
+            },
+            "curto": "Queda livre de cerca de 200 metros num cânion da Serra da Esperança, no Parque Municipal São Francisco da Esperança."
+          },
+          {
+            "id": "casa-do-visconde",
+            "tipo": "patrimonio",
+            "titulo": "Casa do Visconde de Guarapuava",
+            "texto": "Casa luso-brasileira modesta, de paredes de pedra e telhado de telha canal, provavelmente da primeira metade do século XIX. Foi residência de Antonio de Sá Camargo, o visconde de Guarapuava, que morreu nela em 1896. Tombada pelo Estado em 1974 como referência da colonização dos Campos de Guarapuava, abriga o Museu Visconde de Guarapuava, que conta a história do município.",
+            "fontes": [
+              "guarapuava-cpc-pr-casa-do-visconde",
+              "guarapuava-prefeitura-turismo"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão colonial genérico; a casa real é térrea e mais simples, e proporções e cores são ilustrativas."
+            },
+            "curto": "Casa do século XIX onde viveu o visconde de Guarapuava, tombada pelo Estado em 1974 e hoje museu."
+          },
+          {
+            "id": "parque-das-araucarias",
+            "tipo": "natureza",
+            "titulo": "Parque Municipal das Araucárias",
+            "texto": "À beira da BR-277, o parque preserva mais de 3.800 araucárias, com trilhas pela floresta que partem do centro de educação ambiental, conhecido como Chalé. Tem ainda uma estufa de plantas, um jardim de canteiros geométricos e o Museu de Ciências Naturais, com coleções de insetos, fósseis, rochas e conchas.",
+            "fontes": [
+              "guarapuava-prefeitura-turismo"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico da Prefeitura, reproduzido pelo IBGE, o nome viria do tupi-guarani: guará, lobo, e puava, bravo. Foi dado em 1770 aos campos da região, que no começo abrangiam uma área enorme, de 175 mil km².",
+            "fontes": [
+              "ibge-biblioteca-guarapuava-pr",
+              "guarapuava-prefeitura-historia"
+            ]
+          },
+          {
+            "texto": "A Lagoa das Lágrimas, no centro, tem uma lenda contada pela Prefeitura: Ara Essay, “Lágrima que Cai”, esperava às margens o noivo, o cacique Guairacá, que tinha ido defender suas terras. Ao saber que ele morrera, chorou tanto que as lágrimas formaram a lagoa.",
+            "fontes": [
+              "guarapuava-prefeitura-turismo"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "guarapuavano",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-guarapuava-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -25.3863,
+          "lon": -51.4699,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 182093,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 3168.087,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Guarapuava",
+          "intermediaria": "Guarapuava",
+          "mesorregiao": "Centro-Sul Paranaense",
+          "microrregiao": "Guarapuava",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "campo",
+          "floresta",
+          "urbano"
+        ],
+        "rotulo": "Cidade de planalto entre araucárias, com a casa do visconde e um salto na serra",
+        "base": "campos",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.7
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.14
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            14
+          ],
+          [
+            "capim",
+            10
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "marcos": [
+          {
+            "modulo": "cachoeira",
+            "referencia": "salto-sao-francisco"
+          },
+          {
+            "modulo": "casarao",
+            "referencia": "casa-do-visconde"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Altura do Salto São Francisco: a página de Turismo diz 'cerca de 200 metros' e a página Sobre diz '196 metros'; o texto usa 'cerca de 200'. O texto não usa os superlativos das fontes ('maior queda d'água da região Sul', 'maior coral a céu aberto do Brasil', 'maior Maltaria Cervejeira da América Latina'). A Prefeitura diz que a casa do museu foi 'construída no século XIX pelos escravos' e que conserva 'as ruínas de uma senzala'; a Coordenação do Patrimônio Cultural diz que não há dados precisos sobre a origem e que as ruínas são de 'antigo anexo, de finalidade desconhecida'. O texto ficou com a versão do órgão de patrimônio e não fala de senzala — vale a revisão humana decidir. Endereço do museu também diverge (Praça 9 de Dezembro na Prefeitura, Praça 19 de Dezembro no CPC), por isso não aparece. Freguesia: o IBGE registra a criação por decreto de 19/08/1818 e a Prefeitura a instalação em 9/12/1819; o resumo fala da instalação em 1819. Os povos indígenas são citados pela Prefeitura como 'Camés, Votorões e Cayeres ou Dorins', nomes coloniais; o resumo fala em 'povos indígenas que ali viviam' sem nomear, e a revisão pode decidir incluir os nomes Kaingang/Guarani com fonte. A lenda da Lagoa fala em 'invasores espanhóis'; a curiosidade omite o detalhe. Entre Rios e a imigração suábia ficaram de fora por falta de página oficial com descrição."
+      }
+    },
+    "4113205": {
+      "identidade": {
+        "id": "4113205",
+        "ibge": "4113205",
+        "nome": "Lapa",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Antigo pouso de tropeiros nos Campos Gerais, com centro histórico tombado e a memória do Cerco de 1894.",
+        "resumo": "A Lapa fica na região dos Campos Gerais, na transição do Primeiro para o Segundo Planalto paranaense, com formações de arenito e matas com pinheiro-do-paraná e erva-mate. O povoado nasceu como pouso de tropeiros no Caminho de Viamão, em terras onde arqueólogos apontam a presença anterior de Kaingang e Guarani. A freguesia foi instalada em 1769, a vila de Vila Nova do Príncipe veio em 1806 e a elevação a cidade, já com o nome de Lapa, em 1872. O centro histórico, tombado pelo Estado em 1989 e pela União em 1998, guarda a memória do Cerco da Lapa, de 1894.",
+        "fontesResumo": [
+          "lapa-viaje-parana",
+          "lapa-iat-parque-monge",
+          "lapa-patrimonio-pr-setor-historico",
+          "ibge-biblioteca-lapa-pr"
+        ],
+        "referencias": [
+          {
+            "id": "matriz-santo-antonio",
+            "tipo": "patrimonio",
+            "titulo": "Igreja Matriz de Santo Antônio",
+            "texto": "Erguida na segunda metade do século XVIII, a matriz traz a data de 1784 na verga da portada principal. A fachada usa pedra e grés, o arenito local, com frontão de desenho barroco e torre sineira do lado esquerdo. Foi tombada pelo patrimônio nacional em 1938 e pelo Estado em 1972, e nela foram sepultados os coronéis Gomes Carneiro e Cândido Dulcídio, do Cerco da Lapa.",
+            "fontes": [
+              "lapa-patrimonio-pr-matriz"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre central; a torre real fica à esquerda da fachada, e cores e proporções são ilustrativas."
+            },
+            "curto": "Matriz do século XVIII, com a data de 1784 na portada e fachada em arenito local."
+          },
+          {
+            "id": "theatro-sao-joao",
+            "tipo": "patrimonio",
+            "titulo": "Theatro São João",
+            "texto": "O teatro nasceu da Associação Literária Lapeana, fundada em 1873, ficou pronto três anos depois, recebeu a visita de D. Pedro II em 1880 e teve inauguração oficial em 1887. Por dentro, plateia e camarotes se apoiam numa estrutura de madeira em forma de ferradura. Serviu de enfermaria no Cerco de 1894 e, restaurado, foi reaberto ao público em 1976; é tombado pelo Estado desde 1969 e em nível nacional desde 1985.",
+            "fontes": [
+              "lapa-patrimonio-pr-teatro-sao-joao"
+            ],
+            "descoberta": {
+              "modulo": "teatro-frontao",
+              "nota": "Na maquete, um teatro neoclássico genérico com frontão e colunas; o teatro real tem fachada de arcos, e cores e proporções são ilustrativas."
+            },
+            "curto": "Teatro com plateia em madeira em forma de ferradura, inaugurado oficialmente em 1887."
+          },
+          {
+            "id": "parque-estadual-monge",
+            "tipo": "natureza",
+            "titulo": "Parque Estadual do Monge e Gruta do Monge",
+            "texto": "A cerca de 3 km da sede, o parque guarda a Gruta do Monge, onde viveu por um tempo o monge João Maria d'Agostini, imigrante italiano que pregou na Matriz da Lapa em 1845 e receitava ervas medicinais. A gruta é local de peregrinação, com ex-votos deixados por romeiros, e uma trilha de cerca de 450 metros leva à Pedra Partida, salão de pedra com uma fenda aberta pelo desgaste ao longo de milhares de anos.",
+            "fontes": [
+              "lapa-iat-parque-monge"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Em 1894, na Revolução Federalista, a cidade resistiu por 26 dias ao cerco dos maragatos, o que deu tempo ao governo para reforçar as tropas em São Paulo. Os soldados republicanos estão enterrados no Pantheon dos Heróis, e o Theatro São João virou enfermaria durante o cerco.",
+            "fontes": [
+              "lapa-patrimonio-pr-setor-historico",
+              "lapa-patrimonio-pr-teatro-sao-joao"
+            ]
+          },
+          {
+            "texto": "Antes de Lapa, o lugar se chamou Santo Antônio do Registro e, como vila, Vila Nova do Príncipe. Segundo o histórico do IBGE, com fonte na Prefeitura, o nome Lapa se deve à grande quantidade de pedras existentes na região.",
+            "fontes": [
+              "lapa-patrimonio-pr-setor-historico",
+              "ibge-biblioteca-lapa-pr"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "lapeano",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-lapa-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -25.7687,
+          "lon": -49.717,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 45003,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 2093.859,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Curitiba",
+          "intermediaria": "Curitiba",
+          "mesorregiao": "Metropolitana de Curitiba",
+          "microrregiao": "Lapa",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "campo",
+          "floresta"
+        ],
+        "rotulo": "Cidade histórica dos Campos Gerais, entre campos, araucárias e pedras de arenito",
+        "base": "campos",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.5
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            12
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "capim",
+            10
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 12,
+          "predios": 0
+        },
+        "extras": [
+          "cerca"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "matriz-santo-antonio"
+          },
+          {
+            "modulo": "teatro-frontao",
+            "referencia": "theatro-sao-joao"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O site da Prefeitura (lapa.pr.gov.br) não respondeu durante a pesquisa; as fontes são do Governo do Paraná (patrimônio cultural, IAT e Viaje Paraná) e do IBGE. Datas administrativas: o IBGE dá distrito de Vila Nova do Príncipe em 1797, vila em 1806 (instalada em 18/06/1806) e cidade em 1872; a página estadual chama 1797 de criação da Freguesia de Santo Antônio da Lapa e 1769 de criação da freguesia de Santo Antônio de Lisboa — o texto usa 1769 (posse do patrimônio e instalação da freguesia, comum às duas fontes), 1806 e 1872. Cabeza de Vaca: IBGE diz 1541, página estadual diz 1542 — deixado de fora. Superlativos das fontes ('um dos principais conjuntos', 'uma das igrejas mais antigas', 'maior santuário' de São Benedito) ficaram de fora. A forma do nome do monge varia (d'Agostini / D'Agostinis) na própria página do IAT. O Cerco é tratado como fato histórico, sem juízo sobre os lados. Não se cita horário de visitação do parque nem do teatro."
+      }
+    },
+    "4209300": {
+      "identidade": {
+        "id": "4209300",
+        "ibge": "4209300",
+        "nome": "Lages",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Nos campos de altitude da Serra Catarinense, a cidade do pinhão, do Caminho das Tropas e dos muros de taipa.",
+        "resumo": "Lages fica nos Campos de Lages, no planalto catarinense, com a sede a cerca de 900 metros de altitude e rios como o Canoas, o Pelotas e o Caveiras. Antes dos colonos, a região era habitada pelos povos Kaingang e Xokleng, que tinham no pinhão da araucária parte da alimentação. Segundo o histórico do IBGE, a povoação nasceu em 1766 como pouso na rota do gado entre o Rio Grande do Sul e São Paulo, e o nome viria da abundância de pedra laje. O território passou de São Paulo para Santa Catarina em 1820, e Lages foi elevada a cidade em 1860.",
+        "fontesResumo": [
+          "lages-enciclopedia-ibge-v32",
+          "ibge-biblioteca-lages-sc"
+        ],
+        "referencias": [
+          {
+            "id": "antigo-paco-municipal",
+            "tipo": "patrimonio",
+            "titulo": "Antigo Paço Municipal",
+            "texto": "O prédio da Prefeitura, primeiro paço municipal de Lages, foi construído entre 1898 e 1902, na rua Benjamin Constant, ao lado da Catedral Diocesana de Nossa Senhora dos Prazeres. A fachada tem detalhes em cantaria de pedra, como cunhais, platibandas e o balcão da esquina. Nos anos 1950 ganhou mais um pavimento, mantendo boa parte da fachada original, e é tombado pelo Estado de Santa Catarina desde 2001.",
+            "fontes": [
+              "lages-noticia-predio-prefeitura",
+              "lages-noticia-patrimonios-restauro"
+            ],
+            "descoberta": {
+              "modulo": "palacio",
+              "nota": "Na maquete, um prédio público clássico genérico; pavimentos, colunas e cores são ilustrativos."
+            },
+            "curto": "Sede histórica da Prefeitura, construída entre 1898 e 1902 e tombada pelo Estado em 2001."
+          },
+          {
+            "id": "conventinho-franciscano",
+            "tipo": "patrimonio",
+            "titulo": "Conventinho Franciscano",
+            "texto": "A Igreja São José do Patrocínio, conhecida como Conventinho Franciscano, liga-se à presença dos frades franciscanos em Lages desde 1891. O conjunto começou a ser erguido em 1915, com o convento, e a capela veio em 1916. Em estilo neogótico, tem tijolos aparentes, cantarias em arenito, vitrais e torre sineira, e é tombado pelo Estado desde 2001.",
+            "fontes": [
+              "lages-noticia-patrimonios-restauro"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de uma torre; o tijolo aparente, os vitrais e as proporções são simplificados."
+            },
+            "curto": "Igreja neogótica dos franciscanos, de 1916, com tijolos aparentes e torre sineira."
+          },
+          {
+            "id": "coxilha-rica",
+            "tipo": "paisagem",
+            "titulo": "Coxilha Rica e o Caminho das Tropas",
+            "texto": "Na Coxilha Rica, área rural entre Lages e Capão Alto a mais de mil metros de altitude, o terreno é ondulado, com campos de gramíneas e araucárias nos remanescentes de mata. Por ali passava o Caminho das Tropas, aberto no século XVIII para levar gado do Rio Grande do Sul a Sorocaba e ao sul de Minas. Restam mais de 100 km de corredores de taipa, muros de pedra erguidos por escravizados negros e indígenas e por peões.",
+            "fontes": [
+              "lages-noticia-coxilha-rica-rota-tropeiros"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Enciclopédia dos Municípios do IBGE, Antônio Correia Pinto de Macedo ergueu primeiro uma capela em Taipas, na chapada do Cajuru, e depois tentou uma povoação à beira do rio Canoas, até que uma grande enchente o fez buscar outro lugar, junto ao rio Caveiras.",
+            "fontes": [
+              "lages-enciclopedia-ibge-v32"
+            ]
+          },
+          {
+            "texto": "A Festa Nacional do Pinhão começou em 1989, na Praça João Costa. Na festa, o pinhão é servido cozido ou assado na chapa do fogão a lenha, ao som de música nativista.",
+            "fontes": [
+              "lages-noticia-contraturno-festa-pinhao",
+              "lages-noticia-rancho-pinhao"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "lageano",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-lages-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -27.8169,
+          "lon": -50.3258,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 164981,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 2637.66,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Lages",
+          "intermediaria": "Lages",
+          "mesorregiao": "Serrana",
+          "microrregiao": "Campos de Lages",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "campo",
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade nos campos de altitude, entre coxilhas, araucárias e o rio Caveiras",
+        "base": "campos",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.6
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.2
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            14
+          ],
+          [
+            "capim",
+            14
+          ],
+          [
+            "redonda",
+            4
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 2
+        },
+        "extras": [
+          "cerca"
+        ],
+        "marcos": [
+          {
+            "modulo": "palacio",
+            "referencia": "antigo-paco-municipal"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "conventinho-franciscano"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O histórico do IBGE chama Correia Pinto de bandeirante paulista, mas a Enciclopédia do IBGE (1959) diz que essa ideia é um equívoco; o texto não diz a origem dele. A formação administrativa do IBGE dá a vila em 1765 (Carta Régia), antes da freguesia (1768) e da própria fundação (1766), e instalação em 1871; o texto omite a vila. Sobre o Paço, a notícia de 2025 diz 'inaugurado em 1º de janeiro de 1901' e 'construído entre 1898 e 1902', e descreve o estilo como neoclássico com influências do neogótico, enquanto a de 2026 fala em inauguração em 1902 e arquitetura eclética: o texto usa só o período de construção e não nomeia o estilo. O IBGE escreve 'caingangues e xoclengues'; o texto usa as grafias Kaingang e Xokleng. Obras de restauro do Paço e do Conventinho estão em andamento (2026); o texto não promete visitação. A área de 100 km² da Coxilha Rica e a 'maior variedade de raças bovinas' ficaram de fora."
+      }
+    },
+    "4318705": {
+      "identidade": {
+        "id": "4318705",
+        "ibge": "4318705",
+        "nome": "São Leopoldo",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "À margem do rio dos Sinos, onde chegaram os imigrantes alemães de 1824, com trem, Kerb e cuca.",
+        "resumo": "São Leopoldo fica à margem do rio dos Sinos, numa área baixa, de ruas retas e quase sem relevo, segundo a Enciclopédia dos Municípios do IBGE. O histórico do IBGE, com texto da Prefeitura, registra que os primeiros imigrantes alemães chegaram em 25 de julho de 1824 à antiga Feitoria do Linho Cânhamo, um estabelecimento agrícola do governo junto ao rio. A colônia cresceu pelos vales do Sinos, do Cadeia e do Caí e virou vila em 1846, desmembrada de Porto Alegre. No século XX, distritos como Novo Hamburgo, Esteio, Campo Bom e Sapucaia do Sul se separaram dela.",
+        "fontesResumo": [
+          "sao-leopoldo-ibge-enciclopedia-1959",
+          "ibge-biblioteca-sao-leopoldo-rs"
+        ],
+        "referencias": [
+          {
+            "id": "feitoria-velha",
+            "tipo": "patrimonio",
+            "titulo": "Feitoria Velha",
+            "texto": "A Feitoria do Linho Cânhamo era um estabelecimento agrícola do governo, já desativado, na margem esquerda do rio dos Sinos. Ali os primeiros imigrantes alemães ficaram até receber seus lotes. A Enciclopédia dos Municípios do IBGE, de 1959, registra como prédio histórico a casa em que eles se hospedaram em 1824, na localidade de Feitoria Velha, a poucos quilômetros do centro.",
+            "fontes": [
+              "ibge-biblioteca-sao-leopoldo-rs",
+              "sao-leopoldo-ibge-enciclopedia-1959"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão colonial simplificado de paredes claras; a forma é genérica e não reproduz o prédio da Feitoria."
+            },
+            "curto": "Antiga feitoria do governo à beira do rio dos Sinos, onde os primeiros imigrantes alemães ficaram em 1824."
+          },
+          {
+            "id": "ferrovia-e-museu-do-trem",
+            "tipo": "patrimonio",
+            "titulo": "Ferrovia e Museu do Trem",
+            "texto": "Em 1874 entrou em tráfego a ferrovia entre São Leopoldo e Porto Alegre, segundo a Enciclopédia dos Municípios do IBGE. O Museu do Trem, fundado em 1976, cuida da estação ferroviária histórica e guarda acervo da antiga Viação Férrea do Rio Grande do Sul, com locomotivas, vagões, documentos e fotografias. O sítio histórico é tombado pelo Iphae, segundo a Prefeitura.",
+            "fontes": [
+              "sao-leopoldo-ibge-enciclopedia-1959",
+              "sao-leopoldo-prefeitura-museu-do-trem"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação simplificada com plataforma coberta, trilho e locomotiva pequena; cores e proporções são ilustrativas."
+            },
+            "curto": "Ferrovia aberta em 1874 até Porto Alegre; a estação histórica abriga o Museu do Trem desde 1976."
+          },
+          {
+            "id": "kerb",
+            "tipo": "tradicao",
+            "titulo": "Kerb",
+            "texto": "A Enciclopédia dos Municípios do IBGE, de 1959, descreve o Kerb como festa de origem europeia em homenagem ao santo padroeiro do lugar. Durava em geral três dias, sempre com um domingo, começava com procissão e seguia com baile nos salões; os anfitriões recebiam parentes e amigos com cuca. Na cidade, o Kerb era feito em setembro, pela Sociedade Orpheus.",
+            "fontes": [
+              "sao-leopoldo-ibge-enciclopedia-1959"
+            ],
+            "curto": "Festa do padroeiro de origem europeia, com procissão, baile e cuca, registrada pelo IBGE em 1959."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Enciclopédia dos Municípios do IBGE, o nome Colônia Alemã de São Leopoldo foi dado pelo imperador D. Pedro I em 22 de setembro de 1824, em homenagem à imperatriz D. Leopoldina.",
+            "fontes": [
+              "sao-leopoldo-ibge-enciclopedia-1959"
+            ]
+          },
+          {
+            "texto": "A antiga Colônia Alemã de São Leopoldo se estendia por mais de mil quilômetros quadrados, de Esteio até Campo dos Bugres, hoje Caxias do Sul, segundo o histórico do IBGE. A data de chegada dos imigrantes, 25 de julho, é a do Dia do Colono, que a Enciclopédia de 1959 já registrava entre as festas da cidade.",
+            "fontes": [
+              "ibge-biblioteca-sao-leopoldo-rs",
+              "sao-leopoldo-ibge-enciclopedia-1959"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "leopoldense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-sao-leopoldo-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -29.7618,
+          "lon": -51.1493,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 217409,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 103.009,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Novo Hamburgo - São Leopoldo",
+          "intermediaria": "Porto Alegre",
+          "mesorregiao": "Metropolitana de Porto Alegre",
+          "microrregiao": "Porto Alegre",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade plana na beira do rio dos Sinos, com a estação e a antiga feitoria",
+        "base": "vale",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.3
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            8
+          ],
+          [
+            "mata",
+            4
+          ],
+          [
+            "capim",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 3
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "casarao",
+            "referencia": "feitoria-velha"
+          },
+          {
+            "modulo": "estacao",
+            "referencia": "ferrovia-e-museu-do-trem"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O portal da Prefeitura (saoleopoldo.rs.gov.br) só entrega conteúdo com cookie de navegador; a ferramenta de trechos recebe uma página vazia. A página do Museu do Trem foi lida com o cookie e as evidências dela estão marcadas como 'manual' — conferir. O site do Iphae carrega a lista de bens tombados por JavaScript e não confirmou o tombamento do sítio do Museu do Trem (afirmação da Prefeitura). Divergências: o histórico do IBGE fala em 39 imigrantes no primeiro grupo (33 evangélicos e 6 católicos); a Enciclopédia diz que há dúvida entre 38, 45 ou 46 — o texto não dá número. O histórico do IBGE diz que o 'Governo do Estado' batizou o núcleo; a Enciclopédia atribui o nome a D. Pedro I — a curiosidade cita a Enciclopédia. A Enciclopédia não deixa claro se o prédio da Feitoria Velha ainda existe; o texto se refere ao registro de 1959. Kerb e Dia do Colono vêm só da Enciclopédia de 1959 (tempo verbal no passado); não prometem festa atual. Ficaram de fora a frase da Prefeitura 'berço da colonização alemã no Brasil', 'primeira estação ferroviária construída no estado' e 'principal equipamento público na temática ferroviária em toda a região sul', por serem afirmações de primazia ou superlativo. A Enciclopédia descreve rios, morros e quedas do território de 1959, que incluía Dois Irmãos, Ivoti e outros; não foram usados para o cenário."
+      }
+    },
+    "4319158": {
+      "identidade": {
+        "id": "4319158",
+        "ibge": "4319158",
+        "nome": "São Miguel das Missões",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Uma cidade que cresceu em volta das ruínas de pedra de São Miguel Arcanjo, um dos Sete Povos das Missões.",
+        "resumo": "No noroeste gaúcho, São Miguel das Missões guarda os remanescentes do antigo povo de São Miguel, uma das reduções jesuítico-guaranis dos Sete Povos. A Prefeitura fala de fontes que brotam e se misturam aos rios e mananciais do município. Segundo o histórico do IBGE, a redução passou à outra margem do rio Uruguai por causa dos ataques bandeirantes e só voltou ao sítio atual no fim do século XVII. A vila nasceu em 1926, com um loteamento em volta das ruínas; o município foi criado em 1988, desmembrado de Santo Ângelo e São Luiz Gonzaga, e instalado em 1989.",
+        "fontesResumo": [
+          "ibge-biblioteca-sao-miguel-das-missoes-rs",
+          "sao-miguel-das-missoes-prefeitura-historia",
+          "sao-miguel-das-missoes-prefeitura-fonte-missioneira",
+          "sao-miguel-das-missoes-prefeitura-sitio-historico"
+        ],
+        "referencias": [
+          {
+            "id": "sitio-sao-miguel-arcanjo",
+            "tipo": "patrimonio",
+            "titulo": "Sítio Histórico São Miguel Arcanjo",
+            "texto": "Tombado pelo Iphan em 1938 e reconhecido pela Unesco como Patrimônio Mundial em 1983, o sítio guarda parte da antiga redução. A igreja, de inspiração barroca, teve entre seus autores o italiano Gian Battista Primoli e foi erguida com mão de obra indígena de 1735 até cerca de 1745, em pedra arenito, que era rebocada e pintada de branco.",
+            "fontes": [
+              "sao-miguel-das-missoes-prefeitura-sitio-historico",
+              "sao-miguel-das-missoes-iphan-superintendencia-rs"
+            ],
+            "descoberta": {
+              "modulo": "ruinas",
+              "nota": "Na maquete, ruínas genéricas de igreja de pedra; fachada, torre e proporções são ilustrativas e não reproduzem a igreja de São Miguel."
+            },
+            "curto": "Igreja de pedra arenito erguida por mão de obra indígena de 1735 a cerca de 1745; Patrimônio Mundial desde 1983."
+          },
+          {
+            "id": "museu-das-missoes",
+            "tipo": "cultura",
+            "titulo": "Museu das Missões",
+            "texto": "O pavilhão, projetado por Lucio Costa em 1938, fica num dos extremos da praça da antiga redução, junto às ruínas. O museu, criado em 1940, reúne esculturas em madeira policromada dos séculos XVII e XVIII feitas por indígenas Guarani nas reduções, além de fragmentos arquitetônicos e sinos. A maioria das peças foi recolhida na região por João Hugo Machado, o primeiro zelador.",
+            "fontes": [
+              "sao-miguel-das-missoes-ibram-museu-das-missoes",
+              "sao-miguel-das-missoes-prefeitura-museus"
+            ]
+          },
+          {
+            "id": "tava-guarani",
+            "tipo": "tradicao",
+            "titulo": "Tava, lugar de referência guarani",
+            "texto": "Para os Mbyá-Guarani, a Tava é um lugar sagrado de ligação com os antepassados, de convívio e de aprendizado entre crianças, jovens e mais velhos. Em 2014, o Iphan registrou no Livro dos Lugares a Tava do sítio da antiga redução de São Miguel Arcanjo, onde os Guarani reconhecem vestígios de ancestrais que, segundo suas narrativas, se tornaram imortais.",
+            "fontes": [
+              "sao-miguel-das-missoes-iphan-tava"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "A Fonte Missioneira, a 1 km do sítio, foi descoberta em 1982 e restaurada em 1983. Segundo a Prefeitura, era uma das sete fontes que abasteciam a redução.",
+            "fontes": [
+              "sao-miguel-das-missoes-prefeitura-fonte-missioneira"
+            ]
+          },
+          {
+            "texto": "No pórtico da cidade, na RS-536, está escrita em guarani a frase atribuída a Sepé Tiaraju na Guerra Guaranítica: Co yvy oguereco yara, “Esta terra tem dono”.",
+            "fontes": [
+              "sao-miguel-das-missoes-prefeitura-portico"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "miguelino",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-sao-miguel-das-missoes-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -28.5471,
+          "lon": -54.5505,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 7056,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1228.447,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Santo Ângelo",
+          "intermediaria": "Ijuí",
+          "mesorregiao": "Noroeste Rio-grandense",
+          "microrregiao": "Santo Ângelo",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "campo",
+          "rio"
+        ],
+        "rotulo": "Vila missioneira em volta das ruínas de pedra de São Miguel Arcanjo",
+        "base": "campos",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.15
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            10
+          ],
+          [
+            "mata",
+            5
+          ],
+          [
+            "capim",
+            10
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 8
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "ruinas",
+            "referencia": "sitio-sao-miguel-arcanjo"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Data de reinstalação da redução no sítio atual: o histórico do IBGE diz 1697 e a Prefeitura (História e Sítio Histórico) diz 1687; o texto diz só 'fim do século XVII'. A Prefeitura dá a fundação da redução em 1632; o IBGE fala em 'início do século XVII'; o texto não usa a data. Superlativos das fontes ('mais importante remanescente', 'maior coleção', 'única Cruz Missioneira original', 'único patrimônio cultural da humanidade em solo gaúcho') ficaram de fora. Museu das Missões: a página da Prefeitura diz que ele está fechado desde a pandemia, e a do Ibram traz horários; o texto não fala de visitação. O Espetáculo Som e Luz ficou de fora para não prometer horário. Faltou fonte oficial sobre relevo e vegetação atuais do município; o resumo fala só das fontes e mananciais. O site saomiguel-rs.com.br citado pelo IBGE está fora do ar; a Prefeitura está em saomiguel.rs.gov.br."
+      }
+    },
+    "5218805": {
+      "identidade": {
+        "id": "5218805",
+        "ibge": "5218805",
+        "nome": "Rio Verde",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No sudoeste goiano, o antigo arraial das Abóboras virou cidade de lavoura de grãos, com casarões, banda centenária e viola sertaneja.",
+        "resumo": "Rio Verde fica no sudoeste de Goiás, em terras de Cerrado entre 600 e 800 metros de altitude, cortadas por rios com cachoeiras e por serras como a do Caiapó. Segundo a Prefeitura, em texto reproduzido pelo IBGE, a história começa no início do século XIX, quando a família de José Rodrigues de Mendonça, vinda de Casa Branca (SP), se fixou às margens do rio São Tomás. O povoado virou distrito em 1848, vila desmembrada de Goiás em 1854, instalada em 1862, e cidade em 1882. Desde 1970, a abertura dos cerrados atraiu agricultores de São Paulo e do Sul, e a lavoura de grãos marca a economia.",
+        "fontesResumo": [
+          "rio-verde-ibge-enciclopedia-1958",
+          "rio-verde-prefeitura-historia",
+          "ibge-biblioteca-rio-verde-go"
+        ],
+        "referencias": [
+          {
+            "id": "casa-dona-ambrosina",
+            "tipo": "patrimonio",
+            "titulo": "Casa Dona Ambrosina",
+            "texto": "Na Praça Padre Mariano, no Centro, a casa que foi de Dona Ambrosina Candida da Silveira Leão foi construída por volta de 1895, segundo historiadores citados pela Prefeitura, e mantém as características da época. Na Revolução de 1930, abrigou Pedro Ludovico Teixeira, que então morava em Rio Verde, e o senador Martins Borges. Foi tombada como patrimônio histórico e artístico do município em 2014.",
+            "fontes": [
+              "rio-verde-casa-dona-ambrosina-2014"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão colonial genérico; janelas, cores e proporções são ilustrativas, não reproduzem a casa real."
+            },
+            "curto": "Casa de cerca de 1895 na Praça Padre Mariano, que abrigou Pedro Ludovico em 1930; tombada pelo município em 2014."
+          },
+          {
+            "id": "banda-e-orquestra-de-violeiros",
+            "tipo": "tradicao",
+            "titulo": "Banda Municipal e Orquestra de Sanfoneiros e Violeiros",
+            "texto": "A Banda Municipal Filadelfo Jorge da Silva foi fundada em 1893 pelo maestro Manoel Veruna e leva o nome do músico que a dirigiu a partir de 1924. A Orquestra Municipal de Sanfoneiros e Violeiros, criada em 2002, toca violão, viola, acordeom e berrante para manter viva a música sertaneja raiz. As duas foram tombadas como patrimônio cultural do município em 2014.",
+            "fontes": [
+              "rio-verde-seis-patrimonios-tombados-2014"
+            ]
+          },
+          {
+            "id": "arvore-barriguda",
+            "tipo": "paisagem",
+            "titulo": "A Barriguda da Avenida Pedro Ludovico",
+            "texto": "Árvore típica do Cerrado, a Barriguda centenária do canteiro central da Avenida Pedro Ludovico Teixeira era símbolo da cidade, visitada na época da floração, e foi tombada em 2014. Em fevereiro de 2016, um incêndio criminoso queimou cerca de 80% do tronco, e a Prefeitura plantou uma muda da mesma espécie no lugar da antiga árvore.",
+            "fontes": [
+              "rio-verde-seis-patrimonios-tombados-2014",
+              "rio-verde-barriguda-fogo-2016",
+              "rio-verde-barriguda-muda-2016"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Enciclopédia dos Municípios Brasileiros do IBGE, o povoado se chamou arraial das Abóboras e, depois de virar distrito, teve o nome mudado para Dores do Rio Verde. A matriz da cidade é dedicada a Nossa Senhora das Dores.",
+            "fontes": [
+              "rio-verde-ibge-enciclopedia-1958",
+              "rio-verde-167-anos-programacao-2015"
+            ]
+          },
+          {
+            "texto": "No pátio do Colégio do Sol fica um Relógio do Sol construído em 1967 pelo professor Haley Garcia: a base circular marca os pontos cardeais e colaterais, e uma janelinha no plano inclinado mostra o eixo da Terra. Foi tombado pelo município em 2014.",
+            "fontes": [
+              "rio-verde-seis-patrimonios-tombados-2014"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "rio-verdense ou rio-verdino",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-rio-verde-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -17.7853,
+          "lon": -50.9081,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 225696,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 8374.255,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Rio Verde",
+          "intermediaria": "Rio Verde",
+          "mesorregiao": "Sul Goiano",
+          "microrregiao": "Sudoeste de Goiás",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado",
+          "campo"
+        ],
+        "rotulo": "Cidade no Cerrado do sudoeste goiano, entre lavouras de grãos, com a Casa Dona Ambrosina",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.4
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.15,
+          "direcao": 0.5
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            8
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "capim",
+            6
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 3
+        },
+        "extras": [
+          "lavoura",
+          "silo"
+        ],
+        "marcos": [
+          {
+            "modulo": "casarao",
+            "referencia": "casa-dona-ambrosina"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. As fontes divergem sobre os pioneiros: o texto da Prefeitura (reproduzido pelo IBGE) fala de José Rodrigues de Mendonça e família vindos de Casa Branca (SP) no início do século XIX, às margens do rio São Tomás; a Enciclopédia do IBGE fala da família Rodrigues de Mendonça vinda de Minas Gerais por volta de 1835. O resumo atribui a versão à Prefeitura e não dá ano. A Enciclopédia diz que o nome 'arraial das Abóboras' viria da Guerra do Paraguai, o que não bate com o distrito de 1848; o texto cita só o nome, sem a explicação. Ficaram de fora 'maior produtor de grãos de Goiás' e 'primeira cidade do Estado com água encanada' (superlativos da Prefeitura) e 'última das edificações' sobre a Casa Dona Ambrosina. A data da Casa (por volta de 1895) é atribuída a historiadores, como na fonte. A Barriguda original foi destruída em 2016; o texto deixa claro que hoje há uma muda no lugar. Faltou fonte primária descritiva para cachoeiras e parques atuais (o site de turismo só lista nomes); Ponte de Pedra, citada pela Enciclopédia, ficava no então distrito de Montividiu, hoje município próprio."
+      }
+    },
+    "5220454": {
+      "identidade": {
+        "id": "5220454",
+        "ibge": "5220454",
+        "nome": "Senador Canedo",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Cidade que nasceu no acampamento da ferrovia, entre fazendas e rotas de boiada, e que se vê inteira do alto do Morro do Cristo.",
+        "resumo": "Senador Canedo fica na Região Metropolitana de Goiânia, na bacia do rio Meia Ponte, em terras de Cerrado. Segundo a Prefeitura, a região era de grandes fazendas, com lavouras de fumo, criação de gado e pousos das boiadas que seguiam para o Sudeste. A estrada de ferro, nos anos 1930, trouxe trabalhadores de Minas Gerais e da Bahia, e o acampamento montado na Fazenda Vargem Bonita, do senador Antônio Amaro Canedo, deu início ao povoado. Foi distrito de Goiânia a partir de 1953 e virou município por lei de 1988, instalado em 1989. Hoje tem um polo petroquímico, com terminal da Transpetro.",
+        "fontesResumo": [
+          "senador-canedo-ufg-meia-ponte-2025",
+          "senador-canedo-trilha-cerrado-2025",
+          "senador-canedo-mudas-cerrado-2022",
+          "senador-canedo-prefeitura-cidade",
+          "ibge-biblioteca-senador-canedo-go",
+          "senador-canedo-34-anos-2023"
+        ],
+        "referencias": [
+          {
+            "id": "morro-do-cristo",
+            "tipo": "paisagem",
+            "titulo": "Morro do Cristo (Morro Santo Antônio)",
+            "texto": "No alto do Morro Santo Antônio fica uma estátua do Cristo Redentor com mais de 20 metros, doada pelo Governo de Goiás na década de 1990, igual à instalada em Jataí. Revitalizado e aberto em dezembro de 2023 como complexo turístico, o morro tem mirante com vista da cidade, templo ecumênico e áreas de convivência, e recebe trilhas e apresentações de música caipira ao pôr do sol.",
+            "fontes": [
+              "senador-canedo-complexo-turistico-2023",
+              "senador-canedo-cristo-revitalizado-2023",
+              "senador-canedo-morro-santo-antonio-2025",
+              "senador-canedo-cristo-in-concert-2026"
+            ],
+            "descoberta": {
+              "modulo": "mirante",
+              "nota": "Na maquete, um mirante genérico no alto do morro; a estátua do Cristo não é reproduzida e as formas são ilustrativas."
+            },
+            "curto": "Morro com a estátua do Cristo, mirante e templo ecumênico; de lá a cidade se vê do alto."
+          },
+          {
+            "id": "antiga-estacao-ferroviaria",
+            "tipo": "patrimonio",
+            "titulo": "Antiga Estação Ferroviária",
+            "texto": "A estação que deu nome à cidade homenageia o senador Antônio Amaro da Silva Canedo; segundo a Prefeitura, as estações da época recebiam nomes de políticos. Foi perto dela que surgiram a zona central e o primeiro comércio. Hoje a área da antiga estação recebe festas do aniversário da cidade, e em 2026 a Prefeitura levou ao Iphan em Goiás a proposta de levantar a história e o patrimônio ferroviário do lugar.",
+            "fontes": [
+              "senador-canedo-prefeitura-cidade",
+              "ibge-biblioteca-senador-canedo-go",
+              "senador-canedo-30-anos-2019",
+              "senador-canedo-iphan-ferroviario-2026"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação genérica com plataforma e locomotiva; o prédio, os trilhos e as cores são ilustrativos."
+            },
+            "curto": "A estação que batizou a cidade; perto dela nasceram o centro e o primeiro comércio."
+          },
+          {
+            "id": "folia-de-reis",
+            "tipo": "tradicao",
+            "titulo": "Folia de Reis",
+            "texto": "Desde dezembro, grupos de Folia de Reis percorrem a cidade com música e devoção aos Santos Reis. A Prefeitura fala em mais de 50 anos de festa em Senador Canedo, e a casa de Dona Roxa, moradora antiga e uma das primeiras a promover a folia, virou ponto de encerramento das caminhadas.",
+            "fontes": [
+              "senador-canedo-folia-de-reis-2025",
+              "senador-canedo-folia-de-reis-2023"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, o lugar do acampamento da ferrovia era tão plano que ganhou o nome de Esplanada, o primeiro nome da cidade. O primeiro loteamento, abaixo da estação, se chamou Vargem Bonita, e a primeira rua aberta foi a José Calaça.",
+            "fontes": [
+              "senador-canedo-prefeitura-cidade",
+              "senador-canedo-34-anos-2023"
+            ]
+          },
+          {
+            "texto": "Antes do trem, as comitivas de boiada levavam meses na viagem e paravam a cada trinta quilômetros; o território tinha dois desses pousos, na região do Bonsucesso (Batata) e na região Bonito, na divisa com Bela Vista de Goiás.",
+            "fontes": [
+              "senador-canedo-prefeitura-cidade"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "canedense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-senador-canedo-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -16.7083,
+          "lon": -49.0928,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 155635,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 247.005,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Goiânia",
+          "intermediaria": "Goiânia",
+          "mesorregiao": "Centro Goiano",
+          "microrregiao": "Goiânia",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Cidade no Cerrado com a antiga estação e o Morro do Cristo",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.5
+        },
+        "agua": {
+          "modulo": "vereda",
+          "largura": 0.12
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            9
+          ],
+          [
+            "ipe",
+            3
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "capim",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "mirante",
+            "referencia": "morro-do-cristo"
+          },
+          {
+            "modulo": "estacao",
+            "referencia": "antiga-estacao-ferroviaria"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Datas divergem entre fontes: o IBGE põe a ferrovia na década de 1930 e a lei de município em 09-01-1988 (instalado em 01-06-1989); a notícia da Prefeitura de 2023 diz estação inaugurada em 1950 e cita a Lei 10.435 como de 9/1/1989, além de dizer que o povoado era de Bela Vista de Goiás até 1953. O texto usa as datas do IBGE e não dá ano de inauguração da estação. O IBGE registra que a lei de 1988 teve execução suspensa por medida cautelar até julgamento; o texto não entra nisso. O IBGE diz que a Fazenda Vargem Bonita era do senador; a Prefeitura diz que as terras foram dele até o início do século XX e depois tiveram outros donos, e que Vargem Bonita foi o nome do primeiro loteamento, de Dona Natália Ambrozina. O nome oficial do complexo do Morro do Cristo homenageia um ex-governador; o texto não cita o nome. A Prefeitura chama o polo petroquímico de 'o maior do Centro-Oeste'; o superlativo ficou de fora. Ficou de fora a reativação turística da linha férrea (estudo de 2019, sem conclusão). 'Estação da Cultura' aparece como local de shows na notícia de 2023 e há uma 'Estação de Cultura José Rodrigues' na Vila Santa Rosa; o texto evita esses nomes. Dona Roxa aparece como moradora há mais de 70 anos (2023) e há mais de 50 anos (2025); o texto diz só 'moradora antiga'."
+      }
+    },
+    "5221858": {
+      "identidade": {
+        "id": "5221858",
+        "ibge": "5221858",
+        "nome": "Valparaíso de Goiás",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na divisa com o Distrito Federal, a cidade que nasceu de um loteamento da época da construção de Brasília e cresceu com migrantes.",
+        "resumo": "Valparaíso de Goiás fica no Entorno do Distrito Federal, no Cerrado, com todo o território em zona urbana e córregos como o Mangal; a nascente da Bica corre para o Ribeirão Saia Velha, que abastece a cidade. A ocupação começou em 1959 com o loteamento Parque São Bernardo, ligado à construção de Brasília, e a região recebeu muitos migrantes. Em 1979 foi inaugurado o Núcleo Habitacional Valparaíso I, com 864 casas, então parte de Luziânia. Virou município em 1995, desmembrado de Luziânia, e foi instalado em 1997.",
+        "fontesResumo": [
+          "ibge-biblioteca-valparaiso-de-goias-go",
+          "valparaiso-de-goias-prefeitura-feira-do-produtor",
+          "valparaiso-de-goias-prefeitura-nascente-da-bica",
+          "valparaiso-de-goias-prefeitura-historia",
+          "valparaiso-de-goias-prefeitura-corrego-mangal"
+        ],
+        "referencias": [
+          {
+            "id": "parque-ecologico-reserva-paraiso",
+            "tipo": "natureza",
+            "titulo": "Parque Ecológico Reserva Paraíso",
+            "texto": "Área de preservação no Valparaíso I, entre as etapas D e E, inaugurada em novembro de 2018. O nome Reserva Paraíso foi escolhido numa enquete aberta à população, ao lado das opções Fulô do Cerrado e Águas do Cerrado. Tem pista de caminhada, parquinho, academia ao ar livre e um lago que completa a paisagem.",
+            "fontes": [
+              "valparaiso-de-goias-prefeitura-parque-ecologico-2021",
+              "valparaiso-de-goias-prefeitura-nome-parque-2018"
+            ]
+          },
+          {
+            "id": "sao-francisco-padroeiro",
+            "tipo": "tradicao",
+            "titulo": "São Francisco de Assis, padroeiro",
+            "texto": "Uma lei municipal de 1998 fez de São Francisco de Assis o padroeiro de Valparaíso, e o 4 de outubro virou feriado municipal. Em 2017, por exemplo, a data foi celebrada com missa solene na Paróquia de São Francisco de Assis, na Etapa A do Valparaíso I.",
+            "fontes": [
+              "valparaiso-de-goias-prefeitura-padroeiro"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica com uma torre; não reproduz a paróquia real, e cores e proporções são ilustrativas."
+            },
+            "curto": "São Francisco de Assis é o padroeiro desde 1998; o 4 de outubro é feriado municipal."
+          },
+          {
+            "id": "casa-da-cultura-mestre-saba",
+            "tipo": "cultura",
+            "titulo": "Casa da Cultura Mestre Sabá",
+            "texto": "Criada por lei municipal em 2007 e com sede entregue em 2018 no Jardim Céu Azul, a casa oferece aulas gratuitas de música, dança, artes marciais, xadrez e informática. O nome homenageia Mestre Sabá, artista plástico apontado pela Prefeitura como um dos pioneiros da cidade.",
+            "fontes": [
+              "valparaiso-de-goias-prefeitura-casa-da-cultura"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O nome tem mais de uma explicação. O histórico reproduzido pelo IBGE diz que seria homenagem a um engenheiro natural de Valparaíso, no Chile. A Prefeitura registra essa versão e acrescenta que pesquisas recentes apontam o arquiteto colombiano Cesar Barney, de Cali, como autor do projeto urbanístico.",
+            "fontes": [
+              "ibge-biblioteca-valparaiso-de-goias-go",
+              "valparaiso-de-goias-prefeitura-historia"
+            ]
+          },
+          {
+            "texto": "A primeira escola estadual do Núcleo Habitacional, de 1979, é conhecida até hoje como Colégio Redondo, segundo a Prefeitura.",
+            "fontes": [
+              "valparaiso-de-goias-prefeitura-31-anos"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "valparaisense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-valparaiso-de-goias-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -16.0685,
+          "lon": -47.982,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 198861,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 61.488,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Luziânia",
+          "intermediaria": "Luziânia - Águas Lindas de Goiás",
+          "mesorregiao": "Leste Goiano",
+          "microrregiao": "Entorno de Brasília",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Cidade de bairros planejados no Cerrado, junto ao Distrito Federal",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.1,
+          "direcao": -0.8
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            8
+          ],
+          [
+            "ipe",
+            5
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "capim",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 13,
+          "predios": 3
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "sao-francisco-padroeiro"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Município novo (1995), sem verbete na Enciclopédia dos Municípios do IBGE de 1959; não achei fonte oficial sobre relevo, por isso o resumo não fala de relevo e a planície do cenário é ilustrativa (o hino municipal fala de 'vale' e 'terra vermelha', mas em linguagem poética, e não foi usado). Datas: a Biblioteca do IBGE dá a Lei estadual 12.667 de 18-07-1995; a notícia dos 31 anos da Prefeitura (2026) diz 15 de junho de 1995 e comemora o aniversário em 15 de junho; o resumo diz só 1995. A Prefeitura chama 19 de abril de 1979 de data da 'fundação' do núcleo, oficializada por decreto de 1980; o texto evita a palavra fundação. Nome: duas versões (engenheiro de Valparaíso, Chile; arquiteto colombiano Cesar Barney como autor do projeto urbanístico); atribuídas na curiosidade. Ficaram de fora nomes de prefeitos e frases de superlativo da Prefeitura ('um dos que mais crescem no Brasil', 'entre as 10 mais seguras'). Em 2024 a Prefeitura noticiou extravasamento de esgoto no lago do Parque Ecológico; a referência não fala da qualidade da água. Só um marco: não há forma de maquete adequada para o parque (lago sem ilha nem píer conferidos) nem para a Casa da Cultura."
+      }
+    },
+    "4116208": {
+      "identidade": {
+        "id": "4116208",
+        "ibge": "4116208",
+        "nome": "Morretes",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Ao pé da Serra do Mar, às margens do Nhundiaquara, a cidade que cresceu entre o litoral e o planalto com caminhos de pedra e canoas.",
+        "resumo": "Morretes fica no litoral do Paraná, ao pé da Serra do Mar, às margens do rio Nhundiaquara, com serras como a do Marumbi e a da Graciosa ao redor. A região, território dos carijós, atraiu mineradores vindos de São Paulo em busca de ouro no século XVII, e a sede da futura povoação foi demarcada em 1733. Ligada ao Caminho do Itupava e à navegação pelo rio, virou entreposto entre o litoral e o planalto e, no século XIX, centro de engenhos de erva-mate. Vila em 1841 e cidade em 1869, recebeu em definitivo o nome Morretes em 1870.",
+        "fontesResumo": [
+          "morretes-cpc-pr-conjunto-historico",
+          "morretes-ibge-enciclopedia-1959",
+          "ibge-biblioteca-morretes-pr"
+        ],
+        "referencias": [
+          {
+            "id": "centro-historico-de-morretes",
+            "tipo": "patrimonio",
+            "titulo": "Centro Histórico de Morretes",
+            "texto": "Tombado pelo Estado em 2022, o conjunto fica na margem direita do Nhundiaquara, ao pé da serra. O traçado é orgânico, ligado ao rio, aos caminhos e aos largos, com casas baixas de lotes estreitos e quintais, pontes, praças e a ferrovia. O tombamento reconhece também usos que fazem parte da vida da cidade, como a cachaça, o barreado e os restaurantes à beira do rio.",
+            "fontes": [
+              "morretes-cpc-pr-conjunto-historico"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão colonial simplificado representa o conjunto, sem reproduzir um imóvel; cores e proporções são ilustrativas."
+            },
+            "curto": "Centro tombado em 2022, de casas baixas entre o rio Nhundiaquara e a Serra do Mar."
+          },
+          {
+            "id": "igreja-sao-sebastiao-porto-de-cima",
+            "tipo": "patrimonio",
+            "titulo": "Igreja de São Sebastião de Porto de Cima",
+            "texto": "Em Porto de Cima, à beira do Nhundiaquara, a capela começou a ser construída em 1779 e foi ampliada a partir da década de 1840. Na ampliação, a antiga capela virou capela-mor, e a igreja ficou com duas fachadas, a antiga e a nova. Foi tombada pelo Estado em 1963, um dos primeiros tombamentos do Paraná.",
+            "fontes": [
+              "morretes-cpc-pr-igreja-sao-sebastiao"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica com uma torre central; a igreja real tem torre lateral e duas fachadas. Cores e proporções são ilustrativas."
+            },
+            "curto": "Igreja de Porto de Cima, iniciada em 1779, com duas fachadas; tombada em 1963."
+          },
+          {
+            "id": "serra-do-mar-itupava-marumbi",
+            "tipo": "paisagem",
+            "titulo": "Serra do Mar, Itupava e Marumbi",
+            "texto": "A Serra do Mar, tombada pelo Paraná em 1986, inclui áreas de Morretes. Nela passa o Caminho do Itupava, trilha de origem indígena usada por cerca de dois séculos entre o planalto e o litoral, com trechos calçados de pedra. O Pico Marumbi, com primeira escalada registrada em 1879, é ligado à história do montanhismo no país.",
+            "fontes": [
+              "morretes-cpc-pr-serra-do-mar"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico reproduzido pelo IBGE, o nome vem dos pequenos morros, chamados morretes, que cercam a cidade. A Enciclopédia dos Municípios do IBGE, de 1959, acrescenta que Morretes seria uma boa tradução do tupi-guarani acu-antan, terra de morros e picos, origem do antigo nome Cubatão do rio.",
+            "fontes": [
+              "ibge-biblioteca-morretes-pr",
+              "morretes-ibge-enciclopedia-1959"
+            ]
+          },
+          {
+            "texto": "A Irmandade de São Benedito foi fundada em Morretes em 1760 e reunia negros escravizados e pessoas livres. A capela da irmandade, tombada pelo Estado em 1985, foi construída entre 1865 e 1895.",
+            "fontes": [
+              "morretes-cpc-pr-igreja-sao-benedito"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "morretense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-morretes-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -25.479,
+          "lon": -48.8335,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 18309,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 684.58,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Paranaguá",
+          "intermediaria": "Curitiba",
+          "mesorregiao": "Metropolitana de Curitiba",
+          "microrregiao": "Paranaguá",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "serra",
+          "rio",
+          "vale"
+        ],
+        "rotulo": "Cidade colonial à beira do Nhundiaquara, ao pé da Serra do Mar",
+        "base": "vale",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 1.3
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.2,
+          "direcao": 0.5
+        },
+        "vegetacao": [
+          [
+            "mata",
+            16
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 10,
+          "predios": 0
+        },
+        "extras": [
+          "lavoura"
+        ],
+        "marcos": [
+          {
+            "modulo": "casarao",
+            "referencia": "centro-historico-de-morretes"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-sao-sebastiao-porto-de-cima"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Nome na formação: a Biblioteca do IBGE dá freguesia e vila com o nome Nhundiaquara (1811/1812 e 1841) e a mudança para Morretes em 1870; a Enciclopédia de 1959 diz que a vila foi criada como Morretes em 1841, recebeu o nome Nhundiaquara em 1869 e voltou a Morretes em 1870. O resumo diz só que o nome Morretes foi fixado em 1870, comum às duas. Ouro: a Biblioteca fala de 1646 e a Enciclopédia de jazidas descobertas de 1648 a 1653; o resumo diz 'século XVII'. O histórico do IBGE chama 1721 de fundação oficial; o texto usa a demarcação de 1733 (Enciclopédia e CPC dizem que a formação se consolidou em 1733). Teatro: o histórico do IBGE cita o '1º Theatro do Paraná' em 1848 e a Enciclopédia um teatro de madeira em 1823; ficou de fora. A Enciclopédia chama Morretes de 'maior produtor de bananas do Paraná' (1959); superlativo e dado antigo, fora do texto. Barreado e cachaça aparecem só como usos citados pela CPC, sem detalhe de receita ou origem."
+      }
+    },
+    "5208905": {
+      "identidade": {
+        "id": "5208905",
+        "ibge": "5208905",
+        "nome": "Goiás",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "A antiga Vila Boa, à beira do Rio Vermelho e ao pé da Serra Dourada, com ruas de pedra e casas do tempo do ouro.",
+        "resumo": "A cidade de Goiás fica numa bacia formada por contrafortes da Serra Dourada, banhada pelo Rio Vermelho, e nos morros em volta havia cerradão. Segundo a Prefeitura, nasceu em 1727 como Arraial de Sant'Anna, no ciclo do ouro, fundado pelo bandeirante Bartolomeu Bueno da Silva Filho, o Anhanguera. Foi distrito em 1729, vila em 1736, instalada em 1739 como Vila Boa de Goiás, e cidade em 1818; deixou de ser capital em 1937, com a mudança para Goiânia. Manteve as casas coloniais, muitas de pau-a-pique, e em 2001 a Unesco a reconheceu como Patrimônio Mundial.",
+        "fontesResumo": [
+          "goias-ibge-enciclopedia-municipios",
+          "goias-prefeitura-projeto-300-anos",
+          "ibge-biblioteca-goias-go",
+          "goias-iphan-patrimonio-mundial"
+        ],
+        "gentilico": {
+          "oficial": "goiano",
+          "variantes": [
+            "vilaboense"
+          ],
+          "nota": "A Enciclopédia dos Municípios do IBGE (1958) registra que os habitantes são chamados vilaboenses e também goianos.",
+          "fontes": [
+            "ibge-biblioteca-goias-go",
+            "goias-ibge-enciclopedia-municipios"
+          ]
+        },
+        "referencias": [
+          {
+            "id": "museu-das-bandeiras",
+            "tipo": "patrimonio",
+            "titulo": "Museu das Bandeiras, na antiga cadeia",
+            "texto": "O museu ocupa um prédio de 1766 que serviu de cadeia até 1950, quando o governo do Estado o doou à União; antes, a antiga Casa de Câmara e Cadeia foi tombada pelo Patrimônio Histórico. O nome lembra os bandeirantes que passaram pela região. O acervo reúne móveis coloniais goianos, prataria, imagens sacras, indumentária militar e documentos da capitania e da província.",
+            "fontes": [
+              "goias-iphan-patrimonio-mundial",
+              "goias-ibge-enciclopedia-municipios"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão colonial genérico; o prédio real da antiga cadeia tem outra forma, e proporções e cores são ilustrativas."
+            },
+            "curto": "Antiga cadeia de 1766, hoje Museu das Bandeiras, com acervo da capitania e da província."
+          },
+          {
+            "id": "procissao-do-fogareu",
+            "tipo": "tradicao",
+            "titulo": "Procissão do Fogaréu",
+            "texto": "Na Semana Santa, farricocos encapuzados, com tochas acesas, saem da porta do Museu de Arte Sacra da Boa Morte e percorrem as ruas encenando a busca e a prisão de Jesus. Em Goiás, a procissão teria começado por volta de 1745 e sumiu no início do século XX; foi retomada a partir de 1965 pela Organização Vilaboense de Artes e Tradições (OVAT). Uma lei estadual de 2023 a reconheceu como patrimônio cultural imaterial.",
+            "fontes": [
+              "goias-governo-go-procissao-do-fogareu"
+            ]
+          },
+          {
+            "id": "serra-dourada",
+            "tipo": "natureza",
+            "titulo": "Serra Dourada",
+            "texto": "Os contrafortes da serra formam a bacia onde a cidade foi erguida. Parte dela está no Parque Estadual da Serra Dourada, que o Estado mantém entre a Cidade de Goiás, Mossâmedes e Buriti de Goiás para proteger nascentes, flora e fauna, com cachoeiras, afloramentos rochosos e vegetação variada.",
+            "fontes": [
+              "goias-semad-go-parque-serra-dourada",
+              "goias-ibge-enciclopedia-municipios"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Enciclopédia dos Municípios do IBGE, de 1958, o nome Vila Boa de Goiás juntava uma homenagem ao fundador, Bueno, e aos primeiros habitantes da região, os indígenas Goiás, também chamados Guaiases.",
+            "fontes": [
+              "goias-ibge-enciclopedia-municipios"
+            ]
+          },
+          {
+            "texto": "A mesma Enciclopédia registra uma lenda da cidade: quem bebe água do chafariz da Carioca não vai mais embora de Goiás.",
+            "fontes": [
+              "goias-ibge-enciclopedia-municipios"
+            ]
+          }
+        ]
+      },
+      "geografia": {
+        "sede": {
+          "lat": -15.934,
+          "lon": -50.1402,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 24071,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 3108.423,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Goiás - Itapuranga",
+          "intermediaria": "Goiânia",
+          "mesorregiao": "Noroeste Goiano",
+          "microrregiao": "Rio Vermelho",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "vale",
+          "rio",
+          "cerrado"
+        ],
+        "rotulo": "Vila colonial no vale do Rio Vermelho, ao pé da Serra Dourada",
+        "base": "vale",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.8
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.14
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            12
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "arbusto",
+            6
+          ],
+          [
+            "redonda",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 14
+        },
+        "marcos": [
+          {
+            "modulo": "casarao",
+            "referencia": "museu-das-bandeiras"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Nome da vila: a formação administrativa do IBGE diz 'Boa Vista de Goiás' (Carta Régia de 1736), mas a Enciclopédia do IBGE e o Iphan falam em Vila Boa; o texto usa Vila Boa de Goiás. Fundação: a Prefeitura dá 1727 como fundação do Arraial de Sant'Anna (o resumo atribui a ela); o IBGE registra distrito em 1729. Prédio da cadeia: Iphan diz 1766. O texto não usa os superlativos das fontes ('primeiro núcleo urbano', 'mais de 90% da arquitetura colonial original', 'único sítio com arquitetura vernacular', 'maior expressividade' do Fogaréu, 'maior biblioteca do Estado'). O horário da procissão (meia-noite de quinta-feira) ficou de fora para não prometer horário; 'teria começado por volta de 1745' segue o 'estima-se' da fonte. A Enciclopédia de 1958 também registra a Cruz do Anhanguera, com autenticidade discutida, e a lenda do nome Anhanguera (o 'diabo velho'), que envolve violência contra os indígenas; ambos ficaram de fora. O cerradão do resumo é o 'grosso cerradão' do morro de Santa Bárbara, citado numa lenda de 1958; a revisão pode preferir fonte atual sobre vegetação. Só um marco: a procissão não tem módulo, e a Serra Dourada não tem forma própria."
       }
     }
   }
