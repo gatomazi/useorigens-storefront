@@ -16,7 +16,7 @@ export * from "./ink-theme-schema";
 
 export type InkThemeTokens = {
   action: string; onAction: string; selected: string; onSelected: string;
-  ground: string; surface: string; paper: string; ink: string; inkSoft: string; inkMute: string; line: string;
+  ground: string; surface: string; paper: string; photo: string; ink: string; inkSoft: string; inkMute: string; line: string;
   radius: 0 | 8; font: "origens" | "ink";
 };
 export type PublicInkTheme = { v: 1; region: RegionSlug; surfaces: InkThemeConfig["surfaces"]; tokens: InkThemeTokens };
@@ -41,6 +41,8 @@ export function inkThemeTokens(region: RegionSlug, config: InkThemeConfig): { to
     ground: config.ground === "branco" ? n.white : n.ground,
     surface: n.white,
     paper: n.paper,
+    // The grey of every INK product photo (and of the storefront ground): behind the gallery and the thumbnails, whatever the page ground is.
+    photo: n.ground,
     ink: n.ink,
     inkSoft: n.inkSoft,
     inkMute: n.inkMute,
@@ -64,7 +66,7 @@ export const INK_SURFACE_LABEL: Record<keyof InkThemeConfig["surfaces"], string>
 };
 export const INK_PRESET_LABEL = {
   action: { ink: "Preto (como o botão do site)", region: "Cor da região" },
-  ground: { vitrine: "Cinza do site (o mesmo das fotos)", branco: "Branco" },
+  ground: { branco: "Claro (o cinza fica só atrás da camiseta)", vitrine: "Cinza do site na página inteira" },
   corners: { retos: "Retos (como o site)", suaves: "Levemente arredondados" },
   font: { vitrine: "Hanken Grotesk (a do site)", ink: "Poppins (a da INK)" },
 } as const;

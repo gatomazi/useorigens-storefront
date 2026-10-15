@@ -17,13 +17,13 @@ export const INK_THEME_FONTS = ["vitrine", "ink"] as const;
 
 /**
  * REGION only. `surfaces` = the owner's switch per surface (the Worker's deploy flags stay the ceiling). Absent = everything off and the presets of
- * the storefront product page: the first configuration reproduces it faithfully (black action, the storefront grey, square corners, its font).
+ * the storefront product page (black action, square corners, its font) with the composition of round 2: a light page and the photo grey behind the garment.
  */
 export type InkThemeConfig = {
   surfaces: Record<InkThemeSurface, boolean>;
   /** Main action ("Adicionar ao carrinho", "Finalizar compra"): black like the storefront button, or the region's primary colour. */
   action: (typeof INK_THEME_ACTIONS)[number];
-  /** Page ground of the product page: the storefront grey (the same grey as the INK photos) or white. */
+  /** Page ground of the product page: white (round 2 default: the photo grey stays behind the garment only) or the storefront grey everywhere. */
   ground: (typeof INK_THEME_GROUNDS)[number];
   /** Buttons, chips, fields and cards: square like the storefront, or slightly rounded (8 px). */
   corners: (typeof INK_THEME_CORNERS)[number];
@@ -34,7 +34,7 @@ export type InkThemeConfig = {
 export const DEFAULT_INK_THEME: InkThemeConfig = Object.freeze({
   surfaces: Object.freeze({ pdp: false, cart: false, checkout: false }),
   action: "ink",
-  ground: "vitrine",
+  ground: "branco",
   corners: "retos",
   font: "vitrine",
 }) as InkThemeConfig;

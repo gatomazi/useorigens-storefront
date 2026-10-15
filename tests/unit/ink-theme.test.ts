@@ -15,7 +15,7 @@ const ok = (d: ScopeDoc, op: Parameters<typeof applyOp>[1]) => {
   if (!r.ok) throw new Error(r.errors.join("; "));
   return r.doc;
 };
-const ON: InkThemeConfig = { surfaces: { pdp: true, cart: true, checkout: false }, action: "ink", ground: "vitrine", corners: "retos", font: "vitrine" };
+const ON: InkThemeConfig = { surfaces: { pdp: true, cart: true, checkout: false }, action: "ink", ground: "branco", corners: "retos", font: "vitrine" };
 const HEX = /^#[0-9a-f]{6}$/;
 
 describe("Tema da INK: contract", () => {
@@ -24,8 +24,9 @@ describe("Tema da INK: contract", () => {
     expect(inkThemeOf(undefined)).toBe(DEFAULT_INK_THEME);
     const p = inkThemePayload("sul", undefined);
     expect(p).toMatchObject({ v: 1, region: "sul", surfaces: { pdp: false, cart: false, checkout: false } });
-    // Fiel à PDP do storefront: botão preto, cinza #e5e5e5 (o das fotos), cantos retos, Hanken Grotesk, selecionado na cor da região.
-    expect(p.tokens).toMatchObject({ action: "#000000", onAction: "#ffffff", ground: "#e5e5e5", radius: 0, font: "origens", selected: REGION_THEME.sul.primary });
+    // Identidade da PDP do storefront (botão preto, cantos retos, Hanken Grotesk, selecionado na cor da região) com a composição da rodada 2: página clara e o
+    // cinza das fotos (#e5e5e5) só atrás da camiseta.
+    expect(p.tokens).toMatchObject({ action: "#000000", onAction: "#ffffff", ground: "#ffffff", photo: "#e5e5e5", radius: 0, font: "origens", selected: REGION_THEME.sul.primary });
   });
 
   test("given bad values, when validated, then each is refused (only presets; no free colour, CSS or text) and global has none", () => {
@@ -41,7 +42,7 @@ describe("Tema da INK: contract", () => {
     for (const region of ["sul", "norte", "centro-oeste"] as const) {
       for (const action of ["ink", "region"] as const) for (const ground of ["vitrine", "branco"] as const) {
         const { tokens } = inkThemeTokens(region, { ...ON, action, ground });
-        for (const k of ["action", "onAction", "selected", "onSelected", "ground", "surface", "paper", "ink", "inkSoft", "inkMute", "line"] as const) expect(tokens[k]).toMatch(HEX);
+        for (const k of ["action", "onAction", "selected", "onSelected", "ground", "surface", "paper", "photo", "ink", "inkSoft", "inkMute", "line"] as const) expect(tokens[k]).toMatch(HEX);
         expect(contrastRatio(tokens.action, tokens.onAction)).toBeGreaterThanOrEqual(4.5);
         expect(contrastRatio(tokens.selected, tokens.onSelected)).toBeGreaterThanOrEqual(4.5);
         for (const bg of [tokens.ground, tokens.surface, tokens.paper]) { expect(contrastRatio(tokens.ink, bg)).toBeGreaterThanOrEqual(4.5); expect(contrastRatio(tokens.inkMute, bg)).toBeGreaterThanOrEqual(4.5); }
