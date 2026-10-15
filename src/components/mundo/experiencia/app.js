@@ -1541,6 +1541,8 @@ async function carregarDados() {
   try {
     await Promise.all([real.carregarIndice(), perfis]);
     dados = real;
+    // índice gerado antes do campo `p` (nenhum lugar marcado): continua buscando por tentativa
+    if (dados.temMarcaDePerfil?.()) contexto.usarIndice((id) => !!dados.lugar(id)?.p);
     estadoDados = 'pronto';
   } catch {
     estadoDados = 'erro';

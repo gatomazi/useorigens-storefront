@@ -1,4 +1,5 @@
 import "server-only";
+import perfisCidades from "../../../data/mundo/perfis-cidades.json";
 import sedesIbge from "../../../data/mundo/sedes-municipais-ibge-2022.json";
 import { getCatalog } from "../catalog/repository";
 import { localitiesOfRegion } from "../geo/localities";
@@ -15,7 +16,9 @@ import { STATE_CAPITAL_SLUG, type RegionSlug } from "../geo/regions";
  * Prices are left out on purpose: the snapshot can be days old and the experience must not show a price INK no longer charges.
  */
 
-export type IndiceLugar = { i: string; n: string; u: string; r: RegionSlug; s: string; a?: string[]; m?: string; t?: "ra"; c?: 1 };
+/** `p: 1` = the place has a curated profile (the experience fetches only those, never a 404 per place). */
+export type IndiceLugar = { i: string; n: string; u: string; r: RegionSlug; s: string; a?: string[]; m?: string; t?: "ra"; c?: 1; p?: 1 };
+const COM_PERFIL = new Set(Object.keys((perfisCidades as { cidades: Record<string, unknown> }).cidades));
 export type Referencia = { sede?: { lat: number; lon: number; tipo: "sede" | "ra"; nomeIbge?: string }; rgi?: string; rgint?: string };
 export type LugarDoMundo = {
   v: 1;
@@ -66,6 +69,7 @@ export function indiceDoMundo(regions: readonly RegionSlug[]): IndiceLugar[] {
         ...(place.meso ? { m: place.meso } : {}),
         ...(place.type === "administrative_region" ? { t: "ra" as const } : {}),
         ...(STATE_CAPITAL_SLUG[place.uf] === place.slug && place.type === "municipality" ? { c: 1 as const } : {}),
+        ...(COM_PERFIL.has(place.id) ? { p: 1 as const } : {}),
       });
     }
   }

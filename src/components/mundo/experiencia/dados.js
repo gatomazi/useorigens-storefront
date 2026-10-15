@@ -55,7 +55,7 @@ export function prepararIndice(lugares) {
   const preparados = [];
   for (const l of lugares) {
     if (!lugarValido(l) || porId.has(l.i)) continue;
-    const lugar = { i: l.i, n: l.n, u: l.u, r: l.r, s: typeof l.s === 'string' ? l.s : '', m: typeof l.m === 'string' ? l.m : '', t: l.t === 'ra' ? 'ra' : undefined, c: l.c === 1 };
+    const lugar = { i: l.i, n: l.n, u: l.u, r: l.r, s: typeof l.s === 'string' ? l.s : '', m: typeof l.m === 'string' ? l.m : '', t: l.t === 'ra' ? 'ra' : undefined, c: l.c === 1, p: l.p === 1 };
     porId.set(lugar.i, lugar);
     const chave = normalizar(lugar.n);
     preparados.push({ lugar, chave, palavras: chave.split(' '), apelidos: Array.isArray(l.a) ? l.a.filter((a) => typeof a === 'string').map(normalizar) : [] });
@@ -92,6 +92,7 @@ export function adaptadorCatalogo(base) {
     },
     buscar: (q, limite) => buscarNoIndice(indice, q, limite),
     lugar: (id) => indice?.porId.get(id) ?? null,
+    temMarcaDePerfil: () => !!indice && [...indice.porId.values()].some((l) => l.p),
     async produtos(id) {
       if (produtosCache.has(id)) return produtosCache.get(id);
       const pedido = (async () => {
@@ -253,8 +254,10 @@ export function adaptadorContexto() {
     }
   }
   /** Busca o perfil de um lugar uma vez só; sem resposta em 8 s, ou com erro, o lugar segue com o cenário regional. */
+  let temPerfil = null; // do índice do catálogo (`p: 1`); sem ele, tenta buscar
   function buscar(id) {
-    if (perfis.has(id) || !ID_VALIDO.test(id)) return Promise.resolve();
+    if (perfis.has(id)) return Promise.resolve();
+    if (!ID_VALIDO.test(id) || (temPerfil && !temPerfil(id))) { perfis.set(id, null); return Promise.resolve(); }
     if (!pedidos.has(id)) {
       const url = new URL(CONTEXTO.lugar(chaveArquivo(id)), new URL(CONTEXTO.base, location.href));
       const pedido = Promise.race([
@@ -270,6 +273,8 @@ export function adaptadorContexto() {
   return {
     /** Garante os perfis destes lugares antes de a cena criar as ilhas (a ilha nasce com o cenário do perfil). Nunca falha. */
     garantir: (ids) => Promise.all([...new Set(ids.filter(Boolean))].map(buscar)),
+    /** Só busca o arquivo dos lugares que o índice marca com perfil (os outros dariam 404). */
+    usarIndice: (fn) => { temPerfil = fn; },
     conhecido: (id) => perfis.has(id),
     perfil: (id) => perfis.get(id) ?? null,
     fonte: (chave) => fontes[chave] ?? null,

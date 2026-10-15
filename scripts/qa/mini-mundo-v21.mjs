@@ -279,7 +279,7 @@ async function arrastar(page, x, y, dx) {
 
   // cidade sem perfil
   const sp = await novaPagina("mobile");
-  await sp.page.goto(`${base}?mundo=1&origem=4301602`);
+  await sp.page.goto(`${base}?mundo=1&origem=4100103`); // Abatiá (PR), sem perfil
   await pronta(sp.page);
   await sp.page.waitForTimeout(3000);
   await sp.page.click("#lista-lugares li:nth-child(1) .lugar-conhecer");
