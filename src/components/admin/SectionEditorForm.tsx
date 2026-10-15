@@ -438,11 +438,18 @@ export function SectionEditorForm({
             <div className="space-y-2 border border-black/20 p-3">
               <input type="hidden" name="layout_buy_present" value="1" />
               <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="layout_buy" checked={buyOn} onChange={(e) => setBuyOn(e.target.checked)} /> Botão de compra em cada card de produto</label>
-              <p className="a-muted text-[0.8125rem]">Um botão no pé de cada card, alinhado em todos. Ele faz parte do próprio card: abre a mesma página do produto na loja (onde a pessoa escolhe tamanho e cor) e conta o mesmo clique. O texto sugerido é “{DEFAULT_BUY_LABEL}”; dá para trocar por “Comprar”, por exemplo. O card personalizável mostra o texto do botão dele no mesmo formato.</p>
+              <p className="a-muted text-[0.8125rem]">Um botão no pé de cada card, alinhado em todos. Ele faz parte do próprio card: abre a mesma página do produto na loja (onde a pessoa escolhe tamanho e cor) e conta o mesmo clique. O texto sugerido é “{DEFAULT_BUY_LABEL}”; dá para trocar por “Comprar”, por exemplo. No formato “carrinho na imagem”, um botão redondo de carrinho fica no canto da foto e o texto vira o nome dele para leitores de tela. Com o botão embaixo, o card personalizável mostra o texto do botão dele no mesmo formato.</p>
               {buyOn && (
                 <div className="max-w-xs">
                   <label className="a-label" htmlFor="layout_buy_label">Texto do botão</label>
                   <input id="layout_buy_label" name="layout_buy_label" defaultValue={section.layout?.buyLabel ?? DEFAULT_BUY_LABEL} className="a-input" maxLength={MAX_BUY_LABEL} placeholder={DEFAULT_BUY_LABEL} />
+                  <fieldset className="mt-3">
+                    <legend className="a-label">Formato</legend>
+                    <div className="flex flex-wrap gap-4">
+                      <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="button" defaultChecked={section.layout?.buyStyle !== "fab"} /> Botão embaixo</label>
+                      <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="fab" defaultChecked={section.layout?.buyStyle === "fab"} /> Carrinho na imagem</label>
+                    </div>
+                  </fieldset>
                 </div>
               )}
             </div>

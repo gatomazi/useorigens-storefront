@@ -59,7 +59,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function CityPage({ params }: { params: Params }) {
   const { region, uf, city: citySlug } = await params;
   // The store-wide buy button (Aparência, global): on the styles' cards too.
-  const buyLabel = storeCardButton();
+  const buy = storeCardButton();
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const resolved = resolveCity(region, uf, citySlug);
   if (!resolved) notFound();
@@ -163,7 +163,7 @@ export default async function CityPage({ params }: { params: Params }) {
             // mounted only when that piece is chosen, so the document carries one grid instead of ten.
             <CityGarmentTabs
               tabs={garment.tabs}
-              buyLabel={buyLabel}
+              buy={buy}
               panels={Object.fromEntries(
                 garment.tabs.map((tab) => [
                   tab.id,
@@ -182,7 +182,7 @@ export default async function CityPage({ params }: { params: Params }) {
               )}
             />
           ) : (
-            <FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk buyLabel={buyLabel} />
+            <FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk buy={buy} />
           )
         ) : (
           <p className="t-body max-w-xl">Ainda não temos camisetas de {city.name} na loja. Volte em breve ou escolha outra cidade da região.</p>

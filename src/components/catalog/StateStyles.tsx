@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { CardBuy } from "@/lib/site-config/cards-schema";
 import type { StateStyle } from "@/lib/editorial/state-styles";
 import { ProductCarousel } from "./ProductCarousel";
 
@@ -8,7 +9,7 @@ import { ProductCarousel } from "./ProductCarousel";
  * "Escolha o estilo" on a state page: one carousel, switched by a row of style buttons (never eight stacked carousels). The first style is
  * selected on load; the other rows are already in the page, so switching is instant and nothing is fetched.
  */
-export function StateStyles({ stateName, styles, sourceSection, buyLabel }: { stateName: string; styles: StateStyle[]; sourceSection: string; buyLabel?: string }) {
+export function StateStyles({ stateName, styles, sourceSection, buy }: { stateName: string; styles: StateStyle[]; sourceSection: string; buy?: CardBuy }) {
   const [selectedId, setSelectedId] = useState(styles[0]?.id);
   const selected = styles.find((s) => s.id === selectedId) ?? styles[0];
   if (!selected) return null;
@@ -39,7 +40,7 @@ export function StateStyles({ stateName, styles, sourceSection, buyLabel }: { st
       viewAllHref={selected.viewAllHref ?? undefined}
       viewAllLabel={`Ver todas de ${selected.name}`}
       sourceSection={sourceSection}
-      buyLabel={buyLabel}
+      buy={buy}
       toolbar={chips}
     />
   );

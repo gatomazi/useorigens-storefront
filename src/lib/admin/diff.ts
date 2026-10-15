@@ -119,10 +119,10 @@ function navigationChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
 
 /** The store-wide buy button of the product cards (global scope). Pure. */
 function cardsChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
-  const was = published.cards?.buyLabel;
-  const now = draft.cards?.buyLabel;
-  if (was === now) return [];
-  const text = (label: string | undefined) => (label ? `botão “${label}” em todos os cards` : "cada seção decide");
+  const was = published.cards;
+  const now = draft.cards;
+  if (was?.buyLabel === now?.buyLabel && was?.buyStyle === now?.buyStyle) return [];
+  const text = (cards: typeof was) => (cards ? `${cards.buyStyle === "fab" ? "carrinho na imagem" : "botão"} “${cards.buyLabel}” em todos os cards` : "cada seção decide");
   return [{ kind: "theme", sectionId: "cards:buy", text: `Botão nos cards de produto: ${text(was)} → ${text(now)}` }];
 }
 
