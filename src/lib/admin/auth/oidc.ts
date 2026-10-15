@@ -85,7 +85,10 @@ export function unpackLoginState(cookie: string | undefined, secret: string, now
 }
 
 /** Only same-site admin paths may be a post-login destination (no open redirect). */
-export const safeNext = (raw: string | null | undefined): string => (raw && /^\/admin(\/[A-Za-z0-9_\-./]*)?$/.test(raw) && !raw.includes("//") && !raw.includes("..") && !raw.startsWith("/admin/login") && !raw.startsWith("/admin/auth") ? raw : "/admin");
+/** The MCP connector's consent page is the one place a login must come back to WITH its query (the OAuth request): URL-encoded only. */
+const OAUTH_AUTHORIZE_NEXT = /^\/admin\/oauth\/authorize\?[A-Za-z0-9_\-.~*%&=+]{1,1800}$/;
+export const safeNext = (raw: string | null | undefined): string =>
+  raw && (OAUTH_AUTHORIZE_NEXT.test(raw) || (/^\/admin(\/[A-Za-z0-9_\-./]*)?$/.test(raw) && !raw.includes("//") && !raw.includes("..") && !raw.startsWith("/admin/login") && !raw.startsWith("/admin/auth"))) ? raw : "/admin";
 
 export const constantTimeEqual = (a: string, b: string): boolean => {
   const x = Buffer.from(a);
