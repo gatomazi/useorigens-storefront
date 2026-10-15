@@ -1,7 +1,9 @@
 import "server-only";
-import { readSnapshot } from "../catalog/snapshot-file";
+import { commercePlan, SINGLE_STORE_KEY, singleStoreDataDir } from "../catalog/commerce-mode";
+import { readSnapshot, snapshotPath } from "../catalog/snapshot-file";
 import type { UnrankedBinding } from "../catalog/types";
-import { REGIONS, REGION_SLUGS, type RegionSlug } from "../geo/regions";
+import { REGIONS, REGION_SLUGS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { tokenFor } from "../ink/config";
 import { fetchStorePaidOrders } from "../ink/orders-client";
 import { computePodioSnapshot } from "./compute";
 import { podioEnabled } from "./enabled";
@@ -24,9 +26,41 @@ export type PodioSyncDeps = {
   baseDir?: string;
 };
 
+/**
+ * The stores whose orders count for a region's pódio. Regional mode: the region's own store. Single-store mode: the single store AND the region's
+ * old store while it still has a credential, so the 30-day window does not lose the sales made there before the switch.
+ */
+export function podioStoresFor(region: RegionSlug): CommerceStoreKey[] {
+  const own = REGIONS[region].storeKey;
+  if (commercePlan().effective !== "single-store") return [own];
+  return own === SINGLE_STORE_KEY || !tokenFor(own) ? [SINGLE_STORE_KEY] : [SINGLE_STORE_KEY, own];
+}
+
+/** The city-design bindings of every store of the region's pódio: the single store's from its own snapshot, a regional store's from the regional one. */
 async function catalogBindings(region: RegionSlug): Promise<UnrankedBinding[] | null> {
-  const index = (await readSnapshot()).stores[REGIONS[region].storeKey];
-  return index && index.bindings.length > 0 ? index.bindings : null;
+  const singleStore = commercePlan().effective === "single-store";
+  const out: UnrankedBinding[] = [];
+  for (const store of podioStoresFor(region)) {
+    const file = singleStore && store === SINGLE_STORE_KEY ? snapshotPath(singleStoreDataDir()) : snapshotPath();
+    out.push(...((await readSnapshot(file)).stores[store]?.bindings ?? []));
+  }
+  return out.length > 0 ? out : null;
+}
+
+/** Paid orders of the region's pódio stores. An order id is only unique inside its store, so it is prefixed when there is more than one. */
+async function podioOrders(region: RegionSlug, range: { beginDate: string; endDate: string }, cache: Map<string, Promise<{ orders: PodioOrder[]; requests: number }>>) {
+  const stores = podioStoresFor(region);
+  const orders: PodioOrder[] = [];
+  let requests = 0;
+  for (const store of stores) {
+    // The single store serves three regions in one run: its orders are read once and shared (each region keeps only its own UFs).
+    const key = `${store}|${range.beginDate}|${range.endDate}`;
+    if (!cache.has(key)) cache.set(key, fetchStorePaidOrders(store, range));
+    const fetched = await cache.get(key)!;
+    requests += fetched.requests;
+    orders.push(...(stores.length > 1 ? fetched.orders.map((o) => ({ ...o, orderId: `${store}:${o.orderId}` })) : fetched.orders));
+  }
+  return { orders, requests };
 }
 
 /**
@@ -35,7 +69,7 @@ async function catalogBindings(region: RegionSlug): Promise<UnrankedBinding[] | 
  * attempt: pages keep the last good snapshot (up to 72 h) and say the update is pending. A complete run with zero sales is published as
  * such and clears the podium.
  */
-export async function syncRegionPodio(region: RegionSlug, deps: PodioSyncDeps = {}): Promise<RegionPodioResult> {
+export async function syncRegionPodio(region: RegionSlug, deps: PodioSyncDeps = {}, ordersCache = new Map<string, Promise<{ orders: PodioOrder[]; requests: number }>>()): Promise<RegionPodioResult> {
   const now = (deps.now ?? (() => new Date()))();
   const window = windowFor(now);
   const previousState = readRunState(region, deps.baseDir);
@@ -51,7 +85,7 @@ export async function syncRegionPodio(region: RegionSlug, deps: PodioSyncDeps = 
   try {
     // INK filters by creation DAY in an undocumented time zone: pad one day on each side, the exact instants are filtered later.
     const range = { beginDate: addDays(window.referenceDate, -31), endDate: window.referenceDate };
-    fetched = await (deps.fetchOrders ?? ((r, rg) => fetchStorePaidOrders(REGIONS[r].storeKey, rg)))(region, range);
+    fetched = await (deps.fetchOrders ?? ((r, rg) => podioOrders(r, rg, ordersCache)))(region, range);
   } catch (err) {
     return fail(`orders fetch failed: ${err instanceof Error ? err.message : String(err)}`);
   }
@@ -103,7 +137,8 @@ export async function syncPodio(regions: readonly RegionSlug[] = REGION_SLUGS, d
   const enabled = deps.enabled ?? ((region: RegionSlug) => podioEnabled(region));
   running = (async () => {
     const results: RegionPodioResult[] = [];
-    for (const region of regions) results.push(enabled(region) ? await syncRegionPodio(region, deps) : { region, ok: true, skipped: "disabled" });
+    const ordersCache = new Map<string, Promise<{ orders: PodioOrder[]; requests: number }>>();
+    for (const region of regions) results.push(enabled(region) ? await syncRegionPodio(region, deps, ordersCache) : { region, ok: true, skipped: "disabled" });
     return results;
   })();
   try {
