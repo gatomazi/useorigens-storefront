@@ -7,6 +7,8 @@ import { Campaign } from "@/components/home/Campaign";
 import { RegionHero } from "@/components/home/RegionHero";
 import { HomeSections } from "@/components/home/HomeSections";
 import { StateCards } from "@/components/home/StateCards";
+import { MundoBlocoHome } from "@/components/mundo/entrada/MundoEntradas";
+import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import { PodioTeaser } from "@/components/podio/PodioTeaser";
 import { getPodiumLeaders } from "@/lib/podio/server";
 import { SOURCES } from "@/lib/analytics/sources";
@@ -116,6 +118,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
       )}
 
       <StateCards region={region} states={home.states} />
+      {mundoEntradasAtivas() && <MundoBlocoHome region={region} />}
       {/* "Quem está no pódio?": right after the state chooser; the leader of each state, linking to its full podium (docs/storefront/podio.md). */}
       <PodioTeaser region={region} leaders={getPodiumLeaders(region, home.states.map((s) => s.uf))} />
 

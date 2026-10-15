@@ -36,7 +36,12 @@
     "unificado:ler": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-unificado-ler.mts",
     "unificado:reconciliar": "node --conditions=react-server --import tsx scripts/ink-unificado-reconciliar.mts",
     "unificado:gerar": "node --max-old-space-size=8192 --conditions=react-server --import tsx scripts/ink-unificado-gerar.mts",
-    "mockups:fila": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-mockups-fila.mts"
+    "mockups:fila": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-mockups-fila.mts",
+    "mundo:dados": "node --conditions=react-server --import tsx scripts/mini-world-export.mts",
+    "mundo:prototipo": "node --import tsx scripts/mini-world-standalone.mts",
+    "mundo:pacote": "bash scripts/mini-world-pacote.sh",
+    "mundo:validar": "node --conditions=react-server --import tsx scripts/mini-world-validar.mts",
+    "mundo:cobertura": "node --import tsx scripts/mini-world-cobertura.mts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
@@ -46,6 +51,7 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "^0.0.1",
+    "three": "0.186.1",
     "zod": "4.6.7"
   },
   "devDependencies": {
@@ -57,6 +63,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "0.28.2",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "sharp": "^0.35.4",

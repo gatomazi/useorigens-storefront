@@ -40,7 +40,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function OutrosArtigosPage({ params }: Props) {
   const { region } = await params;
   // The store-wide buy button (Aparência, global): on the articles' cards too.
-  const buyLabel = storeCardButton();
+  const buy = storeCardButton();
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const articles = readUmaPencaSnapshot()?.articles ?? [];
   const hover = umaPencaHoverPhotos();
@@ -81,7 +81,7 @@ export default async function OutrosArtigosPage({ params }: Props) {
             ))}
             {articles.map((article, i) => (
               <li key={article.id}>
-                <ArticleCard article={article} region={region} sizes={SIZES} hoverImageUrl={hover[article.id]} priority={groupIndex === 0 && cards.length + i < 2} buyLabel={buyLabel} />
+                <ArticleCard article={article} region={region} sizes={SIZES} hoverImageUrl={hover[article.id]} priority={groupIndex === 0 && cards.length + i < 2} buy={buy} />
               </li>
             ))}
           </ul>

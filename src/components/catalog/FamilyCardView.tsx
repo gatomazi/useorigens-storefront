@@ -5,7 +5,8 @@ import { trackGoToInk } from "@/lib/analytics/track";
 import type { FamilyCardModel } from "@/lib/catalog/family-card";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { ShareButton } from "@/components/share/ShareButton";
-import { CardButton } from "./CardButton";
+import type { CardBuy } from "@/lib/site-config/cards-schema";
+import { CardButton, CardFab } from "./CardButton";
 import { CARD_FOOT, CARD_INFO, CARD_NAME, cardFrame, CardTags } from "./ProductCard";
 import { ProductPhoto } from "./ProductPhoto";
 import { PriceText } from "./PriceText";
@@ -22,10 +23,12 @@ import { PriceText } from "./PriceText";
  *
  * A plain <a> (not next/link) for the INK case: a real cross-origin navigation, same tab, reported once (GoToInk) on the real click.
  */
-export function FamilyCardView({ card, sizes, priority = false, buyLabel }: { card: FamilyCardModel; sizes: string; priority?: boolean; buyLabel?: string }) {
+export function FamilyCardView({ card, sizes, priority = false, buy }: { card: FamilyCardModel; sizes: string; priority?: boolean; buy?: CardBuy }) {
   const content = (
     <>
-      <ProductPhoto src={card.imageUrl} alt={card.alt} sizes={sizes} priority={priority} className="photo-contain" />
+      <ProductPhoto src={card.imageUrl} alt={card.alt} sizes={sizes} priority={priority} className="photo-contain">
+        {buy?.style === "fab" && <CardFab label={buy.label} />}
+      </ProductPhoto>
       <CardTags discount={card.discount} />
       <div className={CARD_INFO}>
         <h3 className={CARD_NAME}>{card.familyName}</h3>
@@ -38,7 +41,7 @@ export function FamilyCardView({ card, sizes, priority = false, buyLabel }: { ca
               <PriceText price={card.price} listPrice={card.listPrice} />
             </p>
           )}
-          {buyLabel && <CardButton label={buyLabel} />}
+          {buy?.style === "button" && <CardButton label={buy.label} />}
         </div>
       </div>
     </>

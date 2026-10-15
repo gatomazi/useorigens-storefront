@@ -47,7 +47,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft), ...podioChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft));
   return changes;
 }
 
@@ -119,11 +119,22 @@ function navigationChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
 
 /** The store-wide buy button of the product cards (global scope). Pure. */
 function cardsChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
-  const was = published.cards?.buyLabel;
-  const now = draft.cards?.buyLabel;
-  if (was === now) return [];
-  const text = (label: string | undefined) => (label ? `botão “${label}” em todos os cards` : "cada seção decide");
+  const was = published.cards;
+  const now = draft.cards;
+  if (was?.buyLabel === now?.buyLabel && was?.buyStyle === now?.buyStyle) return [];
+  const text = (cards: typeof was) => (cards ? `${cards.buyStyle === "fab" ? "carrinho na imagem" : "botão"} “${cards.buyLabel}” em todos os cards` : "cada seção decide");
   return [{ kind: "theme", sectionId: "cards:buy", text: `Botão nos cards de produto: ${text(was)} → ${text(now)}` }];
+}
+
+const MUNDO_TEXTO = { on: "página e entradas na loja", pagina: "só a página, sem entradas", off: "desligado" } as const;
+
+/** "Meu Pequeno Mundo" opened or closed by the panel (global scope); absent = follows the server's MEU_PEQUENO_MUNDO. Pure. */
+function mundoChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const was = published.mundo?.modo;
+  const now = draft.mundo?.modo;
+  if (was === now) return [];
+  const text = (m: typeof was) => (m ? MUNDO_TEXTO[m] : "segue o servidor");
+  return [{ kind: "theme", sectionId: "mundo", text: `Meu Pequeno Mundo: ${text(was)} → ${text(now)}` }];
 }
 
 /** "O Pódio" switched on or off in the region (it belongs to the document, not to a section). Pure. */

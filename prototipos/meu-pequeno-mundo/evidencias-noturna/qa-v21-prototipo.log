@@ -1,0 +1,62 @@
+OK   [mobile] resultado começa compacto (painel ≤ 40% da tela) — 299 px de 812
+OK   [mobile] compacto: lugares, camisetas e compartilhar à vista; detalhes recolhidos
+OK   [mobile] indicação clara para abrir os detalhes
+OK   [mobile] uma camiseta real por cidade, com link da estampa — https://www.useorigens.com.br/sul/sc/nova-trento/ponto-de-origem | https://www.useorigens.com.br/sul/sc/tijucas/ponto-de-origem | https://www.useorigens.com.br/sul/sc/garopaba/ponto-de-origem
+OK   [mobile] 'Conhecer' (botão) e 'Camisetas' (link da página da cidade) com destinos distintos, sem link dentro de botão — https://www.useorigens.com.br/sul/sc/nova-trento | https://www.useorigens.com.br/sul/sc/tijucas | https://www.useorigens.com.br/sul/sc/garopaba
+OK   [mobile] compacto: as três etiquetas acima do painel, sem corte — 79,164 198,219 123,288
+OK   [mobile] visão geral sem pontos de descoberta
+OK   [mobile] alvos ≥ 44 px no resultado compacto
+OK   [mobile] expandido: o que conecta, baixar, copiar link, editar e recomeçar
+OK   [mobile] enquadramento muda com o painel (maquete menor quando expandido) — escala (santuário ↔ montes): 58 → 35 px
+OK   [mobile] alvos ≥ 44 px no resultado expandido
+OK   [mobile] recolher restaura o enquadramento compacto
+OK   [mobile] cartão curto: nome, uma ou duas frases e 'Conhecer' — Templo de 2006 cuja geometria remete a duas mãos em oração. Homenageia Santa Paulina, a primeira santa do Brasil.
+OK   [mobile] cartão encostado no painel e deixa a maior parte da maquete à vista — cartão 165 px; área da maquete 449 px
+OK   [mobile] fechar do cartão com 44 × 44 px — 44×44
+OK   [mobile] só os pontos da cidade em exploração, com 44 px de área e sem sobreposição — santuario-santa-paulina 44×44, montes-do-vale 44×44
+OK   [mobile] símbolo visível do ponto entre 16 e 20 px — 18 px
+OK   [mobile] arrastar a câmera não fecha o cartão
+OK   [mobile] tocar no espaço vazio fecha o cartão
+OK   [mobile] ficha: produtos reais na primeira tela — primeira camiseta em y=575
+OK   [mobile] ficha aberta pela lista: 'Conheça este lugar' recolhido
+OK   [mobile] frase editorial em até duas linhas — 49 px
+OK   [mobile] câmera focada na ilha e controle vira 'Voltar ao mundo'
+OK   [mobile] alvos ≥ 44 px na ficha
+OK   [mobile] ao rolar até o fim, 'Ver camisetas' e o fechar continuam na tela — CTA y=351, fechar y=289
+OK   [mobile] marco com a ficha aberta: abre 'Conheça este lugar' e realça a referência — {"aberto":true,"ref":"santuario-santa-paulina","balao":false} (no ponto: button.ponto-descoberta scrollY=0)
+OK   [mobile] arrastar não fecha a ficha
+OK   [mobile] tocar no espaço vazio fecha a ficha e volta ao mundo
+OK   [mobile] ao voltar, o enquadramento do conjunto é restaurado
+OK   [mobile] produto que falha: erro só no cartão afetado, com nova tentativa; o resto segue — Não carregouTentar de novo
+OK   [mobile] 'Tentar de novo' recarrega só aquele cartão
+OK   [mobile] montagem sem ilha: controles da câmera escondidos
+OK   [mobile] a dica do centro leva à busca
+OK   [mobile] a lupa põe o foco na busca
+OK   [mobile] etapa 1 vazia: sem botão cheio, 'Pular' como texto
+OK   [mobile] depois da primeira ilha, controles da câmera aparecem
+OK   [mobile] cartão escolhido é um botão 'Trocar …'
+OK   [mobile] trocar pelo teclado abre a busca com 'Trocando Tijucas' e 'Cancelar'
+OK   [mobile] cancelar a troca mantém a cidade e devolve o foco ao cartão
+OK   [mobile] ir para outra etapa durante a troca desiste dela e mantém a cidade
+OK   [mobile] etapa 2 vazia: 'Pular' e 'Ver meu mundo' como texto, sem três botões iguais
+OK   [mobile] etapa 3 vazia: nenhum botão cheio destaca pular
+OK   [mobile] depois da escolha, 'Ver meu mundo' ganha destaque
+OK   [mobile] alvos ≥ 44 px na montagem
+OK   [mobile] conclui apenas com o lugar do coração
+OK   [mobile] cidade sem perfil: sem o aviso de texto faltante e sem seções editoriais vazias
+OK   [mobile] cidade sem perfil: identificação discreta de cenário ilustrativo — Paisagem: Interior · interpretação ilustrativa
+OK   [desktop] resultado com tudo aberto (sem o botão de detalhes)
+OK   [desktop] cartões com camiseta, 'Conhecer' e 'Camisetas'
+OK   [desktop] alvos ≥ 44 px no resultado
+OK   [desktop] balão do casarão com fechar de 44 × 44 px — 44×44
+OK   [desktop] 'Conhecer Tijucas' a partir do marco abre a ficha com a referência realçada — {"aberto":true,"ref":"casarao-gallotti"}
+OK   [desktop] com a ficha aberta, o controle diz 'Voltar ao mundo'
+OK   [desktop] alvos ≥ 44 px na ficha
+OK   [desktop] 'Voltar ao mundo' fecha a ficha e o controle volta a 'Visão inicial'
+OK   [desktop] ficha: produtos na primeira tela e 'Conheça' recolhido — y=402
+OK   [desktop] ao rolar, 'Ver camisetas' e o fechar continuam na tela
+OK   [desktop] clicar no espaço vazio fecha a ficha
+OK   [desktop] PNG com três lembranças longas e nomes longos: 1080 × 1350 — lembranças com 80, 80, 80 caracteres
+OK   [mobile] PNG com três lembranças longas e nomes longos: 1080 × 1350 — lembranças com 80, 80, 80 caracteres
+
+60/60 checagens ok; erros de console: 0

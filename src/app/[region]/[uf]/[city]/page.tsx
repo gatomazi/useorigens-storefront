@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { MundoConviteCidade } from "@/components/mundo/entrada/MundoEntradas";
+import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StateOutline } from "@/components/brand/StateOutline";
@@ -59,7 +61,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function CityPage({ params }: { params: Params }) {
   const { region, uf, city: citySlug } = await params;
   // The store-wide buy button (Aparência, global): on the styles' cards too.
-  const buyLabel = storeCardButton();
+  const buy = storeCardButton();
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const resolved = resolveCity(region, uf, citySlug);
   if (!resolved) notFound();
@@ -163,7 +165,7 @@ export default async function CityPage({ params }: { params: Params }) {
             // mounted only when that piece is chosen, so the document carries one grid instead of ten.
             <CityGarmentTabs
               tabs={garment.tabs}
-              buyLabel={buyLabel}
+              buy={buy}
               panels={Object.fromEntries(
                 garment.tabs.map((tab) => [
                   tab.id,
@@ -182,7 +184,7 @@ export default async function CityPage({ params }: { params: Params }) {
               )}
             />
           ) : (
-            <FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk buyLabel={buyLabel} />
+            <FamilyGrid entries={families} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.cityStyles} directToInk buy={buy} />
           )
         ) : (
           <p className="t-body max-w-xl">Ainda não temos camisetas de {city.name} na loja. Volte em breve ou escolha outra cidade da região.</p>
@@ -195,6 +197,8 @@ export default async function CityPage({ params }: { params: Params }) {
         </div>
         {/* Short, real text UNDER the products (never above them): the styles this page actually lists, nothing else. */}
         {intro && <p className="t-body mt-8 max-w-2xl text-ink-soft lg:mt-12">{intro}</p>}
+        {/* "Meu Pequeno Mundo": an invitation that suggests this place (src/lib/mundo/flag.ts). Below the products, never above them. */}
+        {mundoEntradasAtivas() && families.length > 0 && <MundoConviteCidade region={city.regionSlug} cityId={city.id} cityName={city.name} />}
       </section>
 
       {lore.length > 0 && (

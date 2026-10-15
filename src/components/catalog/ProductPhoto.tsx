@@ -1,4 +1,5 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 
 /**
  * INK product photo on the page ground. INK photos are 800x820 on flat #e5e5e5, the same as the
@@ -12,6 +13,7 @@ export function ProductPhoto({
   poster = false,
   hoverSrc,
   className = "",
+  children,
 }: {
   src: string;
   alt: string;
@@ -22,11 +24,14 @@ export function ProductPhoto({
   /** Second photo shown under the pointer (devices that hover only). Decorative: the link is already named by the main photo. */
   hoverSrc?: string;
   className?: string;
+  /** Drawn over the picture, never zoomed with it (the cart button of a card, `CardFab`). */
+  children?: ReactNode;
 }) {
   return (
     <span className={`photo ${poster ? "photo-poster" : ""} ${className}`}>
       <Image src={src} alt={alt} fill sizes={sizes} quality={80} loading={priority ? "eager" : undefined} fetchPriority={priority ? "high" : undefined} />
       {hoverSrc && <Image src={hoverSrc} alt="" aria-hidden="true" fill sizes={sizes} quality={80} className="photo-alt" />}
+      {children}
     </span>
   );
 }

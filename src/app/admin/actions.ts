@@ -22,6 +22,7 @@ import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
+import { MUNDO_MODOS, type MundoModo } from "@/lib/site-config/mundo-schema";
 import { DEFAULT_BUY_LABEL, isUmaPencaSource, MAX_BUY_LABEL, maxSectionProducts, MIN_SECTION_PRODUCTS, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
@@ -564,11 +565,28 @@ export async function saveCardsAction(fd: FormData) {
   const actor = await requireAdmin({ mutation: true, owner: true });
   const on = fd.get("cards_buy") === "on";
   const label = text(fd, "cards_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL;
-  const outcome = await applyAndSave("global", { type: "set-cards", cards: on ? { buyLabel: label } : null }, revNumber(fd), actor);
+  const fab = text(fd, "cards_buy_style") === "fab";
+  const outcome = await applyAndSave("global", { type: "set-cards", cards: on ? { buyLabel: label, ...(fab ? { buyStyle: "fab" as const } : {}) } : null }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back("/admin/aparencia", { err: outcome.errors.map((e) => (e.includes("buyLabel") ? `O texto do botão precisa ter de 1 a ${MAX_BUY_LABEL} caracteres, sem espaço nas pontas.` : e)) });
   await audit(actor, "draft.save", "global", "set-cards");
-  back("/admin/aparencia#botao-cards", { ok: on ? `Rascunho salvo: botão “${label}” em todos os cards. Publique a configuração global para valer na loja.` : "Rascunho salvo: cada seção volta a decidir o próprio botão. Publique a configuração global para valer na loja." });
+  back("/admin/aparencia#botao-cards", { ok: on ? `Rascunho salvo: ${fab ? "carrinho na imagem" : "botão"} “${label}” em todos os cards. Publique a configuração global para valer na loja.` : "Rascunho salvo: cada seção volta a decidir o próprio botão. Publique a configuração global para valer na loja." });
+}
+
+/**
+ * Aparência (owner): how far "Meu Pequeno Mundo" is open, saved in the GLOBAL draft ("segue" = no choice: the server's MEU_PEQUENO_MUNDO
+ * alone). The env stays the ceiling. Published with "Publicar configuração global".
+ */
+export async function saveMundoAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const escolha = text(fd, "mundo_modo");
+  const modo = (MUNDO_MODOS as readonly string[]).includes(escolha) ? (escolha as MundoModo) : null;
+  const outcome = await applyAndSave("global", { type: "set-mundo", modo }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/aparencia#meu-pequeno-mundo", { err: outcome.errors });
+  await audit(actor, "draft.save", "global", "set-mundo");
+  const como = { on: "página e entradas na loja", pagina: "só a página, sem entradas", off: "desligado" } as const;
+  back("/admin/aparencia#meu-pequeno-mundo", { ok: `Rascunho salvo: Meu Pequeno Mundo ${modo ? como[modo] : "segue o servidor"}. Publique a configuração global para valer na loja.` });
 }
 
 export async function discardGlobalThemeAction() {
