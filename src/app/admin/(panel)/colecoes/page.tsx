@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { adoptCollectionMenuAction, createCollectionPageAction, linkCollectionPagesAction, moveCollectionMenuAction, setCollectionEnabledAction, setCollectionMenuPositionAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
+import { adoptCollectionMenuAction, createCollectionPageAction, linkCollectionPagesAction, moveCollectionMenuAction, moveStateRowAction, resetStateRowsAction, setCollectionEnabledAction, setCollectionMenuPositionAction, setStateRowAction, syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
+import { STATE_ROW_MIN_ITEMS, stateRowCollections, stateRowsReach } from "@/lib/catalog/collection-source";
+import { getCatalog } from "@/lib/catalog/repository";
+import { REGIONS, STATE_NAMES } from "@/lib/geo/regions";
+import { normalizeText } from "@/lib/geo/text";
 import { Flash } from "@/components/admin/Flash";
 import { LibrarySearch } from "@/components/admin/LibrarySearch";
 import { collectionMenuEntries, type MenuEntry } from "@/lib/catalog/collection-menu";
@@ -73,6 +77,14 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
   const all = libraryEntries(store.key as CommerceStoreKey, enabled);
   const legacy = all.some((e) => e.needsResync);
   const coverage = searchCoverage(synced?.collections ?? []);
+  // "Página do estado": the rows the region's state pages show, and in how many of its states each one really appears (≥ STATE_ROW_MIN_ITEMS products).
+  const stateRows = stateRowCollections(scope, ws.doc);
+  const catalogNow = getCatalog();
+  const rowReach = stateRowsReach(scope, ws.doc, (s) => catalogNow.productsOfStore(s));
+  const stateCount = REGIONS[scope].ufs.length;
+  const shownRows = stateRows.own ? stateRows.records : stateRows.records.filter((c) => (rowReach.get(c.id) ?? 0) > 0);
+  const stateNameKeys = new Set(Object.values(STATE_NAMES).map(normalizeText));
+  const addable = (synced?.collections ?? []).filter((c) => !shownRows.some((x) => x.id === c.id) && !stateNameKeys.has(normalizeText(c.name))).sort((a, b) => a.position - b.position);
   const ageDays = synced ? daysSince(synced.syncedAt) : 0;
   const catalogInfo = snapshotStatus().stores.find((c) => c.storeKey === store.key);
   const currentCatalog = catalogInfo?.syncedAt;
@@ -232,6 +244,65 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
               )}
               <p className="a-muted mt-2 text-[0.8125rem]">Na ordem do menu da INK. Para mudar, use a coluna “Menu” da tabela.</p>
             </div>
+          </div>
+        </section>
+      )}
+
+      {synced && (
+        <section id="pagina-estado" className="a-card scroll-mt-4 p-5" aria-label="Página do estado" data-testid="state-rows">
+          <p className="a-h2">Página do estado</p>
+          <p className="a-muted mt-2 max-w-3xl">Na página de cada estado (ex.: <code>/{scope}/{REGIONS[scope].ufs[0].toLowerCase()}</code>) entra um carrossel por coleção, só com os produtos que também estão na coleção com o nome do estado (“{STATE_NAMES[REGIONS[scope].ufs[0]]}”). Um carrossel precisa de pelo menos {STATE_ROW_MIN_ITEMS} produtos daquele estado. {stateRows.own ? <><strong>Lista escolhida por você</strong>, nesta ordem.</> : <><strong>Automático</strong>: toda coleção pública com produtos do estado, na ordem do menu da INK. Ao mexer aqui, a lista passa a ser sua.</>} Vale depois de <strong>Publicar</strong>.</p>
+          {shownRows.length === 0 ? <p className="a-muted mt-3 text-[0.875rem]">Nenhuma coleção aparece hoje nas páginas de estado desta região.</p> : (
+            <ol className="mt-3 space-y-1">
+              {shownRows.map((c, i) => {
+                const ref = `${store.key}:${c.id}`;
+                const n = rowReach.get(c.id) ?? 0;
+                return (
+                  <li key={c.id} className="flex flex-wrap items-center gap-2">
+                    <span className="a-muted w-5 text-right">{i + 1}.</span>
+                    <span className="font-semibold">{c.name}</span>
+                    <span className="a-badge" title={`Estados desta região em que a coleção tem pelo menos ${STATE_ROW_MIN_ITEMS} produtos do estado`}>{n === 0 ? "não aparece em nenhum estado" : `em ${n} de ${stateCount} estados`}</span>
+                    <form action={moveStateRowAction} className="ml-auto flex gap-1">
+                      <input type="hidden" name="ref" value={ref} />
+                      <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                      <input type="hidden" name="scope" value={scope} />
+                      <button type="submit" name="direction" value="up" className="a-btn sm ghost" disabled={i === 0} aria-label={`Subir ${c.name}`}>↑</button>
+                      <button type="submit" name="direction" value="down" className="a-btn sm ghost" disabled={i === shownRows.length - 1} aria-label={`Descer ${c.name}`}>↓</button>
+                    </form>
+                    <form action={setStateRowAction}>
+                      <input type="hidden" name="ref" value={ref} />
+                      <input type="hidden" name="on" value="0" />
+                      <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                      <input type="hidden" name="scope" value={scope} />
+                      <button type="submit" className="a-btn sm ghost" aria-label={`Tirar ${c.name} da página do estado`}>Tirar</button>
+                    </form>
+                  </li>
+                );
+              })}
+            </ol>
+          )}
+          <div className="mt-4 flex flex-wrap items-end gap-3">
+            {addable.length > 0 && (
+              <form action={setStateRowAction} className="flex flex-wrap items-end gap-2">
+                <input type="hidden" name="on" value="1" />
+                <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                <input type="hidden" name="scope" value={scope} />
+                <div>
+                  <label className="a-label" htmlFor="state-row-add">Incluir coleção</label>
+                  <select id="state-row-add" name="ref" className="a-input">
+                    {addable.map((c) => <option key={c.id} value={`${store.key}:${c.id}`}>{c.name}{c.isAvailable ? "" : " (interna)"}</option>)}
+                  </select>
+                </div>
+                <button type="submit" className="a-btn sm">Incluir</button>
+              </form>
+            )}
+            {stateRows.own && (
+              <form action={resetStateRowsAction} className="ml-auto">
+                <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                <input type="hidden" name="scope" value={scope} />
+                <button type="submit" className="a-btn sm ghost">Voltar ao automático</button>
+              </form>
+            )}
           </div>
         </section>
       )}

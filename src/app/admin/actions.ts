@@ -17,7 +17,8 @@ import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
 import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { ALL_SCOPES } from "@/lib/admin/auth/authorize";
 import { canEdit, type Actor } from "@/lib/admin/store/ports";
-import { collectionPageSlug } from "@/lib/catalog/collection-source";
+import { collectionPageSlug, stateRowCollections, stateRowsReach } from "@/lib/catalog/collection-source";
+import { getCatalog } from "@/lib/catalog/repository";
 import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
@@ -332,6 +333,51 @@ export async function moveCollectionMenuAction(fd: FormData) {
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to, { err: outcome.errors });
   back(`${to}#menu-colecoes`, { ok: "Ordem do topo alterada (vale depois que você publicar)." });
+}
+
+/** What the state pages show now, as references: the starting point of the region's first own list (collections showing in no state are left out). */
+function stateRowsBase(scope: RegionSlug, doc: Parameters<typeof stateRowCollections>[1]) {
+  const catalog = getCatalog();
+  const reach = stateRowsReach(scope, doc, (s) => catalog.productsOfStore(s));
+  const { own, records } = stateRowCollections(scope, doc);
+  return records.filter((c) => own || (reach.get(c.id) ?? 0) > 0).map((c) => ({ store: storeOf(scope), collectionId: c.id }));
+}
+
+/** Library → "Página do estado": a collection becomes (or stops being) a row of the region's state pages. */
+export async function setStateRowAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
+  const to = "/admin/colecoes";
+  if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
+  const on = text(fd, "on") === "1";
+  const base = stateRowsBase(scope, (await loadWorkspace(scope)).doc);
+  const outcome = await applyAndSave(scope, { type: "set-state-row", ...ref, on, base }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  back(`${to}#pagina-estado`, { ok: on ? "Coleção incluída na página do estado (vale depois que você publicar)." : "Coleção tirada da página do estado (vale depois que você publicar)." });
+}
+
+export async function moveStateRowAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
+  const direction = text(fd, "direction");
+  const to = "/admin/colecoes";
+  if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
+  if (direction !== "up" && direction !== "down") back(to, { err: ["Direção inválida."] });
+  const base = stateRowsBase(scope, (await loadWorkspace(scope)).doc);
+  const outcome = await applyAndSave(scope, { type: "move-state-row", ...ref, direction, base }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  back(`${to}#pagina-estado`, { ok: "Ordem da página do estado alterada (vale depois que você publicar)." });
+}
+
+export async function resetStateRowsAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const to = "/admin/colecoes";
+  const outcome = await applyAndSave(scope, { type: "reset-state-rows" }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  back(`${to}#pagina-estado`, { ok: "A página do estado volta ao automático (vale depois que você publicar)." });
 }
 
 /** Library: a region from before the collection menu keeps what it shows and the INK navbar starts following it (once published). */

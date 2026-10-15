@@ -45,10 +45,21 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
     if (edited.length > 0) changes.push({ kind: "edited", sectionId: s.id, text: `"${label(s)}": ${edited.join(", ")}` });
   }
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
-  changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf));
+  changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
   changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft));
   return changes;
+}
+
+/** The state page's rows changed: the owner's list (names, in order) or back to the automatic one. Pure. */
+function stateRowsChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer): Change[] {
+  const was = published.collections?.stateRows;
+  const now = draft.collections?.stateRows;
+  if (json(was) === json(now)) return [];
+  const text = now
+    ? `Página do estado: ${now.length === 0 ? "nenhuma coleção" : now.map((r) => nameOf(r) ?? `#${r.collectionId}`).join(", ")}`
+    : "Página do estado: volta ao automático (todas as coleções públicas com produtos do estado)";
+  return [{ kind: "edited", sectionId: "state-rows", text }];
 }
 
 /** The order / hidden products of a collection changed (they belong to the collection, not to a section: every section and its page follow them). Pure. */

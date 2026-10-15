@@ -4,7 +4,7 @@ import { arrangementOf, enabledInternalIds } from "../site-config/collections-en
 import { PAGE_SLUG, RESERVED_SLUGS, type ScopeDoc } from "../site-config/schema";
 import { arrangeMembers, type CategoryArrangement, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type InkCategorySource, type UnavailableReason } from "../site-config/sources";
 import { discountPercent, formatListPrice, formatPrice } from "../format";
-import { isRegionSlug, STATE_NAMES, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { isRegionSlug, REGIONS, STATE_NAMES, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { normalizeText } from "../geo/text";
 import { commercePlan, storeForRegion } from "./commerce-mode";
 import { getCatalog } from "./repository";
@@ -216,36 +216,64 @@ export function collectionPageLookup(
   };
 }
 
-/** One row of a state page: a public collection ("Fala Daqui") cut down to the products of the state's own collection ("Pará"). */
+/** One row of a state page: a collection ("Fala Daqui") cut down to the products of the state's own collection ("Pará"). */
 export type StateCollectionRow = { collection: CollectionRecord; items: CarouselItem[] };
+
+/** A row with fewer products than this is not shown (a carousel of one or two cards looks broken). */
+export const STATE_ROW_MIN_ITEMS = 3;
+
+const stateNameKeys = new Set(Object.values(STATE_NAMES).map(normalizeText));
+const byMenuOrder = (a: CollectionRecord, b: CollectionRecord) => a.position - b.position || a.id - b.id;
+
+/**
+ * The collections that may become rows on the region's state pages, in the order they show. The region's choice when it made one (`collections.stateRows`,
+ * any collection of its selling store, in the owner's order; one no longer synced is skipped); otherwise automatic: every PUBLIC collection of the store,
+ * in INK's menu order. Never a collection named after a state: those are the parents.
+ */
+export function stateRowCollections(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): { own: boolean; records: CollectionRecord[] } {
+  const store = storeForRegion(region);
+  const records = getStoreCollections(store, filePath)?.collections ?? [];
+  const usable = (c: CollectionRecord) => !c.needsResync && !stateNameKeys.has(normalizeText(c.name));
+  const chosen = doc?.collections?.stateRows;
+  if (chosen) {
+    const byId = new Map(records.map((c) => [c.id, c]));
+    return { own: true, records: chosen.filter((r) => r.store === store).map((r) => byId.get(r.collectionId)).filter((c): c is CollectionRecord => c !== undefined && usable(c)) };
+  }
+  return { own: false, records: records.filter((c) => c.isAvailable && usable(c)).sort(byMenuOrder) };
+}
 
 /**
  * The state's collections as the state page shows them. INK has no parent/child between collections, so the hierarchy is ours: the PARENT is the
- * collection named after the state ("Pará", usually internal), and each SECONDARY is a public collection of the same store that shares products with
- * it ("Da Nossa Terra", "Fala Daqui"), in INK's menu order. A row holds the secondary's products that are also in the state, in the secondary's
- * own arrangement for the region (hidden ones out), only products of the catalog and of this region. Empty rows are left out; no parent, no rows.
+ * collection named after the state ("Pará", usually internal); the rows are the collections of `stateRowCollections` ("Da Nossa Terra", "Fala Daqui")
+ * cut down to the products they share with it, in each collection's own arrangement for the region (hidden ones out), only products of the catalog and of
+ * this region. A row needs at least `STATE_ROW_MIN_ITEMS` products; no parent, no rows.
  */
 export function stateCollectionRows(region: RegionSlug, uf: string, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): StateCollectionRow[] {
   const store = storeForRegion(region);
-  const records = getStoreCollections(store, filePath)?.collections ?? [];
-  const stateNames = new Set(Object.values(STATE_NAMES).map(normalizeText));
   const wanted = normalizeText(STATE_NAMES[uf] ?? "");
   if (!wanted) return [];
-  const parent = records.filter((c) => normalizeText(c.name) === wanted && !c.needsResync).sort((a, b) => a.position - b.position || a.id - b.id)[0];
+  const records = getStoreCollections(store, filePath)?.collections ?? [];
+  const parent = records.filter((c) => normalizeText(c.name) === wanted && !c.needsResync).sort(byMenuOrder)[0];
   if (!parent) return [];
   const inState = new Set(completeMembers(parent) ?? parent.memberIds);
   const products = productsOf(store);
   const rows: StateCollectionRow[] = [];
-  for (const c of [...records].sort((a, b) => a.position - b.position || a.id - b.id)) {
-    if (c.id === parent.id || !c.isAvailable || stateNames.has(normalizeText(c.name))) continue;
+  for (const c of stateRowCollections(region, doc, filePath).records) {
     const members = (completeMembers(c) ?? c.memberIds).filter((id) => inState.has(id));
-    if (members.length === 0) continue;
+    if (members.length < STATE_ROW_MIN_ITEMS) continue;
     const items = arrangeMembers(members, arrangementOf(doc, store, c.id))
       .map((id) => regionItem(products, id, region))
       .filter((item): item is CarouselItem => item !== null);
-    if (items.length > 0) rows.push({ collection: c, items });
+    if (items.length >= STATE_ROW_MIN_ITEMS) rows.push({ collection: c, items });
   }
   return rows;
+}
+
+/** For the panel: in how many of the region's states each collection shows as a row (0 = it shows nowhere), by collection id. */
+export function stateRowsReach(region: RegionSlug, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): Map<number, number> {
+  const reach = new Map<number, number>();
+  for (const uf of REGIONS[region].ufs) for (const row of stateCollectionRows(region, uf, doc, productsOf, filePath)) reach.set(row.collection.id, (reach.get(row.collection.id) ?? 0) + 1);
+  return reach;
 }
 
 /** The slug of a PUBLIC collection only. An internal collection has no verified public page on INK, so it never gets a link there. */
