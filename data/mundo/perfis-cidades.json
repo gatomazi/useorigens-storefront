@@ -4198,6 +4198,475 @@
       "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1303403",
       "referencia": "Registro de 2001",
       "consultadoEm": "2026-10-15"
+    },
+    "cameta-ibge-enciclopedia-municipios-1957": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XIV (Pará, Amazonas, Maranhão etc.) — Cametá",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_14.pdf",
+      "referencia": "Livro de 1957 (verbete nas páginas 334 a 339 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-cameta-pa": {
+      "titulo": "Biblioteca IBGE — Cametá: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Enciclopédia dos Municípios Brasileiros. Rio de Janeiro : IBGE, 1957. v. 14, p. 328-329)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1502103",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "jaragua-do-sul-camara-historia-negros": {
+      "titulo": "Semana Consciência Negra e a história dos negros em Jaraguá do Sul",
+      "publicador": "Câmara de Vereadores de Jaraguá do Sul",
+      "url": "https://www.jaraguadosul.sc.leg.br/destaques/semana-consciencia-negra-e-a-historia-dos-negros-em-jaragua-do-sul/",
+      "referencia": "Notícia de 21/11/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-jaragua-do-sul-sc": {
+      "titulo": "Biblioteca IBGE — Jaraguá do Sul: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Jaraguá do Sul (SC). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4208906",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "jaragua-do-sul-camara-praca-ferroviarios": {
+      "titulo": "Indicação propõe criação da Praça dos Ferroviários em Jaraguá",
+      "publicador": "Câmara de Vereadores de Jaraguá do Sul",
+      "url": "https://www.jaraguadosul.sc.leg.br/destaques/indicacao-propoe-criacao-da-praca-dos-ferroviarios-em-jaragua/",
+      "referencia": "Notícia de 20/05/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "jaragua-do-sul-camara-150-anos": {
+      "titulo": "Câmara celebra 150 anos de Jaraguá do Sul em solenidade",
+      "publicador": "Câmara de Vereadores de Jaraguá do Sul",
+      "url": "https://www.jaraguadosul.sc.leg.br/destaques/camara-celebra-150-anos-de-jaragua-do-sul-em-solenidade/",
+      "referencia": "Notícia de 23/07/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "jaragua-do-sul-camara-schutzenfest-2025": {
+      "titulo": "Legislativo jaraguaense participa da abertura da 35ª Schützenfest",
+      "publicador": "Câmara de Vereadores de Jaraguá do Sul",
+      "url": "https://www.jaraguadosul.sc.leg.br/destaques/legislativo-jaraguaense-participa-da-abertura-da-35a-schutzenfest/",
+      "referencia": "Notícia de 07/11/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "jaragua-do-sul-camara-igreja-tres-rios": {
+      "titulo": "Tombamento da igreja de Três Rios do Norte é entregue",
+      "publicador": "Câmara de Vereadores de Jaraguá do Sul",
+      "url": "https://www.jaraguadosul.sc.leg.br/destaques/tombamento-da-igreja-de-tres-rios-do-norte-e-entregue/",
+      "referencia": "Notícia de 02/10/2015",
+      "consultadoEm": "2026-10-15"
+    },
+    "jaragua-do-sul-iphan-sc": {
+      "titulo": "Superintendência do Iphan em Santa Catarina",
+      "publicador": "Instituto do Patrimônio Histórico e Artístico Nacional (Iphan)",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/santa-catarina",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "jaragua-do-sul-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XXXII (Santa Catarina) — verbete Jaraguá do Sul",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_32.pdf",
+      "referencia": "Livro de 1959 (verbete nas páginas 190 a 196 da obra)",
+      "consultadoEm": "2026-10-15"
+    },
+    "laguna-secom-labzoo-udesc": {
+      "titulo": "LabZoo: Conheça o laboratório da Udesc com ações para preservação da fauna catarinense",
+      "publicador": "Secretaria de Estado da Comunicação de Santa Catarina (Notícias SC)",
+      "url": "https://noticias.sc.gov.br/labzoo-conheca-o-laboratorio-da-udesc-com-acoes-para-preservacao-da-fauna-catarinense/",
+      "referencia": "Notícia (sem data visível no texto)",
+      "consultadoEm": "2026-10-15"
+    },
+    "laguna-iphan-sc-patrimonio-material": {
+      "titulo": "Patrimônio Material — Superintendência do Iphan em Santa Catarina",
+      "publicador": "Iphan",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/santa-catarina/patrimonio-material",
+      "referencia": "Página institucional publicada em 22/09/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "laguna-secom-molhes-botos": {
+      "titulo": "Trato por Laguna amplia parcerias para colaborar com a conservação do ambiente",
+      "publicador": "Secretaria de Estado da Comunicação de Santa Catarina (Notícias SC)",
+      "url": "https://noticias.sc.gov.br/trato-por-laguna-amplia-parcerias-para-colaborar-com-a-conservacao-do-ambiente/",
+      "referencia": "Notícia de 09/10/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "laguna-secom-museu-anita": {
+      "titulo": "No dia do aniversário da heroína Anita Garibaldi, os catarinenses recebem um presente com a reabertura do Museu Histórico em Laguna",
+      "publicador": "Secretaria de Estado da Comunicação de Santa Catarina (Notícias SC)",
+      "url": "https://noticias.sc.gov.br/no-dia-do-aniversario-da-heroina-anita-garibaldi-os-catarinenses-recebem-um-presente-com-a-reabertura-do-museu-historico-em-laguna/",
+      "referencia": "Notícia de 02/09/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "laguna-secom-complexo-lagunar": {
+      "titulo": "CASAN executa monitoramento ambiental do Complexo Lagunar de Laguna",
+      "publicador": "Secretaria de Estado da Comunicação de Santa Catarina (Notícias SC)",
+      "url": "https://noticias.sc.gov.br/casan-executa-monitoramento-ambiental-do-complexo-lagunar-de-laguna/",
+      "referencia": "Notícia de 20/04/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "laguna-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 32 (Santa Catarina) — Laguna",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_32.pdf",
+      "referencia": "Livro de 1959 (dados de 1958)",
+      "consultadoEm": "2026-10-15"
+    },
+    "laguna-secom-scpar-pesca-cooperativa": {
+      "titulo": "SCPar oferece formação gratuita sobre educação ambiental em Laguna",
+      "publicador": "Secretaria de Estado da Comunicação de Santa Catarina (Notícias SC)",
+      "url": "https://noticias.sc.gov.br/scpar-oferece-formacao-gratuita-sobre-educacao-ambiental-em-laguna/",
+      "referencia": "Notícia de 22/05/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-laguna-sc": {
+      "titulo": "Biblioteca IBGE — Laguna: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Laguna (SC). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4209409",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "garibaldi-turismo-passadas": {
+      "titulo": "Passadas — A arquitetura do olhar",
+      "publicador": "Secretaria Municipal de Turismo e Cultura / Prefeitura de Garibaldi",
+      "url": "https://turismo.garibaldi.rs.gov.br/rotas-atrativos/passadas-a-arquitetura-do-olhar",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "garibaldi-turismo-conheca": {
+      "titulo": "Conheça Garibaldi",
+      "publicador": "Secretaria Municipal de Turismo e Cultura / Prefeitura de Garibaldi",
+      "url": "https://turismo.garibaldi.rs.gov.br/pagina/conheca-garibaldi",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-garibaldi-rs": {
+      "titulo": "Biblioteca IBGE — Garibaldi: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em GARIBALDI (RS). Prefeitura)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4308607",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "garibaldi-turismo-museu": {
+      "titulo": "Museu Municipal de Garibaldi",
+      "publicador": "Secretaria Municipal de Turismo e Cultura / Prefeitura de Garibaldi",
+      "url": "https://turismo.garibaldi.rs.gov.br/rotas-atrativos/museu-municipal-de-garibaldi",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "garibaldi-pm-historia": {
+      "titulo": "História",
+      "publicador": "Prefeitura Municipal de Garibaldi",
+      "url": "https://www.garibaldi.rs.gov.br/pagina/historia",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "garibaldi-turismo-inicio": {
+      "titulo": "Turismo de Garibaldi — Página inicial",
+      "publicador": "Secretaria Municipal de Turismo e Cultura / Prefeitura de Garibaldi",
+      "url": "https://turismo.garibaldi.rs.gov.br",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "garibaldi-turismo-enoturismo": {
+      "titulo": "Enoturismo — Rota dos Espumantes",
+      "publicador": "Secretaria Municipal de Turismo e Cultura / Prefeitura de Garibaldi",
+      "url": "https://turismo.garibaldi.rs.gov.br/atrativos/enoturismo",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ji-parana-ro-museu-comunicacoes": {
+      "titulo": "Estação telegráfica cede lugar ao Museu das Comunicações, em Ji-Paraná",
+      "publicador": "Governo do Estado de Rondônia",
+      "url": "https://rondonia.ro.gov.br/2015/04/57697/",
+      "referencia": "Notícia de 30/04/2015",
+      "consultadoEm": "2026-10-15"
+    },
+    "ji-parana-pm-pesca-rio-machado": {
+      "titulo": "Ji-Paraná sedia bootcamp que une pesca, empreendedorismo e turismo sustentável no Rio Machado",
+      "publicador": "Prefeitura de Ji-Paraná",
+      "url": "https://ji-parana.ro.gov.br/noticias/ji-parana-sedia-bootcamp-que-une-pesca-empreendedorismo-e-turismo-sustentavel-no-rio-machado/",
+      "referencia": "Notícia de 08/08/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ji-parana-pm-parque-ecologico-restauracao": {
+      "titulo": "Prefeitura inicia restauração do Parque Ecológico Municipal",
+      "publicador": "Prefeitura de Ji-Paraná",
+      "url": "https://ji-parana.ro.gov.br/noticias/prefeitura-inicia-restauracao-do-parque-ecologico-municipal/",
+      "referencia": "Notícia de 11/05/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-ji-parana-ro": {
+      "titulo": "Biblioteca IBGE — Ji-Paraná: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em JI-PARANÁ (RO) Prefeitura)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1100122",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "ji-parana-pm-mutirao-rios": {
+      "titulo": "Mutirão retira mais de duas toneladas de lixo dos rios Machado e Urupá",
+      "publicador": "Prefeitura de Ji-Paraná",
+      "url": "https://ji-parana.ro.gov.br/noticias/mutirao-retira-mais-de-duas-toneladas-de-lixo-dos-rios-machado-e-urupa/",
+      "referencia": "Notícia de 13/10/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ji-parana-pm-corrida-marco-zero": {
+      "titulo": "AMT conclui sinalização da 1ª Corrida Internacional Marco Zero",
+      "publicador": "Prefeitura de Ji-Paraná",
+      "url": "https://ji-parana.ro.gov.br/noticias/amt-conclui-sinalizacao-da-1a-corrida-internacional-marco-zero/",
+      "referencia": "Notícia de 17/04/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ji-parana-pm-parque-ecologico-mirante": {
+      "titulo": "Mirante e parte da passarela do Parque Ecológico foram concluídos",
+      "publicador": "Prefeitura de Ji-Paraná",
+      "url": "https://ji-parana.ro.gov.br/noticias/mirante-e-parte-da-passarela-do-parque-ecologico-foram-concluidos/",
+      "referencia": "Notícia de 30/06/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "ji-parana-pm-enchente-2026": {
+      "titulo": "Enchente do Rio Machado coloca Ji-Paraná em alerta vermelho e mobiliza força-tarefa para atender famílias atingidas",
+      "publicador": "Prefeitura de Ji-Paraná",
+      "url": "https://ji-parana.ro.gov.br/noticias/enchente-do-rio-machado-coloca-ji-parana-em-alerta-vermelho-e-mobiliza-forca-tarefa-para-atender-familias-atingidas/",
+      "referencia": "Notícia de 01/04/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "ji-parana-ro-memorial-rondon": {
+      "titulo": "Memorial Marechal Rondon é ponto turístico em Ji-Paraná",
+      "publicador": "Governo do Estado de Rondônia",
+      "url": "https://rondonia.ro.gov.br/memorial-marechal-rondon-e-ponto-turistico-em-ji-parana/",
+      "referencia": "Notícia de 04/05/2015",
+      "consultadoEm": "2026-10-15"
+    },
+    "barcarena-prefeitura-cirio-2024": {
+      "titulo": "Imagem do Círio de Barcarena visita a sede da Prefeitura",
+      "publicador": "Prefeitura Municipal de Barcarena",
+      "url": "https://barcarena.pa.gov.br/imagem-do-cirio-de-barcarena-visita-a-sede-da-prefeitura/",
+      "referencia": "Notícia de 05/11/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "barcarena-prefeitura-cirio-2022": {
+      "titulo": "Círio de Nazaré leva milhares de devotos às ruas",
+      "publicador": "Prefeitura Municipal de Barcarena",
+      "url": "https://barcarena.pa.gov.br/cirio-de-nazare-leva-milhares-de-devotos-as-ruas/",
+      "referencia": "Notícia de 11/11/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "barcarena-agenciapara-praias-2023": {
+      "titulo": "Polícia Militar garante segurança e tranquilidade nas praias de Barcarena",
+      "publicador": "Agência Pará (Governo do Estado do Pará)",
+      "url": "https://agenciapara.com.br/noticia/45514/policia-militar-garante-seguranca-e-tranquilidade-nas-praias-de-barcarena",
+      "referencia": "Notícia de 16/07/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "barcarena-prefeitura-festival-abacaxi-2026": {
+      "titulo": "Barcarena lança 44º Festival do Abacaxi 2026 e anuncia grandes atrações nacionais",
+      "publicador": "Prefeitura Municipal de Barcarena",
+      "url": "https://barcarena.pa.gov.br/barcarena-lanca-44o-festival-do-abacaxi-2026-e-anuncia-grandes-atracoes-nacionais/",
+      "referencia": "Notícia de 18/06/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-barcarena-pa": {
+      "titulo": "Biblioteca IBGE — Barcarena: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em BARCARENA (PA). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1501303",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-15"
+    },
+    "barcarena-prefeitura-festival-verao-2026": {
+      "titulo": "Secretaria de Cultura e Turismo de Barcarena abre o Festival de Verão 2026 na Praia do Caripi",
+      "publicador": "Prefeitura Municipal de Barcarena",
+      "url": "https://barcarena.pa.gov.br/secretaria-de-cultura-e-turismo-de-barcarena-abre-o-festival-de-verao-2026-na-praia-do-caripi/",
+      "referencia": "Notícia de 29/07/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "barcarena-prefeitura-vela-caripi-2026": {
+      "titulo": "Competição de barcos a vela movimenta a Praia do Caripi e estimula a prática esportiva em Barcarena",
+      "publicador": "Prefeitura Municipal de Barcarena",
+      "url": "https://barcarena.pa.gov.br/competicao-de-barcos-a-vela-movimenta-a-praia-do-caripi-e-estimula-a-pratica-esportiva-em-barcarena/",
+      "referencia": "Notícia de 30/07/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "barcarena-prefeitura-vila-do-conde-2024": {
+      "titulo": "Prefeitura celebra 371 anos de Vila do Conde com Ação Cidadania e início das obras na orla",
+      "publicador": "Prefeitura Municipal de Barcarena",
+      "url": "https://barcarena.pa.gov.br/prefeitura-celebra-371-anos-de-vila-do-conde-com-acao-cidadania-e-inicio-das-obras-na-orla/",
+      "referencia": "Notícia de 10/06/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "barcarena-prefeitura-rainha-abacaxi-2026": {
+      "titulo": "Barcarena tem nova Rainha do Festival do Abacaxi",
+      "publicador": "Prefeitura Municipal de Barcarena",
+      "url": "https://barcarena.pa.gov.br/barcarena-tem-nova-rainha-do-festival-do-abacaxi/",
+      "referencia": "Notícia de 19/08/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "barcarena-ibge-enciclopedia-1957": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, volume XIV (verbete Barcarena)",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_14.pdf",
+      "referencia": "Publicação de 1957 (verbete nas páginas 297 e 298 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "apucarana-visite-conhecendo": {
+      "titulo": "Conhecendo Apucarana",
+      "publicador": "Prefeitura Municipal de Apucarana (portal de turismo Visite Apucarana)",
+      "url": "https://www.visiteapucarana.com.br/travel-guide/conhecendo-apucarana",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "apucarana-visite-monumento-bone": {
+      "titulo": "Monumento ao Boné",
+      "publicador": "Prefeitura Municipal de Apucarana (portal de turismo Visite Apucarana)",
+      "url": "https://www.visiteapucarana.com.br/tour/monumento-ao-bone/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "apucarana-visite-catedral": {
+      "titulo": "Catedral Basílica Menor Nossa Senhora de Lourdes",
+      "publicador": "Prefeitura Municipal de Apucarana (portal de turismo Visite Apucarana)",
+      "url": "https://www.visiteapucarana.com.br/tour/catedral-nossa-senhora-de-lourdes/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "apucarana-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XXXI (Paraná) — Apucarana",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_31.pdf",
+      "referencia": "Livro de 1959",
+      "consultadoEm": "2026-10-15"
+    },
+    "apucarana-visite-praca-maua": {
+      "titulo": "Praça Mauá",
+      "publicador": "Prefeitura Municipal de Apucarana (portal de turismo Visite Apucarana)",
+      "url": "https://www.visiteapucarana.com.br/tour/praca-maua/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-apucarana-pr": {
+      "titulo": "Biblioteca IBGE — Apucarana: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Apucarana (PR). Prefeitura. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4101408",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "apucarana-prefeitura-inicio": {
+      "titulo": "Prefeitura Municipal de Apucarana",
+      "publicador": "Prefeitura Municipal de Apucarana",
+      "url": "https://www.apucarana.pr.gov.br",
+      "referencia": "Página inicial (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "campo-largo-camara-historia": {
+      "titulo": "História de Campo Largo",
+      "publicador": "Câmara Municipal de Campo Largo",
+      "url": "https://www.campolargo.pr.leg.br/institucional/historia/historia-de-campo-largo",
+      "referencia": "Página institucional (sem data; cita o Censo 2022)",
+      "consultadoEm": "2026-10-15"
+    },
+    "campo-largo-cpc-pr-engenho-mate-rondinha": {
+      "titulo": "Antigo Engenho de Mate da Rondinha - Campo Largo",
+      "publicador": "Coordenação do Patrimônio Cultural / Secretaria de Estado da Cultura do Paraná",
+      "url": "https://www.patrimoniocultural.pr.gov.br/Bem-Tombado/Antigo-Engenho-de-Mate-da-Rondinha-Campo-Largo",
+      "referencia": "Página de bem tombado (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-campo-largo-pr": {
+      "titulo": "Biblioteca IBGE — Campo Largo: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Campo Largo (PR). Câmara. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4104204",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-15"
+    },
+    "campo-largo-arquidiocese-matriz-piedade-2025": {
+      "titulo": "Paróquia Nossa Senhora da Piedade, em Campo Largo, realiza missa para empreendedores nesta sexta (03)",
+      "publicador": "Arquidiocese de Curitiba",
+      "url": "https://arquidiocesedecuritiba.org.br/paroquia-nossa-senhora-da-piedade-em-campo-largo-realiza-missa-para-empreendedores-nesta-sexta-03/",
+      "referencia": "Notícia de 03/10/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "campo-largo-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 31 (Paraná) — verbete Campo Largo",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_31.pdf",
+      "referencia": "Publicação de 1959 (p. 83–85 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "brusque-secom-fenarreco-2025": {
+      "titulo": "Em Brusque, Jorginho Mello participa da abertura da 38ª Fenarreco",
+      "publicador": "Secretaria de Estado da Comunicação de Santa Catarina (Notícias SC)",
+      "url": "https://noticias.sc.gov.br/em-brusque-jorginho-mello-participa-da-abertura-da-38a-fenarreco/",
+      "referencia": "Notícia de 10/10/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-brusque-sc": {
+      "titulo": "Biblioteca IBGE — Brusque: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Brusque (SC). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4202909",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "brusque-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 32 (Santa Catarina) — Brusque, p. 38-43",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_32.pdf",
+      "referencia": "Livro de 1959 (dados de 1958)",
+      "consultadoEm": "2026-10-15"
+    },
+    "brusque-setur-fenarreco-2024": {
+      "titulo": "Festas de outubro: Setur participa de apresentação da 37ª Fenarreco e reforça importância das celebrações para SC",
+      "publicador": "Secretaria de Estado da Comunicação de Santa Catarina (Notícias SC)",
+      "url": "https://noticias.sc.gov.br/festas-de-outubro-setur-participa-de-apresentacao-da-37a-fenarreco-e-reforca-importancia-das-celebracoes-para-sc/",
+      "referencia": "Notícia de 10/09/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "brusque-fcc-bens-tombados": {
+      "titulo": "Bens Tombados",
+      "publicador": "Fundação Catarinense de Cultura (FCC) / Governo de Santa Catarina",
+      "url": "https://www.cultura.sc.gov.br/a-fcc/patrimoniocultural/patrimonio-material/listagem-de-bens-tombados",
+      "referencia": "Página institucional (sem data); trecho de Brusque",
+      "consultadoEm": "2026-10-15"
+    },
+    "tres-lagoas-prefeitura-ponte-ms-sp": {
+      "titulo": "Autorizada construção da ponte que ligará MS a SP",
+      "publicador": "Prefeitura Municipal de Três Lagoas",
+      "url": "https://www.treslagoas.ms.gov.br/autorizada-construcao-da-ponte-que-ligara-ms-a-sp/",
+      "referencia": "Notícia de 2011",
+      "consultadoEm": "2026-10-15"
+    },
+    "tres-lagoas-ibge-enciclopedia-1958": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XXXV (Mato Grosso) — Três Lagoas",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_35.pdf",
+      "referencia": "Livro de 1958",
+      "consultadoEm": "2026-10-15"
+    },
+    "tres-lagoas-prefeitura-nossa-historia": {
+      "titulo": "Nossa História",
+      "publicador": "Prefeitura Municipal de Três Lagoas",
+      "url": "https://www.treslagoas.ms.gov.br/secretariasmunicipais/gabinete-2/nossahistoria/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "tres-lagoas-prefeitura-lagoa-maior-111-anos": {
+      "titulo": "Com homenagem a ciclista, plantio de 111 mudas e entrega de nova pista da Lagoa Maior, Três Lagoas inicia programação dos 111 anos",
+      "publicador": "Prefeitura Municipal de Três Lagoas",
+      "url": "https://www.treslagoas.ms.gov.br/com-homenagem-a-ciclista-plantio-de-111-mudas-e-entrega-de-nova-pista-da-lagoa-maior-tres-lagoas-inicia-programacao-dos-111-anos/",
+      "referencia": "Notícia de 08/06/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "tres-lagoas-prefeitura-curiosidades-107-anos": {
+      "titulo": "107 anos – Conheça 7 curiosidades sobre Três Lagoas que talvez você não sabia",
+      "publicador": "Prefeitura Municipal de Três Lagoas",
+      "url": "https://www.treslagoas.ms.gov.br/107-anos-conheca-7-curiosidades-sobre-tres-lagoas-que-talvez-voce-nao-sabia/",
+      "referencia": "Notícia de 2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-tres-lagoas-ms": {
+      "titulo": "Biblioteca IBGE — Três Lagoas: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Três Lagoas (MS). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5008305",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -18917,6 +19386,1753 @@
         "status": "curadoria inicial",
         "em": "2026-10-15",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A Prefeitura chama o festival de 'maior espetáculo cultural da Amazônia' e diz que o município teve 'o maior rebanho bovino do Amazonas'; o texto não usa superlativos. A Prefeitura dá 15/10/1852 como elevação a município (lei provincial do Amazonas que confirmou a criação); o texto segue o IBGE: vila em 1848 (lei do Pará), instalação em 1853, cidade em 1880. O histórico do IBGE grafa 'Vila Bela do Imperatriz'; a Enciclopédia de 1957 e a Prefeitura grafam 'da Imperatriz', usado no texto. O histórico do IBGE descreve os Parintintins como antropófagos; o texto deixa isso de fora e cita só, pela Prefeitura, a homenagem do nome. A Prefeitura situa a juta no 'início do século XX', sem data; o texto não data a chegada. Não foi achada fonte oficial sobre a arquitetura da catedral nem sobre a data do prédio atual; a igreja-matriz fotografada em 1957 pode não ser o mesmo prédio. A festa de julho é citada como registro de 1957, sem promessa. Não há marco para o boi (nenhum módulo corresponde ao Bumbódromo)."
+      }
+    },
+    "1502103": {
+      "identidade": {
+        "id": "1502103",
+        "ibge": "1502103",
+        "nome": "Cametá",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na margem esquerda do baixo Tocantins, a antiga vila dos Camutás, com seu cais, a catedral e a samaumeira da praça.",
+        "resumo": "Cametá fica na margem esquerda do rio Tocantins, cujo trecho final corta o município de sul a norte antes de chegar ao rio Pará. O nome vem dos Camutás, da família tupinambá; segundo Jorge Hurley, citado pelo IBGE, eles moravam em casas no alto das árvores, e a palavra juntaria caá (mato) e mutá (degrau). Por volta de 1620, frei Cristóvão de São José reuniu os Camutás junto a uma ermida à beira do rio, e o povoado virou vila em 24 de dezembro de 1635. Na Cabanagem, em 1835, foi sede do governo da Província; os foros de cidade vieram em 1848.",
+        "fontesResumo": [
+          "cameta-ibge-enciclopedia-municipios-1957",
+          "ibge-biblioteca-cameta-pa"
+        ],
+        "referencias": [
+          {
+            "id": "catedral-sao-joao-batista",
+            "tipo": "patrimonio",
+            "titulo": "Catedral de São João Batista",
+            "texto": "A vila de 1635 nasceu sob a invocação de São João Batista, padroeiro de Cametá. A matriz dedicada a ele foi construída em 1757 e, segundo a Enciclopédia do IBGE, passou a catedral com a criação da Prelazia de Cametá pelo Vaticano, em 1952, instalada em 1953.",
+            "fontes": [
+              "cameta-ibge-enciclopedia-municipios-1957"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre central; não reproduz a catedral, e forma, torres e cores são ilustrativas."
+            },
+            "curto": "Matriz do padroeiro São João Batista, construída em 1757 e catedral desde a criação da Prelazia de Cametá, em 1952."
+          },
+          {
+            "id": "cais-rio-tocantins",
+            "tipo": "paisagem",
+            "titulo": "Cais e rio Tocantins",
+            "texto": "Segundo a Enciclopédia do IBGE, de 1957, a cidade é protegida por um longo cais construído em meados do século XIX. O Tocantins, navegável em todo o município, banha também as vilas de Carapajó, Juaba, Curuçambaba e Janua Coeli, e era pelo rio que Cametá se ligava a Belém e aos municípios vizinhos.",
+            "fontes": [
+              "cameta-ibge-enciclopedia-municipios-1957"
+            ],
+            "descoberta": {
+              "modulo": "trapiche",
+              "nota": "Na maquete, um píer de madeira genérico representa a beira-rio e o porto; não reproduz o cais da cidade."
+            },
+            "curto": "Um longo cais de meados do século XIX protege a cidade, na margem esquerda do Tocantins."
+          },
+          {
+            "id": "samaumeira-praca-da-constituicao",
+            "tipo": "tradicao",
+            "titulo": "Samaumeira da Praça da Constituição",
+            "texto": "A Enciclopédia do IBGE conta que, para resistir aos cabanos, o padre Prudêncio mandou construir uma longa trincheira de madeira. Desmontada depois da guerra, ela deixou no chão uma estaca que brotou e virou árvore: a samaumeira centenária da Praça da Constituição, descrita em 1957 como inspiração cívica dos cametaenses.",
+            "fontes": [
+              "cameta-ibge-enciclopedia-municipios-1957"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Em 1957, a Enciclopédia do IBGE descrevia a festa de São João Batista, de 14 a 24 de junho, com bumbás e cordões à luz das fogueiras nas duas últimas noites e o banho de cheiro na noite de 23.",
+            "fontes": [
+              "cameta-ibge-enciclopedia-municipios-1957"
+            ]
+          },
+          {
+            "texto": "Um obelisco no Porto de Pedro Teixeira, inaugurado em 1937, lembra que a expedição de Pedro Teixeira pelo Amazonas partiu de Cametá em 28 de outubro de 1637, com homens e canoas reunidos ali, segundo a Enciclopédia do IBGE.",
+            "fontes": [
+              "cameta-ibge-enciclopedia-municipios-1957"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "cametaense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-cameta-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -2.2431,
+          "lon": -49.4979,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 134184,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 3081.367,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Cametá",
+          "intermediaria": "Belém",
+          "mesorregiao": "Nordeste Paraense",
+          "microrregiao": "Cametá",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "rio",
+          "floresta"
+        ],
+        "rotulo": "Cidade baixa na margem do Tocantins, com cais, barcos, a catedral e mata em volta",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.5
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            10
+          ],
+          [
+            "mata",
+            8
+          ],
+          [
+            "palmeira",
+            4
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 10
+        },
+        "extras": [
+          "barco",
+          "pier"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "catedral-sao-joao-batista"
+          },
+          {
+            "modulo": "trapiche",
+            "referencia": "cais-rio-tocantins"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Os sites da Prefeitura (cameta.pa.gov.br) e da Câmara não responderam; Setur-PA e Iphan não trouxeram resultado para Cametá. Por isso o perfil se apoia só no IBGE (histórico da Biblioteca e Enciclopédia dos Municípios de 1957, no passado: cais, festa, samaumeira e transporte descrevem 1957 e convém conferir o estado atual, inclusive se a samaumeira ainda existe). O histórico do IBGE diz que Cametá foi declarada Patrimônio Histórico Nacional pela Lei nº 7.537/1986; não achei o texto da lei no Planalto/Câmara, e o perfil não usou a informação. Divergências: o histórico do IBGE chama os Camutás de 'hábeis remadores' e a Enciclopédia de 'hábeis construtores de embarcações' (o texto não usa); a Enciclopédia diz que a vila de 1635 ganhou plenas prerrogativas de vila só em 1754, com a incorporação à Coroa (o texto dá só 1635); a Enciclopédia chama o ato de 1848 de Resolução nº 145 e o histórico de Lei Provincial nº 145 (o texto dá só o ano). As interpretações do nome divergem (Hurley, Roque, Tubiriçá); o texto atribui a de Hurley. O obelisco de Pedro Teixeira é obra assinada (Artur Newton Sá) e ficou só como texto, sem marco. A frase diz 'samaumeira da praça' com base em 1957."
+      }
+    },
+    "4208906": {
+      "identidade": {
+        "id": "4208906",
+        "ibge": "4208906",
+        "nome": "Jaraguá do Sul",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No vale do rio Itapocu, entre morros de mata, a cidade colonizada a partir de 1876 e conhecida pela Schützenfest.",
+        "resumo": "Jaraguá do Sul fica no vale do rio Itapocu, entre antigas matas e muitos cursos d'água, com a sede a cerca de 30 metros de altitude e a Serra Jaraguá, ou morro Boa Vista, chegando a 824 metros. A colonização começou em 1876, quando o engenheiro Emílio Carlos Jourdan chegou com cerca de 60 trabalhadores, muitos deles negros, e montou engenho, serraria e olaria entre os rios Itapocu e Jaraguá. Depois vieram colonos húngaros, alemães e italianos, e a ferrovia, inaugurada em 1910, fez o povoado crescer. Distrito de Joinville desde 1895, virou município em 1934 e ganhou o nome atual em 1943.",
+        "fontesResumo": [
+          "jaragua-do-sul-ibge-enciclopedia-1959",
+          "jaragua-do-sul-camara-150-anos",
+          "jaragua-do-sul-camara-historia-negros",
+          "ibge-biblioteca-jaragua-do-sul-sc"
+        ],
+        "referencias": [
+          {
+            "id": "schutzenfest",
+            "tipo": "tradicao",
+            "titulo": "Schützenfest",
+            "texto": "Festa ligada às tradições germânicas da cidade, realizada no Parque Municipal de Eventos Ademar Frederico Duwe. Na abertura da 35ª edição, em 2025, as 17 sociedades de atiradores desfilaram com suas majestades e a Banda Euterpe para buscar o Rei e a Rainha dos Atiradores, e a noite terminou com a sangria do primeiro barril de chope. A programação reúne música, tiro esportivo, gastronomia e artesanato.",
+            "fontes": [
+              "jaragua-do-sul-camara-schutzenfest-2025"
+            ]
+          },
+          {
+            "id": "ferrovia-1910",
+            "tipo": "patrimonio",
+            "titulo": "A ferrovia de 1910",
+            "texto": "A estrada de ferro, inaugurada em 1910, mudou o ritmo do povoado: segundo o histórico do IBGE, a cidade cresceu ao redor dela, por onde chegavam notícias, produtos e visitantes e saía a produção local. A linha fazia parte da Estrada de Ferro São Paulo-Rio Grande, e no início do século XX o atual bairro Centenário abrigou a Vila dos Ferroviários, onde viviam os turmeiros que cuidavam da via.",
+            "fontes": [
+              "ibge-biblioteca-jaragua-do-sul-sc",
+              "jaragua-do-sul-camara-praca-ferroviarios"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação genérica com plataforma, trilho e locomotiva pequena; não reproduz uma estação real da cidade."
+            },
+            "curto": "Ferrovia inaugurada em 1910; a cidade cresceu ao redor dos trilhos."
+          },
+          {
+            "id": "igreja-tres-rios-do-norte",
+            "tipo": "patrimonio",
+            "titulo": "Igreja de Três Rios do Norte",
+            "texto": "No bairro Três Rios do Norte, a igreja da comunidade luterana da paróquia Apóstolo Tiago, a casa e uma construção em enxaimel do mesmo terreno tiveram o tombamento voluntário homologado em 2015. O enxaimel, estrutura de madeira com tijolos aparentes, veio com os imigrantes alemães. O terreno da igreja foi doado pela família Behling, que também hospedou e alimentou os pedreiros até o fim da obra.",
+            "fontes": [
+              "jaragua-do-sul-camara-igreja-tres-rios",
+              "jaragua-do-sul-iphan-sc"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre central e paredes claras; não reproduz a igreja de Três Rios do Norte nem o enxaimel."
+            },
+            "curto": "Igreja, casa e construção enxaimel de Três Rios do Norte, tombadas em 2015."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico do IBGE, com fonte na Prefeitura, Jaraguá vem do tupi-guarani e significaria “Senhor do Vale”. Como não se sabe o dia exato da chegada de Jourdan, a data de 25 de julho de 1876 foi adotada simbolicamente como a de fundação e colonização.",
+            "fontes": [
+              "ibge-biblioteca-jaragua-do-sul-sc",
+              "jaragua-do-sul-camara-150-anos"
+            ]
+          },
+          {
+            "texto": "Entre os primeiros moradores estavam trabalhadores negros como o canoeiro Calixto Borges, que levou Jourdan pelo rio Itapocu. Outro pioneiro negro, Domingos Rosa, dá nome à principal rua do Morro da Boa Vista.",
+            "fontes": [
+              "jaragua-do-sul-camara-historia-negros",
+              "jaragua-do-sul-ibge-enciclopedia-1959"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "jaraguaense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-jaragua-do-sul-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -26.4836,
+          "lon": -49.0825,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 182660,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 530.894,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Joinville",
+          "intermediaria": "Joinville",
+          "mesorregiao": "Norte Catarinense",
+          "microrregiao": "Joinville",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "vale",
+          "rio",
+          "floresta"
+        ],
+        "rotulo": "Cidade no vale do Itapocu, entre o rio, morros de mata e a linha do trem",
+        "base": "vale",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 1.0
+        },
+        "agua": {
+          "modulo": "rio"
+        },
+        "vegetacao": [
+          [
+            "mata",
+            14
+          ],
+          [
+            "palmeira",
+            4
+          ],
+          [
+            "redonda",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 2
+        },
+        "extras": [
+          "lavoura"
+        ],
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "ferrovia-1910"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-tres-rios-do-norte"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O portal da Prefeitura (jaraguadosul.sc.gov.br) é renderizado por JavaScript e depois passou a recusar a conexão; as fontes são o IBGE (histórico e Enciclopédia de 1959), a Câmara de Vereadores e o Iphan. Divergência: a Enciclopédia do IBGE diz que dos 60 trabalhadores de Jourdan 54 eram negros (e que 35 deles foram depois para São Francisco do Sul e Parati); a Câmara diz que 35 eram negros — o texto diz só 'muitos deles negros'. Altitude e altura do morro vêm da Enciclopédia de 1959, quando o município ainda incluía Corupá. Datas: distrito de Jaraguá pela Lei Municipal 7, de 25/08/1895 (IBGE; o histórico fala em 22 de agosto para o Distrito de Paz); município pelo Decreto 565, de 26/03/1934, instalado em 08/04/1934; nome Jaraguá do Sul pelo Decreto-lei 941, de 31/12/1943. O 25 de julho de 1876 é data simbólica. Não há fonte oficial acessível sobre uma estação ferroviária preservada: o marco 'estacao' representa a ferrovia, e a nota diz isso. O tombamento do Rio da Luz pelo Iphan aparece só em notícia da Câmara sobre disputa com moradores — ficou de fora. A Schützenfest: nomes de políticos e a frase 'principal festa' ficaram de fora; o texto não promete data. Faltam fontes da Prefeitura sobre o Museu Emílio da Silva e o Parque Malwee."
+      }
+    },
+    "4209409": {
+      "identidade": {
+        "id": "4209409",
+        "ibge": "4209409",
+        "nome": "Laguna",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Entre a lagoa e o mar, o centro tombado da República Juliana, a terra de Anita e os botos dos Molhes.",
+        "resumo": "Laguna fica no litoral sul catarinense, junto às lagoas Santo Antônio dos Anjos, Imaruí e Mirim, onde a água doce que chega da bacia do rio Tubarão se mistura com a do mar. Segundo o histórico reproduzido pelo IBGE, há registros dos povos dos sambaquis na região há cerca de seis mil anos, e o bandeirante Domingos de Brito Peixoto chegou em 1676, dando ao lugar o nome de Santo Antônio dos Anjos de Laguna. Vila em 1714 e cidade em 1847, foi palco da República Juliana, em 1839, e é a terra natal de Anita Garibaldi.",
+        "fontesResumo": [
+          "laguna-secom-complexo-lagunar",
+          "ibge-biblioteca-laguna-sc",
+          "laguna-iphan-sc-patrimonio-material",
+          "laguna-secom-museu-anita"
+        ],
+        "referencias": [
+          {
+            "id": "centro-historico-e-matriz",
+            "tipo": "patrimonio",
+            "titulo": "Centro histórico e Matriz de Santo Antônio dos Anjos",
+            "texto": "Tombado pelo Iphan em 1985, o centro histórico cresceu a partir do porto original e reúne cerca de 600 imóveis; Laguna foi a terceira povoação portuguesa no litoral catarinense. No conjunto está a Igreja Matriz de Santo Antônio dos Anjos, que a Enciclopédia dos Municípios do IBGE registra como erguida em 1696 por Domingos de Brito Peixoto e reformada em 1844.",
+            "fontes": [
+              "laguna-iphan-sc-patrimonio-material",
+              "laguna-ibge-enciclopedia-1959"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada de uma torre; não reproduz a fachada da Matriz, e as cores são ilustrativas."
+            },
+            "curto": "Centro histórico de cerca de 600 imóveis, tombado pelo Iphan em 1985, com a Matriz de Santo Antônio dos Anjos."
+          },
+          {
+            "id": "museu-anita-garibaldi",
+            "tipo": "patrimonio",
+            "titulo": "Museu Histórico Anita Garibaldi",
+            "texto": "Na Praça da Bandeira, o antigo prédio da Câmara, onde foi proclamada a República Juliana em 1839, abriga o museu dedicado a Anita Garibaldi, nascida em Laguna em 1821. Ela lutou na Revolução Farroupilha ao lado de Giuseppe Garibaldi e depois na Itália, onde morreu em 1849. O museu guarda objetos, documentos, fotografias e obras de arte e reabriu em 2023, depois de quatro anos fechado para restauro.",
+            "fontes": [
+              "laguna-ibge-enciclopedia-1959",
+              "laguna-secom-museu-anita",
+              "laguna-iphan-sc-patrimonio-material"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão colonial genérico de beiral e janelas em série; não reproduz o prédio do museu, e as cores são ilustrativas."
+            },
+            "curto": "No antigo prédio onde se proclamou a República Juliana, um museu dedicado a Anita Garibaldi, nascida em Laguna em 1821."
+          },
+          {
+            "id": "botos-dos-molhes",
+            "tipo": "natureza",
+            "titulo": "Os botos e a pesca cooperativa nos Molhes da Barra",
+            "texto": "Os Molhes da Barra, no canal que liga a lagoa ao mar, são conhecidos pela pesca feita com o auxílio dos botos. Os botos-pescadores e a pesca cooperativa são tema de estudo do Laboratório de Zoologia da Udesc em Laguna e de ações de educação ambiental na barra, e os botos da Lagoa Santo Antônio dos Anjos também entram no monitoramento ambiental do complexo lagunar.",
+            "fontes": [
+              "laguna-secom-molhes-botos",
+              "laguna-secom-scpar-pesca-cooperativa",
+              "laguna-secom-labzoo-udesc",
+              "laguna-secom-complexo-lagunar"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O Iphan protege em Laguna o Marco de Tordesilhas, que lembra o tratado de 1494 entre Portugal e Espanha: a linha divisória das terras das duas coroas passava, ao norte, pelo Pará e, ao sul, por Laguna.",
+            "fontes": [
+              "laguna-iphan-sc-patrimonio-material"
+            ]
+          },
+          {
+            "texto": "A Enciclopédia dos Municípios do IBGE, de 1959, conta que uma figueira brava brotou entre as vigas do Seival, lanchão de Garibaldi abandonado na praia, e foi transplantada para o jardim principal da cidade, onde ficou conhecida como Árvore de Anita.",
+            "fontes": [
+              "laguna-ibge-enciclopedia-1959"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "lagunense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-laguna-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -28.4836,
+          "lon": -48.7814,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 42785,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 333.26,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Tubarão",
+          "intermediaria": "Criciúma",
+          "mesorregiao": "Sul Catarinense",
+          "microrregiao": "Tubarão",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "litoral",
+          "urbano"
+        ],
+        "rotulo": "Cidade histórica entre a lagoa e o mar, com casario antigo, barcos e botos",
+        "base": "litoral",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.45
+        },
+        "agua": {
+          "modulo": "lagoas"
+        },
+        "vegetacao": [
+          [
+            "restinga",
+            8
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "palmeira",
+            3
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "acoriano",
+          "casas": 12
+        },
+        "extras": [
+          "barco",
+          "pier"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "centro-historico-e-matriz"
+          },
+          {
+            "modulo": "casarao",
+            "referencia": "museu-anita-garibaldi"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A formação administrativa do IBGE põe a freguesia em 1797 (Carta Régia) depois da vila de 1714, confirmada em 1720; o texto cita só vila em 1714 e cidade em 1847. O histórico do IBGE (texto da Prefeitura) diz que a capelinha de pau a pique foi a primeira providência após 1676; a Enciclopédia de 1959 dá a Matriz como erguida em 1696 (o texto atribui a data à Enciclopédia). O governo do estado (2023) diz que o prédio do museu é o 'antigo Palácio do Governo da República Juliana', construído em 1747 e tombado em 1938; a Enciclopédia chama o mesmo prédio de Paço do Conselho/Casa da Câmara e diz que era patrimônio do Museu Histórico Nacional; o texto não dá ano de construção nem de tombamento do prédio (conferir no Iphan). O Iphan chama o governo de 1839 de 'República Catarinense'; o texto usa República Juliana, como o IBGE e o governo do estado. A Prefeitura (laguna.sc.gov.br) recusou acesso (HTTP 403); não há fonte da Prefeitura além do histórico reproduzido pelo IBGE. Os botos aparecem só em notícias do governo do estado (Udesc, SCPar, CASAN); sem fonte oficial que descreva a técnica de pesca, o texto não a detalha nem promete avistamento. O Farol de Santa Marta ficou de fora por falta de fonte própria (Marinha recusou acesso). Evitado superlativo 'heroína dos dois mundos'."
+      }
+    },
+    "4308607": {
+      "identidade": {
+        "id": "4308607",
+        "ibge": "4308607",
+        "nome": "Garibaldi",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na encosta da Serra Gaúcha, entre colinas e vinhedos, a antiga Colônia Conde D'Eu e seu casario centenário.",
+        "resumo": "Garibaldi fica na Encosta Superior do Nordeste gaúcho, a 640 metros de altitude, numa paisagem de colinas e vinhedos. O núcleo nasceu em 1870 como Colônia Conde D'Eu, em terras acidentadas, e recebeu primeiro imigrantes prussianos e, a partir de 1874, suíços, italianos, franceses, austríacos e poloneses, a maioria vinda da Itália. Foi distrito de Bento Gonçalves em 1884, já como Garibaldi, e virou vila e município próprio em 1900. Tropeiros, comerciantes sírio-libaneses e congregações religiosas francesas também deixaram sua marca na cidade.",
+        "fontesResumo": [
+          "garibaldi-turismo-conheca",
+          "garibaldi-turismo-inicio",
+          "garibaldi-pm-historia",
+          "ibge-biblioteca-garibaldi-rs"
+        ],
+        "referencias": [
+          {
+            "id": "centro-historico-buarque-de-macedo",
+            "tipo": "patrimonio",
+            "titulo": "Centro Histórico e Rua Buarque de Macedo",
+            "texto": "A Rua Buarque de Macedo foi o caminho por onde as levas de imigrantes chegavam às suas terras e uma ligação das colônias do oeste da serra com a capital. Ao longo dela e das ruas vizinhas, o roteiro Passadas reúne 35 construções, como casas comerciais, conventos e a Igreja Matriz São Pedro, de 1924. Segundo a Prefeitura, os prédios do Centro Histórico foram erguidos a partir de 1890.",
+            "fontes": [
+              "garibaldi-turismo-passadas",
+              "garibaldi-pm-historia"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão genérico de beiral e janelas em série; não reproduz um prédio específico, e as cores são ilustrativas."
+            },
+            "curto": "Rua dos imigrantes e tropeiros, com 35 construções do fim do século XIX e do início do XX."
+          },
+          {
+            "id": "espumante-e-vinhedos",
+            "tipo": "tradicao",
+            "titulo": "Espumante e vinhedos",
+            "texto": "Os imigrantes italianos trouxeram o cultivo da uva. Em 1913, a família Peterlongo, vinda de Trento, começou a elaborar espumante em Garibaldi pelo método de fermentação na garrafa. Hoje a cidade se apresenta como Capital do Espumante, e a Rota dos Espumantes reúne mais de 20 vinícolas, de cantinas familiares e cooperativas a grandes produtoras.",
+            "fontes": [
+              "garibaldi-pm-historia",
+              "garibaldi-turismo-enoturismo",
+              "garibaldi-turismo-inicio"
+            ],
+            "descoberta": {
+              "modulo": "vinhedo",
+              "nota": "Na maquete, fileiras de parreiras genéricas numa encosta, com uma casa de pedra ilustrativa; não reproduz nenhuma vinícola."
+            },
+            "curto": "Espumante feito na cidade desde 1913 e uma rota com mais de 20 vinícolas, de cantinas familiares a grandes produtoras."
+          },
+          {
+            "id": "museu-municipal",
+            "tipo": "patrimonio",
+            "titulo": "Museu Municipal",
+            "texto": "O prédio começou em 1878, de madeira, como sede da sociedade italiana de mútuo socorro; ganhou o pavimento de alvenaria em 1884 e o andar superior em 1892. Abrigou o consulado italiano e, na Primeira Guerra, serviu de hospital. Desde 1985 guarda o Museu Municipal e Arquivo Histórico, e o tombamento foi homologado em 2007.",
+            "fontes": [
+              "garibaldi-turismo-museu"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "A colônia nasceu como Conde D'Eu, em homenagem ao genro do imperador, e passou a se chamar Garibaldi em homenagem a Giuseppe Garibaldi, que lutou na Revolução Farroupilha. Segundo a página do Museu Municipal, a sugestão do nome foi do primeiro cônsul italiano, Abramo Canini, amigo de Garibaldi.",
+            "fontes": [
+              "garibaldi-pm-historia",
+              "garibaldi-turismo-museu"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "garibaldense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-garibaldi-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -29.2545,
+          "lon": -51.534,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 34335,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 168.492,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Bento Gonçalves",
+          "intermediaria": "Caxias do Sul",
+          "mesorregiao": "Nordeste Rio-grandense",
+          "microrregiao": "Caxias do Sul",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "serra",
+          "campo",
+          "urbano"
+        ],
+        "rotulo": "Cidade de encosta na serra, com casario antigo e parreirais nas colinas",
+        "base": "serra",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.8
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            8
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 11,
+          "predios": 0
+        },
+        "extras": [
+          "cerca"
+        ],
+        "marcos": [
+          {
+            "modulo": "casarao",
+            "referencia": "centro-historico-buarque-de-macedo"
+          },
+          {
+            "modulo": "vinhedo",
+            "referencia": "espumante-e-vinhedos"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A Prefeitura chama a cidade de 'capital brasileira do espumante' e diz que a Peterlongo elaborou em 1913 'o primeiro espumante brasileiro'; o texto evita o superlativo e só diz que a cidade se apresenta como Capital do Espumante. A página do Museu diz que o prédio é 'o mais antigo prédio de alvenaria da Serra Gaúcha'; ficou de fora. A Prefeitura diz que em 31/10/1900 Conde D'Eu foi elevada a município já com o nome Garibaldi; o IBGE registra o distrito com o nome Garibaldi (ex-Colônia Conde d'Eu) desde a Lei Provincial nº 1.455, de 1884; o texto segue o IBGE (nome em 1884, vila em 1900). A Prefeitura dá 640 m de altitude e 105 km de Porto Alegre; o portal de turismo dá 640 m e 110 km; o texto não cita distância. Datas de eventos (Fenachamp, Garibaldi Vintage) ficaram de fora para não prometer. Não há fonte para rio no cenário; a água foi omitida."
+      }
+    },
+    "1100122": {
+      "identidade": {
+        "id": "1100122",
+        "ibge": "1100122",
+        "nome": "Ji-Paraná",
+        "uf": "RO",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Às margens do rio Machado, o antigo Ji-Paraná, a cidade do posto telegráfico de Rondon que cresceu com os colonos da BR-364.",
+        "resumo": "Ji-Paraná fica no rio Machado, que antes se chamava Ji-Paraná e deu nome à cidade; uma ponte sobre ele liga o 1º ao 2º distrito, e no município corre também o Urupá. Segundo o IBGE, a região era ocupada pelos povos jaru e urupá quando nordestinos fugidos da seca se fixaram ali, por volta de 1879, e Rondon chegou em 1909 com a linha telegráfica. Chamado de Vila de Rondônia nos anos 1950, o povoado cresceu com a BR-364 e com colonos do Centro-Sul. Foi distrito em 1945 e virou município em 1977.",
+        "fontesResumo": [
+          "ibge-biblioteca-ji-parana-ro",
+          "ji-parana-pm-corrida-marco-zero",
+          "ji-parana-pm-mutirao-rios"
+        ],
+        "referencias": [
+          {
+            "id": "museu-das-comunicacoes",
+            "tipo": "patrimonio",
+            "titulo": "Museu das Comunicações",
+            "texto": "O museu ocupa a antiga estação telegráfica Presidente Pena, que o governo do estado data de 1914, parte da linha que ligava Santo Antônio do Rio Madeira, hoje Porto Velho, a Cuiabá. Segundo pesquisa citada pelo governo, o primeiro prédio era de madeira e foi refeito em adobe, com telhas de cerâmica feitas à mão. Fica na praça da Linha Telegráfica, no centro, com peças das linhas telegráficas e da época de Rondon.",
+            "fontes": [
+              "ji-parana-ro-museu-comunicacoes"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão genérico de paredes claras e beiral; proporções, janelas e cores são ilustrativas."
+            },
+            "curto": "Antiga estação telegráfica da linha de Rondon, refeita em adobe, que hoje abriga o Museu das Comunicações."
+          },
+          {
+            "id": "rio-machado",
+            "tipo": "paisagem",
+            "titulo": "Rio Machado",
+            "texto": "O rio que o histórico do IBGE registra como Ji-Paraná, hoje conhecido como Machado, corta a cidade, e a ponte sobre ele liga o 1º ao 2º distrito. Pescadores da região, organizados numa colônia, participaram em 2025 de um projeto da Prefeitura para ligar a pesca artesanal ao turismo. Na cheia de abril de 2026, o rio chegou a 10,91 metros e a cidade entrou em alerta vermelho.",
+            "fontes": [
+              "ibge-biblioteca-ji-parana-ro",
+              "ji-parana-pm-corrida-marco-zero",
+              "ji-parana-pm-mutirao-rios",
+              "ji-parana-pm-pesca-rio-machado",
+              "ji-parana-pm-enchente-2026"
+            ],
+            "descoberta": {
+              "modulo": "ponte-urbana",
+              "nota": "Na maquete, uma ponte baixa de concreto genérica; largura do rio, vãos e cores são ilustrativos."
+            },
+            "curto": "O antigo rio Ji-Paraná, que dá nome à cidade e separa o 1º do 2º distrito, ligados por uma ponte."
+          },
+          {
+            "id": "parque-ecologico-municipal",
+            "tipo": "natureza",
+            "titulo": "Parque Ecológico Municipal",
+            "texto": "Criado por lei municipal de 14 de julho de 2001 para preservar a fauna e a flora dentro da área urbana, o parque tem uma passarela de madeira de 700 metros. Interditado em dezembro de 2024, estava em restauração em 2026, com madeira apreendida doada pela Justiça; em junho daquele ano, a Prefeitura informou que o mirante e metade da passarela estavam prontos.",
+            "fontes": [
+              "ji-parana-pm-parque-ecologico-restauracao",
+              "ji-parana-pm-parque-ecologico-mirante"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Às margens do rio Machado, no início da rua Dom Augusto, um memorial em forma de pirâmide marca o ponto que pesquisadores consideraram o provável local de desembarque da equipe de Rondon, depois de atravessar o rio em 1909. O projeto é de 2008.",
+            "fontes": [
+              "ji-parana-ro-memorial-rondon"
+            ]
+          },
+          {
+            "texto": "Antes de ser Ji-Paraná, o lugar foi Urupá e depois Vila de Rondônia; o distrito criado em 1945 se chamava Rondônia. O nome atual, tirado do rio, veio com a emancipação de 1977.",
+            "fontes": [
+              "ibge-biblioteca-ji-parana-ro"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "ji-paranaense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-ji-parana-ro"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -10.8768,
+          "lon": -61.9575,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 124333,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 6896.649,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Ji-Paraná",
+          "intermediaria": "Ji-Paraná",
+          "mesorregiao": "Leste Rondoniense",
+          "microrregiao": "Ji-Paraná",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "rio",
+          "urbano"
+        ],
+        "rotulo": "Cidade dos dois lados do rio Machado, com ponte, buritis e a velha estação telegráfica",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.35
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            9
+          ],
+          [
+            "mata",
+            5
+          ],
+          [
+            "buriti",
+            4
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 2
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "casarao",
+            "referencia": "museu-das-comunicacoes"
+          },
+          {
+            "modulo": "ponte-urbana",
+            "referencia": "rio-machado"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O histórico do IBGE diz que Rondon chegou em 1909 e construiu uma estação telegráfica perto do rio; a notícia do governo de Rondônia (2015) diz que a estação Presidente Pena foi inaugurada em 1914. O texto dá 1909 como chegada e atribui 1914 ao governo do estado. O IBGE escreve 'jarus e urupás'; o texto usa 'povos jaru e urupá'. Horários e gestão do Museu das Comunicações são de 2015 e ficaram de fora. O Parque Ecológico estava interditado e em obra em 2026: o texto não promete reabertura nem prazo. Superlativos da Prefeitura ('um dos maiores corredores', 'enorme potencial') ficaram de fora. O 'Coração de Rondônia' da página de turismo não entrou no texto. O relevo (planície) não tem fonte: é escolha neutra do cenário. Não achei página oficial que descreva o Memorial Rondon além da notícia de 2015 nem fonte primária para o Festival de Praia ou a Expojipa."
+      }
+    },
+    "1501303": {
+      "identidade": {
+        "id": "1501303",
+        "ibge": "1501303",
+        "nome": "Barcarena",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na margem do rio Pará, a antiga Missão Gebirié virou Barcarena: a matriz de São Francisco Xavier, a vila do século XVII e a Praia do Caripi.",
+        "resumo": "Barcarena fica em terras baixas de clima equatorial, entre o rio Pará e a baía do Marajó, com ilhas como a das Onças e a de Arapiranga. Os primeiros habitantes foram indígenas Aruans; segundo o IBGE, jesuítas fundaram ali a Fazenda, depois Missão, Gebirié, e o povoado virou freguesia de São Francisco Xavier de Barcarena em 1758. Elevada a município em 1897, desmembrada de Belém, voltou a ser distrito da capital e foi recriada como município em 1943, com instalação em 1944. O padroeiro é São Francisco Xavier, e Nossa Senhora de Nazaré é a copadroeira.",
+        "fontesResumo": [
+          "barcarena-ibge-enciclopedia-1957",
+          "ibge-biblioteca-barcarena-pa",
+          "barcarena-prefeitura-cirio-2024"
+        ],
+        "referencias": [
+          {
+            "id": "igreja-sao-francisco-xavier",
+            "tipo": "patrimonio",
+            "titulo": "Igreja de São Francisco Xavier",
+            "texto": "A matriz de Barcarena leva o nome do padroeiro e é o ponto de chegada do Círio local. Segundo a Enciclopédia dos Municípios do IBGE, de 1957, a igreja foi erguida pelos jesuítas da Missão Gebirié e ainda servia de matriz, guardando os restos do Cônego Batista Campos; em 1897, os moradores impediram que fossem levados para Belém.",
+            "fontes": [
+              "barcarena-ibge-enciclopedia-1957",
+              "barcarena-prefeitura-cirio-2024",
+              "barcarena-prefeitura-cirio-2022"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de uma torre; não reproduz a fachada nem as proporções da matriz de Barcarena."
+            },
+            "curto": "Matriz do padroeiro, erguida pelos jesuítas da Missão Gebirié segundo o IBGE, e chegada do Círio de Barcarena."
+          },
+          {
+            "id": "vila-do-conde",
+            "tipo": "patrimonio",
+            "titulo": "Vila do Conde",
+            "texto": "Segundo a Prefeitura, a Vila do Conde tem origem no século XVII e guarda traços arquitetônicos e urbanísticos das vilas coloniais; em 2024, a comunidade comemorou 371 anos. A praia da vila aparece entre os atrativos naturais do município citados pelo Governo do Pará.",
+            "fontes": [
+              "barcarena-prefeitura-vila-do-conde-2024",
+              "barcarena-agenciapara-praias-2023"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão colonial genérico representa a vila; não reproduz nenhum imóvel da Vila do Conde."
+            },
+            "curto": "Comunidade com origem no século XVII, segundo a Prefeitura, com traços das antigas vilas coloniais."
+          },
+          {
+            "id": "praia-do-caripi",
+            "tipo": "natureza",
+            "titulo": "Praia do Caripi",
+            "texto": "Em Vila dos Cabanos, a Praia do Caripi é um dos atrativos naturais de Barcarena, ao lado das praias da Vila do Conde, de Itupanema e da ilha de Trambioca. Em julho, recebe o Festival de Verão da Prefeitura, e a areia serve de base para regatas e para a Escola Pública de Vela, projeto social da associação local de vela e canoagem.",
+            "fontes": [
+              "barcarena-agenciapara-praias-2023",
+              "barcarena-prefeitura-festival-verao-2026",
+              "barcarena-prefeitura-vela-caripi-2026"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo historiadores citados pelo IBGE, o nome viria de uma grande embarcação batizada de \"Arena\", que os moradores chamavam de barca; a junção das duas palavras teria dado Barcarena.",
+            "fontes": [
+              "ibge-biblioteca-barcarena-pa",
+              "barcarena-ibge-enciclopedia-1957"
+            ]
+          },
+          {
+            "texto": "O Festival do Abacaxi chegou à 44ª edição em 2026, com shows no Ecoparque do Cafezal e o concurso que escolhe a Rainha do Festival do Abacaxi, uma das tradições do calendário cultural da cidade.",
+            "fontes": [
+              "barcarena-prefeitura-festival-abacaxi-2026",
+              "barcarena-prefeitura-rainha-abacaxi-2026"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "barcarenense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-barcarena-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -1.5047,
+          "lon": -48.6257,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 126650,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1310.338,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Belém",
+          "intermediaria": "Belém",
+          "mesorregiao": "Metropolitana de Belém",
+          "microrregiao": "Belém",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "rio",
+          "urbano"
+        ],
+        "rotulo": "Cidade baixa na beira do rio Pará, com a matriz dos jesuítas e uma vila colonial",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.45,
+          "direcao": 0.8
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            9
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 1
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-sao-francisco-xavier"
+          },
+          {
+            "modulo": "casarao",
+            "referencia": "vila-do-conde"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. As páginas História, Sobre o Município e Turismo e Lazer do site da Prefeitura estão vazias; o histórico vem do IBGE (Biblioteca e Enciclopédia de 1957). A Enciclopédia diz que a freguesia foi concedida \"em data ignorada\", enquanto a Biblioteca do IBGE dá 1758; o texto usa 1758 atribuído ao IBGE. A informação de que a igreja é a jesuítica e guarda os restos do Cônego Batista Campos é de 1957 e foi escrita no passado; conferir se os restos continuam na matriz. A Enciclopédia registra mudança da sede autorizada em 1952 para o rio Mucuruçá; não usado. Ficaram de fora \"maior festa popular de Barcarena\" (Festival do Abacaxi) e \"a mais antiga do município\" (Vila do Conde). A relação do festival com o cultivo de abacaxi não aparece nas fontes; não afirmada. Nomes de prefeito e secretários omitidos."
+      }
+    },
+    "4101408": {
+      "identidade": {
+        "id": "4101408",
+        "ibge": "4101408",
+        "nome": "Apucarana",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "A Cidade Alta do Norte do Paraná, com uma santa no alto da torre da catedral e a fama de capital do boné.",
+        "resumo": "Conhecida como Cidade Alta, Apucarana fica no Norte do Paraná e leva o nome de uma serra que já se chamava assim antes da colonização. O município está no encontro das bacias do Tibagi, do Ivaí e do Pirapó, que nasce na área urbana, sobre um solo avermelhado e fértil vindo do basalto. Segundo o histórico do IBGE, a cidade foi projetada em 1934 pela Companhia de Terras Norte do Paraná como polo agrícola entre Londrina e Maringá. Virou município em 1943, desmembrado de Londrina, e foi instalada em 1944; japoneses e ucranianos, chegados por volta de 1936, marcam a cultura local.",
+        "fontesResumo": [
+          "apucarana-prefeitura-inicio",
+          "apucarana-visite-conhecendo",
+          "ibge-biblioteca-apucarana-pr",
+          "apucarana-ibge-enciclopedia-1959"
+        ],
+        "referencias": [
+          {
+            "id": "catedral-nossa-senhora-de-lourdes",
+            "tipo": "patrimonio",
+            "titulo": "Catedral Basílica Menor Nossa Senhora de Lourdes",
+            "texto": "É a terceira igreja da Praça Rui Barbosa: a primeira capela foi derrubada pelo vento em 1941. A pedra fundamental foi lançada em 1949, e a obra levou quase 20 anos. Virou catedral em 1965, com a criação da Diocese, e basílica menor em 2024. No alto da torre principal, de 50 metros, fica uma imagem de Nossa Senhora esculpida em cimento por Ângelo Franco Perez, que morava na cidade.",
+            "fontes": [
+              "apucarana-visite-catedral"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre central; não reproduz a catedral nem a imagem da santa, e cores e proporções são ilustrativas."
+            },
+            "curto": "Catedral desde 1965 na Praça Rui Barbosa, com uma imagem de Nossa Senhora no alto da torre principal."
+          },
+          {
+            "id": "estacao-ferroviaria-praca-maua",
+            "tipo": "patrimonio",
+            "titulo": "Estação ferroviária e Praça Mauá",
+            "texto": "A estação foi inaugurada oficialmente em 1942 pela Companhia Ferroviária São Paulo-Paraná, e o primeiro trem chegou em 19 de abril de 1943. Patrimônio histórico municipal, mantém as características originais; a linha passou a levar só carga. Ao lado, a Praça Mauá, de 1958, reúne obras de Ângelo Franco Perez, como o chafariz em homenagem a Nossa Senhora de Lourdes, que recebia quem chegava de trem.",
+            "fontes": [
+              "apucarana-visite-praca-maua"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação genérica com plataforma, trilho e locomotiva; o prédio real e as obras da praça não são reproduzidos."
+            },
+            "curto": "Estação de 1942, patrimônio histórico municipal, onde o primeiro trem chegou em 1943; ao lado fica a Praça Mauá."
+          },
+          {
+            "id": "capital-do-bone",
+            "tipo": "tradicao",
+            "titulo": "Capital Nacional do Boné",
+            "texto": "Apucarana é reconhecida por lei federal como Capital Nacional do Boné. A fabricação começou em 1974, com bandanas e tiaras feitas à mão e vendidas em feiras agropecuárias, exposições e no litoral paranaense. Desde 2008, um boné gigante de concreto, o Bonezão, com 5 metros de altura e 14 de comprimento contando a aba, fica na Avenida Zilda Seixas Amaral, junto ao viaduto da BR-369.",
+            "fontes": [
+              "apucarana-visite-monumento-bone"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, em texto reproduzido pelo IBGE, o nome viria do caingangue apó-caarã-nã, que significaria semelhante a uma floresta imensa. O mesmo texto registra versões de origem tupi, ligadas à ideia de um círculo rachado.",
+            "fontes": [
+              "ibge-biblioteca-apucarana-pr"
+            ]
+          },
+          {
+            "texto": "O relógio da catedral, inaugurado em 1962, foi presente da colônia japonesa. Tem três metros de diâmetro e quatro mostradores com algarismos romanos, e marca as 4 horas com IIII, em vez de IV.",
+            "fontes": [
+              "apucarana-visite-catedral"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "apucaranense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-apucarana-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -23.5538,
+          "lon": -51.4677,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 130134,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 556.99,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Apucarana",
+          "intermediaria": "Londrina",
+          "mesorregiao": "Norte Central Paranaense",
+          "microrregiao": "Apucarana",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "serra"
+        ],
+        "rotulo": "Cidade alta sobre a terra vermelha, com a catedral e a velha estação",
+        "base": "interior",
+        "cores": {
+          "terra": "#8a3f2a"
+        },
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.55
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.12
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            9
+          ],
+          [
+            "araucaria",
+            5
+          ],
+          [
+            "mata",
+            5
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 4
+        },
+        "extras": [
+          "lavoura"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "catedral-nossa-senhora-de-lourdes"
+          },
+          {
+            "modulo": "estacao",
+            "referencia": "estacao-ferroviaria-praca-maua"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O portal Visite Apucarana usa domínio .com.br, mas é o portal de turismo ligado na página inicial da Prefeitura (contato turismo@apucarana.pr.gov.br); a revisão pode querer confirmar o vínculo. Altitude divergente: 866 m no portal da Prefeitura e 983 m na sede pela Enciclopédia de 1959; o texto não dá número. Data de criação do município: o IBGE e o portal citam o Decreto-lei 199, de 30/12/1943; a página 'Conhecendo Apucarana' fala em 31/12/1943; o texto diz só 1943. A etimologia tem versões diferentes (caingangue, tupi, guaianás no portal); a curiosidade usa só o texto do IBGE, atribuído. Ficaram de fora os superlativos do portal ('uma das mais bonitas do Brasil', 'única do País', 'escultura de Nossa Senhora mais alta', 'mais da metade da produção nacional' de bonés). O texto não nomeia a lei federal da Capital Nacional do Boné (a página não traz o número). A Missa Devocional de todo dia 11 ficou de fora para não prometer evento. Rio da maquete: a nascente do Pirapó na área urbana; a estação não exige água. A fonte apucarana-visite-natureza sustenta só o cenário (araucárias e mata), por isso aparece como declarada e não citada no texto."
+      }
+    },
+    "4104204": {
+      "identidade": {
+        "id": "4104204",
+        "ibge": "4104204",
+        "nome": "Campo Largo",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No Planalto de Curitiba, a cidade da louça, do antigo engenho de mate e da padroeira Nossa Senhora da Piedade.",
+        "resumo": "Campo Largo fica no Planalto de Curitiba, a oeste da capital, com a sede perto de 956 metros de altitude, num município de rios como o Açungui e de relevo acidentado em áreas como a Rondinha. A povoação começou por volta de 1814 e, em 1819, um capitão doou o campo a Nossa Senhora da Piedade para quem quisesse se estabelecer ali. Segundo a Câmara, os pousos de tropeiros e a pecuária marcaram a formação, e a colonização teve poloneses, italianos, alemães e portugueses. Foi distrito em 1841, vila desmembrada de Curitiba em 1870, instalada em 1871, e cidade em 1882.",
+        "fontesResumo": [
+          "campo-largo-ibge-enciclopedia-1959",
+          "campo-largo-cpc-pr-engenho-mate-rondinha",
+          "campo-largo-camara-historia",
+          "ibge-biblioteca-campo-largo-pr"
+        ],
+        "referencias": [
+          {
+            "id": "nossa-senhora-da-piedade",
+            "tipo": "patrimonio",
+            "titulo": "Matriz de Nossa Senhora da Piedade",
+            "texto": "A padroeira está na origem da cidade: o campo da povoação foi doado a Nossa Senhora da Piedade, e a imagem, trazida da Bahia em 1816, foi levada à sua igreja em 1826. A primeira capela começou a ser erguida em 1821, com esmolas dos fiéis, e ficou pronta em 1828. Em 1959, o IBGE registrava a festa da padroeira em 2 de fevereiro. Hoje a paróquia mantém a Igreja Matriz Nossa Senhora da Piedade.",
+            "fontes": [
+              "campo-largo-ibge-enciclopedia-1959",
+              "campo-largo-arquidiocese-matriz-piedade-2025"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de uma torre; não reproduz o prédio atual da matriz, e cores e proporções são ilustrativas."
+            },
+            "curto": "A padroeira está na origem da povoação; a primeira capela foi erguida entre 1821 e 1828."
+          },
+          {
+            "id": "engenho-de-mate-da-rondinha",
+            "tipo": "patrimonio",
+            "titulo": "Antigo Engenho de Mate da Rondinha",
+            "texto": "Construído por volta de 1870 no distrito da Rondinha, o engenho beneficiava erva-mate com uma roda d'água movida por um canal desviado do rio Rondinha, no sopé de um morro. Em 1896 foi adaptado para moer cereais. Tombado pelo Estado em 1968 e pelo Iphan em 1985, foi restaurado em 1980 e 1981 e passou a funcionar como Museu do Mate.",
+            "fontes": [
+              "campo-largo-cpc-pr-engenho-mate-rondinha"
+            ],
+            "descoberta": {
+              "modulo": "casarao",
+              "nota": "Na maquete, um casarão genérico; o engenho real é um conjunto rural de madeira, pedra e barro com roda d'água, que a forma não reproduz."
+            },
+            "curto": "Engenho de erva-mate de cerca de 1870, movido a roda d'água, tombado pelo Estado e pelo Iphan e hoje Museu do Mate."
+          },
+          {
+            "id": "capital-da-louca",
+            "tipo": "tradicao",
+            "titulo": "Capital da Louça",
+            "texto": "O caulim e a argila do município já eram usados na fabricação de louças e cerâmicas em 1959, segundo a Enciclopédia dos Municípios do IBGE. A produção e a exportação de louça deram a Campo Largo o apelido de Capital da Louça, segundo a Câmara Municipal.",
+            "fontes": [
+              "campo-largo-ibge-enciclopedia-1959",
+              "campo-largo-camara-historia"
+            ],
+            "curto": "Caulim e argila deram origem à produção de louça que valeu à cidade o apelido de Capital da Louça."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Enciclopédia dos Municípios do IBGE, de 1959, o nome Campo Largo passou a aparecer nos documentos depois da abertura de um novo caminho de Curitiba para São Paulo que passava pela localidade.",
+            "fontes": [
+              "campo-largo-ibge-enciclopedia-1959"
+            ]
+          },
+          {
+            "texto": "Em 1959, a principal atração turística citada pelo IBGE era a fonte de água mineral Ouro Fino, no distrito de Bateias, procurada por gente de outros municípios e estados.",
+            "fontes": [
+              "campo-largo-ibge-enciclopedia-1959"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "campo-larguense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-campo-largo-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -25.4552,
+          "lon": -49.518,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 136327,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1243.551,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Curitiba",
+          "intermediaria": "Curitiba",
+          "mesorregiao": "Metropolitana de Curitiba",
+          "microrregiao": "Curitiba",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "campo",
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade no planalto, entre campos e morros, com rio, matriz e o engenho de mate",
+        "base": "campos",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.5
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.15
+        },
+        "vegetacao": [
+          [
+            "capim",
+            8
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 2
+        },
+        "extras": [
+          "lavoura",
+          "cerca"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "nossa-senhora-da-piedade"
+          },
+          {
+            "modulo": "casarao",
+            "referencia": "engenho-de-mate-da-rondinha"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O doador do campo aparece como 'capitão João Antonio da Costa' na Enciclopédia (1959) e como 'capitão Antônio da Costa' na Câmara e no histórico do IBGE; o texto diz só 'um capitão'. A Câmara situa o ciclo do ouro 'em meados do século XVI', data que o texto não usa. A Câmara diz também que 'a fundação da cidade ocorreu em 1870' (ano da lei da vila); o texto separa distrito (1841), vila (1870), instalação (1871) e cidade (1882), como o IBGE. A Câmara chama a Ouro Fino de 'uma das fontes de água mineral mais conhecidas do País' (superlativo omitido) e cita marcas de louça, deixadas de fora. A Serra de São Luiz do Purunã, citada em 1959, passou para Balsa Nova em 1961 e ficou fora do texto. A Enciclopédia não diz se a matriz atual é o templo de 1828; o texto e a nota não afirmam isso. A festa de 2 de fevereiro é registro de 1959, não calendário atual. O site da Prefeitura usa codificação que a ferramenta não lê com acentos e não tem página de história acessível; não foi usado. O engenho está na Rondinha, que a fonte estadual situa em Campo Largo."
+      }
+    },
+    "4202909": {
+      "identidade": {
+        "id": "4202909",
+        "ibge": "4202909",
+        "nome": "Brusque",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Às margens do Itajaí-Mirim, entre morros baixos, a cidade dos colonos de 1860, das tecelagens e da Fenarreco.",
+        "resumo": "Brusque se espalha pelas duas margens do rio Itajaí-Mirim, entre morros pouco elevados e colinas arredondadas, num município cercado pelas serras do Mar, de Tijucas e do Itajaí. Em 1860, colonos alemães subiram o rio guiados pelo barão von Schneeburg para formar a nova colônia, que depois recebeu muitos imigrantes italianos. Vila de São Luiz Gonzaga em 1881, instalada em 1883, passou a se chamar Brusque em 1890 e virou cidade em 1916. O nome homenageia Francisco Carlos de Araújo Brusque, presidente da Província em 1860, e a indústria têxtil marcou a cidade desde o fim do século XIX.",
+        "fontesResumo": [
+          "brusque-ibge-enciclopedia-1959",
+          "ibge-biblioteca-brusque-sc"
+        ],
+        "referencias": [
+          {
+            "id": "santuario-de-azambuja",
+            "tipo": "tradicao",
+            "titulo": "Santuário de Azambuja e a gruta de Caravaggio",
+            "texto": "A Enciclopédia dos Municípios do IBGE, de 1959, descreve a fonte de Nossa Senhora do Caravaggio, de água cristalina, com uma capelinha acima da gruta onde os peregrinos deixam ex-votos, e ao lado o Santuário de Azambuja, junto a seminário e hospital. No morro do Rosário ficam imagens dos mistérios do Rosário, e a festa da Assunção, em 15 de agosto, reunia romeiros de Santa Catarina, do Paraná e do Rio Grande do Sul.",
+            "fontes": [
+              "brusque-ibge-enciclopedia-1959"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada de uma torre; não reproduz o Santuário de Azambuja, e as cores são ilustrativas."
+            },
+            "curto": "Santuário junto à gruta e à fonte de Nossa Senhora do Caravaggio, destino de romeiros na festa de 15 de agosto."
+          },
+          {
+            "id": "fiacao-e-tecelagens",
+            "tipo": "cultura",
+            "titulo": "Fiação, tecelagens e a Vila Renaux",
+            "texto": "Segundo a Enciclopédia do IBGE, o Cônsul Carlos Renaux instalou em Brusque, em 1908, a primeira fiação de algodão do estado, e nos anos 1950 a economia da cidade se apoiava sobretudo nos tecidos. A Vila Renaux, residência do cônsul projetada pelo arquiteto alemão Eugen Rombach e construída entre 1932 e 1935 numa elevação, com jardim aos fundos, tem tombamento provisório pelo Estado.",
+            "fontes": [
+              "brusque-ibge-enciclopedia-1959",
+              "brusque-fcc-bens-tombados"
+            ],
+            "descoberta": {
+              "modulo": "usina",
+              "nota": "Na maquete, um galpão fabril genérico com chaminé junto ao rio, lembrando as fiações; não reproduz nenhuma fábrica real."
+            },
+            "curto": "Em 1908, Carlos Renaux instalou em Brusque a primeira fiação de algodão de Santa Catarina; os tecidos moldaram a cidade."
+          },
+          {
+            "id": "fenarreco",
+            "tipo": "tradicao",
+            "titulo": "Fenarreco, a Festa Nacional do Marreco",
+            "texto": "Pensada em 1985 como complemento à Oktoberfest, a festa nasceu para divulgar o marreco recheado, prato da cozinha alemã ligado à cidade. Celebra a imigração alemã em outubro, com comida e bebidas típicas, bandas germânicas, danças folclóricas e brincadeiras como o chope em metro, a corrida do tamanco e o serra-serrador.",
+            "fontes": [
+              "brusque-setur-fenarreco-2024",
+              "brusque-secom-fenarreco-2025"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O nome mudou várias vezes: a colônia nasceu como São Luiz Gonzaga, logo foi chamada de Itajaí, o município foi criado em 1881 de novo como São Luiz Gonzaga e só em 1890 passou a se chamar Brusque.",
+            "fontes": [
+              "brusque-ibge-enciclopedia-1959",
+              "ibge-biblioteca-brusque-sc"
+            ]
+          },
+          {
+            "texto": "A Enciclopédia dos Municípios do IBGE, de 1959, conta que o movimento da cidade se intensificava com o som das sirenes das fábricas e que o matraquear das lançadeiras dos teares seguia noite adentro.",
+            "fontes": [
+              "brusque-ibge-enciclopedia-1959"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "brusquense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-brusque-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -27.0935,
+          "lon": -48.9203,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 141385,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 284.675,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Brusque",
+          "intermediaria": "Blumenau",
+          "mesorregiao": "Vale do Itajaí",
+          "microrregiao": "Blumenau",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "vale",
+          "rio",
+          "urbano"
+        ],
+        "rotulo": "Cidade entre morros baixos nas duas margens do Itajaí-Mirim, com santuário e fiação",
+        "base": "vale",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.8
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.2,
+          "direcao": 0.3
+        },
+        "vegetacao": [
+          [
+            "mata",
+            12
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "palmeira",
+            3
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "santuario-de-azambuja"
+          },
+          {
+            "modulo": "usina",
+            "referencia": "fiacao-e-tecelagens"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Datas divergentes: o histórico do IBGE (texto da Prefeitura) diz que a primeira leva desembarcou em Itajaí em 25/07/1860; a Enciclopédia de 1959 dá 4 de agosto de 1860 para a chegada dos colonos à colônia (o texto diz só 1860). A formação administrativa do IBGE cria o distrito em 31/07/1873 e a Enciclopédia, em 31/07/1874 (o texto omite o distrito). A Fenarreco diverge entre notícias do governo: em 2024, 'surgiu em 1985'; em 2025, primeiro esboço em 1985 e primeira edição anunciada em 1986, depois da enchente de 1984 (o texto diz 'pensada em 1985'). A Vila Renaux aparece na FCC com 'tombamento provisório'; conferir se já é definitivo. O Santuário de Azambuja e a gruta só têm a Enciclopédia de 1959 como fonte (os verbos estão no passado ou atribuídos); o site da Prefeitura carrega por JavaScript e não abriu, e não houve fonte oficial atual sobre o santuário. Evitados superlativos das fontes ('maior festa de Brusque', 'segundo centro da indústria têxtil', 'obra da moderna arquitetura')."
+      }
+    },
+    "5008305": {
+      "identidade": {
+        "id": "5008305",
+        "ibge": "5008305",
+        "nome": "Três Lagoas",
+        "uf": "MS",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "A Cidade das Águas cresceu em volta de três lagoas e dos trilhos da Noroeste, perto do rio Paraná.",
+        "resumo": "Três Lagoas fica na bacia do rio Paraná, que marca a divisa com São Paulo, e no município correm também o Sucuriú, o Pardo e o Taquaruçu. Segundo o IBGE, sertanistas mineiros e paulistas das famílias Garcia e Lopes chegaram a partir de 1829 para abrir fazendas de gado. Em 1909, engenheiros da Estrada de Ferro Noroeste do Brasil acamparam à beira da Lagoa Maior, e o povoado cresceu com a ferrovia. Foi distrito em 1914, vila e município em 1915, instalado em 8 de agosto, e cidade em 1920. As três lagoas que lhe dão nome ficam hoje dentro da área urbana.",
+        "fontesResumo": [
+          "tres-lagoas-ibge-enciclopedia-1958",
+          "ibge-biblioteca-tres-lagoas-ms",
+          "tres-lagoas-prefeitura-nossa-historia"
+        ],
+        "referencias": [
+          {
+            "id": "lagoa-maior",
+            "tipo": "paisagem",
+            "titulo": "Lagoa Maior e as três lagoas",
+            "texto": "Segundo a Enciclopédia do IBGE de 1958, os engenheiros da Noroeste pararam onde a campina se abria em lagoas de água límpida, cercadas de gramíneas; as três lagoas que deram nome à cidade ficam hoje nos perímetros urbano e suburbano. Em volta da Lagoa Maior, a pista de caminhada de mais de 2,5 quilômetros é uma das áreas mais usadas pela população para exercício e lazer, segundo a Prefeitura.",
+            "fontes": [
+              "tres-lagoas-ibge-enciclopedia-1958",
+              "tres-lagoas-prefeitura-nossa-historia",
+              "tres-lagoas-prefeitura-lagoa-maior-111-anos"
+            ]
+          },
+          {
+            "id": "estacao-noroeste",
+            "tipo": "patrimonio",
+            "titulo": "Estação da Noroeste e a Maria Fumaça",
+            "texto": "A Enciclopédia do IBGE chamava a cidade de filha primogênita da Estrada de Ferro Noroeste do Brasil em terras mato-grossenses; a estação ficava no km 474 da linha, que chegava a Três Lagoas logo depois de cruzar o rio Paraná pela ponte Francisco de Sá. Os trilhos cortaram o centro até 2014. A locomotiva Maria Fumaça Baldwin de 1920 ficou na cidade como patrimônio histórico.",
+            "fontes": [
+              "tres-lagoas-ibge-enciclopedia-1958",
+              "tres-lagoas-prefeitura-curiosidades-107-anos",
+              "tres-lagoas-prefeitura-ponte-ms-sp"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação genérica com plataforma, trilho e locomotiva pequena; prédio, cores e locomotiva são ilustrativos."
+            },
+            "curto": "Estação da Estrada de Ferro Noroeste do Brasil, a ferrovia que fez a cidade crescer; a Maria Fumaça de 1920 ficou na cidade."
+          },
+          {
+            "id": "santo-antonio",
+            "tipo": "tradicao",
+            "titulo": "Santo Antônio, o padroeiro",
+            "texto": "A Igreja Matriz de Santo Antônio aparecia entre os edifícios de destaque da cidade na Enciclopédia do IBGE de 1958. O registro daquele ano descrevia as festas de junho para Santo Antônio, São João e São Pedro, com procissões, missas, quermesses, leilões, fogueiras e bailes, com destaque para a do padroeiro, em 13 de junho.",
+            "fontes": [
+              "tres-lagoas-ibge-enciclopedia-1958"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada de torre central; fachada, torre, proporções e cores são ilustrativas."
+            },
+            "curto": "Igreja Matriz de Santo Antônio, o padroeiro, festejado em junho com procissão, quermesse e fogueira no registro de 1958."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, conta-se que um homem negro, sem uma das mãos, tocava o sino da Capela Santo Antônio até ser morto; seu espírito teria aparecido para pedir que a morte não fosse vingada. A história, chamada de lenda do Negrinho Aleijado, ficou conhecida por uma música sertaneja de Teddy Vieira e Luizinho, gravada por Tião Carreiro e Pardinho.",
+            "fontes": [
+              "tres-lagoas-prefeitura-nossa-historia"
+            ]
+          },
+          {
+            "texto": "Em 1958, o IBGE citava o salto do Urubupungá, no rio Paraná, a 48 quilômetros da cidade, como atração e em estudos para gerar energia. Segundo a Prefeitura, a construção da barragem de Jupiá começou em 1964, e a usina Engenheiro Souza Dias foi finalizada em 1974.",
+            "fontes": [
+              "tres-lagoas-ibge-enciclopedia-1958",
+              "tres-lagoas-prefeitura-curiosidades-107-anos",
+              "tres-lagoas-prefeitura-nossa-historia"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "três-lagoense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-tres-lagoas-ms"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -20.7911,
+          "lon": -51.7089,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 132152,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 10217.071,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Três Lagoas",
+          "intermediaria": "Campo Grande",
+          "mesorregiao": "Leste de Mato Grosso do Sul",
+          "microrregiao": "Três Lagoas",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "campo"
+        ],
+        "rotulo": "Cidade plana em volta das três lagoas, com a estação da Noroeste e a matriz",
+        "base": "interior",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "lagoas"
+        },
+        "vegetacao": [
+          [
+            "capim",
+            9
+          ],
+          [
+            "redonda",
+            7
+          ],
+          [
+            "mata",
+            4
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "estacao-noroeste"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "santo-antonio"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A Prefeitura (com base em UFMS/PET-História) data a expedição de Joaquim Francisco Lopes 'por volta de 1828'; o histórico do IBGE e a Enciclopédia de 1958 dão 1829; o texto usa 1829, atribuído ao IBGE. A Prefeitura chama a cidade de 'Capital Mundial da Celulose' e diz que Jupiá foi 'a maior usina hidrelétrica do Brasil'; superlativos deixados de fora. A Prefeitura chama a Lagoa Maior de 'principal cartão-postal da cidade'; o texto não usa o ranking. Não foi achada fonte oficial sobre tombamento da estação, da ponte Francisco de Sá ou da matriz; a notícia de 2017 só chama a estação de 'patrimônio histórico' e diz que o prédio pertence à União (por isso o texto não fala em tombamento). Não se sabe se a 'Capela Santo Antônio' da lenda é a matriz atual; a lenda ficou como curiosidade, separada da referência da matriz. As festas de junho são registro de 1958, sem promessa. A Enciclopédia cita o salto do Urubupungá a 48 km; a relação exata entre o salto e as usinas não foi afirmada."
       }
     }
   }
