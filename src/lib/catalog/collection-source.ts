@@ -4,7 +4,8 @@ import { arrangementOf, enabledInternalIds } from "../site-config/collections-en
 import { PAGE_SLUG, RESERVED_SLUGS, type ScopeDoc } from "../site-config/schema";
 import { arrangeMembers, type CategoryArrangement, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type InkCategorySource, type UnavailableReason } from "../site-config/sources";
 import { discountPercent, formatListPrice, formatPrice } from "../format";
-import { isRegionSlug, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { isRegionSlug, STATE_NAMES, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { normalizeText } from "../geo/text";
 import { commercePlan, storeForRegion } from "./commerce-mode";
 import { getCatalog } from "./repository";
 import { purchaseUrl } from "./commerce";
@@ -213,6 +214,38 @@ export function collectionPageLookup(
     const pageCount = Math.ceil(all.length / perPage);
     return { status: "ok", items: all.slice((page - 1) * perPage, page * perPage), total: all.length, page, pageCount };
   };
+}
+
+/** One row of a state page: a public collection ("Fala Daqui") cut down to the products of the state's own collection ("Pará"). */
+export type StateCollectionRow = { collection: CollectionRecord; items: CarouselItem[] };
+
+/**
+ * The state's collections as the state page shows them. INK has no parent/child between collections, so the hierarchy is ours: the PARENT is the
+ * collection named after the state ("Pará", usually internal), and each SECONDARY is a public collection of the same store that shares products with
+ * it ("Da Nossa Terra", "Fala Daqui"), in INK's menu order. A row holds the secondary's products that are also in the state, in the secondary's
+ * own arrangement for the region (hidden ones out), only products of the catalog and of this region. Empty rows are left out; no parent, no rows.
+ */
+export function stateCollectionRows(region: RegionSlug, uf: string, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): StateCollectionRow[] {
+  const store = storeForRegion(region);
+  const records = getStoreCollections(store, filePath)?.collections ?? [];
+  const stateNames = new Set(Object.values(STATE_NAMES).map(normalizeText));
+  const wanted = normalizeText(STATE_NAMES[uf] ?? "");
+  if (!wanted) return [];
+  const parent = records.filter((c) => normalizeText(c.name) === wanted && !c.needsResync).sort((a, b) => a.position - b.position || a.id - b.id)[0];
+  if (!parent) return [];
+  const inState = new Set(completeMembers(parent) ?? parent.memberIds);
+  const products = productsOf(store);
+  const rows: StateCollectionRow[] = [];
+  for (const c of [...records].sort((a, b) => a.position - b.position || a.id - b.id)) {
+    if (c.id === parent.id || !c.isAvailable || stateNames.has(normalizeText(c.name))) continue;
+    const members = (completeMembers(c) ?? c.memberIds).filter((id) => inState.has(id));
+    if (members.length === 0) continue;
+    const items = arrangeMembers(members, arrangementOf(doc, store, c.id))
+      .map((id) => regionItem(products, id, region))
+      .filter((item): item is CarouselItem => item !== null);
+    if (items.length > 0) rows.push({ collection: c, items });
+  }
+  return rows;
 }
 
 /** The slug of a PUBLIC collection only. An internal collection has no verified public page on INK, so it never gets a link there. */
