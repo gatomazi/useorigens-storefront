@@ -2385,6 +2385,195 @@
       "url": "https://pirenopolis.go.gov.br/experiencia/cachoeira-bonsucesso/",
       "referencia": "Página institucional de turismo (sem data)",
       "consultadoEm": "2026-10-15"
+    },
+    "chapada-dos-guimaraes-prefeitura-historia": {
+      "titulo": "História",
+      "publicador": "Prefeitura Municipal de Chapada dos Guimarães",
+      "url": "https://www.chapadadosguimaraes.mt.gov.br/Institucional/Historia/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-chapada-dos-guimaraes-mt": {
+      "titulo": "Biblioteca IBGE — Chapada dos Guimarães: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em CHAPADA DOS GUIMARÃES (MT). Prefeitura)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5103007",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "chapada-dos-guimaraes-iphan-patrimonio-mt": {
+      "titulo": "Patrimônio Material — Superintendência do Iphan em Mato Grosso",
+      "publicador": "Instituto do Patrimônio Histórico e Artístico Nacional (Iphan)",
+      "url": "https://www.gov.br/iphan/pt-br/superintendencias/mato-grosso/patrimonio-material",
+      "referencia": "Página publicada em 10/09/2021, modificada em 14/03/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "chapada-dos-guimaraes-icmbio-parna": {
+      "titulo": "Parque Nacional da Chapada dos Guimarães",
+      "publicador": "Instituto Chico Mendes de Conservação da Biodiversidade (ICMBio)",
+      "url": "https://www.gov.br/icmbio/pt-br/assuntos/biodiversidade/unidade-de-conservacao/unidades-de-biomas/cerrado/lista-de-ucs/parna-da-chapada-dos-guimaraes",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "caldas-novas-goias-turismo-destino": {
+      "titulo": "Caldas Novas — Goiás Turismo",
+      "publicador": "Goiás Turismo (Governo de Goiás)",
+      "url": "https://goias.gov.br/turismo/caldas-novas/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "caldas-novas-semad-pescan-50-anos": {
+      "titulo": "Governo de Goiás prepara calendário comemorativo aos 50 anos do Parque Estadual da Serra de Caldas Novas",
+      "publicador": "Semad (Governo de Goiás)",
+      "url": "https://goias.gov.br/meioambiente/governo-de-goias-prepara-calendario-comemorativo-aos-50-anos-do-parque-estadual-da-serra-de-caldas-novas/",
+      "referencia": "Notícia de 2020",
+      "consultadoEm": "2026-10-15"
+    },
+    "caldas-novas-semad-pescan-cartilha-cerrado": {
+      "titulo": "Plantas do Cerrado e a sua polinização — Museu do Parque Estadual da Serra de Caldas Novas",
+      "publicador": "Semad / PESCAN (Governo de Goiás)",
+      "url": "https://goias.gov.br/meioambiente/wp-content/uploads/sites/33/2024/02/Cartilha-Plantas-do-Cerrado-e-a-sua-Polinizacao-PESCAN-1.pdf",
+      "referencia": "Cartilha de 2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "caldas-novas-ibge-enciclopedia-1958": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 36 (Goiás) — Caldas Novas",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_36.pdf",
+      "referencia": "Livro de 1958, p. 99-104",
+      "consultadoEm": "2026-10-15"
+    },
+    "caldas-novas-goias-turismo-programas": {
+      "titulo": "Parque Estadual é destaque entre os 13 principais programas para quem busca fortes emoções em Caldas Novas",
+      "publicador": "Goiás Turismo (Governo de Goiás)",
+      "url": "https://goias.gov.br/turismo/parque-estadual-e-destaque-entre-os-13-principais-programas-para-quem-busca-fortes-emocoes-em-caldas-novas/",
+      "referencia": "Notícia de 11/09/2017",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-caldas-novas-go": {
+      "titulo": "Biblioteca IBGE — Caldas Novas: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Caldas Novas (GO). In: ENCICLOPÉDIA dos municípios brasileiros. Rio de Janeiro: IBGE, 1958. v. 36. p. 140-145)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5204508",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "criciuma-ibge-enciclopedia-municipios-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XXXII (Paraná e Santa Catarina) — Criciúma",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_32.pdf",
+      "referencia": "Publicação de 1959 (verbete nas páginas 75 a 79 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "criciuma-prefeitura-catedral": {
+      "titulo": "Viva Criciúma — Catedral São José",
+      "publicador": "Prefeitura Municipal de Criciúma",
+      "url": "https://viva.criciuma.sc.gov.br/pontoturistico/10",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "criciuma-prefeitura-parque-imigrantes": {
+      "titulo": "Viva Criciúma — Parque dos Imigrantes",
+      "publicador": "Prefeitura Municipal de Criciúma",
+      "url": "https://viva.criciuma.sc.gov.br/pontoturistico/28",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "criciuma-prefeitura-historia": {
+      "titulo": "Viva Criciúma — História",
+      "publicador": "Prefeitura Municipal de Criciúma",
+      "url": "https://viva.criciuma.sc.gov.br/historia",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "criciuma-prefeitura-mina-visitacao": {
+      "titulo": "Viva Criciúma — Mina de Visitação Octávio Fontana",
+      "publicador": "Prefeitura Municipal de Criciúma",
+      "url": "https://viva.criciuma.sc.gov.br/pontoturistico/22",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "criciuma-prefeitura-mirante": {
+      "titulo": "Viva Criciúma — Mirante Realdo Santos Guglielmi",
+      "publicador": "Prefeitura Municipal de Criciúma",
+      "url": "https://viva.criciuma.sc.gov.br/pontoturistico/34",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-criciuma-sc": {
+      "titulo": "Biblioteca IBGE — Criciúma: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Criciúma (SC). Prefeitura. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4204608",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "urubici-prefeitura-inscricoes-rupestres": {
+      "titulo": "Inscrições Rupestres",
+      "publicador": "Prefeitura Municipal de Urubici — Turismo",
+      "url": "https://www.urubici.sc.gov.br/turismo/41/inscricoes-rupestres",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "urubici-icmbio-parna-sao-joaquim": {
+      "titulo": "Parna de São Joaquim",
+      "publicador": "Instituto Chico Mendes de Conservação da Biodiversidade (ICMBio)",
+      "url": "https://www.gov.br/icmbio/pt-br/assuntos/biodiversidade/unidade-de-conservacao/unidades-de-biomas/mata-atlantica/lista-de-ucs/parna-de-sao-joaquim",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "urubici-prefeitura-dados-do-municipio": {
+      "titulo": "Dados do Município",
+      "publicador": "Prefeitura Municipal de Urubici",
+      "url": "https://www.urubici.sc.gov.br/dados-do-municipio",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "urubici-prefeitura-pedra-furada": {
+      "titulo": "Pedra Furada - Morro da Igreja",
+      "publicador": "Prefeitura Municipal de Urubici — Turismo",
+      "url": "https://www.urubici.sc.gov.br/turismo/55/pedra-furada-morro-da-igreja",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "urubici-prefeitura-cascata-do-avencal": {
+      "titulo": "Parque Cascata do Avencal",
+      "publicador": "Prefeitura Municipal de Urubici — Turismo",
+      "url": "https://www.urubici.sc.gov.br/turismo/53/parque-cascata-do-avencal",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-urubici-sc": {
+      "titulo": "Biblioteca IBGE — Urubici: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em IBGE, AMURES — Associação dos Municípios da Região Serrana)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4218905",
+      "referencia": "Registro de 2004",
+      "consultadoEm": "2026-10-15"
+    },
+    "dourados-prefeitura-sintese-historica": {
+      "titulo": "Síntese Histórica",
+      "publicador": "Prefeitura Municipal de Dourados",
+      "url": "https://portal.dourados.ms.gov.br/index.php/sintese-historica/",
+      "referencia": "Página institucional de 15/07/2014",
+      "consultadoEm": "2026-10-15"
+    },
+    "dourados-prefeitura-o-que-visitar": {
+      "titulo": "Turista – O Que Visitar",
+      "publicador": "Prefeitura Municipal de Dourados",
+      "url": "https://portal.dourados.ms.gov.br/index.php/turista-o-que-visitar/",
+      "referencia": "Página institucional de 17/07/2014 (com atualizações posteriores)",
+      "consultadoEm": "2026-10-15"
+    },
+    "dourados-ibge-enciclopedia-1958": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, volume XXXV (verbete Dourados)",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_35.pdf",
+      "referencia": "Publicação de 1958 (verbete nas páginas 177 a 179 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-dourados-ms": {
+      "titulo": "Biblioteca IBGE — Dourados: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Dourados (MS). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5003702",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -10388,6 +10577,887 @@
         "status": "curadoria inicial",
         "em": "2026-10-15",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Datas administrativas divergem: o histórico do IBGE dá o distrito pela Carta Régia de 1754 e a vila por 'Decreto de 10-07-1882' com instalação em 14-04-1833 (1882 parece erro de digitação), enquanto a Enciclopédia de 1958 diz distrito em 1732 e vila por decreto de 10/07/1832; o texto usa só a instalação (1833), a cidade (1853) e o nome (1890), comuns às duas. O decreto do nome aparece como n.º 18 (Biblioteca) e n.º 181 (Enciclopédia); fica de fora. O nome do jornal diverge ('Matutino Meia Pontense' na Biblioteca, 'Matutina Meiapontense' na Enciclopédia); o texto não o nomeia. A altitude do pico (1.380 m) e a capela no cume vêm da Enciclopédia de 1958; não achei fonte oficial atual acessível (o Parque Estadual dos Pireneus ficou sem fonte). A Prefeitura chama a Matriz de 'a mais tradicional igreja católica do estado' e o Iphan diz 'um dos mais ricos acervos' e festa 'conhecida internacionalmente': superlativos deixados de fora. A forma do marco 'igreja' (torre central) não corresponde à Matriz real, o que a nota explica."
+      }
+    },
+    "5103007": {
+      "identidade": {
+        "id": "5103007",
+        "ibge": "5103007",
+        "nome": "Chapada dos Guimarães",
+        "uf": "MT",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No alto dos paredões de arenito, entre Cerrado e matas, a cachoeira do Véu de Noiva e uma igreja do século XVIII.",
+        "resumo": "Chapada dos Guimarães fica na borda do Planalto Central, num planalto de encostas e escarpas de arenito vermelho que vão de 600 a mais de 850 metros de altitude. A paisagem mistura Cerrado e matas, e no parque nacional nascem rios da bacia do Coxipó, que formam o Pantanal. Segundo a Prefeitura, em texto reproduzido pelo IBGE, a ocupação começou com o ouro do rio Coxipó e as primeiras roças, e em 1751 o padre Estevão de Castro instalou a Missão de Santana, aldeamento com indígenas de diferentes etnias. Distrito de Cuiabá em 1814, virou município em 1953, instalado em 1954.",
+        "fontesResumo": [
+          "chapada-dos-guimaraes-prefeitura-historia",
+          "chapada-dos-guimaraes-icmbio-parna",
+          "ibge-biblioteca-chapada-dos-guimaraes-mt"
+        ],
+        "referencias": [
+          {
+            "id": "cachoeira-veu-de-noiva",
+            "tipo": "natureza",
+            "titulo": "Cachoeira do Véu de Noiva",
+            "texto": "É a paisagem mais conhecida do Parque Nacional da Chapada dos Guimarães, criado em 1989, e é formada pelo rio Coxipó, que ali leva o nome de Coxipozinho ou Coxipó-Mirim. O parque protege dez tipos de vegetação do Cerrado, nascentes de rios que formam o Pantanal e sítios arqueológicos; o Morro de São Jerônimo e a Cidade de Pedra também ficam nele.",
+            "fontes": [
+              "chapada-dos-guimaraes-icmbio-parna"
+            ],
+            "descoberta": {
+              "modulo": "cachoeira",
+              "nota": "Na maquete, um paredão simplificado com queda d'água e poço; altura, cor da pedra e vegetação são ilustrativas."
+            },
+            "curto": "Cachoeira do rio Coxipó, a paisagem mais conhecida do Parque Nacional."
+          },
+          {
+            "id": "igreja-de-santana",
+            "tipo": "patrimonio",
+            "titulo": "Igreja de Santana do Sacramento",
+            "texto": "Em 1751, o jesuíta Estevão de Crasto ergueu na Aldeia Velha uma capela de palha. Em 1779 ela foi trocada por uma igreja de taipa de pilão, coberta de telha, com capela-mor revestida de azulejos pombalinos e talha de madeira policromada nos altares. Foi o primeiro bem tombado pelo Iphan em Mato Grosso, em 1957.",
+            "fontes": [
+              "chapada-dos-guimaraes-iphan-patrimonio-mt"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada de paredes claras; a torre é ilustrativa (a real é de taipa e sem as torres)."
+            },
+            "curto": "Igreja de taipa de 1779, primeiro bem tombado pelo Iphan em Mato Grosso, em 1957."
+          },
+          {
+            "id": "araras-vermelhas",
+            "tipo": "natureza",
+            "titulo": "Araras-vermelhas dos paredões",
+            "texto": "As araras-vermelhas fazem ninhos nos paredões de arenito que cercam a cidade e são tratadas pela Prefeitura como a ave símbolo da Chapada. Elas fazem parte de uma fauna de aves que a Prefeitura conta em mais de 400 espécies, e que atrai observadores de vários países.",
+            "fontes": [
+              "chapada-dos-guimaraes-prefeitura-historia"
+            ],
+            "curto": "Araras que fazem ninho nos paredões de arenito, ave símbolo da Chapada."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O nome mudou várias vezes: Santana da Chapada, Chapada de Cuiabá, Santana da Chapada de Cuiabá, Santana da Chapada de Guimarães e, por fim, Chapada dos Guimarães. Segundo a Prefeitura, o Guimarães veio de uma Carta Régia que mandava dar nomes portugueses aos povoados, em homenagem à vila de Guimarães, em Portugal.",
+            "fontes": [
+              "ibge-biblioteca-chapada-dos-guimaraes-mt",
+              "chapada-dos-guimaraes-prefeitura-historia"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "chapadense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-chapada-dos-guimaraes-mt"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -15.4601,
+          "lon": -55.749,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 18990,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 6603.252,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Cuiabá",
+          "intermediaria": "Cuiabá",
+          "mesorregiao": "Centro-Sul Mato-grossense",
+          "microrregiao": "Cuiabá",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "cerrado",
+          "serra"
+        ],
+        "rotulo": "Cidade no alto dos paredões de arenito, com Cerrado, cachoeira e a igreja antiga",
+        "base": "cerrado",
+        "cores": {
+          "terra": "#a65a3a"
+        },
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 1.2
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.12,
+          "direcao": -0.6
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            12
+          ],
+          [
+            "mata",
+            7
+          ],
+          [
+            "buriti",
+            4
+          ],
+          [
+            "ipe",
+            4
+          ],
+          [
+            "capim",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 7
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "cachoeira",
+            "referencia": "cachoeira-veu-de-noiva"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-de-santana"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A área do Parque Nacional diverge na própria página do ICMBio (32.630 ha no texto, 32.769,55 ha na ficha), por isso ficou de fora. O padre aparece como Estevão de Castro (Prefeitura e IBGE) e Estevão de Crasto (Iphan); cada texto usa a grafia da sua fonte. O Iphan diz que a igreja conserva o aspecto de 1779 'embora sem as duas torres de origem', depois de citar as torres acrescentadas após a tempestade de 1780; o texto não descreve as torres. Ficaram de fora superlativos da Prefeitura ('último remanescente do barroco' no Iphan, 'maior município brasileiro', 'uma das mais antigas placas geológicas') e a frase de que as araras sobrevoam a cidade todos os dias (promessa de avistamento). A data de 1751 para a missão aparece igual na Prefeitura, no IBGE e no Iphan."
+      }
+    },
+    "5204508": {
+      "identidade": {
+        "id": "5204508",
+        "ibge": "5204508",
+        "nome": "Caldas Novas",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No sopé da serra de Caldas, a cidade das águas termais, com parque de Cerrado, cachoeiras e o velho balneário municipal.",
+        "resumo": "Caldas Novas fica no sopé da serra de Caldas, que lhe dá o nome, numa região de serras e ribeirões das bacias do Corumbá e do Pirapitinga, junto ao lago da represa de Corumbá. A serra, de Cerrado, é a área de recarga das águas termais e virou parque estadual em 1970. Segundo o histórico do IBGE, Bartolomeu Bueno da Silva, o filho, achou ali águas quentes e ouro em 1722, e Martinho Coelho de Siqueira encontrou em 1777 as fontes do córrego das Lavras, onde garimpeiros e doentes formaram o primeiro povoado. Foi distrito de Morrinhos em 1857, município em 1911 e cidade em 1923.",
+        "fontesResumo": [
+          "caldas-novas-ibge-enciclopedia-1958",
+          "caldas-novas-goias-turismo-destino",
+          "caldas-novas-semad-pescan-50-anos",
+          "caldas-novas-semad-pescan-cartilha-cerrado",
+          "ibge-biblioteca-caldas-novas-go"
+        ],
+        "referencias": [
+          {
+            "id": "parque-estadual-serra-de-caldas-novas",
+            "tipo": "natureza",
+            "titulo": "Parque Estadual da Serra de Caldas Novas",
+            "texto": "Criado em 25 de setembro de 1970 pela Lei nº 7.282, o parque abrange Caldas Novas, Rio Quente e Marzagão e protege cerca de 12 mil hectares de Cerrado na área de recarga das águas termais da região. Tem trilhas, mirantes com vista para Caldas Novas e Rio Quente e cachoeiras como a Cascatinha e a do Paredão.",
+            "fontes": [
+              "caldas-novas-semad-pescan-50-anos",
+              "caldas-novas-goias-turismo-programas",
+              "caldas-novas-semad-pescan-cartilha-cerrado"
+            ],
+            "descoberta": {
+              "modulo": "cachoeira",
+              "nota": "Na maquete, uma queda d'água genérica num paredão de pedra; não reproduz a Cascatinha nem o Paredão, e altura e forma são ilustrativas."
+            },
+            "curto": "Parque estadual criado em 1970 na serra que recarrega as águas termais, com trilhas, mirantes e as cachoeiras da Cascatinha e do Paredão."
+          },
+          {
+            "id": "matriz-nossa-senhora-das-dores",
+            "tipo": "patrimonio",
+            "titulo": "Igreja Matriz de Nossa Senhora das Dores",
+            "texto": "Na praça central, a Matriz de Nossa Senhora das Dores é de 1950, segundo a Goiás Turismo. Tombada pelo patrimônio histórico estadual, preserva características originais, como as colunas de madeira, e está nos roteiros de quem visita a cidade.",
+            "fontes": [
+              "caldas-novas-goias-turismo-programas"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre única; não reproduz a matriz, e forma, torre e cores são ilustrativas."
+            },
+            "curto": "Matriz de 1950 na praça central, tombada pelo patrimônio estadual, que guarda as colunas de madeira originais."
+          },
+          {
+            "id": "balneario-municipal",
+            "tipo": "patrimonio",
+            "titulo": "Balneário Municipal",
+            "texto": "Segundo o histórico do IBGE, o Balneário Municipal fica onde Martinho Coelho achou as fontes do córrego das Lavras em 1777. Ali funcionava uma casa de banhos particular, de 1910, abastecida por cinco nascentes termais; em 1935 ela deu lugar ao balneário, que foi restaurado e mantém características da década de 1940.",
+            "fontes": [
+              "ibge-biblioteca-caldas-novas-go",
+              "caldas-novas-goias-turismo-programas"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O histórico do IBGE conta que, em 1777, Martinho Coelho de Siqueira caçava num bosque quando seus cães se lançaram em águas muito quentes; assim foram achadas as fontes que ficaram conhecidas como Caldas de Pirapitinga.",
+            "fontes": [
+              "ibge-biblioteca-caldas-novas-go"
+            ]
+          },
+          {
+            "texto": "Segundo a Goiás Turismo, as águas aquecem em camadas profundas da terra e afloram por fraturas no quartzito. Na Lagoa de Pirapitinga, o poço do ovo, que cozinha um ovo em poucos minutos, chega a 57 graus.",
+            "fontes": [
+              "caldas-novas-goias-turismo-programas"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "calda-novense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-caldas-novas-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -17.7422,
+          "lon": -48.6252,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 98622,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1608.523,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Caldas Novas-Morrinhos",
+          "intermediaria": "Itumbiara",
+          "mesorregiao": "Sul Goiano",
+          "microrregiao": "Meia Ponte",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "serra",
+          "cerrado"
+        ],
+        "rotulo": "Águas termais no sopé da serra de Caldas, com cachoeira, matriz e o lago de Corumbá",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.8
+        },
+        "agua": {
+          "modulo": "lago",
+          "largura": 0.3
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            9
+          ],
+          [
+            "arbusto",
+            6
+          ],
+          [
+            "capim",
+            6
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "buriti",
+            2
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 4
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "cachoeira",
+            "referencia": "parque-estadual-serra-de-caldas-novas"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "matriz-nossa-senhora-das-dores"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A Goiás Turismo (2017) chama a Matriz de 1950 de 'a construção mais antiga da cidade', mas na mesma página diz que o Casarão dos Gonzaga é de 1907 e o Balneário de 1910; o texto não usa 'mais antiga'. A área do parque varia (12 mil ha na Goiás Turismo; 'mais de 12 mil' na Semad; 12,3 mil na cartilha de 2024); o texto diz 'cerca de 12 mil'. A temperatura das águas varia entre fontes (35° a 45° na Enciclopédia de 1958; 37 a 57 graus na Goiás Turismo); só o poço do ovo é citado, atribuído. Ficaram de fora superlativos das fontes ('maior manancial hidrotermal do mundo', 'maior estância hidrotermal', 'terceiro maior parque hoteleiro', 'uma das nascentes mais quentes'). O tombamento estadual da Matriz não foi conferido em fonte do órgão de patrimônio (só na Goiás Turismo). O site da Prefeitura só reproduz o histórico do IBGE."
+      }
+    },
+    "4204608": {
+      "identidade": {
+        "id": "4204608",
+        "ibge": "4204608",
+        "nome": "Criciúma",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "A Capital do Carvão, nascida de uma colônia italiana à beira do rio Criciúma, entre morros e serras do sul catarinense.",
+        "resumo": "Criciúma fica no sul catarinense, a 46 metros de altitude na sede, cortada por rios como o Mãe Luzia e o Sangão e cercada de morros e serras ligados à Serra do Mar. Segundo a Enciclopédia do IBGE, a colônia surgiu em 6 de janeiro de 1880 com 22 famílias italianas, 139 pessoas de Veneza, Belluno e Treviso, à beira do pequeno rio Criciúma. Depois vieram poloneses, alemães e descendentes de portugueses de Laguna. Foi distrito em 1892 e município em 1925, instalado em 1926; o carvão-de-pedra, explorado desde 1913, deu à cidade o apelido de Capital do Carvão.",
+        "fontesResumo": [
+          "criciuma-ibge-enciclopedia-municipios-1959",
+          "ibge-biblioteca-criciuma-sc"
+        ],
+        "referencias": [
+          {
+            "id": "mirante-realdo-santos-guglielmi",
+            "tipo": "paisagem",
+            "titulo": "Mirante Realdo Santos Guglielmi",
+            "texto": "Inaugurado em 2023, nas comemorações dos 98 anos de emancipação de Criciúma, o mirante tem 30 metros de altura, três níveis e duas plataformas de vidro. Fica ao lado do Parque Astronômico Albert Einstein, no bairro Cruzeiro do Sul. Segundo a Prefeitura, do alto a vista abrange a cidade, a serra e o mar.",
+            "fontes": [
+              "criciuma-prefeitura-mirante"
+            ],
+            "descoberta": {
+              "modulo": "mirante",
+              "nota": "Na maquete, uma torre de observação genérica; altura, plataformas e cores são ilustrativas."
+            },
+            "curto": "Torre de 30 metros inaugurada em 2023; segundo a Prefeitura, do alto se veem a cidade, a serra e o mar."
+          },
+          {
+            "id": "catedral-sao-jose",
+            "tipo": "patrimonio",
+            "titulo": "Catedral São José",
+            "texto": "Na Praça Nereu Ramos, no Centro, a Catedral São José começou a ser construída em 1907, sob a orientação do Padre João Canônico, e foi inaugurada em 1917. Para o Congresso Eucarístico Nacional de 1946 ganhou o átrio da fachada, duas capelas laterais e imagens de santos em cimento feitas por Natalício Marques. Foi revestida de azulejos em 1976 e ampliada em 2006.",
+            "fontes": [
+              "criciuma-prefeitura-catedral"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre central; não reproduz a catedral, e forma, cores e azulejos são ilustrativos."
+            },
+            "curto": "Construída a partir de 1907 e inaugurada em 1917, na Praça Nereu Ramos; ganhou azulejos em 1976."
+          },
+          {
+            "id": "mina-de-visitacao-octavio-fontana",
+            "tipo": "cultura",
+            "titulo": "Mina de Visitação Octávio Fontana",
+            "texto": "Aberta ao público em 2011, na antiga propriedade da família Fontana, no bairro Archimedes Naspolini, a mina de carvão mineral permite ao visitante passar, no interior, por experiências parecidas com as dos mineiros na extração. O lugar tem uma mini locomotiva, réplica de 1922, exposição de maquetes e uma gruta dedicada a Santa Bárbara, padroeira dos mineiros.",
+            "fontes": [
+              "criciuma-prefeitura-mina-visitacao"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, o nome Cresciuma viria de um capim abundante na região, chamado em tupi Kyruy-Syiuâ. A grafia passou a Criciúma por lei estadual de 30 de dezembro de 1948, data que o histórico do IBGE também registra.",
+            "fontes": [
+              "criciuma-prefeitura-historia",
+              "ibge-biblioteca-criciuma-sc"
+            ]
+          },
+          {
+            "texto": "No distrito do Rio Maina, o Parque dos Imigrantes, implantado em 2019, tem um casarão que abriga uma atafona, equipamento que os colonizadores do sul catarinense usavam para fazer farinha de milho, polvilho e farinha de mandioca. Segundo a Prefeitura, a estrutura lembra também a primeira indústria da cidade.",
+            "fontes": [
+              "criciuma-prefeitura-parque-imigrantes"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "criciumense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-criciuma-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -28.6778,
+          "lon": -49.3693,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 214493,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 234.865,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Criciúma",
+          "intermediaria": "Criciúma",
+          "mesorregiao": "Sul Catarinense",
+          "microrregiao": "Criciúma",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio",
+          "serra"
+        ],
+        "rotulo": "Cidade do carvão entre morros, cortada por rios, com a serra ao fundo",
+        "base": "vale",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.6
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.2
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            8
+          ],
+          [
+            "mata",
+            6
+          ],
+          [
+            "palmeira",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 4
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "mirante",
+            "referencia": "mirante-realdo-santos-guglielmi"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "catedral-sao-jose"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Divergências: a Enciclopédia do IBGE (1959) diz que a grafia mudou de Cresciúma para Criciúma pelo Decreto-lei estadual n.º 941, de 31/12/1943, enquanto o histórico do IBGE e a Prefeitura dão a Lei estadual n.º 247, de 30/12/1948 (o texto usa 1948 e atribui). O histórico do IBGE cita imigrantes de Veneza e Treviso; a Enciclopédia, de Veneza, Belluno ('Beluno' no original) e Treviso (o resumo atribui à Enciclopédia). A Prefeitura chama 6 de janeiro de 1880 de fundação; o texto atribui a data à Enciclopédia, que diz que nessa data 'se fundavam as colônias'. A página da Mina diz que ela é 'a única mina de carvão mineral aberta à visitação na América Latina - e a quarta no mundo'; ficou de fora (superlativo). Horários, preço e regra de chuva do Mirante ficaram de fora. Não achei descrição da fachada da Catedral (número de torres); por isso o marco é a igreja genérica, com nota. 'Capital do Carvão' é apelido registrado pela Enciclopédia e pela Prefeitura. A altitude e os rios vêm da Enciclopédia de 1959; a área de 1959 (1.000 km²) não foi usada, pois o município perdeu distritos depois."
+      }
+    },
+    "4218905": {
+      "identidade": {
+        "id": "4218905",
+        "ibge": "4218905",
+        "nome": "Urubici",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No vale do rio Canoas, na Serra Catarinense, entre araucárias, cascatas e o alto do Morro da Igreja.",
+        "resumo": "Urubici fica no vale do rio Canoas, na Serra Catarinense, a 915 metros de altitude, numa paisagem de araucárias, campos, cascatas e muros de pedra. Segundo o histórico do IBGE, as primeiras incursões para cultivar a terra foram feitas em 1915; o lugar virou distrito de São Joaquim em 1922 e município em 1956, instalado em 1957. O Morro da Igreja, no município, é um dos núcleos de visitação do Parque Nacional de São Joaquim, que tem sede em Urubici. O IBGE cita a produção de hortaliças, a criação de trutas e o turismo ecológico na economia local.",
+        "fontesResumo": [
+          "urubici-prefeitura-dados-do-municipio",
+          "ibge-biblioteca-urubici-sc",
+          "urubici-icmbio-parna-sao-joaquim"
+        ],
+        "referencias": [
+          {
+            "id": "morro-da-igreja-pedra-furada",
+            "tipo": "natureza",
+            "titulo": "Morro da Igreja e Pedra Furada",
+            "texto": "Com 1.822 metros de altitude, o Morro da Igreja é um dos núcleos de visitação do Parque Nacional de São Joaquim, gerido pelo ICMBio. Do alto se vê a Pedra Furada, uma janela natural na rocha com cerca de 30 metros de circunferência, que marca a divisa entre Urubici, Bom Jardim da Serra e Orleans. A visita é gratuita e pede agendamento junto ao parque.",
+            "fontes": [
+              "urubici-prefeitura-dados-do-municipio",
+              "urubici-prefeitura-pedra-furada",
+              "urubici-icmbio-parna-sao-joaquim"
+            ],
+            "descoberta": {
+              "modulo": "mirante",
+              "nota": "Na maquete, uma torre de observação genérica lembra o mirante do alto do morro; a Pedra Furada e o relevo real não são reproduzidos."
+            },
+            "curto": "Morro de 1.822 metros no Parque Nacional de São Joaquim, de onde se vê a janela de pedra da Pedra Furada."
+          },
+          {
+            "id": "cascata-do-avencal",
+            "tipo": "natureza",
+            "titulo": "Cascata do Avencal",
+            "texto": "A cerca de 8 quilômetros da cidade, a água da Cascata do Avencal cai em queda livre por mais de 100 metros, segundo a Prefeitura. Há mirantes voltados para a queda, que também é usada para a prática de rapel.",
+            "fontes": [
+              "urubici-prefeitura-dados-do-municipio",
+              "urubici-prefeitura-cascata-do-avencal"
+            ],
+            "descoberta": {
+              "modulo": "cachoeira",
+              "nota": "Na maquete, um paredão simplificado com queda d'água e poço; altura, cor da rocha e vegetação são ilustrativas."
+            },
+            "curto": "Cascata a cerca de 8 km da cidade, com queda livre de mais de 100 metros, segundo a Prefeitura."
+          },
+          {
+            "id": "inscricoes-rupestres-do-avencal",
+            "tipo": "patrimonio",
+            "titulo": "Inscrições rupestres do Morro do Avencal",
+            "texto": "No Morro do Avencal, junto à estrada para São Joaquim, há inscrições na rocha deixadas por povos que habitaram a região há pelo menos 4.000 anos, segundo a Prefeitura. A Prefeitura diz que se presume que esses povos considerassem o local sagrado e destaca entre as figuras um rosto conhecido como Máscara do Guardião.",
+            "fontes": [
+              "urubici-prefeitura-inscricoes-rupestres"
+            ],
+            "curto": "Inscrições na rocha deixadas há pelo menos 4.000 anos, no Morro do Avencal."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico do IBGE, o nome do lugar veio do rio que banhava o povoado e que, na época, já se chamava assim. A Prefeitura reúne hipóteses de origem tupi para a palavra, como \"fileira de urubus\".",
+            "fontes": [
+              "ibge-biblioteca-urubici-sc",
+              "urubici-prefeitura-dados-do-municipio"
+            ]
+          },
+          {
+            "texto": "A Prefeitura registra que, no cume do Morro da Igreja, foi medida de forma extraoficial a temperatura de −17,8 °C, em 29 de junho de 1996.",
+            "fontes": [
+              "urubici-prefeitura-dados-do-municipio"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "urubiciense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-urubici-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -28.0156,
+          "lon": -49.5924,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 10834,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1021.371,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Lages",
+          "intermediaria": "Lages",
+          "mesorregiao": "Serrana",
+          "microrregiao": "Campos de Lages",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "serra",
+          "vale"
+        ],
+        "rotulo": "Vale de serra com araucárias, rio, cascata e o mirante do morro",
+        "base": "serra",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 1.3
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.14
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            14
+          ],
+          [
+            "capim",
+            8
+          ],
+          [
+            "mata",
+            4
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "colonial",
+          "casas": 7
+        },
+        "extras": [
+          "cerca",
+          "lavoura"
+        ],
+        "marcos": [
+          {
+            "modulo": "mirante",
+            "referencia": "morro-da-igreja-pedra-furada"
+          },
+          {
+            "modulo": "cachoeira",
+            "referencia": "cascata-do-avencal"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A página 'História do Município' da Prefeitura declara 'Fonte: Wikipédia' e não foi usada (ela fala de jesuítas em 1711, de indígenas xoklengs e de imigrantes italianos, alemães e letões em 1924); a página 'Dados do Município' também parece derivada da Wikipédia, mas está sem atribuição e foi usada só para paisagem, altitude, Morro da Igreja, Avencal, temperatura e etimologia — vale conferir. O histórico do IBGE dá 1915 para as primeiras incursões; a página de história da Prefeitura fala de agricultores e madeireiros entre 1903 e 1911 — o texto usa só o IBGE. A divisão do município em 1922 é por lei municipal de São Joaquim, com instalação do distrito em 1923. Ficaram de fora os superlativos da Prefeitura ('ponto mais alto habitado do sul do Brasil', 'temperatura mais baixa do país', 'maior produtor de hortifrutigranjeiros', 'maior obra arquitetônica', 'um dos mais importantes registros arqueológicos') e a promessa de ver o mar do alto do morro. A Cascata do Avencal é vista a partir de parques turísticos com páginas próprias na Prefeitura (Parque Cascata do Avencal, Parque Quedas do Avencal); não foram citados nomes comerciais. O gentílico no histórico do IBGE aparece como 'urubusiense', divergindo do campo oficial 'urubiciense'; não foram incluídas variantes."
+      }
+    },
+    "5003702": {
+      "identidade": {
+        "id": "5003702",
+        "ibge": "5003702",
+        "nome": "Dourados",
+        "uf": "MS",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Cidade do planalto que leva o nome do Rio Dourados, marcada pela antiga colônia agrícola e por gente de muitas origens.",
+        "resumo": "Dourados fica no planalto, na bacia do Rio Paraná, e herdou o nome do Rio Dourados, próximo ao antigo povoado de São João Batista de Dourados. Segundo a Prefeitura, a região era habitada por povos Terena e Kaiowá antes da colonização. No fim do século XIX chegaram famílias do Rio Grande do Sul, de Minas Gerais e de São Paulo, atraídas pelos ervais nativos, e em 1910 o fazendeiro Marcelino Pires doou terras para o patrimônio do povoado. Distrito em 1914 e município em 1935, cresceu com a Colônia Agrícola Nacional, criada nos anos 1940, que atraiu migrantes e imigrantes, sobretudo japoneses.",
+        "fontesResumo": [
+          "dourados-ibge-enciclopedia-1958",
+          "dourados-prefeitura-sintese-historica",
+          "ibge-biblioteca-dourados-ms"
+        ],
+        "referencias": [
+          {
+            "id": "colonia-agricola",
+            "tipo": "patrimonio",
+            "titulo": "Colônia Agrícola Nacional de Dourados",
+            "texto": "Criada pelo governo federal nos anos 1940, a Colônia Agrícola Nacional de Dourados (CAND) ocupou cerca de 50 mil hectares e atraiu levas de migrantes. Na Avenida Marcelino Pires, o Monumento ao Colono, tombado pelo município em 2018, mostra mãos saindo da terra. Entre Vila São Pedro e Indápolis, o Cruzeiro, tombado em 1987, marca a colonização e fica ao lado do Museu da Colônia, inaugurado em 2016.",
+            "fontes": [
+              "dourados-prefeitura-o-que-visitar",
+              "dourados-prefeitura-sintese-historica",
+              "dourados-ibge-enciclopedia-1958"
+            ],
+            "descoberta": {
+              "modulo": "monumento",
+              "nota": "Na maquete, um obelisco genérico numa praça; não reproduz a escultura do Monumento ao Colono nem o Cruzeiro."
+            },
+            "curto": "Colônia federal dos anos 1940, lembrada pelo Monumento ao Colono e pelo Cruzeiro, tombados pelo município."
+          },
+          {
+            "id": "catedral-imaculada-conceicao",
+            "tipo": "patrimonio",
+            "titulo": "Catedral Imaculada Conceição e Praça Antônio João",
+            "texto": "A Praça Antônio João, no Centro, começou como campo de futebol e foi onde se formou o núcleo urbano de Dourados. Ali fica a Catedral Imaculada Conceição. A primeira capela, dedicada à santa, é de 1925 segundo a Prefeitura (a Enciclopédia do IBGE fala em 1924), e a paróquia foi fundada em 1935 pelo bispo de Corumbá.",
+            "fontes": [
+              "dourados-prefeitura-o-que-visitar",
+              "dourados-ibge-enciclopedia-1958"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de uma torre; não reproduz o prédio da catedral, e cores e proporções são ilustrativas."
+            },
+            "curto": "Na praça onde nasceu o centro da cidade; a primeira capela, dos anos 1920, deu origem à paróquia de 1935."
+          },
+          {
+            "id": "praca-imigracao-japonesa",
+            "tipo": "cultura",
+            "titulo": "Praça da Imigração Japonesa",
+            "texto": "Na Rua Toshinobu Katayama, no centro, a praça reúne símbolos, esculturas, arquitetura e plantas de inspiração japonesa. Foi inaugurada em junho de 2008, no centenário da chegada dos primeiros imigrantes japoneses ao Brasil, e lembra a imigração que o histórico do IBGE liga ao cultivo de café na colônia agrícola.",
+            "fontes": [
+              "dourados-prefeitura-o-que-visitar",
+              "ibge-biblioteca-dourados-ms"
+            ],
+            "curto": "Praça de inspiração japonesa inaugurada em 2008, no centenário da imigração japonesa ao Brasil."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Enciclopédia dos Municípios do IBGE (1958), quando a primeira casa foi construída, o lugar passou a se chamar Patrimônio de Dourados, nome que também vem do rio que corre na região.",
+            "fontes": [
+              "dourados-ibge-enciclopedia-1958"
+            ]
+          },
+          {
+            "texto": "A Reserva Indígena de Dourados tem 3.600 hectares, onde vivem os povos Kaiowá, Ñandeva e Terena, segundo a Prefeitura. A visita depende de autorização da Funai.",
+            "fontes": [
+              "dourados-prefeitura-o-que-visitar"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "douradense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-dourados-ms"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -22.241,
+          "lon": -54.7831,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 243367,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 4062.236,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Dourados",
+          "intermediaria": "Dourados",
+          "mesorregiao": "Sudoeste de Mato Grosso do Sul",
+          "microrregiao": "Dourados",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "campo"
+        ],
+        "rotulo": "Cidade do planalto entre lavouras, com ipês, praça da matriz e o rio por perto",
+        "base": "interior",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.14,
+          "direcao": 1.2
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            7
+          ],
+          [
+            "ipe",
+            6
+          ],
+          [
+            "mata",
+            4
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 3
+        },
+        "extras": [
+          "lavoura"
+        ],
+        "marcos": [
+          {
+            "modulo": "monumento",
+            "referencia": "colonia-agricola"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "catedral-imaculada-conceicao"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Divergências: a criação da Colônia Agrícola Nacional é de 1943 na Prefeitura e no IBGE (Biblioteca) e de 1942 na Enciclopédia de 1958 — o texto diz 'anos 1940'; o histórico do IBGE diz ainda que a colônia 'passou a integrar Dourados em 1935', o que não fecha com a data de criação, e foi deixado de fora. A primeira capela é de 1925 para a Prefeitura e de 1924 para a Enciclopédia; o texto atribui as duas. A Enciclopédia data o distrito de 1914 (Lei 658, igual ao IBGE) mas também cita 1911; o texto usa 1914. A Prefeitura cita a Colônia Militar de Dourados (1861) e Antônio João Ribeiro; o texto não usa a colônia militar porque não ficou claro se ficava no território atual. A Reserva Indígena aparece com 'fundada em 1925' na Prefeitura; a Enciclopédia fala de um decreto de 1915 que reservou 3.600 ha para o patrimônio da vila — por isso o texto não dá o ano da reserva; vale conferir na Funai. Monumento ao Colono é obra escultórica: o marco é um obelisco genérico. Não foi achada fonte oficial sobre a vegetação atual; a 'mata' do cenário vem das matas virgens da Enciclopédia."
       }
     }
   }
