@@ -8,6 +8,7 @@ import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { placeSearchCopy } from "@/lib/search/copy";
 import type { GlobalGroup, GlobalResult, GlobalSearchResponse } from "@/lib/search/global";
 import { SOURCES } from "@/lib/analytics/sources";
+import { carryCampaign } from "@/lib/analytics/campaign";
 import { trackGoToInk, trackSearch, trackSelectCity } from "@/lib/analytics/track";
 
 type Props = {
@@ -160,7 +161,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
       trackGoToInk({ productId: r.inkProductId, sourceSection: SOURCES.search, productName: r.title, destinationUrl: r.href, ...(r.minPrice !== undefined ? { value: r.minPrice } : {}) });
     }
     onNavigate?.();
-    if (r.external) window.location.assign(r.href);
+    if (r.external) window.location.assign(carryCampaign(r.href));
     else router.push(r.href);
   };
 
