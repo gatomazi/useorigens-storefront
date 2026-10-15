@@ -48,8 +48,9 @@ export function produtoPublicado(p: InkProductNormalized): ProdutoBruto {
     slug: p.slug,
     url: p.storeProductUrl,
     image: p.imageUrl,
-    price: p.price === null ? null : String(p.price),
-    promotionalPrice: null,
+    // The normalized product already carries INK's pricing (`price` = what it charges now, `listPrice` only during a promotion): back to INK's fields.
+    price: p.listPrice !== undefined ? String(p.listPrice) : p.price === null ? null : String(p.price),
+    promotionalPrice: p.listPrice !== undefined && p.price !== null ? String(p.price) : null,
     clusterId: p.clusterId,
     typeId: p.garmentTypeId ?? null,
     typeName: null,

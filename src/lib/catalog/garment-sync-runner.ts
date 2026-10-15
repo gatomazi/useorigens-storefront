@@ -28,7 +28,9 @@ export async function runGarmentSyncJob(
       finishSyncJobSuccess(running.startedAt, { startedAt: result.startedAt, finishedAt: result.finishedAt, outcomes: [] });
     } else {
       const problems = result.garments.stores.flatMap((s) => (!s.ok ? [`${s.storeKey}: ${s.error}`] : s.status === "deferred" ? [`${s.storeKey}: deferred (${s.interruptedBy ?? "request cap"})`] : []));
-      finishSyncJobFailure(running.startedAt, new Error(`garment sync needs attention: ${[...result.catalog.failedStores.map((k) => `${k}: catalog refresh failed`), ...problems, ...(result.garments.revalidationError ? [`revalidation: ${result.garments.revalidationError}`] : [])].join("; ")}`));
+      const lu = result.lojaUnica;
+      const lojaUnica = !lu ? [] : !lu.catalog.ok ? [`loja-unica: ${lu.catalog.error}`] : lu.garments && !lu.garments.ok ? [`loja-unica peças: ${lu.garments.error}`] : [];
+      finishSyncJobFailure(running.startedAt, new Error(`garment sync needs attention: ${[...result.catalog.failedStores.map((k) => `${k}: catalog refresh failed`), ...problems, ...lojaUnica, ...(result.garments.revalidationError ? [`revalidation: ${result.garments.revalidationError}`] : [])].join("; ")}`));
     }
   } catch (err) {
     lastRun = { status: "failed", finishedAt: new Date().toISOString(), error: err instanceof Error ? err.message : String(err) };

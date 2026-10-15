@@ -295,6 +295,24 @@ describe("daily incremental garment sync (fake INK, temp Volume)", () => {
     expect(onCatalogChanged).not.toHaveBeenCalled();
     expect(result.status === "done" && result.clean).toBe(true);
   });
+
+  test("given a prepared single store, then it is synced after the regional stores: a change clears the caches and a failure needs attention", async () => {
+    const catalog = { startedAt: "s", finishedAt: "f", changed: false, outcomes: [{ storeKey: "use-sul", ok: true, productCount: 1, bindingCount: 1, merchCount: 0, excludedCount: 0, rejected: 0, requests: 3 }] };
+    const base = { storeKeys: ["use-sul"] as const, revalidatePaths: () => undefined, syncCatalogImpl: (async () => catalog) as never, fetchStore: opts().fetchStore, minPieces: 1, log: () => undefined };
+    const changed = { ok: true as const, changed: true, productCount: 2, bindingCount: 2, merchCount: 0, excludedCount: 0, regiaoPendente: 0, collections: 1 };
+
+    const onCatalogChanged = vi.fn();
+    const ok = await runDailyGarmentSync({ ...base, onCatalogChanged, lojaUnicaImpl: async () => ({ catalog: changed, garments: { ok: true, truncated: true, newGarmentBindings: 4 } }) });
+    expect(onCatalogChanged).toHaveBeenCalledTimes(1);
+    expect(ok.status === "done" && ok.clean).toBe(true);
+    expect(ok.status === "done" && ok.lojaUnica?.garments?.newGarmentBindings).toBe(4);
+
+    const failed = await runDailyGarmentSync({ ...base, onCatalogChanged: () => undefined, lojaUnicaImpl: async () => ({ catalog: { ok: false, error: "falta identidade" }, garments: null }) });
+    expect(failed.status === "done" && failed.clean).toBe(false);
+
+    const none = await runDailyGarmentSync({ ...base, onCatalogChanged: () => undefined, lojaUnicaImpl: null });
+    expect(none.status === "done" && none.lojaUnica).toBeUndefined();
+  });
 });
 
 describe("cursor and upsert helpers", () => {
