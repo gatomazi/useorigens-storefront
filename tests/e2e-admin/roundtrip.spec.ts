@@ -61,13 +61,16 @@ test("given the local CMS, when a collection section is created, styled, reorder
   await picker.press("ArrowDown");
   await picker.press("Enter");
   await expect(picker).toHaveValue("Fé de Origem");
-  await page.getByLabel("Título (opcional)").fill("Terra em foco");
-  await page.getByLabel("Cards").fill("6");
-  await page.getByRole("button", { name: "Criar seção" }).click();
+  // The home has two "add a section" forms (INK collection, Uma Penca) with the same field names: fill the INK one.
+  const create = page.getByRole("form", { name: "Nova seção a partir de uma coleção da INK" });
+  await create.getByLabel("Título (opcional)").fill("Terra em foco");
+  await create.getByLabel("Cards").fill("6");
+  await create.getByRole("button", { name: "Criar seção" }).click();
   await expect(page).toHaveURL(/\/admin\/home\/custom-[0-9a-f]+(\?|$)/);
   await expect(page.getByText("Seção criada no rascunho.")).toBeVisible();
-  // An internal collection has no public page: the editor says so instead of offering a "Ver todos".
-  await expect(page.getByText(/Coleção interna: link “Ver todos” desativado/)).toBeVisible();
+  // "Ver todos" leads to the collection's own page on the site; an internal collection has no INK page, so INK is not offered.
+  await expect(page.locator("#cta_kind")).toHaveValue("collection-page");
+  await expect(page.locator("#cta_kind option", { hasText: "Coleção da INK" })).toHaveCount(0);
 
   // 3. Background: solid regional green, light text, plus a banner with a dark veil.
   await page.getByLabel("Cor sólida").check();
@@ -85,7 +88,10 @@ test("given the local CMS, when a collection section is created, styled, reorder
   expect(before.at(-1)).toBe("Rodapé");
   expect(before.at(-2)).toBe("Nome, número e jeito de falar: cada cidade do Sul tem os seus.");
   expect(before.at(-3)).toBe("Terra em foco"); // new sections land right before the closing campaign
-  await page.getByRole("button", { name: "Mover “Terra em foco” para cima" }).click();
+  // From the keyboard: Space picks the row up by its grip, ↑ moves it, Space drops it (and the new order is saved).
+  await page.getByRole("button", { name: "Mover “Terra em foco”", exact: true }).press("Space");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("Space");
   await expect(page.getByText("Ordem alterada.")).toBeVisible();
   const moved = await titles(page);
   expect(moved.indexOf("Terra em foco")).toBe(before.indexOf("Terra em foco") - 1);

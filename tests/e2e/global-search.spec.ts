@@ -57,6 +57,17 @@ test.describe("global search", () => {
     expect(new Set(places).size).toBe(places.length);
   });
 
+  test("a city page offers 'Busque outra cidade' right under its styles; it opens the search sheet and leads to another city", async ({ page }) => {
+    await page.goto("/sul/rs/bage");
+    await expect(page.getByRole("heading", { name: "Busque outra cidade" })).toBeVisible();
+    await page.getByRole("button", { name: /Cidade, estampa ou coleção/ }).click();
+    const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
+    await expect(dialog.getByRole("combobox")).toBeFocused();
+    await dialog.getByRole("combobox").fill("pelot");
+    await dialog.locator('[data-result-kind="locality"]').first().click();
+    await page.waitForURL(/\/sul\/rs\/pelotas$/);
+  });
+
   test("Esc closes the dialog (desktop)", async ({ page }) => {
     await page.goto("/sul");
     const dialog = await openSearch(page);

@@ -1,11 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * The CMS side of the INK navbar, end to end in a real browser (sandbox in a temp dir, like the round trip). TWO free groups, no special slots:
- * several PUBLIC collections go to "Topo" and several to "Demais categorias", in the owner's order → a navbar-only change is publishable → the public
- * `/api/navbar/sul` shows nothing before publishing and the exact groups/order after → a collection changes group and is republished → reordering →
- * an INTERNAL collection cannot be placed → everything back to "Não exibir" empties the payload. The Worker is not involved: this is the "no deploy
- * to change the menu" path. Needs the locally synced INK collections.
+ * The region's collection menu, end to end in a real browser (sandbox in a temp dir, like the round trip). ONE menu for the storefront header and the
+ * navbar the Worker draws on the INK product pages: "Topo" (the owner's order), "Categorias" (every public collection, automatically) and "Não exibir".
+ * A document from before the menu keeps the Worker's payload untouched until the menu is published → several on top and one hidden → a menu-only change
+ * is publishable → `/api/navbar/sul` and the storefront header follow exactly → regroup and reorder → everything back to Categorias. Needs the locally
+ * synced INK collections.
  */
 const hydrated = (page: Page) => page.waitForFunction(() => document.documentElement.dataset.hydrated === "true", undefined, { timeout: 180_000 });
 async function open(page: Page, url: string) {
@@ -13,12 +13,12 @@ async function open(page: Page, url: string) {
   await hydrated(page);
 }
 type Entry = { id: number; title: string; slug: string; url: string; order: number };
-const navbar = async (page: Page) => (await (await page.request.get("/api/navbar/sul")).json()) as { v: number; region: string; states: { uf: string }[]; top: Entry[]; more: Entry[] };
+const navbar = async (page: Page) => (await (await page.request.get("/api/navbar/sul")).json()) as { v: number; region: string; states: { uf: string }[]; top: Entry[]; more: Entry[]; moreLabel?: string };
 const titles = (l: Entry[]) => l.map((e) => e.title);
-const row = (page: Page, name: string) => page.locator("table.a-table tbody tr", { hasText: name });
-const place = async (page: Page, name: string, position: "Não exibir" | "Topo" | "Demais categorias") => {
+const row = (page: Page, name: string) => page.locator("table.a-table tbody tr", { has: page.locator("p.font-bold", { hasText: new RegExp(`^${name}$`) }) }).first();
+const place = async (page: Page, name: string, position: "Não exibir" | "Topo" | "Categorias") => {
   await open(page, `/admin/colecoes?q=${encodeURIComponent(name)}`);
-  await row(page, name).first().getByRole("button", { name: position, exact: true }).click();
+  await row(page, name).getByRole("button", { name: position, exact: true }).click();
   await expect(page.getByText(/depois que você publicar/)).toBeVisible();
 };
 const publish = async (page: Page, note: string) => {
@@ -27,59 +27,80 @@ const publish = async (page: Page, note: string) => {
   await page.getByRole("button", { name: "Publicar no sandbox local" }).click();
   await expect(page.getByText(/Publicado no sandbox local/)).toBeVisible({ timeout: 300_000 });
 };
+const headerCategories = async (page: Page) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await open(page, "/sul");
+  await page.getByTestId("header-categories").click();
+  return page.locator("nav[aria-label=Principal] details[open] ul a").allInnerTexts();
+};
 
-test("given the local CMS, when several public collections are placed in Topo and Demais categorias, published, regrouped and reordered, then the public config follows exactly", async ({ page }) => {
-  const empty = await navbar(page);
-  expect([empty.v, empty.region, empty.top, empty.more], "nothing configured: a well-formed empty payload, never an error").toEqual([2, "sul", [], []]);
-  expect(empty.states.map((s) => s.uf)).toEqual(["PR", "SC", "RS"]); // Regiões is fixed
+test("given the local CMS, when collections are put on top, hidden, published, regrouped and reordered, then the storefront header and the Worker's config follow exactly", async ({ page }) => {
+  const before = await navbar(page);
+  expect([before.v, before.region, before.top, before.more, before.moreLabel], "no menu yet: the Worker gets what it always got").toEqual([2, "sul", [], [], undefined]);
+  expect(before.states.map((s) => s.uf)).toEqual(["PR", "SC", "RS"]); // Regiões is fixed
 
-  // The library states the rules and the coverage of the text search.
+  // The library states the rules; the site already lists every public collection under Categorias.
   await open(page, "/admin/colecoes");
-  await expect(page.getByTestId("navbar-groups")).toContainText("Nenhuma coleção é especial");
+  await expect(page.getByTestId("collection-menu")).toContainText("Toda coleção pública entra sozinha em Categorias");
+  await expect(page.getByTestId("menu-adopt")).toBeVisible();
   const coverage = page.getByTestId("search-coverage");
   await expect(coverage).toContainText("Busca do site por nome de coleção");
   if (process.env.EXPECT_SEARCH_COVERAGE === "complete") await expect(coverage).not.toContainText("parcial");
   if (process.env.EXPECT_SEARCH_COVERAGE === "partial") await expect(coverage).toContainText("sincronize as coleções");
+  expect(await headerCategories(page)).toEqual(expect.arrayContaining(["Seu Lugar", "Novidades", "Paraná"]));
 
-  // Several on top and several in the dropdown (no cap of one/two/five; "Novidades" is just a name and coexists with the others).
+  // Several on top (no cap; "Novidades" is just a name) and one taken out.
   for (const name of ["Novidades", "Do Nosso Jeito", "Feito Para Você", "Fala Daqui"]) await place(page, name, "Topo");
-  for (const name of ["Seu Lugar", "Da Nossa Terra"]) await place(page, name, "Demais categorias");
+  await place(page, "Paraná", "Não exibir");
   await open(page, "/admin/colecoes");
-  const groups = page.getByTestId("navbar-groups");
-  await expect(groups).toContainText("Topo (4)");
-  await expect(groups).toContainText("Demais categorias (2)");
+  await expect(page.getByTestId("menu-top")).toContainText("Topo (4)");
+  await expect(page.getByTestId("menu-categories")).not.toContainText("Paraná");
   expect((await navbar(page)).top, "a draft is not public").toEqual([]);
 
-  // An internal collection has no public page: it cannot be placed.
-  await open(page, "/admin/colecoes?q=fe+de+origem");
-  await expect(row(page, "Fé de Origem")).toContainText("Indisponível");
-  await expect(row(page, "Fé de Origem").getByRole("button", { name: "Topo", exact: true })).toHaveCount(0);
+  // An internal collection enabled in the CMS (an earlier spec enabled "Fé de Origem") can be brought in: on the site only, it has no INK page.
+  await place(page, "Fé de Origem", "Categorias");
+  await open(page, "/admin/colecoes");
+  await expect(page.getByTestId("menu-categories").locator("li", { hasText: "Fé de Origem" })).toContainText("só no site");
 
-  // A navbar-only change is publishable and says what changes.
+  // A menu-only change is publishable and says what changes, the INK navbar included.
   await open(page, "/admin/publicar");
-  await expect(page.getByText('"Novidades" passa a aparecer no topo da navbar da INK')).toBeVisible();
-  await expect(page.getByText('"Seu Lugar" passa a aparecer em Demais categorias da navbar da INK')).toBeVisible();
-  await publish(page, "navbar: 4 no topo, 2 em demais");
+  await expect(page.getByText("A navbar da INK passa a seguir o menu de coleções do site (Topo e Categorias)")).toBeVisible();
+  await expect(page.getByText('"Novidades" vai para o topo do menu')).toBeVisible();
+  await expect(page.getByText('"Paraná" sai do menu')).toBeVisible();
+  await publish(page, "menu: 4 no topo, Paraná fora");
   await expect.poll(async () => titles((await navbar(page)).top), { timeout: 60_000 }).toEqual(["Novidades", "Do Nosso Jeito", "Feito Para Você", "Fala Daqui"]);
   const live = await navbar(page);
-  expect(titles(live.more)).toEqual(["Seu Lugar", "Da Nossa Terra"]);
   expect(live.top.map((e) => e.order)).toEqual([1, 2, 3, 4]);
-  expect(live.top[0]).toMatchObject({ slug: "novidades", url: "https://www.usesul.com.br/usesul/collections/novidades" });
+  expect(live.top[0]).toMatchObject({ slug: "novidades" });
+  expect(live.top[0].url).toMatch(/\/sul\/colecoes\/novidades$/); // our page, for when the Worker links back to the site
+  expect(live.moreLabel).toBe("Categorias");
+  expect(titles(live.more)).toContain("Seu Lugar");
+  expect(titles(live.more)).not.toContain("Paraná");
+  expect(titles(live.more), "internal: no INK page").not.toContain("Fé de Origem");
+  expect(new Set([...live.top, ...live.more].map((e) => e.id)).size, "never on the bar and in the dropdown").toBe(live.top.length + live.more.length);
   expect((await page.request.get("/api/navbar/mars")).status()).toBe(404);
 
-  // Move one collection to the other group and reorder: only the navbar changes, nothing is duplicated.
-  await place(page, "Fala Daqui", "Demais categorias");
-  await open(page, "/admin/colecoes");
-  await page.getByRole("button", { name: "Subir Da Nossa Terra" }).click();
-  await expect(page.getByText(/Ordem alterada/)).toBeVisible();
-  await publish(page, "navbar: Fala Daqui para demais, reordena");
-  await expect.poll(async () => titles((await navbar(page)).more), { timeout: 60_000 }).toEqual(["Da Nossa Terra", "Seu Lugar", "Fala Daqui"]);
-  const moved = await navbar(page);
-  expect(titles(moved.top)).toEqual(["Novidades", "Do Nosso Jeito", "Feito Para Você"]);
-  expect(new Set([...moved.top, ...moved.more].map((e) => e.id)).size, "no collection on both groups").toBe(moved.top.length + moved.more.length);
+  // The storefront: Categorias has the bar's collections first, never the hidden one, and opens our collection page.
+  const listed = await headerCategories(page);
+  expect(listed.slice(0, 4)).toEqual(["Novidades", "Do Nosso Jeito", "Feito Para Você", "Fala Daqui"]);
+  expect(listed).not.toContain("Paraná");
+  expect(listed).toContain("Fé de Origem");
+  await page.locator("nav[aria-label=Principal] details[open] ul a", { hasText: "Seu Lugar" }).click();
+  await expect(page).toHaveURL(/\/sul\/colecoes\/seu-lugar$/);
 
-  // Everything back to "Não exibir": the payload empties (and the Demais categorias group with it).
-  for (const name of ["Novidades", "Do Nosso Jeito", "Feito Para Você", "Fala Daqui", "Seu Lugar", "Da Nossa Terra"]) await place(page, name, "Não exibir");
-  await publish(page, "navbar: tudo fora");
-  await expect.poll(async () => { const n = await navbar(page); return [n.top.length, n.more.length]; }, { timeout: 60_000 }).toEqual([0, 0]);
+  // Regroup and reorder: only the menu changes, nothing is duplicated.
+  await place(page, "Fala Daqui", "Categorias");
+  await open(page, "/admin/colecoes");
+  await page.getByRole("button", { name: "Subir Feito Para Você" }).click();
+  await expect(page.getByText(/Ordem do topo alterada/)).toBeVisible();
+  await publish(page, "menu: Fala Daqui para Categorias, reordena");
+  await expect.poll(async () => titles((await navbar(page)).top), { timeout: 60_000 }).toEqual(["Novidades", "Feito Para Você", "Do Nosso Jeito"]);
+  expect(titles((await navbar(page)).more)).toContain("Fala Daqui");
+
+  // Everything back to the default: nothing on the bar, Paraná listed again, the internal one out.
+  for (const name of ["Novidades", "Feito Para Você", "Do Nosso Jeito", "Paraná"]) await place(page, name, "Categorias");
+  await place(page, "Fé de Origem", "Não exibir");
+  await publish(page, "menu: tudo em Categorias");
+  await expect.poll(async () => (await navbar(page)).top.length, { timeout: 60_000 }).toBe(0);
+  expect(titles((await navbar(page)).more)).toEqual(expect.arrayContaining(["Novidades", "Paraná", "Seu Lugar"]));
 });

@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { EDITORIAL_MODULE_KEYS, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type Destination, type Fill, type Overlay, type Section, type Source } from "./contract";
+import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { ARTICLE_KINDS } from "../umapenca/types";
@@ -67,21 +67,94 @@ export function parsePageRef(value: string): Destination | null {
   return m ? { kind: "page", pageKind: m[1] as "hotpage" | "categoryLanding", slug: m[2] } : null;
 }
 
-function parseCta(f: Fields): Section["cta"] | undefined {
-  const kind = str(f, "cta_kind");
-  const label = str(f, "cta_label");
-  let dest: Destination | null = null;
-  if (kind === "ink-collection") {
-    const ref = parseCollectionRef(str(f, "cta_collection"));
-    if (ref) dest = { kind: "ink-collection", ...ref };
-  } else if (kind === "external") dest = { kind: "external", url: str(f, "cta_url") };
-  else if (kind === "route") dest = { kind: "route", path: str(f, "cta_route") };
-  else if (kind === "page") dest = parsePageRef(str(f, "cta_page"));
-  else if (kind === "anchor") dest = { kind: "anchor", anchor: str(f, "cta_anchor") };
-  return dest ? { label: label || "Ver todos", dest } : undefined;
+/** A destination from the `<prefix>_kind` field and the one field of that kind (`<prefix>_collection`, `_url`, `_route`, `_page`, `_anchor`), or null. */
+function parseDest(f: Fields, prefix: string): Destination | null {
+  const kind = str(f, `${prefix}_kind`);
+  if (kind === "ink-collection" || kind === "collection-page") {
+    const ref = parseCollectionRef(str(f, `${prefix}_collection`));
+    return ref ? { kind, ...ref } : null;
+  }
+  if (kind === "external") return { kind: "external", url: str(f, `${prefix}_url`) };
+  if (kind === "route") return { kind: "route", path: str(f, `${prefix}_route`) };
+  if (kind === "page") return parsePageRef(str(f, `${prefix}_page`));
+  if (kind === "anchor") return { kind: "anchor", anchor: str(f, `${prefix}_anchor`) };
+  return null;
 }
 
-function parseSource(f: Fields, current: Source | undefined): Source | undefined {
+function parseCta(f: Fields): Section["cta"] | undefined {
+  const dest = parseDest(f, "cta");
+  return dest ? { label: str(f, "cta_label") || "Ver todos", dest } : undefined;
+}
+
+/**
+ * The image grid's tile rows `tile_<i>_*` (i < `tile_count`), in order. A row with neither a name nor a picture is an empty slot and is skipped;
+ * a row missing its name or its destination is reported in plain words (`problems`) instead of reaching the validator as a cryptic path.
+ * Tile pictures are always decorative: the tile's name is the link text.
+ */
+export function parseGridTiles(f: Fields): { tiles: GridTile[]; problems: string[] } {
+  const tiles: GridTile[] = [];
+  const problems: string[] = [];
+  const rows = clamp(Math.round(num(f, "tile_count", 0)), 0, MAX_GRID_TILES);
+  let n = 0; // the tile's number as the editor shows it (empty slots don't count)
+  for (let i = 0; i < rows; i++) {
+    const label = str(f, `tile_${i}_label`);
+    const assetId = str(f, `tile_${i}_image`);
+    if (!label && !assetId) continue;
+    n++;
+    const dest = parseDest(f, `tile_${i}`);
+    if (!label) problems.push(`Bloco ${n}: falta o nome.`);
+    if (!dest) problems.push(`Bloco ${n}${label ? ` ("${label}")` : ""}: escolha para onde ele leva.`);
+    if (!label || !dest) continue;
+    const caption = str(f, `tile_${i}_caption`);
+    tiles.push({ label, ...(caption ? { caption } : {}), ...(assetId ? { image: { assetId, alt: "", decorative: true } } : {}), dest });
+  }
+  if (problems.length === 0 && tiles.length < MIN_GRID_TILES) problems.push(`A grade precisa de pelo menos ${MIN_GRID_TILES} blocos.`);
+  return { tiles, problems };
+}
+
+function parseGridLayout(f: Fields, current: GridLayout | undefined): GridLayout {
+  const columns = Number(str(f, "grid_columns"));
+  const aspect = str(f, "grid_aspect");
+  const labels = str(f, "grid_labels");
+  return {
+    columns: (GRID_COLUMNS as readonly number[]).includes(columns) ? (columns as GridLayout["columns"]) : current?.columns ?? 4,
+    aspect: (GRID_ASPECTS as readonly string[]).includes(aspect) ? (aspect as GridLayout["aspect"]) : current?.aspect ?? "portrait",
+    labels: (GRID_LABELS as readonly string[]).includes(labels) ? (labels as GridLayout["labels"]) : current?.labels ?? "below",
+  };
+}
+
+const inkIds = (v: unknown): string[] => (Array.isArray(v) ? [...new Set(v.filter((id): id is string => typeof id === "string" && /^\d{1,20}$/.test(id)))].slice(0, MAX_ARRANGED_IDS) : []);
+
+/**
+ * The order / hidden products of the section's COLLECTION, from the panel's list (`source_arrangement`, JSON), which says which collection it was drawn
+ * for (`source_arrangement_for`): they only apply to THAT collection, and they belong to the collection (every section built on it and its page follow
+ * them: `set-collection-arrangement`). Null = no list for this collection (another collection was chosen, or the collection did not resolve, so no list
+ * was drawn): what is saved stays, so a save never wipes the owner's order.
+ */
+export function parseCollectionArrangement(f: Fields, ref: CollectionRef): { productIds: string[]; hiddenIds: string[] } | null {
+  const raw = f.get("source_arrangement");
+  if (typeof raw !== "string" || str(f, "source_arrangement_for") !== `${ref.store}:${ref.collectionId}`) return null;
+  try {
+    const v = JSON.parse(raw) as { order?: unknown; productIds?: unknown; hiddenIds?: unknown };
+    return { productIds: v.order === "manual" ? inkIds(v.productIds) : [], hiddenIds: inkIds(v.hiddenIds) };
+  } catch {
+    return null; // A malformed list is ignored like a missing one.
+  }
+}
+
+/**
+ * The section's own (older) order fields: kept as they are while the panel posts no list for this collection; dropped as soon as it does, since the
+ * order then lives in the collection (`parseCollectionArrangement`). Choosing another collection starts with none.
+ */
+function legacyOrder(f: Fields, ref: CollectionRef, current: Source | undefined): Pick<Extract<Source, { kind: "ink-category" }>, "order" | "productIds" | "hiddenIds"> {
+  if (parseCollectionArrangement(f, ref) === null && current?.kind === "ink-category" && current.store === ref.store && current.collectionId === ref.collectionId) {
+    return { order: current.order, ...(current.productIds ? { productIds: current.productIds } : {}), ...(current.hiddenIds ? { hiddenIds: current.hiddenIds } : {}) };
+  }
+  return { order: "category" };
+}
+
+/** `max`: the most cards the section's display may show (a grid shows more than a carousel scrolls through). */
+function parseSource(f: Fields, current: Source | undefined, max: number): Source | undefined {
   const kind = str(f, "source_kind");
   if (kind === "editorial-module") {
     const key = str(f, "source_module");
@@ -90,13 +163,13 @@ function parseSource(f: Fields, current: Source | undefined): Source | undefined
   if (kind === "ink-category") {
     const ref = parseCollectionRef(str(f, "source_collection"));
     if (!ref) return current;
-    return { kind: "ink-category", ...ref, order: "category", limit: clamp(Math.round(num(f, "source_limit", 6)), 3, 24) };
+    return { kind: "ink-category", ...ref, ...legacyOrder(f, ref, current), limit: clamp(Math.round(num(f, "source_limit", 6)), MIN_SECTION_PRODUCTS, max) };
   }
   if (kind === "umapenca") {
     // Checkboxes `source_up_<kind>`: none ticked keeps the current source (the schema refuses an empty list anyway).
     const articleKinds = ARTICLE_KINDS.filter((k) => f.get(`source_up_${k}`) !== null);
     if (articleKinds.length === 0) return current;
-    return { kind: "umapenca", articleKinds, limit: clamp(Math.round(num(f, "source_limit", 8)), 3, 24) };
+    return { kind: "umapenca", articleKinds, limit: clamp(Math.round(num(f, "source_limit", 8)), MIN_SECTION_PRODUCTS, max) };
   }
   return current;
 }
@@ -115,17 +188,32 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
   // A field that is not in the form is left alone; a field that is present and empty clears the value (a carousel's title is then rejected).
   if (f.get("title") !== null) patch.title = str(f, "title") || undefined;
   if (f.get("subtitle") !== null) patch.subtitle = str(f, "subtitle") || undefined;
-  if (section.template === "product-carousel" || section.template === "campaign" || section.template === "hero" || section.template === "city-styles" || section.template === "states" || section.template === "page-hero") {
+  if (section.template === "product-carousel" || section.template === "campaign" || section.template === "hero" || section.template === "city-styles" || section.template === "states" || section.template === "page-hero" || section.template === "image-grid") {
     patch.appearance = parseAppearance(f, section.appearance);
   }
   if (section.template === "product-carousel") {
+    // Carousel or grid ("carousel" is never stored: absent means carousel, so the sections saved before the grid existed stay as they were).
+    const posted = str(f, "layout_display");
+    const display: ProductDisplay | undefined = f.get("layout_display") === null ? section.layout?.display : posted === "grid" || posted === "paged" ? posted : undefined;
     patch.cta = parseCta(f);
-    patch.source = parseSource(f, section.source);
+    const max = maxSectionProducts(display);
+    const source = parseSource(f, section.source, max);
+    // A grid turned back into a carousel: a source kept as it was (its collection did not resolve in the form) still fits the smaller ceiling.
+    patch.source = source && "limit" in source && source.limit > max ? { ...source, limit: max } : source;
     const variant = str(f, "layout_variant") === "poster" ? "poster" : "standard";
     const tone = str(f, "layout_tone") === "dark" ? "dark" : "light";
     const surfaceRaw = str(f, "layout_surface");
     const surface = surfaceRaw === "paper" || surfaceRaw === "region-primary" ? surfaceRaw : "plain";
-    patch.layout = { variant, tone, surface };
+    // The buy button: the checkbox and its text (empty = "Ver produto"); a form without the block keeps what is saved.
+    const buyLabel = f.get("layout_buy_present") === null ? section.layout?.buyLabel : f.get("layout_buy") !== null ? str(f, "layout_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL : undefined;
+    // Tags on the pictures: the "% OFF" of a promotion and/or the section's own text (an empty text is no tag); a form without the block keeps them.
+    let tags: ProductTags | undefined = section.layout?.tags;
+    if (f.get("tags_present") !== null) {
+      const text = f.get("tags_custom") !== null ? str(f, "tags_text").slice(0, MAX_TAG_TEXT).trim() : "";
+      const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text } : {}) };
+      tags = next.discount || next.text ? next : undefined;
+    }
+    patch.layout = { variant, tone, surface, ...(display === "grid" || display === "paged" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(tags ? { tags } : {}) };
   }
   if (section.template === "page-hero") {
     patch.cta = parseCta(f);
@@ -145,6 +233,11 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
         button: str(f, "cc_button"),
       };
     } else patch.customizerCard = undefined;
+  }
+  // A paged grid has no reserved first card (the same card on every page would push a product off each one), nor a "Ver todos": it IS all of them.
+  if (section.template === "product-carousel" && patch.layout?.display === "paged") {
+    patch.customizerCard = undefined;
+    patch.cta = undefined;
   }
   if (section.template === "campaign") {
     patch.fallback = str(f, "fallback") === "fill" ? "fill" : "crops";
@@ -166,6 +259,10 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
       covers[uf] = { assetId, alt, decorative: alt === "" };
     }
     patch.stateCovers = Object.keys(covers).length > 0 ? covers : undefined;
+  }
+  if (section.template === "image-grid" && f.get("grid_present") !== null) {
+    patch.grid = parseGridLayout(f, section.grid);
+    patch.tiles = parseGridTiles(f).tiles; // the caller refuses the save when `parseGridTiles` reports problems
   }
   if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", 8)), 1, 8);
   return patch;

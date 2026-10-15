@@ -19,6 +19,13 @@ function Wireframe({ template }: { template: StructuredModel["template"] }) {
       </div>
     );
   }
+  if (template === "image-grid") {
+    return (
+      <div aria-hidden className="grid grid-cols-4 gap-1.5">
+        {[0, 1, 2, 3].map((i) => <span key={i} className="block"><span className={`${box} block aspect-[4/5]`} /><span className={`${box} mt-1 block h-1.5 w-2/3`} /></span>)}
+      </div>
+    );
+  }
   return (
     <div aria-hidden className="bg-[#0a0c0a] p-3">
       <span className="block h-2.5 w-3/4 bg-white/70" />

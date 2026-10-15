@@ -236,8 +236,10 @@ test("given the owner, when a collection section is created from an enabled inte
   const combo = page.getByRole("combobox", { name: /Coleção \(busque pelo nome\)/ });
   await combo.fill("fe de");
   await page.getByRole("option", { name: /Fé de Origem/ }).click();
-  await page.getByLabel("Título (opcional)").fill("Terra em foco");
-  await page.getByRole("button", { name: "Criar seção" }).click();
+  // The home has two "add a section" forms (INK collection, Uma Penca) with the same field names: fill the INK one.
+  const creator = page.getByRole("form", { name: "Nova seção a partir de uma coleção da INK" });
+  await creator.getByLabel("Título (opcional)").fill("Terra em foco");
+  await creator.getByRole("button", { name: "Criar seção" }).click();
   await expect(page).toHaveURL(/\/admin\/home\/custom-[0-9a-f]+/);
   const uploadValue = (await page.getByLabel("Imagem mobile (opcional)").locator('option[value^="upload:"]').first().getAttribute("value"))!;
   await page.getByLabel("Imagem mobile (opcional)").selectOption(uploadValue);
@@ -250,9 +252,14 @@ test("given the owner, when a collection section is created from an enabled inte
   const stale = await context.newPage();
   await open(stale, "/admin/home");
   await open(page, "/admin/home");
-  await page.getByRole("button", { name: "Mover “Terra em foco” para cima" }).click();
+  const moveUp = async (p: typeof page) => {
+    await p.getByRole("button", { name: "Mover “Terra em foco”", exact: true }).press("Space");
+    await p.keyboard.press("ArrowUp");
+    await p.keyboard.press("Space");
+  };
+  await moveUp(page);
   await expect(page.getByText("Ordem alterada.")).toBeVisible();
-  await stale.getByRole("button", { name: "Mover “Terra em foco” para cima" }).click();
+  await moveUp(stale);
   await expect(stale.getByText(/O rascunho mudou em outra aba/)).toBeVisible();
   await stale.close();
 

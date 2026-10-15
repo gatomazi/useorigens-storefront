@@ -15,3 +15,10 @@ export function gaMeasurementId(): string | null {
   const id = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
   return id && id.length > 0 ? id : null;
 }
+
+/** Microsoft Clarity project ID, same pattern as the two above: unset by default, never hardcoded, only ever read from the env var.
+ * It is interpolated into an inline bootstrap script, so anything that is not a plain lowercase alphanumeric ID counts as unset. */
+export function clarityProjectId(): string | null {
+  const id = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
+  return id && /^[a-z0-9]{6,20}$/.test(id) ? id : null;
+}

@@ -1,6 +1,7 @@
 import "server-only";
 import { ConfigError } from "../config/env";
 import type { CommerceStoreKey } from "../geo/regions";
+import { INK_COMMERCE_HOSTS } from "./hosts";
 
 /**
  * Regional INK stores that exist today. Credentials are server-only (never NEXT_PUBLIC_*).
@@ -28,12 +29,7 @@ function validatedInkApiBaseUrl(): string {
 export const INK_API_BASE_URL = validatedInkApiBaseUrl();
 
 /** Hosts a purchase link may point to. Anything else is treated as a broken destination. */
-export const ALLOWED_COMMERCE_HOSTS: ReadonlySet<string> = new Set([
-  "www.usesul.com.br",
-  "www.usenorte.com.br",
-  "www.usecentro.com.br",
-  "loja.useorigens.com.br",
-]);
+export const ALLOWED_COMMERCE_HOSTS: ReadonlySet<string> = new Set(INK_COMMERCE_HOSTS);
 
 /**
  * Public product-URL prefix of each store: `<base>/<slug>` is exactly INK's `store_product_url` (verified

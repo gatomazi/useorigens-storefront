@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Pagination } from "@/components/catalog/Pagination";
+import { PriceText } from "@/components/catalog/PriceText";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { TrackedInkLink } from "@/components/analytics/TrackedInkLink";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
@@ -8,10 +10,12 @@ import { ShareButton } from "@/components/share/ShareButton";
 import { inkProductShare } from "@/lib/share/server";
 import { SOURCES } from "@/lib/analytics/sources";
 import { regionSearchDocs } from "@/lib/catalog/search-docs";
-import { formatPrice, numberPt } from "@/lib/format";
+import { formatListPrice, formatPrice, numberPt } from "@/lib/format";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { cleanQuery, MAX_QUERY_CHARS, parsePage, searchDocs } from "@/lib/search/catalog-search";
+import { CardButton } from "@/components/catalog/CardButton";
+import { storeCardButton } from "@/lib/site-config/cards";
 
 // Every query is its own page: never prerendered nor ISR-cached (the region layout above is generateStaticParams/ISR, and reading `searchParams` alone
 // makes a production render fail with DYNAMIC_SERVER_USAGE there).
@@ -34,18 +38,6 @@ const pageHref = (region: string, q: string, page: number): string => {
   return `/${region}/busca?${params}`;
 };
 
-/** Page numbers to show: first, last, and a window around the current one, with gaps as `null`. */
-function pageWindow(current: number, count: number): (number | null)[] {
-  const wanted = new Set([1, count, current - 1, current, current + 1]);
-  const pages = [...wanted].filter((p) => p >= 1 && p <= count).sort((a, b) => a - b);
-  const out: (number | null)[] = [];
-  pages.forEach((p, i) => {
-    if (i > 0 && p - (pages[i - 1] ?? 0) > 1) out.push(null);
-    out.push(p);
-  });
-  return out;
-}
-
 /**
  * Text search over the region's whole catalog (city designs, expressions, state lines, collections…). Distinct from the header's "Buscar cidade":
  * that one resolves a place, this one lists PRODUCTS. A plain GET form, so the URL is canonical, shareable and works without JavaScript; the INK
@@ -57,6 +49,8 @@ export default async function SearchPage({ params, searchParams }: Props) {
   const sp = await searchParams;
   const q = cleanQuery(sp.q);
   const result = q ? searchDocs(regionSearchDocs(region), q, { page: parsePage(sp.page) }) : null;
+  // The store-wide buy button (Aparência, global): on the results' cards too.
+  const buyLabel = storeCardButton();
   const regionName = REGIONS[region].name;
 
   return (
@@ -123,49 +117,22 @@ export default async function SearchPage({ params, searchParams }: Props) {
                   <TrackedInkLink
                     href={item.href}
                     params={{ productId: item.id, sourceSection: SOURCES.search, state: item.uf ?? undefined, value: item.price ?? undefined, productName: item.title, destinationUrl: item.href }}
-                    className="block"
+                    className={buyLabel ? "flex h-full flex-col" : "block"}
                   >
                     <ProductPhoto src={item.imageUrl} alt={item.context ? `${item.title}, ${item.context}` : item.title} sizes="(min-width: 1024px) 22vw, (min-width: 768px) 30vw, 46vw" priority={i < 4} />
                     <div className="mt-3">
                       <h2 className="t-h3 link-line inline">{item.title}</h2>
                       {item.context && <p className="t-place mt-1 text-[0.95rem] text-ink-mute">{item.context}</p>}
-                      {formatPrice(item.price) && <p className="t-small mt-0.5 font-semibold">{formatPrice(item.price)}</p>}
+                      {formatPrice(item.price) && <p className="t-small mt-0.5 font-semibold"><PriceText price={formatPrice(item.price)!} listPrice={formatListPrice(item)} /></p>}
                     </div>
+                    {buyLabel && <CardButton label={buyLabel} className="mt-auto" />}
                   </TrackedInkLink>
                 </li>
               );
             })}
           </ul>
 
-          {result.pageCount > 1 && (
-            <nav aria-label="Paginação dos resultados" className="mt-12 flex flex-wrap items-center gap-2">
-              {result.page > 1 && (
-                <Link href={pageHref(region, q, result.page - 1)} rel="prev" className="btn-ghost inline-flex min-h-11 items-center px-4">
-                  Anterior
-                </Link>
-              )}
-              {pageWindow(result.page, result.pageCount).map((p, i) =>
-                p === null ? (
-                  <span key={`gap-${i}`} aria-hidden="true" className="px-1">
-                    …
-                  </span>
-                ) : p === result.page ? (
-                  <span key={p} aria-current="page" className="inline-flex min-h-11 min-w-11 items-center justify-center border-2 border-ink bg-ink px-3 font-semibold text-white">
-                    {p}
-                  </span>
-                ) : (
-                  <Link key={p} href={pageHref(region, q, p)} className="inline-flex min-h-11 min-w-11 items-center justify-center border-2 border-ink px-3 font-semibold hover:bg-ink hover:text-white">
-                    {p}
-                  </Link>
-                ),
-              )}
-              {result.page < result.pageCount && (
-                <Link href={pageHref(region, q, result.page + 1)} rel="next" className="btn-ghost inline-flex min-h-11 items-center px-4">
-                  Próxima
-                </Link>
-              )}
-            </nav>
-          )}
+          <Pagination page={result.page} pageCount={result.pageCount} hrefOf={(p) => pageHref(region, q, p)} label="Paginação dos resultados" />
         </>
       )}
     </div>

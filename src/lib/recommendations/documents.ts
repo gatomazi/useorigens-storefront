@@ -162,7 +162,8 @@ export function buildDocuments(input: StoreInput): BuiltDocuments {
   const stateOf = new Map<string, string>();
   const neverRecommend = new Set<string>();
   for (const c of [...input.collections].sort((a, b) => a.position - b.position || a.id - b.id)) {
-    const members = c.searchMemberIds ?? c.memberIds;
+    // The full list of a PUBLIC collection only, as before internal ones kept theirs: an internal segmentation never widens a signal.
+    const members = (c.isAvailable ? c.allMemberIds : undefined) ?? c.memberIds;
     const stateUf = stateOfCollection(c.slug, ufs);
     for (const id of members) {
       if (NEVER_RECOMMEND_COLLECTIONS.has(c.slug)) neverRecommend.add(id);

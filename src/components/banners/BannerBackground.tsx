@@ -25,7 +25,8 @@ function localSet(image: BannerImage): { srcSet: string; src: string } {
   return { srcSet: entry.variants.map((v) => `${v.src} ${v.w}w`).join(", "), src: mid.src };
 }
 
-export function BannerBackground({ asset, priority = false }: { asset: BannerAsset; priority?: boolean }) {
+/** `sizes`: the rendered width (default the whole viewport, as a section background); a grid tile passes its own column width. */
+export function BannerBackground({ asset, priority = false, sizes = "100vw" }: { asset: BannerAsset; priority?: boolean; sizes?: string }) {
   const isLocal = (i: BannerImage) => i.src.startsWith("/") || (i.variants?.length ?? 0) > 0; // "local" = never the optimizer
   const imgClass = "absolute inset-0 h-full w-full object-cover";
   const style = { objectPosition: asset.focal ?? "50% 50%" };
@@ -37,8 +38,8 @@ export function BannerBackground({ asset, priority = false }: { asset: BannerAss
     const mobile = localSet(asset.mobile);
     return (
       <picture>
-        <source media="(min-width: 1024px)" srcSet={desktop.srcSet} sizes="100vw" />
-        <source srcSet={mobile.srcSet} sizes="100vw" />
+        <source media="(min-width: 1024px)" srcSet={desktop.srcSet} sizes={sizes} />
+        <source srcSet={mobile.srcSet} sizes={sizes} />
         <img src={mobile.src} width={asset.mobile.width} height={asset.mobile.height} alt="" loading={loading} fetchPriority={fetchPriority} decoding="async" className={imgClass} style={style} />
       </picture>
     );
@@ -47,7 +48,7 @@ export function BannerBackground({ asset, priority = false }: { asset: BannerAss
   // Not `priority` on the `getImageProps()` calls below: Next.js 16 deprecated that prop in favour of `preload`, and — unlike the
   // full `<Image>` component — `getImageProps()` silently drops it (no `fetchPriority`, `loading: "lazy"`). Set `loading`/
   // `fetchPriority` explicitly on the rendered element instead (same as ProductPhoto.tsx).
-  const common = { alt: "", quality: 80 as const, sizes: "100vw" };
+  const common = { alt: "", quality: 80 as const, sizes };
   const desktop = getImageProps({ ...common, src: asset.desktop.src, width: asset.desktop.width, height: asset.desktop.height });
   const mobile = getImageProps({ ...common, src: asset.mobile.src, width: asset.mobile.width, height: asset.mobile.height });
   const { srcSet: desktopSrcSet, ...imgProps } = desktop.props;

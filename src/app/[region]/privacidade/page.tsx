@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { measurementRequiresConsent } from "@/lib/consent/policy";
+import { clarityProjectId } from "@/lib/config/public-env";
 import { PrivacyPreferencesLink } from "@/components/consent/PrivacyPreferencesLink";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
@@ -24,13 +25,14 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
  * than shown as placeholders or invented. When they are confirmed, add "Responsável e contato" / "Prazo de
  * retenção" sections here (see docs/deploy/ for the open items).
  */
-const LAST_UPDATED = "23 de setembro de 2026";
+const LAST_UPDATED = "9 de outubro de 2026";
 
 export default async function PrivacyPolicyPage({ params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const r = REGIONS[region];
   const gated = measurementRequiresConsent(); // false by default: measurement does not wait for the banner (src/lib/consent/policy.ts)
+  const clarity = clarityProjectId() !== null; // mentioned only when it is actually loaded (NEXT_PUBLIC_CLARITY_PROJECT_ID)
 
   return (
     <div className="wrap py-14 lg:py-20">
@@ -58,7 +60,7 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
               <strong>Análise e marketing</strong>:{" "}
               {gated
                 ? "ferramentas de medição que só são ativadas depois que você aceita. Sem o seu aceite, elas não são carregadas e nenhuma informação é enviada a elas."
-                : "ferramentas de medição de terceiros (Meta e Google) que ficam ativas ao navegar pelo site, independentemente da sua escolha no aviso de cookies."}
+                : `ferramentas de medição de terceiros (${clarity ? "Meta, Google e Microsoft" : "Meta e Google"}) que ficam ativas ao navegar pelo site, independentemente da sua escolha no aviso de cookies.`}
             </li>
           </ul>
         </section>
@@ -72,15 +74,30 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
             digitado por você. Podemos incluir outras ferramentas de medição no futuro; se isso acontecer, esta página
             será atualizada.
           </p>
+          {clarity && (
+            <p className="t-body mt-2 text-ink-soft">
+              Também usamos o Microsoft Clarity (Microsoft Corporation), que registra como as páginas são usadas — cliques, rolagem e
+              movimentos do mouse — para gerar mapas de calor e reproduções da navegação. O que você digita nos campos do site é mascarado
+              antes de sair do seu navegador.
+            </p>
+          )}
           <p className="t-body mt-2 text-ink-soft">
             Saiba como cada empresa trata esses dados na{" "}
             <a href="https://www.facebook.com/privacy/policy/" className="link-line font-semibold" rel="noopener noreferrer" target="_blank">
               política de privacidade da Meta
-            </a>{" "}
-            e na{" "}
+            </a>
+            {clarity ? ", na" : " e na"}{" "}
             <a href="https://policies.google.com/privacy" className="link-line font-semibold" rel="noopener noreferrer" target="_blank">
               política de privacidade do Google
             </a>
+            {clarity && (
+              <>
+                {" "}e na{" "}
+                <a href="https://privacy.microsoft.com/pt-br/privacystatement" className="link-line font-semibold" rel="noopener noreferrer" target="_blank">
+                  política de privacidade da Microsoft
+                </a>
+              </>
+            )}
             .
           </p>
         </section>

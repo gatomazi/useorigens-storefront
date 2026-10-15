@@ -128,7 +128,7 @@ describe("coleções da loja única", () => {
   test("given the INK pages, then they are matched against the single-store catalog by the production parser", () => {
     const loja = montarLojaUnica(classificar(), { modo: "simulacao", syncedAt: "t", fonte: FONTE }).catalogo.stores["use-sul"]!;
     const c = montarColecoes("use-sul", paginas({ Mista: [curitiba.id, belem.id, "123"] }), loja, "t");
-    expect(c.collections[0]).toMatchObject({ matchedCount: 2, searchMemberIds: [curitiba.id, belem.id] });
+    expect(c.collections[0]).toMatchObject({ matchedCount: 2, allMemberIds: [curitiba.id, belem.id] });
   });
 
   describe("collectionsForRegion (single-store)", () => {

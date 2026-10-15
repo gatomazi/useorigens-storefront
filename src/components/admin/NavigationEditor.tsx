@@ -1,10 +1,13 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { ChromePreview } from "./ChromePreview";
 import {
   assembleNavigation,
+  DEFAULT_CATEGORIES_BLOCK_LABEL,
+  DEFAULT_ORDER,
   DEFAULT_PRIMARY_BLOCK_LABEL,
   DEFAULT_REGIONS_BLOCK_LABEL,
   defaultStatesBlockLabel,
@@ -18,10 +21,11 @@ import {
 } from "@/lib/site-config/navigation";
 
 type Row = { label: string; visible: boolean; order: string };
-type State = { blocks: Record<"primaryBlock" | "statesBlock" | "regionsBlock", Row>; links: Record<NavDestination, Row> };
+type State = { blocks: Record<"primaryBlock" | "categoriesBlock" | "statesBlock" | "regionsBlock", Row>; links: Record<NavDestination, Row> };
 
 const BLOCKS: { key: keyof State["blocks"]; title: string; hint: string }[] = [
   { key: "primaryBlock", title: "Comprar", hint: "Agrupa os links principais abaixo." },
+  { key: "categoriesBlock", title: "Categorias", hint: "Automático: as coleções do menu de coleções (em Coleções), as do topo primeiro. É também o nome do menu “Categorias ▾” do desktop. Aqui você muda o título, a posição e se aparece." },
   { key: "statesBlock", title: "Estados da região", hint: "Automático: mostra só os estados que já têm produtos. Aqui você muda o título, a posição e se aparece." },
   { key: "regionsBlock", title: "Outras regiões", hint: "Automático: mostra só as outras regiões já lançadas (nunca a atual). Aqui você muda o título, a posição e se aparece." },
 ];
@@ -36,7 +40,12 @@ function initial(region: RegionSlug, config: NavigationConfig | undefined, data:
     return own ? row(own.label, own.visible, own.order) : row(offered?.label ?? NAV_DESTINATION_LABEL[destination], true, (index + 1) * 10);
   };
   return {
-    blocks: { primaryBlock: block("primaryBlock", DEFAULT_PRIMARY_BLOCK_LABEL, 10), statesBlock: block("statesBlock", defaultStatesBlockLabel(region), 20), regionsBlock: block("regionsBlock", DEFAULT_REGIONS_BLOCK_LABEL, 30) },
+    blocks: {
+      primaryBlock: block("primaryBlock", DEFAULT_PRIMARY_BLOCK_LABEL, DEFAULT_ORDER.primary),
+      categoriesBlock: block("categoriesBlock", DEFAULT_CATEGORIES_BLOCK_LABEL, DEFAULT_ORDER.categories),
+      statesBlock: block("statesBlock", defaultStatesBlockLabel(region), DEFAULT_ORDER.states),
+      regionsBlock: block("regionsBlock", DEFAULT_REGIONS_BLOCK_LABEL, DEFAULT_ORDER.regions),
+    },
     links: { styles: link("styles", 0), speech: link("speech", 1), states: link("states", 2) },
   };
 }
@@ -47,9 +56,10 @@ function toConfig(state: State, region: RegionSlug): NavigationConfig {
   const order = (v: string, fallback: number) => (Number.isInteger(Number(v)) && v !== "" ? Number(v) : fallback);
   const b = state.blocks;
   return {
-    primaryBlock: { label: label(b.primaryBlock.label, DEFAULT_PRIMARY_BLOCK_LABEL), visible: b.primaryBlock.visible, order: order(b.primaryBlock.order, 10) },
-    statesBlock: { label: label(b.statesBlock.label, defaultStatesBlockLabel(region)), visible: b.statesBlock.visible, order: order(b.statesBlock.order, 20) },
-    regionsBlock: { label: label(b.regionsBlock.label, DEFAULT_REGIONS_BLOCK_LABEL), visible: b.regionsBlock.visible, order: order(b.regionsBlock.order, 30) },
+    primaryBlock: { label: label(b.primaryBlock.label, DEFAULT_PRIMARY_BLOCK_LABEL), visible: b.primaryBlock.visible, order: order(b.primaryBlock.order, DEFAULT_ORDER.primary) },
+    categoriesBlock: { label: label(b.categoriesBlock.label, DEFAULT_CATEGORIES_BLOCK_LABEL), visible: b.categoriesBlock.visible, order: order(b.categoriesBlock.order, DEFAULT_ORDER.categories) },
+    statesBlock: { label: label(b.statesBlock.label, defaultStatesBlockLabel(region)), visible: b.statesBlock.visible, order: order(b.statesBlock.order, DEFAULT_ORDER.states) },
+    regionsBlock: { label: label(b.regionsBlock.label, DEFAULT_REGIONS_BLOCK_LABEL), visible: b.regionsBlock.visible, order: order(b.regionsBlock.order, DEFAULT_ORDER.regions) },
     primaryLinks: NAV_DESTINATIONS.map((destination, i) => ({ id: destination, destination, label: label(state.links[destination].label, NAV_DESTINATION_LABEL[destination]), visible: state.links[destination].visible, order: order(state.links[destination].order, (i + 1) * 10) })),
   };
 }
@@ -93,6 +103,7 @@ export function NavigationEditor({ region, config, data, colors, readOnly, actio
                 <legend className="text-[1rem] font-extrabold">{b.title}</legend>
                 <p className="a-muted mb-3 text-[0.8125rem]">{b.hint}</p>
                 {fields(b.key, state.blocks[b.key], (p) => setBlock(b.key, p), b.title)}
+                {b.key === "categoriesBlock" && <p className="mt-3 text-[0.875rem]" data-testid="auto-categories"><strong>Hoje aparecem:</strong> {data.categories.map((c) => c.label).join(", ") || "nenhuma coleção com página no site"}. <Link className="a-link" href="/admin/colecoes#menu-colecoes">Escolher em Coleções</Link></p>}
                 {b.key === "statesBlock" && <p className="mt-3 text-[0.875rem]" data-testid="auto-states"><strong>Hoje aparecem:</strong> {data.states.map((s) => s.label).join(", ") || "nenhum estado com produtos"}.</p>}
                 {b.key === "regionsBlock" && <p className="mt-3 text-[0.875rem]" data-testid="auto-regions"><strong>Hoje aparecem:</strong> {data.regions.map((s) => s.label).join(", ") || "nenhuma outra região lançada"}.</p>}
               </fieldset>

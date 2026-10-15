@@ -26,9 +26,9 @@ const publicHtml = async (page: Page, url: string) => (await page.request.get(ur
 const status = async (page: Page, url: string) => (await page.request.get(url, { timeout: 300_000 })).status();
 const waitPost = (page: Page) => page.waitForResponse((r) => r.request().method() === "POST", { timeout: 120_000 });
 
-/** Picks an INK collection in the autocomplete by (part of) its name. */
+/** Picks an INK collection in the autocomplete by (part of) its name. The text autocomplete, not a `<select>` (also a combobox): the new-model form has "Origem" first. */
 async function pickCollection(page: Page, scopeSelector: ReturnType<Page["locator"]>, text: string, optionName: RegExp) {
-  const combo = scopeSelector.getByRole("combobox").first();
+  const combo = scopeSelector.locator('input[role="combobox"]').first();
   await combo.fill(text);
   await page.getByRole("option", { name: optionName }).first().click();
 }
@@ -104,7 +104,9 @@ test("A · hotpage: create, compose, style, reorder, preview, publish, restore �
   const rows = page.locator("section[aria-label='Seções da página'] tbody tr");
   await expect(rows).toHaveCount(4);
   const posted = waitPost(page);
-  await page.getByRole("button", { name: /Mover “.*” para cima/ }).last().click();
+  await page.getByRole("button", { name: /^Mover “/ }).last().press("Space");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("Space");
   await posted;
   await page.waitForLoadState("networkidle");
   await expect(rows.nth(2)).toContainText("Campanha");
@@ -146,7 +148,7 @@ test("A · hotpage: create, compose, style, reorder, preview, publish, restore �
 
 const landing: { id: string } = { id: "" };
 
-test("B · category landing: three subthemes from real collections, an internal one without a false 'Ver todos', the wrong region refused, drafts 404, and a showcase link that goes to it", async ({ page }) => {
+test("B · category landing: three subthemes from real collections, an internal one whose 'Ver todos' is its page on the site, the wrong region refused, drafts 404, and a showcase link that goes to it", async ({ page }) => {
   // The internal collection must be enabled in the Library first (this does not touch INK). Idempotent: another spec sharing this sandbox
   // (playwright.admin.config.ts pins roundtrip.spec.ts before this file for exactly this reason) may already have enabled it.
   await open(page, "/admin/colecoes?q=fe+de+origem");
@@ -179,11 +181,12 @@ test("B · category landing: three subthemes from real collections, an internal 
   await addSection("fe de origem", /Fé de Origem/, "Pais com fé de origem");
   await addSection("do nosso jeito", /Do Nosso Jeito/, "Pais do nosso jeito");
 
-  // The internal collection's section says there is no public page, so no "Ver todos".
+  // The internal collection's section: "Ver todos" leads to its page on the site, never to INK (where it has no public page).
   await open(page, `/admin/paginas/${landing.id}`);
   await page.locator("tr", { hasText: "Pais com fé de origem" }).getByRole("link", { name: "Editar" }).click();
   await hydrated(page);
-  await expect(page.getByText(/Coleção interna: link “Ver todos” desativado/)).toBeVisible();
+  await expect(page.locator("#cta_kind")).toHaveValue("collection-page");
+  await expect(page.locator("#cta_kind option", { hasText: "Coleção da INK" })).toHaveCount(0);
 
   // A form forged with another region's collection is refused by the server.
   await open(page, `/admin/paginas/${landing.id}`);
@@ -211,7 +214,8 @@ test("B · category landing: three subthemes from real collections, an internal 
   for (const heading of ["Pais da nossa terra", "Pais com fé de origem", "Pais do nosso jeito"]) expect(html).toContain(heading);
   const internal = html.slice(html.indexOf("Pais com fé de origem"), html.indexOf("Pais do nosso jeito"));
   expect(internal).toContain("usesul.com.br/usesul/product/"); // real products of the same store
-  expect(internal).not.toContain("/collections/"); // no invented "Ver todos"
+  expect(internal).not.toContain("/collections/"); // never an invented INK page
+  expect(internal).toContain('href="/sul/colecoes/fe-de-origem"'); // "Ver todos": the collection's page on the site
   expect(await status(page, "/sul/colecoes/rascunho-de-teste")).toBe(404);
 
   // A showcase card leads to the landing: first a link to a DRAFT page is refused at publish; then to the published one.

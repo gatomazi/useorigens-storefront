@@ -26,7 +26,7 @@ import { lerEstadoMigracao } from "../src/lib/catalog/unificado/estado-migracao"
 import { arquivoDaLoja, carregarLeitura } from "../src/lib/catalog/unificado/leitura";
 import { classificarDesenhosSul, classificarRegioesSul, corteDaMigracao, COLECAO_SUL, COLECAO_ZZ_CO, COLECAO_ZZ_NO, MAPA_VERSAO, reconciliar } from "../src/lib/catalog/unificado/reconciliar";
 import { LOJA_UNICA, montarColecoes, montarLojaLegado, montarLojaUnica, type ModoGeracao } from "../src/lib/catalog/unificado/loja-unica";
-import { collectionState, searchMembers, MIN_USABLE_PRODUCTS, type CollectionsSnapshot, type StoreCollections } from "../src/lib/catalog/collections";
+import { collectionState, completeMembers, MIN_USABLE_PRODUCTS, type CollectionsSnapshot, type StoreCollections } from "../src/lib/catalog/collections";
 import { DESIGN_FAMILIES } from "../src/lib/catalog/families";
 import { isSubLocality, localityKeyOf } from "../src/lib/catalog/locality-binding";
 import type { GarmentIndex } from "../src/lib/catalog/garment-index-file";
@@ -151,7 +151,7 @@ function lado(indices: StoreIndex[], pecas: GarmentIndex, colecoes: StoreCollect
   for (const c of colecoes?.collections ?? []) {
     if (!collectionState(c, new Set()).selectable || c.matchedCount < MIN_USABLE_PRODUCTS) continue;
     if (filtrarColecaoPorRegiao) {
-      const ids = searchMembers(c) ?? c.memberIds;
+      const ids = completeMembers(c) ?? c.memberIds;
       if (!ids.length || !ids.every((id) => regiaoDoId.get(id) === regiao)) continue;
     }
     out.colecoesUsaveis.push(c.name);

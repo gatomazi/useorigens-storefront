@@ -17,14 +17,16 @@ import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
 import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { ALL_SCOPES } from "@/lib/admin/auth/authorize";
 import { canEdit, type Actor } from "@/lib/admin/store/ports";
+import { collectionPageSlug } from "@/lib/catalog/collection-source";
 import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
-import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
-import { isUmaPencaSource, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
+import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
+import { DEFAULT_BUY_LABEL, isUmaPencaSource, MAX_BUY_LABEL, maxSectionProducts, MIN_SECTION_PRODUCTS, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
-import { parseCollectionRef, parseFeaturedFields, parseSectionForm } from "@/lib/admin/section-form";
+import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
+import { parsePageBackdrop } from "@/lib/admin/page-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
 import { nextStatuses, productLinkFor, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
 import type { PageKind } from "@/lib/site-config/schema";
@@ -67,21 +69,23 @@ const revNumber = (fd: FormData): number | null => {
   return v === "" || v === "null" ? null : Number(v);
 };
 
-function back(path: string, flash: { ok?: string; err?: string[] }): never {
+function back(target: string, flash: { ok?: string; err?: string[] }): never {
   const q = new URLSearchParams();
   if (flash.ok) q.set("ok", flash.ok);
   if (flash.err?.length) q.set("err", flash.err.join(" | ").slice(0, 900));
-  redirect(`${path}${q.size ? `${path.includes("?") ? "&" : "?"}${q}` : ""}`);
+  const [path, hash] = target.split("#", 2); // the flash goes in the query, before the anchor
+  redirect(`${path}${q.size ? `${path.includes("?") ? "&" : "?"}${q}` : ""}${hash ? `#${hash}` : ""}`);
 }
 
 /** `/admin/home[/<id>]` → the same place inside a page (`/admin/paginas/<page>[/secoes/<id>]`): the section actions serve the home and the pages alike. */
 const inPagePath = (pageId: string, p: string): string => p.replace(/^\/admin\/home\/([^/?]+)/, `/admin/paginas/${pageId}/secoes/$1`).replace(/^\/admin\/home(?=$|\?)/, `/admin/paginas/${pageId}`);
 
-async function run(fd: FormData, op: DraftOp, okMessage: string, returnTo: string, focusToEditor = false): Promise<never> {
+/** `wrapped`: the op already says where it applies (a batch with a page op inside): it is not wrapped for the page again. */
+async function run(fd: FormData, op: DraftOp, okMessage: string, returnTo: string, focusToEditor = false, wrapped = false): Promise<never> {
   const { actor, scope } = await editScope(fd);
   const pageId = text(fd, "page");
   const to = (p: string) => (pageId ? inPagePath(pageId, p) : p);
-  const outcome: SaveOutcome = await applyAndSave(scope, pageId ? { type: "in-page", page: pageId, op } : op, revNumber(fd), actor);
+  const outcome: SaveOutcome = await applyAndSave(scope, pageId && !wrapped ? { type: "in-page", page: pageId, op } : op, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to(returnTo), { err: outcome.errors });
   await audit(actor, "draft.save", scope, op.type);
@@ -107,6 +111,10 @@ export async function setScopeAction(fd: FormData) {
   redirect(from.startsWith("/admin") && !from.startsWith("//") && !from.includes("..") && !from.startsWith("/admin/preview") ? from.split("?")[0] : "/admin");
 }
 
+/** "Exibição" of a new product section: a grid, or (anything else) the usual carousel. */
+const displayOf = (fd: FormData): ProductDisplay | undefined => (text(fd, "display") === "grid" ? "grid" : undefined);
+const limitOf = (fd: FormData, display: ProductDisplay | undefined, fallback: number) => Math.min(maxSectionProducts(display), Math.max(MIN_SECTION_PRODUCTS, Math.round(Number(text(fd, "limit")) || fallback)));
+
 export async function addCollectionSection(fd: FormData) {
   const { scope } = await editScope(fd);
   const at = text(fd, "page") ? inPagePath(text(fd, "page"), "/admin/home") : "/admin/home";
@@ -115,8 +123,13 @@ export async function addCollectionSection(fd: FormData) {
   // Same rule the editor's autocomplete applies, enforced here too: never trust that the form only offered valid choices.
   const problem = sourceProblem({ kind: "ink-category", ...ref, order: "category", limit: 6 }, (await loadWorkspace(scope)).doc);
   if (problem) back(at, { err: [problem] });
-  const limit = Math.min(24, Math.max(3, Math.round(Number(text(fd, "limit")) || 6)));
-  return run(fd, { type: "add-carousel", title: text(fd, "title") || findCollection(ref.store, ref.collectionId)?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit } }, "Seção criada no rascunho.", "/admin/home", true);
+  const display = displayOf(fd);
+  const limit = limitOf(fd, display, 6);
+  const collection = findCollection(ref.store, ref.collectionId);
+  // "Ver todos" leads to the collection's page on the storefront (every product, paged), public and internal collections alike: INK is for the product,
+  // the cart and the checkout. The button can still be pointed at INK's own page of a public collection in the editor.
+  const cta = { cta: { label: "Ver todos", dest: { kind: "collection-page" as const, ...ref } } };
+  return run(fd, { type: "add-carousel", title: text(fd, "title") || collection?.name || "Nova coleção", source: { kind: "ink-category", ...ref, order: "category", limit }, ...cta, ...(display ? { display } : {}) }, "Seção criada no rascunho.", "/admin/home", true);
 }
 
 /**
@@ -128,19 +141,37 @@ export async function addUmaPencaSection(fd: FormData) {
   const at = text(fd, "page") ? inPagePath(text(fd, "page"), "/admin/home") : "/admin/home";
   const kinds = ARTICLE_KINDS.filter((k) => fd.get(`kind_${k}`) !== null);
   if (kinds.length === 0) back(at, { err: ["Escolha ao menos um tipo: Canecas ou Ecobags."] });
-  const limit = Math.min(24, Math.max(3, Math.round(Number(text(fd, "limit")) || 8)));
+  const display = displayOf(fd);
+  const limit = limitOf(fd, display, 8);
   const title = text(fd, "title") || (kinds.length === 1 ? ARTICLE_KIND_LABELS[kinds[0]].plural : "Outros artigos");
-  return run(fd, { type: "add-carousel", title, source: { kind: "umapenca", articleKinds: kinds, limit }, cta: { label: "Ver todos", dest: { kind: "route", path: `/${scope}/outros-artigos` } } }, "Seção da Uma Penca criada no rascunho.", "/admin/home", true);
+  return run(fd, { type: "add-carousel", title, source: { kind: "umapenca", articleKinds: kinds, limit }, cta: { label: "Ver todos", dest: { kind: "route", path: `/${scope}/outros-artigos` } }, ...(display ? { display } : {}) }, "Seção da Uma Penca criada no rascunho.", "/admin/home", true);
 }
 
-export async function moveSection(fd: FormData) {
-  const direction = text(fd, "direction") === "up" ? "up" : "down";
-  return run(fd, { type: "move", id: text(fd, "id"), direction }, "Ordem alterada.", "/admin/home");
+/** The order a drag in the sections list ended with (JSON list of section ids); the op checks it is the same sections with the fixed ones in place. */
+export async function reorderSections(fd: FormData) {
+  let ids: unknown;
+  try {
+    ids = JSON.parse(text(fd, "order"));
+  } catch {
+    ids = null;
+  }
+  const at = text(fd, "page") ? inPagePath(text(fd, "page"), "/admin/home") : "/admin/home";
+  if (!Array.isArray(ids) || ids.length > 200 || !ids.every((id) => typeof id === "string")) back(at, { err: ["Ordem inválida: recarregue a página e tente de novo."] });
+  return run(fd, { type: "reorder", ids }, "Ordem alterada.", "/admin/home");
 }
 
 export async function setSectionActive(fd: FormData) {
   const active = text(fd, "active") === "true";
   return run(fd, { type: "set-active", id: text(fd, "id"), active }, active ? "Seção ativada." : "Seção ocultada.", "/admin/home");
+}
+
+/** "O Pódio" of the region on/off, as a DRAFT. Once published, off hides it (home and state pages) and the daily calculation skips the region. */
+export async function setPodioAction(fd: FormData) {
+  const enabled = text(fd, "enabled") === "true";
+  const ok = enabled
+    ? "Rascunho salvo: O Pódio ligado. Publique para valer na loja."
+    : "Rascunho salvo: O Pódio desligado. Publique para ele sair da loja e o cálculo diário parar.";
+  return run(fd, { type: "set-podio", enabled }, ok, "/admin/home#podio");
 }
 
 /** Adds one structured home component (city styles, state chooser, regional campaign) to the DRAFT of the region the form was rendered for. */
@@ -183,8 +214,19 @@ export async function saveSection(fd: FormData) {
     } else if (mode === "seed") patch.featured = legacyFeaturedRefs(scope);
     else if (mode === "reset" && scope === "sul") patch.featured = undefined;
   }
+  if (section.template === "image-grid") {
+    const { problems } = parseGridTiles(fd);
+    if (problems.length > 0) back(pageId ? inPagePath(pageId, `/admin/home/${id}`) : `/admin/home/${id}`, { err: problems });
+  }
   const problem = patch.source ? sourceProblem(patch.source, ws.doc) : null;
   if (problem) back(pageId ? inPagePath(pageId, `/admin/home/${id}`) : `/admin/home/${id}`, { err: [problem] });
+  // The order list belongs to the COLLECTION: saved with the section, in one go, for every section built on it and its page.
+  const arrangement = patch.source?.kind === "ink-category" ? parseCollectionArrangement(fd, patch.source) : null;
+  if (patch.source?.kind === "ink-category" && arrangement) {
+    const update: DraftOp = { type: "update", id, patch };
+    const ops: DraftOp[] = [pageId ? { type: "in-page", page: pageId, op: update } : update, { type: "set-collection-arrangement", store: patch.source.store, collectionId: patch.source.collectionId, ...arrangement }];
+    return run(fd, { type: "batch", ops }, "Rascunho salvo.", `/admin/home/${id}`, false, true);
+  }
   return run(fd, { type: "update", id, patch }, "Rascunho salvo.", `/admin/home/${id}`);
 }
 
@@ -236,50 +278,69 @@ export async function setCollectionEnabledAction(fd: FormData) {
   back(to, { ok: enabledNow ? `“${record.name}” habilitada para uso no CMS (a INK não foi alterada).` : `“${record.name}” desabilitada.` });
 }
 
-const NAVBAR_POSITIONS = new Set(["none", "top", "more"]);
+const MENU_POSITIONS = new Set(["none", "top", "more"]);
+
+/** Back to the Library, keeping its search, filter and "back to what I was doing", on the menu card. */
+function libraryBack(fd: FormData): string {
+  const q = new URLSearchParams();
+  for (const k of ["q", "f"]) if (text(fd, k)) q.set(k, text(fd, k));
+  const from = text(fd, "from");
+  if (from.startsWith("/admin/")) q.set("from", from);
+  return `/admin/colecoes${q.size ? `?${q}` : ""}`;
+}
 
 /**
- * Library: where ONE public collection appears in the navbar the Worker draws on the INK product pages: "Não exibir", "Topo" or "Demais categorias".
- * Independent of "enabled for the home". Only PUBLIC collections (a real page on the INK store) with products can be placed; internal ones have no
- * public page. Any number of collections per group; the position is exclusive (moving to a group removes it from the other), appended at the end of
- * the target group, where the owner reorders it (`moveCollectionNavbarAction`). Nothing goes public until the draft is published.
+ * Library: where ONE collection appears in the region's collection menu (the storefront header and the navbar the Worker draws on the INK product pages):
+ * "Não exibir", "Topo" or "Categorias". Independent of "enabled for the home". A collection can enter only if it can be linked somewhere: a page of ours
+ * (public, or internal and enabled, with enough products) or, for the INK navbar, a public INK page with products. Nothing goes public until the draft is
+ * published.
  */
-export async function setCollectionNavbarPositionAction(fd: FormData) {
+export async function setCollectionMenuPositionAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
   const position = text(fd, "position");
-  const from = text(fd, "from");
-  const q = new URLSearchParams();
-  for (const k of ["q", "f"]) if (text(fd, k)) q.set(k, text(fd, k));
-  if (from.startsWith("/admin/")) q.set("from", from);
-  const to = `/admin/colecoes${q.size ? `?${q}` : ""}`;
+  const to = libraryBack(fd);
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: [`Esta coleção pertence a outra loja da INK: a região ${scopeName(scope)} só usa coleções da própria loja.`] });
-  if (!NAVBAR_POSITIONS.has(position)) back(to, { err: ["Posição inválida."] });
+  if (!MENU_POSITIONS.has(position)) back(to, { err: ["Posição inválida."] });
   const record = findCollection(ref.store, ref.collectionId);
   if (!record) back(to, { err: ["Coleção não encontrada no snapshot sincronizado."] });
   if (position !== "none") {
-    if (!record.isAvailable) back(to, { err: ["Só coleções públicas na INK têm página própria: uma coleção interna não pode aparecer na navbar."] });
-    if (record.matchedCount < 1) back(to, { err: ["Esta coleção não tem produtos no catálogo local; ela não apareceria na navbar."] });
+    const ws = await loadWorkspace(scope);
+    const onSite = collectionPageSlug(ws.doc, ref.store, ref.collectionId) !== null;
+    const onInk = record.isAvailable && record.matchedCount >= 1;
+    if (!onSite && !onInk) {
+      back(to, { err: [record.isAvailable ? "Esta coleção não tem produtos no catálogo local; ela não apareceria no menu." : "Coleção interna: ela entra no menu do site depois de habilitada no CMS, e precisa de pelo menos 3 produtos."] });
+    }
   }
-  const outcome = await applyAndSave(scope, { type: "set-collection-navbar-position", ...ref, position: position as "none" | "top" | "more" }, revNumber(fd), actor);
+  const outcome = await applyAndSave(scope, { type: "set-collection-menu-position", ...ref, position: position as "none" | "top" | "more", isPublic: record.isAvailable }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to, { err: outcome.errors });
-  const where = position === "top" ? "vai para o Topo da navbar da INK" : position === "more" ? "vai para Demais categorias da navbar da INK" : "sai da navbar da INK";
-  back(to, { ok: `“${record.name}” ${where} depois que você publicar.` });
+  const where = position === "top" ? "vai para o topo do menu" : position === "more" ? "fica em Categorias" : "sai do menu";
+  back(`${to}#menu-colecoes`, { ok: `“${record.name}” ${where} depois que você publicar.` });
 }
 
-/** Library: one step up or down inside the collection's own navbar group. */
-export async function moveCollectionNavbarAction(fd: FormData) {
+/** Library: one step left or right on the bar. */
+export async function moveCollectionMenuAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
   const direction = text(fd, "direction");
   const to = "/admin/colecoes";
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
   if (direction !== "up" && direction !== "down") back(to, { err: ["Direção inválida."] });
-  const outcome = await applyAndSave(scope, { type: "move-collection-navbar", ...ref, direction }, revNumber(fd), actor);
+  const outcome = await applyAndSave(scope, { type: "move-collection-menu", ...ref, direction }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to, { err: outcome.errors });
-  back(to, { ok: "Ordem alterada (vale depois que você publicar)." });
+  back(`${to}#menu-colecoes`, { ok: "Ordem do topo alterada (vale depois que você publicar)." });
+}
+
+/** Library: a region from before the collection menu keeps what it shows and the INK navbar starts following it (once published). */
+export async function adoptCollectionMenuAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const to = "/admin/colecoes";
+  const outcome = await applyAndSave(scope, { type: "adopt-collection-menu" }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  back(`${to}#menu-colecoes`, { ok: "A navbar da INK passa a seguir este menu depois que você publicar." });
 }
 
 export async function discardDraftAction(fd: FormData) {
@@ -495,6 +556,21 @@ export async function publishGlobalThemeAction(fd: FormData) {
   back("/admin/aparencia", { ok: `Paleta global publicada (release ${result.outcome.releaseId}).` });
 }
 
+/**
+ * Aparência (owner): the store-wide buy button of the product cards, saved in the GLOBAL draft. On: every product card of every region gets a button
+ * with this text (a section's own text wins). Off: each section decides, as before. Published with "Publicar configuração global".
+ */
+export async function saveCardsAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const on = fd.get("cards_buy") === "on";
+  const label = text(fd, "cards_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL;
+  const outcome = await applyAndSave("global", { type: "set-cards", cards: on ? { buyLabel: label } : null }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/aparencia", { err: outcome.errors.map((e) => (e.includes("buyLabel") ? `O texto do botão precisa ter de 1 a ${MAX_BUY_LABEL} caracteres, sem espaço nas pontas.` : e)) });
+  await audit(actor, "draft.save", "global", "set-cards");
+  back("/admin/aparencia#botao-cards", { ok: on ? `Rascunho salvo: botão “${label}” em todos os cards. Publique a configuração global para valer na loja.` : "Rascunho salvo: cada seção volta a decidir o próprio botão. Publique a configuração global para valer na loja." });
+}
+
 export async function discardGlobalThemeAction() {
   const actor = await requireAdmin({ mutation: true, owner: true });
   await discardDraft("global");
@@ -682,6 +758,36 @@ export async function createPageAction(fd: FormData) {
   return runRaw(fd, { type: "create-page", kind: pageKindOf(fd), title: text(fd, "title"), slug: text(fd, "slug") || undefined }, "Página criada no rascunho. Nada é público até publicar.", "/admin/paginas", (id) => `/admin/paginas/${id}`);
 }
 
+/**
+ * Coleções, "Levar para as páginas do site": every "Ver todos" (and menu link, grid tile) that still opens a collection on INK opens its page on the site
+ * instead, for every collection the region can show (one that cannot keeps its INK link, so nothing turns into a dead button). A draft, like any edit.
+ */
+export async function linkCollectionPagesAction(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const ws = await loadWorkspace(scope);
+  const refs = inkCollectionLinks(ws.doc).filter((r) => collectionPageSlug(ws.doc, r.store, r.collectionId) !== null);
+  if (refs.length === 0) back("/admin/colecoes", { ok: "Nenhum link para trocar: os que restam levam a coleções sem página no site." });
+  return runRaw(fd, { type: "link-collection-pages", refs }, `${refs.length === 1 ? "1 link agora leva" : `${refs.length} links agora levam`} à página da coleção no site (rascunho). Publique a home e as páginas alteradas para valer.`, "/admin/colecoes");
+}
+
+/**
+ * "Personalizar página" of a collection (Coleções): its page, as a draft parent-category landing at the collection's own address, with the hero and
+ * every product of it, for the owner to dress (texts, picture, SEO). Until it is published the storefront keeps drawing the automatic one.
+ */
+export async function createCollectionPageAction(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
+  if (!ref) back("/admin/colecoes", { err: ["Coleção inválida."] });
+  const ws = await loadWorkspace(scope);
+  const problem = sourceProblem({ kind: "ink-category", ...ref, order: "category", limit: 6 }, ws.doc);
+  if (problem) back("/admin/colecoes", { err: [problem] });
+  const collection = findCollection(ref.store, ref.collectionId);
+  if (!collection) back("/admin/colecoes", { err: ["Essa coleção não existe no snapshot sincronizado."] });
+  const existing = ws.doc.pages?.find((p) => p.kind === "categoryLanding" && p.slug === collection.slug);
+  if (existing) back(`/admin/paginas/${existing.id}`, { ok: "Esta coleção já tem uma página no rascunho." });
+  return runRaw(fd, { type: "create-page", kind: "categoryLanding", title: collection.name.replace(/\s+/g, " ").trim(), slug: collection.slug, collection: ref }, "Página da coleção criada no rascunho. Até publicar, a loja segue mostrando a página automática.", "/admin/colecoes", (id) => `/admin/paginas/${id}`);
+}
+
 /** Title, address and SEO. The address of a page that is already published cannot change (its URL is public); only the owner turns indexing on. */
 export async function updatePageAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
@@ -703,6 +809,15 @@ export async function updatePageAction(fd: FormData) {
     ...(og ? { ogImage: { assetId: og, alt: text(fd, "seo_og_alt"), decorative: text(fd, "seo_og_alt") === "" } } : {}),
   };
   return runRaw(fd, { type: "update-page", id, patch: { title: text(fd, "title"), slug, seo } }, "Rascunho da página salvo.", here);
+}
+
+/** The page's own ground ("Fundo da página": colour, text tone, optional pattern), or back to the region's ground when switched off. */
+export async function savePageBackdropAction(fd: FormData) {
+  const id = text(fd, "id");
+  const here = `/admin/paginas/${id}`;
+  const { backdrop, problems } = parsePageBackdrop(fd);
+  if (problems.length > 0) back(here, { err: problems });
+  return runRaw(fd, { type: "update-page", id, patch: { backdrop } }, backdrop ? "Fundo da página salvo no rascunho." : "A página voltou ao fundo da região (rascunho).", here);
 }
 
 export async function duplicatePageAction(fd: FormData) {

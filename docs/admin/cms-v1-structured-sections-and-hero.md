@@ -16,6 +16,125 @@ Home · Seções → **Adicionar seção** agora tem dois grupos: **Produtos** (
 - Novas seções só entram no **rascunho** da região selecionada; ordenar, ocultar, editar, remover (as criadas aqui), restaurar e publicar usam o fluxo existente.
 - O `update` de seção passou a validar também as regras do documento inteiro (loja da região, rota da região), reportando só o que é daquela seção.
 
+### Grade de imagens (`image-grid`, `feature/secao-grid-imagens`)
+
+Quarto modelo em **Componentes da home** e em **Componentes** das páginas: blocos com imagem e nome, cada um levando a um destino próprio ("Compre por peça", "Coleções", subtemas de uma categoria-pai).
+
+- **Blocos** (`tiles`, de 2 a 12, na ordem da lista): nome (até 40), legenda opcional (até 80), imagem opcional da Mídia e destino. Os destinos são os mesmos de um botão (coleção pública da INK, hotpage/categoria publicada, caminho da própria região, seção da página, URL da loja Use) e passam pelas mesmas regras: loja e rotas só da região, página precisa estar publicada, coleção interna é recusada na publicação. Nada vem do catálogo, então um bloco nunca mostra preço ou contagem que possa ficar errado.
+- **Layout** (`grid`): colunas no desktop (2, 3 ou 4; no celular sempre 2), formato das imagens (retrato 4:5, quadrado, paisagem 4:3) e nome embaixo da imagem ou sobre ela (texto branco com degradê escuro).
+- **Sem imagem**, o bloco vira uma placa na cor da região com uma seta (serve para um "Ver tudo"). As imagens dos blocos são decorativas: o nome é o texto do link.
+- **Ao adicionar**: "Compre por peça" com dois blocos que existem em toda região (Camisetas → busca de estampas; Canecas e ecobags → Outros artigos), antes da campanha de fechamento. Pode haver várias grades.
+- Erros de preenchimento aparecem em português no editor ("Bloco 2: escolha para onde ele leva."). Um bloco cujo destino não resolve na loja é omitido (nunca link morto); sem blocos, a seção some.
+
+### Produtos em grade (`layout.display`, `feature/grade-produtos-fundo-pagina`)
+
+Toda seção de produtos (coleção da INK, Uma Penca ou curadoria editorial), na home e nas páginas, escolhe a **Exibição** em Layout: **Carrossel** (a fileira de sempre) ou **Grade** (todos os cards na página, como numa categoria: 4 por linha no desktop, 3 no tablet, 2 no celular).
+
+- `layout.display: "grid"`; ausente = carrossel. Nada é gravado para o carrossel, então as seções salvas antes continuam idênticas.
+- Limite de cards: 3 a 24 no carrossel, 3 a **48** na grade (tudo o que a coleção guarda para vitrine, `MAX_STORED_MEMBERS`). Voltar de grade para carrossel corta o limite para 24 no salvar.
+- Mesmo card, mesmo título/"Ver todos" e mesmo evento de clique (`GoToInk` / `GoToPenca` com o `source_section` da seção) nos dois modos. O primeiro card personalizável continua sendo a primeira célula. Na grade, a partir de 8 cards o "Ver todos" se repete como botão no fim.
+- A ordem manual e os produtos escondidos da coleção valem igual nos dois modos.
+- **Adicionar seção** (home e páginas) já pergunta a exibição ao criar; a lista de seções mostra "Grade de produtos".
+
+### Cards de produto e botão de compra (`feature/botao-comprar-cards`)
+
+**Card** (`src/components/catalog/ProductCard.tsx`, usado por `ProductGrid` e `ProductCarousel`: grades e carrosséis do CMS na home e nas páginas, e os carrosséis das páginas de estado). Cada produto é um bloco só: foto em cima, de ponta a ponta, e nome, preço e botão opcional embaixo.
+
+- Borda de 1px suave (preto a 15%, 35% no hover; branco a 25% sobre superfície escura), cantos de 8px, sem sombra nem gradiente.
+- Sem fundo próprio: o card mostra o fundo da grade (`--card-fill`, transparente). A moldura da foto continua no cinza da loja (`.photo`), então nenhum mockup da INK ganha um retângulo branco atrás. Numa página com fundo temático, o card recebe a cor da página para o pattern passar entre os cards e nunca atrás de nome e preço.
+- A foto não é cortada (`object-fit: contain`): os mockups da INK (800×820) ocupam a moldura exatamente; foto de outro formato mantém a proporção.
+- Informações com padding de 12px no celular e 16px a partir do tablet. Nome com peso 500, até duas linhas (o nome completo continua no DOM). Preço de 16px no celular e 18px no desktop, semibold.
+- Preço e botão ficam presos ao pé do card: os cards de uma linha têm a mesma altura, então preços e botões ficam alinhados. Quando todos os nomes da linha cabem numa linha, o preço vem logo abaixo do nome (4px); o espaço só aparece ao lado de um nome que ocupa duas linhas.
+- Promoção da INK: o preço cheio aparece riscado antes do promocional (`PriceText`), também nos cards de cidade, na busca, na PDP, no hero e em Meus Lugares (ver `docs/deploy/railway.md`, "Promoções da INK").
+- Grade: espaço uniforme entre os cards (12/16/20px). Com o botão ligado, o "Ver todos" do fim da grade vira botão secundário (contorno) no fundo claro.
+- O card inteiro é um único link (sem link aninhado), com o anel de foco global em volta dele.
+- Cabeçalho da seção: o "Ver todos" é um botão de contorno (mesma altura das setas, preenche só no hover), mais discreto que os botões dos cards. As setas do carrossel aparecem também no celular, numa linha sob o título ("Ver todos" à esquerda, setas à direita), como pista de que há mais produtos para o lado. Capturas: [`screenshots/ver-todos-setas/`](../screenshots/ver-todos-setas/).
+
+**Botão de compra** (`layout.buyLabel`). No painel, em **Editar seção → Layout → “Botão de compra em cada card de produto”**, em qualquer seção de produtos (carrossel ou grade, home e páginas). Ausente = sem botão; as seções existentes não mudam.
+
+- Texto editável (até 20 caracteres). O padrão é **“Ver produto”**, porque o botão leva à página do produto na loja, onde a pessoa escolhe tamanho e cor. Dá para trocar por “Comprar”.
+- Faz parte do próprio link do card: mesmo destino (INK ou Uma Penca), mesmo `GoToInk`/`GoToPenca`, um clique só. Não há compra direta, carrinho nem modal.
+- Mínimo de 44px de altura, na largura da área de informações, no formato do CTA da loja (retangular, sólido, caixa alta): preto em fundo claro, branco em fundo escuro. Fica sempre no pé do card.
+- O card personalizável mostra o “Personalizar” dele no mesmo formato. A lista de seções mostra o selo com o texto do botão.
+
+**Etiquetas nas fotos** (`layout.tags`). Em **Editar seção → Layout → “Etiquetas nas fotos dos produtos”**, em qualquer seção de produtos; desligadas por padrão.
+
+- **Desconto**: “18% OFF” em cada produto com promoção valendo na INK (ou na Uma Penca), calculado com os dois preços que a loja envia e **truncado** como a própria INK mostra (104,90 → 94,90 = “9% OFF”; `discountPercent` em `src/lib/format.ts`, em centavos inteiros). Sem promoção, sem etiqueta; depende do catálogo sincronizado.
+- **Etiqueta própria**: um texto (até 24 caracteres) em todos os cards da seção (“Black Friday”, “Lançamento”).
+- No canto superior esquerdo da foto: o desconto na cor da região, a própria em preto (o mesmo estilo de “Personalizável”); as duas juntas quando ligadas. Ficam dentro do link do card (o leitor de tela ouve com o produto). A lista de seções mostra o selo “Etiquetas”. Capturas: [`screenshots/etiquetas-cards/`](../screenshots/etiquetas-cards/).
+
+**Seção com foto de fundo**: os cards ganham fundo próprio (o cinza `--ground`, o mesmo dos mockups da INK, então foto e texto viram uma peça só) e texto escuro, mesmo com o título da seção em branco (`SOLID_CARDS` em `ProductCard.tsx`, ligado por `solidCards` quando a seção tem imagem). Sem isso o card é transparente e a foto aparece por trás do nome e do preço. Seção só com cor (sem foto) continua com cards transparentes sobre a cor. Capturas: [`screenshots/cards-fundo-imagem/`](../screenshots/cards-fundo-imagem/).
+
+**Fora deste ajuste** (componentes próprios, com regras próprias): `FamilyCard` (páginas de cidade, “Estilos da cidade” e “Outros estilos” do PDP: tem favoritar, compartilhar e versões), os resultados de `/busca` e os cards de `/outros-artigos`. Dá para estender a eles reaproveitando as mesmas classes.
+
+Capturas: [`screenshots/botao-comprar-cards/`](../screenshots/botao-comprar-cards/).
+
+## Fundo da página (`page.backdrop`, `feature/grade-produtos-fundo-pagina`)
+
+Hotpages e categorias-pai têm o card **Fundo da página** (página temática: Black Friday, Natal…): cor da página inteira, cor do texto e, opcional, uma imagem de **pattern** repetida por cima (tamanho de cada repetição 40–600 px, intensidade 5–100%). Só a página muda; a home e o resto da loja não.
+
+- `backdrop: { color, tone: "light" | "dark", pattern?: { image, size, opacity } }`; sem `backdrop`, o fundo normal da região. A imagem é sempre decorativa, entra na tabela de mídia da publicação e, se faltar, a página aparece só com a cor.
+- O pattern é uma camada sob as seções. Seção com fundo próprio (foto, cor, papel) continua pintando o dela.
+- **Texto**: com fundo escuro (`tone: "dark"`), o texto das seções sem fundo próprio fica claro (`.page-dark` em `globals.css`, que troca só a cor do texto e os tons `--ink-soft`/`--ink-mute`/`--line`; `--ink` fica como está porque também pinta botões e etiquetas). Seções de produtos e o topo da página sem fundo próprio seguem o tom da página automaticamente. Seção com superfície clara própria volta ao texto escuro (`.on-light`), e as duas seções sem versão escura (Estilos da cidade, Escolha seu estado) ficam sobre papel.
+- Legibilidade: o contraste do texto sobre a cor bloqueia a publicação abaixo de 3:1 e avisa abaixo de 4,5:1 (mesma regra das seções); pattern com intensidade acima de 50% só avisa. Ao trocar a cor, o editor sugere a cor de texto que lê melhor.
+
+## Ordenar arrastando (`feature/ordenar-arrastando`)
+
+A ordem das seções (Home · Seções e cada página) e a ordem dos produtos de uma seção de coleção mudam **arrastando a linha pela alça** (os seis pontos à esquerda), no mouse ou no dedo, em vez de um ↑/↓ por vez. As outras linhas abrem espaço enquanto ela passa e, perto da borda, a lista (ou a janela) rola sozinha; Esc desfaz o movimento.
+
+- **Seções**: a nova ordem é salva no rascunho **ao soltar**, de uma vez (`reorderSections` → operação `reorder`), com a mesma checagem de revisão das outras ações (outra aba com o rascunho mais novo recusa e avisa). O hero fica no topo e o rodapé no fim: não têm alça e nada passa deles (regra também em `draft-ops.ts`).
+- **Produtos**: arrastar só muda a lista do editor; vale ao **Salvar rascunho**, como antes. “Topo” continua levando direto ao primeiro lugar, e a linha tracejada de “a loja mostra só os N primeiros” acompanha o arraste.
+- **Teclado e leitor de tela**: na alça, Espaço (ou Enter) pega a linha, ↑/↓ (Home/End) movem, Espaço solta e Esc cancela; cada passo é anunciado. A alça tem `touch-action: none`, então no celular o resto da lista continua rolando com o dedo.
+- Código: `src/components/admin/useDragSort.tsx` (o arrastar, sem biblioteca), `src/lib/admin/drag-sort.ts` (a conta de onde a linha entra, testada em `tests/unit/drag-sort.test.ts`), `SectionOrderTable.tsx` (as tabelas de seções) e `CollectionOrder.tsx`. Capturas: [`screenshots/ordenar-arrastando/`](../screenshots/ordenar-arrastando/).
+
+## Páginas de coleção (`feature/paginas-colecao`)
+
+Cada coleção que a região pode usar (pública, ou interna habilitada, com pelo menos 3 produtos) tem uma página no site em **`/<região>/colecoes/<slug da coleção>`**: o título da coleção e **todos** os produtos dela, 24 por página (`/2`, `/3`…; a `/1` redireciona para a própria página e depois da última dá 404). A INK fica só com o detalhe do produto, o carrinho e o checkout: os cards abrem a página do produto na INK, como no resto do site.
+
+- **“Ver todos”**: o destino novo **Página da coleção (no site)** (`dest.kind: "collection-page"`). É o padrão de toda seção criada a partir de uma coleção, inclusive interna, que antes ficava sem botão. A opção **Coleção da INK** continua existindo para coleção pública. Em **Coleções**, o aviso **Levar para as páginas do site** troca de uma vez, no rascunho, os botões, links do menu e blocos de grade que ainda abrem a coleção na INK. Coleção que a região não pode mostrar fica como está.
+- **Ordem e escondidos são da coleção** (`collections.arrangements`), não mais de cada seção. A lista **Ordem dos produtos** do editor salva para a coleção na região, e toda seção com aquela coleção e a página dela seguem a mesma lista. A seção que tinha ordem própria (antes desta mudança) continua com ela até alguém salvar a ordem daquela coleção. Seção sem ordem passa a seguir a ordem antiga de outra seção da mesma coleção, se houver. A tela **Publicar** mostra a mudança como “Coleção X: ordem própria…”.
+- **Personalizar página** (coluna **Página no site** em Coleções): cria no rascunho uma **categoria-pai** com o mesmo endereço, com o hero e a **grade paginada** (`layout.display: "paged"`, que só existe em categoria-pai e uma vez por página). Ali dá para trocar título, texto, imagem, SEO e incluir outras seções. Enquanto ela não é publicada, a loja mostra a página automática; publicada, ela ocupa o endereço. A página automática nunca é indexada (`noindex`); a personalizada segue a opção de indexação da página.
+- **Busca do site**: o resultado “Coleção” (coleções públicas) abre a página do site, não mais a da INK.
+- **Dados**: a paginação precisa da lista **completa** de produtos de cada coleção, por isso o sync de coleções passou a guardar `allMemberIds` de toda coleção, interna também. Antes guardava só das públicas, como `searchMemberIds`, que continua sendo lido. Na loja Sul unificada isso dá cerca de 48 mil ids, uns 0,5 MB. **Depois do deploy, rode “Sincronizar coleções agora”**: até lá, uma coleção interna mostra só os 48 produtos que o arquivo antigo guardava.
+- **Loja única** (PR #49): o filtro por região dos carrosséis vale também para a página (`collectionPageLookup`). Com a lista completa, uma coleção mista, como “Da Nossa Terra” nas três regiões, não fica sem produto no Norte por causa do corte de 48.
+- Código: `src/lib/catalog/collection-source.ts` (`collectionPageLookup`, `collectionForPage`, `collectionPageSlug`), `src/lib/pages/public.ts` (`resolveCollectionLanding`), as rotas `src/app/[region]/colecoes/[slug]/page.tsx` e `[slug]/[pagina]/page.tsx`, `src/components/catalog/Pagination.tsx` (a mesma da busca), `src/lib/site-config/collections-enabled.ts` (`arrangementOf`). Testes: `tests/unit/collection-pages.test.ts` e `tests/e2e-admin/collection-page.spec.ts`. Capturas: [`screenshots/paginas-colecao/`](../screenshots/paginas-colecao/).
+
+## Menu de coleções: Topo e Categorias (`feature/menu-categorias`)
+
+**Um menu só** para o topo do site e para a navbar que o Worker desenha nas páginas de produto da INK, configurado em **Coleções → Menu de coleções (site e INK)**. Cada coleção tem três posições: **Topo** (direto na barra, na ordem do ↑↓), **Categorias** e **Não exibir**.
+
+- **Categorias é automático:** toda coleção **pública** com página entra sozinha, na ordem do menu da INK, e uma coleção nova aparece sem ninguém mexer. **Não exibir** tira uma (por exemplo as de estado, que já estão em Regiões). Coleção **interna** só entra se for colocada e se tiver página (habilitada, com pelo menos 3 produtos), e aparece só no site, porque não tem página na INK. O documento guarda só o que foge do padrão: `collections.menu = { top, hidden, added }` (`src/lib/site-config/collection-menu.ts`).
+- **No site (desktop):** `Regiões ▾`, **`Categorias ▾`** (todas, as do Topo primeiro; em colunas quando passam de 8) e depois os links da home e as coleções do Topo. Quando a barra não comporta tudo, os últimos itens saem da barra em vez de quebrar a linha (`PriorityLinks`); as coleções continuam em Categorias. **No celular:** um bloco **Categorias** entre Comprar e Estados, com as do Topo primeiro. Cada item abre a página da coleção no site (`/<região>/colecoes/<slug>`).
+- **Navegação:** o bloco **Categorias** (`navigation.categoriesBlock`) tem rótulo, posição e visibilidade como os outros. O rótulo também nomeia o menu do desktop e vai para o Worker (`moreLabel`).
+- **Navbar da INK:** `/api/navbar/<região>` passa a ler o mesmo menu **depois que a região o publica**: `top` = Topo, `more` = o resto de Categorias que tem página na INK, `url` = a página da coleção no site, `moreLabel` = o rótulo do bloco. Uma região que ainda não tem `collections.menu` publicado continua mandando **exatamente** o payload antigo (`navbarGroups`). O site, nesse caso, já mostra o menu: o Topo antigo fica no topo e todas as públicas em Categorias. Em Coleções, “Usar este menu também na INK” adota o menu sem mudar nada; a primeira mudança no menu também adota.
+- **Worker (repositório `use-origens-workers`):** hoje ele ignora `url` e `moreLabel`, monta o link da INK pelo slug e escreve “Demais categorias” fixo (`src/loader/header-nav.js`). Para a navbar da INK abrir as páginas do site e usar o nome do bloco, o Worker precisa mudar e ser publicado; isso não está neste PR.
+- **Publicar** lista “"X" vai para o topo do menu / fica em Categorias / sai do menu”, “A ordem do topo do menu mudou” e, na adoção, “A navbar da INK passa a seguir o menu de coleções do site”.
+- Código: `src/lib/site-config/collection-menu.ts` (regras puras), `src/lib/catalog/collection-menu.ts` (o que cada superfície consegue linkar), `src/lib/site-config/navbar.ts`, `src/lib/site-config/navigation.ts`, `src/components/layout/SiteChrome.tsx` e `PriorityLinks.tsx`, `src/app/admin/(panel)/colecoes/page.tsx`. Testes: `tests/unit/navbar.test.ts`, `tests/unit/navigation-config.test.ts`, `tests/e2e-admin/navbar.spec.ts`. Capturas: [`screenshots/menu-categorias/`](../screenshots/menu-categorias/).
+
+## Botão em todos os cards e busca na página da coleção (`feature/botao-global-busca-colecao`)
+
+- **Botão global nos cards** (Aparência → "Botão nos cards de produto · todas as regiões", só o owner):
+  - Ligado, todo card de produto da loja ganha um botão com o texto escolhido. Vale nas seções de produtos (home, hotpages, páginas de coleção, inclusive o card de personalização), nos estilos da cidade (home, estado, cidade, outros estilos da página da estampa), nos resultados de `/busca` e nos artigos da Uma Penca.
+  - O botão faz parte do link do card: abre a mesma página e registra o mesmo clique.
+  - Uma seção com texto de botão próprio (`layout.buyLabel`) continua com o dela. Desligado, cada seção decide, como antes.
+  - Ficam de fora os 3 cards do hero e a lista de Meus Lugares.
+  - Fica no documento **global** (`cards.buyLabel`, `src/lib/site-config/cards-schema.ts`). Uma região não aceita esse campo.
+  - Publica com "Publicar configuração global" (o mesmo botão da paleta global, que publica o documento global inteiro).
+  - Um valor inválido no arquivo publicado é ignorado, sem derrubar o tracking global.
+- **Mini busca da página de coleção** ("Buscar nesta coleção"):
+  - Aparece na grade paginada das páginas de coleção (automática ou categoria-pai) com mais de 12 produtos.
+  - Conforme a pessoa digita, a grade mostra os cards da coleção **inteira**, todas as páginas, que combinam com o texto, na ordem da coleção e com os mesmos cards e botões. Limpar volta à página com a paginação.
+  - Regras (`src/lib/search/collection-filter.ts`):
+    - procura no nome, no lugar ("Tijucas · SC") e no nome do estado;
+    - ignora maiúsculas, acentos e pontuação;
+    - aceita os apelidos da busca global ("floripa", "poa");
+    - cada termo precisa começar uma palavra, sem busca aproximada;
+    - mínimo de 2 caracteres; até 60 resultados, com aviso para refinar.
+  - API: `GET /api/colecoes/<região>/<slug>?q=` resolve o endereço exatamente como a página e responde 404 para região não lançada ou coleção sem página. Cache de 60 s no navegador e 300 s na CDN.
+  - O clique num resultado registra `source=colecao_busca`. A busca não muda o endereço da página, que continua em cache.
+- **Menu do topo:** "Categorias" e as coleções do Topo já abrem a página da coleção no site; não há chave para isso. Só a navbar da INK (Worker) ainda abre a coleção na INK.
+- Código: `src/components/catalog/CardButton.tsx`, `CollectionSearch.tsx`, `src/app/api/colecoes/[region]/[slug]/route.ts`, `src/lib/pages/public.ts` (`findCollectionLanding`, `pagedGridItems`), `src/lib/site-config/cards.ts`. Testes: `tests/unit/cards-and-collection-search.test.ts`. Capturas: [`screenshots/botao-global-busca-colecao/`](../screenshots/botao-global-busca-colecao/).
+
 ## 2. Três produtos do hero por região (`feature/cms-hero-featured-products`)
 
 Home → Seções → **Hero** → bloco **Produtos em destaque**: três posições, buscar (cidade, UF, estilo ou ID) → **Usar aqui**, **Substituir**, **Limpar**, **↑/↓**. Cada ação salva o rascunho e atualiza a prévia 375/desktop; nada é publicado.
@@ -36,3 +155,4 @@ Home → Seções → **Hero** → bloco **Produtos em destaque**: três posiç�
 - E2E do admin: `structured.spec.ts` (Norte, Centro-Oeste e Sul: adicionar, editar, prévia 375/desktop, publicar no sandbox, sem duplicar) e `hero.spec.ts` (três produtos reais no Norte, prévia, recusa de outra loja, reordenar/limpar, rascunho persistente, publicar, restaurar, Centro-Oeste independente e Sul byte a byte igual).
 - Smoke público (`SMOKE_REGIONS_ONLY=1`): as regiões lançadas com os três componentes e o hero de 2 cards (Norte) e sem cards (Centro-Oeste). `verify-home-equivalence` do Sul: pixel-identical.
 - Capturas do hero: [`screenshots/2026-09-25-cms-sections/`](../screenshots/2026-09-25-cms-sections/).
+- Capturas da grade e do fundo (pattern de teste gerado só para a QA): [`screenshots/grade-produtos-fundo-pagina/`](../screenshots/grade-produtos-fundo-pagina/).

@@ -1,24 +1,28 @@
 import "server-only";
-import { formatPrice } from "../format";
+import { discountPercent, formatListPrice, formatPrice } from "../format";
 import type { SourceResult, UmaPencaLookup } from "../site-config/sources";
+import { umaPencaHoverPhotos } from "./hover";
 import { readUmaPencaSnapshot } from "./snapshot";
 import type { ArticleKind, UmaPencaSnapshot } from "./types";
 
 /**
  * The Uma Penca articles of the chosen kinds as carousel items (a home section with `source.kind === "umapenca"`), in feed order, at most
- * `limit`. Each item carries `umaPenca` so its click fires GoToPenca / go_to_umapenca, never GoToInk. No snapshot yet is "unavailable"
+ * `limit`, with the article's hover photo when one was fetched. Each item carries `umaPenca` so its click fires GoToPenca / go_to_umapenca, never GoToInk. No snapshot yet is "unavailable"
  * (the section is hidden), never an invented product. `read` is only ever overridden by tests.
  */
-export function umaPencaLookup(region: string, read: () => UmaPencaSnapshot | null = readUmaPencaSnapshot): UmaPencaLookup {
+export function umaPencaLookup(region: string, read: () => UmaPencaSnapshot | null = readUmaPencaSnapshot, hoverPhotos: () => Record<string, string> = umaPencaHoverPhotos): UmaPencaLookup {
   return (kinds: readonly ArticleKind[], limit: number): SourceResult => {
     const snapshot = read();
     if (!snapshot) return { status: "unavailable", reason: "umapenca-not-synced" };
+    const hover = hoverPhotos();
     const items = snapshot.articles
       .filter((a) => kinds.includes(a.kind))
       .slice(0, limit)
       .map((a) => {
         const current = a.salePrice ?? a.price;
-        return { id: a.id, name: a.title, price: formatPrice(current), rawPrice: current, imageUrl: a.imageUrl, href: a.url, umaPenca: { kind: a.kind, region } };
+        // On sale in the Uma Penca feed: its regular price struck through, and the "% OFF" like an INK promotion.
+        const promo = a.salePrice !== null && a.price !== null && a.salePrice < a.price ? { price: a.salePrice, listPrice: a.price } : null;
+        return { id: a.id, name: a.title, price: formatPrice(current), ...(promo ? { listPrice: formatListPrice(promo), discount: discountPercent(promo) } : {}), rawPrice: current, imageUrl: a.imageUrl, ...(hover[a.id] ? { hoverImageUrl: hover[a.id] } : {}), href: a.url, umaPenca: { kind: a.kind, region } };
       });
     return { status: "ok", items };
   };

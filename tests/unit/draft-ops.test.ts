@@ -54,6 +54,29 @@ describe("draft operations", () => {
     expect(applyOp(d, { type: "move", id: "seed-origem", direction: "down" }, ctx).ok).toBe(false); // would pass the footer
   });
 
+  test("given a whole new order (a drag in the panel), when applied, then the sections follow it and the input is not mutated", () => {
+    const d = seedDoc();
+    const before = ids(d);
+    const inner = before.slice(1, -1);
+    const wanted = [before[0], inner.at(-1)!, ...inner.slice(0, -1), before.at(-1)!];
+    const r = ok(d, { type: "reorder", ids: wanted });
+    expect(ids(r.doc)).toEqual(wanted);
+    expect(ids(d)).toEqual(before);
+    expect(validateScopeDoc(r.doc).ok).toBe(true);
+    expect(ids(ok(d, { type: "reorder", ids: before }).doc)).toEqual(before); // same order: nothing changes
+  });
+
+  test("given an order that moves the hero or the footer, or that misses, repeats or invents a section, when applied, then it is refused", () => {
+    const d = seedDoc();
+    const before = ids(d);
+    const refused = (list: string[]) => expect(applyOp(d, { type: "reorder", ids: list }, ctx).ok).toBe(false);
+    refused([before[1], before[0], ...before.slice(2)]); // past the hero
+    refused([...before.slice(0, -2), before.at(-1)!, before.at(-2)!]); // past the footer
+    refused(before.slice(0, -1)); // one missing
+    refused([...before.slice(0, -1), before[1]]); // one twice
+    refused([...before.slice(0, -2), "seed-inventada", before.at(-1)!]); // one that does not exist
+  });
+
   test("given a section, when hidden and shown again, then only its flag changes; the hero and footer cannot be hidden", () => {
     const d = ok(seedDoc(), { type: "set-active", id: "seed-fala", active: false }).doc;
     expect(d.home!.sections.find((s) => s.id === "seed-fala")!.active).toBe(false);

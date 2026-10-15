@@ -1,8 +1,10 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { CartRefCapture } from "@/components/cart-mirror/CartRefCapture";
+import { CampaignCarry } from "@/components/analytics/CampaignCarry";
 import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { MetaPixel } from "@/components/analytics/MetaPixel";
+import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { PromoFab } from "@/components/promotions/PromoFab";
 import { ConsentProvider } from "@/lib/consent/ConsentProvider";
@@ -54,6 +56,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
     <ConsentProvider>
       {/* The cart lives in the store that sells (commerce-mode.ts): the region's own in multi-store, the single store's otherwise. */}
       <CartRefCapture region={cartRegionFor(region)} />
+      <CampaignCarry />
       <div data-region={region} style={{ ...regionThemeStyle(region), ...cssVars, ...(cssVars["--ground"] ? { background: "var(--ground)" } : {}), ...(cssVars["--ink"] ? { color: "var(--ink)" } : {}) }} className="relative">
         {commercePlan().simulation && (
           // Local preview only (COMMERCE_SIMULATION=on): never rendered in production, where a simulation snapshot is refused.
@@ -71,6 +74,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
         <MetaPixel pixelId={tracking?.metaPixelId} />
         <GoogleAnalytics measurementId={tracking?.ga4MeasurementId} />
       </Suspense>
+      <MicrosoftClarity region={region} />
       <ConsentBanner region={region} />
       {/* Coupons and promotions of THIS region (CMS, published only); renders nothing when there are none or anything fails. */}
       <PromoFab key={region} region={region} />

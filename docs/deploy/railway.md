@@ -79,6 +79,7 @@ aqui foi executado — é o roteiro para o usuário aplicar no dashboard do Rail
 | `COMMERCE_STORE_PRIORITY` | Override da prioridade de loja entre regiões | Não (default `regional` já é o comportamento certo hoje) | Runtime | web | `regional` |
 | `NEXT_PUBLIC_META_PIXEL_ID` | Meta Pixel ID do storefront `/sul` (`CLAUDE_USE_ORIGENS_META_PIXEL_INK_ESTADOS.md`) | Não (sem ela, `MetaPixel` não renderiza nada — sem `<Script>`, sem request — independente do consentimento; a loja continua 100% funcional) | **Build** (prefixo `NEXT_PUBLIC_` é embutido no bundle do cliente — definir onde o BUILD roda, não só onde o container inicia) | web | `1558923262073052` |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 Measurement ID do storefront `/sul` (`CLAUDE_GA4_STOREFRONT_TRACKING.md`) | Não (sem ela, `GoogleAnalytics` não renderiza nada — mesma regra do Pixel acima; a loja continua 100% funcional) | **Build** (prefixo `NEXT_PUBLIC_` é embutido no bundle do cliente — definir onde o BUILD roda, não só onde o container inicia) | web | `G-8GYTEJ1F77` |
+| `NEXT_PUBLIC_CLARITY_PROJECT_ID` | Projeto do Microsoft Clarity (mapas de calor e gravações), um só para todas as regiões — cada sessão leva a tag `regiao` | Não (sem ela, `MicrosoftClarity` não renderiza nada e a política de privacidade não cita o Clarity) | **Build** (prefixo `NEXT_PUBLIC_` é embutido no bundle do cliente — definir onde o BUILD roda, não só onde o container inicia) | web | `yv1dnesj58` |
 
 Mesmo com `NEXT_PUBLIC_META_PIXEL_ID`/`NEXT_PUBLIC_GA_MEASUREMENT_ID` definidas, o Pixel e o GA4 só carregam
 depois que a pessoa aceita o banner de consentimento (`src/lib/consent`) — nenhuma das duas variáveis sozinha
@@ -172,6 +173,17 @@ próprio processo web** (via a rota autenticada), que já está no mesmo disco q
 
 `POST /api/admin/catalog-sync` chama a mesma função que `npm run catalog:sync` usa localmente
 (`src/lib/catalog/sync-service.ts` — uma implementação só, nunca duas concorrentes).
+
+### Promoções da INK
+
+Durante uma promoção, a INK devolve `promotional_price` junto com `price` (ex.: `"109.9"` e `"89.9"`). O sync guarda
+o preço cobrado agora em `price` e o preço cheio em `listPrice` (só enquanto houver promoção; `src/lib/ink/normalize.ts`,
+`inkPricing`). A vitrine mostra o preço cheio riscado antes do promocional, e o `value` dos eventos de clique é o promocional.
+
+A vitrine só enxerga uma promoção depois de uma sincronização. **Sincronize quando uma promoção começar e quando
+terminar**: sem isso, a vitrine continua com o preço anterior (e, no fim da promoção, mostraria um desconto que a INK
+já não dá). As abas de peça das páginas de cidade (Oversized, Cropped…) vêm do índice de peças, que segue o sync próprio
+(`/api/admin/garments-sync`); as recomendações da PDP da INK, do `recommendations:build`.
 
 ### Por que é assíncrona, não uma chamada HTTP síncrona
 

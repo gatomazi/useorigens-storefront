@@ -2,12 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
+import { PdpGuide } from "@/components/catalog/PdpGuide";
 import { VariantPicker, type VariantOption } from "@/components/catalog/VariantPicker";
 import { SOURCES } from "@/lib/analytics/sources";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import { resolveCity, resolveCityProduct } from "@/lib/catalog/resolver";
-import { formatPrice } from "@/lib/format";
+import { formatListPrice, formatPrice } from "@/lib/format";
 import { isRegionSlug } from "@/lib/geo/regions";
+import { inkProductSlug } from "@/lib/guide/dismiss";
+import { pdpGuideEnabled } from "@/lib/guide/flag";
+import { guideCollections } from "@/lib/guide/pdp-guide";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { familyDescription, familyTitle } from "@/lib/seo/copy";
@@ -15,6 +19,7 @@ import { breadcrumbList } from "@/lib/seo/jsonld";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { SITE_URL } from "@/lib/site";
 import { inkProductShare } from "@/lib/share/server";
+import { storeCardButton } from "@/lib/site-config/cards";
 
 export const revalidate = 3600;
 
@@ -58,6 +63,7 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
       label,
       imageUrl: binding.imageUrl,
       price: formatPrice(binding.price),
+      listPrice: formatListPrice(binding),
       rawPrice: binding.price,
       href: purchaseUrl(binding),
       // Each version shares its own real INK product page (this page opens on the primary one, so it cannot stand for a version).
@@ -68,6 +74,11 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
   });
 
   const others = cityData.families.filter((entry) => entry.family.id !== family.id);
+  // The guided help ("Procurando sua cidade ou outra estampa?"): its collections come from the region's published menu, here on the server, so the
+  // invite needs no request of its own; the city path and a collection's products are fetched from /api/guia only when the visitor asks.
+  const guide = pdpGuideEnabled()
+    ? { collections: guideCollections(region).collections, productSlug: inkProductSlug(purchaseUrl(primary)), othersAnchor: others.length > 0 ? "other-title" : null }
+    : null;
 
   return (
     <>
@@ -115,6 +126,7 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
               <p className="t-body mt-4 hidden max-w-md text-ink-soft sm:block">{family.description}</p>
             </>
           }
+          after={guide && <PdpGuide region={region} city={{ name: city.name, uf: city.uf, slug: city.slug }} productId={primary.inkProductId} productSlug={guide.productSlug} collections={guide.collections} othersAnchor={guide.othersAnchor} />}
         />
       </section>
 
@@ -124,7 +136,7 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
             <h2 id="other-title" className="mb-6 text-[1.5rem] font-extrabold tracking-tight lg:mb-10 lg:text-[1.875rem]">
               Outros estilos de {city.name}
             </h2>
-            <FamilyGrid entries={others} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.pdpOtherStyles} directToInk />
+            <FamilyGrid entries={others} hrefBase={base} cityName={city.name} stateUf={city.uf} sourceSection={SOURCES.pdpOtherStyles} directToInk buyLabel={storeCardButton()} />
           </div>
         </section>
       )}

@@ -73,8 +73,9 @@ describe("home carousel from Uma Penca: rendering", () => {
     const result = resolveSource({ kind: "umapenca", articleKinds: ["caneca"], limit: 2 }, EDITORIAL, undefined, lookup);
     expect(result.status === "ok" && result.items).toEqual([
       { id: "1", name: "Caneca 1", price: "R$ 90,00", rawPrice: 90, imageUrl: "https://umapenca.imgix.net/1/x.jpg", href: "https://artigos.useorigens.com.br/caneca/1.html", umaPenca: { kind: "caneca", region: "sul" } },
-      { id: "3", name: "Caneca 3", price: "R$ 79,90", rawPrice: 79.9, imageUrl: "https://umapenca.imgix.net/3/x.jpg", href: "https://artigos.useorigens.com.br/caneca/3.html", umaPenca: { kind: "caneca", region: "sul" } },
-    ].map((i) => ({ ...i, price: i.price.replace(" ", " ") })));
+      // On sale in the feed (79,90 instead of 90,00): the regular price comes along to be struck through, with the "% OFF" a tag may show.
+      { id: "3", name: "Caneca 3", price: "R$ 79,90", listPrice: "R$ 90,00", discount: 11, rawPrice: 79.9, imageUrl: "https://umapenca.imgix.net/3/x.jpg", href: "https://artigos.useorigens.com.br/caneca/3.html", umaPenca: { kind: "caneca", region: "sul" } },
+    ].map((i) => ({ ...i, price: i.price.replace(" ", " "), ...(i.listPrice ? { listPrice: i.listPrice.replace(" ", " ") } : {}) })));
     const both = resolveSource({ kind: "umapenca", articleKinds: ["caneca", "ecobag"], limit: 24 }, EDITORIAL, undefined, lookup);
     expect(both.status === "ok" && both.items.map((i) => i.id)).toEqual(["1", "2", "3", "4"]);
   });

@@ -7,7 +7,7 @@
  * A `blocking` result stops a publish (unreadable text is a bug); a `warning` is shown but allowed.
  */
 import { contrastRatio, relativeLuminance as luminance } from "../site-config/color";
-import type { Appearance, Color, Fill, Overlay } from "../site-config/schema";
+import type { Appearance, Color, Fill, Overlay, PageBackdrop } from "../site-config/schema";
 
 const TOKEN_HEX: Record<string, string> = { "token:ground": "#e5e5e5", "token:region-primary": "#4d543d", "token:near-black": "#0a0c0a" };
 
@@ -41,3 +41,16 @@ export function readability(appearance: Appearance, tone: "light" | "dark", hasI
   if (tone === "light" && !(kind === "light" && strength >= 0.35)) issues.push({ level: "warning", message: "Texto escuro sobre foto: use uma sobreposição clara (a partir de 0,35) ou a foto pode atrapalhar a leitura." });
   return issues;
 }
+
+/**
+ * A page's own ground ("Fundo da página"): its colour is judged like a section fill under the text it calls for (light text on a dark ground). The
+ * pattern's pixels are unknown, so a strong one only warns.
+ */
+export function groundReadability(backdrop: PageBackdrop): ReadabilityIssue[] {
+  const issues = readability({ fill: { kind: "solid", color: backdrop.color }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } }, backdrop.tone, false);
+  if (backdrop.pattern && backdrop.pattern.opacity > 0.5) issues.push({ level: "warning", message: "Pattern forte: títulos e preços ficam por cima dele. Se atrapalhar a leitura, diminua a intensidade." });
+  return issues;
+}
+
+/** The text tone that reads best on a colour: light text on a dark ground, dark text on a light one. */
+export const toneFor = (hex: string): "light" | "dark" => (contrastRatio("#ffffff", hex) >= contrastRatio("#000000", hex) ? "dark" : "light");

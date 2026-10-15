@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { matcherForStore, MAX_STORED_MEMBERS, parseCollectionsPage, searchCoverage, searchMembers, type CollectionRecord } from "@/lib/catalog/collections";
+import { matcherForStore, MAX_STORED_MEMBERS, parseCollectionsPage, searchCoverage, completeMembers, type CollectionRecord } from "@/lib/catalog/collections";
 import { buildSearchDocs } from "@/lib/catalog/search-docs";
 import type { Catalog } from "@/lib/catalog/repository";
 import type { MerchProduct } from "@/lib/catalog/types";
@@ -73,7 +73,7 @@ describe("truncated membership is never presented as complete", () => {
   const legacy: CollectionRecord = { id: 9, name: "Fala Antiga", slug: "fala-antiga", position: 1, isAvailable: true, reportedProductCount: 55, matchedCount: 55, merchCount: 55, cityDesignCount: 0, memberIds: range(1, 48).map(String) };
 
   test("given a record from before the full lists were stored, when searched by collection name, then it is skipped, not listed as a 48-item slice", () => {
-    expect(searchMembers(legacy)).toBeNull();
+    expect(completeMembers(legacy)).toBeNull();
     expect(all("x").total).toBe(0);
     const partialDocs = buildSearchDocs(catalog, "sul", [legacy]);
     expect(searchDocs(partialDocs, "fala antiga").total).toBe(0);
@@ -81,15 +81,15 @@ describe("truncated membership is never presented as complete", () => {
 
   test("given a short legacy collection whose slice is everything, when searched, then it counts as complete", () => {
     const short: CollectionRecord = { ...legacy, id: 10, name: "Curta", matchedCount: 5, merchCount: 5, memberIds: ["1", "2", "3", "4", "5"] };
-    expect(searchMembers(short)).toEqual(["1", "2", "3", "4", "5"]);
+    expect(completeMembers(short)).toEqual(["1", "2", "3", "4", "5"]);
     expect(searchDocs(buildSearchDocs(catalog, "sul", [short]), "curta").total).toBe(5);
   });
 
   test("given a stored list that disagrees with the matched count or is malformed, when checked, then it is not trusted", () => {
-    expect(searchMembers({ ...legacy, searchMemberIds: ["1", "2"] })).toBeNull();
-    expect(searchMembers({ ...legacy, searchMemberIds: 5 as unknown as string[] })).toBeNull();
-    expect(searchMembers({ ...legacy, matchedCount: 0 })).toBeNull();
-    expect(searchMembers({ ...legacy, needsResync: true, searchMemberIds: range(1, 55).map(String) })).toBeNull();
+    expect(completeMembers({ ...legacy, allMemberIds: ["1", "2"] })).toBeNull();
+    expect(completeMembers({ ...legacy, allMemberIds: 5 as unknown as string[] })).toBeNull();
+    expect(completeMembers({ ...legacy, matchedCount: 0 })).toBeNull();
+    expect(completeMembers({ ...legacy, needsResync: true, allMemberIds: range(1, 55).map(String) })).toBeNull();
   });
 
   test("given a mix of complete and legacy records, when the coverage is computed, then the admin is told exactly which ones need a resync", () => {

@@ -5,7 +5,7 @@ import { matcherForStore, parseCollectionsPage, sortCollections, type Collection
 import { emptyGarmentIndex, upsertPieces, type GarmentIndex, type GarmentTuple } from "../garment-index-file";
 import { linkGarmentBindings, type GarmentLinkStats } from "../garments-link";
 import type { CatalogSnapshot, CatalogSource, InkProductNormalized, StoreIndex } from "../types";
-import { paraProdutoIndexavel, type ProdutoSul } from "./reconciliar";
+import { paraProdutoIndexavel, precoDaInk, type ProdutoSul } from "./reconciliar";
 import type { ProdutoBruto } from "./produto-bruto";
 
 /**
@@ -115,7 +115,7 @@ export function montarLojaUnica(sul: ReadonlyMap<string, ProdutoSul>, opts: { mo
           slug: p.slug,
           storeProductUrl: p.url!,
           imageUrl: p.image!,
-          price: p.price === null ? null : Number(p.price),
+          ...precoDaInk(p),
           totalSalesCount: p.sales,
           ...(p.clusterId ? { productClusterId: p.clusterId } : {}),
           ...(p.typeId !== null ? { garmentTypeId: p.typeId } : {}),
@@ -140,7 +140,7 @@ export function montarLojaUnica(sul: ReadonlyMap<string, ProdutoSul>, opts: { mo
     if (s.regiao === "desconhecida" || s.regiao === "conflito" || noCatalogo.has(s.produto.id)) continue;
     const p = s.produto;
     if (!servivel(p)) continue;
-    candidatas.push({ id: p.id, storeKey: LOJA_UNICA, name: p.name, slug: p.slug, storeProductUrl: p.url!, imageUrl: p.image!, price: p.price === null ? null : Number(p.price), clusterId: p.clusterId, garmentTypeId: p.typeId, createdAt: p.createdAt });
+    candidatas.push({ id: p.id, storeKey: LOJA_UNICA, name: p.name, slug: p.slug, storeProductUrl: p.url!, imageUrl: p.image!, ...precoDaInk(p), clusterId: p.clusterId, garmentTypeId: p.typeId, createdAt: p.createdAt });
   }
   const { bindings: pecasLigadas, stats } = linkGarmentBindings(candidatas, loja.bindings, syncedAt);
   const pecas = emptyGarmentIndex();
@@ -169,7 +169,7 @@ export function montarLojaLegado(storeKey: CommerceStoreKey, produtos: readonly 
   const indice = buildStoreIndex(storeKey, produtos.map((p) => brutoParaProducao(p, storeKey)).filter((p): p is InkProductNormalized => p !== null), syncedAt);
   const candidatas: GarmentSourceProduct[] = produtos
     .filter(servivel)
-    .map((p) => ({ id: p.id, storeKey, name: p.name, slug: p.slug, storeProductUrl: p.url!, imageUrl: p.image!, price: p.price === null ? null : Number(p.price), clusterId: p.clusterId, garmentTypeId: p.typeId, createdAt: p.createdAt }));
+    .map((p) => ({ id: p.id, storeKey, name: p.name, slug: p.slug, storeProductUrl: p.url!, imageUrl: p.image!, ...precoDaInk(p), clusterId: p.clusterId, garmentTypeId: p.typeId, createdAt: p.createdAt }));
   const { bindings, stats } = linkGarmentBindings(candidatas, indice.bindings, syncedAt);
   const clusters: Record<string, GarmentTuple[]> = {};
   upsertPieces(clusters, bindings);

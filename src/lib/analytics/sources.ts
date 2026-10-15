@@ -17,6 +17,8 @@ export const SOURCES = {
   /** The inline `<GlobalSearch>` embedded directly on a state page (not behind the `SearchDialog` modal) — a
    * third, real, distinct search entry point not in the command's own suggested list. */
   stateSearch: "state_search",
+  /** A city page's "Busque outra cidade" field under the styles (it opens the search sheet). */
+  citySearch: "city_search",
 
   // City selection, outside of search.
   stateMesoregion: "state_mesoregion",
@@ -38,6 +40,12 @@ export const SOURCES = {
   homeDdd: "home_ddd",
   /** A home carousel created in the CMS from an INK collection (a closed, enumerated origin — never a free string from a document). */
   homeCollection: "home_colecao",
+  /** The paged grid of a collection page (`/<region>/colecoes/<slug>`): every product of an INK collection, page by page. */
+  collectionPage: "colecao_pagina",
+  /** A card found by a collection page's own mini search ("Buscar nesta coleção"). */
+  collectionSearch: "colecao_busca",
+  /** A card chosen through a collection page's filters or sort (piece, state, city, style, price order) without a text search. */
+  collectionFilter: "colecao_filtro",
   /** A home carousel of Uma Penca articles (canecas, ecobags) created in the CMS — fires GoToPenca / go_to_umapenca, never GoToInk. */
   homeUmaPenca: "home_umapenca",
   /** The home's "Sua cidade, de 8 jeitos" example-city cards that open the INK product directly. */
@@ -45,11 +53,16 @@ export const SOURCES = {
   /** The text search results page (`/<region>/busca`): a product card that opens the INK product. */
   search: "search_results",
   stateShowcase: "state_showcase",
+  /** "Escolha o estilo" on a state page: the state's city designs of one style (chips switch the style). */
+  stateStyles: "state_styles",
   cityStyles: "city_styles",
   cityFala: "city_fala",
   cityLocalities: "city_localities",
   pdp: "pdp",
   pdpOtherStyles: "pdp_other_styles",
+  /** The guided help on a design page ("Procurando sua cidade ou outra estampa?"): a product of a searched city, or of a chosen collection. */
+  pdpGuideCity: "pdp_guia_cidade",
+  pdpGuideCollection: "pdp_guia_colecao",
   /** "Comprar minha lista" on `/meus-lugares`: the click that opens the first product of a buy session. */
   meusLugares: "meus_lugares",
   /** `/<region>/outros-artigos`: an Uma Penca article (caneca, ecobag) — GA4 only, see `trackGoToUmaPenca`. */

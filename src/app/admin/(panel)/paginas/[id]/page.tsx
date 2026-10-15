@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { addCollectionSection, addStructuredSection, archivePageAction, duplicateSection, moveSection, publishTargetAction, removePageAction, removeSection, restoreTargetAction, setSectionActive, updatePageAction } from "@/app/admin/actions";
+import { addCollectionSection, addStructuredSection, archivePageAction, duplicateSection, publishTargetAction, removePageAction, removeSection, reorderSections, restoreTargetAction, savePageBackdropAction, setSectionActive, updatePageAction } from "@/app/admin/actions";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
+import { PageBackdropEditor } from "@/components/admin/PageBackdropEditor";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { RowForm } from "@/components/admin/RowForm";
+import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { toComboEntries } from "@/lib/admin/combo";
 import { listMedia } from "@/lib/admin/media";
@@ -17,9 +19,11 @@ import { loadWorkspace } from "@/lib/admin/workspace";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { PAGE_KIND_LABEL, pageAsHomeDoc, pageHref } from "@/lib/site-config/pages";
+import type { Section } from "@/lib/site-config/schema";
 import { STRUCTURED_MODELS } from "@/lib/site-config/structured";
 
-const TYPE_LABEL: Record<string, string> = { "page-hero": "Topo da página", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha" };
+const TYPE_LABEL: Record<string, string> = { "page-hero": "Topo da página", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens" };
+const typeLabel = (s: Section) => (s.template === "product-carousel" && s.layout?.display === "grid" ? "Grade de produtos" : TYPE_LABEL[s.template] ?? s.template);
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("pt-BR") : "—");
 
 export default async function PageEditor({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
@@ -98,25 +102,34 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
         </form>
       </section>
 
+      <section className="a-card p-5" aria-labelledby="fundo">
+        <h2 id="fundo" className="a-h2">Fundo da página</h2>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Para uma página temática (Black Friday, Natal…): uma cor para a página inteira e, se quiser, uma imagem repetida por cima como pattern. Só esta página muda; a home e o resto da loja ficam como estão.</p>
+        <PageBackdropEditor backdrop={page.backdrop} media={media} action={savePageBackdropAction} hidden={<>{hidden}<input type="hidden" name="id" value={page.id} /></>} />
+      </section>
+
       <section className="a-card overflow-x-auto" aria-label="Seções da página">
-        <table className="a-table">
-          <caption className="sr-only">Seções da página, em ordem</caption>
-          <thead><tr><th scope="col">#</th><th scope="col">Seção</th><th scope="col">Fonte dos produtos</th><th scope="col">Estado</th><th scope="col"><span className="sr-only">Ações</span></th></tr></thead>
-          <tbody>
-            {page.sections.map((s, i) => {
+        <SectionOrderTable
+          caption="Seções da página, em ordem"
+          action={reorderSections}
+          rev={rev}
+          scope={scope}
+          page={page.id}
+          rows={page.sections.map((s) => {
               const status = sourceStatus(s, ws.doc);
               const locked = s.template === "page-hero";
               const custom = s.id.startsWith("custom-") && !locked;
               const readable = sectionReadability(s);
               const label = s.title?.replace(/\n/g, " ") ?? s.anchor;
-              return (
-                <tr key={s.id} className={s.active ? "" : "opacity-60"}>
-                  <td className="a-muted w-8 font-bold">{i + 1}</td>
+              return { id: s.id, label, movable: !locked, dimmed: !s.active, cells: (
+                <>
                   <td>
                     <p className="font-bold">{label}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.8125rem]">
-                      <span className="a-badge">{TYPE_LABEL[s.template] ?? s.template}</span>
+                      <span className="a-badge">{typeLabel(s)}</span>
                       {s.customizerCard && <span className="a-badge ok">1º card personalizável</span>}
+                      {s.layout?.buyLabel && <span className="a-badge ok">Botão “{s.layout.buyLabel}”</span>}
+                      {s.layout?.tags && <span className="a-badge ok">Etiquetas: {[s.layout.tags.discount ? "% OFF" : null, s.layout.tags.text ? `“${s.layout.tags.text}”` : null].filter(Boolean).join(" + ")}</span>}
                       {readable.some((r) => r.level === "blocking") && <span className="a-badge bad">Texto ilegível</span>}
                     </p>
                   </td>
@@ -124,36 +137,36 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
                   <td>{locked ? <span className="a-badge">Fixa</span> : s.active ? <span className="a-badge ok">Ativa</span> : <span className="a-badge">Oculta</span>}</td>
                   <td>
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
-                      {!locked && (
-                        <>
-                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ direction: "up" }} label={`Mover “${label}” para cima`}>↑</RowForm>
-                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ direction: "down" }} label={`Mover “${label}” para baixo`}>↓</RowForm>
-                          <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${label}”` : `Ativar “${label}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>
-                        </>
-                      )}
+                      {!locked && <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${label}”` : `Ativar “${label}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>}
                       <Link href={`/admin/paginas/${page.id}/secoes/${s.id}`} className="a-btn sm">Editar</Link>
                       {s.template === "product-carousel" && <RowForm action={duplicateSection} rev={rev} scope={scope} id={s.id} page={page.id} label={`Duplicar “${label}”`}>Duplicar</RowForm>}
                       {custom && <RowForm action={removeSection} rev={rev} scope={scope} id={s.id} page={page.id} label={`Remover “${label}”`} danger>Remover</RowForm>}
                     </div>
                   </td>
-                </tr>
-              );
+                </>
+              ) };
             })}
-          </tbody>
-        </table>
+        />
       </section>
 
       <section className="a-card p-5" aria-labelledby="add">
         <h2 id="add" className="a-h2">Adicionar seção</h2>
         <h3 className="mt-4 font-extrabold">Produtos: a partir de uma coleção da INK ({scopeName(scope)})</h3>
-        <form action={addCollectionSection} className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1fr_auto] md:items-start">
+        <form action={addCollectionSection} className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1.2fr_1fr_auto] md:items-start">
           {hidden}
           <CollectionCombobox name="collection" label="Coleção (busque pelo nome)" entries={entries} libraryFrom={`/admin/paginas/${page.id}`} hint="Coleções públicas e as internas habilitadas na Biblioteca." />
           <div><label className="a-label" htmlFor="ctitle">Título (opcional)</label><input id="ctitle" name="title" className="a-input" maxLength={120} placeholder="Usa o nome da coleção" /></div>
-          <div><label className="a-label" htmlFor="climit">Cards</label><input id="climit" name="limit" type="number" min={3} max={24} defaultValue={6} className="a-input" /></div>
+          <div>
+            <label className="a-label" htmlFor="cdisplay">Exibição</label>
+            <select id="cdisplay" name="display" className="a-select" defaultValue="carousel">
+              <option value="carousel">Carrossel</option>
+              <option value="grid">Grade (4 por linha)</option>
+            </select>
+          </div>
+          <div><label className="a-label" htmlFor="climit">Cards</label><input id="climit" name="limit" type="number" min={3} max={48} defaultValue={6} className="a-input" /></div>
           <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
         </form>
-        <p className="a-muted mt-2 text-[0.8125rem]">Cada seção usa uma coleção diferente: é assim que uma categoria-pai organiza subtemas. O total de cards é o número acima; a ordem dos produtos é a da INK (não é “mais vendidos”). O botão “Ver todos” só existe quando a coleção tem página pública verificada.</p>
+        <p className="a-muted mt-2 text-[0.8125rem]">Cada seção usa uma coleção diferente: é assim que uma categoria-pai organiza subtemas. O total de cards é o número acima (até 24 no carrossel, até 48 na grade); a ordem dos produtos é a da INK (não é “mais vendidos”) e pode ser ajustada depois, no editor da seção. Na grade, os produtos aparecem todos na página: 4 por linha no desktop e 2 no celular. O botão “Ver todos” só existe quando a coleção tem página pública verificada.</p>
         <h3 className="mt-6 font-extrabold">Componentes</h3>
         <div className="mt-3 flex flex-wrap gap-3">
           {STRUCTURED_MODELS.map((m) => (

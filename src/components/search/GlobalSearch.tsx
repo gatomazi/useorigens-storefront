@@ -8,6 +8,7 @@ import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { placeSearchCopy } from "@/lib/search/copy";
 import type { GlobalGroup, GlobalResult, GlobalSearchResponse } from "@/lib/search/global";
 import { SOURCES } from "@/lib/analytics/sources";
+import { carryCampaign } from "@/lib/analytics/campaign";
 import { trackGoToInk, trackSearch, trackSelectCity } from "@/lib/analytics/track";
 
 type Props = {
@@ -19,7 +20,28 @@ type Props = {
   source?: string;
   /** The dialog keeps the field visible above the results while the phone keyboard is open. */
   sticky?: boolean;
+  /**
+   * A white bordered field with the search icon (same look as the hero trigger), for a search that sits in the page among other content: the
+   * dialog's bare underlined field reads as a line of text on the grey ground there.
+   */
+  boxed?: boolean;
+  /** Only places (cities, localities, states): the guided help's "Buscar uma cidade" step asks for a place, not a design. */
+  placesOnly?: boolean;
+  /**
+   * Intercepts a chosen result before any navigation: return true to keep the visitor where they are (the guided help turns a place of this
+   * region into its designs, in place). Search/SelectCity are reported either way — it is still one conclusive search gesture.
+   */
+  onPick?: (result: GlobalResult) => boolean;
 };
+
+export function SearchIcon({ className }: { className: string }) {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.2">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 const DEBOUNCE_MS = 140;
 const responses = new Map<string, Promise<GlobalSearchResponse>>();
@@ -71,7 +93,7 @@ function Thumb({ result }: { result: GlobalResult }) {
  * floating dropdown), so it behaves the same on a phone, in a sheet, and with a screen reader. A design is ONE row per place × family, its
  * pieces counted from the product cluster, never one row per piece.
  */
-export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false }: Props) {
+export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false, boxed = false, placesOnly = false, onPick }: Props) {
   const copy = placeSearchCopy(region);
   const router = useRouter();
   const uid = useId();
@@ -122,13 +144,16 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
   const { rows, sections } = useMemo(() => {
     const sections: { id: string; label: string | null; rows: Row[]; start: number }[] = [];
     let start = 0;
+    const isPlace = (r: GlobalResult) => r.kind === "locality" || r.kind === "state";
     for (const g of current?.groups ?? []) {
+      if (placesOnly && g.group !== "places") continue;
       sections.push({ id: g.group, label: null, rows: g.items.map((result) => ({ result, other: false })), start });
       start += g.items.length;
     }
-    if (current && current.others.length > 0) sections.push({ id: "others", label: "Em outras regiões", rows: current.others.map((result) => ({ result, other: true })), start });
+    const others = (current?.others ?? []).filter((r) => !placesOnly || isPlace(r));
+    if (others.length > 0) sections.push({ id: "others", label: "Em outras regiões", rows: others.map((result) => ({ result, other: true })), start });
     return { rows: sections.flatMap((x) => x.rows), sections };
-  }, [current]);
+  }, [current, placesOnly]);
   const activeIndex = Math.min(active, Math.max(rows.length - 1, 0));
   const showEmpty = current !== null && !loading && trimmed.length >= 2 && rows.length === 0;
   const hasList = rows.length > 0;
@@ -141,12 +166,13 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
     if (r.kind === "locality" && r.city && r.uf) {
       trackSelectCity({ city: r.city, state: r.uf, region: r.region, source, ...(r.administrativeRegion ? { localityType: "administrative_region" as const } : {}) });
     }
+    if (onPick?.(r)) return;
     // A merchandise design opens its INK product page: the same GoToInk (Meta) / select_item + go_to_ink (GA4) as any INK product link.
     if (r.inkProductId) {
       trackGoToInk({ productId: r.inkProductId, sourceSection: SOURCES.search, productName: r.title, destinationUrl: r.href, ...(r.minPrice !== undefined ? { value: r.minPrice } : {}) });
     }
     onNavigate?.();
-    if (r.external) window.location.assign(r.href);
+    if (r.external) window.location.assign(carryCampaign(r.href));
     else router.push(r.href);
   };
 
@@ -223,10 +249,11 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
 
   return (
     <div className="w-full">
-      <div className={sticky ? "sticky top-0 z-10 -mx-5 bg-ground px-5 pb-1 pt-1 sm:-mx-10 sm:px-10" : ""}>
+      <div className={sticky ? "sticky top-0 z-10 -mx-5 bg-ground px-5 pb-1 pt-1 sm:-mx-10 sm:px-10" : boxed ? "relative text-ink" : ""}>
         <label htmlFor={`${uid}-input`} className="sr-only">
           {copy.label}
         </label>
+        {boxed && <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 sm:left-5" />}
         <input
           id={`${uid}-input`}
           ref={inputRef}
@@ -243,14 +270,19 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
           enterKeyHint="search"
           inputMode="search"
           maxLength={80}
-          placeholder={copy.placeholder}
+          // The box's icon already says "search", and a phone's width (minus the icon) cuts the longer wording.
+          placeholder={boxed ? copy.field : copy.placeholder}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
             setActive(0);
           }}
           onKeyDown={onKeyDown}
-          className="search-input block w-full border-0 border-b-[3px] border-ink bg-transparent px-0 pb-3 pt-2 text-[clamp(1.5rem,5.5vw,3.25rem)] font-extrabold leading-none tracking-tight text-ink outline-none transition-colors placeholder:text-[clamp(1.125rem,4.4vw,2.25rem)] placeholder:font-semibold placeholder:text-ink-mute focus:border-region-ink focus:outline-none"
+          className={
+            boxed
+              ? "block min-h-16 w-full border-2 border-ink bg-white pl-13 pr-4 text-[1.125rem] font-semibold text-ink transition-colors placeholder:font-medium placeholder:text-ink-mute hover:border-region-primary sm:min-h-[4.5rem] sm:pl-15 sm:text-[1.1875rem]"
+              : "search-input block w-full border-0 border-b-[3px] border-ink bg-transparent px-0 pb-3 pt-2 text-[clamp(1.5rem,5.5vw,3.25rem)] font-extrabold leading-none tracking-tight text-ink outline-none transition-colors placeholder:text-[clamp(1.125rem,4.4vw,2.25rem)] placeholder:font-semibold placeholder:text-ink-mute focus:border-region-ink focus:outline-none"
+          }
         />
       </div>
 
@@ -263,7 +295,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
         ))}
       </div>
 
-      {trimmed.length >= 2 && !failed && (current || !loading) && (
+      {!placesOnly && trimmed.length >= 2 && !failed && (current || !loading) && (
         <p className="mt-5 px-3">
           <Link href={`/${region}/busca?${new URLSearchParams({ q: trimmed })}`} onClick={() => onNavigate?.()} className="link-static inline-flex min-h-11 items-center font-semibold">
             Ver todos os produtos para “{trimmed}” →

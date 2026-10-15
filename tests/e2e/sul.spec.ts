@@ -136,7 +136,7 @@ test.describe("/sul critical flows", () => {
     await expect(announcement).toHaveCSS("background-color", "rgb(0, 0, 0)");
     // A dropdown panel is its own white surface: it must reset to dark text, not inherit the header's white. (The region switcher only lists LAUNCHED regions,
     // and this server has only Sul launched, so the panel checked here is the states one; the switcher is covered in tests/e2e-admin/navigation-theme.spec.ts.)
-    await header.getByText("Regiões", { exact: true }).click();
+    await header.locator("summary", { hasText: "Estados" }).click();
     const panelLink = header.getByRole("link", { name: "Paraná" });
     await expect(panelLink).toBeVisible();
     await expect(panelLink).toHaveCSS("color", "rgb(0, 0, 0)");

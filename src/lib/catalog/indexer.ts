@@ -45,6 +45,7 @@ export function buildStoreIndex(
           storeProductUrl: product.storeProductUrl,
           imageUrl: product.imageUrl,
           price: product.price,
+          ...(product.listPrice !== undefined ? { listPrice: product.listPrice } : {}),
           totalSalesCount: product.totalSalesCount,
           ...(product.clusterId ? { productClusterId: product.clusterId } : {}),
           ...(typeof product.garmentTypeId === "number" ? { garmentTypeId: product.garmentTypeId } : {}),
@@ -92,6 +93,7 @@ export function buildStoreIndex(
       storeProductUrl: product.storeProductUrl,
       imageUrl: product.imageUrl,
       price: product.price,
+      ...(product.listPrice !== undefined ? { listPrice: product.listPrice } : {}),
       syncedAt,
       totalSalesCount: product.totalSalesCount,
     });

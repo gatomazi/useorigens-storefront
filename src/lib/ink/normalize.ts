@@ -14,6 +14,19 @@ function asPrice(value: unknown): number | null {
   return null;
 }
 
+/**
+ * What INK charges now, and its regular price while a promotion is on. INK sends `promotional_price` next to `price` when a promotion is running
+ * (checked against the live API on 2026-10-10: "109.9" / "89.9" on the Sul store); its own product page then shows the promotional price with the
+ * regular one struck through. A promotional price counts only when it is positive and below `price`; anything else (null, zero, equal, higher) is
+ * no promotion, and the regular price stands. Never computed or rounded here: both values are exactly what INK returned.
+ */
+export function inkPricing(p: Record<string, unknown>): { price: number | null; listPrice: number | null } {
+  const price = asPrice(p.price);
+  const promotional = asPrice(p.promotional_price);
+  if (price !== null && promotional !== null && promotional > 0 && promotional < price) return { price: promotional, listPrice: price };
+  return { price, listPrice: null };
+}
+
 function asHttpsUrl(value: unknown): string | null {
   const text = asString(value);
   if (!text) return null;
@@ -39,6 +52,7 @@ export function normalizeInkProduct(raw: unknown, storeKey: CommerceStoreKey): I
   const imageUrl = asHttpsUrl(p.main_image_url);
   if (!id || !name || !slug || !storeProductUrl || !imageUrl) return null;
   if (p.status !== "published" || p.visible_in_store !== true) return null;
+  const { price, listPrice } = inkPricing(p);
 
   return {
     id,
@@ -47,7 +61,8 @@ export function normalizeInkProduct(raw: unknown, storeKey: CommerceStoreKey): I
     slug,
     storeProductUrl,
     imageUrl,
-    price: asPrice(p.price),
+    price,
+    ...(listPrice !== null ? { listPrice } : {}),
     tags: Array.isArray(p.tags) ? p.tags.filter((t): t is string => typeof t === "string") : [],
     clusterId: typeof p.product_cluster_id === "number" ? String(p.product_cluster_id) : null,
     garmentTypeId: productTypeId(p.product_type),
@@ -69,7 +84,10 @@ export type GarmentSourceProduct = {
   slug: string;
   storeProductUrl: string;
   imageUrl: string;
+  /** What INK charges now (its promotional price during a promotion), see `inkPricing`. */
   price: number | null;
+  /** The regular price, only while a promotion is on. */
+  listPrice?: number;
   clusterId: string | null;
   garmentTypeId: number | null;
   /** ISO 8601, when INK provided one. Drives the incremental sync's `begin_date` watermark (garment-client.ts). */
@@ -97,6 +115,7 @@ export function normalizeGarmentSourceProduct(raw: unknown, storeKey: CommerceSt
   if (!id || !name || !slug || !storeProductUrl || !imageUrl) return null;
 
   const productType = typeof p.product_type === "object" && p.product_type !== null ? (p.product_type as Record<string, unknown>) : null;
+  const { price, listPrice } = inkPricing(p);
 
   return {
     id,
@@ -105,7 +124,8 @@ export function normalizeGarmentSourceProduct(raw: unknown, storeKey: CommerceSt
     slug,
     storeProductUrl,
     imageUrl,
-    price: asPrice(p.price),
+    price,
+    ...(listPrice !== null ? { listPrice } : {}),
     clusterId: typeof p.product_cluster_id === "number" ? String(p.product_cluster_id) : null,
     garmentTypeId: productType && typeof productType.id === "number" ? productType.id : null,
     createdAt: asString(p.created_at),

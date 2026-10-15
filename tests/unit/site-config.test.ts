@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { bundleChecksum, canonicalJson } from "@/lib/site-config/checksum";
 import { firstImageSectionId, focalToCss, renderableSections, resolveBackground, resolveTracking } from "@/lib/site-config/resolve";
 import { buildSeedBundle } from "@/lib/site-config/seed";
-import { validateBundle, validateScopeDoc, type Appearance, type PublishedBundle, type ScopeDoc, type Section } from "@/lib/site-config/schema";
+import { validateBundle, validateScopeDoc, type Appearance, type PublishedBundle, type ScopeDoc, type Section, type Source } from "@/lib/site-config/schema";
 import { destinationHref, resolveSource } from "@/lib/site-config/sources";
 
 const ENV = { metaPixelId: "1558923262073052", ga4MeasurementId: "G-8GYTEJ1F77" };
@@ -302,6 +302,29 @@ describe("section sources", () => {
 
   test("given an ink-category source, when resolved, then it is explicitly unavailable — categories are never guessed", () => {
     expect(resolveSource({ kind: "ink-category", store: "use-sul", collectionId: 1, order: "category", limit: 6 }, items)).toEqual({ status: "unavailable", reason: "ink-collections-not-synced" });
+  });
+
+  test("given an ink-category source, when resolved, then the lookup gets the whole source (the server resolves its arrangement from the document)", () => {
+    const calls: unknown[] = [];
+    const categories = (source: unknown) => (calls.push(source), { status: "ok" as const, items: [] });
+    const source: Source = { kind: "ink-category", store: "use-sul", collectionId: 1, order: "manual", limit: 6, productIds: ["2", "1"], hiddenIds: ["3"] };
+    resolveSource(source, items, categories);
+    expect(calls).toEqual([source]);
+  });
+
+  test("given an ink-category's own order and hidden list, when validated, then only distinct numeric ids pass, and an order only in manual mode", () => {
+    const withSource = (source: unknown) => {
+      const doc = clone(seed().docs.sul);
+      doc.home!.sections.find((s) => s.id === "seed-terra")!.source = source as never;
+      return validateScopeDoc(doc).ok;
+    };
+    const base = { kind: "ink-category", store: "use-sul", collectionId: 152188, limit: 6 };
+    expect(withSource({ ...base, order: "manual", productIds: ["2", "1"], hiddenIds: ["3"] })).toBe(true);
+    expect(withSource({ ...base, order: "category", hiddenIds: ["3"] })).toBe(true);
+    expect(withSource({ ...base, order: "category", productIds: ["2"] })).toBe(false); // an order without the manual mode
+    expect(withSource({ ...base, order: "manual", productIds: ["2", "2"] })).toBe(false);
+    expect(withSource({ ...base, order: "manual", productIds: ["<script>"] })).toBe(false);
+    expect(withSource({ ...base, order: "category", hiddenIds: Array.from({ length: 101 }, (_, i) => String(i)) })).toBe(false);
   });
 
   test("given destinations, when turned into hrefs, then an unresolved INK collection yields null", () => {

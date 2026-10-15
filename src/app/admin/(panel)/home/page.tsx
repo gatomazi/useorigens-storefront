@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, moveSection, removeSection, setSectionActive } from "@/app/admin/actions";
+import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, setPodioAction, setSectionActive } from "@/app/admin/actions";
+import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
-import { campaignStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
+import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
 import { SINGLETON_TEMPLATES, STRUCTURED_MODELS } from "@/lib/site-config/structured";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
@@ -13,11 +14,30 @@ import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
 import { toComboEntries } from "@/lib/admin/combo";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
+import { podioEnabledIn } from "@/lib/site-config/podio-schema";
+import { podioPublicEnabled } from "@/lib/config/env";
+import type { RegionSlug } from "@/lib/geo/regions";
+import { freshnessOf } from "@/lib/podio/public";
+import { readLatestSnapshot, readRunState } from "@/lib/podio/snapshot";
+import { PODIO_TZ } from "@/lib/podio/window";
 import type { Section } from "@/lib/site-config/schema";
 import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
-const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", footer: "Rodapé" };
+const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens", footer: "Rodapé" };
+const typeLabel = (s: Section) => (s.template === "product-carousel" && s.layout?.display === "grid" ? "Grade de produtos" : TYPE_LABEL[s.template]);
+/** "Exibição" of a new product section (the same choice the section editor offers). */
+function DisplaySelect({ id }: { id: string }) {
+  return (
+    <div>
+      <label className="a-label" htmlFor={id}>Exibição</label>
+      <select id={id} name="display" className="a-select" defaultValue="carousel">
+        <option value="carousel">Carrossel</option>
+        <option value="grid">Grade (4 por linha)</option>
+      </select>
+    </div>
+  );
+}
 
 function RowForm({ action, rev, scope, id, extra, children, danger = false, label }: { action: (fd: FormData) => Promise<void>; rev: number | null; scope: string; id: string; extra?: Record<string, string>; children: React.ReactNode; danger?: boolean; label: string }) {
   return (
@@ -28,6 +48,39 @@ function RowForm({ action, rev, scope, id, extra, children, danger = false, labe
       {Object.entries(extra ?? {}).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
       <button type="submit" aria-label={label} title={label} className={`a-btn sm ${danger ? "danger" : "ghost"}`}>{children}</button>
     </form>
+  );
+}
+
+const podioWhen = new Intl.DateTimeFormat("pt-BR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: PODIO_TZ });
+
+/** "O Pódio" is not a section (it follows "Estados" on the home and sits on every state page), so it gets a switch of its own, saved in the draft. */
+function PodioCard({ scope, rev, draft, live }: { scope: RegionSlug; rev: number | null; draft: boolean; live: boolean }) {
+  const run = readRunState(scope);
+  const fresh = freshnessOf(readLatestSnapshot(scope), run, new Date());
+  return (
+    <section id="podio" className="a-card p-5" aria-labelledby="podio-titulo">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="max-w-3xl">
+          <h2 id="podio-titulo" className="a-h2">O Pódio</h2>
+          <p className="a-muted mt-1 text-[0.875rem]">Os lugares e as estampas mais vestidos nos últimos 30 dias: “Quem está no pódio?” na home, logo depois de Estados, e “O Pódio” na página de cada estado. Desligado, some dos dois lugares e o cálculo diário (04:00) deixa de ler os pedidos da INK de {scopeName(scope)}.</p>
+        </div>
+        <form action={setPodioAction}>
+          <input type="hidden" name="rev" value={rev ?? "null"} />
+          <input type="hidden" name="scope" value={scope} />
+          <input type="hidden" name="enabled" value={String(!draft)} />
+          <button type="submit" className="a-btn sm">{draft ? "Desligar o pódio" : "Ligar o pódio"}</button>
+        </form>
+      </div>
+      <p className="mt-3 flex flex-wrap items-center gap-2 text-[0.9375rem]" data-testid="podio-status">
+        Na loja: {live ? <span className="a-badge ok">Ligado</span> : <span className="a-badge">Desligado</span>}
+        {draft !== live && <span className="a-badge warn">No rascunho: {draft ? "ligado" : "desligado"} (falta publicar)</span>}
+      </p>
+      <p className="a-muted mt-2 text-[0.8125rem]">
+        Último cálculo: {run?.lastSuccess ? podioWhen.format(new Date(run.lastSuccess.at)) : "nenhum"}.
+        {draft && !fresh.visible && " Sem cálculo recente: depois de publicar, o pódio só aparece na loja após o próximo cálculo diário."}
+      </p>
+      {!podioPublicEnabled() && <p className="a-flash err mt-3">Desligado no servidor (<code>PODIO_PUBLIC=off</code>) para todas as regiões: enquanto essa variável existir, o pódio não aparece nem é calculado, seja qual for a escolha aqui.</p>}
+    </section>
   );
 }
 
@@ -51,7 +104,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="a-h1">Home · Seções <span className="a-muted">· {scopeName(scope)}</span></h1>
-          <p className="a-muted mt-2 max-w-2xl">A ordem abaixo é a ordem da home. O hero fica sempre no topo e o rodapé no fim. As seções originais podem ser editadas, movidas e ocultadas; só as criadas aqui podem ser removidas.</p>
+          <p className="a-muted mt-2 max-w-2xl">A ordem abaixo é a ordem da home: arraste uma seção pela alça para mudá-la de lugar (a ordem é salva no rascunho ao soltar). O hero fica sempre no topo e o rodapé no fim. As seções originais podem ser editadas, movidas e ocultadas; só as criadas aqui podem ser removidas.</p>
         </div>
         <div className="flex items-center gap-2">
           {ws.dirty ? <span className="a-badge warn">Alterações não publicadas</span> : <span className="a-badge ok">Igual ao publicado</span>}
@@ -80,26 +133,26 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
 
       {ws.doc.home && (
       <div className="a-card overflow-x-auto">
-        <table className="a-table">
-          <caption className="sr-only">Seções da home de {scopeName(scope)}, em ordem</caption>
-          <thead>
-            <tr><th scope="col">#</th><th scope="col">Seção</th><th scope="col">Fonte dos produtos</th><th scope="col">Estado</th><th scope="col"><span className="sr-only">Ações</span></th></tr>
-          </thead>
-          <tbody>
-            {sections.map((s: Section, i) => {
+        <SectionOrderTable
+          caption={`Seções da home de ${scopeName(scope)}, em ordem`}
+          action={reorderSections}
+          rev={rev}
+          scope={scope}
+          rows={sections.map((s: Section) => {
               const status = sourceStatus(s, ws.doc);
               const locked = s.template === "hero" || s.template === "footer";
               const readable = sectionReadability(s);
               const custom = s.id.startsWith("custom-");
-              return (
-                <tr key={s.id} className={s.active ? "" : "opacity-60"}>
-                  <td className="a-muted w-8 font-bold">{i + 1}</td>
+              return { id: s.id, label: s.title?.replace(/\n/g, " ") ?? typeLabel(s), movable: !locked, dimmed: !s.active, cells: (
+                <>
                   <td>
-                    <p className="font-bold">{s.title?.replace(/\n/g, " ") ?? TYPE_LABEL[s.template]}</p>
+                    <p className="font-bold">{s.title?.replace(/\n/g, " ") ?? typeLabel(s)}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.8125rem]">
-                      <span className="a-badge">{TYPE_LABEL[s.template]}</span>
+                      <span className="a-badge">{typeLabel(s)}</span>
                       {custom && <span className="a-badge ok">Criada aqui</span>}
                       {s.nav && <span className="a-badge ok" title="Aparece no menu do topo da loja">Menu: {s.nav.label}</span>}
+                      {s.layout?.buyLabel && <span className="a-badge ok">Botão “{s.layout.buyLabel}”</span>}
+                      {s.layout?.tags && <span className="a-badge ok">Etiquetas: {[s.layout.tags.discount ? "% OFF" : null, s.layout.tags.text ? `“${s.layout.tags.text}”` : null].filter(Boolean).join(" + ")}</span>}
                       {s.appearance.image && <span className="a-badge">Com imagem</span>}
                       {!s.appearance.image && s.appearance.fill.kind !== "none" && <span className="a-badge">Cor de fundo</span>}
                       {readable.some((r) => r.level === "blocking") && <span className="a-badge bad">Texto ilegível</span>}
@@ -116,25 +169,20 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                   <td>{locked ? <span className="a-badge">Fixa</span> : s.active ? <span className="a-badge ok">Ativa</span> : <span className="a-badge">Oculta</span>}</td>
                   <td>
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
-                      {!locked && (
-                        <>
-                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} extra={{ direction: "up" }} label={`Mover “${s.title ?? s.anchor}” para cima`}>↑</RowForm>
-                          <RowForm action={moveSection} rev={rev} scope={scope} id={s.id} extra={{ direction: "down" }} label={`Mover “${s.title ?? s.anchor}” para baixo`}>↓</RowForm>
-                          <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${s.title ?? s.anchor}”` : `Ativar “${s.title ?? s.anchor}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>
-                        </>
-                      )}
+                      {!locked && <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${s.title ?? s.anchor}”` : `Ativar “${s.title ?? s.anchor}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>}
                       <Link href={`/admin/home/${s.id}`} className="a-btn sm">Editar</Link>
                       {s.template === "product-carousel" && <RowForm action={duplicateSection} rev={rev} scope={scope} id={s.id} label={`Duplicar “${s.title ?? s.anchor}”`}>Duplicar</RowForm>}
                       {custom && <RowForm action={removeSection} rev={rev} scope={scope} id={s.id} label={`Remover “${s.title ?? s.anchor}”`} danger>Remover</RowForm>}
                     </div>
                   </td>
-                </tr>
-              );
+                </>
+              ) };
             })}
-          </tbody>
-        </table>
+        />
       </div>
       )}
+
+      <PodioCard scope={scope} rev={rev} draft={podioEnabledIn(ws.doc)} live={podioEnabledIn(ws.baseDoc)} />
 
       {ws.doc.home && (
       <section className="a-card p-5" aria-labelledby="nova-secao">
@@ -144,7 +192,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         {entries.length === 0 ? (
           <p className="a-flash err mt-3">Nenhuma coleção sincronizada: rode <code>npm run collections:sync</code> (só leitura) depois de um catálogo sincronizado.</p>
         ) : (
-          <form action={addCollectionSection} className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1fr_auto] md:items-start">
+          <form action={addCollectionSection} aria-label="Nova seção a partir de uma coleção da INK" className="mt-3 grid gap-4 md:grid-cols-[3fr_2fr_1.2fr_1fr_auto] md:items-start">
             <input type="hidden" name="rev" value={rev ?? "null"} />
             <input type="hidden" name="scope" value={scope} />
             <CollectionCombobox name="collection" label="Coleção (busque pelo nome)" entries={entries} libraryFrom="/admin/home" hint={anySelectable ? "Inclui as coleções internas que você habilitou na Biblioteca." : "Nenhuma coleção utilizável ainda."} />
@@ -152,20 +200,21 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
               <label className="a-label" htmlFor="title">Título (opcional)</label>
               <input id="title" name="title" className="a-input" maxLength={120} placeholder="Usa o nome da coleção" />
             </div>
+            <DisplaySelect id="display" />
             <div>
               <label className="a-label" htmlFor="limit">Cards</label>
-              <input id="limit" name="limit" type="number" min={3} max={24} defaultValue={6} className="a-input" />
+              <input id="limit" name="limit" type="number" min={3} max={48} defaultValue={6} className="a-input" />
             </div>
             <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
           </form>
         )}
         <p className="a-muted mt-3 text-[0.8125rem]">Precisa de uma coleção interna? <Link className="a-link" href="/admin/colecoes?from=/admin/home">Habilite-a na Biblioteca</Link>.</p>
-        <p className="a-muted mt-3 text-[0.8125rem]">A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A ordem dos cards é a devolvida pela INK; não é “mais vendidos” nem “mais recentes”. A seção nova entra só no rascunho, antes da campanha.</p>
+        <p className="a-muted mt-3 text-[0.8125rem]">Carrossel: uma fileira que a pessoa arrasta (até 24 cards). Grade: todos os produtos na página, 4 por linha no desktop e 2 no celular (até 48). Dá para trocar depois, no editor da seção. A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A seção começa na ordem devolvida pela INK (não é “mais vendidos” nem “mais recentes”); depois de criada, você muda a ordem e esconde produtos no editor dela. A seção nova entra só no rascunho, antes da campanha.</p>
 
         <h3 className="mt-8 font-extrabold">Produtos: canecas e ecobags da Uma Penca</h3>
         <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os produtos vêm do feed da loja da Uma Penca (sincronizado a cada 6 horas), sem coleção da INK. O botão “Ver todos” já leva para <code>/{scope}/outros-artigos</code>. Para pôr o seu modelo “Crie a sua” como primeiro card, edite a seção depois de criada e marque “Destacar um produto personalizável”.</p>
         <p className="a-muted mt-1 text-[0.8125rem]" data-testid="umapenca-feed-count">No feed agora: {ARTICLE_KINDS.map((k) => `${umaPencaCounts[k]} ${umaPencaCounts[k] === 1 ? ARTICLE_KIND_LABELS[k].singular.toLowerCase() : ARTICLE_KIND_LABELS[k].plural.toLowerCase()}`).join(" · ")}{umaPencaSyncedAt ? "" : " (o feed ainda não foi sincronizado)"}</p>
-        <form action={addUmaPencaSection} className="mt-3 grid gap-4 md:grid-cols-[2fr_2fr_1fr_auto] md:items-start">
+        <form action={addUmaPencaSection} aria-label="Nova seção de canecas e ecobags da Uma Penca" className="mt-3 grid gap-4 md:grid-cols-[2fr_2fr_1.2fr_1fr_auto] md:items-start">
           <input type="hidden" name="rev" value={rev ?? "null"} />
           <input type="hidden" name="scope" value={scope} />
           <fieldset>
@@ -180,19 +229,20 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
             <label className="a-label" htmlFor="up_title">Título (opcional)</label>
             <input id="up_title" name="title" className="a-input" maxLength={120} placeholder="Canecas, Ecobags ou Outros artigos" />
           </div>
+          <DisplaySelect id="up_display" />
           <div>
             <label className="a-label" htmlFor="up_limit">Cards</label>
-            <input id="up_limit" name="limit" type="number" min={3} max={24} defaultValue={8} className="a-input" />
+            <input id="up_limit" name="limit" type="number" min={3} max={48} defaultValue={8} className="a-input" />
           </div>
           <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
         </form>
 
         <h3 className="mt-8 font-extrabold">Componentes da home</h3>
-        <ul className="mt-3 grid gap-4 md:grid-cols-3" aria-label="Componentes da home">
+        <ul className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Componentes da home">
           {STRUCTURED_MODELS.map((model) => {
             const existing = sections.find((x) => x.template === model.template) ?? null;
             const single = SINGLETON_TEMPLATES.includes(model.template);
-            const status = model.template === "city-styles" ? cityStylesStatus(scope, existing ?? undefined) : model.template === "states" ? statesStatus(scope) : campaignStatus(scope);
+            const status = model.template === "city-styles" ? cityStylesStatus(scope, existing ?? undefined) : model.template === "states" ? statesStatus(scope) : model.template === "image-grid" ? imageGridStatus() : campaignStatus(scope);
             const addForm = single && existing ? null : (
               <form action={addStructuredSection}>
                 <input type="hidden" name="rev" value={rev ?? "null"} />

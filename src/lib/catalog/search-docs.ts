@@ -2,7 +2,7 @@ import "server-only";
 import { STATE_NAMES, type RegionSlug } from "../geo/regions";
 import { prepareDocs, type PreparedDoc, type SearchDoc } from "../search/catalog-search";
 import { purchaseUrl } from "./commerce";
-import { searchMembers, type CollectionRecord } from "./collections";
+import { completeMembers, type CollectionRecord } from "./collections";
 import { getStoreCollections } from "./collections-file";
 import { collectionsForRegion } from "./collection-source";
 import { storeForRegion } from "./commerce-mode";
@@ -22,14 +22,14 @@ import type { CityDesignBinding } from "./types";
  */
 const familyById = new Map(DESIGN_FAMILIES.map((f) => [f.id, f]));
 
-/** Product id -> names of the PUBLIC INK collections it belongs to, from each collection's COMPLETE membership (`searchMembers`). A collection whose
+/** Product id -> names of the PUBLIC INK collections it belongs to, from each collection's COMPLETE membership (`completeMembers`). A collection whose
  * membership is only a truncated slice (a snapshot from before the full lists were stored) is skipped rather than matched by name: it would return an
  * arbitrary subset with a misleading total. `searchCoverage` tells the admin which ones need a collections resync. */
 export function collectionNamesByProduct(records: readonly CollectionRecord[]): Map<string, string[]> {
   const out = new Map<string, string[]>();
   for (const record of records) {
     if (!record.isAvailable) continue;
-    for (const id of searchMembers(record) ?? []) out.set(id, [...(out.get(id) ?? []), record.name]);
+    for (const id of completeMembers(record) ?? []) out.set(id, [...(out.get(id) ?? []), record.name]);
   }
   return out;
 }
@@ -51,6 +51,7 @@ function cityDoc(binding: CityDesignBinding, tier: number, collections: Map<stri
     context: `${inside ?? city.name} · ${city.uf}`,
     imageUrl: binding.imageUrl,
     price: binding.price,
+    ...(binding.listPrice !== undefined ? { listPrice: binding.listPrice } : {}),
     href,
     uf: city.uf,
     sales: binding.totalSalesCount ?? 0,
@@ -97,6 +98,7 @@ export function buildSearchDocs(catalog: Catalog, region: RegionSlug, collection
       context: null,
       imageUrl: product.imageUrl,
       price: product.price,
+      ...(product.listPrice !== undefined ? { listPrice: product.listPrice } : {}),
       href,
       uf: null,
       sales: product.totalSalesCount,

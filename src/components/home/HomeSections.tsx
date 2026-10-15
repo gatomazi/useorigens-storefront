@@ -1,8 +1,12 @@
 import { isSameFill, SectionBackdrop } from "@/components/banners/SectionBackdrop";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
+import { CollectionBrowser } from "@/components/catalog/CollectionBrowser";
+import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { Campaign } from "@/components/home/Campaign";
+import { ImageGrid, type GridTileView } from "@/components/home/ImageGrid";
 import { PageHero } from "@/components/home/PageHero";
+import { PageGround } from "@/components/pages/PageGround";
 import { RegionHero } from "@/components/home/RegionHero";
 import { Fragment } from "react";
 import { StateCards } from "@/components/home/StateCards";
@@ -14,9 +18,15 @@ import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
 import { firstImageSectionId, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
+import { cardButtonOf } from "@/lib/site-config/cards-schema";
 import type { Fill, Page, PublishedBundle, Section } from "@/lib/site-config/schema";
-import type { CommerceStoreKey } from "@/lib/geo/regions";
-import { destinationHref, resolveSource, type CategoryLookup, type UmaPencaLookup } from "@/lib/site-config/sources";
+import { Pagination } from "@/components/catalog/Pagination";
+import { numberPt } from "@/lib/format";
+import { collectionFacets } from "@/lib/search/collection-filter";
+import { destinationHref, resolveSource, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type SourceResult, type UmaPencaLookup } from "@/lib/site-config/sources";
+
+/** A collection page gets its mini search when it has more products than this (fewer fit on one screen anyway). */
+const SEARCH_FROM = 12;
 
 const NATIVE_FILL: Record<"paper" | "plain" | "region-primary", Fill> = {
   paper: { kind: "none" },
@@ -31,10 +41,15 @@ const NATIVE_FILL: Record<"paper" | "plain" | "region-primary", Fill> = {
  * (`src/app/[region]/page.tsx`). Product data still comes from the catalog snapshot through `getRegionHome`; the config only
  * decides copy, order, layout, appearance and which real source feeds each section. Never a free-form page builder.
  */
-type SlugLookup = (store: CommerceStoreKey, collectionId: number) => string | null;
+/** Which page of a paged grid is drawn, and the address of each page (absent in the panel's preview: the numbers are drawn without links). */
+export type Paging = { page: number; hrefOf?: (page: number) => string };
 
-export function HomeSections({ region, home, bundle, categories, slugOf, umapenca, page }: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; slugOf?: SlugLookup; umapenca?: UmaPencaLookup; page?: Page }) {
+export function HomeSections({
+  region, home, bundle, categories, collectionPage, links, umapenca, page, paging, compactHero = false,
+}: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging; /** The automatic collection page: short header, product count next to the title. */ compactHero?: boolean }) {
   const doc = bundle.docs[region];
+  // The store-wide buy button (Aparência, global): on every product card, unless a section set a text of its own.
+  const cardButton = cardButtonOf(bundle);
   // A page (hotpage / landing) is drawn by the very same renderer: its sections instead of the home's.
   const sections = page ? page.sections.filter((s) => s.active && s.template !== "footer") : renderableSections(doc);
   const media = bundle.media;
@@ -42,8 +57,13 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
   const { showcase } = home;
   const cityPath = showcase ? `/${region}/${showcase.city.uf.toLowerCase()}/${showcase.city.slug}` : null;
   const editorial = { terra: home.terra, recreations: home.recreations, lenda: home.feitoParaVoce, dizeres: home.fala, ddd: home.ddd };
+  // A page with a ground of its own (PageGround): text with no surface of its own follows that ground. On a DARK ground, a section that paints a light
+  // surface goes back to dark text (`on-light`), and the two sections that have no dark version (city styles, states) sit on paper.
+  const pageTone = page?.backdrop?.tone;
+  const darkPage = pageTone === "dark";
+  const paperLayer = <div aria-hidden="true" className="paper absolute inset-0 -z-10" />;
 
-  return (
+  const rendered = (
     <>
       {sections.map((s) => {
         const bg = resolveBackground(s.appearance, media);
@@ -76,10 +96,11 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
                 </div>
-                <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk />
+                <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buyLabel={cardButton} />
               </>
             );
-            if (!hasImage(bg) && bg.fill.kind === "none") {
+            const visual = hasImage(bg) || bg.fill.kind !== "none";
+            if (!visual && !darkPage) {
               return (
                 <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className="wrap py-14 lg:py-24">
                   {content}
@@ -87,8 +108,8 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
               );
             }
             return (
-              <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className="relative isolate overflow-hidden">
-                <SectionBackdrop bg={bg} priority={priorityId === s.id} />
+              <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className={`relative isolate overflow-hidden ${darkPage ? "on-light" : ""}`}>
+                {visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : paperLayer}
                 <div className="wrap py-14 lg:py-24">{content}</div>
               </section>
             );
@@ -108,18 +129,25 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
                   subtitle={s.subtitle}
                   anchor={s.anchor}
                   headingId={s.headingId}
-                  backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
+                  backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : darkPage ? paperLayer : undefined}
+                  className={darkPage ? "on-light" : undefined}
                   covers={resolveStateCovers(s, media)}
                 />
-                {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage) — docs/storefront/podio.md. */}
-                {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf))} />}
+                {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage), unless the region switched it off — docs/storefront/podio.md. */}
+                {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf), doc)} />}
               </Fragment>
             );
           }
 
           case "page-hero": {
-            const ctaHref = s.cta ? destinationHref(s.cta.dest, slugOf, region) : null;
+            const ctaHref = s.cta ? destinationHref(s.cta.dest, links, region) : null;
             const visual = hasImage(bg) || bg.fill.kind !== "none";
+            // Without a background of its own the hero sits on the page's ground, so its text follows that ground.
+            const tone = !visual && pageTone ? pageTone : s.layout?.tone ?? "dark";
+            // The compact header says how many products the page's grid has, right next to the title.
+            const grid = compactHero ? sections.find((g) => g.active && g.layout?.display === "paged" && g.source?.kind === "ink-category") : undefined;
+            const gridResult = grid?.source?.kind === "ink-category" && collectionPage ? collectionPage(grid.source, 1) : null;
+            const total = gridResult?.status === "ok" ? gridResult.total : null;
             return (
               <PageHero
                 key={s.id}
@@ -128,19 +156,22 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
                 title={s.title ?? ""}
                 subtitle={s.subtitle}
                 cta={ctaHref && s.cta ? { label: s.cta.label, href: ctaHref } : undefined}
-                tone={s.layout?.tone ?? "dark"}
+                tone={tone}
+                compact={compactHero}
+                aside={total !== null ? <p className={`t-small pb-1 ${tone === "dark" ? "text-white/85" : "text-ink-soft"}`}>{total === 1 ? "1 produto" : `${numberPt.format(total)} produtos`}</p> : undefined}
+                className={darkPage && visual && tone === "light" ? "on-light" : undefined}
                 backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
               />
             );
           }
 
           case "product-carousel":
-            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} umapenca={umapenca} slugOf={slugOf} region={region} card={resolveCustomizerCard(s, doc, media, region)} />;
+            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} compact={compactHero} />;
 
           case "campaign": {
             const image = hasImage(bg);
             const useFill = !image && s.fallback === "fill" && bg.fill.kind !== "none";
-            const ctaHref = s.cta ? destinationHref(s.cta.dest, slugOf, region) : null;
+            const ctaHref = s.cta ? destinationHref(s.cta.dest, links, region) : null;
             return (
               <Campaign
                 key={s.id}
@@ -160,12 +191,33 @@ export function HomeSections({ region, home, bundle, categories, slugOf, umapenc
             );
           }
 
+          case "image-grid": {
+            if (!s.title || !s.grid) return null;
+            const tiles = gridTiles(s, media, links, region);
+            if (tiles.length === 0) return null;
+            const visual = hasImage(bg) || bg.fill.kind !== "none";
+            return (
+              <ImageGrid
+                key={s.id}
+                anchor={s.anchor}
+                headingId={s.headingId}
+                title={s.title}
+                subtitle={s.subtitle}
+                tiles={tiles}
+                layout={s.grid}
+                className={darkPage && visual ? "on-light" : undefined}
+                backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
+              />
+            );
+          }
+
           case "footer":
             return null; // rendered by the region layout, never as a home section
         }
       })}
     </>
   );
+  return page?.backdrop ? <PageGround backdrop={page.backdrop} media={media}>{rendered}</PageGround> : rendered;
 }
 
 function CarouselSection({
@@ -174,12 +226,26 @@ function CarouselSection({
   priority,
   editorial,
   categories,
+  collectionPage,
+  paging,
   umapenca,
-  slugOf,
+  links,
   region,
   card,
+  pageTone,
+  cardButton,
+  searchSlug,
+  compact = false,
 }: {
   region: RegionSlug;
+  /** The automatic collection page: the grid's own heading is left out (the page header already names the collection and counts its products). */
+  compact?: boolean;
+  /** The store-wide buy button (global `cards.buyLabel`); the section's own text wins. */
+  cardButton?: string;
+  /** The address of the collection page this paged grid is on, live (never in the panel's preview): it gets the mini search. */
+  searchSlug?: string;
+  /** The ground of the page the section is on, when that page has one of its own (PageGround). */
+  pageTone?: "light" | "dark";
   /** The customizer card that takes the FIRST position (null: none, or it cannot be shown: then only products). */
   card: ReturnType<typeof resolveCustomizerCard>;
   s: Section;
@@ -187,21 +253,67 @@ function CarouselSection({
   priority: boolean;
   editorial: Parameters<typeof resolveSource>[1];
   categories?: CategoryLookup;
+  collectionPage?: CollectionPageLookup;
+  paging?: Paging;
   umapenca?: UmaPencaLookup;
-  slugOf?: SlugLookup;
+  links?: CollectionLinks;
 }) {
   if (!s.layout || !s.source || !s.analyticsSource || !s.title) return null;
-  const result = resolveSource(s.source, editorial, categories, umapenca);
+  // A paged grid (a collection page) shows ONE page of every product of its collection; anything else, the section's first products.
+  const paged = s.layout.display === "paged" && s.source.kind === "ink-category" ? (collectionPage ? collectionPage(s.source, paging?.page ?? 1) : ({ status: "unavailable", reason: "ink-collections-not-synced" } as const)) : null;
+  const result: SourceResult = paged ?? resolveSource(s.source, editorial, categories, umapenca);
   // Empty or unavailable: the section is omitted, exactly as the original home does for a carousel with no items.
   if (result.status !== "ok" || result.items.length === 0) return null;
-  // With a first card the section keeps its total: 1 customizer card + (total − 1) products, never one more.
+  // With a first card the section keeps its total: 1 customizer card + (total − 1) products, never one more (a paged grid has no first card).
   const total = s.source.kind === "editorial-module" ? result.items.length : s.source.limit;
-  const items = card ? result.items.slice(0, Math.max(0, total - 1)) : result.items;
+  const items = card && !paged ? result.items.slice(0, Math.max(0, total - 1)) : result.items;
 
-  const { variant, tone, surface } = s.layout;
-  const href = s.cta ? destinationHref(s.cta.dest, slugOf, region) : null;
-  const carousel = (
-    <ProductCarousel
+  const { variant, surface } = s.layout;
+  // A section with a photo or a colour/gradient of its own is drawn as a self-contained block: the background is a layer INSIDE it (never a
+  // band between sections) and the text colour follows the tone. Sections with no visual keep exactly the original markup.
+  const visual = hasImage(bg) || bg.fill.kind !== "none";
+  const ownSurface = visual || surface !== "plain";
+  // With no surface of its own the text sits on the page's ground: on a page with a ground of its own it follows that ground, whatever the section says.
+  const tone = !ownSurface && pageTone ? pageTone : s.layout.tone;
+  // A light surface of its own on a dark page: back to dark text.
+  const onLight = pageTone === "dark" && ownSurface && tone === "light" ? "on-light" : "";
+  // A paged grid already IS every product: no "Ver todos" there.
+  const href = s.cta && !paged ? destinationHref(s.cta.dest, links, region) : null;
+  // Carousel (a row that scrolls) or grid (every card on the page): same heading, cards and click tracking.
+  const Display = s.layout.display === "grid" ? ProductGrid : ProductCarousel;
+  const pages = paged?.status === "ok" ? paged : null;
+  const buyLabel = s.layout.buyLabel ?? cardButton;
+  const pagedGrid = pages && {
+    poster: variant === "poster",
+    tone,
+    labelledBy: s.headingId,
+    title: s.title,
+    intro: s.subtitle,
+    sourceSection: SOURCES[s.analyticsSource],
+    buyLabel,
+    tags: s.layout.tags,
+    solidCards: hasImage(bg),
+  };
+  // Both elements cross into the mini search (a client component), which renders them among its own children: each carries a key of its own.
+  // The compact page already counts the products in its header: next to the grid only the page number remains.
+  const pagedAside = pages && (compact ? pages.pageCount > 1 : true) && (
+    <p key="count" className={`t-small ${tone === "dark" ? "text-white/85" : "text-ink-soft"}`}>
+      {compact ? `página ${pages.page} de ${pages.pageCount}` : `${pages.total === 1 ? "1 produto" : `${numberPt.format(pages.total)} produtos`}${pages.pageCount > 1 ? ` · página ${pages.page} de ${pages.pageCount}` : ""}`}
+    </p>
+  );
+  const pagedFooter = pages && <Pagination key="pages" page={pages.page} pageCount={pages.pageCount} hrefOf={paging?.hrefOf} label={`Páginas de ${s.title}`} dark={tone === "dark"} className="mt-10 justify-center lg:mt-14" />;
+  // The facets of the WHOLE collection (every page), counted here on the server: what the filters offer before anything is chosen.
+  const everyCard = pages && searchSlug && pages.total > SEARCH_FROM && s.source.kind === "ink-category" && collectionPage ? collectionPage({ ...s.source, limit: Number.MAX_SAFE_INTEGER }, 1) : null;
+  const facets = everyCard?.status === "ok" ? collectionFacets(everyCard.items, {}) : null;
+  const carousel = pages && pagedGrid ? (
+    // A collection with more than a screenful of products gets its own search and filters, over every page of it.
+    searchSlug && pages.total > SEARCH_FROM && facets ? (
+      <CollectionBrowser region={region} slug={searchSlug} grid={{ ...pagedGrid, compact }} items={items} aside={pagedAside} footer={pagedFooter} facets={facets} />
+    ) : (
+      <ProductGrid {...pagedGrid} compact={compact} items={items} aside={pagedAside} footer={pagedFooter} />
+    )
+  ) : (
+    <Display
       poster={variant === "poster"}
       tone={tone}
       items={items}
@@ -212,22 +324,22 @@ function CarouselSection({
       viewAllHref={href ?? undefined}
       viewAllLabel={s.cta?.label}
       sourceSection={SOURCES[s.analyticsSource]}
+      buyLabel={buyLabel}
+      tags={s.layout.tags}
+      solidCards={hasImage(bg)}
     />
   );
 
-  // A section with a photo or a colour/gradient of its own is drawn as a self-contained block: the background is a layer INSIDE it (never a
-  // band between sections) and the text colour follows the tone. Sections with no visual keep exactly the original markup.
-  const visual = hasImage(bg) || bg.fill.kind !== "none";
   if (!visual && surface === "paper") {
     return (
-      <section id={s.anchor} className="paper">
+      <section id={s.anchor} className={["paper [--card-fill:transparent]", onLight].filter(Boolean).join(" ")}>
         <div className="wrap py-14 lg:py-24">{carousel}</div>
       </section>
     );
   }
   if (!visual && surface === "plain") {
     return (
-      <section id={s.anchor} className="wrap py-14 lg:py-24">
+      <section id={s.anchor} className={compact ? "wrap pb-14 pt-6 lg:pb-24 lg:pt-8" : "wrap py-14 lg:py-24"}>
         {carousel}
       </section>
     );
@@ -235,11 +347,28 @@ function CarouselSection({
   const surfaceClass = surface === "region-primary" ? "bg-region-primary" : surface === "paper" ? "paper" : "";
   const toneClass = tone === "dark" ? "text-white" : "";
   return (
-    <section id={s.anchor} className={["relative isolate overflow-hidden", surfaceClass, toneClass].filter(Boolean).join(" ")}>
+    <section id={s.anchor} className={["relative isolate overflow-hidden [--card-fill:transparent]", surfaceClass, toneClass, onLight].filter(Boolean).join(" ")}>
       {(hasImage(bg) || !isSameFill(bg.fill, NATIVE_FILL[surface])) && <SectionBackdrop bg={bg} priority={priority} nativeFill={NATIVE_FILL[surface]} />}
       <div className="wrap py-14 lg:py-24">{carousel}</div>
     </section>
   );
+}
+
+/** The grid's tiles with a real link (a tile whose destination cannot be resolved here is left out, never a dead link); a picture the media table does not know falls back to the plain block. */
+function gridTiles(s: Section, media: PublishedBundle["media"], links: CollectionLinks | undefined, region: RegionSlug): GridTileView[] {
+  return (s.tiles ?? []).flatMap((t) => {
+    const href = destinationHref(t.dest, links, region);
+    if (!href) return [];
+    const info = t.image ? media[t.image.assetId] : undefined;
+    const picture = info ? { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}) } : null;
+    return [{
+      label: t.label,
+      caption: t.caption,
+      href,
+      external: t.dest.kind === "external" || t.dest.kind === "ink-collection",
+      image: picture ? { mobile: picture, desktop: picture, alt: "" } : null,
+    }];
+  });
 }
 
 /**

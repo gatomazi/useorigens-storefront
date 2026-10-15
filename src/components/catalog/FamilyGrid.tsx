@@ -1,11 +1,13 @@
+import { familyCardModel } from "@/lib/catalog/family-card";
 import type { CityFamilyEntry } from "@/lib/catalog/repository";
-import { FamilyCard } from "./FamilyCard";
+import { FamilyGridView } from "./FamilyGridView";
 
 /**
  * The families that really exist for a city (1 to 8), as one consistent collection: every card the same size,
  * in commercial order (families.ts) — never a bigger "featured" card (CLAUDE_STYLE_MODELS_LAYOUT_REFINEMENT.md).
- * Always a grid, on every width: 2 columns on phones, 3 from 768px, 4 from 1024px. Used on the home (one city's
- * example) and on a city's own pages, both with `directToInk` (see FamilyCard for the exact rule).
+ * Used on the home (one city's example), on a city's own page (the classic piece) and on a design's page ("Outros estilos"),
+ * all with `directToInk` (see family-card.ts for the exact rule). A Server Component: it verifies the purchase URLs and builds the
+ * share payloads here, and hands plain card models to `FamilyGridView`.
  */
 export function FamilyGrid({
   entries,
@@ -16,6 +18,7 @@ export function FamilyGrid({
   directToInk = false,
   pieceLabel,
   garmentTypeId,
+  buyLabel,
 }: {
   entries: CityFamilyEntry[];
   hrefBase: string;
@@ -23,31 +26,14 @@ export function FamilyGrid({
   stateUf?: string;
   sourceSection?: string;
   directToInk?: boolean;
-  /** Forwarded to every `FamilyCard` — set only by the city page's garment-type tabs. */
+  /** Set only by the city page's garment-type tabs, for a piece that is not the classic one. */
   pieceLabel?: string;
-  /** Forwarded to every `FamilyCard` with `pieceLabel` (the tab's INK `product_type.id`). */
+  /** With `pieceLabel`: the tab's INK `product_type.id`. */
   garmentTypeId?: number;
+  /** The store-wide buy button (global `cards.buyLabel`) under every card. */
+  buyLabel?: string;
 }) {
   if (entries.length === 0) return null;
-
-  return (
-    <ul className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-5 md:grid-cols-3 md:gap-x-6 md:gap-y-10 lg:grid-cols-4">
-      {entries.map((entry, i) => (
-        <li key={entry.family.id}>
-          <FamilyCard
-            entry={entry}
-            href={`${hrefBase}/${entry.family.id}`}
-            cityName={cityName}
-            stateUf={stateUf}
-            sourceSection={sourceSection}
-            priority={i < 2}
-            sizes="(min-width: 1024px) 23vw, (min-width: 768px) 30vw, 46vw"
-            directToInk={directToInk}
-            pieceLabel={pieceLabel}
-            garmentTypeId={garmentTypeId}
-          />
-        </li>
-      ))}
-    </ul>
-  );
+  const cards = entries.map((entry) => familyCardModel(entry, { href: `${hrefBase}/${entry.family.id}`, cityName, stateUf, sourceSection, directToInk, pieceLabel, garmentTypeId }));
+  return <FamilyGridView cards={cards} buyLabel={buyLabel} />;
 }

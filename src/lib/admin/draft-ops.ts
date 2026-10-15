@@ -9,29 +9,47 @@
  *  - a duplicate gets a new id and a unique anchor and starts INACTIVE, so a copy never appears on the home by accident.
  */
 import { sectionsUsing } from "../site-config/collections-enabled";
-import { effectiveNavbarGroups, movedWithin, withNavbarGroups, withPosition, type NavbarPosition } from "../site-config/navbar-groups";
+import { effectiveMenu, movedOnTop, withMenu, withMenuPosition, type MenuPosition } from "../site-config/collection-menu";
 import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredTemplate } from "../site-config/structured";
-import { newPage, uniqueSlug } from "../site-config/pages";
+import { newCollectionLanding, newPage, uniqueSlug } from "../site-config/pages";
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import type { PromotionsConfig } from "../site-config/promotions-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageKind, type PageSeo, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import type { CardsConfig } from "../site-config/cards-schema";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid">;
 
 export type DraftOp =
-  | { type: "add-carousel"; title: string; source: Source; cta?: Section["cta"] }
-  /** Adds one of the structured home components (city styles, state chooser, regional campaign) with the defaults of THIS region. */
+  /** `display: "grid"` creates the section already as a product grid (absent = a carousel). */
+  | { type: "add-carousel"; title: string; source: Source; cta?: Section["cta"]; display?: ProductDisplay }
+  /** Adds one of the structured home components (city styles, state chooser, regional campaign, image grid) with the defaults of THIS region. */
   | { type: "add-structured"; template: StructuredTemplate }
   | { type: "duplicate"; id: string }
   | { type: "move"; id: string; direction: "up" | "down" }
+  /** The whole order at once (drag and drop in the panel): the same sections, the hero first and the footer last, fixed sections where they were. */
+  | { type: "reorder"; ids: string[] }
   | { type: "set-active"; id: string; active: boolean }
   | { type: "remove"; id: string }
   | { type: "update"; id: string; patch: Partial<Editable> }
   | ({ type: "set-collection-enabled"; enabled: boolean } & CollectionRef)
-  /** Places a PUBLIC INK collection in the navbar the Worker draws on the INK product pages: "none" | "top" | "more" (independent of `set-collection-enabled`). */
-  | ({ type: "set-collection-navbar-position"; position: NavbarPosition } & CollectionRef)
-  /** Reorders a collection one step inside its navbar group. */
-  | ({ type: "move-collection-navbar"; direction: "up" | "down" } & CollectionRef)
+  /**
+   * The order and hidden products of ONE collection in this region (every section built on it and its collection page follow them). Both lists empty =
+   * INK's order; the entry stays, as "INK's order", only while an older section still carries an order of its own that it must override.
+   */
+  | ({ type: "set-collection-arrangement"; productIds: string[]; hiddenIds: string[] } & CollectionRef)
+  /** Every link to the INK page of one of these collections (buttons, menu links, grid tiles; home and pages) leads to the collection's page on the site instead. */
+  | { type: "link-collection-pages"; refs: CollectionRef[] }
+  /** Several operations as one save: all of them apply, or none (the first refusal comes back). */
+  | { type: "batch"; ops: DraftOp[] }
+  /**
+   * Places a collection in the region's collection menu (storefront header and INK navbar): "none" | "top" | "more" ("Categorias"). `isPublic` = public on
+   * INK, which decides what "no choice" means for it (public: in "Categorias"; internal: out). Independent of `set-collection-enabled`.
+   */
+  | ({ type: "set-collection-menu-position"; position: MenuPosition; isPublic: boolean } & CollectionRef)
+  /** Moves a collection one step on the bar. */
+  | ({ type: "move-collection-menu"; direction: "up" | "down" } & CollectionRef)
+  /** Gives a document from before the collection menu its own menu, unchanged (the Worker then follows it once published). */
+  | { type: "adopt-collection-menu" }
   /** Creates the home of a region that has none yet, from sections the caller built out of REAL sources (see admin/region-seed.ts). */
   | { type: "init-home"; sections: Section[] }
   /** Replaces the tracking configuration of the document (validated: formats, legacy only for Sul, an inactive ID only in global). */
@@ -42,12 +60,20 @@ export type DraftOp =
   | { type: "set-theme"; theme: ThemeConfig | null }
   /** Replaces the coupons and promotions of a region (an empty list is valid: no button). Strictly validated. */
   | { type: "set-promotions"; promotions: PromotionsConfig }
+  /** GLOBAL only: a buy button on every product card of the store (`cards.buyLabel`), or `null` to leave it to each section again. */
+  | { type: "set-cards"; cards: CardsConfig | null }
+  /** REGION only: switches "O Pódio" on or off (home teaser, state pages and the daily calculation); on removes the setting (the default). */
+  | { type: "set-podio"; enabled: boolean }
   /** Launches / recalls a region publicly (takes effect only when published). */
   | { type: "set-launched"; launched: boolean }
   // ── Pages (hotpages and parent-category landings) ──
-  | { type: "create-page"; kind: PageKind; title: string; slug?: string }
-  /** Title, slug and SEO of a page (the slug of an already-published page is refused by the caller: its URL must not change). */
-  | { type: "update-page"; id: string; patch: { title?: string; slug?: string; seo?: PageSeo } }
+  /** `collection`: a parent-category landing that is the page of that collection (its hero, then every product of it, paged). */
+  | { type: "create-page"; kind: PageKind; title: string; slug?: string; collection?: CollectionRef }
+  /**
+   * Title, slug, SEO and ground of a page (the slug of an already-published page is refused by the caller: its URL must not change).
+   * `backdrop: null` takes the page back to the region's ground.
+   */
+  | { type: "update-page"; id: string; patch: { title?: string; slug?: string; seo?: PageSeo; backdrop?: PageBackdrop | null } }
   | { type: "duplicate-page"; id: string }
   | { type: "set-page-archived"; id: string; archived: boolean }
   | { type: "remove-page"; id: string }
@@ -92,8 +118,21 @@ const fail = (...errors: string[]): OpResult => ({ ok: false, errors });
 export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "create-page" || op.type === "update-page" || op.type === "duplicate-page" || op.type === "set-page-archived" || op.type === "remove-page" || op.type === "in-page") return pageOp(doc, op, ctx);
   if (op.type === "create-customizer" || op.type === "update-customizer" || op.type === "duplicate-customizer" || op.type === "remove-customizer") return customizerOp(doc, op, ctx);
+  if (op.type === "batch") {
+    let current = doc;
+    let focusId: string | undefined;
+    for (const inner of op.ops) {
+      const r = applyOp(current, inner, ctx);
+      if (!r.ok) return r;
+      current = r.doc;
+      focusId ??= r.focusId;
+    }
+    return { ok: true, doc: current, ...(focusId ? { focusId } : {}) };
+  }
   if (op.type === "set-collection-enabled") return setCollectionEnabled(doc, op);
-  if (op.type === "set-collection-navbar-position" || op.type === "move-collection-navbar") return editNavbar(doc, op);
+  if (op.type === "set-collection-arrangement") return setCollectionArrangement(doc, op);
+  if (op.type === "link-collection-pages") return linkCollectionPages(doc, op.refs);
+  if (op.type === "set-collection-menu-position" || op.type === "move-collection-menu" || op.type === "adopt-collection-menu") return editMenu(doc, op);
   if (op.type === "init-home") {
     if (doc.scope === "global") return fail("global has no home");
     if (doc.home) return fail("this region already has a home");
@@ -121,6 +160,19 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }
+  if (op.type === "set-cards") {
+    if (doc.scope !== "global") return fail("the cards' setting belongs to the global scope");
+    const next: ScopeDoc = { ...doc, cards: op.cards ?? undefined };
+    if (!op.cards) delete next.cards;
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-podio") {
+    if (doc.scope === "global") return fail("the pódio belongs to a region");
+    const next: ScopeDoc = { ...doc, podio: { enabled: false } };
+    if (op.enabled) delete next.podio;
+    return { ok: true, doc: next };
+  }
   if (op.type === "set-launched") {
     if (doc.scope === "global" || doc.scope === "sul") return fail("only Norte and Centro-Oeste are launched separately (Sul is always public)");
     return { ok: true, doc: { ...doc, launched: op.launched } };
@@ -140,7 +192,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       const anchor = uniqueAnchor(`colecao-${slug(title)}`, new Set(sections.map((s) => s.anchor)));
       const created: Section = {
         id, anchor, headingId: `${anchor}-title`, template: "product-carousel", active: true, title,
-        layout: { variant: "standard", tone: "light", surface: "plain" },
+        layout: { variant: "standard", tone: "light", surface: "plain", ...(op.display === "grid" ? { display: "grid" as const } : {}) },
         source: op.source, analyticsSource: op.source.kind === "umapenca" ? "homeUmaPenca" : "homeCollection", appearance: defaultAppearance(),
         ...(op.cta ? { cta: op.cta } : {}),
       };
@@ -159,8 +211,9 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       const created = structuredDefaults(op.template, doc.scope, id, new Set(sections.map((s) => s.anchor)));
       const check = validateSection(created);
       if (!check.ok) return { ok: false, errors: check.errors };
-      // City styles go right after the hero (as on the Sul home); the state chooser and campaigns go before the footer, campaigns last.
-      const at = op.template === "city-styles" ? 1 : ctx.mode === "page" ? next.length : next.length - 1;
+      // City styles go right after the hero (as on the Sul home); the state chooser and campaigns go before the footer, campaigns last; a grid goes
+      // where a new carousel goes (before the closing campaign).
+      const at = op.template === "city-styles" ? 1 : ctx.mode === "page" ? next.length : op.template === "image-grid" ? Math.max(1, next.length - 2) : next.length - 1;
       next.splice(at, 0, created);
       return withSections(next, id);
     }
@@ -182,6 +235,13 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       if (target < 1 || target > (ctx.mode === "page" ? next.length - 1 : next.length - 2)) return fail(ctx.mode === "page" ? "it cannot go above the page hero" : "it cannot go past the hero or the footer");
       [next[index], next[target]] = [next[target], next[index]];
       return withSections(next, op.id);
+    }
+    case "reorder": {
+      const byId = new Map(next.map((s) => [s.id, s]));
+      if (op.ids.length !== next.length || new Set(op.ids).size !== op.ids.length || op.ids.some((id) => !byId.has(id))) return fail("the new order must list every section exactly once");
+      const fixed = next.findIndex((s, i) => (i === 0 || isLocked(s) || (ctx.mode !== "page" && i === next.length - 1)) && op.ids[i] !== s.id);
+      if (fixed >= 0) return fail(ctx.mode === "page" ? "it cannot go above the page hero" : "it cannot go past the hero or the footer");
+      return withSections(op.ids.map((id) => byId.get(id)!));
     }
     case "set-active": {
       if (isLocked(next[index]) && !op.active) return fail("the hero and the footer cannot be hidden");
@@ -232,23 +292,75 @@ function setCollectionEnabled(doc: ScopeDoc, op: { store: CollectionRef["store"]
   }
   const remaining = current.filter((r) => !(r.store === op.store && r.collectionId === op.collectionId));
   const next: ScopeDoc = { ...doc };
-  // The navbar list is a separate decision: emptying the enablements must not drop it.
-  if (remaining.length > 0 || (doc.collections?.navbarGroups?.top.length ?? 0) + (doc.collections?.navbarGroups?.more.length ?? 0) > 0 || (doc.collections?.navbar?.length ?? 0) > 0) next.collections = { ...doc.collections, enabled: remaining };
+  // The menu, the older navbar lists and the arrangements are separate decisions: emptying the enablements must not drop them.
+  const c = doc.collections;
+  const others = Boolean(c?.menu) || (c?.navbarGroups?.top.length ?? 0) + (c?.navbarGroups?.more.length ?? 0) > 0 || (c?.navbar?.length ?? 0) > 0 || (c?.arrangements?.length ?? 0) > 0;
+  if (remaining.length > 0 || others) next.collections = { ...doc.collections, enabled: remaining };
   else delete next.collections;
   return { ok: true, doc: next };
 }
 
-/**
- * Edits the INK navbar groups. Independent of the home: it never touches `enabled` nor the sections. Only the references are stored; whether a collection is
- * public, has products and a valid slug is checked when the storefront publishes the list (`site-config/navbar.ts`), so a collection that later disappears
- * from INK stops rendering without losing the owner's choice. The first edit of a document that still has the legacy flat list migrates it into `top`.
- */
-function editNavbar(doc: ScopeDoc, op: ({ type: "set-collection-navbar-position"; position: NavbarPosition } | { type: "move-collection-navbar"; direction: "up" | "down" }) & CollectionRef): OpResult {
+/** See the op. Only the destination's kind changes (same collection, same label); a link to a collection not listed stays on INK. */
+function linkCollectionPages(doc: ScopeDoc, refs: CollectionRef[]): OpResult {
+  const wanted = new Set(refs.map((r) => `${r.store}:${r.collectionId}`));
+  const swap = <T extends { kind: string }>(dest: T): T =>
+    dest.kind === "ink-collection" && wanted.has(`${(dest as unknown as CollectionRef).store}:${(dest as unknown as CollectionRef).collectionId}`) ? ({ ...dest, kind: "collection-page" } as T) : dest;
+  const fix = (s: Section): Section => ({
+    ...s,
+    ...(s.cta ? { cta: { ...s.cta, dest: swap(s.cta.dest) } } : {}),
+    ...(s.nav?.dest ? { nav: { ...s.nav, dest: swap(s.nav.dest) } } : {}),
+    ...(s.tiles ? { tiles: s.tiles.map((t) => ({ ...t, dest: swap(t.dest) })) } : {}),
+  });
+  const next: ScopeDoc = { ...doc, ...(doc.home ? { home: { sections: doc.home.sections.map(fix) } } : {}), ...(doc.pages ? { pages: doc.pages.map((p) => ({ ...p, sections: p.sections.map(fix) })) } : {}) };
+  const check = validateScopeDoc(next);
+  return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+}
+
+/** Does any section of the document (home or page) still carry an order of its own for this collection, from before orders belonged to collections? */
+function olderSectionOrder(doc: ScopeDoc, ref: CollectionRef): boolean {
+  return [...(doc.home?.sections ?? []), ...(doc.pages ?? []).flatMap((p) => p.sections)].some(
+    (s) => s.source?.kind === "ink-category" && s.source.store === ref.store && s.source.collectionId === ref.collectionId && ((s.source.order === "manual" && (s.source.productIds?.length ?? 0) > 0) || (s.source.hiddenIds?.length ?? 0) > 0),
+  );
+}
+
+/** Sets how this region arranges a collection (see the op). Nothing in INK changes; the sections keep their own settings (limit, layout). */
+function setCollectionArrangement(doc: ScopeDoc, op: CollectionRef & { productIds: string[]; hiddenIds: string[] }): OpResult {
+  if (doc.scope === "global") return fail("global has no collections");
   const ref: CollectionRef = { store: op.store, collectionId: op.collectionId };
-  const { groups } = effectiveNavbarGroups(doc);
-  const next = op.type === "set-collection-navbar-position" ? withPosition(groups, ref, op.position) : movedWithin(groups, ref, op.direction);
-  if (next === groups && doc.collections?.navbarGroups) return { ok: true, doc }; // nothing changed
-  const edited = withNavbarGroups(doc, next);
+  const productIds = [...new Set(op.productIds)];
+  const hiddenIds = [...new Set(op.hiddenIds)];
+  const entry = { ...ref, ...(productIds.length > 0 ? { productIds } : {}), ...(hiddenIds.length > 0 ? { hiddenIds } : {}) };
+  const keep = productIds.length > 0 || hiddenIds.length > 0 || olderSectionOrder(doc, ref);
+  const current = doc.collections?.arrangements ?? [];
+  const same = (a: CollectionRef) => a.store === ref.store && a.collectionId === ref.collectionId;
+  // In place when it already has one (a stable document, a readable diff), at the end when it is new.
+  const arrangements = current.some(same) ? current.flatMap((a) => (same(a) ? (keep ? [entry] : []) : [a])) : keep ? [...current, entry] : current;
+  const { arrangements: _old, ...rest } = doc.collections ?? { enabled: [] };
+  void _old;
+  const next: ScopeDoc = { ...doc, collections: { ...rest, enabled: rest.enabled ?? [], ...(arrangements.length > 0 ? { arrangements } : {}) } };
+  const check = validateScopeDoc(next);
+  if (!check.ok) {
+    const own = check.errors.filter((e) => e.startsWith("doc.collections.arrangements"));
+    if (own.length > 0) return { ok: false, errors: own };
+  }
+  return { ok: true, doc: next };
+}
+
+/**
+ * Edits the region's collection menu. Independent of the home: it never touches `enabled` nor the sections. Only references are stored; whether a collection
+ * has a page of ours or on INK is checked when the menu is read (`catalog/collection-menu.ts`), so one that later disappears stops rendering without losing
+ * the owner's choice. The first edit of a document from before the menu starts from what it already shows (its older "Topo" stays on top).
+ */
+type MenuOp = ({ type: "set-collection-menu-position"; position: MenuPosition; isPublic: boolean } & CollectionRef) | ({ type: "move-collection-menu"; direction: "up" | "down" } & CollectionRef) | { type: "adopt-collection-menu" };
+function editMenu(doc: ScopeDoc, op: MenuOp): OpResult {
+  if (doc.scope === "global") return fail("global has no collections");
+  const { menu, own } = effectiveMenu(doc);
+  const next =
+    op.type === "adopt-collection-menu" ? menu
+    : op.type === "set-collection-menu-position" ? withMenuPosition(menu, { store: op.store, collectionId: op.collectionId }, op.position, op.isPublic)
+    : movedOnTop(menu, { store: op.store, collectionId: op.collectionId }, op.direction);
+  if (next === menu && own) return { ok: true, doc }; // nothing changed
+  const edited = withMenu(doc, next);
   const check = validateScopeDoc(edited);
   return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
 }
@@ -272,7 +384,9 @@ function pageOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-page" | "upd
     if (title.length === 0 || title.length > 120) return fail("the title must have 1 to 120 characters");
     const slug = op.slug?.trim() ? op.slug.trim() : uniqueSlug(title, taken(op.kind));
     if (taken(op.kind).has(slug)) return fail(`this region already has a page with the address "${slug}"`);
-    const page = newPage({ id: `${PAGE_PREFIX}${ctx.newId()}`, kind: op.kind, title, slug, heroId: `${CUSTOM_PREFIX}${ctx.newId()}`, subtitle: op.kind === "hotpage" ? undefined : undefined });
+    const page = op.collection && op.kind === "categoryLanding"
+      ? newCollectionLanding({ id: `${PAGE_PREFIX}${ctx.newId()}`, heroId: `${CUSTOM_PREFIX}${ctx.newId()}`, gridId: `${CUSTOM_PREFIX}${ctx.newId()}`, title, slug, ref: op.collection })
+      : newPage({ id: `${PAGE_PREFIX}${ctx.newId()}`, kind: op.kind, title, slug, heroId: `${CUSTOM_PREFIX}${ctx.newId()}`, subtitle: op.kind === "hotpage" ? undefined : undefined });
     const check = validatePage(page, doc.scope);
     if (!check.ok) return { ok: false, errors: check.errors };
     return withPages(doc, [...pages, page], page.id);
@@ -282,7 +396,8 @@ function pageOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-page" | "upd
   if (index < 0) return fail("this page does not exist");
   const page = pages[index];
   if (op.type === "update-page") {
-    const merged: Page = { ...page, ...(op.patch.title !== undefined ? { title: op.patch.title.trim() } : {}), ...(op.patch.slug !== undefined ? { slug: op.patch.slug.trim() } : {}), ...(op.patch.seo !== undefined ? { seo: op.patch.seo } : {}) };
+    const merged: Page = { ...page, ...(op.patch.title !== undefined ? { title: op.patch.title.trim() } : {}), ...(op.patch.slug !== undefined ? { slug: op.patch.slug.trim() } : {}), ...(op.patch.seo !== undefined ? { seo: op.patch.seo } : {}), ...(op.patch.backdrop ? { backdrop: op.patch.backdrop } : {}) };
+    if (op.patch.backdrop === null) delete merged.backdrop;
     if (op.patch.slug !== undefined && merged.slug !== page.slug && pages.some((p, i) => i !== index && p.kind === merged.kind && p.slug === merged.slug)) return fail(`this region already has a page with the address "${merged.slug}"`);
     pages[index] = merged;
     return withPages(doc, pages, merged.id);

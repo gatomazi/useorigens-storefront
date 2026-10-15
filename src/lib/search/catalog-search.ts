@@ -25,7 +25,10 @@ export type SearchDoc = {
   /** Second line ("Curitiba · PR"), when the product is tied to a place. */
   context: string | null;
   imageUrl: string;
+  /** What INK charges now (its promotional price during a promotion). */
   price: number | null;
+  /** INK's regular price, only while a promotion is on (struck through on the card). */
+  listPrice?: number;
   /** Verified INK purchase URL (the card navigates here). */
   href: string;
   /** UF when genuinely tied to one state (analytics `state`), never guessed. */

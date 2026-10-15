@@ -17,6 +17,7 @@ import { TrackedStateLink } from "../analytics/TrackedStateLink";
 import { HeaderDropdown } from "./HeaderDropdown";
 import { HeaderShell } from "./HeaderShell";
 import { MobileMenu } from "./MobileMenu";
+import { PriorityLinks } from "./PriorityLinks";
 import { CartMirrorMenu } from "../cart-mirror/CartMirrorMenu";
 import { cartRegionFor } from "@/lib/catalog/commerce-mode";
 import { FavoritesMenu } from "../favorites/FavoritesMenu";
@@ -41,9 +42,17 @@ export function Header({ region }: { region: RegionSlug }) {
   // One source for mobile and desktop (site-config/navigation.ts): the region's links, its launched states and the other LAUNCHED regions, with the
   // labels / order / visibility the CMS published. Nothing here lists a state or a region by hand.
   const { navigation } = regionChrome(region);
-  const items = navigation.primary;
+  // The home's links first, then the collections the owner put on the bar: when the row is too short for all of them, the last ones step out (they are
+  // all in "Categorias" anyway).
   const states = navigation.states;
+  // The "Estados" dropdown already leads to the home's state chooser ("Ver estados"): the home's own "Estados" link would say it twice.
+  const items = [...navigation.primary, ...navigation.collections]
+    .filter((item) => !(states.length > 0 && item.href.endsWith("#estados")))
+    .filter((item, i, all) => all.findIndex((o) => o.href === item.href) === i);
+  const categories = navigation.categories;
   const others = navigation.regions;
+  // Long lists read down the columns, never one endless column.
+  const columns = categories.length > 16 ? 3 : categories.length > 8 ? 2 : 1;
 
   return (
     <HeaderShell>
@@ -56,11 +65,12 @@ export function Header({ region }: { region: RegionSlug }) {
           </Link>
         </div>
 
-        <nav aria-label="Principal" className="hidden items-center gap-8 lg:flex">
+        <nav aria-label="Principal" className="hidden min-w-0 flex-1 items-center justify-center gap-6 px-4 lg:flex xl:gap-8 xl:px-8">
           {states.length > 0 && (
             <HeaderDropdown className="relative">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 py-1 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden">
-                Regiões
+              {/* Named after what it lists (the region's states): "Regiões" next to the "Sul ▾" region switcher read as two menus of the same thing. */}
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 whitespace-nowrap py-1 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden" data-testid="header-states">
+                Estados
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m6 9 6 6 6-6" />
                 </svg>
@@ -83,11 +93,39 @@ export function Header({ region }: { region: RegionSlug }) {
               </ul>
             </HeaderDropdown>
           )}
-          {items.map((item) => (
-            <Link key={item.href} href={item.href} className="link-line py-1 text-[0.9375rem] font-semibold">
-              {item.label}
-            </Link>
-          ))}
+          {categories.length > 0 && (
+            <HeaderDropdown className="relative">
+              <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 whitespace-nowrap py-1 text-[0.9375rem] font-semibold [&::-webkit-details-marker]:hidden" data-testid="header-categories">
+                {navigation.categoriesLabel}
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </summary>
+              <ul
+                className="absolute left-1/2 top-full z-50 mt-1 grid max-h-[calc(100dvh-6rem)] w-max min-w-52 max-w-[calc(100vw-2rem)] -translate-x-1/2 grid-flow-col overflow-y-auto border-2 border-ink bg-white py-1 text-ink"
+                style={{ gridTemplateRows: `repeat(${Math.ceil(categories.length / columns)}, auto)` }}
+              >
+                {categories.map((c) => (
+                  <li key={c.href}>
+                    <Link href={c.href} className="flex min-h-11 items-center whitespace-nowrap px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
+                      {c.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </HeaderDropdown>
+          )}
+          {items.length > 0 && (
+            <PriorityLinks className="flex h-11 min-w-0 flex-wrap items-center gap-x-6 overflow-hidden xl:gap-x-8">
+              {items.map((item) => (
+                <li key={item.href} className="flex h-11 items-center data-[overflow]:invisible">
+                  <Link href={item.href} className="link-line whitespace-nowrap py-1 text-[0.9375rem] font-semibold">
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </PriorityLinks>
+          )}
         </nav>
 
         <div className="flex items-center gap-1 sm:gap-3">

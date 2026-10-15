@@ -150,8 +150,9 @@ test.describe("the rest of the header is untouched", () => {
       const header = page.locator("header.site-header");
       await expect(header.getByRole("button", { name: "Abrir menu" })).toBeHidden();
       const nav = header.getByRole("navigation", { name: "Principal" });
-      await expect(nav.getByRole("link")).toHaveText(["Estilos", "Fala daqui", "Estados"]);
-      await nav.getByText("Regiões", { exact: true }).click();
+      // The "Estados" dropdown already leads to the state chooser: the home's own "Estados" link is left out of the bar (it stays in the phone menu).
+      await expect(nav.getByRole("link")).toHaveText(["Estilos", "Fala daqui"]);
+      await nav.locator("summary", { hasText: "Estados" }).click();
       await expect(nav.getByRole("link", { name: "Santa Catarina" })).toHaveAttribute("href", "/sul/sc");
       await expect(nav.getByRole("link", { name: "Ver estados" })).toBeVisible();
       await page.keyboard.press("Escape");

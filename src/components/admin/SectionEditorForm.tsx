@@ -2,11 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
+import { CollectionOrder, type OrderMember } from "@/components/admin/CollectionOrder";
+import { GridTilesEditor } from "@/components/admin/GridTilesEditor";
 import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
 import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
-import type { Appearance, Section } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, MAX_BUY_LABEL, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
 import { customizerCardFieldDefaults } from "@/lib/admin/section-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
@@ -27,7 +29,7 @@ const PRESETS = [
   ["regional-wash-dark", "Véu escuro (texto claro)"],
 ] as const;
 
-const previewSrc = (m: MediaOption | undefined) => (m ? (m.kind === "banner" ? m.src.replace(/\.[a-z]+$/i, "-640.webp") : m.src) : undefined);
+export const previewSrc = (m: MediaOption | undefined) => (m ? (m.kind === "banner" ? m.src.replace(/\.[a-z]+$/i, "-640.webp") : m.src) : undefined);
 const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
 
 function FocalPad({ label, image, x, y, onChange }: { label: string; image?: MediaOption; x: number; y: number; onChange: (x: number, y: number) => void }) {
@@ -74,8 +76,14 @@ function AnchorPicker({ anchors, current }: { anchors: { anchor: string; label: 
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pages = [], customizers = [], anchors = [],
+  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement,
 }: {
+  /** Collection carousels: the saved collection's products in INK's order, for the order list (absent when it does not resolve). */
+  collectionMembers?: OrderMember[];
+  /** How this region arranges the saved collection now (`arrangementOf`): it belongs to the collection, every section built on it shares it. */
+  collectionArrangement?: { productIds?: string[]; hiddenIds?: string[] };
+  /** The kind of page the section is on (absent: the home). A parent-category landing may hold the paged grid of a collection. */
+  pageKind?: "hotpage" | "categoryLanding";
   /** Set when the section belongs to a PAGE (hotpage / landing) instead of the home: the id of the page. */
   page?: string;
   /** Pages of this region a button may lead to: value `hotpage/slug`, with a status the editor should know. */
@@ -99,7 +107,7 @@ export function SectionEditorForm({
 }) {
   const a: Appearance = section.appearance;
   const isCarousel = section.template === "product-carousel";
-  const hasVisual = isCarousel || section.template === "hero" || section.template === "page-hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states";
+  const hasVisual = isCarousel || section.template === "hero" || section.template === "page-hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states" || section.template === "image-grid";
 
   const [tone, setTone] = useState<"light" | "dark">(isCarousel ? section.layout?.tone ?? "light" : section.template === "campaign" ? "dark" : section.template === "page-hero" ? section.layout?.tone ?? "dark" : "light");
   const [fillKind, setFillKind] = useState<"none" | "solid" | "gradient">(a.fill.kind);
@@ -123,7 +131,16 @@ export function SectionEditorForm({
   const [srcEntry, setSrcEntry] = useState<ComboEntry | null>(collections.find((e) => e.value === currentRef) ?? null);
   const publicEntries = collections.filter((e) => e.visibility === "public" && e.selectable);
   const internalSource = sourceKind === "ink-category" && srcEntry?.visibility === "internal";
-  const [ctaKind, setCtaKind] = useState<"none" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
+  const [inkLimit, setInkLimit] = useState(String(section.source?.kind === "ink-category" ? section.source.limit : 6));
+  const [display, setDisplay] = useState<ProductDisplay>(section.layout?.display ?? "carousel");
+  // A grid lays out more cards than a carousel scrolls through (same ceiling as the save: section-form.ts).
+  const maxCards = maxSectionProducts(display);
+  const [buyOn, setBuyOn] = useState(Boolean(section.layout?.buyLabel));
+  const [tagOn, setTagOn] = useState(Boolean(section.layout?.tags?.text));
+  const [ctaKind, setCtaKind] = useState<"none" | "collection-page" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
+  // The collections a "Ver todos" may lead to a page of: every one the region can use (public, or internal and enabled), the section's own first.
+  const pageEntries = collections.filter((e) => e.selectable);
+  const ctaCollection = section.cta && (section.cta.dest.kind === "collection-page" || section.cta.dest.kind === "ink-collection") ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : srcEntry?.value ?? currentRef ?? "";
 
   const [navShow, setNavShow] = useState(Boolean(section.nav));
   const [navLabel, setNavLabel] = useState(section.nav?.label ?? suggestedNavLabel(section));
@@ -199,6 +216,19 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
+      {section.template === "image-grid" && (
+        <GridTilesEditor
+          scope={scope}
+          tiles={section.tiles ?? []}
+          layout={section.grid ?? { columns: 4, aspect: "portrait", labels: "below" }}
+          media={media}
+          thumbOf={(assetId) => previewSrc(byId.get(assetId))}
+          collections={pageEntries}
+          pages={pages}
+          anchors={anchors.filter((x) => x.anchor !== section.anchor)}
+        />
+      )}
+
       {section.template === "hero" && featured && <HeroFeaturedProducts scope={scope} regionName={featured.regionName} mode={featured.mode} initial={featured.initial} eligible={featured.eligible} search={featured.search} />}
 
       {section.template === "page-hero" && (
@@ -211,7 +241,7 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
-      {isCarousel && (
+      {isCarousel && display !== "paged" && (
         <fieldset className="space-y-4">
           <legend className="a-h2 mb-3">Primeiro card personalizável</legend>
           <input type="hidden" name="cc_present" value="1" />
@@ -256,6 +286,7 @@ export function SectionEditorForm({
               <label className="a-label" htmlFor="cta_kind">Destino</label>
               <select id="cta_kind" name="cta_kind" className="a-select" value={ctaKind} onChange={(e) => setCtaKind(e.target.value as typeof ctaKind)}>
                 <option value="none">Busca de cidade (padrão)</option>
+                <option value="collection-page">Página de uma coleção (no site)</option>
                 <option value="route">Página desta região (endereço)</option>
                 <option value="page">Hotpage ou categoria-pai publicada</option>
                 <option value="anchor">Uma seção desta página</option>
@@ -264,6 +295,15 @@ export function SectionEditorForm({
             </div>
             {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver mais"} className="a-input" maxLength={32} /></div>}
           </div>
+          {ctaKind === "collection-page" && (
+            <div>
+              <label className="a-label" htmlFor="cta_collection">Coleção</label>
+              <select id="cta_collection" name="cta_collection" className="a-select" defaultValue={section.cta?.dest.kind === "collection-page" ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : ""} required>
+                <option value="" disabled>Escolha…</option>
+                {pageEntries.map((c) => <option key={c.value} value={c.value}>{c.name} · {c.matchedCount} produtos{c.visibility === "internal" ? " · interna" : ""}</option>)}
+              </select>
+            </div>
+          )}
           {ctaKind === "page" && <PagePicker pages={pages} current={section.cta?.dest.kind === "page" ? `${section.cta.dest.pageKind}/${section.cta.dest.slug}` : ""} />}
           {ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
           {ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho (dentro de /{scope})</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : `/${scope}`} className="a-input" placeholder={`/${scope}/pa`} /><p className="a-muted mt-1 text-[0.8125rem]">Ex.: <code>/{scope}</code> ou a página de um estado. Um caminho de outra região é recusado.</p></div>}
@@ -292,8 +332,8 @@ export function SectionEditorForm({
                   <p className="a-muted mt-1 text-[0.8125rem]">Nenhuma coleção da INK: os cards abrem a loja da Uma Penca. Para “Crie a sua”, use “Destacar um produto personalizável” abaixo e escolha um modelo da Uma Penca.</p>
                 </fieldset>
                 <div>
-                  <label className="a-label" htmlFor="source_limit">Cards</label>
-                  <input id="source_limit" name="source_limit" type="number" min={3} max={24} defaultValue={cur?.kind === "umapenca" ? cur.limit : 8} className="a-input" />
+                  <label className="a-label" htmlFor="source_limit">Cards (até {maxCards})</label>
+                  <input id="source_limit" name="source_limit" type="number" min={MIN_SECTION_PRODUCTS} max={maxCards} defaultValue={cur?.kind === "umapenca" ? cur.limit : 8} className="a-input" />
                 </div>
               </div>
             ) : sourceKind === "editorial-module" ? (
@@ -308,29 +348,38 @@ export function SectionEditorForm({
               <div className="grid gap-4 md:grid-cols-[3fr_1fr]">
                 <CollectionCombobox name="source_collection" label="Coleção (busque pelo nome, slug ou número)" entries={collections} defaultValue={currentRef} libraryFrom={`/admin/home/${section.id}`} onSelect={setSrcEntry} />
                 <div>
-                  <label className="a-label" htmlFor="source_limit">Cards</label>
-                  <input id="source_limit" name="source_limit" type="number" min={3} max={24} defaultValue={cur?.kind === "ink-category" ? cur.limit : 6} className="a-input" />
+                  <label className="a-label" htmlFor="source_limit">{display === "paged" ? `Produtos por página (até ${maxCards})` : `Cards (até ${maxCards})`}</label>
+                  <input id="source_limit" name="source_limit" type="number" min={MIN_SECTION_PRODUCTS} max={maxCards} value={inkLimit} onChange={(e) => setInkLimit(e.target.value)} className="a-input" />
                 </div>
               </div>
             )}
-            {sourceKind === "ink-category" && section.id.startsWith("seed-") && <p className="a-flash err text-[0.875rem]">Atenção: isto substitui a curadoria original desta seção por uma coleção da INK (ordem da INK). Só vale depois de publicado.</p>}
+            {sourceKind === "ink-category" && cur?.kind === "ink-category" && collectionMembers && collectionMembers.length > 0 && (srcEntry?.value ?? currentRef) === currentRef && (
+              <CollectionOrder
+                collectionRef={currentRef!}
+                members={collectionMembers}
+                initial={{ order: collectionArrangement?.productIds?.length ? "manual" : "category", productIds: collectionArrangement?.productIds, hiddenIds: collectionArrangement?.hiddenIds }}
+                // Same clamp as the save (3..24, or up to 48 in a grid); the customizer card takes the first place. A paged grid shows them all.
+                visible={display === "paged" ? null : Math.min(maxCards, Math.max(MIN_SECTION_PRODUCTS, Math.round(Number(inkLimit)) || 6)) - (ccShow ? 1 : 0)}
+                total={srcEntry?.value === currentRef ? srcEntry?.matchedCount : undefined}
+              />
+            )}
+            {sourceKind === "ink-category" && srcEntry && srcEntry.value !== currentRef && <p className="a-muted text-[0.8125rem]">Salve o rascunho para ordenar ou esconder os produtos desta coleção (ela começa na ordem da INK).</p>}
+            {sourceKind === "ink-category" && section.id.startsWith("seed-") && <p className="a-flash err text-[0.875rem]">Atenção: isto substitui a curadoria original desta seção por uma coleção da INK (na ordem da INK, que você ajusta aqui depois de salvar). Só vale depois de publicado.</p>}
           </fieldset>
 
+          {display === "paged" ? (
+            <p className="a-muted text-[0.875rem]">Na grade paginada não há botão “Ver todos”: ela já mostra todos os produtos da coleção.</p>
+          ) : (
           <fieldset className="space-y-4">
             <legend className="a-h2 mb-3">Botão “Ver todos”</legend>
-            {internalSource && (
-              <div className="a-flash ok text-[0.875rem]">
-                <p className="font-bold">Coleção interna: link “Ver todos” desativado.</p>
-                <p>Ela não tem uma página pública verificada na loja da INK, então nenhum botão é criado (nem uma URL inventada).</p>
-                <input type="hidden" name="cta_kind" value="none" />
-              </div>
-            )}
-            {!internalSource && <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <label className="a-label" htmlFor="cta_kind">Destino</label>
                 <select id="cta_kind" name="cta_kind" className="a-select" value={ctaKind} onChange={(e) => setCtaKind(e.target.value as typeof ctaKind)}>
                   <option value="none">Sem botão</option>
-                  <option value="ink-collection">Coleção da INK (página real na loja)</option>
+                  <option value="collection-page">Página da coleção (no site, com todos os produtos)</option>
+                  {/* An internal collection has no verified public page on INK: never an invented URL. */}
+                  {(!internalSource || ctaKind === "ink-collection") && <option value="ink-collection">Coleção da INK (página na loja da INK)</option>}
                   <option value="external">URL da loja Use (Sul, Norte ou Centro)</option>
                   <option value="route">Página desta loja</option>
                   <option value="page">Hotpage ou categoria-pai publicada</option>
@@ -338,29 +387,79 @@ export function SectionEditorForm({
                 </select>
               </div>
               {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver todos"} className="a-input" maxLength={32} /></div>}
-            </div>}
-            {!internalSource && ctaKind === "ink-collection" && (
+            </div>
+            {ctaKind === "collection-page" && (
               <div>
                 <label className="a-label" htmlFor="cta_collection">Coleção</label>
-                <select id="cta_collection" name="cta_collection" className="a-select" defaultValue={section.cta?.dest.kind === "ink-collection" ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : ""} required>
+                <select key="page" id="cta_collection" name="cta_collection" className="a-select" defaultValue={pageEntries.some((c) => c.value === ctaCollection) ? ctaCollection : ""} required>
+                  <option value="" disabled>Escolha…</option>
+                  {pageEntries.map((c) => <option key={c.value} value={c.value}>{c.name} · {c.matchedCount} produtos{c.visibility === "internal" ? " · interna" : ""}</option>)}
+                </select>
+                <p className="a-muted mt-1 text-[0.8125rem]">A página fica em <code>/{scope}/colecoes/…</code> com todos os produtos da coleção, em páginas, na mesma ordem e sem os produtos escondidos daqui. Ela existe sozinha; para trocar o título, a imagem ou o texto, use “Personalizar página” em Coleções.</p>
+              </div>
+            )}
+            {ctaKind === "ink-collection" && (
+              <div>
+                <label className="a-label" htmlFor="cta_collection">Coleção</label>
+                <select key="ink" id="cta_collection" name="cta_collection" className="a-select" defaultValue={section.cta?.dest.kind === "ink-collection" ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : ""} required>
                   <option value="" disabled>Escolha…</option>
                   {publicEntries.map((c) => <option key={c.value} value={c.value}>{c.name} · {c.matchedCount} produtos</option>)}
                 </select>
               </div>
             )}
-            {!internalSource && ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usesul.com.br/usesul/collections/…" /></div>}
-            {!internalSource && ctaKind === "page" && <PagePicker pages={pages} current={section.cta?.dest.kind === "page" ? `${section.cta.dest.pageKind}/${section.cta.dest.slug}` : ""} />}
-            {!internalSource && ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
-            {!internalSource && ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : ""} className="a-input" placeholder="/sul/sc" /></div>}
+            {ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usesul.com.br/usesul/collections/…" /></div>}
+            {ctaKind === "page" && <PagePicker pages={pages} current={section.cta?.dest.kind === "page" ? `${section.cta.dest.pageKind}/${section.cta.dest.slug}` : ""} />}
+            {ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
+            {ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : ""} className="a-input" placeholder="/sul/sc" /></div>}
           </fieldset>
+          )}
 
           <fieldset className="space-y-4">
             <legend className="a-h2 mb-3">Layout</legend>
+            <div role="radiogroup" aria-label="Exibição dos produtos" className="grid gap-3 md:grid-cols-2">
+              {([
+                ["carousel", "Carrossel", "Uma fileira que a pessoa arrasta para o lado. Até 24 cards."],
+                ["grid", "Grade", "Todos os produtos na página, como numa categoria: 4 por linha no desktop, 3 no tablet e 2 no celular. Até 48 cards."],
+                // Only on a parent-category landing (its address carries the page numbers), only for an INK collection.
+                ...(pageKind === "categoryLanding" && sourceKind === "ink-category" ? [["paged", "Grade paginada (página da coleção)", "Todos os produtos da coleção, em páginas: os cards abaixo são os de cada página. Sem botão “Ver todos” nem card personalizável."]] as const : []),
+              ] as const).map(([value, label, help]) => (
+                <label key={value} className={`flex cursor-pointer gap-3 border p-3 ${display === value ? "border-black bg-white" : "border-black/20"}`}>
+                  <input type="radio" name="layout_display" value={value} checked={display === value} onChange={() => setDisplay(value)} className="mt-1" />
+                  <span><span className="block font-bold">{label}</span><span className="a-muted block text-[0.8125rem]">{help}</span></span>
+                </label>
+              ))}
+            </div>
+            {display === "grid" && <p className="a-muted text-[0.8125rem]">Dica: na grade, um múltiplo de 4 (8, 12, 16…) fecha as linhas no desktop; com o card personalizável ligado, ele conta como um dos cards.</p>}
             <div className="grid gap-4 md:grid-cols-3">
               <div><label className="a-label" htmlFor="layout_variant">Cards</label><select id="layout_variant" name="layout_variant" className="a-select" defaultValue={section.layout?.variant ?? "standard"}><option value="standard">Padrão</option><option value="poster">Pôster (mais editorial)</option></select></div>
               <div><label className="a-label" htmlFor="layout_surface">Superfície</label><select id="layout_surface" name="layout_surface" className="a-select" defaultValue={section.layout?.surface ?? "plain"}><option value="plain">Fundo da página</option><option value="paper">Papel</option><option value="region-primary">Verde regional</option></select></div>
               <div><label className="a-label" htmlFor="layout_tone">Cor do texto</label><select id="layout_tone" name="layout_tone" className="a-select" value={tone} onChange={(e) => setTone(e.target.value as "light" | "dark")}><option value="light">Escuro (para fundos claros)</option><option value="dark">Claro (para fundos escuros)</option></select></div>
             </div>
+            <div className="space-y-2 border border-black/20 p-3">
+              <input type="hidden" name="layout_buy_present" value="1" />
+              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="layout_buy" checked={buyOn} onChange={(e) => setBuyOn(e.target.checked)} /> Botão de compra em cada card de produto</label>
+              <p className="a-muted text-[0.8125rem]">Um botão no pé de cada card, alinhado em todos. Ele faz parte do próprio card: abre a mesma página do produto na loja (onde a pessoa escolhe tamanho e cor) e conta o mesmo clique. O texto sugerido é “{DEFAULT_BUY_LABEL}”; dá para trocar por “Comprar”, por exemplo. O card personalizável mostra o texto do botão dele no mesmo formato.</p>
+              {buyOn && (
+                <div className="max-w-xs">
+                  <label className="a-label" htmlFor="layout_buy_label">Texto do botão</label>
+                  <input id="layout_buy_label" name="layout_buy_label" defaultValue={section.layout?.buyLabel ?? DEFAULT_BUY_LABEL} className="a-input" maxLength={MAX_BUY_LABEL} placeholder={DEFAULT_BUY_LABEL} />
+                </div>
+              )}
+            </div>
+            <fieldset className="space-y-2 border border-black/20 p-3">
+              <legend className="px-1 font-bold">Etiquetas nas fotos dos produtos</legend>
+              <input type="hidden" name="tags_present" value="1" />
+              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="tags_discount" defaultChecked={Boolean(section.layout?.tags?.discount)} /> Desconto (“18% OFF”) nos produtos em promoção</label>
+              <p className="a-muted text-[0.8125rem]">Calculado com os dois preços que a INK (ou a Uma Penca) envia, arredondado como a própria loja mostra. Só aparece nos produtos com promoção valendo, depois de sincronizar o catálogo; sem promoção, nenhuma etiqueta.</p>
+              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="tags_custom" checked={tagOn} onChange={(e) => setTagOn(e.target.checked)} /> Etiqueta própria em todos os cards desta seção</label>
+              {tagOn && (
+                <div className="max-w-xs">
+                  <label className="a-label" htmlFor="tags_text">Texto da etiqueta</label>
+                  <input id="tags_text" name="tags_text" defaultValue={section.layout?.tags?.text ?? ""} className="a-input" maxLength={MAX_TAG_TEXT} placeholder="Ex.: Black Friday" required />
+                  <p className="a-muted mt-1 text-[0.8125rem]">Até {MAX_TAG_TEXT} caracteres, em caixa alta na foto. Com o desconto ligado, as duas aparecem juntas.</p>
+                </div>
+              )}
+            </fieldset>
           </fieldset>
         </>
       )}

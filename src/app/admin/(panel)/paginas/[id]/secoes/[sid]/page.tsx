@@ -10,8 +10,8 @@ import { listMedia } from "@/lib/admin/media";
 import { pageOptions } from "@/lib/admin/pages-view";
 import { platform } from "@/lib/admin/platform";
 import { currentScope, storeOf } from "@/lib/admin/scope";
-import { campaignStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
-import { sourceStatus } from "@/lib/admin/validate-draft";
+import { campaignStatus, cityStylesStatus, imageGridStatus, statesStatus } from "@/lib/admin/structured-status";
+import { collectionOrderArrangement, collectionOrderMembers, sourceStatus } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { STATE_NAMES } from "@/lib/geo/regions";
@@ -33,7 +33,7 @@ export default async function PageSectionEditor({ params, searchParams }: { para
   const entries = toComboEntries(libraryEntries(store, enabledInternalIds(ws.doc, store)));
   const status = sourceStatus(section, ws.doc);
   const media = await listMedia();
-  const structured = section.template === "city-styles" ? cityStylesStatus(scope, section) : section.template === "states" ? statesStatus(scope) : section.template === "campaign" ? campaignStatus(scope) : null;
+  const structured = section.template === "city-styles" ? cityStylesStatus(scope, section) : section.template === "states" ? statesStatus(scope) : section.template === "campaign" ? campaignStatus(scope) : section.template === "image-grid" ? imageGridStatus(section) : null;
   const stateCovers = section.template === "states" ? REGIONS[scope].ufs.map((uf) => ({ uf, name: STATE_NAMES[uf], legacy: usableBannerAsset("state", bannerFor(scope, "state", uf)) !== null })) : undefined;
   const customizers = (ws.doc.customizers ?? []).map((m) => ({ id: m.id, name: m.name, active: m.active, live: Boolean(published.customizers?.some((x) => x.id === m.id)) }));
 
@@ -55,6 +55,9 @@ export default async function PageSectionEditor({ params, searchParams }: { para
           <SectionEditorForm
             section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={structured?.notes}
             stateCovers={stateCovers} page={page.id} pages={pageOptions(ws.doc, published)} customizers={customizers} anchors={page.sections.map((s) => ({ anchor: s.anchor, label: s.title?.replace(/\n/g, " ") ?? s.anchor }))}
+            collectionMembers={collectionOrderMembers(section, ws.doc)}
+            collectionArrangement={collectionOrderArrangement(section, ws.doc)}
+            pageKind={page.kind}
           />
         </section>
         <section className="a-card p-5 2xl:sticky 2xl:top-4 2xl:self-start" aria-label="Pré-visualização">

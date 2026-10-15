@@ -4,13 +4,13 @@ import path from "node:path";
 import { bundleChecksum } from "../site-config/checksum";
 import { publish, reconcile, type FileState, type PublishOutcome, type PublishPorts, type ReleaseRecord } from "../site-config/publish-flow";
 import { resolveTracking, type TrackingOrigin } from "../site-config/resolve";
-import { mediaRefsOfDoc, validateBundle, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "../site-config/schema";
+import { mediaRefsOfDoc, validateBundle, type Customizer, type Destination, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "../site-config/schema";
 import { REGION_SLUGS } from "../geo/regions";
 import { themeProblems } from "../site-config/navigation";
 import { pageAsHomeDoc } from "../site-config/pages";
 import { buildSeedBundle } from "../site-config/seed";
 import { readJson, withLock, writeJsonAtomic } from "./local-store";
-import { collectionProblems, customizerProblems, readabilityProblems } from "./validate-draft";
+import { collectionProblems, customizerProblems, pageGroundProblems, readabilityProblems } from "./validate-draft";
 import type { BeginRequest, PublishedFileStore, ReleaseStore, ReleaseView } from "./store/ports";
 
 /**
@@ -121,11 +121,12 @@ export function linkProblems(composed: ScopeDoc, sections: Section[]): string[] 
   for (const s of sections) {
     if (!s.active) continue;
     const name = `"${s.title ?? s.id}"`;
-    for (const dest of [s.cta?.dest, s.nav?.dest]) {
+    const links: [string, Destination | undefined][] = [["o botão", s.cta?.dest], ["o botão", s.nav?.dest], ...(s.tiles ?? []).map((t): [string, Destination] => [`o bloco "${t.label}"`, t.dest])];
+    for (const [what, dest] of links) {
       if (dest?.kind !== "page") continue;
       const page = composed.pages?.find((p) => p.kind === dest.pageKind && p.slug === dest.slug);
-      if (!page) out.push(`${name}: o botão leva à página "${dest.slug}", que não existe ou ainda não foi publicada. Publique a página antes.`);
-      else if (page.archived) out.push(`${name}: o botão leva à página "${dest.slug}", que está arquivada.`);
+      if (!page) out.push(`${name}: ${what} leva à página "${dest.slug}", que não existe ou ainda não foi publicada. Publique a página antes.`);
+      else if (page.archived) out.push(`${name}: ${what} leva à página "${dest.slug}", que está arquivada.`);
     }
     if (s.customizerCard) {
       const model = composed.customizers?.find((m) => m.id === s.customizerCard!.customizerId);
@@ -160,7 +161,7 @@ export async function preflight(deps: Pick<PublishDeps, "releases" | "media">, d
   if (target.kind === "page") {
     const page = composed.pages!.find((p) => p.id === target.id)!;
     const asHome = pageAsHomeDoc(composed, page);
-    return [...problems, ...collectionProblems(asHome), ...readabilityProblems(asHome), ...linkProblems(composed, page.sections)];
+    return [...problems, ...collectionProblems(asHome), ...readabilityProblems(asHome), ...pageGroundProblems(page), ...linkProblems(composed, page.sections)];
   }
   const model = composed.customizers!.find((m) => m.id === target.id)!;
   return [...problems, ...customizerProblems(composed, model)];

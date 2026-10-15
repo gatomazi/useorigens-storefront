@@ -209,6 +209,7 @@ function build(file: string, plan: CommercePlan): { catalog: Catalog; mtimeMs: n
             storeProductUrl: piece.storeProductUrl,
             imageUrl: piece.imageUrl,
             price: piece.price,
+            ...(piece.listPrice !== undefined ? { listPrice: piece.listPrice } : {}),
             syncedAt: garmentIndex.stores[primary.commerceStoreKey]?.syncedAt ?? "",
             // A piece of a simulated classic is hidden in INK just like it: never sellable either (commerce.ts).
             ...(primary.simulated ? { simulated: true as const } : {}),

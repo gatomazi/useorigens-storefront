@@ -28,6 +28,8 @@
   --region-wash: 229 229 229;
   --region-fill: var(--region-accent);
   --region-ink: var(--region-primary);
+  /* Fill of a product card (ProductCard.tsx): none, so it shows the ground the grid sits on; a themed page sets its own colour to hide its pattern. */
+  --card-fill: transparent;
 
   --font-display-stack: var(--font-display), "Arial Narrow", Impact, sans-serif;
   --font-body-stack: var(--font-body), system-ui, sans-serif;
@@ -266,9 +268,23 @@ a:focus-visible .link-line {
   object-fit: cover;
   transition: transform 500ms var(--ease-out);
 }
+/* Product cards: the mockup is never cropped. INK pictures (800x820) fill the frame exactly; another shape keeps its proportions on the frame's grey. */
+.photo-contain img {
+  object-fit: contain;
+}
 a:hover > .photo img,
 .photo-hover:hover .photo img {
   transform: scale(1.035);
+}
+/* Second photo (Uma Penca articles): cross-fades in under the pointer, only where a pointer can hover — on touch the first photo stays. */
+.photo .photo-alt {
+  opacity: 0;
+  transition: opacity 300ms var(--ease-out), transform 500ms var(--ease-out);
+}
+@media (hover: hover) {
+  a:hover > .photo .photo-alt {
+    opacity: 1;
+  }
 }
 
 /*
@@ -390,6 +406,24 @@ a:hover > .photo img,
 .paper {
   background: var(--paper);
 }
+
+/*
+ * A CMS page on a dark ground of its own ("Fundo da página" with light text, components/pages/PageGround.tsx): the page's text turns light.
+ * Only the text: --ink keeps its value, because the store also paints with it (buttons, the "Personalizável" tag, the icons of the white chips).
+ * A section that brings a light surface of its own (paper, a light photo or colour) inside such a page goes back to dark text with .on-light.
+ */
+.page-dark {
+  color: #fff;
+  --ink-soft: rgb(255 255 255 / 0.86);
+  --ink-mute: rgb(255 255 255 / 0.72);
+  --line: rgb(255 255 255 / 0.3);
+}
+.on-light {
+  color: var(--ink);
+  --ink-soft: #33332f;
+  --ink-mute: #56564f;
+  --line: rgb(0 0 0 / 0.22);
+}
 .search-input:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 8px;
@@ -403,6 +437,26 @@ dialog {
 }
 dialog::backdrop {
   background: rgb(0 0 0 / 0.55);
+}
+
+/* A choice chip (filters of a collection page): the store's rectangular outline, filled with the region's colour when pressed. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0 0.85rem;
+  border: 2px solid var(--ink);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--ink);
+  transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out), border-color 160ms var(--ease-out);
+}
+.chip[aria-pressed="true"] {
+  background: var(--region-primary);
+  border-color: var(--region-primary);
+  color: #fff;
 }
 
 .no-scrollbar {

@@ -1,5 +1,5 @@
 /**
- * The three structured home components (city styles, state chooser, regional campaign) as CMS section MODELS: pure defaults per region,
+ * The structured home components (city styles, state chooser, regional campaign, image grid) as CMS section MODELS: pure defaults per region,
  * shared by the admin (add / describe) and the tests. No I/O, no `server-only`. Nothing here reads another region's data: the copy is neutral
  * and built from the region's own name, and the visual defaults use only theme tokens, so a new section never carries Sul's texts, numbers or
  * offers into Norte or Centro-Oeste.
@@ -7,10 +7,10 @@
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import type { Appearance, Section } from "./schema";
 
-export const STRUCTURED_TEMPLATES = ["city-styles", "states", "campaign"] as const;
+export const STRUCTURED_TEMPLATES = ["city-styles", "states", "campaign", "image-grid"] as const;
 export type StructuredTemplate = (typeof STRUCTURED_TEMPLATES)[number];
 
-/** City styles and the state chooser exist once per region (an existing one is edited, never duplicated); campaigns may repeat. */
+/** City styles and the state chooser exist once per region (an existing one is edited, never duplicated); campaigns and grids may repeat. */
 export const SINGLETON_TEMPLATES: readonly StructuredTemplate[] = ["city-styles", "states"];
 
 export type StructuredModel = { template: StructuredTemplate; name: string; purpose: string };
@@ -19,6 +19,7 @@ export const STRUCTURED_MODELS: readonly StructuredModel[] = [
   { template: "city-styles", name: "Estilos da cidade", purpose: "Mostra, para uma cidade de exemplo da região, os estilos de camiseta que existem de verdade no catálogo da loja. Cada card abre o produto da própria região." },
   { template: "states", name: "Escolha seu estado", purpose: "Navegador dos estados da região, com o número de cidades, as regiões de cada estado e a linha do estado quando existe. Só aparecem estados com cidades e produtos reais." },
   { template: "campaign", name: "Campanha regional", purpose: "Um bloco editorial de fechamento: título, descrição e um botão. Sem imagem, usa a cor ou o degradê escolhido." },
+  { template: "image-grid", name: "Grade de imagens", purpose: "Blocos com imagem e nome, cada um levando a uma coleção, página ou categoria — por exemplo “Compre por peça” ou “Coleções”. De 2 a 12 blocos." },
 ];
 
 const noImage = (): Appearance => ({ fill: { kind: "none" }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } });
@@ -46,6 +47,19 @@ export function structuredDefaults(template: StructuredTemplate, region: RegionS
   if (template === "states") {
     const anchor = uniqueAnchor("estados", takenAnchors);
     return { id, anchor, headingId: `${anchor}-title`, template, active: true, title: "Escolha o seu estado", appearance: noImage() };
+  }
+  if (template === "image-grid") {
+    const anchor = uniqueAnchor("grade", takenAnchors);
+    // Two real destinations every region has (the shirt search and the Uma Penca articles), as a starting point: the owner swaps in photos and links.
+    return {
+      id, anchor, headingId: `${anchor}-title`, template, active: true, title: "Compre por peça",
+      grid: { columns: 4, aspect: "portrait", labels: "below" },
+      tiles: [
+        { label: "Camisetas", dest: { kind: "route", path: `/${region}/busca` } },
+        { label: "Canecas e ecobags", dest: { kind: "route", path: `/${region}/outros-artigos` } },
+      ],
+      appearance: noImage(),
+    };
   }
   const anchor = uniqueAnchor("campanha", takenAnchors);
   return {

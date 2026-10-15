@@ -51,7 +51,7 @@ export function buildRegionSeed(region: Exclude<RegionSlug, "sul">, maxCarousels
       layout: { variant: "standard", tone: "light", surface: i % 2 === 0 ? "paper" : "plain" },
       source: { kind: "ink-category", store, collectionId: entry.id, order: "category", limit: 8 },
       analyticsSource: "homeCollection",
-      cta: { label: "Ver todos", dest: { kind: "ink-collection", store, collectionId: entry.id } },
+      cta: { label: "Ver todos", dest: { kind: "collection-page", store, collectionId: entry.id } },
       appearance: noImage(),
     };
     sections.push(section);

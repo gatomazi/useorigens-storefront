@@ -1,15 +1,18 @@
 import "server-only";
+import { collectionMenuEntries, type MenuEntry } from "../catalog/collection-menu";
 import { findCollection } from "../catalog/collections-file";
+import { SITE_URL } from "../site";
 import { collectionUrl } from "./sources";
 import { readPublished } from "./published";
 import { effectiveNavbarGroups } from "./navbar-groups";
-import { MAX_NAVBAR_GROUP, type CollectionRef } from "./schema";
+import { DEFAULT_CATEGORIES_BLOCK_LABEL } from "./navigation";
+import { MAX_NAVBAR_GROUP, type CollectionRef, type ScopeDoc } from "./schema";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
 import { storeForRegion } from "../catalog/commerce-mode";
 
 /**
- * The lean, PUBLIC navbar configuration the Worker turns into the header it draws on the INK product pages. Two groups the owner fills freely in the CMS
- * (`top` on the bar, `more` = "Demais categorias"), each in the owner's order, plus the fixed states of the region for the "Regiões" menu. Nothing else of
+ * The lean, PUBLIC navbar configuration the Worker turns into the header it draws on the INK product pages: the region's collection menu (`top` on the
+ * bar, `more` = "Demais categorias"), plus the fixed states of the region for the "Regiões" menu. Nothing else of
  * the CMS is exposed; logo, "Cidades" and the search route are constants of the Worker's per-store config, so a menu change never needs a Worker deploy.
  *
  * Every entry is re-checked at read time against the synced INK collections, not just when it was picked: a collection is listed only if it is PUBLIC on INK
@@ -18,13 +21,39 @@ import { storeForRegion } from "../catalog/commerce-mode";
  */
 export type NavbarEntry = { id: number; title: string; slug: string; url: string; order: number };
 export type NavbarState = { uf: string; name: string; path: string };
-export type NavbarConfig = { v: 2; region: RegionSlug; states: NavbarState[]; top: NavbarEntry[]; more: NavbarEntry[] };
+/** `moreLabel` only once the region has its collection menu: the name the owner gave "Categorias" (Navegação), for the Worker's dropdown. */
+export type NavbarConfig = { v: 2; region: RegionSlug; states: NavbarState[]; top: NavbarEntry[]; more: NavbarEntry[]; moreLabel?: string };
 
 export function publicNavbar(region: RegionSlug): NavbarConfig {
+  const doc = readPublished().bundle.docs[region];
+  const states = REGIONS[region].ufs.map((uf) => ({ uf, name: STATE_NAMES[uf], path: `/${region}/${uf.toLowerCase()}` }));
+  return doc?.collections?.menu ? menuNavbar(region, doc, states) : legacyNavbar(region, doc, states);
+}
+
+/**
+ * The region's collection menu, as the Worker reads it: only collections with an INK page and products (the Worker links by INK slug), the bar in the
+ * owner's order, "Demais categorias" = the rest of "Categorias" in INK's order (never one that is on the bar: the Worker refuses the payload otherwise).
+ * `url` is our page of the collection when the region has one, so the Worker can send the visitor back to the site.
+ */
+function menuNavbar(region: RegionSlug, doc: ScopeDoc, states: NavbarState[]): NavbarConfig {
+  const { top, more } = collectionMenuEntries(region, doc);
+  const entries = (list: MenuEntry[]): NavbarEntry[] =>
+    list
+      .filter((e) => e.inkUrl)
+      .slice(0, MAX_NAVBAR_GROUP)
+      .map((e, i) => ({ id: e.record.id, title: e.record.name, slug: e.record.slug, url: e.pagePath ? `${SITE_URL.replace(/\/$/, "")}${e.pagePath}` : e.inkUrl!, order: i + 1 }));
+  const bar = entries(top);
+  const onBar = new Set(bar.map((e) => e.id));
+  const rest = entries(more.filter((e) => !onBar.has(e.record.id)));
+  return { v: 2, region, states, top: bar, more: rest, moreLabel: doc.navigation?.categoriesBlock?.label ?? DEFAULT_CATEGORIES_BLOCK_LABEL };
+}
+
+/** A document from before the collection menu: exactly what the Worker always received (the older INK navbar choice, INK links). */
+function legacyNavbar(region: RegionSlug, doc: ScopeDoc | undefined, states: NavbarState[]): NavbarConfig {
   // The region's store under the effective commerce mode: in single-store mode a published ref to use-norte/use-centro is dropped (its
   // collection does not exist in the single store and its URL would send the buyer to the old store) until the CMS is re-pointed.
   const store = storeForRegion(region);
-  const { groups, legacy } = effectiveNavbarGroups(readPublished().bundle.docs[region]);
+  const { groups, legacy } = effectiveNavbarGroups(doc);
 
   const resolve = (refs: readonly CollectionRef[]): NavbarEntry[] => {
     const found = refs
@@ -43,6 +72,5 @@ export function publicNavbar(region: RegionSlug): NavbarConfig {
   const top = resolve(groups.top);
   const topIds = new Set(top.map((e) => e.id));
   const more = resolve(groups.more).filter((e) => !topIds.has(e.id)).map((e, i) => ({ ...e, order: i + 1 })); // defensive: never on both
-  const states = REGIONS[region].ufs.map((uf) => ({ uf, name: STATE_NAMES[uf], path: `/${region}/${uf.toLowerCase()}` }));
   return { v: 2, region, states, top, more };
 }

@@ -10,7 +10,12 @@
 export const ORIGENS_ENTRY_POINTS = ["ink_cart_drawer", "ink_post_add", "ink_product_detail", "ink_product_return"] as const;
 export type OrigensEntryPoint = (typeof ORIGENS_ENTRY_POINTS)[number];
 
-/** The only INK product pages that carry our loader (the Worker's exact allowlist). A slug outside this list is dropped, never sent. */
+/**
+ * The product page the click happened on, as the Worker's catalog slug (`<inkBase>/product/<slug>`). Since 2026-09-28 the loader runs on EVERY product
+ * page of the three stores (scope `product-catalog`), so a closed list of five would drop the slug of every other product: the value is accepted when it
+ * has the exact shape of a catalog slug (lower-case, digits, "-" and "_"; the Worker validates the same shape), never free text. It is a public path,
+ * not personal data. The five verified slugs of the pilot are kept for the tests and the docs that still name them.
+ */
 export const ORIGENS_PRODUCT_SLUGS = [
   "serra-catarinense",
   "made-in-rio-grande-do-sul-8834d3a7-4ed3-49a3-8258-d2ba71fa8241",
@@ -18,6 +23,7 @@ export const ORIGENS_PRODUCT_SLUGS = [
   "paranaense-essencia",
   "made-in-parana-cda5fe30-bb4e-4e2e-b416-01e3ec45649a",
 ] as const;
+export const ORIGENS_PRODUCT_SLUG = /^[a-z0-9][a-z0-9_-]{0,127}$/;
 
 export const ARRIVAL_SRC_PARAM = "origens_src";
 export const ARRIVAL_PRODUCT_PARAM = "origens_p";
@@ -36,7 +42,7 @@ export function extractArrival(search: string): ArrivalExtraction {
   const src = params.getAll(ARRIVAL_SRC_PARAM);
   const product = params.getAll(ARRIVAL_PRODUCT_PARAM);
   const entryPoint = ORIGENS_ENTRY_POINTS.find((value) => src.length === 1 && src[0] === value) ?? null;
-  const productSlug = ORIGENS_PRODUCT_SLUGS.find((value) => product.length === 1 && product[0] === value) ?? null;
+  const productSlug = product.length === 1 && ORIGENS_PRODUCT_SLUG.test(product[0]) ? product[0] : null;
   params.delete(ARRIVAL_SRC_PARAM);
   params.delete(ARRIVAL_PRODUCT_PARAM);
   const rest = params.toString();

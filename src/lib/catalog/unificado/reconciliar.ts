@@ -3,10 +3,19 @@ import { cityById } from "../../geo/cities";
 import { localityById } from "../../geo/localities";
 import { buildStoreIndex } from "../indexer";
 import { parseProductName } from "../parse";
-import type { InkProductNormalized, UnrankedBinding } from "../types";
+import type { InkProductNormalized, StoreIndex, UnrankedBinding } from "../types";
 import { chaveMigracaoDoVinculo, chavePeca, chaveProduto, lugarDaChaveMigracao, MODELO_PARA_FAMILIA } from "./chave";
 import { idNoEstado, type EstadoMigracao } from "./estado-migracao";
 import type { ProdutoBruto } from "./produto-bruto";
+import { inkPricing } from "../../ink/normalize";
+
+/** O preço que a INK cobra agora (o promocional, durante uma promoção) e o cheio só nessa hora: a mesma regra do sync de produção. */
+const precoDoBruto = (p: ProdutoBruto) => inkPricing({ price: p.price, promotional_price: p.promotionalPrice });
+/** Para os itens montados aqui e na loja única: `listPrice` só aparece durante uma promoção, como no sync de produção. */
+export const precoDaInk = (p: ProdutoBruto): { price: number | null; listPrice?: number } => {
+  const { price, listPrice } = precoDoBruto(p);
+  return listPrice !== null ? { price, listPrice } : { price };
+};
 
 /**
  * Reconciliação Centro/Norte → loja Sul unificada. Puro: recebe o que foi lido (lojas, coleções, estado do migrador) e devolve o mapa e a
@@ -27,6 +36,7 @@ export const COLECAO_ZZ_NO = 152395;
 
 /** Bruto → forma que o indexador de produção entende, SEM o filtro de visibilidade (ocultos também são classificados). */
 export function paraProdutoIndexavel(p: ProdutoBruto, storeKey: CommerceStoreKey, tagsOverride?: string[]): InkProductNormalized {
+  const { price, listPrice } = precoDoBruto(p);
   return {
     id: p.id,
     storeKey,
@@ -34,7 +44,8 @@ export function paraProdutoIndexavel(p: ProdutoBruto, storeKey: CommerceStoreKey
     slug: p.slug,
     storeProductUrl: p.url ?? "",
     imageUrl: p.image ?? "",
-    price: p.price === null ? null : Number(p.price),
+    price,
+    ...(listPrice !== null ? { listPrice } : {}),
     tags: tagsOverride ?? p.tags,
     clusterId: p.clusterId,
     totalSalesCount: p.sales,

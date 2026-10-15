@@ -9,7 +9,9 @@
  *   - an invalid hero or footer               ⇒ the whole scope falls back to the seed (the home cannot exist without them).
  * Pure: no I/O, so it is unit-tested with hand-made objects.
  */
+import { validateCards } from "./cards-schema";
 import { validateNavigation, validateTheme } from "./navigation-schema";
+import { validatePodio } from "./podio-schema";
 import { validatePromotions } from "./promotions-schema";
 import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
@@ -55,7 +57,7 @@ function sanitizePagesAndModels(scope: Scope, raw: Record<string, unknown>, medi
       if (!r.ok) { diagnostics.push(`${scope}: page #${i + 1} dropped (${r.errors[0]})`); continue; }
       const key = `${r.value.kind}/${r.value.slug}`;
       if (slugs.has(key) || ids.has(r.value.id)) { diagnostics.push(`${scope}: page "${key}" dropped (duplicate slug or id)`); continue; }
-      const missing = r.value.sections.some((s) => !known(s.appearance.image?.mobile) || !known(s.appearance.image?.desktop));
+      const missing = r.value.sections.some((s) => !known(s.appearance.image?.mobile) || !known(s.appearance.image?.desktop)) || !known(r.value.backdrop?.pattern?.image);
       if (missing) diagnostics.push(`${scope}: page "${key}" has images missing from the media table (they render without them)`);
       slugs.add(key);
       ids.add(r.value.id);
@@ -146,9 +148,16 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   const candidate = { ...raw, home: sections ? { sections } : undefined, pages, customizers } as unknown as ScopeDoc;
   // Navigation and theme are optional and cosmetic: an invalid one is dropped (the region keeps its current look and the default menu), never the region.
   // Promotions too: an invalid list means no button (never a broken region, never a half-checked coupon).
-  for (const key of ["navigation", "theme", "promotions"] as const) {
+  // The cards' setting as well: an invalid one means each section decides, as before (never the global scope, which carries the tracking, back to the seed).
+  // And the pódio switch: an invalid one means the pódio stays on, as before the switch existed.
+  for (const key of ["navigation", "theme", "promotions", "cards", "podio"] as const) {
     if (candidate[key] === undefined) continue;
-    const r = key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`) : key === "theme" ? validateTheme(candidate[key], scope, `${scope}.theme`) : validatePromotions(candidate[key], scope, `${scope}.promotions`);
+    const r =
+      key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
+      : key === "theme" ? validateTheme(candidate[key], scope, `${scope}.theme`)
+      : key === "cards" ? validateCards(candidate[key], scope, `${scope}.cards`)
+      : key === "podio" ? validatePodio(candidate[key], scope, `${scope}.podio`)
+      : validatePromotions(candidate[key], scope, `${scope}.promotions`);
     if (!r.ok) {
       diagnostics.push(`${scope}: ${key} is invalid and was ignored (${r.errors[0]})`);
       delete candidate[key];
