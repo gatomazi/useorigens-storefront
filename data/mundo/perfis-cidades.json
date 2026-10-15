@@ -3540,6 +3540,363 @@
       "url": "https://www.goias.go.gov.br/projeto-300-anos",
       "referencia": "Página institucional (sem data)",
       "consultadoEm": "2026-10-15"
+    },
+    "fazenda-rio-grande-prefeitura-institucional": {
+      "titulo": "Município — Institucional",
+      "publicador": "Prefeitura de Fazenda Rio Grande",
+      "url": "https://www.fazendariogrande.pr.gov.br/municipio/institucional",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "fazenda-rio-grande-meio-ambiente-parques": {
+      "titulo": "Parques, Praças e Canchas Municipais",
+      "publicador": "Prefeitura de Fazenda Rio Grande, Secretaria Municipal de Meio Ambiente",
+      "url": "https://www.fazendariogrande.pr.gov.br/secretarias/meio-ambiente/parques-e-pracas/parques-pracas-e-canchas-municipais",
+      "referencia": "Página publicada em 16/03/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-fazenda-rio-grande-pr": {
+      "titulo": "Biblioteca IBGE — Fazenda Rio Grande: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em FAZENDA RIO GRANDE (PR). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4107652",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-15"
+    },
+    "fazenda-rio-grande-cultura-cartilha-historia": {
+      "titulo": "Cartilha — Conheça a História de Fazenda Rio Grande",
+      "publicador": "Prefeitura de Fazenda Rio Grande, Secretaria Municipal de Cultura (Divisão de História e Memória)",
+      "url": "https://ecrie.com.br/sistema/conteudos/arquivo/a_61_0_1_22112024161207.pdf",
+      "referencia": "Cartilha publicada em 25/11/2024 (PDF hospedado pela plataforma do site da Prefeitura)",
+      "consultadoEm": "2026-10-15"
+    },
+    "alvorada-prefeitura-festejos-2026": {
+      "titulo": "Emoção, tradição e Praça da 48 lotada marcam encerramento dos Festejos Farroupilhas em Alvorada",
+      "publicador": "Prefeitura Municipal de Alvorada",
+      "url": "https://www.alvorada.rs.gov.br/emocao-tradicao-e-praca-da-48-lotada-marcam-encerramento-dos-festejos-farroupilhas-em-alvorada/",
+      "referencia": "Notícia de 20/09/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "alvorada-prefeitura-historia": {
+      "titulo": "História da Cidade",
+      "publicador": "Prefeitura Municipal de Alvorada",
+      "url": "https://www.alvorada.rs.gov.br/historia-da-cidade/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "alvorada-sema-bacia-gravatai": {
+      "titulo": "G010 - Bacia Hidrográfica do Rio Gravataí",
+      "publicador": "Secretaria do Meio Ambiente e Infraestrutura do Rio Grande do Sul (Sema)",
+      "url": "https://sema.rs.gov.br/g010-bh-gravatai",
+      "referencia": "Página institucional (dados de população de 2020)",
+      "consultadoEm": "2026-10-15"
+    },
+    "alvorada-prefeitura-rustica-lagoa": {
+      "titulo": "Primeira Rústica da Lagoa reúne mais de 350 pessoas em Alvorada",
+      "publicador": "Prefeitura Municipal de Alvorada",
+      "url": "https://www.alvorada.rs.gov.br/primeira-rustica-da-lagoa-reune-mais-de-350-pessoas-em-alvorada/",
+      "referencia": "Notícia de 07/06/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-alvorada-rs": {
+      "titulo": "Biblioteca IBGE — Alvorada: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Alvorada (RS). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4300604",
+      "referencia": "Registro de 2008",
+      "consultadoEm": "2026-10-15"
+    },
+    "alvorada-prefeitura-romaria-aparecida": {
+      "titulo": "Romaria de Nossa Senhora Aparecida reúne fiéis nesta segunda-feira em Alvorada com melhorias na Gruta",
+      "publicador": "Prefeitura Municipal de Alvorada",
+      "url": "https://www.alvorada.rs.gov.br/romaria-de-nossa-senhora-aparecida-reune-fieis-nesta-segunda-feira-em-alvorada-com-melhorias-na-gruta/",
+      "referencia": "Notícia de 09/10/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "alvorada-prefeitura-localizacao": {
+      "titulo": "Localização",
+      "publicador": "Prefeitura Municipal de Alvorada",
+      "url": "https://www.alvorada.rs.gov.br/localizacao/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "alvorada-prefeitura-lagoa-cocao-4-anos": {
+      "titulo": "#TardeNaLagoa | Parque Municipal Lagoa do Cocão recebe diversas atrações em seu aniversário",
+      "publicador": "Prefeitura Municipal de Alvorada",
+      "url": "https://www.alvorada.rs.gov.br/tardenalagoa-parque-municipal-lagoa-do-cocao-recebe-diversas-atracoes-em-seu-aniversario/",
+      "referencia": "Notícia de 30/03/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "alvorada-prefeitura-festejos-anuncio-2026": {
+      "titulo": "Festejos Farroupilhas retornam à Praça da 48 com grande programação em Alvorada",
+      "publicador": "Prefeitura Municipal de Alvorada",
+      "url": "https://www.alvorada.rs.gov.br/festejos-farroupilhas-retornam-a-praca-da-48-com-grande-programacao-em-alvorada/",
+      "referencia": "Notícia de 20/08/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "luziania-prefeitura-festa-do-divino": {
+      "titulo": "Centro Administrativo Recebe a Bandeira do Divino Espírito Santo",
+      "publicador": "Prefeitura Municipal de Luziânia",
+      "url": "https://www.luziania.go.gov.br/centro-administrativo-recebe-a-bandeira-do-divino-espirito-santo/",
+      "referencia": "Notícia de 25/05/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "luziania-prefeitura-parque-cerrado": {
+      "titulo": "Luziânia apresenta primeiro Parque Natural Colaborativo do Brasil durante encontro em prol do Cerrado",
+      "publicador": "Prefeitura Municipal de Luziânia",
+      "url": "https://www.luziania.go.gov.br/luziania-apresenta-primeiro-parque-natural-colaborativo-do-brasil-durante-encontro-em-prol-do-cerrado/",
+      "referencia": "Notícia de 29/09/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "luziania-secult-go-cavalhadas-retorno": {
+      "titulo": "Apoio do Governo de Goiás possibilita retorno das Cavalhadas a Luziânia após 17 anos",
+      "publicador": "Secretaria de Estado da Cultura — Governo de Goiás",
+      "url": "https://goias.gov.br/cultura/cavalhadas-a-luziania/",
+      "referencia": "Notícia de 2023 (página atualizada em 02/07/2026)",
+      "consultadoEm": "2026-10-15"
+    },
+    "luziania-ibge-enciclopedia-municipios-1958": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XXXVI (Goiás) — Luziânia",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_36.pdf",
+      "referencia": "Publicação de 1958 (verbete nas páginas 267 a 270 do PDF)",
+      "consultadoEm": "2026-10-15"
+    },
+    "luziania-goias-turismo-pesca-corumba-iv": {
+      "titulo": "6ª etapa do Circuito Goiano de Pesca Esportiva movimenta turismo em Luziânia",
+      "publicador": "Goiás Turismo — Agência Estadual de Turismo, Governo de Goiás",
+      "url": "https://goias.gov.br/turismo/6a-etapa-do-circuito-goiano-de-pesca-esportiva-movimenta-turismo-em-luziania/",
+      "referencia": "Notícia de 2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-luziania-go": {
+      "titulo": "Biblioteca IBGE — Luziânia: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em LUZIÂNIA. In: ENCICLOPÉDIA dos municípios brasileiros. Rio de Janeiro: IBGE, 1958. v. 36, p. 268-271)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5212501",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "luziania-goias-turismo": {
+      "titulo": "Luziânia – Esportes e passeios no lago de Corumbá IV",
+      "publicador": "Goiás Turismo — Agência Estadual de Turismo, Governo de Goiás",
+      "url": "https://goias.gov.br/turismo/luziania/",
+      "referencia": "Página publicada em 07/08/2014",
+      "consultadoEm": "2026-10-15"
+    },
+    "luziania-secult-go-cavalhadas-2025": {
+      "titulo": "Luziânia é a primeira cidade a receber o Circuito das Cavalhadas 2025",
+      "publicador": "Secretaria de Estado da Cultura — Governo de Goiás",
+      "url": "https://goias.gov.br/cultura/luziania-e-a-primeira-cidade-a-receber-o-circuito-das-cavalhadas-2025/",
+      "referencia": "Notícia de 2025 (página atualizada em 01/07/2026)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-abaetetuba-pa": {
+      "titulo": "Biblioteca IBGE — Abaetetuba: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Abaetetuba (PA). Prefeitura. 2012)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1500107",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "abaetetuba-prefeitura-sobre-o-municipio": {
+      "titulo": "Sobre o Município",
+      "publicador": "Prefeitura Municipal de Abaetetuba",
+      "url": "https://abaetetuba.pa.gov.br/o-municipio/sobre-o-municipio/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "abaetetuba-enciclopedia-ibge-v14": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 14 — verbete Abaetetuba",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_14.pdf",
+      "referencia": "Volume publicado em 1957",
+      "consultadoEm": "2026-10-15"
+    },
+    "abaetetuba-prefeitura-historia": {
+      "titulo": "História",
+      "publicador": "Prefeitura Municipal de Abaetetuba",
+      "url": "https://abaetetuba.pa.gov.br/o-municipio/historia/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "abaetetuba-agencia-para-miritifest-2024": {
+      "titulo": "Secretaria de Turismo do Pará faz pesquisa turística no Miriti Fest em Abaetetuba",
+      "publicador": "Agência Pará (Setur, Governo do Pará)",
+      "url": "https://www.agenciapara.com.br/noticia/54102/secretaria-de-turismo-do-para-faz-pesquisa-turistica-no-miriti-fest-em-abaetetuba",
+      "referencia": "Notícia de 14/05/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "abaetetuba-agencia-para-miritifest-2019": {
+      "titulo": "Festival do Miriti promete gerar empregos e celebrar tradição local",
+      "publicador": "Agência Pará (Secom, Governo do Pará)",
+      "url": "https://www.agenciapara.com.br/noticia/12782/festival-do-miriti-promete-gerar-empregos-e-celebrar-tradicao-local",
+      "referencia": "Notícia de 14/05/2019",
+      "consultadoEm": "2026-10-15"
+    },
+    "abaetetuba-prefeitura-turismo": {
+      "titulo": "Turismo e Lazer",
+      "publicador": "Prefeitura Municipal de Abaetetuba",
+      "url": "https://abaetetuba.pa.gov.br/o-municipio/turismo-e-lazer/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "araucaria-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, vol. XXXI (Paraná) — Araucária",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_31.pdf",
+      "referencia": "Livro de 1959",
+      "consultadoEm": "2026-10-15"
+    },
+    "araucaria-viaje-parana-museu-tingui-cuera": {
+      "titulo": "Museu Tingui Cuera",
+      "publicador": "Viaje Paraná / Secretaria do Turismo do Paraná",
+      "url": "https://www.viajeparana.com/Endereco/Museu-Tingui-Cuera",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "araucaria-viaje-parana": {
+      "titulo": "Araucária",
+      "publicador": "Viaje Paraná / Secretaria do Turismo do Paraná",
+      "url": "https://www.viajeparana.com/Araucaria",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "araucaria-viaje-parana-parque-cachoeira": {
+      "titulo": "Parque Cachoeira",
+      "publicador": "Viaje Paraná / Secretaria do Turismo do Paraná",
+      "url": "https://www.viajeparana.com/Endereco/Parque-Cachoeira",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-araucaria-pr": {
+      "titulo": "Biblioteca IBGE — Araucária: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Araucária (PR). Prefeitura. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4101804",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-grande-camara-historia": {
+      "titulo": "História",
+      "publicador": "Câmara Municipal do Rio Grande",
+      "url": "https://riogrande.rs.leg.br/pagina/historia",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-grande-icmbio-plano-manejo-taim": {
+      "titulo": "Plano de Manejo da Estação Ecológica do Taim",
+      "publicador": "ICMBio",
+      "url": "https://www.gov.br/icmbio/pt-br/assuntos/unidade-de-conservacao/unidades-de-biomas/marinho/lista-de-ucs/esec-do-taim/arquivos/PM_ESEC_Taim_vs.11.pdf",
+      "referencia": "Documento aprovado pela Portaria nº 712, de 8 de novembro de 2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-rio-grande-rs": {
+      "titulo": "Biblioteca IBGE — Rio Grande: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Rio Grande (RS). Prefeitura. 2010)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4315602",
+      "referencia": "Registro de 2008",
+      "consultadoEm": "2026-10-15"
+    },
+    "rio-grande-ibge-enciclopedia-1959": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, volume XXXIV (verbete Rio Grande)",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_34.pdf",
+      "referencia": "Publicação da série de 1957-1964 (dados do município de 1956)",
+      "consultadoEm": "2026-10-15"
+    },
+    "aguas-lindas-de-goias-icmbio-apa-descoberto": {
+      "titulo": "APA da Bacia do Rio Descoberto",
+      "publicador": "Instituto Chico Mendes de Conservação da Biodiversidade (ICMBio)",
+      "url": "https://www.gov.br/icmbio/pt-br/assuntos/biodiversidade/unidade-de-conservacao/unidades-de-biomas/cerrado/lista-de-ucs/apa-da-bacia-do-rio-descoberto",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-aguas-lindas-de-goias-go": {
+      "titulo": "Biblioteca IBGE — Águas Lindas de Goiás: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Águas Lindas de Goiás (GO). Prefeitura. 2014)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5200258",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "aguas-lindas-de-goias-festa-do-milho-2023": {
+      "titulo": "2º edição da Festa do Milho em Águas Lindas de Goiás atraiu mais de 20 mil pessoas em três dias de evento",
+      "publicador": "Prefeitura Municipal de Águas Lindas de Goiás",
+      "url": "https://aguaslindasdegoias.go.gov.br/2o-edicao-da-festa-do-milho-em-aguas-lindas-de-goias-atraiu-mais-de-20-mil-pessoas-em-tres-dias-de-evento/",
+      "referencia": "Notícia de 02/05/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "aguas-lindas-de-goias-icmbio-plano-manejo-apa-descoberto": {
+      "titulo": "Plano de Manejo da APA da Bacia do Rio Descoberto — Encartes 1, 2 e 3",
+      "publicador": "Instituto Chico Mendes de Conservação da Biodiversidade (ICMBio)",
+      "url": "https://www.gov.br/icmbio/pt-br/assuntos/unidade-de-conservacao/unidades-de-biomas/cerrado/lista-de-ucs/apa-da-bacia-do-rio-descoberto/arquivos/apa_bacia_do_rio_descoberto_pm_encartes_12_e_3planodemanejo.pdf",
+      "referencia": "Documento aprovado pela Portaria nº 133, de 11/12/2014",
+      "consultadoEm": "2026-10-15"
+    },
+    "aguas-lindas-de-goias-quadrilhas-2023": {
+      "titulo": "2º Circuito de Quadrilhas Juninas de Águas Lindas celebra tradições com espetáculo de cores e ritmo",
+      "publicador": "Prefeitura Municipal de Águas Lindas de Goiás",
+      "url": "https://aguaslindasdegoias.go.gov.br/2o-circuito-de-quadrilhas-juninas-de-aguas-lindas-celebra-tradicoes-com-espetaculo-de-cores-e-ritmo/",
+      "referencia": "Notícia de 17/08/2023",
+      "consultadoEm": "2026-10-15"
+    },
+    "aguas-lindas-de-goias-prefeitura-historia": {
+      "titulo": "Nossa História",
+      "publicador": "Prefeitura Municipal de Águas Lindas de Goiás",
+      "url": "https://aguaslindasdegoias.go.gov.br/historia-da-cidade/",
+      "referencia": "Página institucional (atualizada em 2019)",
+      "consultadoEm": "2026-10-15"
+    },
+    "aguas-lindas-de-goias-festa-do-milho-2022": {
+      "titulo": "A Secretaria Municipal de Cultura e Turismo e a Secretaria de Agricultura, juntamente com a Prefeitura realizará a 1ª Festa do Milho de Águas Lindas",
+      "publicador": "Prefeitura Municipal de Águas Lindas de Goiás",
+      "url": "https://aguaslindasdegoias.go.gov.br/a-secretaria-municipal-de-cultura-e-turismo-e-a-secretaria-de-agricultura-juntamente-com-a-prefeitura-realizara-a-1a-festa-do-milho-de-aguas-lindas/",
+      "referencia": "Notícia de 04/07/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "trindade-secult-exposicao-carreiros": {
+      "titulo": "Trindade recebe exposição inédita sobre a fé e a cultura dos carreiros",
+      "publicador": "Secretaria de Estado da Cultura de Goiás (Secult Goiás)",
+      "url": "https://goias.gov.br/cultura/trindade-recebe-exposicao-inedita-sobre-a-fe-e-a-cultura-dos-carreiros/",
+      "referencia": "Notícia atualizada em 01/07/2026",
+      "consultadoEm": "2026-10-15"
+    },
+    "trindade-goias-turismo-destino": {
+      "titulo": "Trindade",
+      "publicador": "Goiás Turismo / Governo de Goiás",
+      "url": "https://goias.gov.br/turismo/trindade-2/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "trindade-secult-romaria-2022": {
+      "titulo": "Romaria de Trindade tem início nesta sexta-feira com apoio da Secult Goiás",
+      "publicador": "Secretaria de Estado da Cultura de Goiás (Secult Goiás)",
+      "url": "https://goias.gov.br/cultura/romaria-de-trindade-tem-inicio-nesta-sexta-feira-com-apoio-da-secult-goias/",
+      "referencia": "Notícia de 2022 (romaria de 24/06 a 03/07/2022)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-trindade-go": {
+      "titulo": "Biblioteca IBGE — Trindade: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em TRINDADE. In: ENCICLOPÉDIA dos municípios brasileiros. Rio de Janeiro: IBGE, 1958. v. 36, p. 425-429)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5221403",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "trindade-ibge-enciclopedia-1958": {
+      "titulo": "Enciclopédia dos Municípios Brasileiros, v. 36 (Goiás) — Trindade, p. 425-429",
+      "publicador": "IBGE",
+      "url": "https://biblioteca.ibge.gov.br/visualizacao/livros/liv27295_36.pdf",
+      "referencia": "Livro de 1958",
+      "consultadoEm": "2026-10-15"
+    },
+    "trindade-prefeitura-historia": {
+      "titulo": "História da Cidade",
+      "publicador": "Prefeitura Municipal de Trindade",
+      "url": "https://trindade.go.gov.br/historia-da-cidade/",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "trindade-goias-turismo-romaria-185-anos": {
+      "titulo": "Tradição, fé e devoção marcam os 185 anos da Romaria de Trindade",
+      "publicador": "Goiás Turismo / Governo de Goiás",
+      "url": "https://goias.gov.br/turismo/tradicao-fe-e-devocao-marcam-os-185-anos-da-romaria-de-trindade/",
+      "referencia": "Notícia de 27/06/2025",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -15719,6 +16076,1345 @@
         "status": "curadoria inicial",
         "em": "2026-10-15",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Nome da vila: a formação administrativa do IBGE diz 'Boa Vista de Goiás' (Carta Régia de 1736), mas a Enciclopédia do IBGE e o Iphan falam em Vila Boa; o texto usa Vila Boa de Goiás. Fundação: a Prefeitura dá 1727 como fundação do Arraial de Sant'Anna (o resumo atribui a ela); o IBGE registra distrito em 1729. Prédio da cadeia: Iphan diz 1766. O texto não usa os superlativos das fontes ('primeiro núcleo urbano', 'mais de 90% da arquitetura colonial original', 'único sítio com arquitetura vernacular', 'maior expressividade' do Fogaréu, 'maior biblioteca do Estado'). O horário da procissão (meia-noite de quinta-feira) ficou de fora para não prometer horário; 'teria começado por volta de 1745' segue o 'estima-se' da fonte. A Enciclopédia de 1958 também registra a Cruz do Anhanguera, com autenticidade discutida, e a lenda do nome Anhanguera (o 'diabo velho'), que envolve violência contra os indígenas; ambos ficaram de fora. O cerradão do resumo é o 'grosso cerradão' do morro de Santa Bárbara, citado numa lenda de 1958; a revisão pode preferir fonte atual sobre vegetação. Só um marco: a procissão não tem módulo, e a Serra Dourada não tem forma própria."
+      }
+    },
+    "4107652": {
+      "identidade": {
+        "id": "4107652",
+        "ibge": "4107652",
+        "nome": "Fazenda Rio Grande",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Da velha fazenda às margens do Iguaçu à cidade da Grande Curitiba, com capela centenária e memória de quatro mil anos.",
+        "resumo": "Na Região Metropolitana de Curitiba, Fazenda Rio Grande tem o território drenado pelos rios Iguaçu, Despique, Maurício e Ana Luiza. Segundo a Prefeitura, os primeiros habitantes, há cerca de quatro mil anos, foram indígenas da tradição Itararé-Taquara, e a região se chamava Capocu. Pelo histórico do IBGE, a fazenda Rio Grande surgiu em 1800 junto à de Capocu, às margens do Iguaçu, e deu nome ao lugar. Foi distrito de Mandirituba a partir de 1981 e virou município em 1990, instalado em 1993.",
+        "fontesResumo": [
+          "fazenda-rio-grande-prefeitura-institucional",
+          "ibge-biblioteca-fazenda-rio-grande-pr"
+        ],
+        "referencias": [
+          {
+            "id": "capela-santo-antonio",
+            "tipo": "patrimonio",
+            "titulo": "Capela de Santo Antônio",
+            "texto": "Construção religiosa centenária, a Capela de Santo Antônio foi erguida com a participação de toda a comunidade. Segundo a cartilha de história da Secretaria de Cultura, faltou cimento para a argamassa, e os moradores usaram clara de ovo para dar liga à massa das paredes, que seguem de pé.",
+            "fontes": [
+              "fazenda-rio-grande-cultura-cartilha-historia"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre central; não reproduz a capela, e forma e cores são ilustrativas."
+            },
+            "curto": "Capela centenária erguida pela comunidade; segundo a cartilha municipal, a argamassa levou clara de ovo."
+          },
+          {
+            "id": "rio-iguacu-parque-miro-siqueirense",
+            "tipo": "natureza",
+            "titulo": "Rio Iguaçu e Parque Miro Siqueirense",
+            "texto": "O Iguaçu atravessa a história do lugar: a fazenda que deu nome à cidade cresceu à sua margem, e o hino municipal começa pelas nascentes do rio. No bairro Iguaçu, o Parque de Preservação Ambiental Miro Siqueirense, com 106.704 m², integra uma unidade de conservação de refúgio da vida silvestre na área de influência do rio.",
+            "fontes": [
+              "fazenda-rio-grande-meio-ambiente-parques",
+              "fazenda-rio-grande-cultura-cartilha-historia",
+              "ibge-biblioteca-fazenda-rio-grande-pr"
+            ]
+          },
+          {
+            "id": "centro-multieventos-raia",
+            "tipo": "cultura",
+            "titulo": "Centro Multieventos e a antiga raia",
+            "texto": "Na Avenida Brasil, no bairro Eucaliptos, o Centro Multieventos ocupa uma área de cerca de 150 mil m²; reformado a partir de 2017, foi reinaugurado com o novo nome em fevereiro de 2018 e recebe hoje os principais eventos da cidade. Segundo a cartilha da Secretaria de Cultura, ali foi construída por pessoas escravizadas a primeira raia da cidade, pista de corridas de cavalos.",
+            "fontes": [
+              "fazenda-rio-grande-meio-ambiente-parques",
+              "fazenda-rio-grande-cultura-cartilha-historia"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a cartilha municipal, uma casa construída em 1916 por Francisco Ferreira da Cruz pertenceu a três municípios sem sair do lugar: São José dos Pinhais, Mandirituba, a partir de 1960, e Fazenda Rio Grande, a partir de 1990.",
+            "fontes": [
+              "fazenda-rio-grande-cultura-cartilha-historia"
+            ]
+          },
+          {
+            "texto": "No Residencial Treviso, um sítio arqueológico revelou fragmentos de fogueiras e cerâmicas da tradição Itararé-Taquara. Segundo a Prefeitura, o nome antigo, Capocu, seria um termo guarani para “campo extenso”.",
+            "fontes": [
+              "fazenda-rio-grande-cultura-cartilha-historia",
+              "fazenda-rio-grande-prefeitura-institucional"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "fazendense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-fazenda-rio-grande-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -25.6501,
+          "lon": -49.3093,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 148873,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 116.678,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Curitiba",
+          "intermediaria": "Curitiba",
+          "mesorregiao": "Metropolitana de Curitiba",
+          "microrregiao": "Curitiba",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio",
+          "campo"
+        ],
+        "rotulo": "Cidade da Grande Curitiba junto ao Iguaçu, com a capela de Santo Antônio",
+        "base": "campos",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.25
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            8
+          ],
+          [
+            "mata",
+            5
+          ],
+          [
+            "capim",
+            8
+          ],
+          [
+            "araucaria",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 11,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "capela-santo-antonio"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Formação: o IBGE dá distrito em 1981 (Lei 7.521), município pela Lei 9.213 de 26/01/1990 e instalação em 01/01/1993; a Prefeitura diz 'autonomia em 26 de janeiro de 1990'. O texto separa as três datas. A Prefeitura diz que a localidade 'integrou a comarca de Mandirituba' após 1960; o IBGE e a cartilha dizem que Fazenda Rio Grande passou a pertencer a Mandirituba; o texto não fala de comarca. A explicação do nome Capocu ('campo extenso') e a do nome Rio Grande são atribuídas. Ficaram de fora superlativos e números de crescimento ('cidade que mais cresce', '12º maior município', 'importante município'), e a 'mais antiga da cidade' para a capela. A cartilha não informa o endereço nem o ano exato da capela (diz 'centenária'). A página de história citada pelo IBGE (historia-de-fazenda-rio-grande) não existe mais; a Prefeitura publica o histórico em municipio/institucional. A página de parques diz que o Parque Verde 'passa por ampla reforma' (2021); ficou de fora. Nenhum superlativo do hino foi usado."
+      }
+    },
+    "4300604": {
+      "identidade": {
+        "id": "4300604",
+        "ibge": "4300604",
+        "nome": "Alvorada",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Cidade da Grande Porto Alegre na margem do rio Gravataí, que nasceu como Passo do Feijó.",
+        "resumo": "Alvorada fica na Depressão Central gaúcha, a 16 km de Porto Alegre, na margem esquerda do rio Gravataí, e todo o seu território está dentro da bacia desse rio. O lugar cresceu como Passo do Feijó, distrito de Viamão criado em 1952. A emancipação veio por lei estadual de 1965, com instalação do município em 1966, já com o nome de Alvorada. Hoje integra a Região Metropolitana de Porto Alegre, e a romaria à Gruta de Nossa Senhora Aparecida e os Festejos Farroupilhas são momentos de encontro da comunidade.",
+        "fontesResumo": [
+          "alvorada-prefeitura-localizacao",
+          "alvorada-sema-bacia-gravatai",
+          "ibge-biblioteca-alvorada-rs",
+          "alvorada-prefeitura-historia",
+          "alvorada-prefeitura-romaria-aparecida",
+          "alvorada-prefeitura-festejos-2026"
+        ],
+        "referencias": [
+          {
+            "id": "lagoa-do-cocao",
+            "tipo": "paisagem",
+            "titulo": "Parque Municipal Lagoa do Cocão",
+            "texto": "Parque de lazer e convivência em volta de uma lagoa, que completou quatro anos de inaugurado em março de 2023. A Prefeitura usa o espaço para atividades de educação ambiental, distribuição de mudas e corridas: a primeira Rústica da Lagoa, em 2025, fez 4 km em quatro voltas ao redor da água.",
+            "fontes": [
+              "alvorada-prefeitura-lagoa-cocao-4-anos",
+              "alvorada-prefeitura-rustica-lagoa"
+            ],
+            "descoberta": {
+              "modulo": "lago-mureta",
+              "nota": "Na maquete, um lago urbano simplificado com mureta e trampolim; formato, mureta e cores são ilustrativos."
+            },
+            "curto": "Parque em volta de uma lagoa, usado para lazer, corridas e educação ambiental."
+          },
+          {
+            "id": "romaria-gruta-aparecida",
+            "tipo": "tradicao",
+            "titulo": "Romaria à Gruta de Nossa Senhora Aparecida",
+            "texto": "Há mais de três décadas, no feriado de 12 de outubro, fiéis seguem em procissão até a Gruta de Nossa Senhora Aparecida em homenagem à padroeira do Brasil. A romaria é organizada pela Paróquia Sagrado Coração de Jesus: em 2026, a caminhada saiu da frente da igreja, na Travessa Sinimbú, e terminou na gruta com missa, almoço e baile dos romeiros.",
+            "fontes": [
+              "alvorada-prefeitura-romaria-aparecida"
+            ]
+          },
+          {
+            "id": "festejos-farroupilhas-praca-48",
+            "tipo": "tradicao",
+            "titulo": "Festejos Farroupilhas na Praça da 48",
+            "texto": "No Mês Farroupilha, a Praça Central, conhecida como Praça da 48, vira ponto de encontro da tradição gaúcha. Na edição de 2026, os Festejos tiveram música nativista, invernadas, rondas campeiras e oficinas para estudantes, e terminaram no 20 de Setembro, Dia do Gaúcho, com a extinção da Chama Paixão Côrtes, acesa na cidade desde 7 de setembro.",
+            "fontes": [
+              "alvorada-prefeitura-festejos-2026",
+              "alvorada-prefeitura-festejos-anuncio-2026"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, em texto também reproduzido pelo IBGE, o nome Alvorada foi sugerido por um integrante da Comissão Pró-Emancipação e teria duas inspirações: o povo que acorda nas primeiras horas da manhã para trabalhar e o Palácio da Alvorada, da então nova capital, Brasília.",
+            "fontes": [
+              "alvorada-prefeitura-historia",
+              "ibge-biblioteca-alvorada-rs"
+            ]
+          },
+          {
+            "texto": "Além da sede, o município tem o distrito de Estância Grande, criado por lei municipal em 1969, poucos anos depois da emancipação.",
+            "fontes": [
+              "ibge-biblioteca-alvorada-rs"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "alvoradense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-alvorada-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -29.9982,
+          "lon": -51.0773,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 187315,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 71.7,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Porto Alegre",
+          "intermediaria": "Porto Alegre",
+          "mesorregiao": "Metropolitana de Porto Alegre",
+          "microrregiao": "Porto Alegre",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade metropolitana na planície do rio Gravataí, com a Lagoa do Cocão",
+        "base": "interior",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio"
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            8
+          ],
+          [
+            "capim",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 14,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "lago-mureta",
+            "referencia": "lagoa-do-cocao"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Fontes municipais quase só jornalísticas: a Prefeitura não tem página de turismo ou de patrimônio com histórico dos lugares; não achei bem tombado nem página estadual de turismo sobre Alvorada. A notícia de 2023 chama o parque de 'Parque Lagoão do Cocão' e de 'Parque Municipal Lagoa do Cocão'; o texto usa o segundo e não dá ano exato de inauguração (só que fez quatro anos em março de 2023). Um único marco (lago); a gruta e a praça ficaram só com texto por falta de módulo e de descrição física. Ficaram de fora: as obras e o projeto de complexo religioso na gruta (promessa de obra), a mudança de local dos Festejos ligada a processo judicial (disputa) e nomes de governantes atuais citados nas notícias; também as cheias recentes do Gravataí no bairro Americana. A área '71 km' da página de história não foi usada (a ficha usa o Censo). Datas: distrito de Passo do Feijó em 22/09/1952, município pela Lei Estadual 5.026 de 17/09/1965, instalado em 12/05/1966 (IBGE)."
+      }
+    },
+    "5212501": {
+      "identidade": {
+        "id": "5212501",
+        "ibge": "5212501",
+        "nome": "Luziânia",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "A antiga Santa Luzia do ouro, no planalto goiano, terra da Festa do Divino e das Cavalhadas.",
+        "resumo": "Luziânia fica no Cerrado do planalto goiano, a cerca de 964 metros de altitude, perto da cabeceira do rio Vermelho, numa rede de rios da bacia do Corumbá como o São Bartolomeu e o Descoberto. Segundo o histórico do IBGE, o paulista Antônio Bueno de Azevedo fixou-se no lugar que chamou de Santa Luzia em 13 de dezembro de 1746, num povoado nascido da mineração de ouro. Com o declínio das minas no fim do século 18, muitas famílias passaram à lavoura e ao gado. Foi distrito em 1759, vila instalada em 1834 e cidade em 1867, e passou a se chamar Luziânia em 1943.",
+        "fontesResumo": [
+          "luziania-ibge-enciclopedia-municipios-1958",
+          "ibge-biblioteca-luziania-go",
+          "luziania-prefeitura-parque-cerrado"
+        ],
+        "referencias": [
+          {
+            "id": "igreja-nossa-senhora-do-rosario",
+            "tipo": "patrimonio",
+            "titulo": "Igreja Nossa Senhora do Rosário e o centro histórico",
+            "texto": "No centro da cidade, a Igreja Nossa Senhora do Rosário vem do século 18, segundo a Goiás Turismo, que lista também o Centro Histórico e a Festa de Nossa Senhora do Rosário entre os destaques de Luziânia. Em 1958, a Enciclopédia do IBGE registrava que o prédio da Cadeia Pública, construído no tempo provincial, era tombado pelo serviço do patrimônio histórico nacional.",
+            "fontes": [
+              "luziania-goias-turismo",
+              "luziania-ibge-enciclopedia-municipios-1958"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de torre central; não reproduz a Igreja do Rosário, e forma e cores são ilustrativas."
+            },
+            "curto": "Igreja do século 18 no centro da antiga Santa Luzia, perto do Centro Histórico."
+          },
+          {
+            "id": "cavalhadas-e-festa-do-divino",
+            "tipo": "tradicao",
+            "titulo": "Festa do Divino e Cavalhadas",
+            "texto": "Segundo a Secretaria de Cultura de Goiás, as primeiras Cavalhadas do estado foram no Arraial de Santa Luzia, em 1751, e o naturalista Saint-Hilaire viu ali a Festa do Divino e a Cavalhada no início do século 19. A encenação da batalha entre cristãos, de azul, e mouros, de vermelho, voltou em 2023, após 17 anos. A Prefeitura data de 1753 a primeira Festa do Divino na cidade.",
+            "fontes": [
+              "luziania-secult-go-cavalhadas-2025",
+              "luziania-secult-go-cavalhadas-retorno",
+              "luziania-prefeitura-festa-do-divino"
+            ]
+          },
+          {
+            "id": "lago-corumba-iv",
+            "tipo": "paisagem",
+            "titulo": "Lago de Corumbá IV",
+            "texto": "A 27 km da cidade, o lago formado pela represa da usina hidrelétrica Corumbá IV tem, segundo a Goiás Turismo, estrutura para esportes náuticos e passeios de flutuante. Em 2024, suas águas receberam uma etapa do Circuito Goiano de Pesca Esportiva, na modalidade pesque e solte.",
+            "fontes": [
+              "luziania-goias-turismo",
+              "luziania-goias-turismo-pesca-corumba-iv"
+            ],
+            "descoberta": {
+              "modulo": "trapiche",
+              "nota": "Na maquete, um píer genérico sobre o lago; na realidade o lago fica a 27 km da cidade, e forma e cores são ilustrativas."
+            },
+            "curto": "Lago da represa de Corumbá IV, a 27 km da cidade, com esportes náuticos e passeios de flutuante."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo o histórico do IBGE, em abril de 1758 começou a construção do Rego Saia Velha, canal de 42 km aberto por milhares de escravizados para explorar as minas do Cruzeiro. A obra levou dois anos, e a inauguração terminou em motim no arraial. A Goiás Turismo lista a Trilha do Canal da Saia Velha entre os atrativos da cidade.",
+            "fontes": [
+              "ibge-biblioteca-luziania-go",
+              "luziania-goias-turismo"
+            ]
+          },
+          {
+            "texto": "Em 1958, a Enciclopédia do IBGE apontava Luziânia como produtora da marmelada Santa Luzia, conhecida em todo o estado de Goiás, e destacava a Festa do Divino Espírito Santo, com folias e passeatas pelas ruas.",
+            "fontes": [
+              "luziania-ibge-enciclopedia-municipios-1958"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "luzianiense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-luziania-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -16.2536,
+          "lon": -47.95,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 209129,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 3962.107,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Luziânia",
+          "intermediaria": "Luziânia - Águas Lindas de Goiás",
+          "mesorregiao": "Leste Goiano",
+          "microrregiao": "Entorno de Brasília",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "cerrado",
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade do planalto goiano no Cerrado, com a igreja antiga e o lago de Corumbá IV",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.4
+        },
+        "agua": {
+          "modulo": "lago",
+          "largura": 0.3
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            12
+          ],
+          [
+            "arbusto",
+            6
+          ],
+          [
+            "capim",
+            8
+          ],
+          [
+            "ipe",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 2
+        },
+        "extras": [
+          "barco"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-nossa-senhora-do-rosario"
+          },
+          {
+            "modulo": "trapiche",
+            "referencia": "lago-corumba-iv"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O portal da Prefeitura (luziania.go.gov.br) não tem página de história nem de atrativos com texto (as páginas de Turismo e Cultura estão vazias, a busca interna e a API não respondem); não achei fonte oficial detalhada sobre a Igreja do Rosário (data exata, tombamento, fachada), por isso a referência é curta e o marco é uma igreja genérica. Não consegui confirmar se a Cadeia Pública segue tombada pelo Iphan; o texto atribui o tombamento à Enciclopédia de 1958 — vale conferir na lista de bens tombados do Iphan. Datas divergem: a vila foi criada por Resolução de 1/4/1833 segundo o histórico e a Enciclopédia, e de 1/4/1834 segundo a formação administrativa do IBGE; todos dão a instalação em 7/4/1834 (o texto diz 'vila instalada em 1834'). A Secult-GO afirma que as primeiras Cavalhadas de Goiás foram em Santa Luzia em 1751 (atribuído); a Prefeitura dá 1753 para a primeira Festa do Divino (atribuído). A notícia da Secult sobre o retorno diz 'há 17 anos' e a de 2025 confirma retomada em 2023. A Enciclopédia chama os moradores de 'luzianenses'; o gentílico do IBGE é luzianiense — mantive o do IBGE (campo omitido). Horários, programação e valores de festas e do lago ficaram de fora. A palavra 'escravos' das fontes foi escrita como 'escravizados'."
+      }
+    },
+    "1500107": {
+      "identidade": {
+        "id": "1500107",
+        "ibge": "1500107",
+        "nome": "Abaetetuba",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na foz do Tocantins, entre ilhas, igarapés e furos, a terra dos brinquedos de miriti e dos antigos engenhos de cachaça.",
+        "resumo": "Abaetetuba fica na margem direita da foz do rio Tocantins, num território plano, parte em terra firme e parte em mais de 45 ilhas, todo cortado por rios, igarapés e furos. A cidade cresceu à beira do rio Maratauíra, afluente do Tocantins. Segundo a Prefeitura, a colonização começou em Beja, onde capuchinhos se juntaram a uma aldeia indígena por volta de 1635; o histórico do IBGE registra outras versões. O nome Abaeté, de origem indígena, significaria \"homem forte e valente\" e virou Abaetetuba em 1944, para não repetir o de outra cidade. Foi vila e município em 1880 e cidade em 1895.",
+        "fontesResumo": [
+          "abaetetuba-enciclopedia-ibge-v14",
+          "abaetetuba-prefeitura-sobre-o-municipio",
+          "abaetetuba-prefeitura-historia",
+          "ibge-biblioteca-abaetetuba-pa"
+        ],
+        "referencias": [
+          {
+            "id": "brinquedo-de-miriti",
+            "tipo": "tradicao",
+            "titulo": "Brinquedos de miriti e o Miritifest",
+            "texto": "Os artesãos de Abaetetuba fazem brinquedos coloridos com a matéria-prima do miritizeiro, palmeira típica da Amazônia. Eles são conhecidos de quem acompanha o Círio de Nazaré, em Belém, do qual se tornaram um dos símbolos. Segundo a Prefeitura, o Festival do Miriti, o Miritifest, foi criado em 2004 e reúne a produção dos artesãos, com apresentações culturais e danças folclóricas.",
+            "fontes": [
+              "abaetetuba-agencia-para-miritifest-2019",
+              "abaetetuba-agencia-para-miritifest-2024",
+              "abaetetuba-prefeitura-sobre-o-municipio"
+            ]
+          },
+          {
+            "id": "engenhos-de-cachaca",
+            "tipo": "tradicao",
+            "titulo": "Os engenhos de aguardente",
+            "texto": "A cana e a aguardente marcaram a economia de Abaetetuba. No início do século XX, os engenhos eram contados às dezenas e, em 1956, segundo a Enciclopédia dos Municípios do IBGE, 34 dos 83 estabelecimentos industriais do município produziam aguardente. Hoje restam ruínas e uma pequena unidade, o Engenho Pacheco. A cachaça local ficou nos versos de Ruy Barata.",
+            "fontes": [
+              "abaetetuba-prefeitura-sobre-o-municipio",
+              "abaetetuba-enciclopedia-ibge-v14"
+            ],
+            "descoberta": {
+              "modulo": "usina",
+              "nota": "Na maquete, um galpão genérico com chaminé de tijolo à beira do rio lembra os antigos engenhos; não reproduz nenhum engenho real."
+            },
+            "curto": "Os engenhos de aguardente, contados às dezenas no início do século XX, marcaram a economia da cidade."
+          },
+          {
+            "id": "vila-de-beja",
+            "tipo": "patrimonio",
+            "titulo": "Vila de Beja e a Igreja de São Miguel Arcanjo",
+            "texto": "Beja, distrito de Abaetetuba, é apontada pela Prefeitura como berço da colonização do município: o aldeamento, chamado de Samaúma, recebeu depois o nome de Beja do governador Francisco Xavier de Mendonça Furtado. Ali fica a antiga Igreja de São Miguel Arcanjo, e a vila tem uma praia de água doce, a praia de Beja.",
+            "fontes": [
+              "abaetetuba-prefeitura-historia",
+              "abaetetuba-prefeitura-sobre-o-municipio",
+              "abaetetuba-prefeitura-turismo"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja genérica de uma torre; fachada, cores e proporções da igreja de Beja são ilustrativas."
+            },
+            "curto": "Antiga igreja na Vila de Beja, apontada pela Prefeitura como berço da colonização do município."
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "O hino de Abaetetuba começa pelo rio: chama o Maratauíra de grande rio formoso e de braço forte do Tocantins.",
+            "fontes": [
+              "abaetetuba-prefeitura-sobre-o-municipio"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "abaetetubense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-abaetetuba-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -1.7251,
+          "lon": -48.8901,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 158188,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1610.654,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Abaetetuba",
+          "intermediaria": "Belém",
+          "mesorregiao": "Nordeste Paraense",
+          "microrregiao": "Cametá",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "rio",
+          "urbano"
+        ],
+        "rotulo": "Cidade plana à beira do Maratauíra, entre ilhas, miritizeiros e barcos",
+        "base": "amazonia",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "rio-largo",
+          "largura": 0.45
+        },
+        "vegetacao": [
+          [
+            "buriti",
+            10
+          ],
+          [
+            "palmeira",
+            8
+          ],
+          [
+            "mata",
+            8
+          ],
+          [
+            "redonda",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 1
+        },
+        "extras": [
+          "barco",
+          "pier"
+        ],
+        "marcos": [
+          {
+            "modulo": "usina",
+            "referencia": "engenhos-de-cachaca"
+          },
+          {
+            "modulo": "igreja",
+            "referencia": "vila-de-beja"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. As versões sobre o início divergem: a Prefeitura (página História) fala em capuchinhos em Beja por volta de 1635 e em povoado de Francisco de Azevedo Monteiro em 1724; o histórico do IBGE dá 1745 para Azevedo Monteiro e 1750 (Palma Muniz) para a fundação de Abaeté. O texto cita só a versão de Beja, atribuída, e menciona a existência de outras. A formação administrativa do IBGE dá instalação da vila em 25/03/1883, a Enciclopédia (1957) dá a instalação da Câmara em 07/01/1881 e a Prefeitura diz 1881; o texto não traz a instalação. A Prefeitura lista 'Fundação: 15/08/1895', que não bate com a lei de cidade (06/07/1895); ficou de fora. A praia de Beja aparece na margem do rio Pará (Sobre o Município) e da Baía do Capim (Turismo e Lazer); o texto não diz em que água fica. Títulos como 'capital mundial do brinquedo de miriti', 'maior evento cultural do Baixo Tocantins' e rankings de produção ficaram de fora (superlativos). A Agência Pará (2019) diz que o Miritifest é iniciativa dos artesãos; a Prefeitura diz que o Governo Municipal apoiou a criação em 2004; o texto atribui a data à Prefeitura. A idade da Igreja de São Miguel Arcanjo não tem data na fonte ('muito antigas'). Os versos de Ruy Barata não foram citados literalmente para não reproduzir obra autoral."
+      }
+    },
+    "4101804": {
+      "identidade": {
+        "id": "4101804",
+        "ibge": "4101804",
+        "nome": "Araucária",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "No planalto de Curitiba, à beira do Iguaçu, cidade batizada pelos pinheirais e marcada pela imigração polonesa.",
+        "resumo": "Araucária fica no planalto de Curitiba, a quase 900 metros de altitude, com a sede banhada pelo rio Iguaçu e o território cortado por rios como Passaúna e Barigui. Segundo a Enciclopédia dos Municípios do IBGE, o nome vem dos muitos pinheiros, as araucárias, da região. A área, chamada Tindiquera, recebeu sesmarias em 1668; a freguesia do Iguaçu veio no século XIX, e a vila e o município de Araucária, em 1890. A partir de 1876 chegaram imigrantes, sobretudo poloneses, depois alemães, italianos e ucranianos, e japoneses na década de 1950.",
+        "fontesResumo": [
+          "araucaria-ibge-enciclopedia-1959",
+          "ibge-biblioteca-araucaria-pr"
+        ],
+        "referencias": [
+          {
+            "id": "sao-miguel-polones",
+            "tipo": "cultura",
+            "titulo": "São Miguel: Portal Polonês e Capela de São Miguel",
+            "texto": "No bairro São Miguel, o passeio passa pelo Portal Polonês e pelo Memorial da Imigração Polonesa, tem um mirante com vista para a Represa de Passaúna e termina na Capela de São Miguel. A herança polonesa também está na mesa: pirogue, kuque, broa de forno a lenha e pastel de requeijão estão entre as receitas tradicionais da cidade, que tem no calendário a Festa do Pierogue e o Dia Polonês.",
+            "fontes": [
+              "araucaria-viaje-parana"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma capela genérica com uma torre; a forma, as cores e a arquitetura são ilustrativas."
+            },
+            "curto": "Portal Polonês, memorial da imigração, mirante para a Represa de Passaúna e a Capela de São Miguel."
+          },
+          {
+            "id": "parque-cachoeira",
+            "tipo": "natureza",
+            "titulo": "Parque Cachoeira",
+            "texto": "Área verde ampla com lago, pista de caminhada, ginásio e campo de futebol, o Parque Cachoeira aparece entre os lugares mais visitados de Araucária na página de turismo do Estado. Também reúne programas culturais, com museu, artesanato e a Casa das Palavras Brincantes.",
+            "fontes": [
+              "araucaria-viaje-parana",
+              "araucaria-viaje-parana-parque-cachoeira"
+            ],
+            "descoberta": {
+              "modulo": "lago-ilha",
+              "nota": "Na maquete, um lago genérico com deck e árvores; a ilha, o contorno e as proporções são ilustrativos."
+            },
+            "curto": "Parque com lago, pista de caminhada, museu e artesanato, entre os lugares mais visitados da cidade."
+          },
+          {
+            "id": "nossa-senhora-dos-remedios",
+            "tipo": "patrimonio",
+            "titulo": "Praça da Matriz e Nossa Senhora dos Remédios",
+            "texto": "A freguesia que deu origem à cidade se chamava Nossa Senhora dos Remédios do Iguaçu, e a santa segue como padroeira: em 1959 o IBGE registrava a festa em 30 de outubro. Hoje o Santuário Nossa Senhora dos Remédios é o principal atrativo da praça central, cercada de comércio, e a Praça Dr. Vicente Machado está entre os lugares mais visitados do município.",
+            "fontes": [
+              "ibge-biblioteca-araucaria-pr",
+              "araucaria-ibge-enciclopedia-1959",
+              "araucaria-viaje-parana"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo uma tradição registrada pelo IBGE em 1959, o povoado de Tindiquera teria sido fundado à beira do Iguaçu pela família dos Maias, que deixou Curitiba depois de conflitos com as autoridades. O nome do Museu Tingui Cuera, segundo a página de turismo do Estado, quer dizer local onde vivem os Tinguis, valentes e destemidos.",
+            "fontes": [
+              "araucaria-ibge-enciclopedia-1959",
+              "araucaria-viaje-parana-museu-tingui-cuera"
+            ]
+          },
+          {
+            "texto": "Nos anos 1950, a agricultura era a base da economia, com a batata à frente, ao lado de milho, centeio, trigo, linho e cebola. Havia olarias de telhas e tijolos em várias localidades e fábricas de palhões para garrafas, conhecidas em todo o Paraná.",
+            "fontes": [
+              "araucaria-ibge-enciclopedia-1959"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "araucariano",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-araucaria-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -25.5905,
+          "lon": -49.4005,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 151666,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 469.24,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Curitiba",
+          "intermediaria": "Curitiba",
+          "mesorregiao": "Metropolitana de Curitiba",
+          "microrregiao": "Curitiba",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "rio",
+          "campo"
+        ],
+        "rotulo": "Planalto de araucárias à beira do Iguaçu, com capela polonesa e parque com lago",
+        "base": "campos",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.35
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.25
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            10
+          ],
+          [
+            "redonda",
+            5
+          ],
+          [
+            "mata",
+            3
+          ],
+          [
+            "capim",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 9,
+          "predios": 2
+        },
+        "extras": [
+          "lavoura",
+          "cerca"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "sao-miguel-polones"
+          },
+          {
+            "modulo": "lago-ilha",
+            "referencia": "parque-cachoeira"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A data da freguesia diverge no próprio registro do IBGE: a formação administrativa cita a Lei Provincial nº 21 de 28-02-1855, e o histórico (da Prefeitura) cita a mesma lei como de 28 de fevereiro de 1858; o texto diz só 'no século XIX'. A Enciclopédia de 1959 cita imigrantes poloneses, russos e alemães; o histórico da Prefeitura cita poloneses, alemães, italianos e ucranianos; o resumo segue o histórico da Prefeitura reproduzido pelo IBGE. A Enciclopédia dá a origem do nome (araucárias) sem atribuição a hipótese; o texto atribui. O site da Prefeitura (araucaria.atende.net) carrega o conteúdo por JavaScript e não pôde ser lido pela ferramenta; o domínio araucaria.pr.gov.br não resolveu. A Viaje Paraná diz que a Paixão de Cristo do Grupo Lanteri é 'uma das mais famosas do estado' e que Araucária é 'segunda em arrecadação de ICMS'; ficaram de fora. A Enciclopédia diz que Araucária era 'um dos maiores produtores de batata'; o texto não usa o superlativo. A fonte não diz se o Museu Tingui Cuera fica no Parque Cachoeira; o texto não liga os dois. A tradição da família dos Maias e a menção aos tinguis como mamelucos (Enciclopédia de 1959) pedem leitura cuidadosa na revisão; o texto não reproduz a classificação dos tinguis."
+      }
+    },
+    "4315602": {
+      "identidade": {
+        "id": "4315602",
+        "ibge": "4315602",
+        "nome": "Rio Grande",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Na saída da Lagoa dos Patos para o mar, a cidade do porto, dos molhes da barra, da Praia do Cassino e dos banhados do Taim.",
+        "resumo": "Rio Grande fica na passagem que liga a Lagoa dos Patos ao Atlântico, em terras baixas de dunas, banhados e lagoas, entre o oceano e a Lagoa Mirim. Segundo o histórico do IBGE, o nome vem de como eram chamadas as águas que correm do Guaíba ao mar pela Lagoa dos Patos. A ocupação começou em 1737, com uma fortificação portuguesa na entrada do canal, em meio à disputa com a Espanha. Foi vila em 1751, perdeu essa condição em 1763, voltou a ser vila em 1809 e virou cidade em 1835. O porto e as indústrias atraíram gente de várias nacionalidades, somada a descendentes de portugueses e de africanos.",
+        "fontesResumo": [
+          "rio-grande-camara-historia",
+          "rio-grande-ibge-enciclopedia-1959",
+          "ibge-biblioteca-rio-grande-rs"
+        ],
+        "referencias": [
+          {
+            "id": "molhes-da-barra",
+            "tipo": "paisagem",
+            "titulo": "Molhes da Barra",
+            "texto": "Dois braços de pedra avançam pelo Atlântico na barra do Rio Grande, junto à Praia do Cassino. O contrato de 1906 para as obras da barra e do porto previa dois faroletes na ponta dos molhes. Já na década de 1950, segundo a Enciclopédia do IBGE, eles atraíam pescadores amadores e campeonatos estaduais de pesca, com gente vinda até do Uruguai e da Argentina.",
+            "fontes": [
+              "rio-grande-ibge-enciclopedia-1959"
+            ],
+            "descoberta": {
+              "modulo": "farol",
+              "nota": "Na maquete, um farol listrado genérico sobre pedras lembra os faroletes dos molhes; listras, rochedo e proporções são ilustrativos."
+            },
+            "curto": "Dois braços de pedra que avançam pelo mar na barra, junto ao Cassino; ponto tradicional de pesca."
+          },
+          {
+            "id": "praia-do-cassino",
+            "tipo": "paisagem",
+            "titulo": "Praia do Cassino",
+            "texto": "A praia do distrito antes chamado Mangueira, que passou a se chamar Cassino em 1938, já era descrita pela Enciclopédia do IBGE, nos anos 1950, como tradicional lugar de descanso do sul do estado. Em 1979, o distrito do Cassino foi extinto e seu território passou a fazer parte do distrito-sede.",
+            "fontes": [
+              "rio-grande-ibge-enciclopedia-1959",
+              "ibge-biblioteca-rio-grande-rs"
+            ]
+          },
+          {
+            "id": "estacao-ecologica-do-taim",
+            "tipo": "natureza",
+            "titulo": "Estação Ecológica do Taim",
+            "texto": "Em terras de Rio Grande e de Santa Vitória do Palmar, a Estação Ecológica do Taim protege lagoas, banhados, campos, mata de restinga e dunas, com banhados que ligam a Lagoa Mirim à Lagoa Mangueira. Criada em 1986 e ampliada em 2017, tem registro de 220 espécies de aves e foi reconhecida em 2017 como sítio Ramsar, de zonas úmidas de importância internacional.",
+            "fontes": [
+              "rio-grande-icmbio-plano-manejo-taim"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a própria Câmara, a Câmara de Vereadores instalada em 1751 na vila foi a primeira do Rio Grande do Sul. Com a invasão espanhola de 1763, ela foi transferida para Viamão e depois para Porto Alegre.",
+            "fontes": [
+              "rio-grande-camara-historia"
+            ]
+          },
+          {
+            "texto": "Na Lagoa dos Patos, o município tem ilhas como a dos Marinheiros, a da Pólvora e a da Torotama, listadas pela Enciclopédia do IBGE. A Ilha dos Marinheiros virou distrito em 1979.",
+            "fontes": [
+              "rio-grande-ibge-enciclopedia-1959",
+              "ibge-biblioteca-rio-grande-rs"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "rio-grandino",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-rio-grande-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -32.0308,
+          "lon": -52.0978,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 191900,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 2682.867,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Pelotas",
+          "intermediaria": "Pelotas",
+          "mesorregiao": "Sudeste Rio-grandense",
+          "microrregiao": "Litoral Lagunar",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "litoral",
+          "urbano"
+        ],
+        "rotulo": "Cidade portuária na barra da lagoa, com dunas, molhes, farol e barcos de pesca",
+        "base": "litoral",
+        "relevo": {
+          "modulo": "costa-dunas"
+        },
+        "agua": {
+          "modulo": "costa",
+          "direcao": 0.8
+        },
+        "vegetacao": [
+          [
+            "restinga",
+            8
+          ],
+          [
+            "junco",
+            6
+          ],
+          [
+            "capim",
+            6
+          ],
+          [
+            "redonda",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 3
+        },
+        "extras": [
+          "barco",
+          "pier"
+        ],
+        "marcos": [
+          {
+            "modulo": "farol",
+            "referencia": "molhes-da-barra"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O site da Prefeitura (riogrande.rs.gov.br) exige cookie e JavaScript e não abriu pela ferramenta; o portal de turismo do estado também. Não achei página oficial legível sobre a Catedral de São Pedro (Iphan), por isso ela ficou de fora — vale incluir na revisão se houver fonte. Divergências: a Câmara dá a instalação da Câmara em 13/12/1751 e o IBGE dá a instalação da vila em 16/12/1751, e o IBGE fala em \"capital em 1745\" enquanto a Câmara diz que a vila era capital em 1751; o texto não dá dia nem cita capital. Os dados da Praia do Cassino e dos molhes vêm da Enciclopédia de 1959 (sem fonte atual); \"tradicional estação de repouso\" é dela. A área do Taim diverge entre a página do ICMBio (32.806,31 ha) e o plano de manejo (32.797 ha); não citada. Ficaram de fora \"reconhecida mundialmente\", \"maior laboratório a céu aberto\" e \"um dos maiores produtores\" de pescado."
+      }
+    },
+    "5200258": {
+      "identidade": {
+        "id": "5200258",
+        "ibge": "5200258",
+        "nome": "Águas Lindas de Goiás",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "O antigo Parque da Barragem cresceu à beira da BR-070, junto ao lago do Descoberto, e leva o nome de uma nascente.",
+        "resumo": "Águas Lindas de Goiás fica a cerca de 50 km de Brasília, junto à BR-070, no Cerrado da bacia do rio Descoberto, e parte da cidade está na área de proteção do lago do Descoberto. Segundo moradores pioneiros, em texto da Prefeitura reproduzido pelo IBGE, o nome homenageia a nascente Águas Lindas; antes, o lugar se chamava Parque da Barragem e era de Santo Antônio do Descoberto. Até meados dos anos 1980 havia ali cerrado, fazendas e chácaras; depois, famílias de Brasília e arredores se fixaram à beira da rodovia. Após plebiscito, o município foi criado em 1995 e instalado em 1997.",
+        "fontesResumo": [
+          "aguas-lindas-de-goias-prefeitura-historia",
+          "aguas-lindas-de-goias-icmbio-plano-manejo-apa-descoberto",
+          "ibge-biblioteca-aguas-lindas-de-goias-go"
+        ],
+        "referencias": [
+          {
+            "id": "apa-bacia-do-rio-descoberto",
+            "tipo": "natureza",
+            "titulo": "Lago e APA da Bacia do Rio Descoberto",
+            "texto": "Área de proteção ambiental federal do Cerrado, criada em 1983 para proteger o lago do Descoberto e os mananciais que o formam, que respondem por cerca de 65% da água do Distrito Federal. A maior parte fica no DF; no lado goiano, inclui cerca de um terço da cidade de Águas Lindas, na margem direita, que drena para a barragem do Descoberto. Restam matas de galeria, cerrado e campos.",
+            "fontes": [
+              "aguas-lindas-de-goias-icmbio-apa-descoberto",
+              "aguas-lindas-de-goias-icmbio-plano-manejo-apa-descoberto"
+            ]
+          },
+          {
+            "id": "festa-do-milho",
+            "tipo": "tradicao",
+            "titulo": "Festa do Milho",
+            "texto": "Promovida pela Prefeitura, a Festa do Milho teve a primeira edição em julho de 2022, numa estrutura à beira da BR-070, para mostrar o valor do milho na alimentação. Tem concurso de Rainha do Milho, quadrilhas, shows e um festival de pratos de milho: em 2023, os premiados foram uma canjiquinha, uma galinhada de milho com mousse de milho e um bolo de pamonha assado.",
+            "fontes": [
+              "aguas-lindas-de-goias-festa-do-milho-2022",
+              "aguas-lindas-de-goias-festa-do-milho-2023"
+            ]
+          },
+          {
+            "id": "quadrilhas-juninas",
+            "tipo": "cultura",
+            "titulo": "Circuito de Quadrilhas Juninas",
+            "texto": "Desde 2022 a Prefeitura reúne as quadrilhas da cidade num circuito com júri, que avalia coreografia, marcação, figurino, animação, casal de noivos e repertório. Na edição de 2023, no pátio da Prefeitura, dançaram a Aquarela Nordestina, a Paixão Cangaço, a Amor Junino e a Tico Tico.",
+            "fontes": [
+              "aguas-lindas-de-goias-quadrilhas-2023",
+              "aguas-lindas-de-goias-festa-do-milho-2022"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Segundo a Prefeitura, na Contagem da População do IBGE de 1996 Águas Lindas já tinha 61.478 moradores, mais que a sede do município a que pertencia, Santo Antônio do Descoberto (46.194). O plebiscito de 12 de outubro de 1995 aprovou a emancipação com mais de 92% dos votos.",
+            "fontes": [
+              "aguas-lindas-de-goias-prefeitura-historia"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "águas lindense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-aguas-lindas-de-goias-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -15.7355,
+          "lon": -48.2831,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 225693,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 191.817,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Águas Lindas de Goiás",
+          "intermediaria": "Luziânia - Águas Lindas de Goiás",
+          "mesorregiao": "Leste Goiano",
+          "microrregiao": "Entorno de Brasília",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Cidade no Cerrado à beira da BR-070, junto ao lago do Descoberto",
+        "base": "cerrado",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "agua": {
+          "modulo": "lago",
+          "largura": 0.3
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            7
+          ],
+          [
+            "capim",
+            6
+          ],
+          [
+            "mata",
+            3
+          ],
+          [
+            "arbusto",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 12,
+          "predios": 1
+        },
+        "extras": [],
+        "marcos": []
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Nenhuma referência virou marco: não achei fonte primária descritiva para um edifício ou lugar visitável da cidade (o site da Prefeitura não tem página de turismo; uma notícia de 2023 cita 'cachoeiras' e clubes sem nomeá-los). Sugere-se à revisão buscar um marco (matriz, praça ou feira) com a Prefeitura. O nome aparece como homenagem 'à nascente Águas Lindas' (IBGE) e 'às nascentes' (página atual da Prefeitura); o resumo usa a forma do IBGE, atribuída a moradores pioneiros. A Prefeitura escreve que a lei estadual nº 12.797 é de 27/12/1995 e a instalação em 1º/1/1997, como o IBGE. Ficaram de fora nomes de prefeitos e menções a governantes atuais presentes nas fontes. A Festa do Milho e o Circuito Junino são citados pelas edições passadas, sem prometer datas futuras. Os números de 1996 são da Prefeitura citando a Contagem do IBGE."
+      }
+    },
+    "5221403": {
+      "identidade": {
+        "id": "5221403",
+        "ibge": "5221403",
+        "nome": "Trindade",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Terra do Divino Pai Eterno, entre morros e córregos, aonde a romaria chega a pé e de carro de boi.",
+        "resumo": "Trindade fica a cerca de 780 metros de altitude, entre os córregos Barro Preto e Bruacas, guardada pelos morros das Almas e do Barreiro, numa terra que o IBGE descrevia em 1958 com matas e pastagens naturais. Segundo o histórico do IBGE, por volta de 1840 já havia ali o povoado de Barro Preto, onde um casal de lavradores achou um medalhão de barro com a coroação da Virgem pela Santíssima Trindade. A reza em volta da imagem deu origem à devoção ao Divino Pai Eterno e à romaria anual. Distrito de Campinas em 1909, virou vila em 1920 e cidade em 1927.",
+        "fontesResumo": [
+          "trindade-ibge-enciclopedia-1958",
+          "ibge-biblioteca-trindade-go",
+          "trindade-prefeitura-historia",
+          "trindade-goias-turismo-romaria-185-anos"
+        ],
+        "referencias": [
+          {
+            "id": "capela-do-barro-preto",
+            "tipo": "patrimonio",
+            "titulo": "Das capelas do Barro Preto à Matriz",
+            "texto": "Segundo o histórico do IBGE, Constantino Xavier ergueu nos anos 1840 uma capela coberta com folhas de buriti para quem vinha rezar diante do medalhão e, em 1866, com as esmolas dos devotos, uma nova capela, que o IBGE registra como ainda de pé. A imagem maior do Divino Pai Eterno foi esculpida em madeira por Veiga Valle, artista de Pirenópolis. A Matriz é uma das igrejas onde a romaria celebra missas.",
+            "fontes": [
+              "ibge-biblioteca-trindade-go",
+              "trindade-prefeitura-historia",
+              "trindade-goias-turismo-romaria-185-anos"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, uma igreja simplificada de uma torre; não reproduz a capela nem a Matriz, e as cores são ilustrativas."
+            },
+            "curto": "A devoção começou numa capela de buriti nos anos 1840; em 1866, as esmolas dos fiéis ergueram uma nova capela."
+          },
+          {
+            "id": "romaria-do-divino-pai-eterno",
+            "tipo": "tradicao",
+            "titulo": "Romaria do Divino Pai Eterno",
+            "texto": "Segundo a Goiás Turismo, a romaria começa na última sexta-feira de junho e vai até o domingo da primeira semana de julho, com missas, novenas e procissões. Muitos fiéis fazem a pé os cerca de 18 km da Rodovia dos Romeiros (GO-060), de Goiânia ao Santuário Basílica. A pedra fundamental do santuário é de 1943, centenário da romaria; as novenas ali começaram em 1974, e o templo virou basílica menor em 2006.",
+            "fontes": [
+              "trindade-goias-turismo-destino",
+              "trindade-goias-turismo-romaria-185-anos",
+              "trindade-secult-romaria-2022",
+              "trindade-prefeitura-historia"
+            ]
+          },
+          {
+            "id": "romaria-dos-carreiros",
+            "tipo": "tradicao",
+            "titulo": "Romaria dos Carros de Boi",
+            "texto": "Carreiros de várias cidades goianas preparam com antecedência carros, bagagem e economias para chegar à festa, numa viagem de dias com pousos em fazendas, pastos e margens de córregos. Segundo a Prefeitura, o desfile anual começou tímido em 1988 e chegou a reunir cerca de 300 carros de boi e 2.000 cavaleiros e muladeiros, o que levou à construção do Carreiródromo Ada Cira, junto ao Parque Municipal.",
+            "fontes": [
+              "trindade-prefeitura-historia",
+              "trindade-secult-exposicao-carreiros"
+            ]
+          }
+        ],
+        "curiosidades": [
+          {
+            "texto": "Conta o histórico do IBGE que, ao buscar em Pirenópolis a imagem encomendada a Veiga Valle, Constantino Xavier descobriu que o preço era maior do que o dinheiro que levava: vendeu o cavalo e voltou a pé, carregando a imagem até Trindade.",
+            "fontes": [
+              "ibge-biblioteca-trindade-go"
+            ]
+          },
+          {
+            "texto": "Trindade já deixou de ser município: em 1938 seu território foi anexado a Goiânia, e só em 31 de dezembro de 1943 voltou a ter autonomia.",
+            "fontes": [
+              "ibge-biblioteca-trindade-go"
+            ]
+          }
+        ],
+        "gentilico": {
+          "oficial": "trindadense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-trindade-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -16.6556,
+          "lon": -49.4917,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 142431,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 712.69,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Goiânia",
+          "intermediaria": "Goiânia",
+          "mesorregiao": "Centro Goiano",
+          "microrregiao": "Goiânia",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "ambientes": [
+          "urbano",
+          "campo"
+        ],
+        "rotulo": "Cidade da romaria entre morros baixos e córregos, com a capela antiga",
+        "base": "interior",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.5
+        },
+        "agua": {
+          "modulo": "rio",
+          "largura": 0.12,
+          "direcao": 0.4
+        },
+        "vegetacao": [
+          [
+            "mata",
+            8
+          ],
+          [
+            "redonda",
+            6
+          ],
+          [
+            "capim",
+            6
+          ],
+          [
+            "buriti",
+            3
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 10,
+          "predios": 2
+        },
+        "extras": [
+          "cerca"
+        ],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "capela-do-barro-preto"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Data da capela de buriti diverge: o IBGE diz 1843 e a Prefeitura, 'por volta de 1848' (o texto diz 'nos anos 1840'). O IBGE diz que a capela de 1866 'permanece até hoje', mas nenhuma fonte consultada liga essa capela à atual Matriz; o texto não afirma que sejam o mesmo prédio. O IBGE (Constantino encomendou a imagem) e a Prefeitura (Veiga Valle fez uma réplica maior, em madeira, ao ser chamado para restaurar o medalhão) contam a origem da imagem de modo diferente; o texto fica no comum (imagem maior feita em madeira por Veiga Valle). A Secult Goiás diz que a Romaria de Carros de Bois é 'considerada Patrimônio Cultural Brasileiro', mas as páginas do Iphan não abriram pela ferramenta; o texto não cita o registro (conferir no Iphan). Números de 300 carros e 2.000 cavaleiros vêm do histórico da Prefeitura, sem data clara (texto da página cita 2009). Evitados superlativos das fontes ('maior sino do mundo', 'maior festa religiosa do Centro-Oeste', 'único santuário do mundo'), estimativas de público e a obra do novo santuário (em andamento). Só uma referência virou marco: a basílica e os carros de boi não têm módulo genérico que não imite a obra."
       }
     }
   }
