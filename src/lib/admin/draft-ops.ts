@@ -16,6 +16,7 @@ import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-sc
 import type { PromotionsConfig } from "../site-config/promotions-schema";
 import type { CardsConfig } from "../site-config/cards-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
+import type { InkThemeConfig } from "../site-config/ink-theme-schema";
 import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid">;
@@ -66,6 +67,8 @@ export type DraftOp =
   | { type: "set-mundo"; modo: MundoModo | null }
   /** REGION only: switches "O Pódio" on or off (home teaser, state pages and the daily calculation); on removes the setting (the default). */
   | { type: "set-podio"; enabled: boolean }
+  /** REGION only: replaces the "Tema da INK" (surfaces on/off and presets). Strictly validated. */
+  | { type: "set-ink-theme"; inkTheme: InkThemeConfig }
   /** Launches / recalls a region publicly (takes effect only when published). */
   | { type: "set-launched"; launched: boolean }
   // ── Pages (hotpages and parent-category landings) ──
@@ -181,6 +184,12 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     const next: ScopeDoc = { ...doc, podio: { enabled: false } };
     if (op.enabled) delete next.podio;
     return { ok: true, doc: next };
+  }
+  if (op.type === "set-ink-theme") {
+    if (doc.scope === "global") return fail("the INK theme belongs to a region");
+    const next: ScopeDoc = { ...doc, inkTheme: op.inkTheme };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }
   if (op.type === "set-launched") {
     if (doc.scope === "global" || doc.scope === "sul") return fail("only Norte and Centro-Oeste are launched separately (Sul is always public)");

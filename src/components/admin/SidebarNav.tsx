@@ -12,6 +12,7 @@ const ITEMS = [
   { href: "/admin/navegacao", label: "Navegação" },
   { href: "/admin/aparencia", label: "Aparência" },
   { href: "/admin/promocoes", label: "Cupons e promoções" },
+  { href: "/admin/tema-ink", label: "Tema da INK" },
   { href: "/admin/tracking", label: "Tracking" },
   { href: "/admin/publicar", label: "Publicar" },
   { href: "/admin/midia", label: "Mídia" },

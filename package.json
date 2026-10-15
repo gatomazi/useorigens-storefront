@@ -14,6 +14,7 @@
     "garments:migrate-index": "node --conditions=react-server --import tsx scripts/migrate-garment-index.mts",
     "garments:promote": "node --conditions=react-server --import tsx scripts/promote-garment-index.mts",
     "garments:revalidate": "node --env-file=.env.local --conditions=react-server --import tsx scripts/revalidate-garments.mts",
+    "ink-theme:draft": "NODE_ENV=development ADMIN_DEV_MODE=true SITE_CONFIG_HOME=on SITE_CONFIG_DIR=\"$PWD/data/admin-dev/published\" node --conditions=react-server --import tsx scripts/ink-theme-draft.mts",
     "garments:coverage": "node --conditions=react-server --import tsx scripts/garment-coverage-report.mts",
     "recommendations:build": "node --conditions=react-server --import tsx scripts/build-recommendations.mts",
     "collections:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-collections.mts",

@@ -41,6 +41,7 @@ import type { DraftOp } from "@/lib/admin/draft-ops";
 import { parseNavigationForm, parseThemeForm, readableNavigationError } from "@/lib/admin/navigation-form";
 import { themeProblems } from "@/lib/site-config/navigation";
 import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-form";
+import type { InkThemeConfig } from "@/lib/site-config/ink-theme-schema";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
 /**
@@ -595,6 +596,23 @@ export async function discardGlobalThemeAction() {
   await audit(actor, "draft.discard", "global");
   revalidatePath("/admin", "layout");
   back("/admin/aparencia", { ok: "Rascunho da paleta global descartado." });
+}
+
+// ── Tema da INK (por região) ─────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Saves the region's "Tema da INK" as a DRAFT: which INK surfaces (product page, cart, checkout) wear the storefront's look and the presets of that look.
+ * Only fixed choices are read from the form (checkboxes and radio values checked against the lists); anything else is refused by the validator.
+ */
+export async function saveInkThemeAction(fd: FormData) {
+  const inkTheme = {
+    surfaces: { pdp: fd.get("pdp") === "on", cart: fd.get("cart") === "on", checkout: fd.get("checkout") === "on" },
+    action: text(fd, "action"),
+    ground: text(fd, "ground"),
+    corners: text(fd, "corners"),
+    font: text(fd, "font"),
+  } as InkThemeConfig;
+  return run(fd, { type: "set-ink-theme", inkTheme }, "Rascunho do tema da INK salvo. A INK só muda depois de publicar em Publicar.", "/admin/tema-ink");
 }
 
 // ── Cupons e promoções (por região) ─────────────────────────────────────────────────────────────────────────────

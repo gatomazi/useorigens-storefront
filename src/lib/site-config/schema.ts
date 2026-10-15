@@ -10,6 +10,7 @@ import { isAllowedMediaSrc } from "./media-hosts";
 import { CARD_BUY_STYLES, DEFAULT_BUY_LABEL, MAX_BUY_LABEL, validateCards, type CardBuyStyle, type CardsConfig } from "./cards-schema";
 import { validateMundo, type MundoConfig } from "./mundo-schema";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
+import { validateInkTheme, type InkThemeConfig } from "./ink-theme-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
 import { REGIONS, regionMayUseStore, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
@@ -311,6 +312,8 @@ export type ScopeDoc = {
   mundo?: MundoConfig;
   /** REGION only: "O Pódio" switched off (home teaser, state pages and the daily calculation, `podio-schema.ts`). Absent = on. Published with the region. */
   podio?: PodioConfig;
+  /** REGION only: "Tema da INK" (`ink-theme-schema.ts`): how the INK product page, cart and checkout look, by preset. Absent = all off. Published with the region. */
+  inkTheme?: InkThemeConfig;
   /**
    * Hotpages and parent-category landings of this region. Part of the document for storage and rollback, but PUBLISHED ON THEIR OWN: publishing the
    * home never publishes a draft page, and publishing a page never touches the home (admin/publishing.ts composes the bundle per target).
@@ -894,6 +897,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.podio !== undefined) {
     const r = validatePodio(input.podio, sc, "doc.podio");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.inkTheme !== undefined) {
+    const r = validateInkTheme(input.inkTheme, sc, "doc.inkTheme");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.collections !== undefined) {

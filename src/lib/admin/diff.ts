@@ -1,11 +1,12 @@
 import { effectiveMenu, menuPositionOf, type MenuPosition } from "../site-config/collection-menu";
 import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlockConfig } from "../site-config/navigation";
 import { podioEnabledIn } from "../site-config/podio-schema";
+import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkThemeOf, INK_THEME_SURFACES } from "../site-config/ink-theme";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "podio"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "podio" | "ink-theme"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
@@ -47,7 +48,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...inkThemeChanges(published, draft));
   return changes;
 }
 
@@ -143,6 +144,20 @@ function podioChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   const now = podioEnabledIn(draft);
   if (was === now) return [];
   return [{ kind: "podio", sectionId: "podio", text: now ? "O Pódio volta para a home e as páginas de estado, e o cálculo diário desta região volta a rodar" : "O Pódio sai da home e das páginas de estado, e o cálculo diário desta região para" }];
+}
+
+/** "Tema da INK": each surface switched on/off and each preset changed. Pure. */
+function inkThemeChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const was = inkThemeOf(published);
+  const now = inkThemeOf(draft);
+  const out: Change[] = [];
+  for (const s of INK_THEME_SURFACES) {
+    if (was.surfaces[s] !== now.surfaces[s]) out.push({ kind: "ink-theme", sectionId: `ink-theme:${s}`, text: `Tema da INK, ${INK_SURFACE_LABEL[s].toLowerCase()}: ${now.surfaces[s] ? "ligado" : "desligado (volta ao visual da INK)"}` });
+  }
+  for (const k of ["action", "ground", "corners", "font"] as const) {
+    if (was[k] !== now[k]) out.push({ kind: "ink-theme", sectionId: `ink-theme:${k}`, text: `Tema da INK: ${(INK_PRESET_LABEL[k] as Record<string, string>)[was[k]]} → ${(INK_PRESET_LABEL[k] as Record<string, string>)[now[k]]}` });
+  }
+  return out;
 }
 
 const modeText = (doc: ScopeDoc): string => (doc.theme ? (doc.theme.mode === "inherit" ? "herda a paleta da Use Origens" : "paleta própria") : "visual atual (sem configuração)");
