@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { MundoConviteCidade } from "@/components/mundo/entrada/MundoEntradas";
+import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StateOutline } from "@/components/brand/StateOutline";
@@ -195,6 +197,8 @@ export default async function CityPage({ params }: { params: Params }) {
         </div>
         {/* Short, real text UNDER the products (never above them): the styles this page actually lists, nothing else. */}
         {intro && <p className="t-body mt-8 max-w-2xl text-ink-soft lg:mt-12">{intro}</p>}
+        {/* "Meu Pequeno Mundo": an invitation that suggests this place (src/lib/mundo/flag.ts). Below the products, never above them. */}
+        {mundoEntradasAtivas() && families.length > 0 && <MundoConviteCidade region={city.regionSlug} cityId={city.id} cityName={city.name} />}
       </section>
 
       {lore.length > 0 && (

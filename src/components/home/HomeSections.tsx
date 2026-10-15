@@ -10,6 +10,8 @@ import { PageGround } from "@/components/pages/PageGround";
 import { RegionHero } from "@/components/home/RegionHero";
 import { Fragment } from "react";
 import { StateCards } from "@/components/home/StateCards";
+import { MundoBlocoHome } from "@/components/mundo/entrada/MundoEntradas";
+import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import { PodioTeaser } from "@/components/podio/PodioTeaser";
 import { getPodiumLeaders } from "@/lib/podio/server";
 import { SOURCES } from "@/lib/analytics/sources";
@@ -132,6 +134,8 @@ export function HomeSections({
                   className={darkPage ? "on-light" : undefined}
                   covers={resolveStateCovers(s, media)}
                 />
+                {/* "Meu Pequeno Mundo" right after the state chooser, on the home only, when its entries are on (src/lib/mundo/flag.ts). */}
+                {!page && mundoEntradasAtivas() && <MundoBlocoHome region={region} />}
                 {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage), unless the region switched it off — docs/storefront/podio.md. */}
                 {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf), doc)} />}
               </Fragment>

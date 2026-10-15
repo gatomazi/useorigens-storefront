@@ -1,0 +1,572 @@
+{
+  "base": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html",
+  "quando": "2026-10-14T16:54:57.615Z",
+  "checagens": [
+    {
+      "nome": "[desktop] entrada com a prévia dos três perfis",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] lembrança opcional na escolha, com contador",
+      "ok": true,
+      "detalhe": "31/80"
+    },
+    {
+      "nome": "[desktop] mundo com as três cidades do piloto",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] sem rolagem horizontal no resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] áreas de toque ≥ 44 px no resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] visão geral sem pontos de descoberta competindo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] o que conecta: lugares e estado",
+      "ok": true,
+      "detalhe": "Três lugares em Santa Catarina."
+    },
+    {
+      "nome": "[desktop] o que conecta: paisagens dos perfis",
+      "ok": true,
+      "detalhe": "Nas fichas dos lugares: vale, rio, área urbana e litoral."
+    },
+    {
+      "nome": "[desktop] o que conecta: distância origem–presente em linha reta",
+      "ok": true,
+      "detalhe": "Da origem ao presente: aproximadamente 30 km em linha reta.Entre as sedes municipais (IBGE). Não é distância por estrada."
+    },
+    {
+      "nome": "[desktop] lembrança aparece na lista do resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] escolha \"incluir lembranças\" visível e desligada",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] sem incluir: a lembrança fica fora do link",
+      "ok": true,
+      "detalhe": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html?mundo=1&origem=4211504&presente=4218004&coracao=4205704"
+    },
+    {
+      "nome": "[desktop] a cidade em exploração mostra os dois pontos dela",
+      "ok": true,
+      "detalhe": "4211504|santuario-santa-paulina, 4211504|montes-do-vale"
+    },
+    {
+      "nome": "[desktop] descoberta do santuário abre o balão certo",
+      "ok": true,
+      "detalhe": "Santuário Santa Paulina"
+    },
+    {
+      "nome": "[desktop] uma descoberta aberta por vez",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] Esc fecha a descoberta",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] ficha Nova Trento: cidade · UF e papel",
+      "ok": true,
+      "detalhe": "Nova Trento · SC — Minha origem"
+    },
+    {
+      "nome": "[desktop] ficha Nova Trento: frase e resumo de 40–70 palavras",
+      "ok": true,
+      "detalhe": "63 palavras"
+    },
+    {
+      "nome": "[desktop] ficha Nova Trento: até três referências",
+      "ok": true,
+      "detalhe": "Santuário Santa Paulina | Montes em volta do vale | Imigração trentina"
+    },
+    {
+      "nome": "[desktop] ficha Nova Trento: conteúdo desta cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] ficha Nova Trento: \"Ver camisetas\" visível sem rolar e com link real",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/sul/sc/nova-trento"
+    },
+    {
+      "nome": "[desktop] ficha Nova Trento: camisetas do catálogo",
+      "ok": true,
+      "detalhe": "4 camisetas"
+    },
+    {
+      "nome": "[desktop] ficha Nova Trento: mais sobre com dados datados",
+      "ok": true,
+      "detalhe": "Gentílico: nova-trentino | Um pouco de história: Nova Trento deixou de ser parte de Tijucas e virou município pela Lei nº 36, de 8 de agosto de 1892; a instalação foi em 26 de agosto daquele ano. | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Brusque · intermediária de Blumenau | Divisão regional de 1990: Mesorregião Grande Florianópolis · microrregião Tijucas | Sede municipal: 27,2863° S · 48,9303° O | População: 13.727 pessoas | Área territorial: 402,85 km²"
+    },
+    {
+      "nome": "[desktop] ficha Nova Trento: fontes com links",
+      "ok": true,
+      "detalhe": "8 fontes"
+    },
+    {
+      "nome": "[desktop] áreas de toque ≥ 44 px na ficha",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] \"Ver na maquete\" na ficha abre a descoberta e leva o foco",
+      "ok": true,
+      "detalhe": "balao-titulo"
+    },
+    {
+      "nome": "[desktop] ficha Tijucas: cidade · UF e papel",
+      "ok": true,
+      "detalhe": "Tijucas · SC — Meu presente"
+    },
+    {
+      "nome": "[desktop] ficha Tijucas: frase e resumo de 40–70 palavras",
+      "ok": true,
+      "detalhe": "51 palavras"
+    },
+    {
+      "nome": "[desktop] ficha Tijucas: até três referências",
+      "ok": true,
+      "detalhe": "Casarão Gallotti | Rio Tijucas | Museu Tijucas"
+    },
+    {
+      "nome": "[desktop] ficha Tijucas: conteúdo desta cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] ficha Tijucas: \"Ver camisetas\" visível sem rolar e com link real",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/sul/sc/tijucas"
+    },
+    {
+      "nome": "[desktop] ficha Tijucas: camisetas do catálogo",
+      "ok": true,
+      "detalhe": "4 camisetas"
+    },
+    {
+      "nome": "[desktop] ficha Tijucas: mais sobre com dados datados",
+      "ok": true,
+      "detalhe": "Gentílico: tijuquense | Um pouco de história: O distrito de São Sebastião da Foz do Tijucas foi criado em 1848 e elevado a vila em 1859; o nome Tijucas e a categoria de cidade vieram em 1906 (Lei Estadual nº 1.123). | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Itajaí · intermediária de Blumenau | Divisão regional de 1990: Mesorregião Grande Florianópolis · microrregião Tijucas | Sede municipal: 27,2428° S · 48,6319° O | População: 51.592 pessoas | Área territorial: 279,16 km²"
+    },
+    {
+      "nome": "[desktop] ficha Tijucas: fontes com links",
+      "ok": true,
+      "detalhe": "6 fontes"
+    },
+    {
+      "nome": "[desktop] ficha Garopaba: cidade · UF e papel",
+      "ok": true,
+      "detalhe": "Garopaba · SC — Meu lugar do coração"
+    },
+    {
+      "nome": "[desktop] ficha Garopaba: frase e resumo de 40–70 palavras",
+      "ok": true,
+      "detalhe": "56 palavras"
+    },
+    {
+      "nome": "[desktop] ficha Garopaba: até três referências",
+      "ok": true,
+      "detalhe": "Dunas do Siriú | Baleia-franca | Pesca da tainha e engenhos de farinha"
+    },
+    {
+      "nome": "[desktop] ficha Garopaba: conteúdo desta cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] ficha Garopaba: \"Ver camisetas\" visível sem rolar e com link real",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/sul/sc/garopaba"
+    },
+    {
+      "nome": "[desktop] ficha Garopaba: camisetas do catálogo",
+      "ok": true,
+      "detalhe": "4 camisetas"
+    },
+    {
+      "nome": "[desktop] ficha Garopaba: mais sobre com dados datados",
+      "ok": true,
+      "detalhe": "Gentílico: garopabense | Um pouco de história: O histórico do IBGE associa 1846 à construção da igreja matriz, do cemitério e da casa paroquial. Garopaba passou à condição de município em 1890, perdeu essa condição em 1923 e voltou a ser município em 1961. | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Florianópolis · intermediária de Florianópolis | Divisão regional de 1990: Mesorregião Sul Catarinense · microrregião Tubarão | Sede municipal: 28,0237° S · 48,6135° O | População: 29.959 pessoas | Área territorial: 114,77 km²"
+    },
+    {
+      "nome": "[desktop] ficha Garopaba: fontes com links",
+      "ok": true,
+      "detalhe": "6 fontes"
+    },
+    {
+      "nome": "[desktop] PNG 1080 × 1350 sem lembrança",
+      "ok": true,
+      "detalhe": "1080,1350"
+    },
+    {
+      "nome": "[desktop] incluir: a lembrança entra no link (lo)",
+      "ok": true,
+      "detalhe": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html?mundo=1&origem=4211504&presente=4218004&coracao=4205704&lo=Onde+cresci%2C+perto+do+santu%C3%A1rio"
+    },
+    {
+      "nome": "[desktop] PNG 1080 × 1350 com lembrança",
+      "ok": true,
+      "detalhe": "1080,1350"
+    },
+    {
+      "nome": "[desktop] link copiado leva a lembrança só quando incluída",
+      "ok": true,
+      "detalhe": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html?mundo=1&origem=4211504&presente=4218004&coracao=4205704&lo=Onde+cresci%2C+perto+do+santu%C3%A1rio"
+    },
+    {
+      "nome": "[desktop] recarregar mantém lembrança e \"incluir\"",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[desktop] desligar \"incluir\" tira a lembrança do link",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "trocas repetidas entre perfis não acumulam GPU nem cena",
+      "ok": true,
+      "detalhe": "{\"geometrias\":38,\"texturas\":6,\"programas\":17,\"objetos\":95,\"ilhas\":3,\"animacoes\":0} · {\"geometrias\":38,\"texturas\":6,\"programas\":17,\"objetos\":95,\"ilhas\":3,\"animacoes\":0}"
+    },
+    {
+      "nome": "[mobile] entrada com a prévia dos três perfis",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] lembrança opcional na escolha, com contador",
+      "ok": true,
+      "detalhe": "31/80"
+    },
+    {
+      "nome": "[mobile] mundo com as três cidades do piloto",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] sem rolagem horizontal no resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] áreas de toque ≥ 44 px no resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] visão geral sem pontos de descoberta competindo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] o que conecta: lugares e estado",
+      "ok": true,
+      "detalhe": "Três lugares em Santa Catarina."
+    },
+    {
+      "nome": "[mobile] o que conecta: paisagens dos perfis",
+      "ok": true,
+      "detalhe": "Nas fichas dos lugares: vale, rio, área urbana e litoral."
+    },
+    {
+      "nome": "[mobile] o que conecta: distância origem–presente em linha reta",
+      "ok": true,
+      "detalhe": "Da origem ao presente: aproximadamente 30 km em linha reta.Entre as sedes municipais (IBGE). Não é distância por estrada."
+    },
+    {
+      "nome": "[mobile] lembrança aparece na lista do resultado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] escolha \"incluir lembranças\" visível e desligada",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] sem incluir: a lembrança fica fora do link",
+      "ok": true,
+      "detalhe": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html?mundo=1&origem=4211504&presente=4218004&coracao=4205704"
+    },
+    {
+      "nome": "[mobile] a cidade em exploração mostra os dois pontos dela",
+      "ok": true,
+      "detalhe": "4211504|santuario-santa-paulina, 4211504|montes-do-vale"
+    },
+    {
+      "nome": "[mobile] descoberta do santuário abre o balão certo",
+      "ok": true,
+      "detalhe": "Santuário Santa Paulina"
+    },
+    {
+      "nome": "[mobile] uma descoberta aberta por vez",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] Esc fecha a descoberta",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] ficha Nova Trento: cidade · UF e papel",
+      "ok": true,
+      "detalhe": "Nova Trento · SC — Minha origem"
+    },
+    {
+      "nome": "[mobile] ficha Nova Trento: frase e resumo de 40–70 palavras",
+      "ok": true,
+      "detalhe": "63 palavras"
+    },
+    {
+      "nome": "[mobile] ficha Nova Trento: até três referências",
+      "ok": true,
+      "detalhe": "Santuário Santa Paulina | Montes em volta do vale | Imigração trentina"
+    },
+    {
+      "nome": "[mobile] ficha Nova Trento: conteúdo desta cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] ficha Nova Trento: \"Ver camisetas\" visível sem rolar e com link real",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/sul/sc/nova-trento"
+    },
+    {
+      "nome": "[mobile] ficha Nova Trento: camisetas do catálogo",
+      "ok": true,
+      "detalhe": "4 camisetas"
+    },
+    {
+      "nome": "[mobile] ficha Nova Trento: mais sobre com dados datados",
+      "ok": true,
+      "detalhe": "Gentílico: nova-trentino | Um pouco de história: Nova Trento deixou de ser parte de Tijucas e virou município pela Lei nº 36, de 8 de agosto de 1892; a instalação foi em 26 de agosto daquele ano. | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Brusque · intermediária de Blumenau | Divisão regional de 1990: Mesorregião Grande Florianópolis · microrregião Tijucas | Sede municipal: 27,2863° S · 48,9303° O | População: 13.727 pessoas | Área territorial: 402,85 km²"
+    },
+    {
+      "nome": "[mobile] ficha Nova Trento: fontes com links",
+      "ok": true,
+      "detalhe": "8 fontes"
+    },
+    {
+      "nome": "[mobile] áreas de toque ≥ 44 px na ficha",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] \"Ver na maquete\" na ficha abre a descoberta e leva o foco",
+      "ok": true,
+      "detalhe": "balao-titulo"
+    },
+    {
+      "nome": "[mobile] ficha Tijucas: cidade · UF e papel",
+      "ok": true,
+      "detalhe": "Tijucas · SC — Meu presente"
+    },
+    {
+      "nome": "[mobile] ficha Tijucas: frase e resumo de 40–70 palavras",
+      "ok": true,
+      "detalhe": "51 palavras"
+    },
+    {
+      "nome": "[mobile] ficha Tijucas: até três referências",
+      "ok": true,
+      "detalhe": "Casarão Gallotti | Rio Tijucas | Museu Tijucas"
+    },
+    {
+      "nome": "[mobile] ficha Tijucas: conteúdo desta cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] ficha Tijucas: \"Ver camisetas\" visível sem rolar e com link real",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/sul/sc/tijucas"
+    },
+    {
+      "nome": "[mobile] ficha Tijucas: camisetas do catálogo",
+      "ok": true,
+      "detalhe": "4 camisetas"
+    },
+    {
+      "nome": "[mobile] ficha Tijucas: mais sobre com dados datados",
+      "ok": true,
+      "detalhe": "Gentílico: tijuquense | Um pouco de história: O distrito de São Sebastião da Foz do Tijucas foi criado em 1848 e elevado a vila em 1859; o nome Tijucas e a categoria de cidade vieram em 1906 (Lei Estadual nº 1.123). | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Itajaí · intermediária de Blumenau | Divisão regional de 1990: Mesorregião Grande Florianópolis · microrregião Tijucas | Sede municipal: 27,2428° S · 48,6319° O | População: 51.592 pessoas | Área territorial: 279,16 km²"
+    },
+    {
+      "nome": "[mobile] ficha Tijucas: fontes com links",
+      "ok": true,
+      "detalhe": "6 fontes"
+    },
+    {
+      "nome": "[mobile] ficha Garopaba: cidade · UF e papel",
+      "ok": true,
+      "detalhe": "Garopaba · SC — Meu lugar do coração"
+    },
+    {
+      "nome": "[mobile] ficha Garopaba: frase e resumo de 40–70 palavras",
+      "ok": true,
+      "detalhe": "56 palavras"
+    },
+    {
+      "nome": "[mobile] ficha Garopaba: até três referências",
+      "ok": true,
+      "detalhe": "Dunas do Siriú | Baleia-franca | Pesca da tainha e engenhos de farinha"
+    },
+    {
+      "nome": "[mobile] ficha Garopaba: conteúdo desta cidade",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] ficha Garopaba: \"Ver camisetas\" visível sem rolar e com link real",
+      "ok": true,
+      "detalhe": "https://www.useorigens.com.br/sul/sc/garopaba"
+    },
+    {
+      "nome": "[mobile] ficha Garopaba: camisetas do catálogo",
+      "ok": true,
+      "detalhe": "4 camisetas"
+    },
+    {
+      "nome": "[mobile] ficha Garopaba: mais sobre com dados datados",
+      "ok": true,
+      "detalhe": "Gentílico: garopabense | Um pouco de história: O histórico do IBGE associa 1846 à construção da igreja matriz, do cemitério e da casa paroquial. Garopaba passou à condição de município em 1890, perdeu essa condição em 1923 e voltou a ser município em 1961. | Estado e região: Santa Catarina · Região Sul | Divisão regional atual: Região imediata de Florianópolis · intermediária de Florianópolis | Divisão regional de 1990: Mesorregião Sul Catarinense · microrregião Tubarão | Sede municipal: 28,0237° S · 48,6135° O | População: 29.959 pessoas | Área territorial: 114,77 km²"
+    },
+    {
+      "nome": "[mobile] ficha Garopaba: fontes com links",
+      "ok": true,
+      "detalhe": "6 fontes"
+    },
+    {
+      "nome": "[mobile] PNG 1080 × 1350 sem lembrança",
+      "ok": true,
+      "detalhe": "1080,1350"
+    },
+    {
+      "nome": "[mobile] incluir: a lembrança entra no link (lo)",
+      "ok": true,
+      "detalhe": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html?mundo=1&origem=4211504&presente=4218004&coracao=4205704&lo=Onde+cresci%2C+perto+do+santu%C3%A1rio"
+    },
+    {
+      "nome": "[mobile] PNG 1080 × 1350 com lembrança",
+      "ok": true,
+      "detalhe": "1080,1350"
+    },
+    {
+      "nome": "[mobile] link copiado leva a lembrança só quando incluída",
+      "ok": true,
+      "detalhe": "http://127.0.0.1:4321/meu-pequeno-mundo-use-origens.html?mundo=1&origem=4211504&presente=4218004&coracao=4205704&lo=Onde+cresci%2C+perto+do+santu%C3%A1rio"
+    },
+    {
+      "nome": "[mobile] recarregar mantém lembrança e \"incluir\"",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "[mobile] desligar \"incluir\" tira a lembrança do link",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "mesma cidade em origem e presente: frase curta, sem 0 km",
+      "ok": true,
+      "detalhe": "Dois lugares em Santa Catarina. | Nas fichas dos lugares: rio, área urbana e litoral. | Sua origem e seu presente são a mesma cidade."
+    },
+    {
+      "nome": "mesma cidade: uma ilha e uma lista com dois lugares",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "uma cidade: conclui e o que conecta não inventa distância",
+      "ok": true,
+      "detalhe": "Um lugar em Santa Catarina. | Nas fichas dos lugares: litoral."
+    },
+    {
+      "nome": "cidades sem perfil: distância a partir das sedes do IBGE",
+      "ok": true,
+      "detalhe": "Dois lugares em 2 estados: RS, PR. | Da origem ao presente: aproximadamente 810 km em linha reta.Entre as sedes municipais (IBGE). Não é distância por estrada."
+    },
+    {
+      "nome": "cidade sem perfil: ficha com dados do IBGE e camisetas, sem aviso de texto faltante nem campos vazios",
+      "ok": true,
+      "detalhe": "Estado e região, Divisão regional atual, Divisão regional de 1990, Sede municipal"
+    },
+    {
+      "nome": "cidade sem perfil: cenário identificado como ilustrativo",
+      "ok": true,
+      "detalhe": "Paisagem: Campos · interpretação ilustrativa"
+    },
+    {
+      "nome": "cidade sem perfil: nenhum ponto de descoberta",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "sem coordenada: a distância é omitida",
+      "ok": true,
+      "detalhe": "Dois lugares em 2 estados: RS, DF."
+    },
+    {
+      "nome": "link com lembrança: acentos e emoji preservados; texto longo demais e sem lugar ignorados",
+      "ok": true,
+      "detalhe": "“Minha família mora aqui ❤”"
+    },
+    {
+      "nome": "link com lembrança: 'incluir' vem ligado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "lembrança vinda do link é texto, nunca HTML",
+      "ok": true,
+      "detalhe": "“<img src=x onerror=alert(1)>”"
+    },
+    {
+      "nome": "link da versão anterior abre o mundo",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "progresso salvo na versão anterior (v1) é restaurado",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "ao salvar de novo, o progresso passa para o formato v2",
+      "ok": true,
+      "detalhe": "v2"
+    },
+    {
+      "nome": "começar de novo apaga lugares e lembranças",
+      "ok": true,
+      "detalhe": ""
+    },
+    {
+      "nome": "movimento reduzido: descoberta abre e se posiciona",
+      "ok": true,
+      "detalhe": ""
+    }
+  ],
+  "consoleErros": []
+}

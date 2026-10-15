@@ -8,6 +8,7 @@
  */
 import { isAllowedMediaSrc } from "./media-hosts";
 import { CARD_BUY_STYLES, DEFAULT_BUY_LABEL, MAX_BUY_LABEL, validateCards, type CardBuyStyle, type CardsConfig } from "./cards-schema";
+import { validateMundo, type MundoConfig } from "./mundo-schema";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
@@ -306,6 +307,8 @@ export type ScopeDoc = {
   promotions?: PromotionsConfig;
   /** GLOBAL only: the store-wide setting of the product cards (a buy button on every one of them, `cards-schema.ts`). Published with the global scope. */
   cards?: CardsConfig;
+  /** GLOBAL only: how far "Meu Pequeno Mundo" is open (`mundo-schema.ts`); the MEU_PEQUENO_MUNDO env stays the ceiling. Published with the global scope. */
+  mundo?: MundoConfig;
   /** REGION only: "O Pódio" switched off (home teaser, state pages and the daily calculation, `podio-schema.ts`). Absent = on. Published with the region. */
   podio?: PodioConfig;
   /**
@@ -883,6 +886,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.cards !== undefined) {
     const r = validateCards(input.cards, sc, "doc.cards");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.mundo !== undefined) {
+    const r = validateMundo(input.mundo, sc, "doc.mundo");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.podio !== undefined) {

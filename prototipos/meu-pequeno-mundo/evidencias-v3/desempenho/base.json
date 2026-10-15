@@ -1,0 +1,143 @@
+{
+  "rotulo": "base",
+  "base": "http://127.0.0.1:3100",
+  "quando": "2026-10-14T17:15:29.475Z",
+  "paginas": [
+    {
+      "viewport": "desktop",
+      "pagina": "home Sul",
+      "caminho": "/sul",
+      "status": 200,
+      "tempoAteOcioso": 3211,
+      "navegacao": {
+        "dcl": 80,
+        "load": 1359
+      },
+      "requisicoes": 59,
+      "bytesTransferidos": 1433216,
+      "bytesJs": 185712,
+      "scripts": 11,
+      "scripts3d": [],
+      "linksParaOMundo": []
+    },
+    {
+      "viewport": "desktop",
+      "pagina": "cidade (Florianópolis)",
+      "caminho": "/sul/sc/florianopolis",
+      "status": 200,
+      "tempoAteOcioso": 942,
+      "navegacao": {
+        "dcl": 144,
+        "load": 153
+      },
+      "requisicoes": 33,
+      "bytesTransferidos": 684394,
+      "bytesJs": 178494,
+      "scripts": 10,
+      "scripts3d": [],
+      "linksParaOMundo": []
+    },
+    {
+      "viewport": "desktop",
+      "pagina": "produto (Ponto de Origem, Florianópolis)",
+      "caminho": "/sul/sc/florianopolis/ponto-de-origem",
+      "status": 200,
+      "tempoAteOcioso": 758,
+      "navegacao": {
+        "dcl": 69,
+        "load": 233
+      },
+      "requisicoes": 30,
+      "bytesTransferidos": 394446,
+      "bytesJs": 178166,
+      "scripts": 10,
+      "scripts3d": [],
+      "linksParaOMundo": []
+    },
+    {
+      "viewport": "desktop",
+      "pagina": "cidade (Tijucas)",
+      "caminho": "/sul/sc/tijucas",
+      "status": 200,
+      "tempoAteOcioso": 892,
+      "navegacao": {
+        "dcl": 122,
+        "load": 193
+      },
+      "requisicoes": 31,
+      "bytesTransferidos": 671611,
+      "bytesJs": 178494,
+      "scripts": 10,
+      "scripts3d": [],
+      "linksParaOMundo": []
+    },
+    {
+      "viewport": "mobile",
+      "pagina": "home Sul",
+      "caminho": "/sul",
+      "status": 200,
+      "tempoAteOcioso": 1778,
+      "navegacao": {
+        "dcl": 64,
+        "load": 792
+      },
+      "requisicoes": 52,
+      "bytesTransferidos": 573457,
+      "bytesJs": 185712,
+      "scripts": 11,
+      "scripts3d": [],
+      "linksParaOMundo": []
+    },
+    {
+      "viewport": "mobile",
+      "pagina": "cidade (Florianópolis)",
+      "caminho": "/sul/sc/florianopolis",
+      "status": 200,
+      "tempoAteOcioso": 1122,
+      "navegacao": {
+        "dcl": 100,
+        "load": 130
+      },
+      "requisicoes": 33,
+      "bytesTransferidos": 459445,
+      "bytesJs": 178494,
+      "scripts": 10,
+      "scripts3d": [],
+      "linksParaOMundo": []
+    },
+    {
+      "viewport": "mobile",
+      "pagina": "produto (Ponto de Origem, Florianópolis)",
+      "caminho": "/sul/sc/florianopolis/ponto-de-origem",
+      "status": 200,
+      "tempoAteOcioso": 756,
+      "navegacao": {
+        "dcl": 96,
+        "load": 125
+      },
+      "requisicoes": 30,
+      "bytesTransferidos": 362995,
+      "bytesJs": 178166,
+      "scripts": 10,
+      "scripts3d": [],
+      "linksParaOMundo": []
+    },
+    {
+      "viewport": "mobile",
+      "pagina": "cidade (Tijucas)",
+      "caminho": "/sul/sc/tijucas",
+      "status": 200,
+      "tempoAteOcioso": 854,
+      "navegacao": {
+        "dcl": 106,
+        "load": 159
+      },
+      "requisicoes": 31,
+      "bytesTransferidos": 451857,
+      "bytesJs": 178494,
+      "scripts": 10,
+      "scripts3d": [],
+      "linksParaOMundo": []
+    }
+  ]
+}

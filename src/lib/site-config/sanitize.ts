@@ -10,6 +10,7 @@
  * Pure: no I/O, so it is unit-tested with hand-made objects.
  */
 import { validateCards } from "./cards-schema";
+import { validateMundo } from "./mundo-schema";
 import { validateNavigation, validateTheme } from "./navigation-schema";
 import { validatePodio } from "./podio-schema";
 import { validatePromotions } from "./promotions-schema";
@@ -150,13 +151,15 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // Promotions too: an invalid list means no button (never a broken region, never a half-checked coupon).
   // The cards' setting as well: an invalid one means each section decides, as before (never the global scope, which carries the tracking, back to the seed).
   // And the pódio switch: an invalid one means the pódio stays on, as before the switch existed.
-  for (const key of ["navigation", "theme", "promotions", "cards", "podio"] as const) {
+  // And the "Meu Pequeno Mundo" switch: an invalid one means the env alone decides, as before the switch existed.
+  for (const key of ["navigation", "theme", "promotions", "cards", "podio", "mundo"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
       : key === "theme" ? validateTheme(candidate[key], scope, `${scope}.theme`)
       : key === "cards" ? validateCards(candidate[key], scope, `${scope}.cards`)
       : key === "podio" ? validatePodio(candidate[key], scope, `${scope}.podio`)
+      : key === "mundo" ? validateMundo(candidate[key], scope, `${scope}.mundo`)
       : validatePromotions(candidate[key], scope, `${scope}.promotions`);
     if (!r.ok) {
       diagnostics.push(`${scope}: ${key} is invalid and was ignored (${r.errors[0]})`);
