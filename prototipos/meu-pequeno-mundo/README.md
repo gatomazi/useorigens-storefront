@@ -9,7 +9,7 @@ com fontes e uma lembrança pessoal opcional.
 (`npm run mundo:prototipo`). Não edite o HTML à mão.
 
 - `meu-pequeno-mundo-use-origens.html` — o protótipo inteiro, gerado (HTML, CSS e JS num arquivo; Three.js 0.186.1 por CDN com versão fixa).
-- `contexto/perfis-cidades.json` — **cópia gerada** de `data/mundo/perfis-cidades.json` (fora do git). Os perfis curados agora ficam em
+- `contexto/perfis-cidades.json` e `contexto/perfis/<id>.json` — **cópias geradas** de `data/mundo/perfis-cidades.json` (fora do git); a página lê um arquivo por cidade. Os perfis curados agora ficam em
   `data/mundo/` e servem a loja e o protótipo: 9 cidades (Nova Trento, Tijucas, Garopaba, Curitiba, Porto Alegre, Goiânia, Campo Grande,
   Belém e Manaus). Guia em `docs/mundo/curadoria.md`; validação com `npm run mundo:validar`.
 - `data/mundo/sedes-municipais-ibge-2022.json` — ponto da sede municipal (e das Regiões Administrativas do DF) e divisão regional de

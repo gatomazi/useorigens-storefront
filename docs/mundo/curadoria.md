@@ -4,6 +4,10 @@ Os perfis ficam em `data/mundo/perfis-cidades.json`. A loja, o protótipo avulso
 de perfis. O catálogo de lugares (2.144 cidades e Regiões Administrativas do DF, com produtos reais) **não** passa por aqui: ele vem do
 snapshot da loja, por `src/lib/mundo/catalogo.ts`. Um lugar sem perfil continua funcionando, com cenário regional e o ponto do IBGE.
 
+A página não baixa o arquivo inteiro: cada perfil sai sozinho, só com as fontes que cita (`/api/mundo/perfis/<id>.json` na loja,
+`contexto/perfis/<id>.json` no protótipo, gerados por `src/lib/mundo/perfis.ts`), e só para os lugares que entram no mundo. Por isso
+o número de perfis não pesa no carregamento.
+
 ## Adicionar ou mudar um perfil
 
 1. Copie o bloco de `data/mundo/modelo-perfil.json` para `cidades`, com a chave igual ao ID do IBGE (ou `df-ra:<região>` no DF).
@@ -46,7 +50,8 @@ snapshot da loja, por `src/lib/mundo/catalogo.ts`. Um lugar sem perfil continua 
 | água | `rio`, `rio-largo`, `vereda`, `mar`, `costa`, `lagoas`, `lagoas-muitas`, `lago` (`largura` e `direcao` opcionais) |
 | vegetação | `redonda`, `araucaria`, `palmeira`, `buriti`, `mata`, `cerrado`, `arbusto`, `capim`, `junco`, `restinga`, `ipe` |
 | construções | `colonial`, `urbano` (com `predios`), `acoriano` |
-| marcos | `santuario`, `pico-cruz` (pede `vale-montes`), `casarao`, `ponte-urbana` (pede rio), `dunas` (pede `costa-dunas`), `baleia` (pede `mar`), `estufa`, `torre-relogio`, `usina` (fica perto da água), `mercado`, `sobrado`, `lago-mureta`, `lago-ilha`, `mercado-ferro` (fica perto da água), `teatro-frontao`, `teatro-cupula`, `encontro-aguas` (pede rio) |
+| marcos específicos | `santuario`, `pico-cruz` (pede `vale-montes`), `dunas` (pede `costa-dunas`), `baleia` (pede `mar`), `estufa`, `teatro-cupula`, `encontro-aguas` (pede rio) — formas pensadas para uma cidade; evite em outras |
+| marcos genéricos | `igreja` (uma torre), `catedral` (duas torres), `ruinas`, `palacio`, `teatro-frontao`, `casarao`, `sobrado`, `mercado`, `mercado-ferro` (fica perto da água), `usina` (fica perto da água), `estacao`, `torre-relogio`, `coreto`, `monumento` (obelisco genérico), `mirante`, `forte`, `farol` (pede `mar` ou `costa`), `trapiche` (pede água), `ponte-urbana` (pede rio), `ponte-pensil` (pede rio, `mar` ou `costa`), `cachoeira`, `vinhedo`, `lago-mureta`, `lago-ilha` |
 | bases (paleta e relevo de partida) | `litoral`, `serra`, `campos`, `vale`, `interior`, `amazonia`, `cerrado`, `alagado` |
 
 A lista oficial é `MODULOS` em `src/components/mundo/experiencia/config.js`. A cena ignora qualquer nome fora dela, e o validador acusa.

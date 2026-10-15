@@ -39,7 +39,8 @@
     "mundo:dados": "node --conditions=react-server --import tsx scripts/mini-world-export.mts",
     "mundo:prototipo": "node --import tsx scripts/mini-world-standalone.mts",
     "mundo:pacote": "bash scripts/mini-world-pacote.sh",
-    "mundo:validar": "node --conditions=react-server --import tsx scripts/mini-world-validar.mts"
+    "mundo:validar": "node --conditions=react-server --import tsx scripts/mini-world-validar.mts",
+    "mundo:cobertura": "node --import tsx scripts/mini-world-cobertura.mts"
   },
   "dependencies": {
     "embla-carousel-react": "^8.6.0",
