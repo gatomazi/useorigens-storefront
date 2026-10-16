@@ -2,8 +2,9 @@ import "server-only";
 import { requireAtLeastOneInkToken } from "../config/env";
 import { fetchStoreProducts, type FetchProgress } from "../ink/client";
 import { INK_STORES, tokenFor } from "../ink/config";
-import type { CommerceStoreKey } from "../geo/regions";
+import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import { buildStoreIndex } from "./indexer";
+import { lerColecoes } from "./unificado/leitura";
 import { readSnapshot, writeSnapshot } from "./snapshot-file";
 import type { CatalogSnapshot, StoreIndex } from "./types";
 
@@ -73,11 +74,29 @@ export async function promoteSnapshot(snapshot: CatalogSnapshot, filePath?: stri
  * Next.js Route Handler concern, done by the caller (the admin route) right after this resolves, since it
  * can only run inside an actual request (see that route for why).
  */
+/** The regional segmentation collections every store keeps on INK (internal), by region. */
+const SEGMENTATION: Readonly<Record<string, RegionSlug>> = { "ZZ - SU": "sul", "ZZ - NO": "norte", "ZZ - CO": "centro-oeste" };
+
+/**
+ * Merchandise of `storeKey` filed under a region's segmentation collection (product id → region). With the products of Norte and Centro-Oeste
+ * moved into use-sul for the single store, use-sul's visible merchandise includes theirs ("Made In Goiás"): the regional catalog must not show it
+ * as Sul's. City designs need none of this (their UF already excludes them: `uf-mismatch`). 1–2 GETs per store.
+ */
+export async function segmentationOf(storeKey: CommerceStoreKey): Promise<Map<string, RegionSlug>> {
+  const { membros } = await lerColecoes(storeKey, (name) => Object.hasOwn(SEGMENTATION, name.trim()));
+  const out = new Map<string, RegionSlug>();
+  for (const m of membros) {
+    const region = SEGMENTATION[m.name.trim()];
+    if (region) for (const id of m.productIds) out.set(id, region);
+  }
+  return out;
+}
+
 export async function syncCatalog(
   requestedStoreKeys: readonly CommerceStoreKey[] = [],
   onProgress?: FetchProgress,
   maxRequestsPerStore: Partial<Record<CommerceStoreKey, number>> = {},
-  options: { skipWriteWhenUnchanged?: boolean } = {},
+  options: { skipWriteWhenUnchanged?: boolean; segmentation?: (storeKey: CommerceStoreKey) => Promise<Map<string, RegionSlug>> } = {},
 ): Promise<SyncResult> {
   requireAtLeastOneInkToken();
   const startedAt = new Date().toISOString();
@@ -89,8 +108,12 @@ export async function syncCatalog(
   const snapshot = await readSnapshot();
   const settled = await Promise.allSettled(
     keys.map(async (storeKey) => {
-      const { products, rejected, requests } = await fetchStoreProducts(storeKey, onProgress, maxRequestsPerStore[storeKey]);
-      const index = buildStoreIndex(storeKey, products, new Date().toISOString());
+      // A failed segmentation read fails this store's sync (it keeps its last snapshot): never a catalog that could show another region's merchandise.
+      const [{ products, rejected, requests }, foreign] = await Promise.all([
+        fetchStoreProducts(storeKey, onProgress, maxRequestsPerStore[storeKey]),
+        (options.segmentation ?? segmentationOf)(storeKey),
+      ]);
+      const index = buildStoreIndex(storeKey, products, new Date().toISOString(), undefined, foreign);
       return { storeKey, index, rejected, requests };
     }),
   );
