@@ -25,7 +25,8 @@ import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
 import { MUNDO_MODOS, type MundoModo } from "@/lib/site-config/mundo-schema";
-import { DEFAULT_BUY_LABEL, isUmaPencaSource, MAX_BUY_LABEL, maxSectionProducts, MIN_SECTION_PRODUCTS, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, isUmaPencaSource, MAX_BUY_LABEL, MAX_COLLECTION_NOTE, maxSectionProducts, MIN_SECTION_PRODUCTS, type CollectionNote, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
+import { CARD_BUY_STYLE_NAME, postedBuyStyle } from "@/lib/site-config/cards-schema";
 import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
@@ -394,6 +395,25 @@ export async function setStatePageSectionAction(fd: FormData) {
 }
 
 /** Menu: a region from before the collection menu keeps what it shows and the INK navbar starts following it (once published). */
+/**
+ * Navegação: the short descriptions under the collections' names in the open menus (one line each, `note_<store>:<id>`; empty = none). Saved in
+ * the region's draft and published with it.
+ */
+export async function saveCollectionNotesAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const descriptions: CollectionNote[] = [];
+  for (const [name, value] of fd.entries()) {
+    const ref = name.startsWith("note_") ? parseCollectionRef(name.slice(5)) : null;
+    const text = typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, MAX_COLLECTION_NOTE) : "";
+    if (ref && text) descriptions.push({ ...ref, text });
+  }
+  const outcome = await applyAndSave(scope, { type: "set-collection-descriptions", descriptions }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(MENU_SCREEN, { err: outcome.errors });
+  await audit(actor, "draft.save", scope, "set-collection-descriptions");
+  back(`${MENU_SCREEN}#descricoes-colecoes`, { ok: `Rascunho salvo: ${descriptions.length === 0 ? "nenhuma coleção com descrição" : descriptions.length === 1 ? "1 coleção com descrição" : `${descriptions.length} coleções com descrição`} no menu. Publique para valer na loja.` });
+}
+
 export async function adoptCollectionMenuAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const to = MENU_SCREEN;
@@ -608,12 +628,12 @@ export async function saveCardsAction(fd: FormData) {
   const actor = await requireAdmin({ mutation: true, owner: true });
   const on = fd.get("cards_buy") === "on";
   const label = text(fd, "cards_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL;
-  const fab = text(fd, "cards_buy_style") === "fab";
-  const outcome = await applyAndSave("global", { type: "set-cards", cards: on ? { buyLabel: label, ...(fab ? { buyStyle: "fab" as const } : {}) } : null }, revNumber(fd), actor);
+  const style = postedBuyStyle(text(fd, "cards_buy_style"));
+  const outcome = await applyAndSave("global", { type: "set-cards", cards: on ? { buyLabel: label, ...(style ? { buyStyle: style } : {}) } : null }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back("/admin/aparencia", { err: outcome.errors.map((e) => (e.includes("buyLabel") ? `O texto do botão precisa ter de 1 a ${MAX_BUY_LABEL} caracteres, sem espaço nas pontas.` : e)) });
   await audit(actor, "draft.save", "global", "set-cards");
-  back("/admin/aparencia#botao-cards", { ok: on ? `Rascunho salvo: ${fab ? "carrinho na imagem" : "botão"} “${label}” em todos os cards. Publique a configuração global para valer na loja.` : "Rascunho salvo: cada seção volta a decidir o próprio botão. Publique a configuração global para valer na loja." });
+  back("/admin/aparencia#botao-cards", { ok: on ? `Rascunho salvo: ${CARD_BUY_STYLE_NAME[style ?? "button"]} “${label}” em todos os cards. Publique a configuração global para valer na loja.` : "Rascunho salvo: cada seção volta a decidir o próprio botão. Publique a configuração global para valer na loja." });
 }
 
 /**

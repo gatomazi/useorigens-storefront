@@ -31,6 +31,7 @@ export function ProductGrid({
   toolbar,
   footer,
   compact = false,
+  eager = true,
 }: {
   /** The automatic collection page: the page header already names the collection, so the grid's heading is a quiet line (still the section's name for assistive tech). */
   compact?: boolean;
@@ -57,6 +58,8 @@ export function ProductGrid({
   tags?: ProductTags;
   /** Opaque light cards (`SOLID_CARDS`), for a section on a photo. */
   solidCards?: boolean;
+  /** The first two pictures load right away (a section near the top); false = every picture loads lazily (a section below the fold). */
+  eager?: boolean;
 }) {
   const dark = tone === "dark";
   const cardDark = dark && !solidCards;
@@ -85,7 +88,7 @@ export function ProductGrid({
         )}
         {items.map((item, i) => (
           <li key={item.id}>
-            <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buy={buy} tags={tags} />
+            <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={eager && i < 2} sourceSection={sourceSection} buy={buy} tags={tags} />
           </li>
         ))}
       </ul>

@@ -3,9 +3,11 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
+import { variantsOf } from "../site-config/schema";
+import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, type TileFormat, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
+import { postedBuyStyle } from "../site-config/cards-schema";
 import { ARTICLE_KINDS } from "../umapenca/types";
 
 type Fields = { get(name: string): FormDataEntryValue | null };
@@ -86,6 +88,12 @@ function parseCta(f: Fields): Section["cta"] | undefined {
   return dest ? { label: str(f, "cta_label") || "Ver todos", dest } : undefined;
 }
 
+/** A tile colour from the form: a theme token or `#rrggbb`; anything else = none (the region's colour). */
+function parseTileColor(value: string): Color | undefined {
+  if (value === "token:region-primary" || value === "token:ground" || value === "token:near-black") return value;
+  return /^#[0-9a-fA-F]{6}$/.test(value) ? (value.toLowerCase() as Color) : undefined;
+}
+
 /**
  * The image grid's tile rows `tile_<i>_*` (i < `tile_count`), in order. A row with neither a name nor a picture is an empty slot and is skipped;
  * a row missing its name or its destination is reported in plain words (`problems`) instead of reaching the validator as a cryptic path.
@@ -106,7 +114,32 @@ export function parseGridTiles(f: Fields): { tiles: GridTile[]; problems: string
     if (!dest) problems.push(`Bloco ${n}${label ? ` ("${label}")` : ""}: escolha para onde ele leva.`);
     if (!label || !dest) continue;
     const caption = str(f, `tile_${i}_caption`);
-    tiles.push({ label, ...(caption ? { caption } : {}), ...(assetId ? { image: { assetId, alt: "", decorative: true } } : {}), dest });
+    const posted = str(f, `tile_${i}_format`);
+    const format = (TILE_FORMATS as readonly string[]).includes(posted) ? (posted as TileFormat) : undefined;
+    if (format === "product" && dest.kind !== "collection-page" && dest.kind !== "ink-collection") {
+      problems.push(`Bloco ${n} ("${label}"): o formato “camiseta da coleção” precisa levar para uma coleção (a camiseta vem dela).`);
+      continue;
+    }
+    // A banner's picture may carry meaning (a described creative); a classic tile's is always decorative (its name is the link text).
+    const alt = format === "banner" ? str(f, `tile_${i}_alt`).slice(0, 160) : "";
+    const tile: GridTile = { label, ...(caption ? { caption } : {}), ...(assetId ? { image: { assetId, alt, decorative: alt === "" } } : {}), dest };
+    if (format) {
+      tile.format = format;
+      const color = parseTileColor(str(f, `tile_${i}_color`));
+      if (color) tile.color = color;
+      const tone = str(f, `tile_${i}_tone`);
+      if (tone === "light" || tone === "dark") tile.tone = tone;
+    }
+    const cta = str(f, `tile_${i}_cta`).slice(0, MAX_TILE_CTA).trim();
+    if (cta) tile.cta = cta;
+    if (format === "banner") {
+      const mobileId = str(f, `tile_${i}_image_mobile`);
+      if (mobileId) tile.imageMobile = { assetId: mobileId, alt: "", decorative: true };
+      const point = (x: string, y: string) => ({ x: clamp(Math.round(num(f, `tile_${i}_${x}`, 50)), 0, 100), y: clamp(Math.round(num(f, `tile_${i}_${y}`, 50)), 0, 100) });
+      const focal = { mobile: point("fmx", "fmy"), desktop: point("fdx", "fdy") };
+      if (focal.mobile.x !== 50 || focal.mobile.y !== 50 || focal.desktop.x !== 50 || focal.desktop.y !== 50) tile.focal = focal;
+    }
+    tiles.push(tile);
   }
   if (problems.length === 0 && tiles.length < MIN_GRID_TILES) problems.push(`A grade precisa de pelo menos ${MIN_GRID_TILES} blocos.`);
   return { tiles, problems };
@@ -207,7 +240,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     // The buy button: the checkbox and its text (empty = "Ver produto"); a form without the block keeps what is saved.
     const buyLabel = f.get("layout_buy_present") === null ? section.layout?.buyLabel : f.get("layout_buy") !== null ? str(f, "layout_buy_label").slice(0, MAX_BUY_LABEL).trim() || DEFAULT_BUY_LABEL : undefined;
     // Its style: under the price (never stored) or the cart on the picture; it goes with the label.
-    const buyStyle = !buyLabel ? undefined : f.get("layout_buy_present") === null ? section.layout?.buyStyle : str(f, "layout_buy_style") === "fab" ? ("fab" as const) : undefined;
+    const buyStyle = !buyLabel ? undefined : f.get("layout_buy_present") === null ? section.layout?.buyStyle : postedBuyStyle(str(f, "layout_buy_style"));
     // Tags on the pictures: the "% OFF" of a promotion and/or the section's own text (an empty text is no tag); a form without the block keeps them.
     let tags: ProductTags | undefined = section.layout?.tags;
     if (f.get("tags_present") !== null) {
@@ -267,6 +300,11 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     patch.tiles = parseGridTiles(f).tiles; // the caller refuses the save when `parseGridTiles` reports problems
   }
   if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", 8)), 1, 8);
+  if (f.get("variant_present") !== null) {
+    // The composition: one of the template's own, or the original ("" / anything else: never stored).
+    const posted = str(f, "variant");
+    patch.variant = variantsOf(section.template).includes(posted) ? (posted as Section["variant"]) : undefined;
+  }
   return patch;
 }
 

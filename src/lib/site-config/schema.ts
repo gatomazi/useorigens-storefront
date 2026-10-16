@@ -135,7 +135,32 @@ export const DEFAULT_PAGE_PRODUCTS = 24;
  * so a tile never shows a price or a count it could get wrong; the destination goes through the same rules as any button (own region, live page).
  * A tile without a picture is drawn as a plain colour block with its name (a "Ver tudo" tile, or a grid still waiting for its photos).
  */
-export type GridTile = { label: string; caption?: string; image?: MediaRef; dest: Destination };
+export type GridTile = {
+  label: string;
+  caption?: string;
+  image?: MediaRef;
+  dest: Destination;
+  /**
+   * How the tile is drawn (absent = the classic tile: the picture with its name under or over it). "product": a REAL shirt of the destination
+   * collection (its first product in the region's own order, read from the catalog snapshot at render time, never a copy) on the tile's colour, with
+   * the name, the caption and the call under it. "banner": the picture fills the card (a mini banner), the name and the call over its lower edge.
+   */
+  format?: TileFormat;
+  /** Banner only: the phone's own crop (absent = the same picture). */
+  imageMobile?: MediaRef;
+  /** Banner only: the point of the picture that stays in frame, per screen (0..100; absent = the centre). */
+  focal?: { mobile: Point; desktop: Point };
+  /** "product" / "banner": the card's colour (under the shirt; under the picture while it loads). Absent = the region's colour. */
+  color?: Color;
+  /** "product" / "banner": the text over that colour or picture. "dark" = dark text (a light colour or picture), "light" = white text. */
+  tone?: "light" | "dark";
+  /** The explicit call at the foot of the tile ("Ver coleção"). Absent: none on a classic tile, "Ver coleção" on the other two. */
+  cta?: string;
+};
+export const TILE_FORMATS = ["product", "banner"] as const;
+export type TileFormat = (typeof TILE_FORMATS)[number];
+export const DEFAULT_TILE_CTA = "Ver coleção";
+export const MAX_TILE_CTA = 24;
 export const GRID_COLUMNS = [2, 3, 4] as const;
 export const GRID_ASPECTS = ["square", "portrait", "landscape"] as const;
 export const GRID_LABELS = ["below", "overlay"] as const;
@@ -143,6 +168,17 @@ export const GRID_LABELS = ["below", "overlay"] as const;
 export type GridLayout = { columns: (typeof GRID_COLUMNS)[number]; aspect: (typeof GRID_ASPECTS)[number]; labels: (typeof GRID_LABELS)[number] };
 export const MIN_GRID_TILES = 2;
 export const MAX_GRID_TILES = 12;
+
+/**
+ * The composition of a structured section, per template (absent = its original look, so documents saved before this existed stay as they were):
+ *   hero "feature"        headline, search and ONE large featured product (the first eligible of `featured`) instead of three small cards;
+ *   states "strip"        a band of one entry per state (UF, name, number of places and the call), each entry one link, instead of the cover cards;
+ *   city-styles "split"   the heading in a column of its own beside the style cards;
+ *   campaign "split"      the picture (or real shirts) on one half and the text on a colour of its own on the other, edge to edge.
+ */
+export const SECTION_VARIANTS = { hero: ["feature"], states: ["strip"], "city-styles": ["split"], campaign: ["split"] } as const satisfies Partial<Record<TemplateKey, readonly string[]>>;
+export type SectionVariant = (typeof SECTION_VARIANTS)[keyof typeof SECTION_VARIANTS][number];
+export const variantsOf = (template: TemplateKey): readonly string[] => (SECTION_VARIANTS as Partial<Record<TemplateKey, readonly string[]>>)[template] ?? [];
 
 export type Section = {
   id: string;
@@ -185,6 +221,8 @@ export type Section = {
   tiles?: GridTile[];
   /** Image grid only. */
   grid?: GridLayout;
+  /** Hero, state chooser, city styles and campaign only: their composition (`SECTION_VARIANTS`); absent = the original one. */
+  variant?: SectionVariant;
   appearance: Appearance;
 };
 
@@ -212,6 +250,9 @@ export const MAX_ARRANGEMENTS = 300;
  * collections taken out of "Categorias"; `added` = internal collections brought into it (site only). A collection is in at most one list.
  */
 export type CollectionMenu = { top: CollectionRef[]; hidden: CollectionRef[]; added: CollectionRef[] };
+/** One short line that says what a collection is ("Camisetas com o estado inteiro"), shown under its name in the storefront's open menus. */
+export type CollectionNote = CollectionRef & { text: string };
+export const MAX_COLLECTION_NOTE = 80;
 
 /**
  * A page of a region outside the home: an editorial hotpage or a parent-category landing. Made of the SAME sections as the home (rendered by the
@@ -354,6 +395,8 @@ export type ScopeDoc = {
      * the next edit).
      */
     menu?: CollectionMenu;
+    /** A short description per collection (at most one each), under its name in the header's "Coleções" and in the phone menu. Absent = names only. */
+    descriptions?: CollectionNote[];
     /**
      * Order and hidden products per collection (at most one entry per collection). Before this existed each section kept its own (`Source.productIds` /
      * `hiddenIds`): those are read only while the collection has no entry here (`arrangementOf`), so an entry with neither list means "INK's order"
@@ -623,6 +666,27 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       if (t.caption !== undefined && !isStr(t.caption, 80)) c.fail(`${at}.caption`, "1..80 chars");
       if (t.image !== undefined) checkMediaRef(c, `${at}.image`, t.image);
       checkDestination(c, `${at}.dest`, t.dest);
+      if (t.format !== undefined && !(TILE_FORMATS as readonly unknown[]).includes(t.format)) c.fail(`${at}.format`, `must be ${TILE_FORMATS.join(" | ")}`);
+      const styled = t.format === "product" || t.format === "banner";
+      if (t.imageMobile !== undefined) {
+        if (t.format !== "banner") c.fail(`${at}.imageMobile`, "banner tiles only");
+        else checkMediaRef(c, `${at}.imageMobile`, t.imageMobile);
+      }
+      if (t.focal !== undefined) {
+        if (t.format !== "banner" || !isRecord(t.focal)) c.fail(`${at}.focal`, "banner tiles only: { mobile, desktop }");
+        else {
+          checkPoint(c, `${at}.focal.mobile`, t.focal.mobile);
+          checkPoint(c, `${at}.focal.desktop`, t.focal.desktop);
+        }
+      }
+      if (t.color !== undefined) {
+        if (!styled) c.fail(`${at}.color`, "product or banner tiles only");
+        else checkColor(c, `${at}.color`, t.color);
+      }
+      if (t.tone !== undefined && (!styled || (t.tone !== "light" && t.tone !== "dark"))) c.fail(`${at}.tone`, "product or banner tiles only: light | dark");
+      if (t.cta !== undefined && (!isStr(t.cta, MAX_TILE_CTA) || t.cta.trim() !== t.cta)) c.fail(`${at}.cta`, `1..${MAX_TILE_CTA} chars, no leading or trailing spaces`);
+      // A product tile shows a shirt OF its destination: only a collection has one.
+      if (t.format === "product" && isRecord(t.dest) && t.dest.kind !== "collection-page" && t.dest.kind !== "ink-collection") c.fail(`${at}.dest`, "a product tile leads to a collection (its shirt comes from it)");
     });
   }
   if (v.grid !== undefined) {
@@ -636,6 +700,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     if (!v.tiles) c.fail(`${path}.tiles`, "required for an image grid");
     if (!v.grid) c.fail(`${path}.grid`, "required for an image grid");
   }
+  if (v.variant !== undefined && !variantsOf(v.template as TemplateKey).includes(v.variant as string)) c.fail(`${path}.variant`, "not a composition of this template");
   if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > 8)) c.fail(`${path}.count`, "city styles only, an integer 1..8");
   if (v.template === "page-hero" && !v.title) c.fail(`${path}.title`, "required for a page hero");
   if (v.template === "product-carousel") {
@@ -876,6 +941,12 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
       items.forEach((r) => { if (isRecord(r)) earlier.add(key(r)); });
     }
   }
+  if (v.descriptions !== undefined) {
+    checkRefList(c, `${path}.descriptions`, v.descriptions, MAX_NAVBAR_GROUP * 4);
+    if (Array.isArray(v.descriptions)) v.descriptions.forEach((d, i) => {
+      if (isRecord(d) && (!isStr(d.text, MAX_COLLECTION_NOTE) || d.text.trim() !== d.text || /[\u0000-\u001f\u007f]/.test(d.text))) c.fail(`${path}.descriptions[${i}].text`, `1..${MAX_COLLECTION_NOTE} chars, one line`);
+    });
+  }
   if (v.stateCategories !== undefined) checkRefList(c, `${path}.stateCategories`, v.stateCategories, MAX_STATE_ROWS);
   if (v.stateSubcategories !== undefined) {
     const sub = v.stateSubcategories;
@@ -1073,7 +1144,7 @@ export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
   if (!doc) return [];
   const out: MediaRef[] = [];
   const ofSection = (s: Section) => {
-    for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), s.customizerCard?.image, ...(s.tiles ?? []).map((t) => t.image)]) if (r) out.push(r);
+    for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), s.customizerCard?.image, ...(s.tiles ?? []).flatMap((t) => [t.image, t.imageMobile])]) if (r) out.push(r);
   };
   for (const s of doc.home?.sections ?? []) ofSection(s);
   for (const p of doc.pages ?? []) {

@@ -18,9 +18,9 @@ import type { TopBarConfig } from "../site-config/top-bar-schema";
 import type { CardsConfig } from "../site-config/cards-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type StateSubcategories, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionNote, type CollectionRef, type StateSubcategories, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid" | "variant">;
 
 export type DraftOp =
   /** `display: "grid"` creates the section already as a product grid (absent = a carousel). */
@@ -53,6 +53,8 @@ export type DraftOp =
   | ({ type: "move-collection-menu"; direction: "up" | "down" } & CollectionRef)
   /** Gives a document from before the collection menu its own menu, unchanged (the Worker then follows it once published). */
   | { type: "adopt-collection-menu" }
+  /** The short descriptions of the menu's collections, all at once (the panel's form). An empty list removes them. */
+  | { type: "set-collection-descriptions"; descriptions: CollectionNote[] }
   /**
    * The state page's CATEGORIES (`collections.stateCategories`): puts a collection in (`on`) or takes it out, or moves it one step. `base` is what the
    * list is now (the menu bar while the region has no list of its own, computed by the caller), so the first edit starts from it instead of from nothing.
@@ -159,6 +161,15 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-collection-menu-position" || op.type === "move-collection-menu" || op.type === "adopt-collection-menu") return editMenu(doc, op);
   if (op.type === "set-state-category" || op.type === "move-state-category" || op.type === "reset-state-categories") return editStateCategories(doc, op);
   if (op.type === "set-state-subcategory" || op.type === "reset-state-subcategories") return editStateSubcategories(doc, op);
+  if (op.type === "set-collection-descriptions") {
+    if (doc.scope === "global") return fail("global has no collections");
+    const collections = { ...(doc.collections ?? { enabled: [] }) };
+    if (op.descriptions.length > 0) collections.descriptions = op.descriptions.map((d) => ({ store: d.store, collectionId: d.collectionId, text: d.text }));
+    else delete collections.descriptions;
+    const next: ScopeDoc = { ...doc, collections };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
   if (op.type === "set-state-page-section") {
     if (doc.scope === "global") return fail("global has no state pages");
     const next = withStatePageSection(doc, op.section, op.shown);

@@ -10,6 +10,10 @@ import { PageGround } from "@/components/pages/PageGround";
 import { RegionHero } from "@/components/home/RegionHero";
 import { Fragment } from "react";
 import { StateCards } from "@/components/home/StateCards";
+import { StateStrip } from "@/components/home/StateStrip";
+import { cssColor } from "@/components/banners/SectionBackdrop";
+import { relativeLuminance } from "@/lib/site-config/color";
+import type { BannerAsset } from "@/lib/editorial/banners";
 import { MundoBlocoHome } from "@/components/mundo/entrada/MundoEntradas";
 import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import { PodioTeaser } from "@/components/podio/PodioTeaser";
@@ -20,9 +24,9 @@ import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
-import { firstImageSectionId, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
+import { firstImageSectionId, focalToCss, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
 import { cardBuy, cardButtonOf, type CardBuy } from "@/lib/site-config/cards-schema";
-import type { Fill, Page, PublishedBundle, Section } from "@/lib/site-config/schema";
+import { DEFAULT_TILE_CTA, type Color, type Fill, type MediaRef, type Page, type PublishedBundle, type Section } from "@/lib/site-config/schema";
 import { Pagination } from "@/components/catalog/Pagination";
 import { numberPt } from "@/lib/format";
 import { collectionFacets } from "@/lib/search/collection-filter";
@@ -63,12 +67,14 @@ export function HomeSections({
   // A page with a ground of its own (PageGround): text with no surface of its own follows that ground. On a DARK ground, a section that paints a light
   // surface goes back to dark text (`on-light`), and the two sections that have no dark version (city styles, states) sit on paper.
   const pageTone = page?.backdrop?.tone;
+  // The hero's "explore by state" link points at the state chooser of THIS page, and only when there is one (never a dead anchor).
+  const statesAnchor = sections.find((x) => x.template === "states")?.anchor ?? null;
   const darkPage = pageTone === "dark";
   const paperLayer = <div aria-hidden="true" className="paper absolute inset-0 -z-10" />;
 
   const rendered = (
     <>
-      {sections.map((s) => {
+      {sections.map((s, index) => {
         const bg = resolveBackground(s.appearance, media);
         switch (s.template) {
           case "hero":
@@ -81,6 +87,9 @@ export function HomeSections({
                 config={{}}
                 copy={s.title && s.subtitle ? { title: s.title, body: s.subtitle } : undefined}
                 backdrop={<SectionBackdrop bg={bg} priority={priorityId === s.id} />}
+                variant={s.variant === "feature" ? "feature" : undefined}
+                buy={cardButton}
+                statesAnchor={statesAnchor}
               />
             );
 
@@ -91,7 +100,24 @@ export function HomeSections({
             const ownStore = storeForRegion(region);
             const entries = showcase.families.filter((f) => f.primary.commerceStoreKey === ownStore).slice(0, s.count ?? 8);
             if (entries.length === 0) return null;
-            const content = (
+            const split = s.variant === "split";
+            const content = split ? (
+              // The heading in a column of its own beside the cards (three across from 768px; a row that scrolls on phones).
+              <div className="grid gap-6 md:gap-8 lg:grid-cols-12 lg:gap-10">
+                <div className="lg:col-span-4 xl:col-span-3">
+                  <h2 id={s.headingId} className="t-h2">
+                    {s.title}
+                  </h2>
+                  {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
+                  <div className="mt-3">
+                    <SearchDialog region={region} variant="link" label="Encontre aqui a sua cidade" source={SOURCES.homeStylesSearch} />
+                  </div>
+                </div>
+                <div className="min-w-0 lg:col-span-8 xl:col-span-9">
+                  <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buy={cardButton} layout="split" />
+                </div>
+              </div>
+            ) : (
               <>
                 <div className="mb-8 max-w-2xl lg:mb-12">
                   <h2 id={s.headingId} className="t-h2">
@@ -127,8 +153,12 @@ export function HomeSections({
             const states = home.states.filter((st) => st.cityCount > 0);
             if (states.length === 0) return null;
             const visual = hasImage(bg) || bg.fill.kind !== "none";
+            const backdrop = visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : darkPage ? paperLayer : undefined;
             return (
               <Fragment key={s.id}>
+                {s.variant === "strip" ? (
+                  <StateStrip region={region} states={states} title={s.title ?? "Escolha o seu estado"} subtitle={s.subtitle} anchor={s.anchor} headingId={s.headingId} backdrop={backdrop} className={darkPage ? "on-light" : undefined} />
+                ) : (
                 <StateCards
                   region={region}
                   states={states}
@@ -136,14 +166,15 @@ export function HomeSections({
                   subtitle={s.subtitle}
                   anchor={s.anchor}
                   headingId={s.headingId}
-                  backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : darkPage ? paperLayer : undefined}
+                  backdrop={backdrop}
                   className={darkPage ? "on-light" : undefined}
                   covers={resolveStateCovers(s, media)}
                 />
+                )}
                 {/* "Meu Pequeno Mundo" right after the state chooser, on the home only, when its entries are on (src/lib/mundo/flag.ts). */}
                 {!page && mundoEntradasAtivas() && <MundoBlocoHome region={region} />}
                 {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage), unless the region switched it off — docs/storefront/podio.md. */}
-                {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf), doc)} />}
+                {!page && <PodioTeaser region={region} leaders={getPodiumLeaders(region, states.map((st) => st.uf), doc)} spaced={s.variant === "strip"} />}
               </Fragment>
             );
           }
@@ -175,12 +206,34 @@ export function HomeSections({
           }
 
           case "product-carousel":
-            return <CarouselSection key={s.id} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} compact={compactHero} />;
+            return <CarouselSection key={s.id} eager={index < 2} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} compact={compactHero} />;
 
           case "campaign": {
             const image = hasImage(bg);
             const useFill = !image && s.fallback === "fill" && bg.fill.kind !== "none";
             const ctaHref = s.cta ? destinationHref(s.cta.dest, links, region) : null;
+            if (s.variant === "split") {
+              // The picture becomes the figure half (its own crop and framing per screen); the fill paints the text half (the region's colour when none).
+              const figure = splitFigure(bg);
+              const panelFill = bg.fill.kind === "none" ? null : <SectionBackdrop bg={{ ...bg, images: { mobile: null, desktop: null } }} />;
+              // Without a picture, the shirts the button leads to stand in (the first two of its collection, real photos), else the home's own crops.
+              const dest = s.cta?.dest;
+              const found = !figure && dest && (dest.kind === "collection-page" || dest.kind === "ink-collection") && categories ? categories({ kind: "ink-category", store: dest.store, collectionId: dest.collectionId, order: "category", limit: 2 }) : null;
+              const shirts = found?.status === "ok" && found.items.length >= 2 ? found.items.slice(0, 2).map((item) => ({ imageUrl: item.imageUrl, family: item.id })) : home.campaignCrops;
+              return (
+                <Campaign
+                  key={s.id}
+                  region={region}
+                  crops={shirts}
+                  config={{}}
+                  copy={s.title ? { title: s.title, body: s.subtitle ?? "" } : undefined}
+                  anchor={s.anchor}
+                  headingId={s.headingId}
+                  cta={ctaHref && s.cta ? { label: s.cta.label, href: ctaHref } : undefined}
+                  split={{ figure, panel: panelFill, panelTone: fillTone(bg.fill) }}
+                />
+              );
+            }
             return (
               <Campaign
                 key={s.id}
@@ -202,7 +255,7 @@ export function HomeSections({
 
           case "image-grid": {
             if (!s.title || !s.grid) return null;
-            const tiles = gridTiles(s, media, links, region);
+            const tiles = gridTiles(s, media, links, region, categories);
             if (tiles.length === 0) return null;
             const visual = hasImage(bg) || bg.fill.kind !== "none";
             return (
@@ -245,8 +298,11 @@ function CarouselSection({
   cardButton,
   searchSlug,
   compact = false,
+  eager,
 }: {
   region: RegionSlug;
+  /** The section is one of the page's first two: its first pictures load right away; below the fold, every picture waits (lazy). */
+  eager: boolean;
   /** The automatic collection page: the grid's own heading is left out (the page header already names the collection and counts its products). */
   compact?: boolean;
   /** The store-wide buy button (global `cards`); the section's own button (text and style) wins. */
@@ -337,6 +393,7 @@ function CarouselSection({
       buy={buy}
       tags={s.layout.tags}
       solidCards={hasImage(bg)}
+      eager={eager}
     />
   );
 
@@ -364,21 +421,74 @@ function CarouselSection({
   );
 }
 
-/** The grid's tiles with a real link (a tile whose destination cannot be resolved here is left out, never a dead link); a picture the media table does not know falls back to the plain block. */
-function gridTiles(s: Section, media: PublishedBundle["media"], links: CollectionLinks | undefined, region: RegionSlug): GridTileView[] {
+/**
+ * The grid's tiles with a real link (a tile whose destination cannot be resolved here is left out, never a dead link); a picture the media table does
+ * not know falls back to the plain block. A "product" tile shows the FIRST product of its destination collection, in the region's own order (the same
+ * lookup the product sections use: this store's catalog snapshot, never a copy); none resolved = the card keeps its colour and text.
+ */
+function gridTiles(s: Section, media: PublishedBundle["media"], links: CollectionLinks | undefined, region: RegionSlug, categories?: CategoryLookup): GridTileView[] {
+  const pictureOf = (ref: MediaRef | undefined) => {
+    const info = ref ? media[ref.assetId] : undefined;
+    return info ? { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}) } : null;
+  };
   return (s.tiles ?? []).flatMap((t) => {
     const href = destinationHref(t.dest, links, region);
     if (!href) return [];
-    const info = t.image ? media[t.image.assetId] : undefined;
-    const picture = info ? { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}) } : null;
-    return [{
+    const picture = pictureOf(t.image);
+    const styled = t.format === "product" || t.format === "banner";
+    const view: GridTileView = {
       label: t.label,
       caption: t.caption,
       href,
       external: t.dest.kind === "external" || t.dest.kind === "ink-collection",
-      image: picture ? { mobile: picture, desktop: picture, alt: "" } : null,
-    }];
+      image: null,
+      ...(t.cta || styled ? { cta: t.cta ?? DEFAULT_TILE_CTA } : {}),
+    };
+    if (t.format === "banner") {
+      const mobile = pictureOf(t.imageMobile) ?? picture;
+      const desktop = picture ?? mobile;
+      const focal = t.focal ?? { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } };
+      return [{
+        ...view,
+        format: "banner",
+        image: mobile && desktop ? { mobile, desktop, alt: t.image && !t.image.decorative ? t.image.alt : "", focal: focalToCss(focal.mobile), focalDesktop: focalToCss(focal.desktop) } : null,
+        color: tileColor(t.color),
+        tone: t.tone ?? colorTone(t.color),
+      }];
+    }
+    if (t.format === "product") {
+      const dest = t.dest;
+      const found = (dest.kind === "collection-page" || dest.kind === "ink-collection") && categories ? categories({ kind: "ink-category", store: dest.store, collectionId: dest.collectionId, order: "category", limit: 1 }) : null;
+      const first = found?.status === "ok" ? found.items[0] : undefined;
+      return [{ ...view, format: "product", product: first ? { imageUrl: first.imageUrl } : null, color: tileColor(t.color), tone: t.tone ?? colorTone(t.color) }];
+    }
+    return [{ ...view, image: picture ? { mobile: picture, desktop: picture, alt: "" } : null }];
   });
+}
+
+/** A collection card's colour as CSS (the region's colour when none). */
+const tileColor = (color: Color | undefined): string => cssColor(color ?? "token:region-primary");
+
+/** The text a colour carries when the owner did not choose: white on a dark colour (the region's, near-black), ink on a light one. */
+function colorTone(color: Color | undefined): "light" | "dark" {
+  if (!color || color === "token:region-primary" || color === "token:near-black") return "light";
+  if (color === "token:ground") return "dark";
+  return relativeLuminance(color) > 0.35 ? "dark" : "light";
+}
+
+/** The text tone of a fill (its first colour). */
+function fillTone(fill: Fill): "light" | "dark" {
+  return fill.kind === "solid" ? colorTone(fill.color) : fill.kind === "gradient" ? colorTone(fill.from) : "light";
+}
+
+/** The split campaign's figure: the section's picture, each screen with its own crop and framing (null: no picture, the shirts stand in). */
+function splitFigure(bg: ReturnType<typeof resolveBackground>): BannerAsset | null {
+  const mobile = bg.images.mobile ?? bg.images.desktop;
+  const desktop = bg.images.desktop ?? bg.images.mobile;
+  if (!mobile || !desktop) return null;
+  const alt = !desktop.decorative ? desktop.alt : "";
+  const pic = (i: NonNullable<typeof mobile>) => ({ src: i.src, width: i.width, height: i.height, ...(i.variants ? { variants: i.variants } : {}) });
+  return { mobile: pic(mobile), desktop: pic(desktop), alt, focal: focalToCss(bg.focal.mobile), focalDesktop: focalToCss(bg.focal.desktop) };
 }
 
 /**

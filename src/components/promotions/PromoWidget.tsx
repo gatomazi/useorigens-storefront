@@ -62,7 +62,8 @@ function coversPurchase(bottomOffset: number): boolean {
   }
   return false;
 }
-const headerPopoverOpen = (): boolean => !!document.querySelector('header [aria-expanded="true"]');
+// The header's own menus are native <details> (their state is `open`, not an aria attribute).
+const headerPopoverOpen = (): boolean => !!document.querySelector('header [aria-expanded="true"], header details[open]');
 const coarsePointer = (): boolean => window.matchMedia?.("(pointer: coarse)").matches ?? false;
 const reducedMotion = (): boolean => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 const isSheet = (): boolean => !(window.matchMedia?.("(min-width: 640px)").matches ?? true);

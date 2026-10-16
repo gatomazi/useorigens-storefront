@@ -14,7 +14,7 @@ import { formatListPrice, formatPrice, numberPt } from "@/lib/format";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { cleanQuery, MAX_QUERY_CHARS, parsePage, searchDocs } from "@/lib/search/catalog-search";
-import { CardButton, CardFab } from "@/components/catalog/CardButton";
+import { CardButton, CardCall, CardFab } from "@/components/catalog/CardButton";
 import { storeCardButton } from "@/lib/site-config/cards";
 
 // Every query is its own page: never prerendered nor ISR-cached (the region layout above is generateStaticParams/ISR, and reading `searchParams` alone
@@ -125,7 +125,11 @@ export default async function SearchPage({ params, searchParams }: Props) {
                     <div className="mt-3">
                       <h2 className="t-h3 link-line inline">{item.title}</h2>
                       {item.context && <p className="t-place mt-1 text-[0.95rem] text-ink-mute">{item.context}</p>}
-                      {formatPrice(item.price) && <p className="t-small mt-0.5 font-semibold"><PriceText price={formatPrice(item.price)!} listPrice={formatListPrice(item)} /></p>}
+                      {buy?.style === "link" ? (
+                        <CardCall label={buy.label} className="mt-2" price={formatPrice(item.price) ? <p className="t-small font-semibold"><PriceText price={formatPrice(item.price)!} listPrice={formatListPrice(item)} /></p> : undefined} />
+                      ) : (
+                        formatPrice(item.price) && <p className="t-small mt-0.5 font-semibold"><PriceText price={formatPrice(item.price)!} listPrice={formatListPrice(item)} /></p>
+                      )}
                     </div>
                     {buy?.style === "button" && <CardButton label={buy.label} className="mt-auto" />}
                   </TrackedInkLink>

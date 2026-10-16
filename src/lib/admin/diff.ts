@@ -5,6 +5,7 @@ import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
+import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
 export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "podio"; sectionId: string; text: string };
@@ -13,7 +14,7 @@ const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
 
 const EDITED_FIELDS: [keyof Section, string][] = [
-  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["featured", "produtos em destaque do hero"], ["count", "quantidade de estilos"], ["stateCovers", "banners dos estados"], ["nav", "menu do topo"], ["fallback", "alternativa sem imagem"], ["tiles", "blocos da grade"], ["grid", "layout da grade"],
+  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["featured", "produtos em destaque do hero"], ["count", "quantidade de estilos"], ["stateCovers", "banners dos estados"], ["nav", "menu do topo"], ["fallback", "alternativa sem imagem"], ["tiles", "blocos da grade"], ["grid", "layout da grade"], ["variant", "composição"],
 ];
 
 /** Name of an INK collection for the publish screen (injected: this module stays pure). */
@@ -130,6 +131,17 @@ function menuChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNam
   // Order of the bar, among the collections that stay on it.
   const stay = (a: CollectionRef[], b: CollectionRef[]) => a.filter((r) => b.some((o) => key(o) === key(r))).map(key);
   if (stay(before.menu.top, after.menu.top).join() !== stay(after.menu.top, before.menu.top).join()) out.push({ kind: "navbar-moved", sectionId: "navbar:order:top", text: "A ordem do topo do menu mudou" });
+  // The short descriptions under the collections' names in the open menus.
+  const notes = (doc: ScopeDoc) => new Map((doc.collections?.descriptions ?? []).map((d) => [key(d), d]));
+  const was = notes(published);
+  const now = notes(draft);
+  for (const k of new Set([...was.keys(), ...now.keys()])) {
+    const a = was.get(k)?.text;
+    const b = now.get(k)?.text;
+    if (a === b) continue;
+    const ref = (now.get(k) ?? was.get(k))!;
+    out.push({ kind: "navbar-moved", sectionId: `navbar:note:${k}`, text: b ? `${named(ref)}: descrição no menu “${b}”` : `${named(ref)}: sem descrição no menu` });
+  }
   return out;
 }
 
@@ -158,7 +170,7 @@ function cardsChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   const was = published.cards;
   const now = draft.cards;
   if (was?.buyLabel === now?.buyLabel && was?.buyStyle === now?.buyStyle) return [];
-  const text = (cards: typeof was) => (cards ? `${cards.buyStyle === "fab" ? "carrinho na imagem" : "botão"} “${cards.buyLabel}” em todos os cards` : "cada seção decide");
+  const text = (cards: typeof was) => (cards ? `${CARD_BUY_STYLE_NAME[cards.buyStyle ?? "button"]} “${cards.buyLabel}” em todos os cards` : "cada seção decide");
   return [{ kind: "theme", sectionId: "cards:buy", text: `Botão nos cards de produto: ${text(was)} → ${text(now)}` }];
 }
 

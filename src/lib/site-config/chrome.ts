@@ -2,6 +2,7 @@ import "server-only";
 import { siteCollectionMenu } from "../catalog/collection-menu";
 import { getCatalog } from "../catalog/repository";
 import { citiesOfRegion } from "../geo/cities";
+import { localitiesOfRegion, stateLocalityCounts, stateLocalityLabel } from "../geo/localities";
 import type { RegionSlug } from "../geo/regions";
 import { launchedRegions } from "../regions/launched";
 import { siteConfigHomeEnabled } from "./flag";
@@ -31,11 +32,20 @@ export function coveredUfs(region: RegionSlug): string[] | null {
   return [...new Set(citiesOfRegion(region).filter((c) => covered.has(c.id)).map((c) => c.uf))];
 }
 
+/** Per UF of the region, how many places with products it has, in the words the home uses ("399 cidades", "36 localidades"). */
+function stateDetails(region: RegionSlug): Record<string, string> {
+  const covered = getCatalog().coveredLocalityIds(region);
+  const localities = localitiesOfRegion(region).filter((l) => covered.has(l.id));
+  const out: Record<string, string> = {};
+  for (const uf of new Set(localities.map((l) => l.uf))) out[uf] = stateLocalityLabel(stateLocalityCounts(localities.filter((l) => l.uf === uf)));
+  return out;
+}
+
 export function regionChrome(region: RegionSlug): RegionChrome {
   const { doc, global } = publishedDocs(region);
   const theme = resolveTheme(region, doc, global);
   return {
-    navigation: resolveNavigation({ region, doc, launched: launchedRegions(), coveredUfs: coveredUfs(region), collections: siteCollectionMenu(region, doc) }),
+    navigation: resolveNavigation({ region, doc, launched: launchedRegions(), coveredUfs: coveredUfs(region), collections: siteCollectionMenu(region, doc), stateDetails: stateDetails(region) }),
     theme,
     cssVars: themeCssVars(theme.configured),
   };

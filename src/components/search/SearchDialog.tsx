@@ -9,7 +9,8 @@ import { GlobalSearch, SearchIcon } from "./GlobalSearch";
 /**
  * The global search (places, designs, collections) as a native modal <dialog> (focus trap and Esc come from the platform): a full-screen sheet
  * on phones, a wide sheet on larger screens. Its triggers: the header icon, the hero field, the field under a heading of its own (`field`, a
- * city page's "Busque outra cidade") and a quiet text link next to styles shown on an example (`link`, "Encontre aqui a sua cidade"). A field
+ * city page's "Busque outra cidade"), a quiet text link next to styles shown on an example (`link`, "Encontre aqui a sua cidade") and the first word of
+ * the header's menu (`nav`, "Sua cidade"). A field
  * low on a page opens the sheet instead of searching inline, so the phone keyboard never covers the results.
  */
 export function SearchDialog({
@@ -19,10 +20,10 @@ export function SearchDialog({
   label = "Busque a sua cidade",
 }: {
   region: RegionSlug;
-  variant?: "header" | "hero" | "field" | "cta" | "link";
+  variant?: "header" | "hero" | "field" | "cta" | "link" | "nav";
   /** GA4 `source` for select_city when a result is chosen; defaults to the trigger's own (hero or dialog). */
   source?: string;
-  /** The words of the `link` trigger. */
+  /** The words of the `link` and `nav` triggers. */
   label?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -52,6 +53,11 @@ export function SearchDialog({
       ) : variant === "cta" ? (
         <button type="button" onClick={open} aria-haspopup="dialog" className="btn btn-light">
           Encontrar minha cidade
+        </button>
+      ) : variant === "nav" ? (
+        // A word in the header's menu ("Sua cidade"): it opens the search, so it is a button, drawn like the menu's links.
+        <button type="button" onClick={open} aria-haspopup="dialog" className="inline-flex min-h-11 items-center whitespace-nowrap py-1 text-[0.9375rem] font-semibold" data-testid="header-city-search">
+          <span className="link-line">{label}</span>
         </button>
       ) : variant === "link" ? (
         <button type="button" onClick={open} aria-haspopup="dialog" className="link-static inline-flex min-h-11 items-center gap-1.5 font-semibold">

@@ -1,6 +1,6 @@
 "use client";
 
-import { CardButton, CardFab } from "@/components/catalog/CardButton";
+import { CardButton, CardCall, CardFab } from "@/components/catalog/CardButton";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { SOURCES } from "@/lib/analytics/sources";
@@ -17,6 +17,17 @@ export function ArticleCard({ article, region, sizes, priority = false, hoverIma
   const current = article.salePrice ?? article.price;
   const price = formatPrice(current);
   const fullPrice = article.salePrice !== null ? formatPrice(article.price) : null;
+  const priceLine = (
+    <p className="t-small mt-0.5 font-semibold">
+      {fullPrice && (
+        <>
+          <s className="mr-1.5 font-normal text-ink/60">{fullPrice}</s>
+          <span className="sr-only">por </span>
+        </>
+      )}
+      {price}
+    </p>
+  );
 
   return (
     <a
@@ -42,19 +53,10 @@ export function ArticleCard({ article, region, sizes, priority = false, hoverIma
         <h3 className="link-line inline text-[1.0625rem] font-bold leading-tight tracking-tight transition-colors group-hover:text-region-primary sm:text-[1.125rem]">
           {article.title}
         </h3>
-        {price && (
-          <p className="t-small mt-0.5 font-semibold">
-            {fullPrice && (
-              <>
-                <s className="mr-1.5 font-normal text-ink/60">{fullPrice}</s>
-                <span className="sr-only">por </span>
-              </>
-            )}
-            {price}
-          </p>
-        )}
+        {price && buy?.style !== "link" && priceLine}
       </div>
       <p className="t-caption mt-1">{ARTICLE_KIND_LABELS[article.kind].singular} · na loja Uma Penca</p>
+      {buy?.style === "link" && <CardCall label={buy.label} className="mt-2" price={price ? priceLine : undefined} />}
       {buy?.style === "button" && <CardButton label={buy.label} className="mt-auto" />}
     </a>
   );

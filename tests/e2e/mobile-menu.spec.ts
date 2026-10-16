@@ -18,18 +18,22 @@ async function openMenu(page: import("@playwright/test").Page, width: number, he
 
 test.describe("mobile menu hierarchy", () => {
   for (const width of MOBILE) {
-    test(`given ${width}px, when the menu opens, then it is Comprar then Estados do Sul, each a list of real links, with no region block`, async ({ page }) => {
+    test(`given ${width}px, when the menu opens, then it is Sua cidade (the search), Comprar then Estados do Sul, each a list of real links, with no region block`, async ({ page }) => {
       const dialog = await openMenu(page, width);
       const sections = dialog.locator("[data-block]");
-      await expect(sections).toHaveCount(2);
-      await expect(sections.nth(0).getByRole("heading", { level: 2 })).toHaveText("Comprar");
-      await expect(sections.nth(1).getByRole("heading", { level: 2 })).toHaveText("Estados do Sul");
-      await expect(sections.nth(0).getByRole("link")).toHaveText(["Estilos", "Fala daqui", "Estados"]);
-      await expect(sections.nth(1).getByRole("link")).toHaveText(["Paraná", "Santa Catarina", "Rio Grande do Sul"]);
-      await expect(sections.nth(1).getByRole("link").first()).toHaveAttribute("href", "/sul/pr");
+      await expect(sections).toHaveCount(3);
+      // The first path: the visitor's own city, through the store's search (a button: it opens the search sheet).
+      await expect(sections.nth(0).getByRole("heading", { level: 2 })).toHaveText("Sua cidade");
+      await expect(sections.nth(0).getByRole("button", { name: /Cidade, estampa ou coleção/ })).toBeVisible();
+      await expect(sections.nth(1).getByRole("heading", { level: 2 })).toHaveText("Comprar");
+      await expect(sections.nth(2).getByRole("heading", { level: 2 })).toHaveText("Estados do Sul");
+      await expect(sections.nth(1).getByRole("link")).toHaveText(["Estilos", "Fala daqui", "Estados"]);
+      // Each state: its UF, its name and how many cities it has, as one link.
+      await expect(sections.nth(2).getByRole("link")).toHaveText([/PR\s*Paraná\s*\d+ cidades/, /SC\s*Santa Catarina\s*\d+ cidades/, /RS\s*Rio Grande do Sul\s*\d+ cidades/]);
+      await expect(sections.nth(2).getByRole("link").first()).toHaveAttribute("href", "/sul/pr");
       await expect(dialog.getByText("Explorar outras regiões")).toHaveCount(0);
       // states are not mixed into the primary list any more
-      await expect(sections.nth(0).getByRole("link", { name: "Paraná" })).toHaveCount(0);
+      await expect(sections.nth(1).getByRole("link", { name: "Paraná" })).toHaveCount(0);
     });
 
     test(`given ${width}px, when the menu is open, then nothing overflows sideways and the type scale is lighter than before`, async ({ page }) => {
@@ -51,9 +55,10 @@ test.describe("mobile menu hierarchy", () => {
 
   test("given the blocks, when measured, then the gap between blocks is larger than the gap between items of one block", async ({ page }) => {
     const dialog = await openMenu(page, 375);
-    const y = async (name: string) => (await dialog.getByRole("link", { name, exact: true }).boundingBox())!;
-    const within = (await y("Santa Catarina")).y - ((await y("Paraná")).y + (await y("Paraná")).height);
-    const between = (await y("Paraná")).y - ((await y("Estados")).y + (await y("Estados")).height);
+    // A state's link also says how many cities it has ("Paraná 399 cidades"): the states are matched by the start of their name.
+    const y = async (name: string | RegExp) => (await dialog.getByRole("link", typeof name === "string" ? { name, exact: true } : { name }).boundingBox())!;
+    const within = (await y(/^Santa Catarina/)).y - ((await y(/^Paraná/)).y + (await y(/^Paraná/)).height);
+    const between = (await y(/^Paraná/)).y - ((await y("Estados")).y + (await y("Estados")).height);
     expect(between).toBeGreaterThan(within + 20);
   });
 });

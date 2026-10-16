@@ -151,6 +151,10 @@ export const statePath = (region: RegionSlug, uf: string): string => `/${region}
 export type NavItemData = {
   label: string;
   href: string;
+  /** A short mark drawn before the label in the open menus: a state's UF. */
+  badge?: string;
+  /** One short line under the label in the open menus: a state's number of places, a collection's description. */
+  detail?: string;
   /** Present only on state entries, so `select_state` can still fire (plain data: the menu is rendered from a Server Component). */
   trackState?: { state: string; region: string };
 };
@@ -188,6 +192,8 @@ export type NavigationInput = {
   coveredUfs: readonly string[] | null;
   /** The region's collection menu with links (`catalog/collection-menu.ts`); none = no collection in the header. */
   collections?: CollectionNavData;
+  /** Per UF, how many places the state has ("399 cidades"), drawn under its name in the open menus; absent = the name alone. */
+  stateDetails?: Readonly<Record<string, string>>;
 };
 
 export function navData(input: NavigationInput): NavData {
@@ -199,7 +205,7 @@ export function navData(input: NavigationInput): NavData {
     // The region's own (editorial) order, as the storefront has always listed them; only launched states (with products) when that is known.
     states: REGIONS[input.region].ufs
       .filter((uf) => (covered ? covered.has(uf) : true))
-      .map((uf) => ({ label: STATE_NAMES[uf], href: statePath(input.region, uf), trackState: { state: uf, region: input.region } })),
+      .map((uf) => ({ label: STATE_NAMES[uf], href: statePath(input.region, uf), badge: uf, ...(input.stateDetails?.[uf] ? { detail: input.stateDetails[uf] } : {}), trackState: { state: uf, region: input.region } })),
     regions: REGION_SLUGS.filter((slug) => slug !== input.region && input.launched.includes(slug)).map((slug) => ({ label: REGIONS[slug].name, href: regionPath(slug) })),
   };
 }

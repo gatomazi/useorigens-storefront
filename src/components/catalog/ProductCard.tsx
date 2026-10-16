@@ -5,7 +5,7 @@ import { trackGoToInk, trackGoToUmaPenca } from "@/lib/analytics/track";
 import type { ProductTags } from "@/lib/site-config/schema";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
-import { CardButton, CardFab } from "./CardButton";
+import { CardButton, CardCall, CardFab } from "./CardButton";
 import { ProductPhoto } from "./ProductPhoto";
 import { PriceText } from "./PriceText";
 
@@ -77,6 +77,9 @@ const NAME = CARD_NAME;
  */
 export const CARD_FOOT = "mt-auto pt-1";
 const FOOT = CARD_FOOT;
+/** The price line of a card. */
+export const CARD_PRICE = "text-base font-semibold leading-tight tabular-nums md:text-lg";
+const PRICE = CARD_PRICE;
 
 /** A notch smaller on phones, so a discount and a short own tag share one line instead of stacking over the print. */
 const TAG = "px-1.5 py-0.5 text-[0.625rem] font-bold uppercase leading-[1.15] tracking-[0.04em] text-white sm:px-2 sm:py-1 sm:text-[0.6875rem] sm:tracking-[0.08em]";
@@ -160,7 +163,11 @@ export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSec
         <h3 className={NAME}>{item.name}</h3>
         {item.context && <p className={`t-place mt-1 text-[0.95rem] ${dark ? "text-white/80" : "text-ink-mute"}`}>{item.context}</p>}
         <div className={FOOT}>
-          {item.price && <p className="text-base font-semibold leading-tight tabular-nums md:text-lg"><PriceText price={item.price} listPrice={item.listPrice} /></p>}
+          {buy?.style === "link" ? (
+            <CardCall label={buy.label} dark={dark} price={item.price ? <p className={PRICE}><PriceText price={item.price} listPrice={item.listPrice} /></p> : undefined} />
+          ) : (
+            item.price && <p className={PRICE}><PriceText price={item.price} listPrice={item.listPrice} /></p>
+          )}
           {buy?.style === "button" && <CardButton label={buy.label} dark={dark} />}
         </div>
       </div>

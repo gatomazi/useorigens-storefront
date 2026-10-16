@@ -68,14 +68,15 @@ export function Header({ region }: { region: RegionSlug }) {
     .filter((item, i, all) => all.findIndex((o) => o.href === item.href) === i);
   const categories = navigation.categories;
   const others = navigation.regions;
-  // Long lists read down the columns, never one endless column.
-  const columns = categories.length > 16 ? 3 : categories.length > 8 ? 2 : 1;
+  // Long lists read down the columns, never one endless column. Collections with descriptions take more room: two columns from five entries.
+  const described = categories.some((c) => c.detail);
+  const columns = described ? (categories.length > 4 ? 2 : 1) : categories.length > 16 ? 3 : categories.length > 8 ? 2 : 1;
 
   return (
     <HeaderShell>
       <div className="wrap site-header-row flex items-center justify-between gap-3">
         <div className="flex items-center gap-1">
-          <MobileMenu blocks={navigation.blocks} />
+          <MobileMenu blocks={navigation.blocks} search={<SearchDialog region={region} variant="field" source={SOURCES.searchDialog} />} />
           <Link href={regionPath(region)} className="flex min-h-11 items-center gap-2.5" aria-label={`Use Origens ${REGIONS[region].name}, página inicial`}>
             <Image src={`/brand/logo-${region === "centro-oeste" ? "centro" : region}.png`} alt="" width={40} height={40} className="h-9 w-9" priority unoptimized />
             <span translate="no" className="font-display text-[1.6rem] font-black uppercase leading-none tracking-[0.02em]">Use Origens</span>
@@ -83,6 +84,8 @@ export function Header({ region }: { region: RegionSlug }) {
         </div>
 
         <nav aria-label="Principal" className="hidden min-w-0 flex-1 items-center justify-center gap-6 px-4 lg:flex xl:gap-8 xl:px-8">
+          {/* The first path: the visitor's own city, through the same search as the icon on the right (a button: it opens the search, it goes nowhere). */}
+          <SearchDialog region={region} variant="nav" label="Sua cidade" />
           {states.length > 0 && (
             <HeaderDropdown className="relative">
               {/* Named after what it lists (the region's states): "Regiões" next to the "Sul ▾" region switcher read as two menus of the same thing. */}
@@ -92,11 +95,16 @@ export function Header({ region }: { region: RegionSlug }) {
                   <path d="m6 9 6 6 6-6" />
                 </svg>
               </summary>
-              <ul className="absolute left-0 top-full z-50 mt-1 min-w-52 border-2 border-ink bg-white py-1 text-ink">
+              {/* One entry per state, every entry on the same grid (UF, name, number of places), so a long name never shifts its neighbours. */}
+              <ul className="absolute left-0 top-full z-50 mt-1 w-72 border-2 border-ink bg-white py-1 text-ink">
                 {states.map((s) => (
                   <li key={s.href}>
-                    <TrackedStateLink href={s.href} params={{ state: s.trackState!.state, region, source: SOURCES.stateSelector }} className="flex min-h-11 items-center px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
-                      {s.label}
+                    <TrackedStateLink href={s.href} params={{ state: s.trackState!.state, region, source: SOURCES.stateSelector }} className="group/item grid min-h-14 grid-cols-[2.75rem_minmax(0,1fr)] items-center gap-x-3 px-4 py-2 hover:bg-ink hover:text-white">
+                      <span aria-hidden="true" className="font-display text-[1.625rem] font-extrabold uppercase leading-none text-region-primary group-hover/item:text-white">{s.badge}</span>
+                      <span className="min-w-0">
+                        <span className="block text-[0.9375rem] font-semibold leading-tight">{s.label}</span>
+                        {s.detail && <span className="mt-0.5 block text-[0.8125rem] leading-tight text-ink-mute group-hover/item:text-white/80">{s.detail}</span>}
+                      </span>
                     </TrackedStateLink>
                   </li>
                 ))}
@@ -119,13 +127,15 @@ export function Header({ region }: { region: RegionSlug }) {
                 </svg>
               </summary>
               <ul
-                className="absolute left-1/2 top-full z-50 mt-1 grid max-h-[calc(100dvh-6rem)] w-max min-w-52 max-w-[calc(100vw-2rem)] -translate-x-1/2 grid-flow-col overflow-y-auto border-2 border-ink bg-white py-1 text-ink"
+                className={`absolute left-1/2 top-full z-50 mt-1 grid max-h-[calc(100dvh-6rem)] min-w-52 max-w-[calc(100vw-2rem)] -translate-x-1/2 grid-flow-col overflow-y-auto border-2 border-ink bg-white py-1 text-ink ${described ? "w-[min(40rem,calc(100vw-2rem))] auto-cols-fr" : "w-max"}`}
                 style={{ gridTemplateRows: `repeat(${Math.ceil(categories.length / columns)}, auto)` }}
               >
                 {categories.map((c) => (
-                  <li key={c.href}>
-                    <Link href={c.href} className="flex min-h-11 items-center whitespace-nowrap px-4 text-[0.9375rem] font-semibold hover:bg-ink hover:text-white">
-                      {c.label}
+                  <li key={c.href} className="min-w-0">
+                    {/* With descriptions (CMS): the name and, under it, what the collection is; without, the name alone, as before. */}
+                    <Link href={c.href} className={`group/item flex min-h-11 flex-col justify-center px-4 hover:bg-ink hover:text-white ${described ? "py-2" : "whitespace-nowrap"}`}>
+                      <span className="text-[0.9375rem] font-semibold leading-tight">{c.label}</span>
+                      {c.detail && <span className="mt-0.5 text-[0.8125rem] leading-snug text-ink-mute group-hover/item:text-white/80">{c.detail}</span>}
                     </Link>
                   </li>
                 ))}

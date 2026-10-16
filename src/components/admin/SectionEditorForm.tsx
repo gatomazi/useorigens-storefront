@@ -29,6 +29,26 @@ const PRESETS = [
   ["regional-wash-dark", "Véu escuro (texto claro)"],
 ] as const;
 
+/** The compositions a template offers (`SECTION_VARIANTS`), with the original first ("" = never stored). */
+const VARIANT_CHOICES: Partial<Record<Section["template"], readonly (readonly [string, string, string])[]>> = {
+  hero: [
+    ["", "Três produtos", "O título, a busca e até três produtos em cards pequenos ao lado."],
+    ["feature", "Um produto em destaque", "O título, a busca e um único produto grande (o primeiro dos produtos escolhidos abaixo), com nome, preço e “Ver produto →”. No celular, o produto fica logo abaixo da busca."],
+  ],
+  states: [
+    ["", "Cartões com capa", "Um cartão por estado, com a capa, as regiões e a linha do estado."],
+    ["strip", "Faixa compacta", "Uma faixa de ponta a ponta: sigla, nome e “Ver 399 cidades →” em cada estado; o estado inteiro é um link. No celular, uma linha por estado."],
+  ],
+  "city-styles": [
+    ["", "Grade", "O título em cima e os estilos em grade (até 4 por linha)."],
+    ["split", "Título ao lado", "O título numa coluna e os estilos ao lado, três por linha (combina com 3 estilos). No celular, os cards rolam para o lado."],
+  ],
+  campaign: [
+    ["", "Bloco escuro", "O texto sobre a foto (com véu) ou sobre a cor, com recortes de camisetas quando não há foto."],
+    ["split", "Dividida", "A foto de um lado (ou recortes de camisetas reais) e o texto sobre a cor do outro, de ponta a ponta. A cor do fundo pinta o lado do texto; sem cor, usa a da região."],
+  ],
+};
+
 export const previewSrc = (m: MediaOption | undefined) => (m ? (m.kind === "banner" ? m.src.replace(/\.[a-z]+$/i, "-640.webp") : m.src) : undefined);
 const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
 
@@ -176,6 +196,20 @@ export function SectionEditorForm({
           <textarea id="subtitle" name="subtitle" defaultValue={section.subtitle} className="a-textarea" maxLength={300} />
           {section.template === "city-styles" && <p className="a-muted mt-1 text-[0.8125rem]">Use <code>{"{city}"}</code> onde o nome da cidade de exemplo deve aparecer.</p>}
         </div>
+        {VARIANT_CHOICES[section.template] && (
+          <fieldset>
+            <legend className="a-label">Composição</legend>
+            <input type="hidden" name="variant_present" value="1" />
+            <div className="flex flex-wrap gap-3">
+              {VARIANT_CHOICES[section.template]!.map(([value, label, help]) => (
+                <label key={value || "original"} className="flex max-w-xs cursor-pointer gap-2 border border-black/20 p-3 has-[:checked]:border-black has-[:checked]:bg-white">
+                  <input type="radio" name="variant" value={value} defaultChecked={(section.variant ?? "") === value} className="mt-1" data-testid={`variant-${value || "original"}`} />
+                  <span><span className="block font-bold">{label}</span><span className="a-muted block text-[0.8125rem]">{help}</span></span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
         {section.template === "city-styles" && (
           <div className="max-w-[12rem]">
             <label className="a-label" htmlFor="count">Quantos estilos mostrar</label>
@@ -446,8 +480,9 @@ export function SectionEditorForm({
                   <fieldset className="mt-3">
                     <legend className="a-label">Formato</legend>
                     <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="button" defaultChecked={section.layout?.buyStyle !== "fab"} /> Botão embaixo</label>
+                      <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="button" defaultChecked={!section.layout?.buyStyle || section.layout.buyStyle === "button"} /> Botão embaixo</label>
                       <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="fab" defaultChecked={section.layout?.buyStyle === "fab"} /> Carrinho na imagem</label>
+                      <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="link" defaultChecked={section.layout?.buyStyle === "link"} /> Chamada ao lado do preço (“{DEFAULT_BUY_LABEL} →”)</label>
                     </div>
                   </fieldset>
                 </div>

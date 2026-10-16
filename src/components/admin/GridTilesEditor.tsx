@@ -3,12 +3,26 @@
 import { useRef, useState } from "react";
 import type { ComboEntry } from "@/components/admin/CollectionCombobox";
 import type { MediaOption } from "@/components/admin/SectionEditorForm";
-import { MAX_GRID_TILES, MIN_GRID_TILES, type GridLayout, type GridTile } from "@/lib/site-config/schema";
+import { DEFAULT_TILE_CTA, MAX_GRID_TILES, MAX_TILE_CTA, MIN_GRID_TILES, type GridLayout, type GridTile, type TileFormat } from "@/lib/site-config/schema";
 
 type DestKind = "collection-page" | "ink-collection" | "page" | "route" | "anchor" | "external";
-type Row = { key: number; label: string; caption: string; image: string; kind: DestKind; collection: string; page: string; route: string; url: string; anchor: string };
+type Row = {
+  key: number; label: string; caption: string; image: string; kind: DestKind; collection: string; page: string; route: string; url: string; anchor: string;
+  /** "" = the classic tile. */
+  format: "" | TileFormat; color: string; tone: "" | "light" | "dark"; cta: string; imageMobile: string; alt: string; fmx: number; fmy: number; fdx: number; fdy: number;
+};
 
-const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "" });
+const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "", format: "", color: "", tone: "", cta: "", imageMobile: "", alt: "", fmx: 50, fmy: 50, fdx: 50, fdy: 50 });
+
+/** The card colours offered first (the theme's own, then a few warm grounds that sit well with the region's palette); any #rrggbb is accepted too. */
+const COLOR_CHOICES = [
+  ["", "Cor da região (verde)"],
+  ["token:ground", "Cinza das fotos"],
+  ["#ece6d8", "Areia clara"],
+  ["#dfe3d3", "Verde claro"],
+  ["#e8c9a9", "Terracota clara"],
+  ["token:near-black", "Quase preto"],
+] as const;
 
 function toRow(t: GridTile, key: number, scope: string): Row {
   const d = t.dest;
@@ -23,6 +37,16 @@ function toRow(t: GridTile, key: number, scope: string): Row {
     route: d.kind === "route" ? d.path : `/${scope}`,
     url: d.kind === "external" ? d.url : "",
     anchor: d.kind === "anchor" ? d.anchor : "",
+    format: t.format ?? "",
+    color: t.color ?? "",
+    tone: t.tone ?? "",
+    cta: t.cta ?? "",
+    imageMobile: t.imageMobile?.assetId ?? "",
+    alt: t.image && !t.image.decorative ? t.image.alt : "",
+    fmx: t.focal?.mobile.x ?? 50,
+    fmy: t.focal?.mobile.y ?? 50,
+    fdx: t.focal?.desktop.x ?? 50,
+    fdy: t.focal?.desktop.y ?? 50,
   };
 }
 
@@ -127,14 +151,90 @@ export function GridTilesEditor({
                       <div><label className="a-label" htmlFor={id("label")}>Nome</label><input id={id("label")} name={id("label")} value={r.label} onChange={(e) => patch(r.key, { label: e.target.value })} className="a-input" maxLength={40} placeholder="Camisetas" required /></div>
                       <div><label className="a-label" htmlFor={id("caption")}>Legenda (opcional)</label><input id={id("caption")} name={id("caption")} value={r.caption} onChange={(e) => patch(r.key, { caption: e.target.value })} className="a-input" maxLength={80} placeholder="Do mapa às coordenadas" /></div>
                     </div>
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <div>
+                        <label className="a-label" htmlFor={id("format")}>Formato do card</label>
+                        <select id={id("format")} name={id("format")} className="a-select" value={r.format} onChange={(e) => patch(r.key, { format: e.target.value as Row["format"] })} data-testid={`tile-format-${i}`}>
+                          <option value="">Imagem com o nome (clássico)</option>
+                          <option value="product">A · Camiseta da coleção sobre cor</option>
+                          <option value="banner">B · Mini banner (imagem ocupando o card)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="a-label" htmlFor={id("cta")}>Chamada{r.format ? "" : " (opcional)"}</label>
+                        <input id={id("cta")} name={id("cta")} value={r.cta} onChange={(e) => patch(r.key, { cta: e.target.value })} className="a-input" maxLength={MAX_TILE_CTA} placeholder={r.format ? DEFAULT_TILE_CTA : "Sem chamada"} />
+                      </div>
+                    </div>
+                    {r.format === "product" && <p className="a-muted text-[0.8125rem]">A camiseta é a primeira da coleção de destino, na ordem desta região (a ordem se ajusta em Coleções). Leve o bloco para uma coleção. A imagem abaixo não é usada neste formato.</p>}
+                    {r.format && (
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div>
+                          <label className="a-label" htmlFor={id("color")}>Cor do card</label>
+                          <select id={id("color")} className="a-select" value={COLOR_CHOICES.some(([v]) => v === r.color) ? r.color : "custom"} onChange={(e) => patch(r.key, { color: e.target.value === "custom" ? "#ece6d8" : e.target.value })}>
+                            {COLOR_CHOICES.map(([v, l]) => <option key={v || "region"} value={v}>{l}</option>)}
+                            <option value="custom">Outra cor…</option>
+                          </select>
+                          {!COLOR_CHOICES.some(([v]) => v === r.color) && <input aria-label={`Cor do bloco ${i + 1} (#rrggbb)`} value={r.color} onChange={(e) => patch(r.key, { color: e.target.value })} className="a-input mt-2" placeholder="#ece6d8" pattern="#[0-9a-fA-F]{6}" />}
+                          <input type="hidden" name={id("color")} value={r.color} />
+                        </div>
+                        <div>
+                          <label className="a-label" htmlFor={id("tone")}>Texto</label>
+                          <select id={id("tone")} name={id("tone")} className="a-select" value={r.tone} onChange={(e) => patch(r.key, { tone: e.target.value as Row["tone"] })}>
+                            <option value="">Automático (pela cor)</option>
+                            <option value="dark">Escuro (fundo ou imagem clara)</option>
+                            <option value="light">Branco (fundo ou imagem escura)</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
                     <div>
-                      <label className="a-label" htmlFor={id("image")}>Imagem</label>
+                      <label className="a-label" htmlFor={id("image")}>{r.format === "banner" ? "Imagem (desktop; também no celular se não houver outra)" : "Imagem"}</label>
                       <select id={id("image")} name={id("image")} className="a-select" value={r.image} onChange={(e) => patch(r.key, { image: e.target.value })}>
                         <option value="">Sem imagem (placa na cor da região)</option>
                         {uploads.length > 0 && <optgroup label="Enviadas">{uploads.map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
                         <optgroup label="Banners do projeto">{banners.map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>
                       </select>
                     </div>
+                    {r.format === "banner" && (
+                      <>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          <div>
+                            <label className="a-label" htmlFor={id("image_mobile")}>Imagem do celular (opcional)</label>
+                            <select id={id("image_mobile")} name={id("image_mobile")} className="a-select" value={r.imageMobile} onChange={(e) => patch(r.key, { imageMobile: e.target.value })}>
+                              <option value="">A mesma do desktop</option>
+                              {uploads.length > 0 && <optgroup label="Enviadas">{uploads.map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
+                              <optgroup label="Banners do projeto">{banners.map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="a-label" htmlFor={id("alt")}>Texto alternativo (opcional)</label>
+                            <input id={id("alt")} name={id("alt")} value={r.alt} onChange={(e) => patch(r.key, { alt: e.target.value })} className="a-input" maxLength={160} placeholder="Vazio = imagem decorativa" />
+                          </div>
+                        </div>
+                        <div className="grid gap-3 md:grid-cols-2">
+                          {([["fm", "Enquadramento no celular", r.fmx, r.fmy, r.imageMobile || r.image], ["fd", "Enquadramento no desktop", r.fdx, r.fdy, r.image]] as const).map(([k, title, x, y, asset]) => {
+                            const src = asset ? thumbOf(asset) : undefined;
+                            return (
+                              <div key={k}>
+                                <p className="a-label">{title}</p>
+                                <div className="relative aspect-[4/3] w-full max-w-[14rem] overflow-hidden border border-black/40 bg-neutral-300">
+                                  {src && (
+                                    // eslint-disable-next-line @next/next/no-img-element -- an admin thumbnail of the chosen media
+                                    <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ objectPosition: `${x}% ${y}%` }} />
+                                  )}
+                                  <span aria-hidden className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-black/60" style={{ left: `${x}%`, top: `${y}%` }} />
+                                </div>
+                                <div className="mt-2 grid max-w-[14rem] grid-cols-2 gap-2">
+                                  <label className="text-[0.75rem] font-bold">Horizontal {x}%<input type="range" min={0} max={100} name={id(`${k}x`)} value={x} onChange={(e) => patch(r.key, { [`${k}x`]: Number(e.target.value) } as Partial<Row>)} className="w-full" /></label>
+                                  <label className="text-[0.75rem] font-bold">Vertical {y}%<input type="range" min={0} max={100} name={id(`${k}y`)} value={y} onChange={(e) => patch(r.key, { [`${k}y`]: Number(e.target.value) } as Partial<Row>)} className="w-full" /></label>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <p className="a-muted text-[0.8125rem]">O nome e a chamada ficam na parte de baixo da imagem, sobre um véu. Enquadre a imagem para que a estampa ou o detalhe importante fique na parte de cima.</p>
+                      </>
+                    )}
                     <div className="grid gap-3 md:grid-cols-2">
                       <div>
                         <label className="a-label" htmlFor={id("kind")}>Leva para</label>

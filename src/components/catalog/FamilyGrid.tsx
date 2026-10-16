@@ -20,6 +20,7 @@ export function FamilyGrid({
   pieceLabel,
   garmentTypeId,
   buy,
+  layout,
 }: {
   entries: CityFamilyEntry[];
   hrefBase: string;
@@ -33,8 +34,10 @@ export function FamilyGrid({
   garmentTypeId?: number;
   /** The store-wide buy button (global `cards`) on every card. */
   buy?: CardBuy;
+  /** "split": the home's composition with the heading beside the cards (FamilyGridView). */
+  layout?: "grid" | "split";
 }) {
   if (entries.length === 0) return null;
   const cards = entries.map((entry) => familyCardModel(entry, { href: `${hrefBase}/${entry.family.id}`, cityName, stateUf, sourceSection, directToInk, pieceLabel, garmentTypeId }));
-  return <FamilyGridView cards={cards} buy={buy} />;
+  return <FamilyGridView cards={cards} buy={buy} layout={layout} />;
 }

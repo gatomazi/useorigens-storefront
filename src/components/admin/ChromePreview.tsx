@@ -22,6 +22,7 @@ export function ChromePreview({ region, navigation, colors }: { region: RegionSl
               <span translate="no" className="font-display text-[1.25rem] font-black uppercase leading-none tracking-[0.02em]">Use Origens</span>
             </span>
             <span className="hidden items-center gap-5 text-[0.8125rem] font-semibold sm:flex">
+              <span>Sua cidade</span>
               {navigation.states.length > 0 && <span>Estados ▾</span>}
               {navigation.categories.length > 0 && <span>{navigation.categoriesLabel} ▾</span>}
               {[...navigation.primary, ...navigation.collections].map((l) => <span key={l.href}>{l.label}</span>)}
@@ -52,6 +53,14 @@ export function ChromePreview({ region, navigation, colors }: { region: RegionSl
             </span>
           </div>
           <div className="pt-3">
+            {/* The store's menu opens with the city search ("Sua cidade"); drawn here as a still field. */}
+            <div className="mb-7 border-b border-current/25 pb-6">
+              <p className="mb-3 flex items-center gap-2.5 text-[0.8125rem] font-semibold uppercase leading-none tracking-[0.14em]">
+                <span aria-hidden="true" className="inline-block h-[3px] w-5" style={{ background: "var(--region-accent, currentColor)" }} />
+                Sua cidade
+              </p>
+              <span className="flex min-h-14 items-center border-2 border-black bg-white px-3 text-[0.9375rem] font-medium text-neutral-600">Cidade, estampa ou coleção…</span>
+            </div>
             <MobileMenuPanel blocks={navigation.blocks as NavBlockData[]} interactive={false} />
           </div>
         </div>

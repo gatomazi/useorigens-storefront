@@ -6,8 +6,8 @@ import type { FamilyCardModel } from "@/lib/catalog/family-card";
 import { FavoriteButton } from "@/components/favorites/FavoriteButton";
 import { ShareButton } from "@/components/share/ShareButton";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
-import { CardButton, CardFab } from "./CardButton";
-import { CARD_FOOT, CARD_INFO, CARD_NAME, cardFrame, CardTags } from "./ProductCard";
+import { CardButton, CardCall, CardFab } from "./CardButton";
+import { CARD_FOOT, CARD_INFO, CARD_NAME, CARD_PRICE, cardFrame, CardTags } from "./ProductCard";
 import { ProductPhoto } from "./ProductPhoto";
 import { PriceText } from "./PriceText";
 
@@ -36,10 +36,14 @@ export function FamilyCardView({ card, sizes, priority = false, buy }: { card: F
         <p className={`t-caption mt-1 max-w-[30ch] ${card.pieceLabel ? "" : "hidden sm:block"}`}>{card.description}</p>
         {card.variantsCount > 0 && <p className="t-caption mt-1 font-semibold text-ink">{card.variantsCount === 1 ? "Mais 1 versão" : `Mais ${card.variantsCount} versões`}</p>}
         <div className={CARD_FOOT}>
-          {card.price && (
-            <p className="text-base font-semibold leading-tight tabular-nums md:text-lg">
-              <PriceText price={card.price} listPrice={card.listPrice} />
-            </p>
+          {buy?.style === "link" ? (
+            <CardCall label={buy.label} price={card.price ? <p className={CARD_PRICE}><PriceText price={card.price} listPrice={card.listPrice} /></p> : undefined} />
+          ) : (
+            card.price && (
+              <p className={CARD_PRICE}>
+                <PriceText price={card.price} listPrice={card.listPrice} />
+              </p>
+            )
           )}
           {buy?.style === "button" && <CardButton label={buy.label} />}
         </div>

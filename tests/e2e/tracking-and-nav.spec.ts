@@ -582,7 +582,10 @@ test.describe("Header: Regiões navigation and dropdown outside-click", () => {
     await summaryTrigger(page, "Estados").click();
     const details = page.locator("details:has(summary:text('Estados'))").first();
     const panel = details.locator("ul");
-    await panel.click({ position: { x: 5, y: 5 } }); // inside the panel, not on a link
+    // Inside the panel, on its top padding (Playwright positions are relative to the padding box, and the padding is 4px: y 5 is already the
+    // first link, and choosing a link closes the menu on purpose).
+    await panel.click({ position: { x: 5, y: 1 } });
+    expect(await panel.evaluate((el) => { const r = el.getBoundingClientRect(); return document.elementFromPoint(r.left + 7, r.top + 3)?.closest("a") === null; })).toBe(true);
     await expect(details).toHaveJSProperty("open", true);
   });
 });
