@@ -12,7 +12,8 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { stateShowcase } from "@/lib/editorial/state-showcase";
 import { stateStyles } from "@/lib/editorial/state-styles";
-import { collectionsForRegion, stateCollectionRows } from "@/lib/catalog/collection-source";
+import { collectionPageSlug, collectionsForRegion, stateCollectionRows } from "@/lib/catalog/collection-source";
+import { collectionPagePath } from "@/lib/site-config/sources";
 import { homeBundle } from "@/lib/site-config/flag";
 import { statePageShows } from "@/lib/site-config/state-page-schema";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
@@ -25,7 +26,7 @@ import { normalizeText, slugify } from "@/lib/geo/text";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { stateDescription, stateIntro, stateTitle } from "@/lib/seo/copy";
-import { stateOf } from "@/lib/seo/state-copy";
+import { stateOf, stateOfUf } from "@/lib/seo/state-copy";
 import { breadcrumbList } from "@/lib/seo/jsonld";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { SITE_URL } from "@/lib/site";
@@ -128,6 +129,12 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   // and a last row with what none of them took; each product in the deepest row that shows it (collection-source.ts `stateCollectionRows`,
   // state-hierarchy.ts). None when the store has no collection named after the state.
   const stateRows = stateCollectionRows(region, uf, doc, (s) => catalog.productsOfStore(s));
+  // "Ver todos" opens the row's collection page on the site: a category or subcategory filtered to this state (`?uf=`, read by its filters), the
+  // state's own collection as it is. None when that collection has no page in the region.
+  const rowHref = (row: (typeof stateRows)[number]): string | undefined => {
+    const slug = collectionPageSlug(doc, storeForRegion(region), row.collection.id);
+    return slug ? `${collectionPagePath(region, slug)}${row.level === "state" ? "" : `?uf=${uf}`}` : undefined;
+  };
 
   // Editorial mesoregion grouping (ADR 0004), navigation only — not the current IBGE division. Cities
   // without one still appear in A–Z. A state with administrative regions groups them apart from its municipality.
@@ -218,7 +225,8 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
           <ProductCarousel
             items={row.items}
             labelledBy={`state-collection-${row.collection.id}`}
-            title={row.level === "state" ? `Mais ${stateOf(uf)}` : `${row.collection.name.replace(/\s+/g, " ").trim()} · ${STATE_NAMES[uf]}`}
+            title={row.level === "state" ? `Mais ${stateOfUf(uf)}` : `${row.collection.name.replace(/\s+/g, " ").trim()} · ${uf}`}
+            viewAllHref={rowHref(row)}
             sourceSection={SOURCES.stateCollection}
             buy={buy}
           />

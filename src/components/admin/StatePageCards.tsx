@@ -6,7 +6,7 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { normalizeText } from "@/lib/geo/text";
-import { stateOf } from "@/lib/seo/state-copy";
+import { stateOfUf } from "@/lib/seo/state-copy";
 import type { ScopeDoc } from "@/lib/site-config/schema";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows, type StatePageSection } from "@/lib/site-config/state-page-schema";
 
@@ -30,7 +30,7 @@ export function StateRowsList({ uf, rows }: { uf: string; rows: StateCollectionR
       {rows.map((row) => (
         <li key={row.collection.id} className={row.level === "subcategory" && row.category ? "pl-4" : ""}>
           {row.level === "subcategory" && row.category && <span aria-hidden="true" className="a-muted">↳ </span>}
-          <span className={row.level === "category" ? "font-semibold" : ""}>{row.level === "state" ? `Mais ${stateOf(uf)}` : row.collection.name}</span>
+          <span className={row.level === "category" ? "font-semibold" : ""}>{row.level === "state" ? `Mais ${stateOfUf(uf)}` : row.collection.name}</span>
           <span className="a-muted"> · {row.items.length}</span>
           {row.level === "subcategory" && <span className="a-muted">{row.category ? ` (em ${row.category.name})` : " (fora das categorias)"}</span>}
           {row.level === "state" && <span className="a-muted"> (sem categoria)</span>}
@@ -115,7 +115,7 @@ export function StatePageCards({ scope, rev, doc, baseDoc }: Props) {
         <p className="a-muted mt-2 max-w-3xl text-[0.875rem]">
           Abaixo do estado, cada categoria vira um carrossel com os produtos do estado que nenhuma subcategoria levou, nesta ordem.{" "}
           {categories.own ? <strong>Lista escolhida por você.</strong> : <><strong>Automático</strong>: as coleções do topo do menu, na mesma ordem. Ao mexer aqui, a lista passa a ser sua e não acompanha mais o menu.</>}
-          {" "}Um carrossel precisa de {STATE_ROW_MIN_ITEMS} produtos; com menos, eles vão para “Mais {stateOf(ufs[0])}”.
+          {" "}Um carrossel precisa de {STATE_ROW_MIN_ITEMS} produtos; com menos, eles vão para “Mais {stateOfUf(ufs[0])}”.
         </p>
         {categories.records.length === 0 ? <p className="a-muted mt-3 text-[0.875rem]">Nenhuma categoria: os produtos de cada estado vão para as subcategorias ou para o carrossel do estado.</p> : (
           <ol className="mt-3 space-y-2">
@@ -226,7 +226,7 @@ export function StatePageCards({ scope, rev, doc, baseDoc }: Props) {
 
       <section id="estado-previa" className="a-card scroll-mt-4 p-5" aria-labelledby="estado-previa-titulo" data-testid="state-tree">
         <h2 id="estado-previa-titulo" className="a-h2">Como fica cada estado</h2>
-        <p className="a-muted mt-2 max-w-3xl text-[0.875rem]">Os carrosséis de categoria de cada página, na ordem em que aparecem, com o rascunho de agora. Cada produto fica no carrossel mais fundo que aparece: subcategoria, depois categoria, depois o do próprio estado (“Mais {stateOf(ufs[0])}”).</p>
+        <p className="a-muted mt-2 max-w-3xl text-[0.875rem]">Os carrosséis de categoria de cada página, na ordem em que aparecem, com o rascunho de agora. Cada produto fica no carrossel mais fundo que aparece: subcategoria, depois categoria, depois o do próprio estado (“Mais {stateOfUf(ufs[0])}”).</p>
         <div className="mt-3 grid gap-4 md:grid-cols-3">
           {ufs.map((uf) => (
             <div key={uf}>

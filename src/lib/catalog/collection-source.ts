@@ -63,10 +63,36 @@ export const selectableEntries = (store: CommerceStoreKey, enabledInternal: Read
 function merchItem(product: MerchProduct): CarouselItem | null {
   const href = purchaseUrl(product);
   if (!href) return null;
+  const state = merchStates(product.commerceStoreKey).get(product.inkProductId);
   return {
     id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href,
     ...(product.garmentTypeId !== undefined ? { garmentTypeId: product.garmentTypeId } : {}),
+    ...(state ? { state } : {}),
   };
+}
+
+const merchStateMaps = new WeakMap<readonly CollectionRecord[], Map<string, string>>();
+/**
+ * The UF of the store's merch products that are in exactly ONE collection named after a state ("Santa Catarina" > "SC"): the owner's own word that
+ * the product is that state's (a merch product has no city to say it). One in two states' collections gets none, never a guess. Cached per synced file.
+ */
+function merchStates(store: CommerceStoreKey): Map<string, string> {
+  const records = getStoreCollections(store)?.collections;
+  if (!records) return new Map();
+  const cached = merchStateMaps.get(records);
+  if (cached) return cached;
+  const map = new Map<string, string>();
+  const twice = new Set<string>();
+  for (const uf of Object.keys(STATE_NAMES)) {
+    const parent = stateCollectionIn(records, uf);
+    for (const id of parent ? (completeMembers(parent) ?? parent.memberIds) : []) {
+      if (map.has(id) && map.get(id) !== uf) twice.add(id);
+      map.set(id, uf);
+    }
+  }
+  for (const id of twice) map.delete(id);
+  merchStateMaps.set(records, map);
+  return map;
 }
 
 /** A city design has no display name of its own: its family and city are the label ("Ponto de Origem" · "Tijucas · SC"). */
@@ -285,12 +311,16 @@ export function stateSubcategoryChoice(region: RegionSlug, doc: ScopeDoc | undef
   return { hidden: records.filter((c) => c.isAvailable && !kept.has(c.id)).map(ref), added: records.filter((c) => !c.isAvailable && kept.has(c.id)).map(ref) };
 }
 
-/** The collection named after the state ("Paraná"), the parent of that state's rows; null when the region's store has none. */
-export function stateParentCollection(region: RegionSlug, uf: string, filePath?: string): CollectionRecord | null {
+/** The collection named after a state ("Paraná") among a store's collections, or null. */
+function stateCollectionIn(records: readonly CollectionRecord[], uf: string): CollectionRecord | null {
   const wanted = normalizeText(STATE_NAMES[uf] ?? "");
   if (!wanted) return null;
-  const records = getStoreCollections(storeForRegion(region), filePath)?.collections ?? [];
   return records.filter((c) => normalizeText(c.name) === wanted && !c.needsResync).sort(byMenuOrder)[0] ?? null;
+}
+
+/** The collection named after the state ("Paraná"), the parent of that state's rows; null when the region's store has none. */
+export function stateParentCollection(region: RegionSlug, uf: string, filePath?: string): CollectionRecord | null {
+  return stateCollectionIn(getStoreCollections(storeForRegion(region), filePath)?.collections ?? [], uf);
 }
 
 /** The cards of `ids` as collection `c` shows them in the region: in its arrangement (hidden ones out), only products of the catalog and of this region. */

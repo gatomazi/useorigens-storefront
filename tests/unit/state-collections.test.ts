@@ -65,6 +65,17 @@ describe("a state's collections on its page", () => {
     expect(rows.map((r) => [r.level, r.collection.name, r.items.map((i) => i.id).join(",")])).toEqual([["subcategory", "Da Nossa Terra", "7,1,2"], ["state", "Santa Catarina", "3,4,6"]]);
   });
 
+  test("given a merch product in one state's collection, then its card carries that UF (the collection filter and GoToInk use it); in two states', none", async () => {
+    const ufs = () => Object.fromEntries(stateCollectionRows("sul", "SC", undefined, () => products(), filePath).flatMap((r) => r.items).map((i) => [i.id, i.state ?? null]));
+    expect(ufs()).toEqual({ "1": "SC", "2": "SC", "7": "SC", "3": "SC", "4": "SC", "6": "SC" });
+    const file = JSON.parse(await readFile(filePath, "utf8"));
+    file.stores["use-sul"].collections.find((c: CollectionRecord) => c.name === "Paraná").memberIds.push("1");
+    file.stores["use-sul"].collections.find((c: CollectionRecord) => c.name === "Paraná").allMemberIds.push("1");
+    file.stores["use-sul"].collections.find((c: CollectionRecord) => c.name === "Paraná").matchedCount = 2;
+    await writeFile(filePath, JSON.stringify(file));
+    expect(ufs()["1"]).toBeNull(); // in "Santa Catarina" and "Paraná": no UF is guessed
+  });
+
   test("given no collection named after the state, then the page shows no rows", () => {
     expect(stateCollectionRows("sul", "RS", undefined, () => products(), filePath)).toEqual([]);
   });
