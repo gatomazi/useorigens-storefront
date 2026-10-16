@@ -120,7 +120,9 @@ export type ExclusionReason =
   | "ambiguous-city"
   | "city-not-found"
   | "unclassified-family"
-  | "uf-mismatch";
+  | "uf-mismatch"
+  /** Merchandise of a store that is in ANOTHER region's segmentation collection (ZZ - NO / ZZ - CO in use-sul): it is not this region's to show. */
+  | "other-region";
 
 export type ExcludedProduct = {
   inkProductId: string;
