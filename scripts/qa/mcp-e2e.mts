@@ -67,7 +67,7 @@ check(bad.status === 401 && (bad.headers.get("www-authenticate") ?? "").includes
 const mcp = new Client({ name: "qa", version: "1.0.0" });
 await mcp.connect(new StreamableHTTPClientTransport(new URL(`${base}/api/mcp`), { requestInit: { headers: { authorization: `Bearer ${refreshed.access_token}` } } }));
 const { tools } = await mcp.listTools();
-check(tools.length === 10 && tools.every((t) => t.annotations?.readOnlyHint === true), "tools/list: 10 read-only tools");
+check(tools.length === 12 && tools.every((t) => t.annotations?.readOnlyHint === true), "tools/list: 12 read-only tools (read-only grant)");
 const call = async (name: string, args: Record<string, unknown>) => {
   const started = Date.now();
   const r = await mcp.callTool({ name, arguments: args });

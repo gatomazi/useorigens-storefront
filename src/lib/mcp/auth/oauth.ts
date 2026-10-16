@@ -14,8 +14,10 @@ import { sha256Hex, type OAuthClient, type OAuthStore, type TokenRecord } from "
  */
 
 export const MCP_SCOPE = "origens.read";
+/** Confirmed changes in INK (products, categories, order items, exchanges). Granted only when the owner ticks it on the consent page. */
+export const WRITE_SCOPE = "origens.write";
 export const OFFLINE_SCOPE = "offline_access";
-export const SUPPORTED_SCOPES: readonly string[] = [MCP_SCOPE, OFFLINE_SCOPE];
+export const SUPPORTED_SCOPES: readonly string[] = [MCP_SCOPE, WRITE_SCOPE, OFFLINE_SCOPE];
 export const CLAUDE_CALLBACK = "https://claude.ai/api/mcp/auth_callback";
 
 export const CODE_TTL_MS = 60_000;
@@ -135,12 +137,18 @@ export function errorRedirect(redirectUri: string, error: string, description: s
   return u.href;
 }
 
-/** Requested scopes: space-separated, every one supported; `origens.read` is always part of the grant (it is the only resource scope). */
+/** Requested scopes: space-separated, every one supported; `origens.read` is always part of the grant (every tool needs it). */
 export function parseScope(raw: string | null): string[] | null {
   const requested = (raw ?? "").split(" ").filter(Boolean);
   if (!requested.every((s) => SUPPORTED_SCOPES.includes(s))) return null;
   return SUPPORTED_SCOPES.filter((s) => s === MCP_SCOPE || requested.includes(s));
 }
+
+/**
+ * The owner's own choice on the consent page decides `origens.write`, whatever the client asked: unticked removes it, ticked adds it (the
+ * token response then states the granted scope, RFC 6749 §3.3). A client asking for it only pre-ticks the box.
+ */
+export const withWriteChoice = (scope: readonly string[], allowWrite: boolean): string[] => SUPPORTED_SCOPES.filter((s) => (s === WRITE_SCOPE ? allowWrite : scope.includes(s)));
 
 export async function checkAuthorizeRequest(store: OAuthStore, params: URLSearchParams, ctx: { resource: string; issuer: string }): Promise<AuthorizeCheck> {
   const page = (message: string): AuthorizeCheck => ({ ok: false, kind: "page", message });

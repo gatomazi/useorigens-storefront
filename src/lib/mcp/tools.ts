@@ -54,8 +54,8 @@ export const SALES_MAX_DAYS = 186;
 export const ORDERS_MAX_DAYS = 92;
 export const SALES_DATE_BASIS = "order_created_at (dia de São Paulo) com pagamento aprovado no momento da consulta";
 
-const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0)));
-const iso = (d: Date) => d.toISOString();
+export const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0)));
+export const iso = (d: Date) => d.toISOString();
 const oldest = (dates: readonly Date[]) => (dates.length ? iso(new Date(Math.min(...dates.map((d) => d.getTime())))) : null);
 
 // ── Shared input handling ────────────────────────────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ function withCategoryCoverage(coverage: Coverage, cc: { units_membership_unknown
   return { status: "partial", reason: coverage.reason ? `${coverage.reason}; ${reason}` : reason };
 }
 
-function pickStores(deps: ToolDeps, requested: readonly CommerceStoreKey[] | undefined): { stores: CommerceStoreKey[]; skipped: CommerceStoreKey[] } {
+export function pickStores(deps: Pick<ToolDeps, "stores" | "hasCredential">, requested: readonly CommerceStoreKey[] | undefined): { stores: CommerceStoreKey[]; skipped: CommerceStoreKey[] } {
   if (requested && requested.length > 0) {
     for (const s of requested) {
       if (!deps.stores.includes(s)) throw new McpToolError("FORBIDDEN", `Loja ${s} não está entre as lojas desta integração.`);
@@ -208,7 +208,12 @@ export async function capabilities(deps: ToolDeps): Promise<ToolResult> {
           "O painel descreve o cupom; a INK aplica. Status do painel (live, scheduled, ended, disabled) é o de agora. Uso = pedidos pagos do período com aquele promotion_code (sem diferenciar maiúsculas); promotion_discount = promotion_value informado pela INK. Pedido com cupom não prova que o cupom causou a venda.",
         on_sale: "Produto em promoção = preço promocional da INK abaixo do preço normal no último sync (list_price = preço normal; discount_percent truncado como na INK).",
       },
-      tools: ["origens_capabilities", "origens_search_products", "origens_get_product", "origens_list_categories", "origens_promotions", "origens_sales_summary", "origens_sales_ranking", "origens_list_orders", "origens_get_order", "origens_catalog_status"],
+      tools: ["origens_capabilities", "origens_search_products", "origens_get_product", "origens_list_categories", "origens_promotions", "origens_sales_summary", "origens_sales_ranking", "origens_list_orders", "origens_get_order", "origens_list_exchanges", "origens_get_exchange", "origens_catalog_status"],
+      write_tools: {
+        tools: ["origens_preview_product_changes", "origens_preview_order_item_edit", "origens_preview_exchange", "origens_confirm_change", "origens_change_status"],
+        available: "Só em conexões autorizadas com \"Também permitir alterações na INK\" e nas lojas com credencial de escrita.",
+        rule: "Toda alteração é prévia (nada muda) → aprovação explícita do dono → origens_confirm_change com o código. Até 25 produtos por prévia; sem excluir, sem reembolso.",
+      },
     },
   };
 }
@@ -496,6 +501,7 @@ export async function getOrderTool(deps: ToolDeps, input: { store: CommerceStore
       product_id: i.productId,
       product_name: i.productName,
       sku: i.sku,
+      variant_id: i.variant.id,
       model: i.variant.model,
       color: i.variant.color,
       size: i.variant.size,
@@ -519,6 +525,7 @@ export async function getOrderTool(deps: ToolDeps, input: { store: CommerceStore
       order_status_label: o.orderStatusLabel,
       payment_status: o.paymentStatusLabel,
       is_exchange: o.isExchange,
+      exchange: { items_editable: o.itemsEditable, exchangeable: o.exchangeable, how: o.itemsEditable ? "antes da fábrica: trocar o item no pedido (origens_preview_order_item_edit)" : o.exchangeable ? "abrir troca (origens_preview_exchange)" : "a INK não aceita edição nem troca agora" },
       totals: { total: m(o.totalCents), shipping: m(o.shippingCents), promotion_discount: m(o.promotionCents), payment_discount: m(o.paymentDiscountCents), freight_value_difference: m(o.freightDifferenceCents), store_payout_reported_by_ink: m(o.kickbackCents) },
       promotion_code: o.promotionCode,
       destination: o.destination,

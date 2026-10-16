@@ -20,7 +20,9 @@ import type { ConfiguredPromotions } from "@/lib/mcp/promotions";
 import { salesRanking, salesSummary } from "@/lib/mcp/sales";
 import { createUseOrigensMcpServer } from "@/lib/mcp/server";
 import * as tools from "@/lib/mcp/tools";
+import type { AllDeps } from "@/lib/mcp/write-tools";
 import { product } from "./fixtures";
+import { fakeWrite } from "./mcp-write-fakes";
 
 // ── Synthetic catalog: Sul sells Joinville/SC (with a garment sibling) and a GO design copied from the Centro-Oeste; Centro sells Goiânia ──
 const SYNC = "2026-10-14T03:00:00.000Z";
@@ -220,7 +222,7 @@ describe("catalog index", () => {
 });
 
 // ── Tools through the MCP protocol, with fake INK ──
-function fakeDeps(over: Partial<tools.ToolDeps> = {}): tools.ToolDeps & { calls: OrderQuery[] } {
+function fakeDeps(over: Partial<AllDeps> = {}): AllDeps & { calls: OrderQuery[] } {
   const calls: OrderQuery[] = [];
   const byStore: Record<string, McpOrder[]> = { "use-sul": parse(rawSul, "use-sul"), "use-centro": parse(rawCentro, "use-centro"), "use-norte": [] };
   return {
@@ -246,13 +248,14 @@ function fakeDeps(over: Partial<tools.ToolDeps> = {}): tools.ToolDeps & { calls:
     storeProduct: async () => {
       throw new McpToolError("UPSTREAM_UNAVAILABLE", "fora do ar");
     },
+    write: fakeWrite(),
     ...over,
   };
 }
 
 const GRANT = { subject: "01J00000000000000000000000", email: "dono@example.com", clientId: "mcp_testclient000000000000", scopes: ["origens.read"], expiresAt: 2_000_000_000, resource: "https://www.useorigens.com.br/api/mcp" };
 
-async function connect(deps: tools.ToolDeps, log: (l: Record<string, unknown>) => void = () => undefined) {
+async function connect(deps: AllDeps, log: (l: Record<string, unknown>) => void = () => undefined) {
   const server = createUseOrigensMcpServer(GRANT, deps, log);
   const [a, b] = InMemoryTransport.createLinkedPair();
   await server.connect(a);
@@ -262,10 +265,10 @@ async function connect(deps: tools.ToolDeps, log: (l: Record<string, unknown>) =
 }
 
 describe("MCP server", () => {
-  test("lists the ten tools, all annotated read-only, idempotent and non-destructive, each with an output schema", async () => {
+  test("a read-only grant lists the twelve read tools, all annotated read-only, idempotent and non-destructive, each with an output schema", async () => {
     const client = await connect(fakeDeps());
     const { tools: listed } = await client.listTools();
-    expect(listed.map((t) => t.name).sort()).toEqual(["origens_capabilities", "origens_catalog_status", "origens_get_order", "origens_get_product", "origens_list_categories", "origens_list_orders", "origens_promotions", "origens_sales_ranking", "origens_sales_summary", "origens_search_products"]);
+    expect(listed.map((t) => t.name).sort()).toEqual(["origens_capabilities", "origens_catalog_status", "origens_get_exchange", "origens_get_order", "origens_get_product", "origens_list_categories", "origens_list_exchanges", "origens_list_orders", "origens_promotions", "origens_sales_ranking", "origens_sales_summary", "origens_search_products"]);
     for (const t of listed) {
       expect(t.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false, idempotentHint: true });
       expect(t.outputSchema).toBeTruthy();

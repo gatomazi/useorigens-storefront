@@ -1,4 +1,4 @@
-import { MCP_SCOPE } from "@/lib/mcp/auth/oauth";
+import { MCP_SCOPE, WRITE_SCOPE } from "@/lib/mcp/auth/oauth";
 import { jsonResponse, preflight } from "@/lib/mcp/auth/http";
 import { mcpResource } from "@/lib/mcp/auth/resource";
 
@@ -17,7 +17,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ path
     {
       resource: where.resource,
       authorization_servers: [where.issuer],
-      scopes_supported: [MCP_SCOPE],
+      scopes_supported: [MCP_SCOPE, WRITE_SCOPE],
       bearer_methods_supported: ["header"],
       resource_name: "Use Origens",
     },

@@ -12,7 +12,11 @@ export type McpErrorCode =
   | "RATE_LIMITED"
   | "UPSTREAM_UNAVAILABLE"
   | "INCOMPLETE_COVERAGE"
-  | "CATALOG_UNAVAILABLE";
+  | "CATALOG_UNAVAILABLE"
+  /** A confirmation code that is unknown, expired, already used, of another account — or a state that changed since the preview. */
+  | "CONFLICT"
+  /** INK refused a write (its own validation, 422): nothing was changed by that request. */
+  | "INK_REJECTED";
 
 export class McpToolError extends Error {
   constructor(

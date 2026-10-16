@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -142,11 +142,21 @@ await accepts("audit for a product link", `insert into audit_log (actor,action) 
   try { await code("1".repeat(64), "A".repeat(43)); ok("an authorization code stored as a hash with an S256 challenge"); } catch (e) { bad("code", e.message); }
   try { await code("plain-code", "A".repeat(43)); bad("code in clear", "was accepted"); } catch { ok("an authorization code stored in clear is rejected"); }
   try { await code("2".repeat(64), "short"); bad("plain PKCE", "was accepted"); } catch { ok("a non-S256 (plain) challenge is rejected"); }
-  try { await code("3".repeat(64), "A".repeat(43), "{origens.write}"); bad("unknown scope", "was accepted"); } catch { ok("a scope outside origens.read/offline_access is rejected"); }
+  try { await code("3".repeat(64), "A".repeat(43), "{origens.admin}"); bad("unknown scope", "was accepted"); } catch { ok("a scope outside origens.read/origens.write/offline_access is rejected"); }
   await accepts("an access token stored as a hash", `insert into mcp_oauth_token (token_hash, kind, family_id, client_id, subject, scope, resource, expires_at) values ($1, 'access', $2, $3, $4, '{origens.read}', 'https://www.useorigens.com.br/api/mcp', now() + interval '1 hour')`, ["4".repeat(64), FAM, C, ULID_A]);
   await rejects("a token stored in clear", `insert into mcp_oauth_token (token_hash, kind, family_id, client_id, subject, scope, resource, expires_at) values ('tok', 'access', $1, $2, $3, '{origens.read}', 'r', now())`, [FAM, C, ULID_A]);
   await rejects("a token of an unknown kind", `insert into mcp_oauth_token (token_hash, kind, family_id, client_id, subject, scope, resource, expires_at) values ($1, 'id', $2, $3, $4, '{origens.read}', 'r', now())`, ["5".repeat(64), FAM, C, ULID_A]);
   await accepts("audit for an MCP authorization", `insert into audit_log (actor,action) values ('system','mcp.authorize')`);
+
+  // ── 0007: confirmed changes (only the code's hash; one status machine; the write scope and audit action) ──
+  try { await code("6".repeat(64), "A".repeat(43), "{origens.read,origens.write,offline_access}"); ok("a code granting origens.write (0007)"); } catch (e) { bad("write scope", e.message); }
+  const change = (hash, extra = {}) => db.query(`insert into mcp_change (code_hash, subject, client_id, kind, store, plan, status, applied_at, expires_at) values ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, now() + interval '10 minutes')`, [hash, ULID_A, C, extra.kind ?? "product", extra.store ?? "use-sul", extra.plan ?? '{"kind":"product"}', extra.status ?? "pending", extra.appliedAt ?? null]);
+  try { await change("7".repeat(64)); ok("a pending change stored under the code's hash"); } catch (e) { bad("pending change", e.message); }
+  try { await change("chg_plain"); bad("change code in clear", "was accepted"); } catch { ok("a change stored under the code itself is rejected"); }
+  try { await change("8".repeat(64), { kind: "refund" }); bad("unknown change kind", "was accepted"); } catch { ok("a change kind outside product/order_items/exchange is rejected"); }
+  try { await change("9".repeat(64), { status: "applied" }); bad("applied without time", "was accepted"); } catch { ok("an applied change without applied_at is rejected"); }
+  try { await change("a".repeat(64), { plan: "[]" }); bad("plan not an object", "was accepted"); } catch { ok("a plan that is not an object is rejected"); }
+  await accepts("audit for a confirmed MCP change", `insert into audit_log (actor,action) values ('system','mcp.write')`);
 }
 
 // ── 0004 → 0005 on data that already exists: nothing is lost, statuses are renamed in place ────────────────────────────────

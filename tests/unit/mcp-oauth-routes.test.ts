@@ -43,7 +43,7 @@ describe("discovery metadata", () => {
     const prm = await import("@/app/.well-known/oauth-protected-resource/[[...path]]/route");
     const as = await import("@/app/.well-known/oauth-authorization-server/route");
     const r = await prm.GET(req("/.well-known/oauth-protected-resource/api/mcp"), { params: Promise.resolve({ path: ["api", "mcp"] }) });
-    expect(await r.json()).toMatchObject({ resource: `${ORIGIN}/api/mcp`, authorization_servers: [ORIGIN], scopes_supported: ["origens.read"], bearer_methods_supported: ["header"] });
+    expect(await r.json()).toMatchObject({ resource: `${ORIGIN}/api/mcp`, authorization_servers: [ORIGIN], scopes_supported: ["origens.read", "origens.write"], bearer_methods_supported: ["header"] });
     expect((await prm.GET(req("/.well-known/oauth-protected-resource"), { params: Promise.resolve({}) })).status).toBe(200);
     expect((await prm.GET(req("/.well-known/oauth-protected-resource/other"), { params: Promise.resolve({ path: ["other"] }) })).status).toBe(404);
     const meta = (await (await as.GET(req("/.well-known/oauth-authorization-server"))).json()) as Record<string, unknown>;
@@ -54,7 +54,7 @@ describe("discovery metadata", () => {
       registration_endpoint: `${ORIGIN}/api/mcp/oauth/register`,
       code_challenge_methods_supported: ["S256"],
       token_endpoint_auth_methods_supported: ["none"],
-      scopes_supported: ["origens.read", "offline_access"],
+      scopes_supported: ["origens.read", "origens.write", "offline_access"],
     });
     expect(meta).not.toHaveProperty("client_id_metadata_document_supported");
   });
