@@ -1,5 +1,6 @@
 import { siteUrl } from "./config/env";
 import type { RegionSlug } from "./geo/regions";
+import { SUL_INK_ORIGIN } from "./ink/sul-domain";
 
 /**
  * The regions that are ALWAYS public: Sul only. Norte and Centro-Oeste become public per region through the CMS ("launched", published;
@@ -11,7 +12,7 @@ export const SITE_URL = siteUrl();
 
 /** Where the Norte and Centro-Oeste storefronts live until they are built here. */
 export const LEGACY_STORE_URLS = {
-  sul: "https://www.usesul.com.br",
+  sul: SUL_INK_ORIGIN,
   norte: "https://www.usenorte.com.br",
   "centro-oeste": "https://www.usecentro.com.br",
 } as const;

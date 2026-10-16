@@ -8,7 +8,7 @@ import { cityById } from "../geo/cities";
 import { localityById } from "../geo/localities";
 import { REGIONS, STATE_NAMES, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { normalizeText, slugify } from "../geo/text";
-import { STORE_PRODUCT_URL_BASE } from "../ink/config";
+import { acceptedStoreProductBases, STORE_PRODUCT_URL_BASE } from "../ink/config";
 import { baseTitleOf, displayTitle, geoOfName, mesoOfName, themesOf, tokensOf } from "./signals";
 
 /**
@@ -104,7 +104,8 @@ function verifiedHref(store: CommerceStoreKey, product: { slug: string; storePro
   const base = STORE_PRODUCT_URL_BASE[store];
   if (!base || !purchaseUrl(product)) return null;
   const href = `${base}/${product.slug}`;
-  return href === product.storeProductUrl && /^[a-z0-9][a-z0-9_-]{0,127}$/.test(product.slug) ? href : null;
+  const own = acceptedStoreProductBases(store).some((b) => `${b}/${product.slug}` === product.storeProductUrl);
+  return own && /^[a-z0-9][a-z0-9_-]{0,127}$/.test(product.slug) ? href : null;
 }
 
 type Candidate = { id: string; slug: string; storeProductUrl: string; imageUrl: string; price: number | null; sales: number; garmentTypeId?: number | null };
