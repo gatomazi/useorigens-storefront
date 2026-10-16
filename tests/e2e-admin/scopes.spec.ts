@@ -67,7 +67,7 @@ for (const region of REGIONS) {
     // 4. The Library is this region's store, never another one; an internal collection is enabled and disabled for this region only.
     await open(page, "/admin/colecoes");
     await expect(page.getByText(new RegExp(`Coleções da loja INK de ${region.store}`))).toBeVisible();
-    await expect(page.locator("table.a-table tbody")).not.toContainText("SUL - RS");
+    await expect(page.locator("table.a-table tbody")).not.toContainText("ZZ - SU"); // Sul's segment collections ("ZZ - SU - RS"…)
     await open(page, "/admin/sincronizacao");
     await expect(page.getByRole("button", { name: new RegExp(`Sincronizar catálogo de ${region.store}`) })).toBeVisible(); // the owner can sync this store's catalog from the panel
     await open(page, "/admin/colecoes");
@@ -90,13 +90,23 @@ for (const region of REGIONS) {
     await expect(page.getByRole("link", { name: /Abrir a loja/ })).toHaveAttribute("href", `/${region.slug}`); // follows the selected region once it is public
     // 6. Public: real products, links to the region's OWN INK store, the region shows in the navigation, Sul is untouched.
     await open(page, `/${region.slug}`);
-    // The header links only what the region really has, under the chosen apelido (never a dead "Fala daqui").
+    // The header links only what the region really has (never a dead "Fala daqui"). On desktop the "Estados" dropdown already leads to the state
+    // chooser, so the home's own states link is not repeated on the bar; under the chosen apelido it is in the phone menu (checked below).
     const menu = page.getByRole("navigation", { name: "Principal" });
-    await expect(menu.getByRole("link", { name: "Meus estados" })).toHaveAttribute("href", `/${region.slug}#estados`);
+    await expect(menu.getByTestId("header-states")).toHaveText("Estados");
+    await expect(menu.getByRole("link", { name: "Meus estados" })).toHaveCount(0);
     await expect(menu.getByRole("link", { name: "Fala daqui" })).toHaveCount(0);
     expect(await page.locator(`a[href^="https://www.${region.host}/"]`).count(), "real INK products of the region").toBeGreaterThanOrEqual(3);
     expect(await page.locator('a[href^="https://www.usesul.com.br/"]').count(), "never Sul's store").toBe(0);
     await expect(page.getByText(/^0 cidades|\b0 cidades\b/)).toHaveCount(0);
+    // The phone menu carries the home's links under the chosen apelido.
+    await page.setViewportSize({ width: 375, height: 812 });
+    await open(page, `/${region.slug}`);
+    await page.getByRole("button", { name: "Abrir menu" }).click();
+    const phoneMenu = page.getByRole("dialog", { name: "Menu" });
+    await expect(phoneMenu.locator('[data-block="primary"]').getByRole("link", { name: "Meus estados" })).toHaveAttribute("href", `/${region.slug}#estados`);
+    await expect(phoneMenu.getByRole("link", { name: "Fala daqui" })).toHaveCount(0);
+    await page.setViewportSize({ width: 1280, height: 720 });
     await open(page, "/sul");
     expect(await page.locator(`footer a[href="/${region.slug}"]`).count()).toBeGreaterThan(0);
     // Sul's content is what it was before (the launch of another region never touches it).
