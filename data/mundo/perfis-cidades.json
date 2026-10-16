@@ -5479,6 +5479,391 @@
       "url": "https://formosa.go.gov.br/parque-municipal-do-itiquira/",
       "referencia": "Página institucional (sem data)",
       "consultadoEm": "2026-10-15"
+    },
+    "marituba-prefeitura-refugio": {
+      "titulo": "Visite o Refúgio de Vida Silvestre Metrópole da Amazônia",
+      "url": "https://marituba.pa.gov.br/site/visite-o-refugio-de-vida-silvestre-metropole-da-amazonia/",
+      "publicador": "Prefeitura de Marituba",
+      "referencia": "Notícia de 11/07/2019",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-marituba-pa": {
+      "titulo": "Biblioteca IBGE — Marituba: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Instituto de Desenvolvimento Econômico e Social do Pará. Estatística municipal: Marituba. 2011)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1504422",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-15"
+    },
+    "marituba-ideflorbio-revis": {
+      "titulo": "Refúgio de Vida Silvestre (REVIS) Metrópole da Amazônia",
+      "url": "https://ideflorbio.pa.gov.br/refugio-de-vida-silvestre-metropol-da-amazonia/",
+      "publicador": "Ideflor-Bio",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "soure-prefeitura-turismo": {
+      "titulo": "Turismo e Lazer",
+      "url": "https://soure.pa.gov.br/o-municipio/turismo-e-lazer/",
+      "publicador": "Prefeitura de Soure",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-soure-pa": {
+      "titulo": "Biblioteca IBGE — Soure: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em SOURE (PA). Prefeitura)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1507904",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-15"
+    },
+    "santana-plano-diretor": {
+      "titulo": "Atualização do Plano Diretor Municipal — Volume 2B: Resumo Executivo da Leitura Técnica",
+      "url": "https://planodiretor.santana.ap.gov.br/wp-content/uploads/2024/03/P2B_ResumoExecutivo-PDM-Santana.pdf",
+      "publicador": "Prefeitura de Santana / equipe do Plano Diretor",
+      "referencia": "Documento disponibilizado em 2024, p. 12",
+      "consultadoEm": "2026-10-15"
+    },
+    "santana-prefeitura-piedade": {
+      "titulo": "Prefeito prestigia festividade de Nossa Senhora da Piedade no Igarapé do Lago",
+      "url": "https://santana.ap.gov.br/prefeito-bala-rocha-prestigia-festidade-de-nossa-senhora-da-piedade-no-igarape-do-lago/",
+      "publicador": "Prefeitura de Santana",
+      "referencia": "Notícia de 06/07/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "santana-prefeitura-igarape-fortaleza": {
+      "titulo": "Circuito Igarapé Forte: Prefeitura de Santana realiza competição aquática em comemoração aos 35 anos da cidade",
+      "url": "https://santana.ap.gov.br/circuito-igarape-forte-prefeitura-de-santana-realiza-competicao-aquatica-em-comemoracao-aos-35-anos-da-cidade/",
+      "publicador": "Prefeitura de Santana",
+      "referencia": "Notícia de 12/12/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-santana-ap": {
+      "titulo": "Biblioteca IBGE — Santana: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Santana (AP). Prefeitura. [2017])",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1600600",
+      "referencia": "Registro de 2006",
+      "consultadoEm": "2026-10-15"
+    },
+    "mateiros-estado-jalapao": {
+      "titulo": "Jalapão — atrativos",
+      "url": "https://jalapaotocantins.to.gov.br/",
+      "publicador": "Governo do Tocantins — portal de turismo",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-mateiros-to": {
+      "titulo": "Biblioteca IBGE — Mateiros: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em http://to.gov.br/m/mateiros/650)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1712702",
+      "referencia": "Registro de 2008",
+      "consultadoEm": "2026-10-15"
+    },
+    "cambe-prefeitura-parque-zezao": {
+      "titulo": "Lazer e turismo: Parque Zezão é um tesouro verde no coração de Cambé",
+      "url": "https://www.cambe.pr.gov.br/index.php/lazer-e-turismo-parque-zezao-e-um-tesouro-verde-no-coracao-de-cambe/",
+      "publicador": "Prefeitura de Cambé",
+      "referencia": "Notícia de 20/01/2022",
+      "consultadoEm": "2026-10-15"
+    },
+    "cambe-prefeitura-museu": {
+      "titulo": "Completando 40 anos, Museu Histórico de Cambé será reinaugurado nesta sexta-feira (31)",
+      "url": "https://www.cambe.pr.gov.br/index.php/completando-40-anos-museu-historico-de-cambe-sera-reinaugurado-nesta-sexta-feira-31/",
+      "publicador": "Prefeitura de Cambé",
+      "referencia": "Notícia de 30/10/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "cambe-plano-educacao": {
+      "titulo": "Plano Municipal de Educação — Lei nº 2.610",
+      "url": "https://educacao.cambe.pr.gov.br/wp-content/uploads/2025/05/LEI-2610_-PLANO-MUNICIPAL-DE-EDUCACAO-CAMBE.pdf",
+      "publicador": "Prefeitura de Cambé — Secretaria Municipal de Educação",
+      "referencia": "Plano de 2015, p. 30",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-cambe-pr": {
+      "titulo": "Biblioteca IBGE — Cambé: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em CAMBÉ (PR). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4103701",
+      "referencia": "Registro de 2005",
+      "consultadoEm": "2026-10-15"
+    },
+    "cambe-prefeitura-biblioteca": {
+      "titulo": "Biblioteca Pública Municipal é reinaugurada após reforma e melhoria do espaço",
+      "url": "https://www.cambe.pr.gov.br/index.php/biblioteca-publica-municipal-e-reinaugurada-apos-reforma-e-melhoria-do-espaco/",
+      "publicador": "Prefeitura de Cambé",
+      "referencia": "Notícia de 19/08/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "tubarao-alesc-zumblick": {
+      "titulo": "Exposição de telas de Zumblick é reaberta ao público com obras inéditas",
+      "url": "https://www.alesc.sc.gov.br/agencia/noticia/exposicaeo-de-telas-de-zumblick-e-reaberta-ao-publico-com-obras-ineditas/",
+      "publicador": "Assembleia Legislativa de Santa Catarina",
+      "referencia": "Notícia de 26/09/2013",
+      "consultadoEm": "2026-10-15"
+    },
+    "tubarao-fcc-museu-ferroviario": {
+      "titulo": "Uma volta ao passado: Criciúma terá passeio de Maria Fumaça em celebração ao Dia das Mães",
+      "url": "https://fcc.criciuma.sc.gov.br/noticia/Uma-volta-ao-passado-Criciuma-tera-passeio-de-Maria-Fumaca-em-celebracao-ao-Dia-das-Maes/18476",
+      "publicador": "Fundação Cultural de Criciúma",
+      "referencia": "Notícia de 2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-tubarao-sc": {
+      "titulo": "Biblioteca IBGE — Tubarão: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Tubarão (SC). In: ENCICLOPÉDIA dos municípios brasileiros. Rio de Janeiro: IBGE, 1959. v. 32. p. 376-383)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4218707",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "tubarao-defesa-civil-plancon": {
+      "titulo": "Plano de Contingência de Proteção e Defesa Civil — Tubarão",
+      "url": "https://tubarao.sc.gov.br/uploads/sites/265/2023/10/904811_393566_PLANO_DE_CONTINGENCIA-2.pdf",
+      "publicador": "Prefeitura de Tubarão — Defesa Civil",
+      "referencia": "Plano disponibilizado em 2023; diagnóstico com avaliação de abril de 2013",
+      "consultadoEm": "2026-10-15"
+    },
+    "torres-prefeitura-guarita": {
+      "titulo": "Parque da Guarita",
+      "url": "https://torres.rs.gov.br/viva/parque-estadual-da-guarita/",
+      "publicador": "Prefeitura de Torres",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-torres-rs": {
+      "titulo": "Biblioteca IBGE — Torres: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Torres (RS). Prefeitura. 2016)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4321501",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "torres-prefeitura-sao-domingos": {
+      "titulo": "Igreja Matriz São Domingos",
+      "url": "https://torres.rs.gov.br/viva/igreja-sao-domingos/",
+      "publicador": "Prefeitura de Torres (texto do IPHAE)",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-sorriso-mt": {
+      "titulo": "Biblioteca IBGE — Sorriso: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em SORRISO (MT). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5107925",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "sorriso-turismo-parque": {
+      "titulo": "Parque Ecológico Municipal de Sorriso",
+      "url": "https://turismo.sorriso.mt.gov.br/atrativos-turisticos/atrativos-tursticos/parque-ecologico-municipal-de-sorriso",
+      "publicador": "Secretaria Municipal de Desenvolvimento Econômico e Turismo de Sorriso",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sorriso-turismo-centro-cultural": {
+      "titulo": "Centro Histórico-Cultural Benjamim Raiser de Sorriso",
+      "url": "https://turismo.sorriso.mt.gov.br/atrativos-turisticos/atrativos-tursticos/centro-historico-cultural-benjamim-raiser-de-sorriso",
+      "publicador": "Secretaria Municipal de Desenvolvimento Econômico e Turismo de Sorriso",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "sorriso-prefeitura-relevo": {
+      "titulo": "Laudo de avaliação de imóveis urbanos — Sorriso",
+      "url": "https://site.sorriso.mt.gov.br/dl/330415",
+      "publicador": "Prefeitura de Sorriso",
+      "referencia": "Laudo de 17/02/2023, p. 1–2",
+      "consultadoEm": "2026-10-15"
+    },
+    "catalao-prefeitura-morrinho": {
+      "titulo": "Revitalização do Morrinho de São João será entregue nesta quinta-feira(7)",
+      "url": "https://catalao.go.gov.br/producao/public/index.php/noticias/obras/revitalizacao-do-morrinho-de-sao-joao-sera-entregue-nesta-quinta-feira7",
+      "publicador": "Prefeitura de Catalão",
+      "referencia": "Notícia de 06/11/2024",
+      "consultadoEm": "2026-10-15"
+    },
+    "catalao-cultura-museu": {
+      "titulo": "Cultura Catalão — Museu Cornélio Ramos e patrimônio cultural",
+      "url": "https://cultura.catalao.go.gov.br/",
+      "publicador": "Secretaria Municipal de Cultura de Catalão",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-catalao-go": {
+      "titulo": "Biblioteca IBGE — Catalão: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Catalão (GO). In: ENCICLOPÉDIA dos municípios brasileiros. Rio de Janeiro: IBGE, 1958. v. 36. p. 113-119)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5205109",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "catalao-prefeitura-geografia": {
+      "titulo": "Sobre a Cidade",
+      "url": "https://www.catalao.go.gov.br/sobre-a-cidade",
+      "publicador": "Prefeitura de Catalão",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "itumbiara-prefeitura-nota-ponte": {
+      "titulo": "Nota oficial — Ponte Affonso Penna",
+      "url": "https://itumbiara.go.gov.br/nota-oficial-ponte-affonso-penna/",
+      "publicador": "Prefeitura de Itumbiara",
+      "referencia": "Nota de 07/04/2026; conteúdo em imagem",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-itumbiara-go": {
+      "titulo": "Biblioteca IBGE — Itumbiara: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em ITUMBIARA (GO). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5211503",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "itumbiara-prefeitura-rio-praca": {
+      "titulo": "A cidade de Itumbiara é o destaque desta semana da campanha Isso é Goiás",
+      "url": "https://itumbiara.go.gov.br/a-cidade-de-itumbiara-e-o-destaque-desta-semana-da-campanha-isso-e-goias-nas-redes-sociais-da-assembleia/",
+      "publicador": "Prefeitura de Itumbiara / Assembleia Legislativa de Goiás",
+      "referencia": "Notícia de 01/07/2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "itumbiara-prefeitura-ponte": {
+      "titulo": "Prefeituras de Itumbiara e Araporã irão recuperar Ponte Affonso Pena",
+      "url": "https://itumbiara.go.gov.br/prefeituras-de-itumbiara-e-arapora-irao-recuperar-ponto-affonso-pena/",
+      "publicador": "Prefeitura de Itumbiara",
+      "referencia": "Notícia de 2021",
+      "consultadoEm": "2026-10-15"
+    },
+    "itumbiara-imb-painel": {
+      "titulo": "Painéis Municipais — Itumbiara",
+      "url": "https://goias.gov.br/imb/wp-content/uploads/sites/29/2018/07/itumbiara-201612-4dd.pdf",
+      "publicador": "Instituto Mauro Borges / Governo de Goiás",
+      "referencia": "Painel de dezembro de 2016, p. 1",
+      "consultadoEm": "2026-10-15"
+    },
+    "breves-icmbio-mapua": {
+      "titulo": "Resex Mapuá",
+      "url": "https://www.gov.br/icmbio/pt-br/assuntos/unidade-de-conservacao/unidades-de-biomas/amazonia/lista-de-ucs/resex-mapua/resex-mapua/",
+      "publicador": "ICMBio",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "breves-icmbio-comunidades": {
+      "titulo": "Práticas inovadoras na gestão de áreas protegidas — Reserva Extrativista Mapuá",
+      "url": "https://www.gov.br/icmbio/pt-br/centrais-de-conteudo/publicacoes/publicacoes-diversas/revista_praticas_inovadoras_2014.pdf",
+      "publicador": "ICMBio",
+      "referencia": "Publicação de 2014, p. 78–79",
+      "consultadoEm": "2026-10-15"
+    },
+    "breves-ufra-planejamento": {
+      "titulo": "Uso do Sistema de Informações Geográficas como subsídio para o planejamento ambiental do município de Breves/PA",
+      "url": "https://bdta.ufra.edu.br/jspui/bitstream/123456789/4294/1/USO_DO_SIG_%20COMO_SUBSIDIO_PARA_O_PLANEJAMENTO_AMBIENTAL_DO_MUNICIPIO_DE_BREVES_PA.pdf",
+      "publicador": "Raíssa Vitória Moreira da Silva / Universidade Federal Rural da Amazônia",
+      "referencia": "Trabalho de conclusão de curso aprovado em 28/03/2025, p. 37 e 41",
+      "consultadoEm": "2026-10-15"
+    },
+    "breves-prefeitura-guia": {
+      "titulo": "Guia Turístico Breves-Pará",
+      "url": "https://breves.pa.gov.br/wp-content/uploads/2023/01/GUIAR-TURISTICO-BREVES-PA.pdf",
+      "publicador": "Prefeitura de Breves — Cultura, Turismo, Eventos e Esportes",
+      "referencia": "Guia disponibilizado em janeiro de 2023 (sem data interna)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-breves-pa": {
+      "titulo": "Biblioteca IBGE — Breves: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em BREVES (PA). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1501808",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "paragominas-prefeitura-parque": {
+      "titulo": "Parque Ambiental Ademar Monteiro reabre as portas para receber a população",
+      "url": "https://paragominas.pa.gov.br/parque-ambiental-ademar-monteiro-reabre-as-portas-para-receber-a-populacao/",
+      "publicador": "Prefeitura de Paragominas",
+      "referencia": "Notícia de 10/05/2018",
+      "consultadoEm": "2026-10-15"
+    },
+    "paragominas-pca-lagos": {
+      "titulo": "Plano de Contratação Anual 2026 — Secretaria Municipal de Urbanismo",
+      "url": "https://paragominas.pa.gov.br/wp-content/uploads/2026/01/14-SEMUR.pdf",
+      "publicador": "Prefeitura de Paragominas — SEMUR",
+      "referencia": "Plano de 2026, itens 20 e 27",
+      "consultadoEm": "2026-10-15"
+    },
+    "paragominas-plano-residuos": {
+      "titulo": "Plano Municipal de Gestão Integrada de Resíduos Sólidos de Paragominas",
+      "url": "https://paragominas.pa.gov.br/wp-content/uploads/2020/04/PLANO_MUNICIPAL_GIRSP.pdf",
+      "publicador": "Prefeitura de Paragominas — Secretaria Municipal de Urbanismo",
+      "referencia": "Plano disponibilizado em abril de 2020, p. 26",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-paragominas-pa": {
+      "titulo": "Biblioteca IBGE — Paragominas: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Paragominas (PA). Prefeitura. 2009. Ofício encaminhado ao IBGE contendo o histórico do município)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1505502",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-15"
+    },
+    "mateiros-doe-localizacao-dunas": {
+      "titulo": "Instrução Normativa nº 002/2022/GABSEC/SECTUR",
+      "publicador": "Governo do Tocantins — Secretaria da Cultura e Turismo",
+      "url": "https://doe.to.gov.br/diario/4640/download",
+      "referencia": "Diário Oficial nº 6091, 19/05/2022, p. 19",
+      "consultadoEm": "2026-10-15"
+    },
+    "erechim-estado-parque": {
+      "titulo": "Parque Municipal Longines Malinowski",
+      "url": "https://www.turismo.rs.gov.br/turismo/atrativo/visualizar/698",
+      "publicador": "Secretaria de Turismo do Rio Grande do Sul",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-erechim-rs": {
+      "titulo": "Biblioteca IBGE — Erechim: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em ERECHIM (RS). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4307005",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "erechim-prefeitura-castelinho": {
+      "titulo": "Castelinho",
+      "url": "https://www.pmerechim.rs.gov.br//pagina/352/castelinho",
+      "publicador": "Prefeitura de Erechim",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "erechim-prefeitura-estacao": {
+      "titulo": "Estação Ferroviária",
+      "url": "https://www.pmerechim.rs.gov.br/pagina/362/estacao-ferroviaria",
+      "publicador": "Prefeitura de Erechim",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "erechim-plano-manejo": {
+      "titulo": "Plano de Manejo — Parque Natural Municipal Longines Malinowski",
+      "url": "https://www.pmerechim.rs.gov.br/uploads/paginas/515b35ff2c97e4536c58f83c593d6cb7.pdf",
+      "publicador": "Prefeitura de Erechim / equipe do Plano de Manejo",
+      "referencia": "Plano de dezembro de 2011, p. 112",
+      "consultadoEm": "2026-10-15"
+    },
+    "jatai-prefeitura-cidade": {
+      "titulo": "A cidade de Jataí",
+      "url": "https://www.jatai.go.gov.br/cidade-jatai/",
+      "publicador": "Prefeitura de Jataí",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "jatai-prefeitura-museu-historico": {
+      "titulo": "Exposição no Museu Histórico de Jataí valoriza a deficiência",
+      "url": "https://www.jatai.go.gov.br/exposicao-no-museu-historico-de-jatai-valoriza-a-deficiencia/",
+      "publicador": "Prefeitura de Jataí",
+      "referencia": "Notícia de 11/09/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-jatai-go": {
+      "titulo": "Biblioteca IBGE — Jataí: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Jataí (GO). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5211909",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "jatai-goias-turismo": {
+      "titulo": "Município de Jataí — levantamento dos subsistemas naturais",
+      "url": "https://goias.gov.br/turismo/wp-content/uploads/sites/4/2023/12/20-%E2%80%93-Municipio-de-Jatai.pdf",
+      "publicador": "Goiás Turismo / Governo de Goiás",
+      "referencia": "Documento disponibilizado em dezembro de 2023, p. 4",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -25033,6 +25418,1818 @@
         "status": "curadoria inicial",
         "em": "2026-10-15",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Datas: o histórico do IBGE diz que o Arraial de Couros foi 'criada na segunda metade do século XVII', o que não bate com o próprio texto (registro em 1736, missa em 1767) nem com a Enciclopédia (1736-1750); o resumo não data o arraial. Cidade: Lei Provincial n.º 574, de 21/07/1877 (IBGE); a Prefeitura diz 7 de setembro de 1877 e a Enciclopédia, instalação em 16/09/1877; o texto dá só o ano. A Prefeitura indica 'Fundação: 1843' (data da vila); o texto não chama 1843 de fundação. Santo Antônio do Itiquira: a Prefeitura diz que foi fundado em 1753 por negros que desviavam o rebanho dos senhores e abandonado por febre amarela e malária; o IBGE fala em negros fugindo da febre amarela; a Enciclopédia, em febres; o resumo diz só 'fugindo de epidemias' e atribui à Prefeitura. Ficaram de fora os superlativos das fontes ('cachoeira mais alta do Brasil acessível', 'um dos maiores [lagos] do Centro-Oeste', 'referência nacional no parapente'). Horários e preços do Parque do Itiquira não entram (as páginas trazem horários divergentes, 16h e 17h). A palavra 'Cerrado' não aparece nas fontes oficiais lidas; o cenário usa base 'interior' com campos e matas, como descreve a Enciclopédia de 1958, e a base 'cerrado' pode ser considerada pela revisão. Cristo Redentor e Usina Parque Bandeirinha foram considerados, mas as páginas oficiais têm pouca descrição. A Lagoa Feia virou marco com o módulo lago-ilha, que tem ilha e deck ilustrativos."
+      }
+    },
+    "1504422": {
+      "identidade": {
+        "id": "1504422",
+        "ibge": "1504422",
+        "nome": "Marituba",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Da vila dos ferroviários às florestas de várzea do refúgio.",
+        "resumo": "A formação de Marituba está ligada à Estrada de Ferro de Bragança. A vila operária ficou pronta em 1907, e o município foi criado em 1994, desmembrado de Benevides. Pelo bairro Decouville chega-se ao Refúgio Metrópole da Amazônia, com igarapés e florestas de várzea.",
+        "fontesResumo": [
+          "ibge-biblioteca-marituba-pa",
+          "marituba-ideflorbio-revis",
+          "marituba-prefeitura-refugio"
+        ],
+        "referencias": [
+          {
+            "id": "revis-metropole-amazonia",
+            "tipo": "natureza",
+            "titulo": "Refúgio de Vida Silvestre Metrópole da Amazônia",
+            "texto": "Com acesso pelo bairro Decouville, a unidade reúne rios, igarapés e florestas de várzea. A paisagem protegida oferece uma outra leitura do município, além de sua origem ferroviária.",
+            "fontes": [
+              "marituba-ideflorbio-revis",
+              "marituba-prefeitura-refugio",
+              "ibge-biblioteca-marituba-pa"
+            ]
+          },
+          {
+            "id": "vila-operaria",
+            "tipo": "patrimonio",
+            "titulo": "Memória da Vila Operária",
+            "texto": "Segundo o histórico do IBGE, a vila de casas para trabalhadores da Estrada de Ferro de Bragança foi concluída em 1907. A relação entre moradia e manutenção dos trens ajuda a contar a formação de Marituba.",
+            "fontes": [
+              "ibge-biblioteca-marituba-pa"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "maritubense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-marituba-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -1.3646,
+          "lon": -48.3368,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 111785,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 103.214,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Belém",
+          "intermediaria": "Belém",
+          "mesorregiao": "Metropolitana de Belém",
+          "microrregiao": "Belém",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "amazonia",
+        "ambientes": [
+          "urbano",
+          "floresta",
+          "rio"
+        ],
+        "rotulo": "Núcleo urbano e várzea do refúgio",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "vegetacao": [
+          [
+            "mata",
+            7
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "rio"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Sem marcos: a Vila Operária é uma referência histórica, sem confirmação da conservação atual de seus edifícios. O refúgio abrange mais de um município; os ecossistemas citados descrevem a unidade, não todo o território de Marituba. Sem reproduzir a linguagem colonial e os juízos sobre ocupação do histórico do IBGE."
+      }
+    },
+    "1507904": {
+      "identidade": {
+        "id": "1507904",
+        "ibge": "1507904",
+        "nome": "Soure",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Dunas, coqueiros e a vida à beira do Paracauari.",
+        "resumo": "Na Praia do Pesqueiro, dunas e coqueiros acompanham águas com influência salgada do Atlântico. Soure foi elevada a vila em 1757 e a cidade em 1890. O rio Paracauari banha o município e serve de porto a pequenas embarcações.",
+        "fontesResumo": [
+          "soure-prefeitura-turismo",
+          "ibge-biblioteca-soure-pa"
+        ],
+        "referencias": [
+          {
+            "id": "praia-pesqueiro",
+            "tipo": "paisagem",
+            "titulo": "Praia do Pesqueiro",
+            "texto": "Dunas e coqueiros acompanham a praia, cujas águas recebem a influência salgada do Atlântico. São elementos da paisagem descrita pela Prefeitura de Soure.",
+            "fontes": [
+              "soure-prefeitura-turismo"
+            ],
+            "descoberta": {
+              "modulo": "dunas",
+              "nota": "Na maquete, um campo de dunas genérico; extensão, cores e posição dos coqueiros são ilustrativas."
+            },
+            "curto": "Praia com dunas e coqueiros, sob influência das águas salgadas do Atlântico."
+          },
+          {
+            "id": "rio-paracauari",
+            "tipo": "paisagem",
+            "titulo": "Rio Paracauari",
+            "texto": "O rio banha Soure e recebe pequenas embarcações. A Prefeitura também registra currais para a captura de peixes em suas águas.",
+            "fontes": [
+              "soure-prefeitura-turismo"
+            ]
+          },
+          {
+            "id": "praia-barra-velha",
+            "tipo": "natureza",
+            "titulo": "Praia da Barra Velha",
+            "texto": "A praia fica próxima do núcleo urbano e tem vegetação de manguezal de grande porte, segundo a descrição municipal.",
+            "fontes": [
+              "soure-prefeitura-turismo"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "sourense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-soure-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -0.7293,
+          "lon": -48.5207,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 24204,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 2857.349,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Soure-Salvaterra",
+          "intermediaria": "Breves",
+          "mesorregiao": "Marajó",
+          "microrregiao": "Arari",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "litoral",
+        "ambientes": [
+          "litoral",
+          "urbano"
+        ],
+        "rotulo": "Dunas e coqueiros da Praia do Pesqueiro",
+        "relevo": {
+          "modulo": "costa-dunas"
+        },
+        "vegetacao": [
+          [
+            "palmeira",
+            9
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "dunas",
+            "referencia": "praia-pesqueiro"
+          }
+        ],
+        "agua": {
+          "modulo": "costa"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O módulo costa resume a transição de águas, sem representar Soure como praia oceânica de mar aberto. Manguezal da Barra Velha fica só em texto, pois não há módulo específico. A página turística é sem data: não foram repetidos horários, serviços ou recomendações de saúde da descrição da Vila do Pesqueiro. Dunas não reproduzem um ponto exato da praia."
+      }
+    },
+    "1600600": {
+      "identidade": {
+        "id": "1600600",
+        "ibge": "1600600",
+        "nome": "Santana",
+        "uf": "AP",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Amazonas, ressacas e tradições do Igarapé do Lago.",
+        "resumo": "Santana está às margens do Amazonas, com áreas de ressaca ligadas aos rios e terreno pouco acidentado em grande parte do município. Foi elevada a município em 1987, desmembrada de Macapá. A celebração de Nossa Senhora da Piedade integra a vida cultural da comunidade quilombola do Igarapé do Lago.",
+        "fontesResumo": [
+          "santana-plano-diretor",
+          "ibge-biblioteca-santana-ap",
+          "santana-prefeitura-piedade"
+        ],
+        "referencias": [
+          {
+            "id": "igarape-fortaleza",
+            "tipo": "paisagem",
+            "titulo": "Igarapé da Fortaleza",
+            "texto": "O transporte de ribeirinhos e comerciantes por suas águas participa do abastecimento de Santana, como registra a Prefeitura na apresentação do Circuito Igarapé Forte.",
+            "fontes": [
+              "santana-prefeitura-igarape-fortaleza"
+            ]
+          },
+          {
+            "id": "piedade-igarape-lago",
+            "tipo": "tradicao",
+            "titulo": "Nossa Senhora da Piedade no Igarapé do Lago",
+            "texto": "A notícia municipal de julho de 2025 descreve a celebração na comunidade quilombola do Igarapé do Lago. Na procissão da meia-lua, a imagem de Nossa Senhora da Piedade é levada pelo rio.",
+            "fontes": [
+              "santana-prefeitura-piedade"
+            ]
+          },
+          {
+            "id": "rppn-revecom",
+            "tipo": "natureza",
+            "titulo": "RPPN REVECOM",
+            "texto": "O resumo técnico do Plano Diretor registra a reserva privada, criada em 1998 às margens do Amazonas, como espaço voltado à educação ambiental e à pesquisa.",
+            "fontes": [
+              "santana-plano-diretor"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "santanenses",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-santana-ap"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -0.0308,
+          "lon": -51.178,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 107618,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 1541.224,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Macapá",
+          "intermediaria": "Macapá",
+          "mesorregiao": "Sul do Amapá",
+          "microrregiao": "Macapá",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "alagado",
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Núcleo urbano entre o Amazonas e as ressacas",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "vegetacao": [],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "rio-largo"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Revisar a apresentação da tradição quilombola, sem generalizar crenças para toda a comunidade. O relevo da maquete foca as áreas baixas descritas no Plano Diretor; há colinas ao norte, não representadas. Sem marco de forte: a notícia de 2022 cita o antigo Cumaú, sem comprovar estrutura preservada. Não se afirma funcionamento atual da RPPN. O gentílico foi mantido como fornecido pelo IBGE (santanenses), no plural, para conferência editorial."
+      }
+    },
+    "1712702": {
+      "identidade": {
+        "id": "1712702",
+        "ibge": "1712702",
+        "nome": "Mateiros",
+        "uf": "TO",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Areia levada pelo vento, a Cachoeira do Formiga e o artesanato de Mumbuca.",
+        "resumo": "A paisagem de Mateiros inclui a Cachoeira do Formiga e dunas formadas por partículas de arenito trazidas pelo vento da Serra do Espírito Santo. O município foi criado em 1991 e instalado em 1993. O histórico do IBGE destaca a produção de artesanato de capim dourado na comunidade quilombola Mumbuca.",
+        "fontesResumo": [
+          "mateiros-estado-jalapao",
+          "ibge-biblioteca-mateiros-to",
+          "mateiros-doe-localizacao-dunas"
+        ],
+        "referencias": [
+          {
+            "id": "dunas-jalapao",
+            "tipo": "paisagem",
+            "titulo": "Dunas do Jalapão",
+            "texto": "O portal estadual explica sua formação pela ação do vento sobre partículas de arenito vindas da Serra do Espírito Santo. A maquete destaca essa paisagem de areia no interior do país.",
+            "fontes": [
+              "mateiros-estado-jalapao",
+              "mateiros-doe-localizacao-dunas"
+            ],
+            "descoberta": {
+              "modulo": "dunas",
+              "nota": "Na maquete, dunas de interior simplificadas; o módulo de relevo não indica litoral. Formas e cores são ilustrativas."
+            },
+            "curto": "Dunas formadas pela ação dos ventos sobre partículas de arenito da Serra do Espírito Santo."
+          },
+          {
+            "id": "cachoeira-formiga",
+            "tipo": "natureza",
+            "titulo": "Cachoeira do Formiga",
+            "texto": "Localizada em Mateiros, tem águas de tom esverdeado e vegetação natural ao redor, conforme a descrição do Governo do Tocantins.",
+            "fontes": [
+              "mateiros-estado-jalapao"
+            ]
+          },
+          {
+            "id": "mumbuca-capim-dourado",
+            "tipo": "tradicao",
+            "titulo": "Mumbuca e o artesanato de capim dourado",
+            "texto": "O histórico do IBGE associa o artesanato de capim dourado à comunidade quilombola Mumbuca. O texto registra essa relação entre saberes, material e comunidade.",
+            "fontes": [
+              "ibge-biblioteca-mateiros-to"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "mateirense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-mateiros-to"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -10.546,
+          "lon": -46.4182,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 2748,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 9589.273,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Palmas",
+          "intermediaria": "Palmas",
+          "mesorregiao": "Oriental do Tocantins",
+          "microrregiao": "Jalapão",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "interior",
+        "ambientes": [
+          "serra"
+        ],
+        "rotulo": "Dunas de interior ligadas à Serra do Espírito Santo",
+        "relevo": {
+          "modulo": "costa-dunas"
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 4,
+          "predios": 0
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "dunas",
+            "referencia": "dunas-jalapao"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Revisar a apresentação dos saberes da comunidade quilombola Mumbuca; fonte do IBGE com registro de 2008. As dunas são de interior: costa-dunas é apenas o nome técnico do módulo, sem mar. A vegetação genérica remete ao entorno da Cachoeira do Formiga; não implica árvores sobre todo o campo de dunas. O portal municipal de turismo foi descartado por conteúdos promocionais e páginas sem conteúdo específico; foram preferidas fontes estaduais e IBGE. Fervedouros ficaram sem marco por ausência de módulo adequado."
+      }
+    },
+    "4103701": {
+      "identidade": {
+        "id": "4103701",
+        "ibge": "4103701",
+        "nome": "Cambé",
+        "uf": "PR",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Um córrego entre a mata do Zezão e espaços de memória.",
+        "resumo": "O fundo de vale do Zezão reúne mata nativa ao longo do Córrego da Verdade. Cambé tornou-se município em 1947, segundo a formação administrativa do IBGE. O Museu Histórico, criado em 1985, preserva registros da trajetória local.",
+        "fontesResumo": [
+          "cambe-prefeitura-parque-zezao",
+          "cambe-plano-educacao",
+          "ibge-biblioteca-cambe-pr",
+          "cambe-prefeitura-museu"
+        ],
+        "referencias": [
+          {
+            "id": "parque-zezao",
+            "tipo": "natureza",
+            "titulo": "Parque Zezão",
+            "texto": "Também chamado de Parque Verdade, foi inaugurado em 2000. Sua área de preservação acompanha o Córrego da Verdade com mata nativa junto ao núcleo urbano.",
+            "fontes": [
+              "cambe-prefeitura-parque-zezao"
+            ]
+          },
+          {
+            "id": "museu-historico",
+            "tipo": "cultura",
+            "titulo": "Museu Histórico de Cambé",
+            "texto": "Criado em 1985, reúne registros da história de Cambé. A apresentação municipal de 2025 destaca os povos originários e o trabalho ligado ao café entre os temas do acervo.",
+            "fontes": [
+              "cambe-prefeitura-museu"
+            ]
+          },
+          {
+            "id": "biblioteca-municipal",
+            "tipo": "cultura",
+            "titulo": "Biblioteca Pública Municipal Maria Adelina de Melo e Souza",
+            "texto": "A biblioteca recebeu esse nome em 2025. A notícia municipal sobre sua reinauguração a situa no piso superior do Centro Cultural.",
+            "fontes": [
+              "cambe-prefeitura-biblioteca"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "cambeense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-cambe-pr"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -23.2787,
+          "lon": -51.2832,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 107208,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 495.375,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Londrina",
+          "intermediaria": "Londrina",
+          "mesorregiao": "Norte Central Paranaense",
+          "microrregiao": "Londrina",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "vale",
+        "ambientes": [
+          "urbano",
+          "vale",
+          "rio"
+        ],
+        "rotulo": "Córrego e mata do fundo de vale do Zezão",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.35
+        },
+        "vegetacao": [
+          [
+            "mata",
+            8
+          ],
+          [
+            "redonda",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "vereda"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A página geral Sobre a Cidade foi descartada por indícios de conteúdo enciclopédico reaproveitado. Foram usadas notícias próprias da Prefeitura e o Plano de Educação. Museu e biblioteca permanecem em texto, sem imitar edifícios modernos. Revisar a apresentação dos povos originários no texto sobre o museu. O anúncio de reinauguração do museu não foi convertido em afirmação de obra entregue."
+      }
+    },
+    "4218707": {
+      "identidade": {
+        "id": "4218707",
+        "ibge": "4218707",
+        "nome": "Tubarão",
+        "uf": "SC",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "A cidade do rio, da memória ferroviária e da pintura de Zumblick.",
+        "resumo": "Partes da área urbana de Tubarão ocupam a planície de inundação do rio que dá nome à cidade. O distrito foi criado em 1836, e a vila foi desmembrada de Laguna em 1870. A memória ferroviária e a pintura de Willy Zumblick aparecem nos acervos de dois museus locais.",
+        "fontesResumo": [
+          "tubarao-defesa-civil-plancon",
+          "ibge-biblioteca-tubarao-sc",
+          "tubarao-fcc-museu-ferroviario",
+          "tubarao-alesc-zumblick"
+        ],
+        "referencias": [
+          {
+            "id": "museu-ferroviario",
+            "tipo": "cultura",
+            "titulo": "Museu Ferroviário de Tubarão",
+            "texto": "Criado em 1997 e mantido pela Sociedade dos Amigos da Locomotiva a Vapor, reúne coleções documentais, fotográficas e de maquinário ligadas à memória do trabalho ferroviário.",
+            "fontes": [
+              "tubarao-fcc-museu-ferroviario"
+            ]
+          },
+          {
+            "id": "museu-willy-zumblick",
+            "tipo": "cultura",
+            "titulo": "Museu Willy Zumblick",
+            "texto": "Em 2013, a Alesc registrou a exposição dos 72 quadros que o artista doou ao município. Entre os temas retratados estão a Festa do Divino, o Boi de Mamão e enchentes.",
+            "fontes": [
+              "tubarao-alesc-zumblick"
+            ]
+          },
+          {
+            "id": "rio-tubarao",
+            "tipo": "paisagem",
+            "titulo": "Rio Tubarão e a planície urbana",
+            "texto": "O plano municipal de contingência descreve áreas urbanas na planície de inundação do rio. Os terrenos baixos fazem parte da relação entre a cidade e suas águas.",
+            "fontes": [
+              "tubarao-defesa-civil-plancon"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "tubaronense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-tubarao-sc"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -28.4838,
+          "lon": -49.0064,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 110088,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 301.485,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Tubarão",
+          "intermediaria": "Criciúma",
+          "mesorregiao": "Sul Catarinense",
+          "microrregiao": "Tubarão",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "vale",
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Núcleo urbano na planície do rio Tubarão",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "vegetacao": [],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "rio"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Páginas HTML da Prefeitura responderam 403; o plano de contingência em PDF foi acessível. Museu ferroviário: o site próprio só devolveu título, substituído pela Fundação Cultural de Criciúma. Museu de arte: fonte de 2013, com atribuição e no passado; não se afirma configuração atual da exposição. Sem marcos, para não inventar estação nem imitar edifício ou obras de Zumblick."
+      }
+    },
+    "4321501": {
+      "identidade": {
+        "id": "4321501",
+        "ibge": "4321501",
+        "nome": "Torres",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Torres de basalto junto ao mar e uma igreja na Torre Norte.",
+        "resumo": "Torres tem paredões de basalto junto ao mar, paisagem presente no Parque da Guarita. São Domingos das Torres foi elevada a vila em 1878; o município foi restabelecido como Torres em 1890. Na Torre Norte, a Igreja São Domingos foi inaugurada em 1824.",
+        "fontesResumo": [
+          "torres-prefeitura-guarita",
+          "ibge-biblioteca-torres-rs",
+          "torres-prefeitura-sao-domingos"
+        ],
+        "referencias": [
+          {
+            "id": "parque-guarita",
+            "tipo": "natureza",
+            "titulo": "Parque da Guarita",
+            "texto": "Torres basálticas junto ao mar compõem a paisagem do parque. Em 2003, a área passou a se chamar Parque Estadual José Lutzenberger, em homenagem ao ambientalista.",
+            "fontes": [
+              "torres-prefeitura-guarita"
+            ]
+          },
+          {
+            "id": "igreja-sao-domingos",
+            "tipo": "patrimonio",
+            "titulo": "Igreja Matriz São Domingos",
+            "texto": "Na Torre Norte, também chamada Morro do Farol, a igreja começou a ser construída em 1819 e foi inaugurada em 1824. Sua torre lateral foi acrescentada em 1898.",
+            "fontes": [
+              "torres-prefeitura-sao-domingos"
+            ],
+            "descoberta": {
+              "modulo": "igreja",
+              "nota": "Na maquete, igreja genérica com torre central; no edifício real a torre é lateral. Cores e proporções são ilustrativas."
+            },
+            "curto": "Igreja da Torre Norte, iniciada em 1819 e inaugurada em 1824; a torre lateral é de 1898."
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "torrense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-torres-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -29.3398,
+          "lon": -49.7256,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 41751,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 161.627,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Torres",
+          "intermediaria": "Porto Alegre",
+          "mesorregiao": "Metropolitana de Porto Alegre",
+          "microrregiao": "Osório",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "litoral",
+        "ambientes": [
+          "litoral",
+          "urbano"
+        ],
+        "rotulo": "Morros costeiros e a igreja da Torre Norte",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.7
+        },
+        "vegetacao": [],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "igreja",
+            "referencia": "igreja-sao-domingos"
+          }
+        ],
+        "agua": {
+          "modulo": "mar"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. A torre real da igreja fica à esquerda; o módulo tem torre central, diferença explicitada na nota. O parque não recebe marco nem reprodução do projeto paisagístico. O IBGE menciona primeira missa em 1820, enquanto a Prefeitura/IPHAE distingue inauguração em 1824: o texto usa apenas inauguração. Sem cronologia indígena simplificada nem número de torres, divergente entre páginas municipais."
+      }
+    },
+    "5107925": {
+      "identidade": {
+        "id": "5107925",
+        "ibge": "5107925",
+        "nome": "Sorriso",
+        "uf": "MT",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Memória da formação da cidade e o verde do Parque Ecológico.",
+        "resumo": "Sorriso reúne um parque urbano arborizado com lago e espaços dedicados à memória local. Seu histórico no IBGE situa o início da colonização na década de 1970, a criação do distrito em 1980 e a emancipação em 1986. O Centro Histórico-Cultural Benjamim Raiser conserva obras de arte, objetos e registros da comunidade.",
+        "fontesResumo": [
+          "sorriso-turismo-parque",
+          "ibge-biblioteca-sorriso-mt",
+          "sorriso-turismo-centro-cultural",
+          "sorriso-prefeitura-relevo"
+        ],
+        "referencias": [
+          {
+            "id": "parque-ecologico",
+            "tipo": "natureza",
+            "titulo": "Parque Ecológico Municipal",
+            "texto": "O parque reúne arborização, lago e uma ciclovia na mata. É uma referência de área verde dentro da cidade.",
+            "fontes": [
+              "sorriso-turismo-parque"
+            ]
+          },
+          {
+            "id": "centro-historico-cultural",
+            "tipo": "cultura",
+            "titulo": "Centro Histórico-Cultural Benjamim Raiser",
+            "texto": "Obras de arte, objetos antigos e registros da comunidade compõem o acervo. Fotografias, documentos e utensílios ajudam a contar o cotidiano da formação da cidade.",
+            "fontes": [
+              "sorriso-turismo-centro-cultural"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "sorrisense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-sorriso-mt"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -12.5453,
+          "lon": -55.7275,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 110635,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 9293.629,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Sorriso",
+          "intermediaria": "Sinop",
+          "mesorregiao": "Norte Mato-grossense",
+          "microrregiao": "Alto Teles Pires",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "interior",
+        "ambientes": [
+          "urbano"
+        ],
+        "rotulo": "Cidade com o lago arborizado do Parque Ecológico",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "vegetacao": [
+          [
+            "mata",
+            5
+          ],
+          [
+            "redonda",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "lago"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Uma evidência MANUAL: relevo no laudo municipal digitalizado de 17/02/2023, p. 1; áreas nomeadas na p. 2. Leitura visual das três páginas, sem texto extraível. O documento descreve alguns loteamentos urbanos, não o município inteiro. O histórico do IBGE informa emancipação em 1986, mas a formação administrativa traz instalação em 1997; esta última data foi omitida. Revisar o contexto da colonização no resumo. Parque mantido sem marco: lago-ilha e lago-mureta acrescentariam ilha ou trampolim sem fonte. Não se reproduzem as esculturas da cidade nem superlativos econômicos."
+      }
+    },
+    "5205109": {
+      "identidade": {
+        "id": "5205109",
+        "ibge": "5205109",
+        "nome": "Catalão",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Morros do Cerrado, memória ferroviária e ternos de congada.",
+        "resumo": "Catalão tem vales, chapadas e morros no Cerrado do sudeste goiano. Foi elevada a vila em 1833 e a cidade em 1859. A antiga estação ferroviária abriga o Museu Histórico Municipal Cornélio Ramos.",
+        "fontesResumo": [
+          "catalao-prefeitura-geografia",
+          "ibge-biblioteca-catalao-go",
+          "catalao-cultura-museu"
+        ],
+        "referencias": [
+          {
+            "id": "museu-cornelio-ramos",
+            "tipo": "patrimonio",
+            "titulo": "Museu Histórico Municipal Cornélio Ramos",
+            "texto": "A antiga estação ferroviária, tombada pelo município em 2001, abriga o museu. Fotografias, documentos, artesanatos e objetos compõem seu acervo sobre a história local.",
+            "fontes": [
+              "catalao-cultura-museu"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, uma estação genérica; trilho, locomotiva, cores e cobertura são ilustrativos."
+            },
+            "curto": "A antiga estação, tombada em 2001, abriga um acervo sobre a história de Catalão."
+          },
+          {
+            "id": "morrinho-sao-joao",
+            "tipo": "patrimonio",
+            "titulo": "Morrinho de São João",
+            "texto": "Também chamado de Colina dos Poetas e Morro da Saudade, foi tombado junto com a capela em 1994. Ali fica o túmulo do poeta Ricardo Paranhos.",
+            "fontes": [
+              "catalao-prefeitura-morrinho"
+            ]
+          },
+          {
+            "id": "congadas",
+            "tipo": "tradicao",
+            "titulo": "Congadas de Catalão",
+            "texto": "Ternos de Moçambiques, Congos e Catupés homenageiam Nossa Senhora do Rosário dos Pretos nas congadas descritas pela Prefeitura.",
+            "fontes": [
+              "catalao-prefeitura-geografia"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "catalano",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-catalao-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -18.1703,
+          "lon": -47.9508,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 114427,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 3826.37,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Catalão",
+          "intermediaria": "Goiânia",
+          "mesorregiao": "Sul Goiano",
+          "microrregiao": "Catalão",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "cerrado",
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Morros do Cerrado e memória da estação",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.6
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            8
+          ],
+          [
+            "arbusto",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "museu-cornelio-ramos"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Origem do povoado diverge entre narrativas da Prefeitura e do IBGE; não foi fixada uma fundação nem repetida a lenda do nome. A cronologia ferroviária da página geral não foi utilizada. Revisar a apresentação das congadas, tradição afro-brasileira. Morrinho mantido só em texto; não se presume entrega da obra anunciada em 2024."
+      }
+    },
+    "5211503": {
+      "identidade": {
+        "id": "5211503",
+        "ibge": "5211503",
+        "nome": "Itumbiara",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "À beira do Paranaíba, entre a ponte pênsil e a praça.",
+        "resumo": "Itumbiara está às margens do Paranaíba, numa região de savanas descrita pelo Instituto Mauro Borges. Santa Rita do Paranaíba tornou-se vila em 1909 e cidade em 1915. O município recebeu o nome Itumbiara em 1943.",
+        "fontesResumo": [
+          "itumbiara-prefeitura-rio-praca",
+          "itumbiara-imb-painel",
+          "ibge-biblioteca-itumbiara-go"
+        ],
+        "referencias": [
+          {
+            "id": "ponte-affonso-penna",
+            "tipo": "patrimonio",
+            "titulo": "Ponte Pênsil Affonso Penna",
+            "texto": "Instalada em 1909 e transferida no início dos anos 1970, foi tombada pelo Iphan. Uma nota municipal de abril de 2026 registrou a interrupção do tráfego de veículos; o perfil não informa condições atuais de acesso.",
+            "fontes": [
+              "itumbiara-prefeitura-ponte",
+              "itumbiara-prefeitura-nota-ponte"
+            ],
+            "descoberta": {
+              "modulo": "ponte-pensil",
+              "nota": "Na maquete, ponte pênsil genérica; cabos, torres e proporções são ilustrativos e não indicam liberação de tráfego."
+            },
+            "curto": "Ponte pênsil instalada em 1909, transferida nos anos 1970 e tombada pelo Iphan."
+          },
+          {
+            "id": "orla-paranaiba",
+            "tipo": "paisagem",
+            "titulo": "Orla do Rio Paranaíba",
+            "texto": "A Avenida Beira Rio acompanha a orla do Paranaíba, elemento da paisagem urbana de Itumbiara.",
+            "fontes": [
+              "itumbiara-prefeitura-rio-praca"
+            ]
+          },
+          {
+            "id": "praca-matriz",
+            "tipo": "patrimonio",
+            "titulo": "Praça Matriz",
+            "texto": "A apresentação da cidade divulgada pela Prefeitura registra sua construção em 1934. A praça compõe o conjunto de referências históricas locais.",
+            "fontes": [
+              "itumbiara-prefeitura-rio-praca"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "itumbiarense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-itumbiara-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -18.4194,
+          "lon": -49.2162,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 107970,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 2447.014,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Itumbiara",
+          "intermediaria": "Itumbiara",
+          "mesorregiao": "Sul Goiano",
+          "microrregiao": "Meia Ponte",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "cerrado",
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Vale do Paranaíba com a ponte pênsil",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.35
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            5
+          ],
+          [
+            "capim",
+            6
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "ponte-pensil",
+            "referencia": "ponte-affonso-penna"
+          }
+        ],
+        "agua": {
+          "modulo": "rio-largo"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Uma evidência MANUAL: nota oficial de 07/04/2026 publicada apenas em imagem, lida integralmente. Registra interrupção do tráfego em 01/04/2026, sem se presumir situação atual ou conclusão da restauração. Revisar permanência do marco e condições de conservação. Data de distrito diverge: 1842 na apresentação municipal de 2021, 1852 no IBGE; ficou de fora. Relevo baixo é síntese do vale, não medição topográfica."
+      }
+    },
+    "1501808": {
+      "identidade": {
+        "id": "1501808",
+        "ibge": "1501808",
+        "nome": "Breves",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Furos, floresta e saberes do artesanato no Marajó.",
+        "resumo": "Breves fica na região dos Furos de Breves; um estudo da UFRA de 2025 descreveu seu relevo predominantemente plano e a presença de floresta aluvial. Foi elevada a vila em 1851 e a cidade em 1909. Na Reserva Extrativista Mapuá, o ICMBio registrou em 2014 atividades como o manejo do açaí e o cultivo da mandioca.",
+        "fontesResumo": [
+          "breves-prefeitura-guia",
+          "breves-ufra-planejamento",
+          "ibge-biblioteca-breves-pa",
+          "breves-icmbio-comunidades"
+        ],
+        "referencias": [
+          {
+            "id": "reserva-mapua",
+            "tipo": "natureza",
+            "titulo": "Reserva Extrativista Mapuá",
+            "texto": "Criada em 2005, a reserva fica em Breves. Uma publicação do ICMBio de 2014 descreveu o manejo do açaí e o cultivo da mandioca entre as atividades das comunidades.",
+            "fontes": [
+              "breves-icmbio-mapua",
+              "breves-icmbio-comunidades"
+            ]
+          },
+          {
+            "id": "praca-ceu",
+            "tipo": "cultura",
+            "titulo": "Praça CEU",
+            "texto": "O guia municipal apresenta a praça como espaço de cultura, lazer e práticas esportivas na cidade de Breves.",
+            "fontes": [
+              "breves-prefeitura-guia"
+            ]
+          },
+          {
+            "id": "artesanato-local",
+            "tipo": "tradicao",
+            "titulo": "Artesanato de cipó, palha e barro",
+            "texto": "O guia turístico municipal registra o uso de cipós, talas de palmeiras, madeira, barro e palha. Entre as peças citadas estão cestarias, paneiros, tipitis, matapis e panelas de barro.",
+            "fontes": [
+              "breves-prefeitura-guia"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "brevense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-breves-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -1.6913,
+          "lon": -50.4831,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 106968,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 9566.572,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Breves",
+          "intermediaria": "Breves",
+          "mesorregiao": "Marajó",
+          "microrregiao": "Furos de Breves",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "amazonia",
+        "ambientes": [
+          "urbano",
+          "rio",
+          "floresta"
+        ],
+        "rotulo": "Cidade de furos e floresta aluvial",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "vegetacao": [
+          [
+            "mata",
+            8
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "rio"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O cenário de planície e floresta tem apoio em pesquisa da UFRA de 2025, não apenas em associação regional. Revisar o uso de TCC como fonte geográfica e a apresentação dos saberes comunitários. O histórico do IBGE tem datas incoerentes (1970 e 1981 em contexto colonial), omitidas. A área da Resex diverge entre ficha atual e publicação de 2014; não foi publicada. Guia turístico sem data interna: serviços, agenda de festas e obras anunciadas ficaram de fora. Sem marcos por falta de formas e comprovação de edifícios específicos."
+      }
+    },
+    "1505502": {
+      "identidade": {
+        "id": "1505502",
+        "ibge": "1505502",
+        "nome": "Paragominas",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "O Uraim cruza a cidade entre colinas e áreas verdes.",
+        "resumo": "O Uraim atravessa Paragominas, cujo relevo inclui colinas, tabuleiros, terraços e várzeas descritos no plano municipal de resíduos. O município foi criado e instalado em 1965. O Parque Ambiental Adhemar Monteiro e o Lago Verde integram suas referências urbanas de água e lazer.",
+        "fontesResumo": [
+          "paragominas-plano-residuos",
+          "ibge-biblioteca-paragominas-pa",
+          "paragominas-prefeitura-parque",
+          "paragominas-pca-lagos"
+        ],
+        "referencias": [
+          {
+            "id": "parque-ambiental",
+            "tipo": "natureza",
+            "titulo": "Parque Ambiental Adhemar Monteiro",
+            "texto": "Às margens do Uraim, o parque é apresentado pela Prefeitura como lugar de lazer e educação ambiental. O nome também aparece no planejamento municipal de 2026.",
+            "fontes": [
+              "paragominas-prefeitura-parque",
+              "paragominas-pca-lagos"
+            ]
+          },
+          {
+            "id": "rio-uraim",
+            "tipo": "paisagem",
+            "titulo": "Rio Uraim",
+            "texto": "O curso d’água atravessa a cidade e acompanha o Parque Ambiental. É um dos elementos que ajudam a ler a paisagem urbana de Paragominas.",
+            "fontes": [
+              "paragominas-plano-residuos",
+              "paragominas-prefeitura-parque"
+            ]
+          },
+          {
+            "id": "lago-verde",
+            "tipo": "paisagem",
+            "titulo": "Lago Verde",
+            "texto": "O plano municipal de contratações de 2026 registra atividades de limpeza e manutenção do Lago Verde e dos lagos do Parque Ambiental. O documento distingue esses espaços aquáticos no planejamento da cidade.",
+            "fontes": [
+              "paragominas-pca-lagos"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "paragominense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-paragominas-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -3,
+          "lon": -47.3554,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 105550,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 19342.565,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Paragominas",
+          "intermediaria": "Castanhal",
+          "mesorregiao": "Sudeste Paraense",
+          "microrregiao": "Paragominas",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "vale",
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade cortada pelo Uraim, com colinas suaves",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.4
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            6
+          ],
+          [
+            "arbusto",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "rio"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Não foram criados marcos para o lago ou para as pontes do parque: as formas disponíveis acrescentariam detalhes sem fonte ou não confirmados hoje. A notícia de 2018 documenta o parque, mas não fundamenta afirmação sobre funcionamento atual. O PCA de 2026 prevê compras e manutenção: não se afirma execução nem existência de equipamentos previstos. A paisagem não generaliza floresta primária para todo o município."
+      }
+    },
+    "4307005": {
+      "identidade": {
+        "id": "4307005",
+        "ibge": "4307005",
+        "nome": "Erechim",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Mata com araucárias e memória ferroviária no núcleo urbano.",
+        "resumo": "No perímetro urbano de Erechim, o Parque Longines Malinowski conserva mata com araucárias sobre um relevo irregular descrito em seu plano de manejo. A formação da cidade se liga à ferrovia entre o Rio Grande do Sul e São Paulo. O município foi criado em 1918, desmembrado de Passo Fundo. O Castelinho foi construído para abrigar a Comissão de Terras do Estado.",
+        "fontesResumo": [
+          "erechim-estado-parque",
+          "erechim-plano-manejo",
+          "ibge-biblioteca-erechim-rs",
+          "erechim-prefeitura-castelinho"
+        ],
+        "referencias": [
+          {
+            "id": "parque-longines",
+            "tipo": "natureza",
+            "titulo": "Parque Natural Municipal Longines Malinowski",
+            "texto": "O parque conserva um fragmento de mata com araucária dentro do perímetro urbano. O portal estadual descreve uma área de 24 hectares próxima ao centro antigo.",
+            "fontes": [
+              "erechim-estado-parque"
+            ]
+          },
+          {
+            "id": "castelinho",
+            "tipo": "patrimonio",
+            "titulo": "Castelinho",
+            "texto": "O edifício de madeira foi construído entre 1912 e 1915 para a Comissão de Terras do Estado. Sua inauguração ocorreu em 1916.",
+            "fontes": [
+              "erechim-prefeitura-castelinho"
+            ]
+          },
+          {
+            "id": "estacao-ferroviaria",
+            "tipo": "patrimonio",
+            "titulo": "Estação Ferroviária",
+            "texto": "Inaugurado em 3 de agosto de 1910, o prédio da estação se liga à expansão da cidade e da região, segundo a Prefeitura.",
+            "fontes": [
+              "erechim-prefeitura-estacao"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, estação genérica; plataforma, trilho, locomotiva, cores e proporções são ilustrativos."
+            },
+            "curto": "Estação inaugurada em 1910, ligada à expansão de Erechim e do norte gaúcho."
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "erechinense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-erechim-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -27.6353,
+          "lon": -52.2743,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 105705,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 429.164,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Erechim",
+          "intermediaria": "Passo Fundo",
+          "mesorregiao": "Noroeste Rio-grandense",
+          "microrregiao": "Erechim",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "serra",
+        "ambientes": [
+          "urbano",
+          "floresta"
+        ],
+        "rotulo": "Núcleo urbano com araucárias e estação",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.45
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            6
+          ],
+          [
+            "redonda",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "estacao-ferroviaria"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Castelinho apenas em texto: não há módulo apropriado para o prédio de madeira e a página municipal o informa em restauração, sem se presumir reabertura. A forma da estação é genérica e não comprova operação de trens ou visitação. A geomorfologia citada é a do parque no plano de 2011, não de todo o município. A data de transferência do parque diverge entre fontes (1939/1948), omitida."
+      }
+    },
+    "5211909": {
+      "identidade": {
+        "id": "5211909",
+        "ibge": "5211909",
+        "nome": "Jataí",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Relevo suave do Cerrado, lago e espaços de memória.",
+        "resumo": "O levantamento da Goiás Turismo descreve Jataí com relevo plano a suavemente ondulado e cobertura de Cerrado. Paraíso tornou-se vila em 1882; em 1895, foi elevada a cidade com o nome Jataí. O Memorial JK e o Museu Histórico Francisco Honório de Campos integram seus espaços de memória.",
+        "fontesResumo": [
+          "jatai-goias-turismo",
+          "ibge-biblioteca-jatai-go",
+          "jatai-prefeitura-cidade",
+          "jatai-prefeitura-museu-historico"
+        ],
+        "referencias": [
+          {
+            "id": "memorial-jk",
+            "tipo": "cultura",
+            "titulo": "Memorial JK",
+            "texto": "Dentro do Parque JK, o memorial se dedica aos arquivos e à memória de Juscelino Kubitschek. A apresentação municipal o relaciona à história da mudança da capital federal.",
+            "fontes": [
+              "jatai-prefeitura-cidade"
+            ]
+          },
+          {
+            "id": "museu-historico",
+            "tipo": "cultura",
+            "titulo": "Museu Histórico de Jataí Francisco Honório de Campos",
+            "texto": "Na Rua José Manoel Vilela, o museu compõe os espaços de memória da cidade. Em setembro de 2025, a Prefeitura anunciou ali a exposição Memória, História e defiCiência, sobre percursos anticapacitistas.",
+            "fontes": [
+              "jatai-prefeitura-museu-historico"
+            ]
+          },
+          {
+            "id": "lago-bonsucesso",
+            "tipo": "paisagem",
+            "titulo": "Lago Bonsucesso",
+            "texto": "O lago é referência do Polo Turístico Vale do Paraíso, situado pela Prefeitura às suas margens, junto à BR-158.",
+            "fontes": [
+              "jatai-prefeitura-cidade"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "jataiense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-jatai-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -17.8858,
+          "lon": -51.724,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 105729,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 7178.792,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Jataí-Mineiros",
+          "intermediaria": "Rio Verde",
+          "mesorregiao": "Sul Goiano",
+          "microrregiao": "Sudoeste de Goiás",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "cerrado",
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Relevo suave do Cerrado e o Lago Bonsucesso",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.3
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            7
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "lago"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Sem marco: o lago não ganhou ilha ou trampolim sem fonte; o memorial e o museu permanecem em texto, sem reproduzir arquitetura ou esculturas. A fonte do museu registra um anúncio de exposição em 2025, não programação vigente. O painel IMB de 2016 foi descartado para geografia por dados suspeitos de altitude e hidrografia; usou-se levantamento da Goiás Turismo. Referência histórica a JK, sem política atual."
       }
     }
   }
