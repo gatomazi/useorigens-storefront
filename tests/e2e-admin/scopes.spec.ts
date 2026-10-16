@@ -68,7 +68,9 @@ for (const region of REGIONS) {
     await open(page, "/admin/colecoes");
     await expect(page.getByText(new RegExp(`Coleções da loja INK de ${region.store}`))).toBeVisible();
     await expect(page.locator("table.a-table tbody")).not.toContainText("SUL - RS");
+    await open(page, "/admin/sincronizacao");
     await expect(page.getByRole("button", { name: new RegExp(`Sincronizar catálogo de ${region.store}`) })).toBeVisible(); // the owner can sync this store's catalog from the panel
+    await open(page, "/admin/colecoes");
     const enableButtons = page.locator("table.a-table tbody").getByRole("button", { name: "Habilitar" });
     if ((await enableButtons.count()) > 0) {
       const row = page.locator("table.a-table tbody tr").filter({ has: page.getByRole("button", { name: "Habilitar" }) }).first();
@@ -161,8 +163,12 @@ test("given a change of the global tracking in DRAFT, when nothing is published,
   await expect(ifPublished("centro-oeste", "meta")).not.toContainText("4444444444444444");
 
   // Publishing the global alone changes nobody: Norte's OWN published document still says "off", so nothing is asked and nothing moves.
-  await page.getByRole("button", { name: "Publicar tracking global" }).click();
-  await expect(flash(page, /Tracking global publicado/)).toBeVisible({ timeout: 300_000 });
+  // The global document is published from Publicar; Tracking only says it is waiting.
+  await expect(page.getByTestId("global-pending")).toContainText("tracking global");
+  await open(page, "/admin/publicar");
+  await page.getByRole("button", { name: "Publicar configuração global" }).click();
+  await expect(flash(page, /Configuração global publicada .*tracking global/)).toBeVisible({ timeout: 300_000 });
+  await open(page, "/admin/tracking");
   await expect(live("norte", "meta")).toContainText("nenhum");
 
   // Norte's own publish is what makes it inherit, and it must be confirmed (effective ID changes).
@@ -185,13 +191,19 @@ test("given a change of the global tracking in DRAFT, when nothing is published,
   await globalMeta.locator("input:not([type])").fill("5555555555555555");
   await global.getByRole("button", { name: /Salvar rascunho/ }).click();
   await expect(flash(page, /Rascunho de tracking salvo/)).toBeVisible();
-  await expect(page.getByRole("group", { name: "Confirmação do rastreamento" })).toContainText("Norte · Meta Pixel");
-  await page.getByRole("button", { name: "Publicar tracking global" }).click();
+  await open(page, "/admin/publicar");
+  const globalCard = page.getByTestId("publish-global");
+  await expect(globalCard.getByText(/Hoje herdam o tracking global:/)).toContainText("Norte");
+  await expect(page.getByRole("group", { name: "Confirmação do rastreamento global", exact: true })).toContainText("Norte · Meta Pixel");
+  await page.getByRole("button", { name: "Publicar configuração global" }).click();
   await expect(flash(page, /Confirme os IDs/)).toBeVisible({ timeout: 300_000 });
+  await open(page, "/admin/tracking");
   await expect(live("norte", "meta")).toContainText("4444444444444444"); // refused: still the old one
-  await page.getByLabel(/Revisei os IDs efetivos/).check();
-  await page.getByRole("button", { name: "Publicar tracking global" }).click();
-  await expect(flash(page, /Tracking global publicado/)).toBeVisible({ timeout: 300_000 });
+  await open(page, "/admin/publicar");
+  await globalCard.getByLabel(/Revisei os IDs efetivos/).check();
+  await page.getByRole("button", { name: "Publicar configuração global" }).click();
+  await expect(flash(page, /Configuração global publicada/)).toBeVisible({ timeout: 300_000 });
+  await open(page, "/admin/tracking");
   await expect(live("norte", "meta")).toContainText("5555555555555555");
 
   // Invalid formats are refused with a clear message (the draft is not saved).

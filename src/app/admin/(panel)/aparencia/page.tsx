@@ -1,5 +1,6 @@
-import { discardGlobalThemeAction, publishGlobalThemeAction, saveCardsAction, saveMundoAction, saveThemeAction } from "@/app/admin/actions";
+import { saveCardsAction, saveMundoAction, saveThemeAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
+import { GlobalPendingNote } from "@/components/admin/GlobalPendingNote";
 import { ThemeEditor } from "@/components/admin/ThemeEditor";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { currentScope, REGION_SCOPES, scopeName } from "@/lib/admin/scope";
@@ -44,9 +45,10 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Aparência <span className="a-muted">· {scopeName(scope)}</span></h1>
-        <p className="a-muted mt-2 max-w-3xl">Cores do header, do menu mobile e da página. A paleta <strong>Use Origens</strong> vale para toda região que escolher <em>Herdar</em>; cada região pode manter a <em>Paleta própria</em>. Sem configuração, a região continua exatamente como está hoje. Salvar guarda só um <strong>rascunho</strong>; a região é publicada em <em>Publicar</em>.</p>
+        <p className="a-muted mt-2 max-w-3xl">Cores do header, do menu mobile e da página. A paleta <strong>Use Origens</strong> vale para toda região que escolher <em>Herdar</em>; cada região pode manter a <em>Paleta própria</em>. Sem configuração, a região continua exatamente como está hoje. Salvar guarda só um <strong>rascunho</strong>; a região é publicada em <em>Publicar</em>, e a paleta global, o botão nos cards e o Meu Pequeno Mundo também, em <em>Publicar → Configuração global</em>.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
+      <GlobalPendingNote global={global} owner={owner} />
 
       <ThemeEditor
         key={`region-${scope}-${ws.record?.rev ?? "null"}`}
@@ -75,7 +77,7 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
         action={saveThemeAction}
         rev={String(global.record?.rev ?? "null")}
         title="Paleta global · Use Origens"
-        note="Os padrões da marca. Só o owner altera. Ao publicar, todas as regiões que herdam esta paleta mudam juntas, sem deploy; as que mantêm paleta própria ou o visual atual não mudam."
+        note="Os padrões da marca. Só o owner altera e publica (em Publicar → Configuração global). Ao publicar, todas as regiões que herdam esta paleta mudam juntas, sem deploy; as que mantêm paleta própria ou o visual atual não mudam."
       />
 
       <section id="botao-cards" className="a-card scroll-mt-4 p-5" aria-labelledby="cards-title" data-testid="cards-setting">
@@ -109,7 +111,7 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
                   ))}
                 </div>
               </fieldset>
-              <p className="text-[0.875rem]" data-testid="cards-live"><strong>Na loja agora:</strong> {live ? `${live.buyStyle === "fab" ? "carrinho na imagem" : "botão"} “${live.buyLabel}” em todos os cards` : "cada seção decide"}.{JSON.stringify(draft ?? null) !== JSON.stringify(live ?? null) && " O rascunho tem outra escolha: publique a configuração global abaixo."}</p>
+              <p className="text-[0.875rem]" data-testid="cards-live"><strong>Na loja agora:</strong> {live ? `${live.buyStyle === "fab" ? "carrinho na imagem" : "botão"} “${live.buyLabel}” em todos os cards` : "cada seção decide"}.{JSON.stringify(draft ?? null) !== JSON.stringify(live ?? null) && " O rascunho tem outra escolha: publique a configuração global em Publicar."}</p>
               {owner ? <button type="submit" className="a-btn" data-testid="save-cards">Salvar rascunho do botão</button> : <p className="a-muted">Só o owner altera.</p>}
             </form>
           );
@@ -140,7 +142,7 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
                     );
                   })}
                 </fieldset>
-                <p className="text-[0.875rem]" data-testid="mundo-live"><strong>Na loja agora:</strong> {MUNDO_ROTULO[modoEfetivo(servidor, servidor === "off" ? undefined : live)]}.{(draft ?? null) !== (live ?? null) && " O rascunho tem outra escolha: publique a configuração global abaixo."}</p>
+                <p className="text-[0.875rem]" data-testid="mundo-live"><strong>Na loja agora:</strong> {MUNDO_ROTULO[modoEfetivo(servidor, servidor === "off" ? undefined : live)]}.{(draft ?? null) !== (live ?? null) && " O rascunho tem outra escolha: publique a configuração global em Publicar."}</p>
                 <p className="a-muted text-[0.8125rem]">Ao publicar, as páginas das regiões são refeitas: o bloco da home, o convite e o link aparecem ou somem na próxima visita, junto com a página.</p>
                 {owner ? <button type="submit" className="a-btn" data-testid="save-mundo">Salvar rascunho</button> : <p className="a-muted">Só o owner altera.</p>}
               </form>
@@ -149,16 +151,6 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
         })()}
       </section>
 
-      {owner && (
-        <section className="a-card p-5" aria-label="Publicar a configuração global">
-          <form action={publishGlobalThemeAction} className="space-y-3">
-            <p className="a-muted text-[0.875rem]">Publica o documento global: a paleta, o botão dos cards, o Meu Pequeno Mundo e, se houver rascunho, o tracking global. Para o tracking, a confirmação dos IDs efetivos continua na tela Tracking.</p>
-            <button type="submit" className="a-btn" disabled={!global.dirty} data-testid="publish-global-theme">Publicar configuração global</button>
-            {!global.dirty && <span className="a-muted ml-3 text-[0.875rem]">Nada a publicar: o rascunho é igual ao publicado.</span>}
-          </form>
-          <form action={discardGlobalThemeAction} className="mt-3"><button type="submit" className="a-btn ghost sm" disabled={!global.record}>Descartar rascunho do global</button></form>
-        </section>
-      )}
     </div>
   );
 }

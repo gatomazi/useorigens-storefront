@@ -1,22 +1,21 @@
 import Link from "next/link";
+import { linkCollectionPagesAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireAdmin } from "@/lib/admin/auth/guard";
+import { listHistory } from "@/lib/admin/ops";
+import { pendingPublishes } from "@/lib/admin/pending";
 import { platform } from "@/lib/admin/platform";
+import { currentScope, scopeName, storeOf } from "@/lib/admin/scope";
+import { collectionsStaleReason } from "@/lib/admin/sync-status";
 import { collectionProblems, readabilityProblems } from "@/lib/admin/validate-draft";
-import { inspectPublishing, listHistory } from "@/lib/admin/ops";
 import { loadWorkspace } from "@/lib/admin/workspace";
-import { currentScope, REGION_SCOPES, scopeName, storeOf } from "@/lib/admin/scope";
-import { effectiveTable, seedForEnv } from "@/lib/admin/publishing";
-import { snapshotStatus } from "@/lib/catalog/snapshot-file";
+import { collectionPageSlug, stateRowCollections, stateRowsReach } from "@/lib/catalog/collection-source";
 import { getCollections } from "@/lib/catalog/collections-file";
-import { libraryEntries, MIN_USABLE_PRODUCTS } from "@/lib/catalog/collection-source";
-import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
-import { siteConfigHomeEnabled } from "@/lib/site-config/flag";
-import { publishedFilePath, readPublished } from "@/lib/site-config/published";
-import { numberPt } from "@/lib/format";
-
-const STORE_NAME = { "use-sul": "Sul", "use-norte": "Norte", "use-centro": "Centro-Oeste" } as const;
+import { getCatalog } from "@/lib/catalog/repository";
+import { snapshotStatus } from "@/lib/catalog/snapshot-file";
+import type { CommerceStoreKey } from "@/lib/geo/regions";
+import { inkCollectionLinks } from "@/lib/site-config/collections-enabled";
 
 const ago = (iso: string | null | undefined): string => {
   if (!iso) return "nunca";
@@ -26,40 +25,104 @@ const ago = (iso: string | null | undefined): string => {
   return `há ${Math.round(min / 1440)} dias`;
 };
 
+/**
+ * "Visão geral": what asks for action in the region being edited, each item leading to where it is solved (the queue, Publicar, the home, the state
+ * pages, Sincronização). The technical state of the catalog and of publishing lives in Sincronização.
+ */
 export default async function AdminOverview({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
   const actor = await requireAdmin();
   const scope = await currentScope(actor);
   const sp = await searchParams;
   const ws = await loadWorkspace(scope);
-  const published = await platform().files.read();
-  const effective = effectiveTable(published ?? seedForEnv());
+  const store = storeOf(scope) as CommerceStoreKey;
   const history = await listHistory();
   const head = history.find((r) => r.status === "live");
-  const catalog = snapshotStatus();
-  const collections = getCollections();
   const sections = ws.doc.home?.sections ?? [];
   const problems = [...collectionProblems(ws.doc), ...readabilityProblems(ws.doc)];
-  const pending = await inspectPublishing();
   const prod = platform().mode === "prod";
-  const reading = readPublished();
   const custom = sections.filter((s) => s.id.startsWith("custom-")).length;
   const openRequests = await platform().requests.countOpen([scope]).catch(() => 0);
-  const sandboxLive = process.env.SITE_CONFIG_DIR ? publishedFilePath() : null;
+  const waiting = await pendingPublishes(scope, actor, { ws });
+  // Links still opening a collection on INK that can open its page on the site instead ("Levar para as páginas do site").
+  const toSite = inkCollectionLinks(ws.doc).filter((r) => collectionPageSlug(ws.doc, r.store, r.collectionId) !== null).length;
+  const syncedCollections = getCollections().stores[store];
+  const catalogPresent = (snapshotStatus().stores.find((c) => c.storeKey === store)?.productCount ?? 0) > 0;
+  const stale = collectionsStaleReason(store);
+  // The owner's own list of state-page rows: the ones that show in no state (the "não aparece em nenhum estado" of Páginas de estado).
+  const stateRows = stateRowCollections(scope, ws.doc);
+  const catalog = getCatalog();
+  const reach = stateRowsReach(scope, ws.doc, (s) => catalog.productsOfStore(s));
+  const rowsNowhere = stateRows.own ? stateRows.records.filter((c) => (reach.get(c.id) ?? 0) === 0) : [];
+  const preview = scope !== "sul" && ws.baseDoc.launched !== true;
+  const waitingParts = [waiting.region.pending ? `rascunho de ${scopeName(scope)}` : null, waiting.pages.length ? `${waiting.pages.length} página(s)` : null, waiting.models.length ? `${waiting.models.length} modelo(s)` : null, waiting.global?.pending ? "configuração global" : null].filter(Boolean);
+  const attention = openRequests > 0 || waiting.count > 0 || problems.length > 0 || toSite > 0 || !syncedCollections || !catalogPresent || stale !== null || rowsNowhere.length > 0 || preview;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="a-h1">Visão geral</h1>
-        <p className="a-muted mt-2 max-w-2xl">Home de {scopeName(scope)} (troque a região no topo). Tudo abaixo vem do estado real: rascunho, publicação, catálogo e coleções da INK sincronizados.</p>
+        <h1 className="a-h1">Visão geral <span className="a-muted">· {scopeName(scope)}</span></h1>
+        <p className="a-muted mt-2 max-w-2xl">O que pede atenção em {scopeName(scope)} agora (troque a região no topo). Cada item leva para onde ele se resolve. O estado técnico do catálogo e da publicação fica em <Link href="/admin/sincronizacao" className="a-link">Sincronização</Link>.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
-      {openRequests > 0 && (
-        <p className="a-flash ok" data-testid="overview-pending-requests">
-          <strong>{openRequests}</strong> solicitação(ões) de personalização de {scopeName(scope)} esperando a equipe (recebidas, em criação ou com a arte pronta e o cliente ainda sem contato). <Link href="/admin/personalizacao/solicitacoes" className="a-link">Abrir a fila</Link>
-        </p>
-      )}
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Resumo">
+      <section className="a-card p-5" aria-labelledby="atencao" data-testid="attention">
+        <h2 id="atencao" className="a-h2">O que pede atenção</h2>
+        {!attention ? <p className="mt-3"><span className="a-badge ok">Nada agora</span> <span className="a-muted ml-2">Sem solicitações abertas, nada esperando publicação e nenhuma seção com problema.</span></p> : (
+          <ul className="mt-3 divide-y divide-black/10">
+            {openRequests > 0 && (
+              <li className="flex flex-wrap items-center justify-between gap-3 py-3" data-testid="overview-pending-requests">
+                <span><strong>{openRequests}</strong> solicitação(ões) de personalização de {scopeName(scope)} esperando a equipe (recebidas, em criação ou com a arte pronta e o cliente ainda sem contato).</span>
+                <Link href="/admin/personalizacao/solicitacoes" className="a-btn sm">Abrir a fila</Link>
+              </li>
+            )}
+            {waiting.count > 0 && (
+              <li className="flex flex-wrap items-center justify-between gap-3 py-3" data-testid="overview-waiting">
+                <span><strong>{waiting.count}</strong> {waiting.count === 1 ? "item esperando" : "itens esperando"} publicação: {waitingParts.join(", ")}. A loja só muda depois de publicar.</span>
+                <Link href="/admin/publicar" className="a-btn sm">Ver em Publicar</Link>
+              </li>
+            )}
+            {problems.length > 0 && (
+              <li className="flex flex-wrap items-start justify-between gap-3 py-3" data-testid="overview-problems">
+                <div>
+                  <p><strong>{problems.length}</strong> {problems.length === 1 ? "seção não aparece" : "seções não aparecem"} na loja até serem corrigidas:</p>
+                  <ul className="mt-1 list-disc pl-5 text-[0.9375rem]">{problems.map((p) => <li key={p}>{p}</li>)}</ul>
+                </div>
+                <Link href="/admin/home" className="a-btn sm ghost">Abrir a Home</Link>
+              </li>
+            )}
+            {rowsNowhere.length > 0 && (
+              <li className="flex flex-wrap items-center justify-between gap-3 py-3" data-testid="overview-state-rows">
+                <span>Páginas de estado: <strong>{rowsNowhere.map((c) => c.name).join(", ")}</strong> {rowsNowhere.length === 1 ? "está na lista mas não aparece" : "estão na lista mas não aparecem"} em nenhum estado (poucos produtos que também estejam na coleção do estado).</span>
+                <Link href="/admin/estados" className="a-btn sm ghost">Ver por estado</Link>
+              </li>
+            )}
+            {toSite > 0 && (
+              <li className="py-3">
+                <form action={linkCollectionPagesAction} className="flex flex-wrap items-center justify-between gap-3" data-testid="link-collection-pages">
+                  <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
+                  <input type="hidden" name="scope" value={scope} />
+                  <span className="max-w-3xl"><strong>{toSite === 1 ? "1 botão ou bloco ainda abre" : `${toSite} botões ou blocos ainda abrem`} a coleção na loja da INK.</strong> Eles podem levar à página da coleção aqui no site, com todos os produtos. A troca vai para o rascunho; depois publique a home e as páginas alteradas.</span>
+                  <button type="submit" className="a-btn sm">Levar para as páginas do site</button>
+                </form>
+              </li>
+            )}
+            {(!catalogPresent || !syncedCollections || stale) && (
+              <li className="flex flex-wrap items-center justify-between gap-3 py-3" data-testid="overview-sync">
+                <span>{!catalogPresent ? "O catálogo desta loja ainda não foi sincronizado." : !syncedCollections ? "As coleções desta loja ainda não foram sincronizadas." : `Coleções da INK: ${stale!.toLowerCase()}.`} Sem dados atualizados, seções, menu e páginas de estado podem ficar desatualizados.</span>
+                <Link href="/admin/sincronizacao" className="a-btn sm ghost">Abrir Sincronização</Link>
+              </li>
+            )}
+            {preview && (
+              <li className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <span>{scopeName(scope)} está em <strong>prévia</strong>: a loja pública e a navegação ainda não mostram esta região.</span>
+                <Link href="/admin/publicar" className="a-btn sm ghost">Lançamento em Publicar</Link>
+              </li>
+            )}
+          </ul>
+        )}
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-2" aria-label="Resumo">
         <div className="a-card p-5">
           <p className="a-h2">Rascunho × publicado</p>
           <p className="mt-3 flex flex-wrap items-center gap-2">
@@ -78,80 +141,6 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
           <p className="a-muted mt-2 text-[0.9375rem]">{custom} criada(s) no painel · {sections.filter((s) => s.source?.kind === "ink-category").length} ligada(s) a uma coleção INK</p>
           <p className="mt-3">{problems.length === 0 ? <span className="a-badge ok">Sem problemas</span> : <span className="a-badge bad">{problems.length} problema(s)</span>}</p>
           <Link href="/admin/home" className="a-link mt-4 inline-block text-[0.9375rem]">Editar seções</Link>
-        </div>
-
-        <div className="a-card p-5">
-          <p className="a-h2">Catálogo INK (snapshot local)</p>
-          {catalog.present ? (
-            <ul className="mt-3 space-y-1 text-[0.9375rem]">
-              {catalog.stores.map((s) => (
-                <li key={s.storeKey} className="flex justify-between gap-3"><span className="a-muted">{STORE_NAME[s.storeKey as keyof typeof STORE_NAME] ?? s.storeKey}</span><span className="font-bold">{numberPt.format(s.productCount)} produtos · {ago(s.syncedAt)}</span></li>
-              ))}
-            </ul>
-          ) : (
-            <p className="a-flash err mt-3">Sem snapshot do catálogo. Rode <code>npm run catalog:sync</code>.</p>
-          )}
-        </div>
-
-        <div className="a-card p-5">
-          <p className="a-h2">Coleções INK sincronizadas</p>
-          {Object.keys(collections.stores).length === 0 ? (
-            <p className="a-flash err mt-3">Ainda não sincronizadas. Rode <code>npm run collections:sync</code> (só leitura, ~4 requisições).</p>
-          ) : (
-            <ul className="mt-3 space-y-1 text-[0.9375rem]">
-              {(Object.entries(collections.stores) as [keyof typeof STORE_NAME, unknown][]).map(([key]) => {
-                const rows = libraryEntries(key, key === storeOf(scope) ? enabledInternalIds(ws.doc, key) : new Set());
-                const publicUsable = rows.filter((e) => e.visibility === "public" && e.selectable).length;
-                const internal = rows.filter((e) => e.visibility === "internal");
-                const internalEligible = internal.filter((e) => e.eligible).length;
-                const internalEnabled = internal.filter((e) => e.enabled).length;
-                return (
-                  <li key={key} className="flex justify-between gap-3"><span className="a-muted">{STORE_NAME[key] ?? key}</span><span className="text-right font-bold">{publicUsable} públicas utilizáveis · {internalEligible} internas elegíveis ({internalEnabled} habilitadas) · {rows.length} no total</span></li>
-                );
-              })}
-            </ul>
-          )}
-          <p className="a-muted mt-3 text-[0.8125rem]">Elegível = pelo menos {MIN_USABLE_PRODUCTS} produtos publicados no catálogo local da mesma loja. O total bruto da INK inclui produtos ocultos. Internas precisam ser habilitadas na <Link href="/admin/colecoes" className="a-link">Biblioteca</Link>.</p>
-        </div>
-      </section>
-
-      <section className="a-card overflow-x-auto" aria-label="Regiões e tracking efetivo">
-        <table className="a-table a-stack">
-          <caption className="a-h2 p-4 text-left">Regiões e tracking efetivo (o que está publicado)</caption>
-          <thead><tr><th scope="col">Região</th><th scope="col">Estado</th><th scope="col">Meta Pixel</th><th scope="col">GA4</th></tr></thead>
-          <tbody>
-            {REGION_SCOPES.map((r) => {
-              const meta = effective.find((x) => x.scope === r && x.tool === "meta")!;
-              const ga = effective.find((x) => x.scope === r && x.tool === "ga4")!;
-              const isLaunched = r === "sul" || published?.docs[r]?.launched === true;
-              return (
-                <tr key={r}>
-                  <td data-label="Região" className="font-bold">{scopeName(r)}</td>
-                  <td data-label="Estado">{isLaunched ? <span className="a-badge ok">Pública</span> : <span className="a-badge">Prévia</span>}</td>
-                  <td data-label="Meta Pixel">{meta.id ? <code>{meta.id}</code> : <span className="a-muted">nenhum</span>} <span className="a-muted text-[0.8125rem]">({meta.origin})</span></td>
-                  <td data-label="GA4">{ga.id ? <code>{ga.id}</code> : <span className="a-muted">nenhum</span>} <span className="a-muted text-[0.8125rem]">({ga.origin})</span></td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        <p className="a-muted p-4 text-[0.8125rem]">Edite em <Link href="/admin/tracking" className="a-link">Tracking</Link>. “legacy” = os IDs de sempre do Sul, lidos da configuração do build até uma configuração explícita ser publicada.</p>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-2" aria-label="Ambiente">
-        <div className="a-card p-5">
-          <p className="a-h2">{prod ? "Publicação" : "Sandbox de publicação"}</p>
-          <ul className="mt-3 space-y-2 text-[0.9375rem]">
-            <li className="flex items-center justify-between gap-3"><span>Consistência (registro × arquivo × cache)</span>{pending.length === 0 ? <span className="a-badge ok">Coerente</span> : <span className="a-badge warn">Pendente: {pending.join(", ")}</span>}</li>
-            <li className="flex items-center justify-between gap-3"><span>Leitor da loja (esta máquina)</span>{reading.source === "published" ? <span className="a-badge ok">Lendo release {reading.bundle.releaseId}</span> : <span className="a-badge">Seed · {reading.reason}</span>}</li>
-            <li className="flex items-center justify-between gap-3"><span>Loja lê o sandbox? (<code>SITE_CONFIG_HOME</code> + <code>SITE_CONFIG_DIR</code>)</span>{siteConfigHomeEnabled() && sandboxLive ? <span className="a-badge ok">Sim</span> : <span className="a-badge warn">Não neste processo</span>}</li>
-          </ul>
-          {reading.diagnostics.length > 0 && <p className="a-flash err mt-3 text-[0.875rem]">{reading.diagnostics.join(" · ")}</p>}
-          {!(siteConfigHomeEnabled() && sandboxLive) && <p className="a-muted mt-3 text-[0.8125rem]">Para ver a publicação na loja local, inicie com <code>npm run cms:dev</code> (ele liga a flag e aponta a loja para o sandbox).</p>}
-        </div>
-        <div className="a-card p-5">
-          <p className="a-h2">Seções com problema</p>
-          {problems.length === 0 ? <p className="a-muted mt-3">Nenhuma. Toda seção ativa tem fonte real e texto legível.</p> : <ul className="mt-3 list-disc space-y-1 pl-5 text-[0.9375rem]">{problems.map((p) => <li key={p}>{p}</li>)}</ul>}
         </div>
       </section>
 

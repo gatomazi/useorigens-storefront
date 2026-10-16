@@ -249,24 +249,54 @@ export function stateRowCollections(region: RegionSlug, doc: ScopeDoc | undefine
  * this region. A row needs at least `STATE_ROW_MIN_ITEMS` products; no parent, no rows.
  */
 export function stateCollectionRows(region: RegionSlug, uf: string, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): StateCollectionRow[] {
-  const store = storeForRegion(region);
-  const wanted = normalizeText(STATE_NAMES[uf] ?? "");
-  if (!wanted) return [];
-  const records = getStoreCollections(store, filePath)?.collections ?? [];
-  const parent = records.filter((c) => normalizeText(c.name) === wanted && !c.needsResync).sort(byMenuOrder)[0];
+  const parent = stateParentCollection(region, uf, filePath);
   if (!parent) return [];
+  const store = storeForRegion(region);
   const inState = new Set(completeMembers(parent) ?? parent.memberIds);
   const products = productsOf(store);
   const rows: StateCollectionRow[] = [];
   for (const c of stateRowCollections(region, doc, filePath).records) {
-    const members = (completeMembers(c) ?? c.memberIds).filter((id) => inState.has(id));
-    if (members.length < STATE_ROW_MIN_ITEMS) continue;
-    const items = arrangeMembers(members, arrangementOf(doc, store, c.id))
-      .map((id) => regionItem(products, id, region))
-      .filter((item): item is CarouselItem => item !== null);
+    const items = stateRowItems(region, inState, c, doc, products);
     if (items.length >= STATE_ROW_MIN_ITEMS) rows.push({ collection: c, items });
   }
   return rows;
+}
+
+/** The collection named after the state ("Paraná"), the parent of that state's rows; null when the region's store has none. */
+export function stateParentCollection(region: RegionSlug, uf: string, filePath?: string): CollectionRecord | null {
+  const wanted = normalizeText(STATE_NAMES[uf] ?? "");
+  if (!wanted) return null;
+  const records = getStoreCollections(storeForRegion(region), filePath)?.collections ?? [];
+  return records.filter((c) => normalizeText(c.name) === wanted && !c.needsResync).sort(byMenuOrder)[0] ?? null;
+}
+
+/** A collection's products on one state page BEFORE the minimum: shared with the state's parent, in the catalog and of this region, in the collection's arrangement. */
+function stateRowItems(region: RegionSlug, inState: ReadonlySet<string>, c: CollectionRecord, doc: ScopeDoc | undefined, products: StoreProducts): CarouselItem[] {
+  const members = (completeMembers(c) ?? c.memberIds).filter((id) => inState.has(id));
+  return arrangeMembers(members, arrangementOf(doc, storeForRegion(region), c.id))
+    .map((id) => regionItem(products, id, region))
+    .filter((item): item is CarouselItem => item !== null);
+}
+
+/** One state of the region as the panel explains it: its parent collection (with how many of its products the store can show) or none. */
+export type StateParentView = { uf: string; name: string; parent: { id: number; name: string; products: number } | null };
+
+/**
+ * For the panel ("Páginas de estado"): every state's parent collection and, for each candidate row, how many products it would show on each state page
+ * (below `STATE_ROW_MIN_ITEMS` the row is not drawn). This is what turns "não aparece em nenhum estado" into a reason: no parent, or too few shared products.
+ */
+export function stateRowMatrix(region: RegionSlug, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): { states: StateParentView[]; counts: Map<number, Record<string, number>> } {
+  const products = productsOf(storeForRegion(region));
+  const candidates = stateRowCollections(region, doc, filePath).records;
+  const counts = new Map<number, Record<string, number>>(candidates.map((c) => [c.id, {}]));
+  const states: StateParentView[] = REGIONS[region].ufs.map((uf) => {
+    const parent = stateParentCollection(region, uf, filePath);
+    const members = parent ? (completeMembers(parent) ?? parent.memberIds) : [];
+    const inState = new Set(members);
+    for (const c of candidates) counts.get(c.id)![uf] = parent ? stateRowItems(region, inState, c, doc, products).length : 0;
+    return { uf, name: STATE_NAMES[uf] ?? uf, parent: parent ? { id: parent.id, name: parent.name, products: members.filter((id) => regionItem(products, id, region) !== null).length } : null };
+  });
+  return { states, counts };
 }
 
 /** For the panel: in how many of the region's states each collection shows as a row (0 = it shows nowhere), by collection id. */

@@ -37,7 +37,6 @@ export default async function RequestsQueue({ searchParams }: { searchParams: Pr
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Solicitações de personalização</h1>
-        <p className="mt-2 flex gap-2"><Link href="/admin/personalizacao" className="a-btn sm ghost">Modelos</Link><Link href="/admin/personalizacao/solicitacoes" aria-current="page" className="a-btn sm">Solicitações</Link></p>
         <p className="a-muted mt-3 max-w-3xl">O que os clientes enviaram, com o contato para falar com eles. Fluxo: <strong>a equipe cria a estampa, entra em contato quando ela está pronta e orienta a compra na INK</strong>. Uma solicitação não é um pedido e o CMS não acompanha compra nem pagamento.</p>
         <p className="mt-3" data-testid="queue-open-count"><span className={`a-badge ${open > 0 ? "warn" : "ok"}`}>{open} pendente(s)</span> <span className="a-muted text-[0.875rem]">recebidas, em criação ou com a arte pronta e o cliente ainda sem contato</span></p>
       </div>

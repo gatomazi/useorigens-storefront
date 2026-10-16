@@ -24,14 +24,36 @@ npm run cms:dev
 
 Opcional: `ADMIN_DEV_DATA_DIR` (caminho absoluto) muda onde o sandbox guarda os dados. Não há segredos. As primeiras aberturas de cada tela compilam por alguns segundos.
 
+## O menu do painel
+
+O menu lateral é agrupado pelo que a pessoa está fazendo; **Publicar** fica na barra do topo, ao lado da região, com o número de itens esperando publicação.
+
+| Grupo | Item | O que tem dentro |
+|---|---|---|
+| — | **Visão geral** (`/admin`) | O que pede atenção na região: solicitações abertas, itens esperando publicação, seções com problema, carrosséis de estado que não aparecem, links que ainda abrem a INK, dados desatualizados. |
+| Conteúdo · região | **Home** (`/admin/home`) | Seções da home (ordem, editar, ocultar, adicionar). |
+| | **Páginas de estado** (`/admin/estados`) | Por estado: a coleção com o nome do estado e os carrosséis que aparecem; a lista de carrosséis por coleção (com quantos produtos cada um teria em cada estado); O Pódio. |
+| | **Páginas** (`/admin/paginas`) | Hotpages e categorias-pai. |
+| | **Menu** (`/admin/navegacao`) | Coleções no menu (Topo, Categorias, Não exibidas; também a navbar da INK), seções da home na barra e os blocos do menu do celular. |
+| | **Mídia** (`/admin/midia`) | Banners e imagens enviadas. |
+| Catálogo | **Coleções** (`/admin/colecoes`) | A biblioteca: status, habilitar internas, página da coleção no site. |
+| | **Personalização** (`/admin/personalizacao`) | Modelos personalizáveis. |
+| Atendimento | **Solicitações** (`/admin/personalizacao/solicitacoes`) | A fila de personalização, com o contador. |
+| Marketing | **Cupons e promoções**, **Tracking** | Botão de cupons; Meta Pixel e GA4 por região e global. |
+| Configuração | **Aparência** | Paleta da região e paleta global, botão nos cards, Meu Pequeno Mundo. |
+| | **Sincronização** (`/admin/sincronizacao`) | Catálogo e coleções da INK (sincronizar, só owner) e o estado técnico da publicação. |
+| | **Pessoas** (só owner, produção) | Quem entra e em que regiões. |
+
+**Publicar** (`/admin/publicar`) lista tudo o que espera: o rascunho da região, cada página e cada modelo (publicados um a um) e a **configuração global** (paleta da Use Origens, botão nos cards, Meu Pequeno Mundo e tracking global, publicada inteira, só pelo owner). Aparência e Tracking só avisam que o global tem alterações e levam para lá.
+
 ## Roteiro de 5 minutos
 
-1. **Visão geral** (`/admin`): estado real: rascunho × publicado, catálogo, coleções sincronizadas, seções com problema.
-2. **Home · Seções**: a ordem da home. Arraste uma seção pela alça (os seis pontos à esquerda; no teclado, Espaço na alça e as setas) para mudá-la de lugar: a ordem é salva no rascunho ao soltar. **Ocultar/Ativar**, **Duplicar** (a cópia começa oculta) e **Editar**. O hero fica sempre no topo e o rodapé no fim.
+1. **Visão geral** (`/admin`): o que pede atenção agora; o estado técnico (catálogo, coleções sincronizadas, sandbox) está em **Sincronização**.
+2. **Home**: a ordem da home. Arraste uma seção pela alça (os seis pontos à esquerda; no teclado, Espaço na alça e as setas) para mudá-la de lugar: a ordem é salva no rascunho ao soltar. **Ocultar/Ativar**, **Duplicar** (a cópia começa oculta) e **Editar**. O hero fica sempre no topo e o rodapé no fim.
 3. **Coleções** (`/admin/colecoes`): a Biblioteca com todas as coleções da INK, inclusive as **internas** (ocultas na INK). Busca sem acento por nome, slug ou número; filtros Todas / Públicas / Internas / Habilitadas no CMS / Sem produtos elegíveis. Para usar uma coleção interna, clique em **Habilitar** nela (individual e reversível; nada é enviado à INK). Enquanto uma seção a usa, ela não pode ser desabilitada.
 4. **Nova seção a partir de uma coleção da INK**: no campo **Coleção**, digite parte do nome, o slug ou o número (↑/↓ e Enter, ou o mouse). As sugestões iniciais são só as coleções utilizáveis (públicas e internas habilitadas, com ≥ 3 produtos no catálogo local); se o que você digitou é uma interna ainda não habilitada, a lista diz isso e leva à Biblioteca. Dê um título e **Criar seção**. Ela entra no rascunho, antes da campanha. Coleção interna não tem “Ver todos” (a INK não expõe página pública para ela).
 5. **Editor da seção**: título, subtítulo, botão “Ver todos” (coleção real da loja, URL da loja ou página interna), fonte (coleção ou a curadoria atual), quantidade de cards, layout, **cor do texto**, **fundo** (sem cor / cor sólida / degradê), **imagem mobile e desktop** opcionais (banners do projeto ou enviadas), **foco** por dispositivo, **sobreposição** e um aviso de legibilidade do texto. **Salvar rascunho** atualiza a pré-visualização (375 px e desktop, com os componentes reais e os cards reais do snapshot; não dispara tracking).
-6. **Publicar**: veja as diferenças, **Publicar no sandbox local**. A loja local (`/sul`) passa a mostrar a nova versão. O histórico permite **Restaurar esta versão** (cria uma nova release) e **Descartar rascunho**.
+6. **Publicar** (barra do topo): veja as diferenças, **Publicar no sandbox local**. A loja local (`/sul`) passa a mostrar a nova versão. O histórico permite **Restaurar esta versão** (cria uma nova release) e **Descartar rascunho**.
 
 **Mídia**: banners do projeto e envio de imagens (PNG, JPEG ou WebP até 8 MB, 6000 px), somente neste computador; não é versionado nem é o armazenamento de produção.
 

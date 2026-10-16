@@ -195,9 +195,9 @@ describe("what the storefront and the Worker read", () => {
     await writeFile(path.join(dir, "site-config", "published.json"), JSON.stringify(bundle));
     await writeFile(path.join(dir, "collections-snapshot.json"), JSON.stringify({ version: 2, stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "2026-09-24T00:00:00Z", catalogSyncedAt: "2026-09-21T00:00:00Z", totalCount: collections.length, collections } } }));
     const { publicNavbar } = await import("@/lib/site-config/navbar");
-    const { siteCollectionMenu } = await import("@/lib/catalog/collection-menu");
+    const { offMenuEntries, siteCollectionMenu } = await import("@/lib/catalog/collection-menu");
     const { SITE_URL } = await import("@/lib/site");
-    return { navbar: publicNavbar("sul"), site: siteCollectionMenu("sul", bundle.docs.sul), siteUrl: SITE_URL.replace(/\/$/, "") };
+    return { navbar: publicNavbar("sul"), site: siteCollectionMenu("sul", bundle.docs.sul), off: offMenuEntries("sul", bundle.docs.sul), siteUrl: SITE_URL.replace(/\/$/, "") };
   }
   const seven = [
     record(1, "Novidades", "novidades", 3), record(2, "Do Nosso Jeito", "do-nosso-jeito", 2), record(3, "Seu Lugar", "seu-lugar", 1), record(4, "Feito Para Você", "feito-para-voce", 4),
@@ -229,6 +229,14 @@ describe("what the storefront and the Worker read", () => {
       const { site, navbar } = await setup({ enabled: [ref(101)], menu: { top: [], hidden: [], added: [ref(101)] } }, [...seven.slice(0, 2), internal]);
       expect(labels(site.categories)).toEqual(["Fé de Origem", "Do Nosso Jeito", "Novidades"]);
       expect(titles(navbar.more)).toEqual(["Do Nosso Jeito", "Novidades"]);
+    });
+
+    test("given a public collection taken out and internal ones, when the panel lists what is off the menu, then only what could link somewhere, in INK's order", async () => {
+      const enabledInternal = record(101, "Fé de Origem", "fe-de-origem", 0, { isAvailable: false });
+      const disabledInternal = record(102, "Segmento", "segmento", 8, { isAvailable: false });
+      const { off } = await setup({ enabled: [ref(101)], menu: { top: [ref(1)], hidden: [ref(6)], added: [] } }, [...seven, enabledInternal, disabledInternal]);
+      expect(off.map((e) => e.record.name)).toEqual(["Fé de Origem", "Kits"]); // "Segmento" is not enabled: no page on the site, no INK page
+      expect(off[0]).toMatchObject({ pagePath: "/sul/colecoes/fe-de-origem", inkUrl: null });
     });
 
     test("given an internal collection that is not enabled, one with too few products and an unknown one, when read, then each surface keeps only what it can link", async () => {

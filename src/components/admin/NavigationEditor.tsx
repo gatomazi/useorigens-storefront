@@ -25,7 +25,7 @@ type State = { blocks: Record<"primaryBlock" | "categoriesBlock" | "statesBlock"
 
 const BLOCKS: { key: keyof State["blocks"]; title: string; hint: string }[] = [
   { key: "primaryBlock", title: "Comprar", hint: "Agrupa os links principais abaixo." },
-  { key: "categoriesBlock", title: "Categorias", hint: "Automático: as coleções do menu de coleções (em Coleções), as do topo primeiro. É também o nome do menu “Categorias ▾” do desktop. Aqui você muda o título, a posição e se aparece." },
+  { key: "categoriesBlock", title: "Categorias", hint: "Automático: as coleções do menu (acima, em Topo e Categorias), as do topo primeiro. É também o nome do menu “Categorias ▾” do desktop. Aqui você muda o título, a posição e se aparece." },
   { key: "statesBlock", title: "Estados da região", hint: "Automático: mostra só os estados que já têm produtos. Aqui você muda o título, a posição e se aparece." },
   { key: "regionsBlock", title: "Outras regiões", hint: "Automático: mostra só as outras regiões já lançadas (nunca a atual). Aqui você muda o título, a posição e se aparece." },
 ];
@@ -103,7 +103,7 @@ export function NavigationEditor({ region, config, data, colors, readOnly, actio
                 <legend className="text-[1rem] font-extrabold">{b.title}</legend>
                 <p className="a-muted mb-3 text-[0.8125rem]">{b.hint}</p>
                 {fields(b.key, state.blocks[b.key], (p) => setBlock(b.key, p), b.title)}
-                {b.key === "categoriesBlock" && <p className="mt-3 text-[0.875rem]" data-testid="auto-categories"><strong>Hoje aparecem:</strong> {data.categories.map((c) => c.label).join(", ") || "nenhuma coleção com página no site"}. <Link className="a-link" href="/admin/colecoes#menu-colecoes">Escolher em Coleções</Link></p>}
+                {b.key === "categoriesBlock" && <p className="mt-3 text-[0.875rem]" data-testid="auto-categories"><strong>Hoje aparecem:</strong> {data.categories.map((c) => c.label).join(", ") || "nenhuma coleção com página no site"}. <Link className="a-link" href="#menu-colecoes">Escolher nas coleções do menu, acima</Link></p>}
                 {b.key === "statesBlock" && <p className="mt-3 text-[0.875rem]" data-testid="auto-states"><strong>Hoje aparecem:</strong> {data.states.map((s) => s.label).join(", ") || "nenhum estado com produtos"}.</p>}
                 {b.key === "regionsBlock" && <p className="mt-3 text-[0.875rem]" data-testid="auto-regions"><strong>Hoje aparecem:</strong> {data.regions.map((s) => s.label).join(", ") || "nenhuma outra região lançada"}.</p>}
               </fieldset>
