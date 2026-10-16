@@ -2,10 +2,10 @@
   {
     "vp": 360,
     "overflowX": 0,
-    "firstKB": 5054,
-    "firstImagesKB": 396,
-    "firstImgCount": 13,
-    "totalKB": 5065,
+    "firstKB": 5037,
+    "firstImagesKB": 387,
+    "firstImgCount": 11,
+    "totalKB": 5057,
     "imagesKB": 407,
     "imgCount": 15,
     "pageHeight": 5483
@@ -13,10 +13,10 @@
   {
     "vp": 390,
     "overflowX": 0,
-    "firstKB": 5076,
-    "firstImagesKB": 418,
-    "firstImgCount": 13,
-    "totalKB": 5087,
+    "firstKB": 5059,
+    "firstImagesKB": 409,
+    "firstImgCount": 11,
+    "totalKB": 5079,
     "imagesKB": 429,
     "imgCount": 15,
     "pageHeight": 5443
@@ -24,10 +24,10 @@
   {
     "vp": 430,
     "overflowX": 0,
-    "firstKB": 5081,
-    "firstImagesKB": 424,
-    "firstImgCount": 13,
-    "totalKB": 5108,
+    "firstKB": 5059,
+    "firstImagesKB": 409,
+    "firstImgCount": 11,
+    "totalKB": 5100,
     "imagesKB": 450,
     "imgCount": 15,
     "pageHeight": 5603
@@ -35,10 +35,10 @@
   {
     "vp": 1366,
     "overflowX": 0,
-    "firstKB": 5004,
+    "firstKB": 4996,
     "firstImagesKB": 346,
     "firstImgCount": 15,
-    "totalKB": 5004,
+    "totalKB": 4996,
     "imagesKB": 346,
     "imgCount": 15,
     "pageHeight": 4679
@@ -46,10 +46,10 @@
   {
     "vp": 1440,
     "overflowX": 0,
-    "firstKB": 5004,
+    "firstKB": 4996,
     "firstImagesKB": 346,
     "firstImgCount": 15,
-    "totalKB": 5004,
+    "totalKB": 4996,
     "imagesKB": 346,
     "imgCount": 15,
     "pageHeight": 4757
@@ -57,10 +57,10 @@
   {
     "vp": 1920,
     "overflowX": 0,
-    "firstKB": 5029,
+    "firstKB": 5020,
     "firstImagesKB": 371,
     "firstImgCount": 14,
-    "totalKB": 5029,
+    "totalKB": 5020,
     "imagesKB": 371,
     "imgCount": 14,
     "pageHeight": 4761

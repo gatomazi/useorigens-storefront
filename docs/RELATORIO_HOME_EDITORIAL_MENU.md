@@ -80,7 +80,7 @@ Todos reais e já no projeto: a foto da abertura (`/banners/sul/hero-*`) e a do 
 
 ## Verificação
 
-Detalhes e evidências em `docs/evidence/home-editorial/`.
+Detalhes e evidências em `docs/screenshots/home-editorial/`.
 
 - **Telas:** 360, 390, 430, 1366, 1440 e 1920 px, antes e depois, sem rolagem horizontal em nenhuma.
 - **Interação:** 39 de 39 verificações (busca com resultado e vazia; destaque leva à PDP interna; faixa; cards de coleção; campanha; cards de produto por foto, nome e chamada; foco visível; menus abertos, clique fora, Escape e foco; menu mobile com rolagem travada e destravada; alvos de 44 px em 360, 390 e 430).
