@@ -1,8 +1,8 @@
 # MCP Use Origens × Reserva INK
 
-Conector privado, **somente leitura**, para o dono da loja consultar produtos, vendas e pedidos das lojas Use Origens pelo Claude. O servidor roda no mesmo serviço do site, em `https://www.useorigens.com.br/api/mcp`.
+Conector privado, **somente leitura**, para o dono da loja consultar produtos, categorias, cupons, vendas e pedidos das lojas Use Origens pelo Claude. O servidor roda no mesmo serviço do site, em `https://www.useorigens.com.br/api/mcp`.
 
-Data desta versão: 15/10/2026.
+Data desta versão: 15/10/2026 (categorias, cupons e promoções acrescentados no mesmo dia, PR seguinte ao #76).
 
 ## 1. Como conectar no Claude
 
@@ -25,10 +25,12 @@ Data desta versão: 15/10/2026.
 | Ferramenta | O que responde | Fonte |
 | --- | --- | --- |
 | `origens_capabilities` | Lojas, fontes, limites e definições das métricas | Configuração e índice |
-| `origens_search_products` | Produtos por texto, região, UF ou cidade da estampa, família, tipo e visibilidade; paginado | Índice do site |
-| `origens_get_product` | Um produto: classificação, preço e, ao vivo, status, visibilidade e variantes | Índice + API INK |
-| `origens_sales_summary` | Totais do período (pedidos, unidades, total, mercadorias, frete, descontos, repasse, ticket) ou totais dos itens filtrados | API INK + índice |
-| `origens_sales_ranking` | Ranking por produto, cidade/UF/região/família da estampa, cidade/UF de entrega ou loja | API INK + índice |
+| `origens_search_products` | Produtos por texto, região, UF ou cidade da estampa, família, tipo, visibilidade, **categoria** e **em promoção**; paginado | Índice do site + categorias |
+| `origens_get_product` | Um produto: classificação, **categorias**, preço (com % de desconto) e, ao vivo, status, visibilidade e variantes | Índice + API INK |
+| `origens_list_categories` | **Categorias (coleções) da INK** por loja: id, nome, slug, visibilidade, posição, produtos do catálogo e link; paginado | Snapshot de categorias do site |
+| `origens_promotions` | **Cupons e promoções do painel** (por região) com status de agora; com período, o **uso de cada código** nos pedidos pagos | Painel + API INK |
+| `origens_sales_summary` | Totais do período (pedidos, unidades, total, mercadorias, frete, descontos, repasse, ticket) ou totais dos itens filtrados (inclusive por categoria e por cupom) | API INK + índice |
+| `origens_sales_ranking` | Ranking por produto, cidade/UF/região/família da estampa, **categoria**, **modelo/tamanho/cor**, cidade/UF de entrega ou loja; aceita filtro de categoria e de cupom | API INK + índice |
 | `origens_list_orders` | Pedidos do período com status, prazos e atraso informado pela INK; totais por status | API INK |
 | `origens_get_order` | Um pedido: itens com estampa classificada, valores, produção, entrega e rastreio | API INK + índice |
 | `origens_catalog_status` | Último sync por loja, contagens e produtos sem classificação | Índice do site |
@@ -36,7 +38,7 @@ Data desta versão: 15/10/2026.
 Todas têm as anotações `readOnlyHint: true`, `destructiveHint: false` e `idempotentHint: true`, e o comportamento é o mesmo: o cliente INK só faz GET em rotas fixas. Não existe ferramenta genérica de URL, SQL ou header.
 
 Toda resposta traz `meta` com:
-- `source`, `generated_at` e `data_as_of`;
+- `source` (`ink_api`, `use_origens_index`, `use_origens_panel` ou combinações), `generated_at` e `data_as_of`;
 - `period` e `date_basis`;
 - `filters_applied`;
 - `coverage` (`complete` / `partial` / `unavailable`, com o motivo);
@@ -75,6 +77,44 @@ O código está em `src/lib/mcp/sales.ts` e os testes em `tests/unit/mcp-tools.t
   3. parser determinístico do nome. Uma UF escrita no nome vale mesmo em outra loja (estampa migrada); sem UF no nome, valem só as UFs da loja.
 - **Sem classificação:** item que nenhuma dessas regras resolve vai para `unclassified` (`not_placed` no ranking), com a participação informada. Nunca há aproximação.
 - **Nunca usados:** o preço atual do catálogo para vendas passadas e o `total_sales_count` acumulado.
+
+### Categorias
+
+O código está em `src/lib/mcp/categories.ts`.
+
+- **Categoria = coleção da INK** (`GET /v1/stores/collections`, escopo `store.categories.read`). O MCP **não chama a INK** para isso: lê o `collections-snapshot.json` que o `collections:sync` já grava ao lado do catálogo.
+- **Visibilidade:** `public` aparece na loja INK (ex.: "Território", "Fala Daqui"); `internal` é segmentação oculta (ex.: "ZZ - SU - SC"). Na listagem saem as duas; no ranking o padrão é `public` (`category_visibility` muda).
+- **Referência:** `category` aceita o id numérico ou o slug/nome. Um slug pode existir em mais de uma loja ("territorio" no Norte e no Centro-Oeste): o filtro vale para todas as lojas consultadas.
+- **Pertença:** o sync guarda os membros só entre as estampas clássicas e o merch do catálogo (a lista bruta da INK passa de 100 mil ids). Logo:
+  - um produto **fora** desse conjunto (outro modelo vendido por link, produto retirado, produto sem classificação) tem pertença **desconhecida**, nunca "sem categoria";
+  - essas unidades saem em `not_placed` (motivo `category_membership_unknown`) e em `category_coverage`, e a `coverage` da resposta fica `partial` com a participação delas;
+  - uma loja com categorias de um sync antigo (só parte dos membros) também fica como desconhecida até rodar `collections:sync` de novo.
+- **Sobreposição:** um produto pode estar em várias categorias. No ranking por categoria, a linha conta em cada uma, a participação é sobre as linhas do recorte e as participações não somam 100% (`overlapping: true`).
+
+### Cupons e promoções
+
+O código está em `src/lib/mcp/promotions.ts`. São duas fontes, que não se misturam:
+- **Painel** ("Cupons e promoções", por região, só o publicado): título, código, texto, janela e status **de agora** (`live`, `scheduled`, `ended`, `disabled`).
+  - O painel descreve, e quem aplica é a INK. A configuração da promoção dentro da INK (regra, valor, limite) **não é lida**.
+  - O painel não guarda quando um item esteve ligado.
+- **Pedidos:** `promotion_code` e `promotion_value` dos pedidos pagos do período, no mesmo universo das vendas.
+  - **Por código**, sem diferenciar maiúsculas: pedidos, unidades, total, mercadorias, desconto, frete e ticket médio, ligados ao cupom do painel quando o código bate.
+  - **Sem código:** os mesmos totais, para comparar. `orders_with_promotion_discount` conta os pedidos que tiveram desconto da INK sem código, como uma promoção automática.
+  - **Cupons do painel que ninguém usou** no período, só das regiões das lojas consultadas.
+- **Sem período,** a ferramenta só lê o painel e não chama a INK.
+- **`region`** também restringe o uso à loja da região.
+- **Limite da leitura:** pedido com cupom não prova que o cupom causou a venda. O ticket com e sem código é uma comparação, não um efeito.
+- **Filtro `promotion_code`** em resumo e ranking: só as linhas dos pedidos com aquele código. Serve para ver, por exemplo, quais estampas saem com o LEVEMAIS.
+
+### Produtos em promoção
+
+- **Quando um produto está em promoção:** o preço promocional da INK está abaixo do preço normal no último sync. O índice guarda o preço normal em `list_price`.
+- **Desconto:** `discount_percent` é truncado, como a página da INK mostra.
+- **Busca:** `on_sale: true` filtra só esses produtos.
+
+### Dimensões da variante
+
+`model`, `size` e `color` agrupam pelo que a INK grava na variante do item vendido. Item sem o campo vai para `not_placed` (motivo `unknown_variant`).
 
 **Observado em 15/10/2026 (últimos 30 dias, 3 lojas):** 16,5% das unidades vendidas ficaram sem classificação. Todas são **estampas estaduais**, não de cidade: "Mato Grosso do Sul | Clean", "Made in Amazonas", "Santa Catarina | Atlas do Sul" e afins. O catálogo trata essas peças como merch. Ficaram de propósito em `unclassified` (ver seção 8).
 
@@ -135,6 +175,27 @@ O código está em `src/lib/mcp/auth/*` e na migração `db/migrations/0006_mcp_
 
 ## 7. Verificações feitas (15/10/2026)
 
+**Rodada de categorias e cupons:**
+- **`tests/unit/mcp-tools.test.ts`:** 28 testes, 10 deles novos. Cobrem:
+  - categoria por id, slug e nome em duas lojas, e categoria inexistente;
+  - ranking por categoria com sobreposição e pertença desconhecida (e a `coverage` parcial);
+  - resumo filtrado por categoria;
+  - busca por categoria e `on_sale`, e categorias de um produto e de uma peça irmã;
+  - listagem com filtros;
+  - o caso sem snapshot de categorias;
+  - cupons sem período (nenhuma leitura da INK) e com período (código em minúsculas ligado ao cupom do painel, pedidos sem código, cupom sem uso, `region`);
+  - filtro `promotion_code` e ranking por tamanho.
+- **Suíte completa:** 1.522 testes passando; `tsc` e `eslint` limpos.
+- **Dados locais reais, sem INK** (snapshot de catálogo, de categorias e o `published.json` local):
+  - 260 categorias nas 3 lojas, 52 públicas com produtos;
+  - "territorio" achou 908 produtos em Norte e Centro-Oeste;
+  - a categoria "Santa Catarina" achou as 35 estampas estaduais;
+  - 20 produtos em promoção;
+  - os 3 itens do painel do Sul saíram com status.
+- **Não rodado:** a parte de pedidos contra a INK real. O `scripts/qa/mcp-e2e.mts` já tem os checks novos, mas lê a produção.
+
+**Primeira versão:**
+
 - **Contrato INK, só leitura, com as credenciais atuais das 3 lojas:**
   - `GET /v1/stores/orders` (lista, filtros `payment_status`, `order_status`, `begin_date` e `end_date`), `/v1/stores/orders/{id}`, `/v1/stores/orders/{id}/refunds`, `/v1/stores/products/{id}` (com `product_variants`) e `/v1/stores/collections` respondem 200;
   - os scripts imprimiram só nomes de campos, tipos e contagens.
@@ -158,7 +219,9 @@ O código está em `src/lib/mcp/auth/*` e na migração `db/migrations/0006_mcp_
   - 1 GET/s por loja; somado ao sync do catálogo (40/min), fica dentro dos 100/min por loja.
   - Para análises longas (ano inteiro, recorrência), uma base própria de pedidos seria o próximo passo.
 - **"Pago" é o status atual:** um pedido reembolsado depois sai da conta quando a pergunta é refeita. Isso é declarado no `date_basis`.
-- **Estampas estaduais** ficam em `unclassified`. Uma classificação estadual por nome exato do estado ("Santa Catarina | …", "Made in Goiás") seria uma mudança deliberada, a decidir.
+- **Estampas estaduais** ficam em `unclassified`. Uma classificação estadual por nome exato do estado ("Santa Catarina | …", "Made in Goiás") seria uma mudança deliberada, a decidir. O ranking por categoria já mostra essas vendas pelas categorias "Santa Catarina", "Paraná" e "Rio Grande do Sul" do Sul, sem reclassificar nada.
+- **Categorias de outros modelos:** a pertença de peças vendidas por link (Oversized, Body…) não é conhecida, porque o sync não guarda a lista bruta da INK. Herdar a categoria da camiseta clássica do mesmo cluster seria uma suposição, então não é feito.
+- **Promoções dentro da INK:** o conector não lê a configuração das promoções na INK. Não foi verificado se a API da INK expõe isso: o teste de leitura em produção não foi feito nesta rodada.
 - **Sem atribuição de campanha** nos pedidos da INK: estes dados não dizem qual anúncio gerou a venda (o ROAS precisa dos dados de Meta e Google).
 - **Clickjacking:** o painel não manda `X-Frame-Options`. A tela de consentimento fica protegida porque o cookie de sessão é `SameSite=Lax` e não vai para iframe de outro site, que então mostraria só o login. Endurecer todos os cabeçalhos do admin fica para outra rodada.
 - **Opcional, não feito:** uma tela no painel para listar e revogar conexões. Hoje a revogação é pelo Claude, pelo endpoint ou desativando a conta.

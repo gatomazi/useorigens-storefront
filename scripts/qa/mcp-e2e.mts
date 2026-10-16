@@ -67,7 +67,7 @@ check(bad.status === 401 && (bad.headers.get("www-authenticate") ?? "").includes
 const mcp = new Client({ name: "qa", version: "1.0.0" });
 await mcp.connect(new StreamableHTTPClientTransport(new URL(`${base}/api/mcp`), { requestInit: { headers: { authorization: `Bearer ${refreshed.access_token}` } } }));
 const { tools } = await mcp.listTools();
-check(tools.length === 8 && tools.every((t) => t.annotations?.readOnlyHint === true), "tools/list: 8 read-only tools");
+check(tools.length === 10 && tools.every((t) => t.annotations?.readOnlyHint === true), "tools/list: 10 read-only tools");
 const call = async (name: string, args: Record<string, unknown>) => {
   const started = Date.now();
   const r = await mcp.callTool({ name, arguments: args });
@@ -106,6 +106,16 @@ if (one) {
   const text = JSON.stringify(o.r);
   check(!o.r.isError && !/"(buyer|email|phone|document|street|cep|billing_address|pix|payment_method)"/.test(text), "get order: no personal-data keys in the answer");
 }
+const cats = await call("origens_list_categories", { visibility: "public" });
+check(!cats.r.isError && ((cats.out?.data.total_matches as number | undefined) ?? 0) > 0, "public INK categories", `total=${cats.out?.data.total_matches}`);
+const byCategory = await call("origens_sales_ranking", { last_days: 30, dimension: "category", limit: 5 });
+const bc = byCategory.out?.data as { rows?: { label: string; units_net: number }[]; category_coverage?: { membership_unknown_share: number } } | undefined;
+check(!byCategory.r.isError && (bc?.rows?.length ?? 0) > 0, "ranking by public category", `${JSON.stringify(bc?.rows?.map((r) => [r.label, r.units_net]))} unknown_share=${bc?.category_coverage?.membership_unknown_share}`);
+const promos = await call("origens_promotions", { last_days: 30 });
+const pu = promos.out?.data.usage as { orders_in_period?: number; orders_with_code?: number; by_code?: { code: string; orders: number }[] } | undefined;
+check(!promos.r.isError && (pu?.orders_in_period ?? 0) > 0, "coupons: panel + usage on the orders", `with_code=${pu?.orders_with_code}/${pu?.orders_in_period} codes=${JSON.stringify(pu?.by_code?.slice(0, 5).map((c) => [c.code, c.orders]))}`);
+const onSale = await call("origens_search_products", { on_sale: true, limit: 1 });
+check(!onSale.r.isError, "products on sale", `total=${onSale.out?.data.total_matches}`);
 const tooLong = await call("origens_sales_summary", { start_date: "2025-01-01", end_date: "2026-10-01" });
 check(tooLong.r.isError === true, "a period over 186 days is refused, not truncated");
 await mcp.close();
