@@ -43,6 +43,7 @@ import type { DraftOp } from "@/lib/admin/draft-ops";
 import { parseNavigationForm, parseThemeForm, readableNavigationError } from "@/lib/admin/navigation-form";
 import { themeProblems } from "@/lib/site-config/navigation";
 import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-form";
+import { readableTopBarError, topBarFromForm } from "@/lib/admin/top-bar-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
 /**
@@ -657,6 +658,27 @@ export async function savePromotionsAction(fd: FormData) {
   if (!outcome.ok) back("/admin/promocoes", { err: outcome.errors.map((e) => readablePromotionError(e, parsed.value.items)) });
   await audit(actor, "draft.save", scope, "set-promotions");
   back("/admin/promocoes", { ok: `Rascunho dos cupons e promoções de ${scopeName(scope)} salvo. Nada muda na loja nem na INK até você publicar.` });
+}
+
+// ── Faixa do topo (por região) ───────────────────────────────────────────────────────────────────────────────────
+
+/** Saves the top strip of a region (messages and INK production time) as a DRAFT: the store and the INK pages change only once it is published. */
+export async function saveTopBarAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const here = "/admin/faixa";
+  let rows: unknown;
+  try {
+    rows = JSON.parse(text(fd, "messages") || "[]");
+  } catch {
+    back(here, { err: ["Não foi possível ler a lista. Recarregue a página e tente de novo."] });
+  }
+  const parsed = topBarFromForm(rows, text(fd, "productionDays"), scope);
+  if (!parsed.ok) back(here, { err: parsed.errors });
+  const outcome = await applyAndSave(scope, { type: "set-top-bar", topBar: parsed.value }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(here, { err: outcome.errors.map((e) => readableTopBarError(e, scope)) });
+  await audit(actor, "draft.save", scope, "set-top-bar");
+  back(here, { ok: `Rascunho da faixa do topo de ${scopeName(scope)} salvo. Nada muda na loja nem na INK até você publicar.` });
 }
 
 /**

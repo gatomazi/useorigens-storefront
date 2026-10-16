@@ -14,6 +14,7 @@ import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredT
 import { newCollectionLanding, newPage, uniqueSlug } from "../site-config/pages";
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import type { PromotionsConfig } from "../site-config/promotions-schema";
+import type { TopBarConfig } from "../site-config/top-bar-schema";
 import type { CardsConfig } from "../site-config/cards-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
@@ -80,6 +81,8 @@ export type DraftOp =
   | { type: "set-theme"; theme: ThemeConfig | null }
   /** Replaces the coupons and promotions of a region (an empty list is valid: no button). Strictly validated. */
   | { type: "set-promotions"; promotions: PromotionsConfig }
+  /** Replaces the top strip of a region (messages and production time; no message and no time removes the setting). Strictly validated. */
+  | { type: "set-top-bar"; topBar: TopBarConfig }
   /** GLOBAL only: a buy button on every product card of the store (`cards.buyLabel`), or `null` to leave it to each section again. */
   | { type: "set-cards"; cards: CardsConfig | null }
   | { type: "set-mundo"; modo: MundoModo | null }
@@ -186,6 +189,14 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-promotions") {
     if (doc.scope === "global") return fail("promotions belong to a region");
     const next: ScopeDoc = { ...doc, promotions: op.promotions };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-top-bar") {
+    if (doc.scope === "global") return fail("the top strip belongs to a region");
+    const empty = op.topBar.messages.length === 0 && op.topBar.productionDays === undefined;
+    const next: ScopeDoc = { ...doc, topBar: op.topBar };
+    if (empty) delete next.topBar;
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }

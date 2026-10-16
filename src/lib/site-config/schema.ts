@@ -11,6 +11,7 @@ import { CARD_BUY_STYLES, DEFAULT_BUY_LABEL, MAX_BUY_LABEL, validateCards, type 
 import { validateMundo, type MundoConfig } from "./mundo-schema";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
+import { validateTopBar, type TopBarConfig } from "./top-bar-schema";
 import { validateStatePage, type StatePageConfig } from "./state-page-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
 import { REGIONS, regionMayUseStore, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
@@ -312,6 +313,11 @@ export type ScopeDoc = {
   mundo?: MundoConfig;
   /** REGION only: "O Pódio" switched off (home teaser, state pages and the daily calculation, `podio-schema.ts`). Absent = on. Published with the region. */
   podio?: PodioConfig;
+  /**
+   * REGION only: "Faixa do topo", the strip above the header of the storefront and of the INK pages (`top-bar-schema.ts`): scheduled messages and the
+   * INK production time. Absent or no live message = the storefront's default strip and the INK's own. Published with the region.
+   */
+  topBar?: TopBarConfig;
   /** REGION only: the state-page sections switched off ("Destaques", "Escolha o estilo", "Regiões e cidades", `state-page-schema.ts`). Absent = all on. */
   statePage?: StatePageConfig;
   /**
@@ -928,6 +934,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.podio !== undefined) {
     const r = validatePodio(input.podio, sc, "doc.podio");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.topBar !== undefined) {
+    const r = validateTopBar(input.topBar, sc, "doc.topBar");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.statePage !== undefined) {
