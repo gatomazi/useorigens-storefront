@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { carryCampaign, rememberCampaign } from "@/lib/analytics/campaign";
+import { carryCampaign, rememberCampaign, setCarryRegion } from "@/lib/analytics/campaign";
 
 /**
  * Keeps the landing's campaign (utm_*, fbclid, gclid…) for the visit and carries it on every link to an INK store (src/lib/analytics/campaign.ts).
@@ -10,8 +10,14 @@ import { carryCampaign, rememberCampaign } from "@/lib/analytics/campaign";
  * browser reads the href — so no link component, server-rendered or not, needs to know about it. Right after, the href goes back to what
  * was rendered: a link copied later never carries someone's click id, and React's DOM stays as React wrote it. Renders nothing.
  */
-export function CampaignCarry() {
+export function CampaignCarry({ region = null }: { region?: { region: string; host: string } | null }) {
   const pathname = usePathname();
+
+  // Single-store mode only (the layout passes it): the browsed region goes along to the single store.
+  useEffect(() => {
+    setCarryRegion(region);
+    return () => setCarryRegion(null);
+  }, [region]);
 
   useEffect(() => {
     rememberCampaign(window.location.search);
