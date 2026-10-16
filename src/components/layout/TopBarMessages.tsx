@@ -54,23 +54,27 @@ export function TopBarMessages({ schedule, renderedAt, fixedNow, children }: { s
   }, [rotating]);
 
   if (live.length === 0) return <>{children}</>;
-  if (marquee) return <Marquee messages={live} productionDays={schedule.productionDays} now={now} />;
+  // The strip's own colours (CMS), only while a message is on: the default strip stays black.
+  const colors: CSSProperties | undefined = schedule.colors ? { background: schedule.colors.background, color: schedule.colors.text } : undefined;
+  if (marquee) return <div style={colors} data-testid="top-bar"><Marquee messages={live} productionDays={schedule.productionDays} now={now} /></div>;
   const message = live[(still ? 0 : turn) % live.length];
   const text = topBarText(message, schedule.productionDays, now);
   return (
-    <p
-      className={LINE}
-      data-testid="top-bar-message"
-      data-message-id={message.id}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocus={() => setPaused(true)}
-      onBlur={() => setPaused(false)}
-    >
-      <span key={message.id} className="top-bar-in">
-        {message.href ? <Link href={message.href} className="underline underline-offset-2">{text}</Link> : text}
-      </span>
-    </p>
+    <div style={colors} data-testid="top-bar">
+      <p
+        className={LINE}
+        data-testid="top-bar-message"
+        data-message-id={message.id}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={() => setPaused(false)}
+      >
+        <span key={message.id} className="top-bar-in">
+          {message.href ? <Link href={message.href} className="underline underline-offset-2">{text}</Link> : text}
+        </span>
+      </p>
+    </div>
   );
 }
 

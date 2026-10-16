@@ -4,6 +4,7 @@ import { diffDocs } from "@/lib/admin/diff";
 import { readableTopBarError, topBarFromForm, type TopBarRow } from "@/lib/admin/top-bar-form";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
+import { contrastRatio } from "@/lib/site-config/color";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 import {
   daysLeftText,
@@ -13,6 +14,7 @@ import {
   topBarPayload,
   topBarSchedule,
   topBarText,
+  TOP_BAR_COLOR_PRESETS,
   validateTopBar,
   type TopBarConfig,
   type TopBarMessage,
@@ -99,6 +101,26 @@ describe("Faixa do topo: contract", () => {
     expect(topBarSchedule({ ...config, style: "rotate" }, at("2026-11-20T12:00:00-03:00"))?.style).toBe("rotate");
   });
 
+  test("colours: both #rrggbb, readable together (3:1 or more), only while a message is on; the presets read at AA", () => {
+    const red = { ...config, colors: { background: "#b3121f", text: "#ffffff" } };
+    expect(validateTopBar(red, "sul").ok).toBe(true);
+    const low = validateTopBar({ ...config, colors: { background: "#777777", text: "#888888" } }, "sul");
+    expect(low.ok).toBe(false);
+    if (!low.ok) expect(low.errors[0]).toMatch(/contrast 1\.\d:1 is below 3:1/);
+    expect(validateTopBar({ ...config, colors: { background: "red", text: "#ffffff" } }, "sul").ok).toBe(false);
+    expect(validateTopBar({ ...config, colors: { background: "#000000" } }, "sul").ok).toBe(false);
+    for (const p of TOP_BAR_COLOR_PRESETS) if (p.colors) expect(contrastRatio(p.colors.background, p.colors.text)).toBeGreaterThanOrEqual(4.5);
+    expect(topBarPayload("sul", { ...red, colors: { background: "#B3121F", text: "#FFFFFF" } }, at("2026-11-20T12:00:00-03:00")).colors).toEqual({ background: "#b3121f", text: "#ffffff" });
+    expect("colors" in topBarPayload("sul", config, Date.now())).toBe(false);
+    expect(topBarSchedule(red, at("2026-11-20T12:00:00-03:00"))?.colors).toEqual(red.colors);
+    const form = topBarFromForm([row({ text: "Natal" })], "", "sul", "", { background: "#B3121F", text: "#FFFFFF" });
+    expect(form.ok && form.value.colors).toEqual({ background: "#b3121f", text: "#ffffff" });
+    const unreadable = topBarFromForm([row({ text: "Natal" })], "", "sul", "", { background: "#777777", text: "#888888" });
+    if (!unreadable.ok) expect(unreadable.errors[0]).toMatch(/^As cores da faixa quase não se leem juntas \(contraste 1,\d:1/);
+    const plain = topBarFromForm([row({ text: "Natal" })], "", "sul", "", { background: "", text: "" });
+    expect(plain.ok && "colors" in plain.value).toBe(false);
+  });
+
   test("placeholders: {producao} needs the production time, {faltam} needs an end, anything else is refused", () => {
     const errors = (c: unknown) => { const r = validateTopBar(c, "sul"); return r.ok ? [] : r.errors; };
     expect(errors({ messages: [natal] })[0]).toMatch(/\{producao\} needs/);
@@ -157,6 +179,8 @@ describe("Faixa do topo: editor, draft and publish", () => {
     const texts = diffDocs(sul, r.doc).filter((c) => c.kind === "top-bar").map((c) => c.text);
     expect(texts).toContain("Faixa do topo, prazo de produção da INK: sem prazo → 7 dias úteis");
     expect(texts).toContain('Faixa do topo: mensagem "Black Friday: {faltam}" adicionada');
+    const red = applyOp(r.doc, { type: "set-top-bar", topBar: { ...config, colors: { background: "#b3121f", text: "#ffffff" } } }, ctx);
+    expect(red.ok && diffDocs(r.doc, red.doc).map((c) => c.text)).toContain("Faixa do topo, cores: preta (padrão) → fundo #b3121f, fonte #ffffff");
     const rotating = applyOp(r.doc, { type: "set-top-bar", topBar: { ...config, style: "rotate" } }, ctx);
     expect(rotating.ok && diffDocs(r.doc, rotating.doc).map((c) => c.text)).toContain("Faixa do topo, como as mensagens aparecem: passando (letreiro) → uma de cada vez");
     const off = applyOp(r.doc, { type: "set-top-bar", topBar: { messages: [] } }, ctx);

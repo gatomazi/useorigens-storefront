@@ -3,13 +3,13 @@
  * storefront strip (server and browser), the CMS editor, the public API and the tests run the very same rules. The Worker of the INK keeps its own check
  * of the payload (`use-origens-workers/src/top-bar-gateway.js`): the contract between the two is `v: 1` below.
  */
-import { TOP_BAR_TOKENS, type TopBarConfig, type TopBarMessage, type TopBarStyle } from "./top-bar-schema";
+import { TOP_BAR_TOKENS, type TopBarColors, type TopBarConfig, type TopBarMessage, type TopBarStyle } from "./top-bar-schema";
 
 export * from "./top-bar-schema";
 
 /** One message as the public sees it: the text already filled in, the link and, when it has one, the end (a client drops it once it is over). */
 export type PublicTopBarMessage = { id: string; text: string; href?: string; endsAt?: string };
-export type PublicTopBar = { v: 1; region: string; style: TopBarStyle; messages: PublicTopBarMessage[] };
+export type PublicTopBar = { v: 1; region: string; style: TopBarStyle; colors?: TopBarColors; messages: PublicTopBarMessage[] };
 
 const at = (iso: string | undefined): number | null => (iso === undefined ? null : Date.parse(iso));
 
@@ -25,6 +25,15 @@ export function liveTopBarMessages(config: TopBarConfig | undefined, now: number
     .sort((a, b) => a.message.order - b.message.order || a.index - b.index)
     .map(({ message }) => message);
 }
+
+/** Ready-made colour pairs for the seasons in the editor (each one reads at AA, tested); `null` = the default black strip. */
+export const TOP_BAR_COLOR_PRESETS: { name: string; colors: TopBarColors | null }[] = [
+  { name: "Preta (padrão)", colors: null },
+  { name: "Vermelho Natal", colors: { background: "#b3121f", text: "#ffffff" } },
+  { name: "Verde Natal", colors: { background: "#14532d", text: "#ffffff" } },
+  { name: "Dourado", colors: { background: "#e2b64a", text: "#111111" } },
+  { name: "Black Friday", colors: { background: "#000000", text: "#f5d90a" } },
+];
 
 /** "1 dia útil", "7 dias úteis". */
 export const productionText = (days: number): string => (days === 1 ? "1 dia útil" : `${days} dias úteis`);
@@ -64,7 +73,9 @@ export function topBarPayload(region: string, config: TopBarConfig | undefined, 
     if (m.endsAt) out.endsAt = m.endsAt;
     return out;
   });
-  return { v: 1, region, style: config?.style ?? "marquee", messages };
+  const out: PublicTopBar = { v: 1, region, style: config?.style ?? "marquee", messages };
+  if (config?.colors) out.colors = { background: config.colors.background.toLowerCase(), text: config.colors.text.toLowerCase() };
+  return out;
 }
 
 /**
@@ -78,5 +89,6 @@ export function topBarSchedule(config: TopBarConfig | undefined, now: number): T
   const out: TopBarConfig = { messages };
   if (config.productionDays !== undefined) out.productionDays = config.productionDays;
   if (config.style !== undefined) out.style = config.style;
+  if (config.colors !== undefined) out.colors = config.colors;
   return out;
 }
