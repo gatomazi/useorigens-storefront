@@ -6,6 +6,7 @@
  * Only PRESETS, never free values: no colour, CSS, HTML or text typed by hand reaches the INK. The tokens the Worker receives are built from these
  * presets and the region's own palette (`ink-theme.ts`). What the INK computes (prices, discounts, shipping, payment, validation) is never configurable.
  */
+import { REGIONS, type RegionSlug } from "../geo/regions";
 import type { Scope, ValidationResult } from "./schema";
 
 export const INK_THEME_SURFACES = ["pdp", "cart", "checkout"] as const;
@@ -29,7 +30,35 @@ export type InkThemeConfig = {
   corners: (typeof INK_THEME_CORNERS)[number];
   /** Hanken Grotesk (the storefront's) or the INK's own Poppins (no font request at all). */
   font: (typeof INK_THEME_FONTS)[number];
+  /** Optional: the cart's free-shipping incentive. Absent = no incentive (and no rule recorded). */
+  incentive?: InkCartIncentive;
 };
+
+/**
+ * The cart's free-shipping incentive ("Falta 1 peça para o frete grátis"). It REPRESENTS a commercial rule the INK already applies; it never creates one:
+ * the INK keeps computing shipping and totals. Only by number of pieces (the INK shows a value-based rule with its own bar). Shown in the cart only
+ * when `enabled` AND `confirmed` (the owner states the rule is set up and active in the INK, for every product) AND the Worker has `cart-incentive`.
+ */
+export type InkCartIncentive = {
+  enabled: boolean;
+  confirmed: boolean;
+  kind: "free-shipping";
+  unit: "items";
+  /** Minimum number of pieces, as configured in the INK (2 to 20). */
+  threshold: number;
+  /** Destinations of the rule: states of THIS region, in the region's order. */
+  ufs: string[];
+};
+export const INK_INCENTIVE_LIMITS = { min: 2, max: 20 } as const;
+/** What the owner has to confirm in the INK before turning the incentive on (shown in the panel). */
+export const INK_INCENTIVE_CHECKLIST = [
+  "a quantidade mínima de peças que a INK exige para o frete grátis",
+  "que vale para todos os produtos da loja (nenhum fica de fora)",
+  "os estados de destino em que vale",
+  "quais formas de entrega ficam grátis (todas ou só uma)",
+  "se um cupom aplicado mantém ou tira o frete grátis",
+  "a data de fim, se houver (desligue aqui quando acabar)",
+] as const;
 
 export const DEFAULT_INK_THEME: InkThemeConfig = Object.freeze({
   surfaces: Object.freeze({ pdp: false, cart: false, checkout: false }),
@@ -45,7 +74,7 @@ const oneOf = <T extends string>(list: readonly T[], v: unknown): v is T => type
 export function validateInkTheme(input: unknown, scope: Scope, path = "inkTheme"): ValidationResult<InkThemeConfig> {
   if (scope === "global") return { ok: false, errors: [`${path}: belongs to a region`] };
   if (!isRecord(input)) return { ok: false, errors: [`${path}: must be { surfaces, action, ground, corners, font }`] };
-  const errors = Object.keys(input).filter((k) => !["surfaces", "action", "ground", "corners", "font"].includes(k)).map((k) => `${path}.${k}: unknown field`);
+  const errors = Object.keys(input).filter((k) => !["surfaces", "action", "ground", "corners", "font", "incentive"].includes(k)).map((k) => `${path}.${k}: unknown field`);
   const s = input.surfaces;
   if (!isRecord(s)) errors.push(`${path}.surfaces: must be { pdp, cart, checkout }`);
   else {
@@ -56,8 +85,28 @@ export function validateInkTheme(input: unknown, scope: Scope, path = "inkTheme"
   if (!oneOf(INK_THEME_GROUNDS, input.ground)) errors.push(`${path}.ground: must be one of ${INK_THEME_GROUNDS.join(", ")}`);
   if (!oneOf(INK_THEME_CORNERS, input.corners)) errors.push(`${path}.corners: must be one of ${INK_THEME_CORNERS.join(", ")}`);
   if (!oneOf(INK_THEME_FONTS, input.font)) errors.push(`${path}.font: must be one of ${INK_THEME_FONTS.join(", ")}`);
+  if (input.incentive !== undefined) errors.push(...incentiveErrors(input.incentive, scope, `${path}.incentive`));
   return errors.length === 0 ? { ok: true, value: input as InkThemeConfig } : { ok: false, errors };
 }
 
 /** The region's setting as the editor and the payload see it (no document or no setting = the defaults, every surface off). */
 export const inkThemeOf = (doc: { inkTheme?: InkThemeConfig } | null | undefined): InkThemeConfig => doc?.inkTheme ?? DEFAULT_INK_THEME;
+
+const INCENTIVE_KEYS = ["enabled", "confirmed", "kind", "unit", "threshold", "ufs"];
+// Mensagens em português: o dono chega a elas pelo formulário (ex.: ligar sem confirmar). O caminho fica no fim, para quem depura.
+function incentiveErrors(v: unknown, scope: Scope, path: string): string[] {
+  if (!isRecord(v)) return [`Incentivo de frete: formato inválido (${path})`];
+  const errors = Object.keys(v).filter((k) => !INCENTIVE_KEYS.includes(k)).map((k) => `Incentivo de frete: campo desconhecido (${path}.${k})`);
+  if (typeof v.enabled !== "boolean" || typeof v.confirmed !== "boolean") errors.push(`Incentivo de frete: formato inválido (${path})`);
+  if (v.enabled === true && v.confirmed !== true) errors.push(`Incentivo de frete: para ligar, confirme que a regra está cadastrada e ativa na INK (${path}.confirmed)`);
+  if (v.kind !== "free-shipping" || v.unit !== "items") errors.push(`Incentivo de frete: só frete grátis por quantidade de peças (${path})`);
+  if (typeof v.threshold !== "number" || !Number.isInteger(v.threshold) || v.threshold < INK_INCENTIVE_LIMITS.min || v.threshold > INK_INCENTIVE_LIMITS.max) {
+    errors.push(`Incentivo de frete: informe o mínimo de peças, de ${INK_INCENTIVE_LIMITS.min} a ${INK_INCENTIVE_LIMITS.max} (${path}.threshold)`);
+  }
+  const allowed = scope === "global" ? [] : REGIONS[scope as RegionSlug].ufs;
+  if (!Array.isArray(v.ufs) || v.ufs.length === 0) errors.push(`Incentivo de frete: marque ao menos um estado de destino (${path}.ufs)`);
+  else if (new Set(v.ufs).size !== v.ufs.length || v.ufs.some((uf) => typeof uf !== "string" || !allowed.includes(uf))) {
+    errors.push(`Incentivo de frete: os estados precisam ser desta região, sem repetir (${path}.ufs)`);
+  }
+  return errors;
+}

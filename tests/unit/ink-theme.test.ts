@@ -91,3 +91,45 @@ describe("Tema da INK: draft, publication and diff", () => {
     expect(diffDocs(on, on)).toEqual([]);
   });
 });
+
+describe("Tema da INK: incentivo de frete no carrinho", () => {
+  const RULE = { enabled: true, confirmed: true, kind: "free-shipping" as const, unit: "items" as const, threshold: 2, ufs: ["RS", "PR", "SC"] };
+
+  test("given the defaults, then there is no incentive: no rule is invented and the payload has no `incentive` key", () => {
+    expect(DEFAULT_INK_THEME.incentive).toBeUndefined();
+    expect("incentive" in inkThemePayload("sul", undefined)).toBe(false);
+    expect("incentive" in inkThemePayload("sul", ON)).toBe(false);
+  });
+
+  test("given a confirmed rule switched on, then the payload carries it in the region's order; off or unconfirmed, it does not", () => {
+    expect(inkThemePayload("sul", { ...ON, incentive: RULE }).incentive).toEqual({ enabled: true, kind: "free-shipping", unit: "items", threshold: 2, ufs: ["PR", "SC", "RS"] });
+    expect(inkThemePayload("sul", { ...ON, incentive: { ...RULE, enabled: false } }).incentive).toBeUndefined();
+    expect(inkThemePayload("sul", { ...ON, incentive: { ...RULE, confirmed: false, enabled: false } }).incentive).toBeUndefined();
+  });
+
+  test("given an invalid rule, then the validator refuses it with a Portuguese message the owner can act on", () => {
+    const errs = (incentive: unknown) => {
+      const r = validateInkTheme({ ...ON, incentive }, "sul");
+      return r.ok ? [] : r.errors;
+    };
+    expect(errs(RULE)).toEqual([]);
+    expect(errs({ ...RULE, enabled: false, confirmed: false })).toEqual([], "a rule kept off without confirmation is fine");
+    expect(errs({ ...RULE, confirmed: false }).join(" ")).toMatch(/para ligar, confirme que a regra está cadastrada e ativa na INK/);
+    expect(errs({ ...RULE, threshold: 1 }).join(" ")).toMatch(/mínimo de peças, de 2 a 20/);
+    expect(errs({ ...RULE, threshold: Number.NaN }).join(" ")).toMatch(/mínimo de peças/);
+    expect(errs({ ...RULE, ufs: [] }).join(" ")).toMatch(/ao menos um estado/);
+    expect(errs({ ...RULE, ufs: ["SP"] }).join(" ")).toMatch(/desta região/);
+    expect(errs({ ...RULE, unit: "value" }).join(" ")).toMatch(/quantidade de peças/);
+    expect(errs({ ...RULE, extra: 1 }).join(" ")).toMatch(/campo desconhecido/);
+    const norte = validateInkTheme({ ...ON, incentive: RULE }, "norte");
+    expect(norte.ok).toBe(false);
+  });
+
+  test("given a change of the rule, then the publish screen says what the cart will show", () => {
+    const sul = structuredClone(seed().docs.sul);
+    const off = ok(sul, { type: "set-ink-theme", inkTheme: { ...ON, incentive: { ...RULE, enabled: false, confirmed: false } } });
+    const on = ok(off, { type: "set-ink-theme", inkTheme: { ...ON, incentive: RULE } });
+    expect(diffDocs(off, on).map((c) => c.text)).toContain("Tema da INK, incentivo de frete no carrinho: ligado: frete grátis a partir de 2 peças (RS, PR, SC)");
+    expect(diffDocs(on, ok(on, { type: "set-ink-theme", inkTheme: ON })).map((c) => c.text)).toContain("Tema da INK, incentivo de frete no carrinho: sem regra");
+  });
+});

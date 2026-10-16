@@ -654,6 +654,14 @@ export async function saveInkThemeAction(fd: FormData) {
     corners: text(fd, "corners"),
     font: text(fd, "font"),
   } as InkThemeConfig;
+  // Incentivo: só é guardado quando a regra foi preenchida (mínimo de peças e estados). Ligar exige a confirmação (o validador recusa sem ela).
+  const threshold = text(fd, "incentiveThreshold");
+  const ufs = fd.getAll("incentiveUfs").map(String);
+  const enabled = fd.get("incentiveEnabled") === "on";
+  const confirmed = fd.get("incentiveConfirmed") === "on";
+  if (threshold !== "" || ufs.length > 0 || enabled || confirmed) {
+    inkTheme.incentive = { enabled, confirmed, kind: "free-shipping", unit: "items", threshold: /^\d{1,3}$/.test(threshold) ? Number(threshold) : Number.NaN, ufs };
+  }
   return run(fd, { type: "set-ink-theme", inkTheme }, "Rascunho do tema da INK salvo. A INK só muda depois de publicar em Publicar.", "/admin/tema-ink");
 }
 

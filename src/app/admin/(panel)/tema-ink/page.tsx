@@ -4,7 +4,8 @@ import { requireAdmin } from "@/lib/admin/auth/guard";
 import { currentScope, scopeName } from "@/lib/admin/scope";
 import { canEdit } from "@/lib/admin/store/ports";
 import { loadWorkspace } from "@/lib/admin/workspace";
-import { INK_PRESET_LABEL, INK_SURFACE_LABEL, INK_THEME_SURFACES, inkThemeOf, inkThemeTokens, type InkThemeConfig, type InkThemeTokens } from "@/lib/site-config/ink-theme";
+import { REGIONS } from "@/lib/geo/regions";
+import { INK_INCENTIVE_CHECKLIST, INK_INCENTIVE_LIMITS, INK_PRESET_LABEL, INK_SURFACE_LABEL, INK_THEME_SURFACES, inkIncentiveText, inkThemeOf, inkThemeTokens, type InkThemeConfig, type InkThemeTokens } from "@/lib/site-config/ink-theme";
 import { readPublished } from "@/lib/site-config/published";
 
 const SURFACE_HELP: Record<(typeof INK_THEME_SURFACES)[number], string> = {
@@ -94,6 +95,43 @@ export default async function InkThemePage({ searchParams }: { searchParams: Pro
         {radios("corners", "Cantos de botões, seletores e campos")}
         {radios("font", "Fonte")}
         {warnings.map((w) => <p key={w} className="a-flash err mt-3">{w}</p>)}
+        <h2 className="a-h2 mt-6" id="ink-incentivo">Incentivo de frete no carrinho</h2>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">
+          Mostra no carrinho quantas peças faltam para o frete grátis (“Falta 1 peça para o frete grátis”) e, ao chegar lá, pede o CEP para conferir. Isto só
+          <strong> representa</strong> uma regra que a INK já aplica: não cria promoção nem muda frete ou total, que continuam sendo calculados pela INK. Só por
+          quantidade de peças (uma regra por valor a INK mostra sozinha, com a régua dela).
+        </p>
+        <p className="mt-3 text-[0.875rem]"><strong>Antes de ligar, confira na INK:</strong></p>
+        <ul className="a-muted mt-1 list-disc pl-5 text-[0.875rem]">{INK_INCENTIVE_CHECKLIST.map((item) => <li key={item}>{item};</li>)}</ul>
+        <div className="mt-4 flex flex-wrap items-end gap-x-8 gap-y-4">
+          <label className="block">
+            <span className="a-label">Mínimo de peças</span>
+            <input type="number" name="incentiveThreshold" min={INK_INCENTIVE_LIMITS.min} max={INK_INCENTIVE_LIMITS.max} step={1} defaultValue={draft.incentive?.threshold ?? ""} disabled={readOnly} className="a-input mt-1 w-28" data-testid="ink-incentive-threshold" />
+          </label>
+          <fieldset>
+            <legend className="a-label">Estados em que vale</legend>
+            <div className="mt-1 flex flex-wrap gap-x-5 gap-y-2">
+              {REGIONS[scope].ufs.map((uf) => (
+                <label key={uf} className="flex items-center gap-2 text-[0.9375rem]">
+                  <input type="checkbox" name="incentiveUfs" value={uf} defaultChecked={draft.incentive?.ufs.includes(uf) ?? false} disabled={readOnly} data-testid={`ink-incentive-uf-${uf}`} /> {uf}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        </div>
+        <label className="mt-4 flex items-start gap-3">
+          <input type="checkbox" name="incentiveConfirmed" defaultChecked={draft.incentive?.confirmed ?? false} disabled={readOnly} className="mt-1" data-testid="ink-incentive-confirmed" />
+          <span>Confirmo que essa regra está cadastrada e ativa na INK, para todos os produtos da loja.</span>
+        </label>
+        <label className="mt-3 flex items-start gap-3">
+          <input type="checkbox" name="incentiveEnabled" defaultChecked={draft.incentive?.enabled ?? false} disabled={readOnly} className="mt-1" data-testid="ink-incentive-enabled" />
+          <span>
+            <strong>Mostrar o incentivo no carrinho</strong>{" "}
+            {live.incentive?.enabled && live.incentive.confirmed ? <span className="a-badge ok">No ar</span> : <span className="a-badge">Desligado na INK</span>}
+            {inkIncentiveText(live.incentive) !== inkIncentiveText(draft.incentive) && <span className="a-badge warn ml-1">No rascunho: {inkIncentiveText(draft.incentive)}</span>}
+            <span className="a-muted block text-[0.875rem]">Também depende do carrinho ligado acima e da opção <code>cart-incentive</code> no Worker da loja.</span>
+          </span>
+        </label>
         {!readOnly && <button type="submit" className="a-btn mt-6" data-testid="ink-theme-save">Salvar rascunho</button>}
       </form>
       <section className="a-card p-5" aria-labelledby="ink-amostra">

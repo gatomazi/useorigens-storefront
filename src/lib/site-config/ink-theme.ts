@@ -10,6 +10,7 @@
 import type { RegionSlug } from "../geo/regions";
 import { REGION_THEME } from "../theme/region-theme";
 import { contrastRatio } from "./color";
+import { REGIONS } from "../geo/regions";
 import { DEFAULT_INK_THEME, type InkThemeConfig } from "./ink-theme-schema";
 
 export * from "./ink-theme-schema";
@@ -19,7 +20,9 @@ export type InkThemeTokens = {
   ground: string; surface: string; paper: string; photo: string; ink: string; inkSoft: string; inkMute: string; line: string;
   radius: 0 | 8; font: "origens" | "ink";
 };
-export type PublicInkTheme = { v: 1; region: RegionSlug; surfaces: InkThemeConfig["surfaces"]; tokens: InkThemeTokens };
+/** `incentive` only when the owner turned it on AND confirmed the rule is active in the INK (otherwise the key is absent). */
+export type PublicInkIncentive = { enabled: true; kind: "free-shipping"; unit: "items"; threshold: number; ufs: string[] };
+export type PublicInkTheme = { v: 1; region: RegionSlug; surfaces: InkThemeConfig["surfaces"]; tokens: InkThemeTokens; incentive?: PublicInkIncentive };
 
 // The storefront's neutral tokens (src/app/globals.css). `line` is `rgb(0 0 0 / 0.22)` composed over the ground, as a solid colour.
 export const STOREFRONT_NEUTRALS = Object.freeze({ ground: "#e5e5e5", paper: "#f2f2f0", ink: "#000000", inkSoft: "#33332f", inkMute: "#56564f", line: "#b3b3b0", white: "#ffffff" });
@@ -55,7 +58,12 @@ export function inkThemeTokens(region: RegionSlug, config: InkThemeConfig): { to
 
 export function inkThemePayload(region: RegionSlug, config: InkThemeConfig | undefined): PublicInkTheme {
   const c = config ?? DEFAULT_INK_THEME;
-  return { v: 1, region, surfaces: { pdp: c.surfaces.pdp, cart: c.surfaces.cart, checkout: c.surfaces.checkout }, tokens: inkThemeTokens(region, c).tokens };
+  const payload: PublicInkTheme = { v: 1, region, surfaces: { pdp: c.surfaces.pdp, cart: c.surfaces.cart, checkout: c.surfaces.checkout }, tokens: inkThemeTokens(region, c).tokens };
+  const i = c.incentive;
+  if (i && i.enabled && i.confirmed) {
+    payload.incentive = { enabled: true, kind: "free-shipping", unit: "items", threshold: i.threshold, ufs: REGIONS[region].ufs.filter((uf) => i.ufs.includes(uf)) };
+  }
+  return payload;
 }
 
 /** "liga" / "desliga" lines for the publish diff and the editor. */
@@ -70,3 +78,11 @@ export const INK_PRESET_LABEL = {
   corners: { retos: "Retos (como o site)", suaves: "Levemente arredondados" },
   font: { vitrine: "Hanken Grotesk (a do site)", ink: "Poppins (a da INK)" },
 } as const;
+
+/** One line for the publish diff and the editor: the incentive as the cart would show it, or that it is off. */
+export function inkIncentiveText(i: InkThemeConfig["incentive"]): string {
+  if (!i) return "sem regra";
+  const where = i.ufs.join(", ");
+  const rule = `frete grátis a partir de ${i.threshold} peças (${where})`;
+  return i.enabled && i.confirmed ? `ligado: ${rule}` : `desligado (${rule}${i.confirmed ? "" : ", regra não confirmada na INK"})`;
+}

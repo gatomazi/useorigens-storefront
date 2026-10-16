@@ -1,7 +1,7 @@
 import { effectiveMenu, menuPositionOf, type MenuPosition } from "../site-config/collection-menu";
 import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlockConfig } from "../site-config/navigation";
 import { podioEnabledIn } from "../site-config/podio-schema";
-import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkThemeOf, INK_THEME_SURFACES } from "../site-config/ink-theme";
+import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkIncentiveText, inkThemeOf, INK_THEME_SURFACES } from "../site-config/ink-theme";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
@@ -192,6 +192,7 @@ function inkThemeChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   for (const k of ["action", "ground", "corners", "font"] as const) {
     if (was[k] !== now[k]) out.push({ kind: "ink-theme", sectionId: `ink-theme:${k}`, text: `Tema da INK: ${(INK_PRESET_LABEL[k] as Record<string, string>)[was[k]]} → ${(INK_PRESET_LABEL[k] as Record<string, string>)[now[k]]}` });
   }
+  if (json(was.incentive) !== json(now.incentive)) out.push({ kind: "ink-theme", sectionId: "ink-theme:incentive", text: `Tema da INK, incentivo de frete no carrinho: ${inkIncentiveText(now.incentive)}` });
   return out;
 }
 
