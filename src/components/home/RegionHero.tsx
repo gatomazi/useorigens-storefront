@@ -4,7 +4,8 @@ import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection"
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { PriceText } from "@/components/catalog/PriceText";
 import { SearchDialog } from "@/components/search/SearchDialog";
-import { usableBannerAsset, type BannerConfig } from "@/lib/editorial/banners";
+import { usableBannerAsset, type BannerAsset, type BannerConfig } from "@/lib/editorial/banners";
+import { BannerBackground } from "@/components/banners/BannerBackground";
 import { numberPt } from "@/lib/format";
 import type { HeroFamilyCard } from "@/lib/home";
 import { DEFAULT_BUY_LABEL, type CardBuy } from "@/lib/site-config/cards-schema";
@@ -40,6 +41,7 @@ export function RegionHero({
   buy,
   statesAnchor = "estados",
   panelColor,
+  panelImage,
 }: {
   region: RegionSlug;
   cityCount: number;
@@ -57,6 +59,8 @@ export function RegionHero({
   statesAnchor?: string | null;
   /** "feature" only: the product half's colour (the section's own fill, CMS); absent = a tint of the region's colour. */
   panelColor?: string;
+  /** "feature" only: the section's picture (CMS), a banner in the product's place (the product's bar stays over it when there is one). */
+  panelImage?: BannerAsset | null;
 }) {
   const r = REGIONS[region];
   const background = backdrop === undefined ? usableBannerAsset("hero", config) : null;
@@ -65,7 +69,7 @@ export function RegionHero({
       Ou explore por estado.
     </a>
   ) : null;
-  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} product={trio[0]} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} />;
+  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} product={trio[0]} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} panelImage={panelImage ?? null} />;
   return (
     <section aria-labelledby="hero-title" className="relative isolate">
       {backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />}
@@ -145,13 +149,14 @@ const ALIGN_END = "lg:pr-[max(var(--gutter),calc(100%-var(--content-max)/2+var(-
  * The "feature" opening (CMS `variant: "feature"`), the approved editorial direction: the headline (its last line in the region's accent, when the
  * accent reads on the page), its supporting line and the city search on a clean reading half; on the other half, edge to edge, ONE real product on a
  * tint of the region's colour, with its name, place, price and "Ver produto →" on a bar at the foot. The whole half is one link to the same internal
- * product page as the three-card hero. The section's own colour (CMS fill) paints the product half; its photo (CMS image, under its wash) goes behind the
- * reading half.
+ * product page as the three-card hero. The section's own colour (CMS fill) paints the product half; its picture (CMS image) takes the product's place
+ * there as a banner, with the product's bar under it when there is a product.
  *
- * Phones: the reading area, then the product half full width (the search stays in the first screen). No product: the reading area alone.
+ * Phones: the reading area, then the product half full width (the search stays in the first screen). Neither a product nor a picture: the reading
+ * area alone.
  */
 function FeatureHero({
-  region, cityCount, product, copy, backdrop, buy, statesLink, panelColor,
+  region, cityCount, product, copy, backdrop, buy, statesLink, panelColor, panelImage,
 }: {
   region: RegionSlug;
   cityCount: number;
@@ -161,6 +166,7 @@ function FeatureHero({
   buy?: CardBuy;
   statesLink: ReactNode;
   panelColor?: string;
+  panelImage: BannerAsset | null;
 }) {
   const r = REGIONS[region];
   const call = buy?.label ?? DEFAULT_BUY_LABEL;
@@ -192,39 +198,58 @@ function FeatureHero({
           </div>
         </div>
 
-        {product && (
-          <Link
-            href={product.href}
-            className={`group relative isolate flex min-h-full flex-col text-ink ${panelColor ? "" : "bg-[rgb(var(--region-primary-rgb)/0.13)]"}`}
-            style={panelColor ? { background: panelColor } : undefined}
-          >
-            {/* A quiet answer to the pointer over the whole half (the colour is the owner's, so it is darkened, never replaced). */}
-            <span aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-black/0 transition-colors group-hover:bg-black/[0.03] group-active:bg-black/[0.06]" />
-            <span className={`flex flex-1 items-center justify-center px-[var(--gutter)] py-8 lg:py-14 ${ALIGN_END} lg:pl-14`}>
-              <span className="block w-full max-w-[17rem] overflow-hidden rounded-md sm:max-w-[20rem] lg:max-w-[26rem]">
-                <ProductPhoto src={product.imageUrl} alt={`Camiseta ${product.familyName} de ${product.cityName}`} sizes="(min-width: 1024px) 26rem, 20rem" priority className="photo-contain" />
+        {(product || panelImage) && (
+          <HeroPanel href={product?.href} color={panelColor}>
+            {panelImage ? (
+              // A banner in the product's place (the owner's picture, its own crop and framing per screen); the product's bar stays under it.
+              <span className="relative block min-h-[20rem] flex-1 sm:min-h-[24rem] lg:min-h-0">
+                <BannerBackground asset={panelImage} priority sizes="(min-width: 1024px) 50vw, 100vw" alt={panelImage.alt} />
               </span>
-            </span>
-            <span className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-[rgb(var(--region-primary-rgb)/0.18)] bg-[rgb(var(--region-primary-rgb)/0.07)] px-[var(--gutter)] py-4 ${ALIGN_END} lg:pl-14 lg:py-5`}>
-              <span className="min-w-0">
-                <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
-                <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
-                  {product.cityName} · {product.uf}
+            ) : (
+              product && (
+                <span className={`flex flex-1 items-center justify-center px-[var(--gutter)] py-8 lg:py-14 ${ALIGN_END} lg:pl-14`}>
+                  <span className="block w-full max-w-[17rem] overflow-hidden rounded-md sm:max-w-[20rem] lg:max-w-[26rem]">
+                    <ProductPhoto src={product.imageUrl} alt={`Camiseta ${product.familyName} de ${product.cityName}`} sizes="(min-width: 1024px) 26rem, 20rem" priority className="photo-contain" />
+                  </span>
+                </span>
+              )
+            )}
+            {product && (
+              <span className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-[rgb(var(--region-primary-rgb)/0.18)] bg-[rgb(var(--region-primary-rgb)/0.07)] px-[var(--gutter)] py-4 ${ALIGN_END} lg:pl-14 lg:py-5`}>
+                <span className="min-w-0">
+                  <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
+                  <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
+                    {product.cityName} · {product.uf}
+                  </span>
+                </span>
+                <span className="flex items-baseline gap-4">
+                  {product.price && <span className={CARD_PRICE}><PriceText price={product.price} listPrice={product.listPrice} /></span>}
+                  <span className="inline-flex min-h-6 items-center gap-1 whitespace-nowrap text-[0.9375rem] font-semibold underline decoration-region-accent decoration-2 underline-offset-4 transition-colors group-hover:decoration-current">
+                    {call}
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </span>
                 </span>
               </span>
-              <span className="flex items-baseline gap-4">
-                {product.price && <span className={CARD_PRICE}><PriceText price={product.price} listPrice={product.listPrice} /></span>}
-                <span className="inline-flex min-h-6 items-center gap-1 whitespace-nowrap text-[0.9375rem] font-semibold underline decoration-region-accent decoration-2 underline-offset-4 transition-colors group-hover:decoration-current">
-                  {call}
-                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                </span>
-              </span>
-            </span>
-          </Link>
+            )}
+          </HeroPanel>
         )}
       </div>
     </section>
+  );
+}
+
+/** The product half: ONE link to the product page when there is a product (the whole half answers the pointer), a plain block for a banner alone. */
+function HeroPanel({ href, color, children }: { href?: string; color?: string; children: ReactNode }) {
+  const className = `group relative isolate flex min-h-full flex-col text-ink ${color ? "" : "bg-[rgb(var(--region-primary-rgb)/0.13)]"}`;
+  const style = color ? { background: color } : undefined;
+  if (!href) return <div className={className} style={style}>{children}</div>;
+  return (
+    <Link href={href} className={className} style={style}>
+      {/* A quiet answer to the pointer over the whole half (the colour is the owner's, so it is darkened, never replaced). */}
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-black/0 transition-colors group-hover:bg-black/[0.03] group-active:bg-black/[0.06]" />
+      {children}
+    </Link>
   );
 }

@@ -78,7 +78,7 @@ export function HomeSections({
         const bg = resolveBackground(s.appearance, media);
         switch (s.template) {
           case "hero": {
-            // The "feature" opening: the colour paints the product half, the photo stays behind the reading half.
+            // The "feature" opening: the colour paints the product half, and a picture takes the product's place there as a banner.
             const feature = s.variant === "feature";
             const panelColor = feature && bg.fill.kind !== "none" ? cssColor(bg.fill.kind === "solid" ? bg.fill.color : bg.fill.from) : undefined;
             return (
@@ -89,11 +89,12 @@ export function HomeSections({
                 trio={heroCards(region, s.featured, home.heroFamilies)}
                 config={{}}
                 copy={s.title && s.subtitle ? { title: s.title, body: s.subtitle } : undefined}
-                backdrop={<SectionBackdrop bg={feature ? { ...bg, fill: { kind: "none" } } : bg} priority={priorityId === s.id} />}
+                backdrop={feature ? null : <SectionBackdrop bg={bg} priority={priorityId === s.id} />}
                 variant={feature ? "feature" : undefined}
                 buy={cardButton}
                 statesAnchor={statesAnchor}
                 panelColor={panelColor}
+                panelImage={feature ? splitFigure(bg) : null}
               />
             );
           }

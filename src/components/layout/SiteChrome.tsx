@@ -44,7 +44,8 @@ export function AnnouncementBar({ region, cityCount, topBar }: { region: RegionS
     </p>
   );
   return (
-    <div className="on-ink">
+    // Black, as always; the editorial theme paints it its green (`--strip-bg`); the strip's own colours (CMS) still win, on the messages.
+    <div className="on-ink" style={{ background: "var(--strip-bg, #000)" }}>
       {schedule ? <TopBarMessages schedule={schedule} renderedAt={now}>{fallback}</TopBarMessages> : fallback}
     </div>
   );
@@ -185,7 +186,8 @@ export function Header({ region }: { region: RegionSlug }) {
   );
 }
 
-export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: string | null }) {
+/** `onBrand`: the editorial home theme draws the footer on its green, with light text (`.on-brand`). */
+export function Footer({ region, syncedAt, onBrand = false }: { region: RegionSlug; syncedAt: string | null; onBrand?: boolean }) {
   const r = REGIONS[region];
   const checkout = checkoutStoreFor(region);
   const others = (Object.values(REGIONS) as (typeof REGIONS)[RegionSlug][]).filter((x) => x.slug !== region);
@@ -193,7 +195,7 @@ export function Footer({ region, syncedAt }: { region: RegionSlug; syncedAt: str
   const updated = syncedAt ? new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "America/Sao_Paulo" }).format(new Date(syncedAt)) : null;
 
   return (
-    <footer className="border-t border-line">
+    <footer className={onBrand ? "on-brand" : "border-t border-line"}>
       <div className="wrap grid grid-cols-2 gap-x-6 gap-y-10 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:gap-12 md:py-14">
         <div className="col-span-2 md:col-span-1">
           <p translate="no" className="font-display text-[2rem] font-extrabold uppercase leading-none">Use Origens</p>

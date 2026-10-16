@@ -1,6 +1,13 @@
 # Home editorial e menu: refinamento sobre a base
 
-A home `/sul` e o menu do topo foram refinados na base existente, seguindo a direção do protótipo e o pedido `CLAUDE_REFINAMENTO_HOME_MENU_USE_ORIGENS`. Tudo o que muda a composição da home é **opção do painel**: as seções ganharam composições novas, os cards de coleção ganharam os formatos A e B, e o card de produto ganhou o estilo "chamada ao lado do preço". Sem publicar no painel, a loja continua com a composição de hoje.
+A home `/sul` e o menu do topo foram refinados na base existente, seguindo a direção do protótipo e o pedido `CLAUDE_REFINAMENTO_HOME_MENU_USE_ORIGENS`.
+
+A home passou a ter **dois temas**, como numa plataforma de loja:
+
+- **Original:** o visual de hoje.
+- **Editorial:** a direção aprovada, com verde profundo, creme e terracota.
+
+Os dois temas usam os mesmos tipos de seção, editados no mesmo editor (Home), e cada um **guarda as próprias seções**. A troca fica em **Aparência → Tema da home**: vale no rascunho e não apaga nada. Sem trocar e publicar, a loja continua no Original.
 
 **O que muda com o deploy, sem passar pelo painel:**
 
@@ -22,25 +29,31 @@ npx tsx scripts/home-editorial-draft.mts   # monta o rascunho da Sul no sandbox 
 npm run cms:dev                            # depois: /admin/publicar → "Publicar no sandbox local"
 ```
 
-O script parte da release que está viva no sandbox. Só mudam a home, o menu e o botão dos cards; cupons e tracking ficam como estão. As seções antigas (Da Nossa Terra, Redesenhos, Feito Para Você, Fala daqui, DDD) ficam no rascunho, **desligadas**, e voltam com um clique.
+- **O que o script faz:** o mesmo que o botão "Usar o tema Editorial" do painel. O Original fica guardado com as próprias seções, e o Editorial é montado a partir delas e das coleções reais da região. A opção `--original-from <release>` pega o Original de uma release antiga do sandbox.
+- **Ver cada tema:** a loja local mostra o tema publicado. `/admin/preview?tema=original` e `/admin/preview?tema=editorial` mostram qualquer um dos dois sem trocar nada.
 
-## Paleta da referência pelo tema do painel
+## Os dois temas
 
-A prévia usa a paleta da direção aprovada (verde profundo, creme quente, terracota pontual) **pelo tema da região**, em Menu → Tema. O código não troca nenhuma cor da loja; "Usar o tema padrão" devolve o oliva de hoje.
+| | Original | Editorial |
+| --- | --- | --- |
+| Paleta | a da região (oliva, cinza das fotos), ou a definida em Aparência | verde profundo `#213b30`, creme `#f7f3ec`, terracota `#b0472f`; as cores de Aparência valem por cima, uma a uma |
+| Faixa do topo e rodapé | preta / fundo da página | no verde do tema (as cores próprias da faixa, no painel, continuam valendo) |
+| Seções | as de hoje | montadas na primeira troca a partir das atuais: abertura "Um produto em destaque", faixa de estados, estilos com o título ao lado, cards de coleção (A/B), campanha dividida e seleção de Novidades. O resto vem junto: as vitrines que os cards e a campanha já cobrem ficam desligadas, e as demais (como Canecas) continuam como estavam. |
+| Edição | Home, como sempre | Home, igual: mesmos tipos de seção e mesmas opções |
 
-| Papel | Cor |
-| --- | --- |
-| Cor principal, menu do celular, faixa do topo | `#213b30` (verde profundo) |
-| Fundo da página e do cabeçalho | `#f7f3ec` (creme) |
-| Texto principal e do cabeçalho | `#213b30` |
-| Destaque | `#b0472f` (terracota): última linha do título, siglas dos estados, sublinhados |
-| Metade do produto na abertura | `#dfe3d3` (sálvia, a cor de fundo da seção) |
+A troca de tema é testada nos dois sentidos: Original → Editorial → Original devolve cada tema exatamente como foi deixado. Se o tema guardado no arquivo publicado estiver inválido, só ele é descartado; a home continua.
 
-A terracota só vira cor de texto quando tem contraste com o fundo (pelo menos 3:1, título grande); senão, esses textos ficam na cor principal. As fotos da INK continuam no cinza delas e, no creme, aparecem como fotos emolduradas, como na referência.
+A terracota só vira cor de texto (última linha do título, siglas dos estados) quando tem contraste com o fundo, de pelo menos 3:1 em título grande; senão, esses textos usam a cor principal.
+
+**Onde há produto, cabe um banner:**
+
+- **Abertura "Um produto em destaque":** uma imagem escolhida na seção entra no lugar do produto, com enquadramento por tela. A barra do produto (nome, preço e "Ver produto →") continua embaixo, se houver um produto.
+- **Cards de coleção:** cada card escolhe entre camiseta (A) e mini banner (B).
+- **Campanha dividida:** a imagem entra no lugar das camisetas.
 
 ## Composição da home
 
-1. **Abertura** (composição "Um produto em destaque"), como na referência. À esquerda, no creme: título com "No peito." em terracota, apoio e a busca real com o botão de seta. À direita, até a borda: um único produto grande sobre o sálvia, com uma barra embaixo (nome, lugar, preço e "Ver produto →"). A metade inteira é um link para a PDP interna. A cor de fundo da seção pinta essa metade; se houver foto, ela fica atrás do texto. No celular, o produto vem depois da busca.
+1. **Abertura** (composição "Um produto em destaque"), como na referência. À esquerda, no creme: título com "No peito." em terracota, apoio e a busca real com o botão de seta. À direita, até a borda: um único produto grande sobre o sálvia, com uma barra embaixo (nome, lugar, preço e "Ver produto →"). A metade inteira é um link para a PDP interna. A cor de fundo da seção pinta essa metade; uma imagem escolhida na seção entra no lugar do produto, como banner. No celular, essa metade vem depois da busca.
 2. **Estados** ("Faixa compacta"): uma faixa de ponta a ponta. Cada estado é um link inteiro, com a sigla, o nome e "Ver 497 cidades →". No celular, uma linha por estado.
 3. **Estilos da cidade** ("Título ao lado", 3 estilos): o título numa coluna e os três estilos ao lado. No celular, os cards rolam para o lado.
 4. **Coleções** (grade com os formatos A e B): Da Nossa Terra (A), Fala Daqui (B) e Do Nosso Jeito (A), cada uma levando à página da coleção.
@@ -59,7 +72,7 @@ O Pódio ("Quem está no pódio?") continua logo depois dos estados, com respiro
 | 3 | Cards de coleção alternando produto e mini banner | Formato por card no painel: **A**, camiseta real da coleção sobre cor; **B**, mini banner com imagem própria do celular e enquadramento. Na prévia ficam A, B, A, com o banner no meio como ponto de ritmo. |
 | 4 | Áreas que parecem clicáveis e não levam a nada | Revisão da home inteira: nenhuma âncora `#` sem alvo (o link "Ou explore por estado" só aparece quando a home tem a seção de estados), nenhum elemento aninhado, e o hover dos estados só existe no link. O menu fecha ao escolher um link da mesma página. |
 | 5 | Estados mal posicionados | Faixa com a mesma grade em cada estado: sigla em coluna fixa, nome e chamada. As três entradas têm a mesma altura e os nomes alinhados, inclusive "Rio Grande do Sul" (medido: 88 px cada, mesmo topo). No menu aberto, a mesma estrutura: sigla, nome e número de cidades. |
-| 6 | Abertura com imagem de fundo | Na composição "Um produto em destaque", a foto da seção (com imagem e enquadramento por dispositivo) vai atrás da área de texto, sob o véu claro, e a cor pinta a metade do produto. A prévia segue a referência: creme e sálvia, sem foto. Sem imagem, o layout continua de pé. |
+| 6 | Abertura com imagem de fundo | Na composição "Um produto em destaque", a imagem da seção (imagem e enquadramento por dispositivo) vira o banner da metade direita, com a barra do produto embaixo; a cor pinta essa metade quando não há imagem. A prévia segue a referência (sálvia, sem foto); a variação com foto está nas capturas. Sem imagem e sem produto, a área de texto fica sozinha e o layout continua de pé. |
 | 7 | Corte de cor nas laterais | Fundos de seção (faixa dos estados, coleções, campanha, abertura, bloco Meu Pequeno Mundo) vão de ponta a ponta; só o conteúdo respeita o contêiner. Conferido em 1920 px. Não usei `overflow-x: hidden`. |
 
 ## Menu
@@ -79,9 +92,9 @@ O Pódio ("Quem está no pódio?") continua logo depois dos estados, com respiro
 
 | Onde | Opção |
 | --- | --- |
-| Home → seção de abertura | Composição: "Três produtos" (atual) ou "Um produto em destaque" (o primeiro dos produtos escolhidos; a última linha do título fica na cor de destaque). Cor de fundo (pinta a metade do produto), imagem do celular e do desktop, enquadramento e véu. |
-| Menu → Tema | Paleta da região (já existia): na prévia, verde profundo, creme e terracota. |
-| Faixa do topo | Cores e mensagens (já existia): na prévia, verde profundo com "Camisetas com sotaque, história e lugar." |
+| Aparência → Tema da home | Original ou Editorial, cada um com as próprias seções; "Ver prévia" de cada tema. |
+| Home → seção de abertura | Composição: "Três produtos" (atual) ou "Um produto em destaque" (o primeiro dos produtos escolhidos; a última linha do título fica na cor de destaque). Cor de fundo: pinta a metade do produto. Imagem do celular e do desktop: um banner no lugar do produto. Enquadramento. |
+| Aparência → Identidade visual | Paleta da região (já existia): vale por cima do tema, cor a cor. |
 | Home → Escolha seu estado | Composição: "Cartões com capa" (atual) ou "Faixa compacta". Cor de fundo. |
 | Home → Estilos da cidade | Composição: "Grade" (atual) ou "Título ao lado". Quantidade de estilos. |
 | Home → Campanha | Composição: "Bloco escuro" (atual) ou "Dividida". A imagem vira a metade da foto; sem imagem, entram duas camisetas da coleção do botão. A cor pinta o lado do texto. |
@@ -106,7 +119,7 @@ Detalhes e evidências em `docs/screenshots/home-editorial/`.
   - celular 390: 0,91 MB → 0,23 MB (51 → 14).
 
   É peso de imagens; não é medida de conversão.
-- **Testes:** unitários 1599 de 1599 (17 novos).
+- **Testes:** unitários 1610 de 1610 (28 novos, 11 deles dos temas).
 - **e2e da vitrine:** `sul`, `tracking-and-nav`, `mobile-menu`, `global-search`, `seo`, `city-garment-tabs`, `share-size-guide` e `cart-mirror`, 192 testes. Ficam só as 4 falhas que já existiam:
   - a altura da página de estado, que mede os mesmos 6809 px sem as minhas mudanças;
   - 3 testes do seletor "Sul", que não existe com uma região só no ar.

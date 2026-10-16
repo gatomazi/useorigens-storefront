@@ -7,8 +7,8 @@ import type { RegionSlug } from "../geo/regions";
 import { launchedRegions } from "../regions/launched";
 import { siteConfigHomeEnabled } from "./flag";
 import { readPublished } from "./published";
-import { resolveNavigation, resolveTheme, themeCssVars, type ResolvedNavigation, type ResolvedTheme } from "./navigation";
-import type { ScopeDoc } from "./schema";
+import { homeThemeCssVars, resolveNavigation, resolveTheme, themeCssVars, type ResolvedNavigation, type ResolvedTheme } from "./navigation";
+import { homeThemeOf, type HomeThemeName, type ScopeDoc } from "./schema";
 
 /**
  * What the storefront header, the mobile menu and the region wrapper need, resolved on the SERVER from the PUBLISHED configuration (the local
@@ -16,7 +16,8 @@ import type { ScopeDoc } from "./schema";
  * regions, the states of the region that have products and the collections of its menu that have a page. With the config-driven home off, or nothing published, the config is empty and the
  * result is the default menu hierarchy in the region's current colours.
  */
-export type RegionChrome = { navigation: ResolvedNavigation; theme: ResolvedTheme; cssVars: Record<string, string> };
+/** `homeTheme`: the theme of the region's home ("original" / "editorial"): the footer follows it. */
+export type RegionChrome = { navigation: ResolvedNavigation; theme: ResolvedTheme; cssVars: Record<string, string>; homeTheme: HomeThemeName };
 
 function publishedDocs(region: RegionSlug): { doc: ScopeDoc | undefined; global: ScopeDoc | undefined } {
   if (!siteConfigHomeEnabled()) return { doc: undefined, global: undefined };
@@ -47,7 +48,8 @@ export function regionChrome(region: RegionSlug): RegionChrome {
   return {
     navigation: resolveNavigation({ region, doc, launched: launchedRegions(), coveredUfs: coveredUfs(region), collections: siteCollectionMenu(region, doc), stateDetails: stateDetails(region) }),
     theme,
-    cssVars: themeCssVars(theme.configured, theme.effective),
+    cssVars: { ...themeCssVars(theme.configured, theme.effective), ...homeThemeCssVars(doc, theme.effective) },
+    homeTheme: homeThemeOf(doc),
   };
 }
 

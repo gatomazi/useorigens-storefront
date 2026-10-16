@@ -25,8 +25,10 @@ import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
 import { MUNDO_MODOS, type MundoModo } from "@/lib/site-config/mundo-schema";
-import { DEFAULT_BUY_LABEL, isUmaPencaSource, MAX_BUY_LABEL, MAX_COLLECTION_NOTE, maxSectionProducts, MIN_SECTION_PRODUCTS, type CollectionNote, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, HOME_THEMES, isUmaPencaSource, MAX_BUY_LABEL, MAX_COLLECTION_NOTE, maxSectionProducts, MIN_SECTION_PRODUCTS, type CollectionNote, type HomeThemeName, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { CARD_BUY_STYLE_NAME, postedBuyStyle } from "@/lib/site-config/cards-schema";
+import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
+import { editorialCollections } from "@/lib/catalog/editorial-collections";
 import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
@@ -395,6 +397,24 @@ export async function setStatePageSectionAction(fd: FormData) {
 }
 
 /** Menu: a region from before the collection menu keeps what it shows and the INK navbar starts following it (once published). */
+/**
+ * Aparência: the THEME of the region's home ("original" / "editorial"). The current sections are kept under the current theme and the chosen theme's
+ * come back; the editorial theme, the first time, is built from the current sections and the region's real collections. Saved in the draft only.
+ */
+export async function setHomeThemeAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const theme = text(fd, "home_theme") as HomeThemeName;
+  const here = "/admin/aparencia";
+  if (!(HOME_THEMES as readonly string[]).includes(theme)) back(here, { err: ["Tema desconhecido."] });
+  const ws = await loadWorkspace(scope);
+  const collections = theme === "editorial" ? editorialCollections(scope, ws.doc) : undefined;
+  const outcome = await applyAndSave(scope, { type: "set-home-theme", theme, collections }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(here, { err: outcome.errors });
+  await audit(actor, "draft.save", scope, `set-home-theme:${theme}`);
+  back(`${here}#tema-da-home`, { ok: `Rascunho: a home de ${scopeName(scope)} agora usa o tema ${HOME_THEME_LABEL[theme]}. As seções do outro tema ficam guardadas. Confira em Home e na prévia, e publique para valer na loja.` });
+}
+
 /**
  * Navegação: the short descriptions under the collections' names in the open menus (one line each, `note_<store>:<id>`; empty = none). Saved in
  * the region's draft and published with it.

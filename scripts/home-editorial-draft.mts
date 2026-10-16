@@ -1,18 +1,24 @@
-// The editorial home of the Sul region (CLAUDE_REFINAMENTO_HOME_MENU_USE_ORIGENS) as a DRAFT of the LOCAL CMS sandbox (`data/admin-dev`, gitignored),
-// so the composition can be reviewed with `npm run cms:dev` and published there (Publicar), exactly like an owner would do it in the panel.
+// The two home themes of the Sul region (CLAUDE_REFINAMENTO_HOME_MENU_USE_ORIGENS) as a DRAFT of the LOCAL CMS sandbox (`data/admin-dev`, gitignored):
+// the "editorial" theme in use, built exactly as the panel builds it (Aparência → Tema da home → Usar o tema Editorial), and the "original" one kept
+// with its own sections. Review with `npm run cms:dev`, publish there (Publicar), and see either theme at /admin/preview?tema=original|editorial.
 //
-//   npx tsx scripts/home-editorial-draft.mts            # writes data/admin-dev/drafts/{sul,global}.json
+//   npx tsx scripts/home-editorial-draft.mts                          # from the live release of the sandbox
+//   npx tsx scripts/home-editorial-draft.mts --original-from 1        # the original sections taken from release 1 (a sandbox that published an older preview)
 //
-// Nothing here reaches production: the files live in the local sandbox only, and production is changed only from the real panel. Every value is a
-// real one of the project: collections of the synced snapshot, banners already in /public, the hero's own featured products. The previous home
-// sections are kept INACTIVE (not deleted), so the owner can bring any of them back.
+// Nothing here reaches production: the files live in the local sandbox only, and production changes only from the real panel. Every value is a real one:
+// collections of the synced snapshot (by slug), banners already in /public, the hero's own featured products. Coupons, tracking and everything that is
+// not the home stay as they are live.
+import { randomBytes } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { validateScopeDoc, type ScopeDoc, type Section, type Appearance } from "../src/lib/site-config/schema";
+import { applyOp } from "../src/lib/admin/draft-ops";
+import { EDITORIAL_COLLECTION_SLUGS, type EditorialCollections } from "../src/lib/site-config/home-themes";
+import { validateScopeDoc, type ScopeDoc } from "../src/lib/site-config/schema";
 
 const dir = path.join(process.cwd(), "data", "admin-dev");
 const draftFile = (scope: string) => path.join(dir, "drafts", `${scope}.json`);
 type DraftRecord = { scope: string; rev: number; updatedAt: string; baseReleaseId: string | number | null; doc: ScopeDoc };
+type Bundle = { releaseId: string | number; docs: Record<string, ScopeDoc> };
 
 const readJson = async <T,>(file: string): Promise<T | null> => {
   try {
@@ -21,166 +27,61 @@ const readJson = async <T,>(file: string): Promise<T | null> => {
     return null;
   }
 };
+const release = (id: string) => readJson<Bundle>(path.join(dir, "published", "releases", `${id}.json`));
+const arg = (name: string) => {
+  const i = process.argv.indexOf(name);
+  return i >= 0 ? process.argv[i + 1] : undefined;
+};
 
-// The LIVE release of the sandbox (the ledger's head), never a published.json copied from elsewhere: tracking, coupons and everything that is not
-// the home stay exactly as they are live.
+// The LIVE release (the ledger's head), never a published.json copied from elsewhere.
 const ledger = await readJson<{ headId: string | null }>(path.join(dir, "ledger.json"));
-const published = ledger?.headId ? await readJson<{ releaseId: string | number; docs: Record<string, ScopeDoc> }>(path.join(dir, "published", "releases", `${ledger.headId}.json`)) : null;
-if (!published) throw new Error("no live release in the local sandbox: run the panel once (npm run cms:dev) and publish");
+const live = ledger?.headId ? await release(ledger.headId) : null;
+if (!live) throw new Error("no live release in the local sandbox: run the panel once (npm run cms:dev) and publish");
 
-const plain = (fill: Appearance["fill"] = { kind: "none" }): Appearance => ({ fill, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } });
-const SUL = "use-sul" as const;
-const COLLECTION = { terra: 152188, fala: 152079, jeito: 152187, feito: 152191, seuLugar: 152078, novidades: 153383 } as const;
-/**
- * The approved palette (deep green, warm cream, a terracotta accent), through the region's own theme in the panel (Menu → Tema): nothing in the code
- * changes colour, and "Usar o tema padrão" brings today's olive back. The INK photos keep their grey: on the cream they read as framed pictures.
- */
-const PALETTE = { green: "#213b30", cream: "#f7f3ec", terracotta: "#b0472f" } as const;
+/** The region's real collections the editorial theme is built on: by slug in the Sul store's synced snapshot, available ones with products only. */
+async function collections(): Promise<EditorialCollections> {
+  type Snapshot = { stores: Record<string, { collections: { id: number; slug: string; isAvailable: boolean; matchedCount: number }[] }> };
+  const snapshot = await readJson<Snapshot>(path.join(process.cwd(), "data", "generated", "collections-snapshot.json"));
+  const records = snapshot?.stores["use-sul"]?.collections ?? [];
+  const out: EditorialCollections = {};
+  for (const [key, slug] of Object.entries(EDITORIAL_COLLECTION_SLUGS) as [keyof EditorialCollections, string][]) {
+    const r = records.find((c) => c.slug === slug && c.isAvailable && c.matchedCount >= 3);
+    if (r) out[key] = { store: "use-sul", collectionId: r.id };
+  }
+  return out;
+}
 
 async function sulDraft(): Promise<DraftRecord> {
-  const current = (await readJson<DraftRecord>(draftFile("sul"))) ?? { scope: "sul", rev: 0, updatedAt: "", baseReleaseId: published!.releaseId, doc: published!.docs.sul };
-  // From what is PUBLISHED (an older draft may lack the coupons, the tracking or anything else edited since): only the home and the menu change.
-  const doc = structuredClone(published!.docs.sul);
-  // Idempotent: the sections this script adds are rebuilt, never duplicated, when the live release already has them.
-  const OWN = new Set(["editorial-colecoes", "editorial-selecao"]);
-  const old = doc.home!.sections.filter((s) => !OWN.has(s.id));
-  const find = (template: Section["template"]) => old.find((s) => s.template === template);
-  const hero = find("hero")!;
-  const states = find("states")!;
-  const styles = find("city-styles")!;
-  const campaign = find("campaign")!;
-  const footer = find("footer")!;
-
-  const sections: Section[] = [
-    {
-      ...hero,
-      variant: "feature",
-      title: "A gente leva\na origem\nno peito.",
-      subtitle: "Sua cidade, suas histórias, seu jeito de falar. Busque a sua e vista o que te representa.",
-      // The reading half on the page's cream (a photo can go behind it from the panel); the colour paints the product half: a sage of the green.
-      appearance: plain({ kind: "solid", color: "#dfe3d3" }),
-    },
-    { ...states, active: true, variant: "strip", title: "Comece pelo seu estado", subtitle: undefined, appearance: plain() },
-    {
-      ...styles,
-      active: true,
-      variant: "split",
-      count: 3,
-      title: "Sua cidade, do seu jeito.",
-      subtitle: "O mapa, o nome ou as coordenadas. O exemplo aqui é {city}; ao abrir a sua, você vê só os estilos que existem para ela.",
-      appearance: plain(),
-    },
-    {
-      id: "editorial-colecoes",
-      anchor: "colecoes",
-      headingId: "colecoes-title",
-      template: "image-grid",
-      active: true,
-      title: "Tem coisa que é só nossa.",
-      subtitle: "Reconhecer, dar risada, sentir saudade: escolha o que faz sentido pra você.",
-      grid: { columns: 3, aspect: "portrait", labels: "below" },
-      tiles: [
-        { label: "Da Nossa Terra", caption: "O estado inteiro numa camiseta, não só uma cidade.", format: "product", color: "#dfe3d3", cta: "Ver coleção", dest: { kind: "collection-page", store: SUL, collectionId: COLLECTION.terra } },
-        {
-          label: "Fala Daqui",
-          caption: "Expressões dos três estados, sempre com o lugar de onde vêm.",
-          format: "banner",
-          // The card is a portrait from 768px and a wide band on phones: the square crop for the card, the wide one for the phone.
-          image: { assetId: "legacy:sul/fala-daqui-mobile", alt: "", decorative: true },
-          imageMobile: { assetId: "legacy:sul/fala-daqui-desktop", alt: "", decorative: true },
-          focal: { mobile: { x: 60, y: 45 }, desktop: { x: 60, y: 40 } },
-          tone: "light",
-          cta: "Ver coleção",
-          dest: { kind: "collection-page", store: SUL, collectionId: COLLECTION.fala },
-        },
-        { label: "Do Nosso Jeito", caption: "Obras, referências e ícones com sotaque local.", format: "product", color: "#e8c9a9", cta: "Ver coleção", dest: { kind: "collection-page", store: SUL, collectionId: COLLECTION.jeito } },
-      ],
-      appearance: plain(),
-    },
-    {
-      ...campaign,
-      active: true,
-      variant: "split",
-      title: "Você conhece a referência. O sotaque é nosso.",
-      subtitle: "Um pouco de arte, um pouco de humor e muito do lugar de onde a gente vem.",
-      cta: { label: "Conhecer as releituras", dest: { kind: "collection-page", store: SUL, collectionId: COLLECTION.jeito } },
-      fallback: "fill",
-      appearance: plain({ kind: "solid", color: "token:region-primary" }),
-    },
-    {
-      id: "editorial-selecao",
-      anchor: "selecao",
-      headingId: "selecao-title",
-      template: "product-carousel",
-      active: true,
-      title: "Qual delas é a sua cara?",
-      subtitle: "As estampas que acabaram de chegar à loja.",
-      source: { kind: "ink-category", store: SUL, collectionId: COLLECTION.novidades, order: "category", limit: 4 },
-      layout: { variant: "standard", tone: "light", surface: "plain", display: "grid" },
-      analyticsSource: "homeCollection",
-      cta: { label: "Ver novidades", dest: { kind: "collection-page", store: SUL, collectionId: COLLECTION.novidades } },
-      appearance: plain(),
-    },
-    // The previous showcases stay in the draft, switched off: one click in the panel brings any of them back.
-    ...old.filter((s) => s.template === "product-carousel").map((s) => ({ ...s, active: false })),
-    footer,
-  ];
-  for (const s of sections) if (s.subtitle === undefined) delete s.subtitle;
-  doc.home = { ...doc.home!, sections };
-  doc.theme = {
-    mode: "override",
-    colors: {
-      brandPrimary: PALETTE.green,
-      headerBackground: PALETTE.cream,
-      headerText: PALETTE.green,
-      mobileMenuBackground: PALETTE.green,
-      mobileMenuText: "#ffffff",
-      accent: PALETTE.terracotta,
-      pageBackground: PALETTE.cream,
-      pageText: PALETTE.green,
-    },
-  };
-  // The strip above the header in the deep green, with the line of the approved direction.
-  doc.topBar = { style: "rotate", colors: { background: PALETTE.green, text: "#ffffff" }, messages: [{ id: "editorial-sotaque", enabled: true, text: "Camisetas com sotaque, história e lugar.", order: 1 }] };
-  // The menu's hypothesis (Sua cidade · Estados · Coleções · Novidades · Canecas): the in-page "Estilos" link steps out of the bar (Navegação → links).
-  doc.navigation = {
-    ...(doc.navigation ?? {}),
-    categoriesBlock: { label: "Coleções", visible: true, order: 15 },
-    // Phone menu in the same order as the bar: the states (UF, name, number of places) before the collections; the home's own "Estados" anchor
-    // link would repeat them, so it steps out too.
-    statesBlock: { label: "Estados do Sul", visible: true, order: 12 },
-    primaryLinks: [
-      { id: "nav-styles", label: "Estilos", destination: "styles", visible: false, order: 10 },
-      { id: "nav-states", label: "Estados", destination: "states", visible: false, order: 20 },
-    ],
-  };
-  const ref = (collectionId: number) => ({ store: SUL, collectionId });
-  doc.collections = {
-    ...(doc.collections ?? { enabled: [] }),
-    menu: { top: [ref(COLLECTION.novidades)], hidden: [], added: [] },
-    descriptions: [
-      { ...ref(COLLECTION.novidades), text: "As estampas que acabaram de chegar" },
-      { ...ref(COLLECTION.seuLugar), text: "Sua cidade no mapa, no nome e nas coordenadas" },
-      { ...ref(COLLECTION.terra), text: "O estado inteiro numa camiseta" },
-      { ...ref(COLLECTION.fala), text: "Expressões dos três estados" },
-      { ...ref(COLLECTION.jeito), text: "Obras e ícones com sotaque local" },
-      { ...ref(COLLECTION.feito), text: "A combinação com a cara de quem vai vestir" },
-    ],
-  };
-  return { ...current, rev: current.rev + 1, updatedAt: new Date().toISOString(), baseReleaseId: published!.releaseId, doc };
+  const current = (await readJson<DraftRecord>(draftFile("sul"))) ?? { scope: "sul", rev: 0, updatedAt: "", baseReleaseId: live!.releaseId, doc: live!.docs.sul };
+  let doc = structuredClone(live!.docs.sul);
+  const from = arg("--original-from");
+  if (from) {
+    // The original theme as it was in that release: its sections, and its own palette and strip (the editorial theme brings its own).
+    const old = (await release(from))?.docs.sul;
+    if (!old?.home) throw new Error(`release ${from} has no Sul home`);
+    doc = { ...doc, home: old.home, theme: old.theme, topBar: old.topBar };
+    if (!old.theme) delete doc.theme;
+    if (!old.topBar) delete doc.topBar;
+    delete doc.homeTheme;
+    delete doc.homeThemes;
+  }
+  // Exactly what "Usar o tema Editorial" does in the panel: the original sections kept, the editorial ones built from them.
+  const r = applyOp(doc, { type: "set-home-theme", theme: "editorial", collections: await collections() }, { newId: () => randomBytes(4).toString("hex") });
+  if (!r.ok) throw new Error(r.errors.join("; "));
+  return { ...current, rev: current.rev + 1, updatedAt: new Date().toISOString(), baseReleaseId: live!.releaseId, doc: r.doc };
 }
 
 async function globalDraft(): Promise<DraftRecord> {
-  const current = (await readJson<DraftRecord>(draftFile("global"))) ?? { scope: "global", rev: 0, updatedAt: "", baseReleaseId: published!.releaseId, doc: published!.docs.global };
-  const doc = structuredClone(published!.docs.global);
+  const current = (await readJson<DraftRecord>(draftFile("global"))) ?? { scope: "global", rev: 0, updatedAt: "", baseReleaseId: live!.releaseId, doc: live!.docs.global };
+  const doc = structuredClone(live!.docs.global);
   // Every product card of the store: the price and "Ver produto →" together at the foot (Aparência → Botão nos cards).
   doc.cards = { buyLabel: "Ver produto", buyStyle: "link" };
-  return { ...current, rev: current.rev + 1, updatedAt: new Date().toISOString(), doc };
+  return { ...current, rev: current.rev + 1, updatedAt: new Date().toISOString(), baseReleaseId: live!.releaseId, doc };
 }
 
 for (const record of [await sulDraft(), await globalDraft()]) {
   const check = validateScopeDoc(record.doc);
   if (!check.ok) throw new Error(`${record.scope}: ${check.errors.join("; ")}`);
   await writeFile(draftFile(record.scope), JSON.stringify(record, null, 2));
-  console.log(`draft ${record.scope} rev ${record.rev}: ok`);
+  console.log(`draft ${record.scope} rev ${record.rev}: ok${record.doc.homeTheme ? ` (tema ${record.doc.homeTheme}; guardado: ${Object.keys(record.doc.homeThemes ?? {}).join(", ")})` : ""}`);
 }

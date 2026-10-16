@@ -2,6 +2,7 @@ import { saveCardsAction, saveMundoAction, saveThemeAction } from "@/app/admin/a
 import { Flash } from "@/components/admin/Flash";
 import { GlobalPendingNote } from "@/components/admin/GlobalPendingNote";
 import { ThemeEditor } from "@/components/admin/ThemeEditor";
+import { HomeThemeCard } from "@/components/admin/HomeThemeCard";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { currentScope, REGION_SCOPES, scopeName } from "@/lib/admin/scope";
 import { canEdit } from "@/lib/admin/store/ports";
@@ -51,12 +52,15 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
       <Flash ok={sp.ok} err={sp.err} />
       <GlobalPendingNote global={global} owner={owner} />
 
+      <HomeThemeCard region={scope} doc={ws.doc} live={ws.baseDoc} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} />
+
       <ThemeEditor
         key={`region-${scope}-${ws.record?.rev ?? "null"}`}
         scope={scope}
         region={scope}
         theme={ws.doc.theme}
         globalTheme={global.doc.theme}
+        homeTheme={ws.doc.homeTheme}
         navigation={ws.doc.navigation}
         navData={navByRegion}
         readOnly={!canEdit(actor, scope)}

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
+import { homeThemeOf } from "@/lib/site-config/schema";
 import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, setSectionActive } from "@/app/admin/actions";
 import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
@@ -66,7 +68,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="a-h1">Home · Seções <span className="a-muted">· {scopeName(scope)}</span></h1>
+          <h1 className="a-h1">Home · Seções <span className="a-muted">· {scopeName(scope)} · tema {HOME_THEME_LABEL[homeThemeOf(ws.doc)]}</span></h1>
+          <p className="a-muted mt-1 text-[0.875rem]" data-testid="home-theme-note">Estas são as seções do tema <strong>{HOME_THEME_LABEL[homeThemeOf(ws.doc)]}</strong>{homeThemeOf(ws.baseDoc) !== homeThemeOf(ws.doc) ? ` (na loja ainda está o ${HOME_THEME_LABEL[homeThemeOf(ws.baseDoc)]})` : ""}. O outro tema guarda as dele; troque em <Link href="/admin/aparencia#tema-da-home" className="a-link">Aparência → Tema da home</Link>.</p>
           <p className="a-muted mt-2 max-w-2xl">A ordem abaixo é a ordem da home: arraste uma seção pela alça para mudá-la de lugar (a ordem é salva no rascunho ao soltar). O hero fica sempre no topo e o rodapé no fim. As seções originais podem ser editadas, movidas e ocultadas; só as criadas aqui podem ser removidas.</p>
         </div>
         <div className="flex items-center gap-2">

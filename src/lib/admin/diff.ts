@@ -4,7 +4,8 @@ import { podioEnabledIn } from "../site-config/podio-schema";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
-import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
+import { homeThemeOf, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
+import { HOME_THEME_LABEL } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
@@ -26,6 +27,10 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   const before = published.home?.sections ?? [];
   const after = draft.home?.sections ?? [];
   const changes: Change[] = [];
+  // The home's theme first: when it changes, every section below is the other theme's (the previous ones stay kept, not deleted).
+  const themeWas = homeThemeOf(published);
+  const themeNow = homeThemeOf(draft);
+  if (themeWas !== themeNow) changes.push({ kind: "theme", sectionId: "home-theme", text: `Tema da home: ${HOME_THEME_LABEL[themeWas]} → ${HOME_THEME_LABEL[themeNow]} (as seções do ${HOME_THEME_LABEL[themeWas]} ficam guardadas)` });
   const beforeIds = new Set(before.map((s) => s.id));
   const afterIds = new Set(after.map((s) => s.id));
   for (const s of after) if (!beforeIds.has(s.id)) changes.push({ kind: "added", sectionId: s.id, text: `Nova seção "${label(s)}"` });

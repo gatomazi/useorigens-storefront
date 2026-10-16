@@ -58,7 +58,22 @@ export function themeDefaults(region: RegionSlug, brandPrimary?: string): ThemeC
 
 // ── Theme resolution ──────────────────────────────────────────────────────────────────────────────────────────
 
-export type ThemeOrigin = "default" | "global" | "own";
+export type ThemeOrigin = "default" | "theme" | "global" | "own";
+
+/**
+ * The palette of the "editorial" home theme (`ScopeDoc.homeTheme`): deep green, a warm cream ground, white on the green surfaces and a terracotta accent.
+ * It is the BASE of the region's palette while that theme is in use; the colours the owner sets in Aparência still go over it, one by one.
+ */
+export const EDITORIAL_COLORS: ThemeColors = {
+  brandPrimary: "#213b30",
+  headerBackground: "#f7f3ec",
+  headerText: "#213b30",
+  mobileMenuBackground: "#213b30",
+  mobileMenuText: "#ffffff",
+  accent: "#b0472f",
+  pageBackground: "#f7f3ec",
+  pageText: "#213b30",
+};
 export type ResolvedTheme = {
   /** `default` = nothing configured: the storefront's current look, untouched. */
   mode: "default" | "inherit" | "override";
@@ -69,15 +84,29 @@ export type ResolvedTheme = {
   origin: Record<ThemeColorKey, ThemeOrigin>;
 };
 
-/** Region with no theme → current look; `override` → its own colours over the current look; `inherit` → the global colours over the current look. */
-export function resolveTheme(region: RegionSlug, doc: Pick<ScopeDoc, "theme"> | undefined, global: Pick<ScopeDoc, "theme"> | undefined): ResolvedTheme {
+/**
+ * Region with no theme → current look; `override` → its own colours over the current look; `inherit` → the global colours over the current look. With the
+ * "editorial" home theme, the editorial palette takes the place of the current look underneath (and is emitted, since it differs from the code's colours).
+ */
+export function resolveTheme(region: RegionSlug, doc: Pick<ScopeDoc, "theme" | "homeTheme"> | undefined, global: Pick<ScopeDoc, "theme"> | undefined): ResolvedTheme {
   const own = doc?.theme;
   const mode: ResolvedTheme["mode"] = !own ? "default" : own.mode;
-  const configured: Partial<ThemeColors> = mode === "override" ? { ...own!.colors } : mode === "inherit" ? { ...(global?.theme?.colors ?? {}) } : {};
+  const picked: Partial<ThemeColors> = mode === "override" ? { ...own!.colors } : mode === "inherit" ? { ...(global?.theme?.colors ?? {}) } : {};
+  const look: Partial<ThemeColors> = doc?.homeTheme === "editorial" ? EDITORIAL_COLORS : {};
+  const configured: Partial<ThemeColors> = { ...look, ...picked };
   const defaults = themeDefaults(region, configured.brandPrimary);
   const effective = { ...defaults, ...configured };
-  const origin = Object.fromEntries(THEME_COLOR_KEYS.map((k) => [k, k in configured ? (mode === "inherit" ? "global" : "own") : "default"])) as Record<ThemeColorKey, ThemeOrigin>;
+  const origin = Object.fromEntries(THEME_COLOR_KEYS.map((k) => [k, k in picked ? (mode === "inherit" ? "global" : "own") : k in look ? "theme" : "default"])) as Record<ThemeColorKey, ThemeOrigin>;
   return { mode, configured, effective, origin };
+}
+
+/**
+ * What the editorial theme adds beyond the palette: the strip above the header and the footer on the theme's own green (the strip's own colours, CMS
+ * "Faixa do topo", still win). Empty for the original theme: nothing changes.
+ */
+export function homeThemeCssVars(doc: Pick<ScopeDoc, "homeTheme"> | undefined, effective: ThemeColors): Record<string, string> {
+  if (doc?.homeTheme !== "editorial") return {};
+  return { "--strip-bg": effective.brandPrimary, "--footer-bg": effective.brandPrimary };
 }
 
 /**

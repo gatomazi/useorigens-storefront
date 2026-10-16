@@ -54,6 +54,11 @@ export type Appearance = {
   overlay: Overlay;
 };
 
+/** The themes of a region's home (see `ScopeDoc.homeTheme`). */
+export const HOME_THEMES = ["original", "editorial"] as const;
+export type HomeThemeName = (typeof HOME_THEMES)[number];
+export const homeThemeOf = (doc: Pick<ScopeDoc, "homeTheme"> | undefined): HomeThemeName => doc?.homeTheme ?? "original";
+
 export type PageKind = "hotpage" | "categoryLanding";
 export const PAGE_KINDS: readonly PageKind[] = ["hotpage", "categoryLanding"];
 /** Public path segment of each page kind under `/<region>/…` (static segments: they never collide with `[uf]`). */
@@ -343,6 +348,15 @@ export type ScopeDoc = {
    * On `global`: the "Use Origens" palette regions may inherit (always `override`). Published with its scope.
    */
   theme?: ThemeConfig;
+  /**
+   * The THEME of the region's home, like a theme of a shop platform: "original" (the look the store has had, absent) or "editorial" (the approved editorial
+   * direction: a deep-green, cream and terracotta palette as the base of `theme`, a green strip and footer). `home.sections` are ALWAYS the sections of
+   * this theme (the one being edited in the draft, or the one live once published); the other theme keeps its own sections in `homeThemes`, edited
+   * with the very same section editor once the owner switches to it. Switching swaps the two lists; nothing is lost.
+   */
+  homeTheme?: Exclude<HomeThemeName, "original">;
+  /** The sections of the theme(s) not in use, kept as they were left (at most one entry per theme, never the one in use). */
+  homeThemes?: Partial<Record<HomeThemeName, { sections: Section[] }>>;
   /**
    * "Cupons e promoções" of this REGION: copyable coupons and announcements without a code, each with its own texts, order and optional window.
    * Absent or empty = no button anywhere. Published with the region (never with a page); the public reads only live items (site-config/promotions.ts).
@@ -967,6 +981,54 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
   }
 }
 
+/** The rules of a home's section list (the live home and every theme kept for later): `path` is where its errors are reported. */
+function checkHomeSections(c: Collector, path: string, sections: unknown, sc: Scope): void {
+  if (!Array.isArray(sections)) c.fail(path, "must be an array");
+  else {
+    sections.forEach((s, i) => checkSection(c, `${path}[${i}]`, s));
+    // Sources and "Ver todos" targets must come from THIS region's INK store (a Norte section can never show or link Sul's collection).
+    const ownStore = REGIONS[sc as RegionSlug]?.storeKey;
+    if (ownStore) {
+      sections.forEach((s, i) => {
+        if (!isRecord(s)) return;
+        if (isRecord(s.source) && s.source.kind === "ink-category" && !regionMayUseStore(sc as RegionSlug, s.source.store)) c.fail(`${path}[${i}].source.store`, "belongs to another region's INK store");
+        const dest = isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null;
+        if (dest && (dest.kind === "ink-collection" || dest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, dest.store)) c.fail(`${path}[${i}].cta.dest.store`, "belongs to another region's INK store");
+        if (isRecord(s.layout) && s.layout.display === "paged") c.fail(`${path}[${i}].layout.display`, "a paged grid belongs to a parent-category landing");
+        // A state cover belongs to a state of THIS region.
+        if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(REGIONS[sc as RegionSlug]?.ufs as readonly string[] | undefined)?.includes(uf)) c.fail(`${path}[${i}].stateCovers.${uf}`, "not a state of this region");
+        // The hero's cards are products of THIS region's own INK store (a Norte card can never be a Sul product).
+        if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`${path}[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
+        const navDest = isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null;
+        if (navDest && (navDest.kind === "ink-collection" || navDest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, navDest.store)) c.fail(`${path}[${i}].nav.dest.store`, "belongs to another region's INK store");
+        if (navDest && navDest.kind === "route" && typeof navDest.path === "string" && navDest.path !== `/${sc}` && !navDest.path.startsWith(`/${sc}/`)) c.fail(`${path}[${i}].nav.dest.path`, "must be a page of this region");
+        if (s.template === "page-hero") c.fail(`${path}[${i}].template`, "the page hero belongs to pages, not to the home");
+        checkTileRegion(c, `${path}[${i}]`, s.tiles, sc);
+        // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
+        if (dest && dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`${path}[${i}].cta.dest.path`, "must be a page of this region");
+      });
+    }
+    const anchors = new Set<string>();
+    const ids = new Set<string>();
+    sections.forEach((s, i) => {
+      if (!isRecord(s)) return;
+      if (typeof s.anchor === "string") {
+        if (anchors.has(s.anchor)) c.fail(`${path}[${i}].anchor`, "duplicate anchor");
+        anchors.add(s.anchor);
+      }
+      if (typeof s.id === "string") {
+        if (ids.has(s.id)) c.fail(`${path}[${i}].id`, "duplicate id");
+        ids.add(s.id);
+      }
+    });
+    const first = sections[0];
+    const last = sections[sections.length - 1];
+    if (sections.length > 0 && (!isRecord(first) || first.template !== "hero")) c.fail(path, "the first section must be the hero");
+    if (sections.length > 0 && (!isRecord(last) || last.template !== "footer")) c.fail(path, "the last section must be the footer");
+    if (sections.filter((s) => isRecord(s) && (s.template === "hero" || s.template === "footer")).length > 2) c.fail(path, "hero and footer appear once");
+  }
+}
+
 export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   const c = new Collector();
   if (!isRecord(input)) return { ok: false, errors: ["doc: must be an object"] };
@@ -1041,50 +1103,18 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.home !== undefined) {
     if (sc === "global") c.fail("doc.home", "global has no home in V1");
-    const sections = isRecord(input.home) ? input.home.sections : undefined;
-    if (!Array.isArray(sections)) c.fail("doc.home.sections", "must be an array");
+    checkHomeSections(c, "doc.home.sections", isRecord(input.home) ? input.home.sections : undefined, sc);
+  }
+  if (input.homeTheme !== undefined && (sc === "global" || input.homeTheme !== "editorial")) c.fail("doc.homeTheme", "a region's home theme: editorial (absent = original)");
+  if (input.homeThemes !== undefined) {
+    if (sc === "global" || !isRecord(input.homeThemes)) c.fail("doc.homeThemes", "a region's kept home themes");
     else {
-      sections.forEach((s, i) => checkSection(c, `doc.home.sections[${i}]`, s));
-      // Sources and "Ver todos" targets must come from THIS region's INK store (a Norte section can never show or link Sul's collection).
-      const ownStore = REGIONS[sc as RegionSlug]?.storeKey;
-      if (ownStore) {
-        sections.forEach((s, i) => {
-          if (!isRecord(s)) return;
-          if (isRecord(s.source) && s.source.kind === "ink-category" && !regionMayUseStore(sc as RegionSlug, s.source.store)) c.fail(`doc.home.sections[${i}].source.store`, "belongs to another region's INK store");
-          const dest = isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null;
-          if (dest && (dest.kind === "ink-collection" || dest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, dest.store)) c.fail(`doc.home.sections[${i}].cta.dest.store`, "belongs to another region's INK store");
-          if (isRecord(s.layout) && s.layout.display === "paged") c.fail(`doc.home.sections[${i}].layout.display`, "a paged grid belongs to a parent-category landing");
-          // A state cover belongs to a state of THIS region.
-          if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(REGIONS[sc as RegionSlug]?.ufs as readonly string[] | undefined)?.includes(uf)) c.fail(`doc.home.sections[${i}].stateCovers.${uf}`, "not a state of this region");
-          // The hero's cards are products of THIS region's own INK store (a Norte card can never be a Sul product).
-          if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`doc.home.sections[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
-          const navDest = isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null;
-          if (navDest && (navDest.kind === "ink-collection" || navDest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, navDest.store)) c.fail(`doc.home.sections[${i}].nav.dest.store`, "belongs to another region's INK store");
-          if (navDest && navDest.kind === "route" && typeof navDest.path === "string" && navDest.path !== `/${sc}` && !navDest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].nav.dest.path`, "must be a page of this region");
-          if (s.template === "page-hero") c.fail(`doc.home.sections[${i}].template`, "the page hero belongs to pages, not to the home");
-          checkTileRegion(c, `doc.home.sections[${i}]`, s.tiles, sc);
-          // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
-          if (dest && dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].cta.dest.path`, "must be a page of this region");
-        });
+      const inUse = (input.homeTheme as string | undefined) ?? "original";
+      for (const [name, kept] of Object.entries(input.homeThemes)) {
+        if (!(HOME_THEMES as readonly string[]).includes(name)) c.fail(`doc.homeThemes.${name}`, "unknown theme");
+        else if (name === inUse) c.fail(`doc.homeThemes.${name}`, "the theme in use lives in home.sections");
+        else checkHomeSections(c, `doc.homeThemes.${name}.sections`, isRecord(kept) ? kept.sections : undefined, sc);
       }
-      const anchors = new Set<string>();
-      const ids = new Set<string>();
-      sections.forEach((s, i) => {
-        if (!isRecord(s)) return;
-        if (typeof s.anchor === "string") {
-          if (anchors.has(s.anchor)) c.fail(`doc.home.sections[${i}].anchor`, "duplicate anchor");
-          anchors.add(s.anchor);
-        }
-        if (typeof s.id === "string") {
-          if (ids.has(s.id)) c.fail(`doc.home.sections[${i}].id`, "duplicate id");
-          ids.add(s.id);
-        }
-      });
-      const first = sections[0];
-      const last = sections[sections.length - 1];
-      if (sections.length > 0 && (!isRecord(first) || first.template !== "hero")) c.fail("doc.home.sections", "the first section must be the hero");
-      if (sections.length > 0 && (!isRecord(last) || last.template !== "footer")) c.fail("doc.home.sections", "the last section must be the footer");
-      if (sections.filter((s) => isRecord(s) && (s.template === "hero" || s.template === "footer")).length > 2) c.fail("doc.home.sections", "hero and footer appear once");
     }
   }
   if (input.pages !== undefined) {
