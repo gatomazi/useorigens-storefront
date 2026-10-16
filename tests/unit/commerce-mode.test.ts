@@ -104,12 +104,15 @@ describe("commercePlan: o modo só é efetivo com dados e dependências prontos"
     expect(plan.diagnostics.join()).toMatch(/recusada/);
   });
   test("given a real single-store snapshot, then the switch is BLOCKED while an external dependency is pending", () => {
-    expect(SINGLE_STORE_DEPENDENCIES.some((d) => !d.ready)).toBe(true);
     process.env.COMMERCE_MODE = "single-store";
     gravar(unificado(false), SINGLE_STORE_DIR);
-    const plan = commercePlan();
+    const pending = SINGLE_STORE_DEPENDENCIES.map((d) => (d.id === "checkout-theme" ? { ...d, ready: false } : d));
+    const plan = commercePlan(pending);
     expect(plan.effective).toBe("multi-store");
-    expect(plan.diagnostics.join()).toMatch(/cart-mirror-worker/);
+    expect(plan.diagnostics.join()).toMatch(/checkout-theme/);
+    // Every dependency delivered (16/10/2026): the real snapshot is served.
+    expect(SINGLE_STORE_DEPENDENCIES.every((d) => d.ready)).toBe(true);
+    expect(commercePlan()).toMatchObject({ effective: "single-store", simulation: false });
   });
   test("given a simulation snapshot, then it is served only with COMMERCE_SIMULATION=on", () => {
     process.env.COMMERCE_MODE = "single-store";
