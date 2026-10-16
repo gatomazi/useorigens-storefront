@@ -10,6 +10,7 @@ import { describeUploadFailure } from "@/lib/admin/media/upload-errors";
 import { platform } from "@/lib/admin/platform";
 import { publishRelease, reconcileReleases, type PublishDeps } from "@/lib/admin/publishing";
 import { publishDeps } from "@/lib/admin/ops";
+import { globalParts } from "@/lib/admin/pending";
 import { allow } from "@/lib/admin/auth/rate-limit";
 import { syncCollections } from "@/lib/catalog/collections-sync";
 import { beginSyncJob, SyncAlreadyRunningError } from "@/lib/catalog/sync-job";
@@ -173,7 +174,7 @@ export async function setPodioAction(fd: FormData) {
   const ok = enabled
     ? "Rascunho salvo: O Pódio ligado. Publique para valer na loja."
     : "Rascunho salvo: O Pódio desligado. Publique para ele sair da loja e o cálculo diário parar.";
-  return run(fd, { type: "set-podio", enabled }, ok, "/admin/home#podio");
+  return run(fd, { type: "set-podio", enabled }, ok, "/admin/estados#podio");
 }
 
 /** Adds one structured home component (city styles, state chooser, regional campaign) to the DRAFT of the region the form was rendered for. */
@@ -282,17 +283,11 @@ export async function setCollectionEnabledAction(fd: FormData) {
 
 const MENU_POSITIONS = new Set(["none", "top", "more"]);
 
-/** Back to the Library, keeping its search, filter and "back to what I was doing", on the menu card. */
-function libraryBack(fd: FormData): string {
-  const q = new URLSearchParams();
-  for (const k of ["q", "f"]) if (text(fd, k)) q.set(k, text(fd, k));
-  const from = text(fd, "from");
-  if (from.startsWith("/admin/")) q.set("from", from);
-  return `/admin/colecoes${q.size ? `?${q}` : ""}`;
-}
+/** The collection menu lives on the Menu screen (Navegação), next to the rest of the store's menu. */
+const MENU_SCREEN = "/admin/navegacao";
 
 /**
- * Library: where ONE collection appears in the region's collection menu (the storefront header and the navbar the Worker draws on the INK product pages):
+ * Menu: where ONE collection appears in the region's collection menu (the storefront header and the navbar the Worker draws on the INK product pages):
  * "Não exibir", "Topo" or "Categorias". Independent of "enabled for the home". A collection can enter only if it can be linked somewhere: a page of ours
  * (public, or internal and enabled, with enough products) or, for the INK navbar, a public INK page with products. Nothing goes public until the draft is
  * published.
@@ -301,7 +296,7 @@ export async function setCollectionMenuPositionAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
   const position = text(fd, "position");
-  const to = libraryBack(fd);
+  const to = MENU_SCREEN;
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: [`Esta coleção pertence a outra loja da INK: a região ${scopeName(scope)} só usa coleções da própria loja.`] });
   if (!MENU_POSITIONS.has(position)) back(to, { err: ["Posição inválida."] });
   const record = findCollection(ref.store, ref.collectionId);
@@ -321,12 +316,12 @@ export async function setCollectionMenuPositionAction(fd: FormData) {
   back(`${to}#menu-colecoes`, { ok: `“${record.name}” ${where} depois que você publicar.` });
 }
 
-/** Library: one step left or right on the bar. */
+/** Menu: one step left or right on the bar. */
 export async function moveCollectionMenuAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
   const direction = text(fd, "direction");
-  const to = "/admin/colecoes";
+  const to = MENU_SCREEN;
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
   if (direction !== "up" && direction !== "down") back(to, { err: ["Direção inválida."] });
   const outcome = await applyAndSave(scope, { type: "move-collection-menu", ...ref, direction }, revNumber(fd), actor);
@@ -339,7 +334,7 @@ export async function moveCollectionMenuAction(fd: FormData) {
 export async function setStateCategoryAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
-  const to = "/admin/colecoes";
+  const to = "/admin/estados";
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
   const on = text(fd, "on") === "1";
   const base = stateCategoryCollections(scope, (await loadWorkspace(scope)).doc).records.map((c) => ({ store: storeOf(scope), collectionId: c.id }));
@@ -353,7 +348,7 @@ export async function moveStateCategoryAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
   const direction = text(fd, "direction");
-  const to = "/admin/colecoes";
+  const to = "/admin/estados";
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
   if (direction !== "up" && direction !== "down") back(to, { err: ["Direção inválida."] });
   const base = stateCategoryCollections(scope, (await loadWorkspace(scope)).doc).records.map((c) => ({ store: storeOf(scope), collectionId: c.id }));
@@ -364,14 +359,14 @@ export async function moveStateCategoryAction(fd: FormData) {
 }
 
 export async function resetStateCategoriesAction(fd: FormData) {
-  return run(fd, { type: "reset-state-categories" }, "As categorias da página do estado voltam a ser as do topo do menu (vale depois que você publicar).", "/admin/colecoes#estado-categorias");
+  return run(fd, { type: "reset-state-categories" }, "As categorias da página do estado voltam a ser as do topo do menu (vale depois que você publicar).", "/admin/estados#estado-categorias");
 }
 
 /** "Página do estado" → Subcategorias: takes a public collection out of the automatic subcategories (or puts it back), or brings an internal one in. */
 export async function setStateSubcategoryAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
-  const to = "/admin/colecoes";
+  const to = "/admin/estados";
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
   const record = findCollection(ref!.store, ref!.collectionId);
   if (!record) back(to, { err: ["Coleção não encontrada nas coleções sincronizadas."] });
@@ -384,23 +379,23 @@ export async function setStateSubcategoryAction(fd: FormData) {
 }
 
 export async function resetStateSubcategoriesAction(fd: FormData) {
-  return run(fd, { type: "reset-state-subcategories" }, "As subcategorias da página do estado voltam ao automático (vale depois que você publicar).", "/admin/colecoes#estado-subcategorias");
+  return run(fd, { type: "reset-state-subcategories" }, "As subcategorias da página do estado voltam ao automático (vale depois que você publicar).", "/admin/estados#estado-subcategorias");
 }
 
 /** "Página do estado": shows or hides a section that is not built from collections ("Destaques", "Escolha o estilo", "Regiões e cidades"). */
 export async function setStatePageSectionAction(fd: FormData) {
   const section = text(fd, "section");
   const shown = text(fd, "shown") === "true";
-  const to = "/admin/colecoes#estado-secoes";
+  const to = "/admin/estados#estado-secoes";
   if (!(STATE_PAGE_SECTIONS as readonly string[]).includes(section)) back(to, { err: ["Seção desconhecida."] });
   const label = STATE_PAGE_SECTION_LABELS[section as StatePageSection];
   return run(fd, { type: "set-state-page-section", section: section as StatePageSection, shown }, `Rascunho salvo: “${label}” ${shown ? "volta para" : "sai da"} página do estado. Publique para valer na loja.`, to);
 }
 
-/** Library: a region from before the collection menu keeps what it shows and the INK navbar starts following it (once published). */
+/** Menu: a region from before the collection menu keeps what it shows and the INK navbar starts following it (once published). */
 export async function adoptCollectionMenuAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
-  const to = "/admin/colecoes";
+  const to = MENU_SCREEN;
   const outcome = await applyAndSave(scope, { type: "adopt-collection-menu" }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to, { err: outcome.errors });
@@ -535,28 +530,7 @@ export async function saveTrackingAction(fd: FormData) {
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back("/admin/tracking", { err: outcome.errors.map((e) => e.replace(/^doc\.tracking\./, "").replace("invalid id format for this vendor", "formato de ID inválido (Meta: só números; GA4: G-XXXXXXXXXX)")) });
   await audit(actor, "draft.save", scope, "set-tracking");
-  back("/admin/tracking", { ok: "Rascunho de tracking salvo. Nada muda na loja até você publicar e confirmar os IDs efetivos." });
-}
-
-/** Publishes the GLOBAL tracking document (owner only). Regions that inherit it change together, so the effective-ID confirmation is mandatory (see `pendingTrackingChanges`). */
-export async function publishGlobalTrackingAction(fd: FormData) {
-  const actor = await requireAdmin({ mutation: true, owner: true });
-  const ws = await loadWorkspace("global");
-  await reconcileReleases(deps(actor), revalidateStorefront).catch(() => undefined);
-  const result = await publishRelease(deps(actor), { kind: "publish", doc: ws.doc, note: text(fd, "note").slice(0, 200) || "Tracking global", confirmTracking: text(fd, "confirmTracking") === "on" }, revalidateStorefront).catch(publishError);
-  revalidatePath("/admin", "layout");
-  if (!result.ok) back("/admin/tracking", { err: result.errors });
-  await audit(actor, result.outcome.status === "failed" ? "publish.failed" : "publish", "global", result.outcome.releaseId, { status: result.outcome.status });
-  if (result.outcome.status === "failed") back("/admin/tracking", { err: ["A publicação falhou ao gravar o arquivo; a versão anterior continua no ar."] });
-  back("/admin/tracking", { ok: `Tracking global publicado (release ${result.outcome.releaseId}).` });
-}
-
-export async function discardGlobalTrackingAction() {
-  const actor = await requireAdmin({ mutation: true, owner: true });
-  await discardDraft("global");
-  await audit(actor, "draft.discard", "global");
-  revalidatePath("/admin", "layout");
-  back("/admin/tracking", { ok: "Rascunho do tracking global descartado." });
+  back("/admin/tracking", { ok: scope === "global" ? "Rascunho de tracking salvo. O tracking global é publicado em Publicar → Configuração global, com a confirmação dos IDs efetivos." : "Rascunho de tracking salvo. Nada muda na loja até você publicar e confirmar os IDs efetivos." });
 }
 
 // ── Navegação e Aparência (menu por região; paleta global ou por região) ─────────────────────────────────────────
@@ -607,22 +581,27 @@ export async function saveThemeAction(fd: FormData) {
   back("/admin/aparencia", { ok: `Rascunho da aparência ${what} salvo. Nada muda na loja até você publicar.` });
 }
 
-/** Publishes the GLOBAL document (owner only): the "Use Origens" palette, together with the global tracking draft if there is one. Regions that inherit it change together. */
-export async function publishGlobalThemeAction(fd: FormData) {
+/**
+ * Publishes the GLOBAL document (owner only), from Publicar: the Use Origens palette, the cards' button, Meu Pequeno Mundo and the global tracking, all
+ * at once (they are one document). Regions that inherit change together, so a change of an effective tracking ID needs the confirmation.
+ */
+export async function publishGlobalAction(fd: FormData) {
   const actor = await requireAdmin({ mutation: true, owner: true });
   const ws = await loadWorkspace("global");
+  const parts = globalParts(ws.baseDoc, ws.doc);
+  const here = "/admin/publicar"; // the flash is at the top of the screen: no anchor, so it is seen
   await reconcileReleases(deps(actor), revalidateStorefront).catch(() => undefined);
-  const result = await publishRelease(deps(actor), { kind: "publish", doc: ws.doc, note: text(fd, "note").slice(0, 200) || "Paleta global", confirmTracking: text(fd, "confirmTracking") === "on" }, revalidateStorefront).catch(publishError);
+  const result = await publishRelease(deps(actor), { kind: "publish", doc: ws.doc, note: text(fd, "note").slice(0, 200) || `Configuração global${parts.length ? `: ${parts.join(", ")}` : ""}`, confirmTracking: text(fd, "confirmTracking") === "on" }, revalidateStorefront).catch(publishError);
   revalidatePath("/admin", "layout");
-  if (!result.ok) back("/admin/aparencia", { err: result.errors });
+  if (!result.ok) back(here, { err: result.errors });
   await audit(actor, result.outcome.status === "failed" ? "publish.failed" : "publish", "global", result.outcome.releaseId, { status: result.outcome.status });
-  if (result.outcome.status === "failed") back("/admin/aparencia", { err: ["A publicação falhou ao gravar o arquivo; a versão anterior continua no ar."] });
-  back("/admin/aparencia", { ok: `Paleta global publicada (release ${result.outcome.releaseId}).` });
+  if (result.outcome.status === "failed") back(here, { err: ["A publicação falhou ao gravar o arquivo; a versão anterior continua no ar."] });
+  back(here, { ok: `Configuração global publicada (release ${result.outcome.releaseId})${parts.length ? `: ${parts.join(", ")}` : ""}.` });
 }
 
 /**
  * Aparência (owner): the store-wide buy button of the product cards, saved in the GLOBAL draft. On: every product card of every region gets a button
- * with this text (a section's own text wins). Off: each section decides, as before. Published with "Publicar configuração global".
+ * with this text (a section's own text wins). Off: each section decides, as before. Published from Publicar → Configuração global.
  */
 export async function saveCardsAction(fd: FormData) {
   const actor = await requireAdmin({ mutation: true, owner: true });
@@ -638,7 +617,7 @@ export async function saveCardsAction(fd: FormData) {
 
 /**
  * Aparência (owner): how far "Meu Pequeno Mundo" is open, saved in the GLOBAL draft ("segue" = no choice: the server's MEU_PEQUENO_MUNDO
- * alone). The env stays the ceiling. Published with "Publicar configuração global".
+ * alone). The env stays the ceiling. Published from Publicar → Configuração global.
  */
 export async function saveMundoAction(fd: FormData) {
   const actor = await requireAdmin({ mutation: true, owner: true });
@@ -649,15 +628,15 @@ export async function saveMundoAction(fd: FormData) {
   if (!outcome.ok) back("/admin/aparencia#meu-pequeno-mundo", { err: outcome.errors });
   await audit(actor, "draft.save", "global", "set-mundo");
   const como = { on: "página e entradas na loja", pagina: "só a página, sem entradas", off: "desligado" } as const;
-  back("/admin/aparencia#meu-pequeno-mundo", { ok: `Rascunho salvo: Meu Pequeno Mundo ${modo ? como[modo] : "segue o servidor"}. Publique a configuração global para valer na loja.` });
+  back("/admin/aparencia#meu-pequeno-mundo", { ok: `Rascunho salvo: Meu Pequeno Mundo ${modo ? como[modo] : "segue o servidor"}. Publique a configuração global em Publicar para valer na loja.` });
 }
 
-export async function discardGlobalThemeAction() {
+export async function discardGlobalAction() {
   const actor = await requireAdmin({ mutation: true, owner: true });
   await discardDraft("global");
   await audit(actor, "draft.discard", "global");
   revalidatePath("/admin", "layout");
-  back("/admin/aparencia", { ok: "Rascunho da paleta global descartado." });
+  back("/admin/publicar", { ok: "Rascunho da configuração global descartado: paleta, botão nos cards, Meu Pequeno Mundo e tracking global voltaram ao publicado." });
 }
 
 // ── Cupons e promoções (por região) ─────────────────────────────────────────────────────────────────────────────
@@ -722,15 +701,15 @@ export async function syncCollectionsAction() {
   const { syncs } = platform();
   await syncs.failStale("collections", 10 * 60_000);
   const last = await syncs.last("collections");
-  if (last && last.status === "succeeded" && Date.now() - new Date(last.startedAt).getTime() < SYNC_MIN_INTERVAL_MS) back("/admin/colecoes", { err: ["A última sincronização foi há poucos minutos. Aguarde um pouco antes de repetir."] });
+  if (last && last.status === "succeeded" && Date.now() - new Date(last.startedAt).getTime() < SYNC_MIN_INTERVAL_MS) back("/admin/sincronizacao", { err: ["A última sincronização foi há poucos minutos. Aguarde um pouco antes de repetir."] });
   const run = await syncs.start("collections", actor.id);
-  if (!run) back("/admin/colecoes", { err: ["Já há uma sincronização de coleções em andamento."] });
+  if (!run) back("/admin/sincronizacao", { err: ["Já há uma sincronização de coleções em andamento."] });
   let outcomes: Awaited<ReturnType<typeof syncCollections>>;
   try {
     outcomes = await syncCollections();
   } catch (error) {
     await syncs.finish(run.id, { ok: false, error: error instanceof Error ? error.message : "erro" }).catch(() => undefined);
-    back("/admin/colecoes", { err: ["Falha ao sincronizar. Os dados anteriores foram mantidos."] });
+    back("/admin/sincronizacao", { err: ["Falha ao sincronizar. Os dados anteriores foram mantidos."] });
   }
   const failed = outcomes.filter((o) => !o.ok);
   const summary = { stores: outcomes.length, failed: failed.length, requests: outcomes.reduce((n, o) => n + (o.ok ? o.requests : 0), 0) };
@@ -739,24 +718,24 @@ export async function syncCollectionsAction() {
   await platform().audit.record({ actor: actor.id, action: "collections.sync", meta: summary }).catch(() => undefined);
   revalidatePath("/[region]", "layout");
   revalidatePath("/admin", "layout");
-  back("/admin/colecoes", failed.length ? { err: [`Sincronização parcial: ${failed.map((f) => (f.ok ? "" : `${f.storeKey}: ${f.error}`)).join("; ")}. Os dados anteriores foram mantidos.`] } : { ok: `Coleções sincronizadas (${summary.requests} requisições de leitura à INK).` });
+  back("/admin/sincronizacao", failed.length ? { err: [`Sincronização parcial: ${failed.map((f) => (f.ok ? "" : `${f.storeKey}: ${f.error}`)).join("; ")}. Os dados anteriores foram mantidos.`] } : { ok: `Coleções sincronizadas (${summary.requests} requisições de leitura à INK).` });
 }
 
 /**
  * Refreshes the CATALOG (and then the collections) of the INK store of the region being edited. Owner only. Read-only against INK, paced (a
  * store takes a few minutes), so it runs in the background exactly like the authenticated route: the person is answered at once and the
- * Coleções screen shows the job. One sync at a time (the same in-process lock as the route); never touches the last-good data on failure.
+ * Sincronização screen shows the job. One sync at a time (the same in-process lock as the route); never touches the last-good data on failure.
  */
 export async function syncCatalogAction(fd: FormData) {
   const actor = await requireAdmin({ mutation: true, owner: true });
   const scope = await scopeOf(fd, actor);
   const store = storeOf(scope);
-  if (!tokenFor(store)) back("/admin/colecoes", { err: [`A variável ${INK_STORES[store]?.tokenEnv ?? "INK_TOKEN_*"} não está configurada neste ambiente (ou o serviço ainda não terminou de reiniciar depois de criá-la).`] });
+  if (!tokenFor(store)) back("/admin/sincronizacao", { err: [`A variável ${INK_STORES[store]?.tokenEnv ?? "INK_TOKEN_*"} não está configurada neste ambiente (ou o serviço ainda não terminou de reiniciar depois de criá-la).`] });
   let running: ReturnType<typeof beginSyncJob>;
   try {
     running = beginSyncJob([store]);
   } catch (error) {
-    if (error instanceof SyncAlreadyRunningError) back("/admin/colecoes", { err: ["Já há uma sincronização de catálogo em andamento. Aguarde terminar."] });
+    if (error instanceof SyncAlreadyRunningError) back("/admin/sincronizacao", { err: ["Já há uma sincronização de catálogo em andamento. Aguarde terminar."] });
     throw error;
   }
   after(() =>
@@ -771,7 +750,7 @@ export async function syncCatalogAction(fd: FormData) {
   );
   await audit(actor, "catalog.sync", scope, store, { withCollections: true });
   revalidatePath("/admin", "layout");
-  back("/admin/colecoes", { ok: `Sincronização do catálogo de ${scopeName(scope)} iniciada. Leva alguns minutos; recarregue esta página para acompanhar. As coleções são atualizadas ao final.` });
+  back("/admin/sincronizacao", { ok: `Sincronização do catálogo de ${scopeName(scope)} iniciada. Leva alguns minutos; recarregue esta página para acompanhar. As coleções são atualizadas ao final.` });
 }
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
@@ -840,15 +819,15 @@ export async function createPageAction(fd: FormData) {
 }
 
 /**
- * Coleções, "Levar para as páginas do site": every "Ver todos" (and menu link, grid tile) that still opens a collection on INK opens its page on the site
+ * Visão geral, "Levar para as páginas do site": every "Ver todos" (and menu link, grid tile) that still opens a collection on INK opens its page on the site
  * instead, for every collection the region can show (one that cannot keeps its INK link, so nothing turns into a dead button). A draft, like any edit.
  */
 export async function linkCollectionPagesAction(fd: FormData) {
   const { scope } = await editScope(fd);
   const ws = await loadWorkspace(scope);
   const refs = inkCollectionLinks(ws.doc).filter((r) => collectionPageSlug(ws.doc, r.store, r.collectionId) !== null);
-  if (refs.length === 0) back("/admin/colecoes", { ok: "Nenhum link para trocar: os que restam levam a coleções sem página no site." });
-  return runRaw(fd, { type: "link-collection-pages", refs }, `${refs.length === 1 ? "1 link agora leva" : `${refs.length} links agora levam`} à página da coleção no site (rascunho). Publique a home e as páginas alteradas para valer.`, "/admin/colecoes");
+  if (refs.length === 0) back("/admin", { ok: "Nenhum link para trocar: os que restam levam a coleções sem página no site." });
+  return runRaw(fd, { type: "link-collection-pages", refs }, `${refs.length === 1 ? "1 link agora leva" : `${refs.length} links agora levam`} à página da coleção no site (rascunho). Publique a home e as páginas alteradas para valer.`, "/admin");
 }
 
 /**
@@ -937,7 +916,7 @@ export async function publishTargetAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const kind = text(fd, "target") === "customizer" ? "customizer" : "page";
   const id = text(fd, "id");
-  const back_ = kind === "page" ? `/admin/paginas/${id}` : `/admin/personalizacao/${id}`;
+  const back_ = text(fd, "from") === "publicar" ? "/admin/publicar" : kind === "page" ? `/admin/paginas/${id}` : `/admin/personalizacao/${id}`;
   const ws = await loadWorkspace(scope);
   const target: PublishTarget = { kind, id };
   await reconcileReleases(deps(actor), revalidateStorefront).catch(() => undefined);

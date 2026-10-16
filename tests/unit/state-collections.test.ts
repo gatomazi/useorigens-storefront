@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { stateCategoryCollections, stateCollectionRows, stateRowsReach, stateSubcategoryChoice, stateSubcategoryCollections } from "@/lib/catalog/collection-source";
+import { stateCategoryCollections, stateCollectionRows, stateRowMatrix, stateRowsReach, stateSubcategoryChoice, stateSubcategoryCollections } from "@/lib/catalog/collection-source";
 import { applyOp } from "@/lib/admin/draft-ops";
 import { diffDocs } from "@/lib/admin/diff";
 import { validateScopeDoc } from "@/lib/site-config/schema";
@@ -49,6 +49,20 @@ describe("a state's collections on its page", () => {
       ["Da Nossa Terra", ["1", "2", "7"]], // "5" is Paraná's; "Carnaval" is internal; "8" is not in the catalog
       ["Fala Daqui", ["3", "4", "6"]],
     ]); // "Novidades" shares one product with the state: below the minimum of 3, no row
+  });
+
+  test("given the panel's matrix, then every state says whether it has its own collection and each category or subcategory what its carousel shows there after the hierarchy", () => {
+    const { states, counts } = stateRowMatrix("sul", undefined, () => products(), filePath);
+    expect(states).toEqual([
+      { uf: "PR", name: "Paraná", parent: { id: 31, name: "Paraná", products: 1 } },
+      { uf: "SC", name: "Santa Catarina", parent: { id: 30, name: "Santa Catarina", products: 6 } }, // "8" is not in the catalog
+      { uf: "RS", name: "Rio Grande do Sul", parent: null },
+    ]);
+    expect(Object.fromEntries(counts)).toEqual({
+      11: { PR: 0, SC: 3, RS: 0 }, // Da Nossa Terra: in PR it would have one product, below the minimum: no row, 0
+      10: { PR: 0, SC: 3, RS: 0 },
+      12: { PR: 0, SC: 0, RS: 0 }, // Novidades: one product of SC, no row
+    });
   });
 
   test("given a legacy list (the first state page), then exactly those collections in that order, internal ones too; a row below 3 products still does not show", () => {

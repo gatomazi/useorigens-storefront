@@ -71,9 +71,10 @@ test("given the CMS is configured, when the three regions are visited, then each
   await chooseRegion(page, "Sul");
   await open(page, "/admin/tracking");
   await saveTracking(page, "global", { mode: "override", id: "4444444444444444" }, { mode: "override", id: "G-GLOBAL0001" });
-  // Nobody inherits it yet, so no region's effective ID changes and no confirmation is asked.
-  await page.getByRole("button", { name: "Publicar tracking global" }).click();
-  await expect(page.getByText(/Tracking global publicado/)).toBeVisible({ timeout: 300_000 });
+  // Nobody inherits it yet, so no region's effective ID changes and no confirmation is asked. The global document is published from Publicar.
+  await open(page, "/admin/publicar");
+  await page.getByRole("button", { name: "Publicar configuração global" }).click();
+  await expect(page.getByText(/Configuração global publicada/)).toBeVisible({ timeout: 300_000 });
   // Publishing the global changed nobody: Sul is still legacy (it never inherited), Norte/Centro-Oeste are still 'unconfigured'.
   await open(page, "/admin/tracking");
   await expect(page.getByTestId("eff-sul-meta")).toContainText("1111111111111111");

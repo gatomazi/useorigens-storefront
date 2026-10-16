@@ -47,7 +47,7 @@ test("given no session, when the admin host is visited, then only the login page
     expect(h["x-robots-tag"]).toContain("noindex");
     expect(h["cache-control"]).toContain("no-store");
   };
-  for (const p of ["/admin", "/admin/home", "/admin/home/seed-hero", "/admin/colecoes", "/admin/publicar", "/admin/midia", "/admin/usuarios", "/admin/preview"]) {
+  for (const p of ["/admin", "/admin/home", "/admin/home/seed-hero", "/admin/colecoes", "/admin/estados", "/admin/sincronizacao", "/admin/publicar", "/admin/midia", "/admin/usuarios", "/admin/preview"]) {
     const r = await request.get(`${ADMIN}${p}`, { maxRedirects: 0 });
     expect([302, 303, 307, 308], p).toContain(r.status());
     expect(r.headers().location, p).toContain("/admin/login");
@@ -170,14 +170,14 @@ test("given an editor of another region, when editing the Sul home or managing p
     await expect(norte.page).toHaveURL(/\/admin\?err=/);
     await expect(norte.page.getByText("Você não tem permissão para editar essa região.")).toBeVisible();
   }
-  await open(norte.page, "/admin/colecoes");
+  await open(norte.page, "/admin/sincronizacao");
   await expect(norte.page.getByRole("button", { name: "Sincronizar coleções agora" })).toHaveCount(0);
   await norte.context.close();
 
   const sul = await newSession(browser, "editor-sul@e2e.test", { inToken: false });
   await open(sul.page, "/admin/usuarios");
   await expect(sul.page.getByText("Você não tem permissão para isso.")).toBeVisible();
-  await open(sul.page, "/admin/colecoes");
+  await open(sul.page, "/admin/sincronizacao");
   await expect(sul.page.getByRole("button", { name: "Sincronizar coleções agora" })).toHaveCount(0);
   await open(sul.page, "/admin/home");
   await expect(sul.page.getByRole("heading", { name: /Adicionar seção/ })).toBeVisible();

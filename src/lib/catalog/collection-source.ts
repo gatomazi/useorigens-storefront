@@ -131,21 +131,30 @@ const regionItem = (products: StoreProducts, id: string, region: RegionSlug | un
 
 /**
  * The collections a region may show (search results, collection pages): those of the region's store under the effective commerce mode. In
- * single-store mode one store's collections serve three regions, so a collection belongs to a region only when EVERY member known in the
- * catalog is a product of that region (evidence from the products themselves, never from the collection's name); mixed or unknown ones are
- * left out. In the regional mode every collection of the region's own store qualifies, as before.
+ * single-store mode one store's collections serve three regions and thematic ones mix them ("Da Nossa Terra" has Sul, Norte and Centro-Oeste
+ * products), so a collection is the region's when it has at least MIN_USABLE_PRODUCTS products of that region (evidence from the products
+ * themselves, never from the name), and the region shows only those. In the regional mode every collection of the region's own store qualifies.
  */
 export function collectionsForRegion(region: RegionSlug, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): CollectionRecord[] {
   const store = storeForRegion(region);
   const all = getStoreCollections(store, filePath)?.collections ?? [];
   if (commercePlan().effective !== "single-store") return all;
   const products = productsOf(store);
-  return all.filter((c) => belongsToRegion(c, products, region));
+  // The count the region shows (search results, "N produtos") is its own products', not the whole mixed collection's.
+  return all.flatMap((c) => {
+    const n = regionMemberCount(c, products, region);
+    return n >= MIN_USABLE_PRODUCTS ? [{ ...c, matchedCount: n }] : [];
+  });
 }
 
+/** How many of a collection's products are about `region` (a thematic collection of the single store mixes the three regions). */
+function regionMemberCount(c: CollectionRecord, products: StoreProducts, region: RegionSlug): number {
+  return (completeMembers(c) ?? c.memberIds).filter((id) => regionOfStoreProduct(products, id) === region).length;
+}
+
+/** A collection is the region's when it has at least MIN_USABLE_PRODUCTS products of the region; it then shows only those (`regionItem`). */
 function belongsToRegion(c: CollectionRecord, products: StoreProducts, region: RegionSlug): boolean {
-  const ids = completeMembers(c) ?? c.memberIds;
-  return ids.length > 0 && ids.every((id) => regionOfStoreProduct(products, id) === region);
+  return regionMemberCount(c, products, region) >= MIN_USABLE_PRODUCTS;
 }
 
 /** Whether a collection of the region's selling store is the region's (`collectionsForRegion`'s rule, one record): always in the regional mode. */
@@ -348,6 +357,27 @@ export function stateCollectionRows(region: RegionSlug, uf: string, doc: ScopeDo
     items: (c, ids) => stateRowItems(region, c, ids, doc, products),
     min: STATE_ROW_MIN_ITEMS,
   });
+}
+
+/** One state of the region as the panel explains it: its own collection ("Paraná", with how many of its products the store can show) or none. */
+export type StateParentView = { uf: string; name: string; parent: { id: number; name: string; products: number } | null };
+
+/**
+ * For the panel ("Páginas de estado"): every state's own collection and, for each category and subcategory, how many products its carousel shows on each
+ * state page AFTER the hierarchy (0 = no row there: too few products of the state left for it, or no collection named after the state).
+ */
+export function stateRowMatrix(region: RegionSlug, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): { states: StateParentView[]; counts: Map<number, Record<string, number>> } {
+  const products = productsOf(storeForRegion(region));
+  const candidates = [...stateCategoryCollections(region, doc, filePath).records, ...stateSubcategoryCollections(region, doc, filePath).records];
+  const counts = new Map<number, Record<string, number>>(candidates.map((c) => [c.id, {}]));
+  const states: StateParentView[] = REGIONS[region].ufs.map((uf) => {
+    const parent = stateParentCollection(region, uf, filePath);
+    const rows = parent ? stateCollectionRows(region, uf, doc, productsOf, filePath) : [];
+    for (const c of candidates) counts.get(c.id)![uf] = rows.find((r) => r.level !== "state" && r.collection.id === c.id)?.items.length ?? 0;
+    const members = parent ? (completeMembers(parent) ?? parent.memberIds) : [];
+    return { uf, name: STATE_NAMES[uf] ?? uf, parent: parent ? { id: parent.id, name: parent.name, products: members.filter((id) => regionItem(products, id, region) !== null).length } : null };
+  });
+  return { states, counts };
 }
 
 /** For the panel: in how many of the region's states each category or subcategory shows as a row (0 = it shows nowhere), by collection id. */

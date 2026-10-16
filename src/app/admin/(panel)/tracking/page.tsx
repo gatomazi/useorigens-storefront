@@ -1,9 +1,9 @@
-import { discardGlobalTrackingAction, publishGlobalTrackingAction, saveTrackingAction } from "@/app/admin/actions";
+import { saveTrackingAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
+import { GlobalPendingNote } from "@/components/admin/GlobalPendingNote";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { platform } from "@/lib/admin/platform";
-import { effectiveTable, pendingTrackingChanges, seedForEnv } from "@/lib/admin/publishing";
-import { publishDeps } from "@/lib/admin/ops";
+import { effectiveTable, seedForEnv } from "@/lib/admin/publishing";
 import { REGION_SCOPES, scopeName } from "@/lib/admin/scope";
 import { canEdit } from "@/lib/admin/store/ports";
 import { loadWorkspace, type Workspace } from "@/lib/admin/workspace";
@@ -82,14 +82,13 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
   const live = effectiveTable(published);
   const next = effectiveTable(withDrafts);
   const globalDoc = workspaces.global;
-  const globalPending = await pendingTrackingChanges(publishDeps(), globalDoc.doc);
   const inheritors = REGION_SCOPES.filter((r) => (["meta", "ga4"] as const).some((t) => modeOf(base.docs[r]?.tracking[t], r) === "inherit"));
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Tracking</h1>
-        <p className="a-muted mt-2 max-w-3xl">Meta Pixel e GA4 são independentes. Cada região herda o global, usa um ID próprio ou desliga a ferramenta. Salvar guarda só um <strong>rascunho</strong>: nada muda na loja até você publicar e confirmar os IDs efetivos. O painel nunca dispara pixel algum.</p>
+        <p className="a-muted mt-2 max-w-3xl">Meta Pixel e GA4 são independentes. Cada região herda o global, usa um ID próprio ou desliga a ferramenta. Salvar guarda só um <strong>rascunho</strong>: nada muda na loja até você publicar (a região em <em>Publicar</em>; o global em <em>Publicar → Configuração global</em>) e confirmar os IDs efetivos. O painel nunca dispara pixel algum.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
 
@@ -115,24 +114,9 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
         <p className="a-muted p-4 text-[0.8125rem]">“Legado” = os IDs de sempre do Sul, lidos da configuração do build até você publicar uma escolha explícita. Norte e Centro-Oeste nunca herdam os IDs do Sul: começam sem rastreamento.</p>
       </section>
 
-      <TrackingCard scope="global" ws={globalDoc} readOnly={!owner} note="Um ID opcional que qualquer região pode herdar. Só o owner altera. Trocar o ID aqui muda, ao publicar, todas as regiões que herdam." />
-      {owner && (
-        <section className="a-card p-5" aria-label="Publicar o tracking global">
-          {inheritors.length > 0 && <p className="a-flash err mb-3">Hoje herdam o global: <strong>{inheritors.map((r) => scopeName(r)).join(", ")}</strong>. Publicar um novo ID global muda o rastreamento dessas regiões.</p>}
-          <form action={publishGlobalTrackingAction} className="space-y-3">
-            {globalPending.length > 0 && (
-              <div className="a-flash err" role="group" aria-label="Confirmação do rastreamento">
-                <p className="font-extrabold">Isto muda o rastreamento efetivo:</p>
-                <ul className="mt-1 list-disc pl-5">{globalPending.map((l) => <li key={l}>{l}</li>)}</ul>
-                <label className="mt-3 flex items-start gap-2"><input type="checkbox" name="confirmTracking" className="mt-1" /> <span>Revisei os IDs efetivos acima e confirmo que eles podem ir para a loja.</span></label>
-              </div>
-            )}
-            <button type="submit" className="a-btn" disabled={!globalDoc.dirty}>Publicar tracking global</button>
-            {!globalDoc.dirty && <span className="a-muted ml-3 text-[0.875rem]">Nada a publicar: o rascunho é igual ao publicado.</span>}
-          </form>
-          <form action={discardGlobalTrackingAction} className="mt-3"><button type="submit" className="a-btn ghost sm" disabled={!globalDoc.record}>Descartar rascunho do global</button></form>
-        </section>
-      )}
+      <TrackingCard scope="global" ws={globalDoc} readOnly={!owner} note="Um ID opcional que qualquer região pode herdar. Só o owner altera. Ele é publicado com a configuração global, em Publicar; trocar o ID muda, ao publicar, todas as regiões que herdam." />
+      {owner && inheritors.length > 0 && <p className="a-flash err">Hoje herdam o global: <strong>{inheritors.map((r) => scopeName(r)).join(", ")}</strong>. Publicar um novo ID global muda o rastreamento dessas regiões.</p>}
+      <GlobalPendingNote global={globalDoc} owner={owner} />
 
       {REGION_SCOPES.map((r) => (
         <TrackingCard key={r} scope={r} ws={workspaces[r]} readOnly={!canEdit(actor, r)} note={r === "sul" ? "Hoje o Sul usa os IDs legados do build. Escolher outra opção e publicar substitui isso; “Legado” volta a eles." : "Começa sem rastreamento. Escolha herdar o global ou informar um ID próprio; a publicação fica na tela Publicar desta região."} />
