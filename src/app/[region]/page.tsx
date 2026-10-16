@@ -12,6 +12,7 @@ import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import { PodioTeaser } from "@/components/podio/PodioTeaser";
 import { getPodiumLeaders } from "@/lib/podio/server";
 import { SOURCES } from "@/lib/analytics/sources";
+import { SearchDialog } from "@/components/search/SearchDialog";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { REAL_COLLECTIONS } from "@/lib/editorial/collections";
 import { getRegionHome } from "@/lib/home";
@@ -96,6 +97,9 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
               Do mapa às coordenadas: escolha a estampa que mais combina com o seu lugar. O exemplo aqui é {showcase.city.name} —
               ao abrir a sua, você vê só os estilos que existem para ela.
             </p>
+            <div className="mt-3">
+              <SearchDialog region={region} variant="link" label="Encontre aqui a sua cidade" source={SOURCES.homeStylesSearch} />
+            </div>
           </div>
           <FamilyGrid entries={showcase.families} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk />
         </section>

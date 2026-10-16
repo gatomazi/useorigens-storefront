@@ -18,8 +18,8 @@ import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
 import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { ALL_SCOPES } from "@/lib/admin/auth/authorize";
 import { canEdit, type Actor } from "@/lib/admin/store/ports";
-import { collectionPageSlug, stateRowCollections, stateRowsReach } from "@/lib/catalog/collection-source";
-import { getCatalog } from "@/lib/catalog/repository";
+import { collectionPageSlug, stateCategoryCollections, stateSubcategoryChoice } from "@/lib/catalog/collection-source";
+import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, type StatePageSection } from "@/lib/site-config/state-page-schema";
 import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
@@ -330,49 +330,66 @@ export async function moveCollectionMenuAction(fd: FormData) {
   back(`${to}#menu-colecoes`, { ok: "Ordem do topo alterada (vale depois que você publicar)." });
 }
 
-/** What the state pages show now, as references: the starting point of the region's first own list (collections showing in no state are left out). */
-function stateRowsBase(scope: RegionSlug, doc: Parameters<typeof stateRowCollections>[1]) {
-  const catalog = getCatalog();
-  const reach = stateRowsReach(scope, doc, (s) => catalog.productsOfStore(s));
-  const { own, records } = stateRowCollections(scope, doc);
-  return records.filter((c) => own || (reach.get(c.id) ?? 0) > 0).map((c) => ({ store: storeOf(scope), collectionId: c.id }));
-}
-
-/** "Páginas de estado": a collection becomes (or stops being) a row of the region's state pages. */
-export async function setStateRowAction(fd: FormData) {
+/** "Página do estado" → Categorias: a collection becomes (or stops being) a category of the region's state pages. The first edit starts from the menu bar. */
+export async function setStateCategoryAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
   const to = "/admin/estados";
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
   const on = text(fd, "on") === "1";
-  const base = stateRowsBase(scope, (await loadWorkspace(scope)).doc);
-  const outcome = await applyAndSave(scope, { type: "set-state-row", ...ref, on, base }, revNumber(fd), actor);
+  const base = stateCategoryCollections(scope, (await loadWorkspace(scope)).doc).records.map((c) => ({ store: storeOf(scope), collectionId: c.id }));
+  const outcome = await applyAndSave(scope, { type: "set-state-category", ...ref, on, base }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to, { err: outcome.errors });
-  back(`${to}#pagina-estado`, { ok: on ? "Coleção incluída na página do estado (vale depois que você publicar)." : "Coleção tirada da página do estado (vale depois que você publicar)." });
+  back(`${to}#estado-categorias`, { ok: on ? "Categoria incluída na página do estado (vale depois que você publicar)." : "Categoria tirada da página do estado (vale depois que você publicar)." });
 }
 
-export async function moveStateRowAction(fd: FormData) {
+export async function moveStateCategoryAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const ref = parseCollectionRef(text(fd, "ref"));
   const direction = text(fd, "direction");
   const to = "/admin/estados";
   if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
   if (direction !== "up" && direction !== "down") back(to, { err: ["Direção inválida."] });
-  const base = stateRowsBase(scope, (await loadWorkspace(scope)).doc);
-  const outcome = await applyAndSave(scope, { type: "move-state-row", ...ref, direction, base }, revNumber(fd), actor);
+  const base = stateCategoryCollections(scope, (await loadWorkspace(scope)).doc).records.map((c) => ({ store: storeOf(scope), collectionId: c.id }));
+  const outcome = await applyAndSave(scope, { type: "move-state-category", ...ref, direction, base }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to, { err: outcome.errors });
-  back(`${to}#pagina-estado`, { ok: "Ordem da página do estado alterada (vale depois que você publicar)." });
+  back(`${to}#estado-categorias`, { ok: "Ordem das categorias alterada (vale depois que você publicar)." });
 }
 
-export async function resetStateRowsAction(fd: FormData) {
+export async function resetStateCategoriesAction(fd: FormData) {
+  return run(fd, { type: "reset-state-categories" }, "As categorias da página do estado voltam a ser as do topo do menu (vale depois que você publicar).", "/admin/estados#estado-categorias");
+}
+
+/** "Página do estado" → Subcategorias: takes a public collection out of the automatic subcategories (or puts it back), or brings an internal one in. */
+export async function setStateSubcategoryAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
   const to = "/admin/estados";
-  const outcome = await applyAndSave(scope, { type: "reset-state-rows" }, revNumber(fd), actor);
+  if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
+  const record = findCollection(ref!.store, ref!.collectionId);
+  if (!record) back(to, { err: ["Coleção não encontrada nas coleções sincronizadas."] });
+  const on = text(fd, "on") === "1";
+  const base = stateSubcategoryChoice(scope, (await loadWorkspace(scope)).doc);
+  const outcome = await applyAndSave(scope, { type: "set-state-subcategory", ...ref, on, isPublic: record!.isAvailable, base }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to, { err: outcome.errors });
-  back(`${to}#pagina-estado`, { ok: "A página do estado volta ao automático (vale depois que você publicar)." });
+  back(`${to}#estado-subcategorias`, { ok: on ? `“${record!.name}” está nas subcategorias (vale depois que você publicar).` : `“${record!.name}” saiu das subcategorias: os produtos dela ficam na categoria (vale depois que você publicar).` });
+}
+
+export async function resetStateSubcategoriesAction(fd: FormData) {
+  return run(fd, { type: "reset-state-subcategories" }, "As subcategorias da página do estado voltam ao automático (vale depois que você publicar).", "/admin/estados#estado-subcategorias");
+}
+
+/** "Página do estado": shows or hides a section that is not built from collections ("Destaques", "Escolha o estilo", "Regiões e cidades"). */
+export async function setStatePageSectionAction(fd: FormData) {
+  const section = text(fd, "section");
+  const shown = text(fd, "shown") === "true";
+  const to = "/admin/estados#estado-secoes";
+  if (!(STATE_PAGE_SECTIONS as readonly string[]).includes(section)) back(to, { err: ["Seção desconhecida."] });
+  const label = STATE_PAGE_SECTION_LABELS[section as StatePageSection];
+  return run(fd, { type: "set-state-page-section", section: section as StatePageSection, shown }, `Rascunho salvo: “${label}” ${shown ? "volta para" : "sai da"} página do estado. Publique para valer na loja.`, to);
 }
 
 /** Menu: a region from before the collection menu keeps what it shows and the INK navbar starts following it (once published). */

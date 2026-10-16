@@ -36,7 +36,8 @@ const products = (n: number) => (n === 1 ? "1 produto" : `${numberPt.format(n)} 
  * visitor asks, the grid shows the cards of the WHOLE collection (every page, not only this one) that answer (`/api/colecoes/<region>/<slug>`,
  * rules in search/collection-filter.ts), with the same cards and buttons, over the snapshot only (never INK). Clearing everything brings back the
  * page as the server drew it (`items`, `aside`, `footer`: its count and its page links). Nothing changes in the address: the page stays one cached
- * page per number, with its canonical, and no combination of filters becomes a URL.
+ * page per number, with its canonical, and no combination of filters becomes a URL. The one way in is `?uf=` on arrival (a state page's "Ver todos"),
+ * which starts the state filter.
  *
  * Desktop: one bar of compact selects over the grid. Phones: a "Filtrar" button (with the number of active filters) opens a sheet of chips, with
  * "Limpar filtros" and "Ver N produtos"; the sort stays next to it. A facet with one option offers no choice and is left out; the city facet
@@ -72,6 +73,13 @@ export function CollectionBrowser({
   const active = isCollectionQueryActive(query);
   const key = collectionQueryString(query);
   const searching = collectionQueryTerms(q.trim()).length > 0;
+
+  // A link from a state page ("Ver todos" of "Da Nossa Terra · SC") opens the collection already filtered to that state (`?uf=SC`), when the collection
+  // has products of it. Read once, on the client: the page stays one cached page per number, and the address is never written back.
+  useEffect(() => {
+    const uf = new URLSearchParams(window.location.search).get("uf")?.toUpperCase();
+    if (uf && initialFacets.state.some((o) => o.value === uf)) setFilters((f) => ({ ...f, state: uf }));
+  }, [initialFacets]);
 
   useEffect(() => {
     if (!active) return;

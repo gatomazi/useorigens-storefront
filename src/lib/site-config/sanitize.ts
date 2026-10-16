@@ -13,6 +13,7 @@ import { validateCards } from "./cards-schema";
 import { validateMundo } from "./mundo-schema";
 import { validateNavigation, validateTheme } from "./navigation-schema";
 import { validatePodio } from "./podio-schema";
+import { validateStatePage } from "./state-page-schema";
 import { validatePromotions } from "./promotions-schema";
 import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
@@ -152,7 +153,8 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // The cards' setting as well: an invalid one means each section decides, as before (never the global scope, which carries the tracking, back to the seed).
   // And the pódio switch: an invalid one means the pódio stays on, as before the switch existed.
   // And the "Meu Pequeno Mundo" switch: an invalid one means the env alone decides, as before the switch existed.
-  for (const key of ["navigation", "theme", "promotions", "cards", "podio", "mundo"] as const) {
+  // And the state-page switches: an invalid one means every section shows, as before they existed.
+  for (const key of ["navigation", "theme", "promotions", "cards", "podio", "mundo", "statePage"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
@@ -160,6 +162,7 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
       : key === "cards" ? validateCards(candidate[key], scope, `${scope}.cards`)
       : key === "podio" ? validatePodio(candidate[key], scope, `${scope}.podio`)
       : key === "mundo" ? validateMundo(candidate[key], scope, `${scope}.mundo`)
+      : key === "statePage" ? validateStatePage(candidate[key], scope, `${scope}.statePage`)
       : validatePromotions(candidate[key], scope, `${scope}.promotions`);
     if (!r.ok) {
       diagnostics.push(`${scope}: ${key} is invalid and was ignored (${r.errors[0]})`);

@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { SearchDialog } from "@/components/search/SearchDialog";
+import { SOURCES } from "@/lib/analytics/sources";
+import type { RegionSlug } from "@/lib/geo/regions";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
 import type { StateStyle } from "@/lib/editorial/state-styles";
 import { ProductCarousel } from "./ProductCarousel";
 
 /**
  * "Escolha o estilo" on a state page: one carousel, switched by a row of style buttons (never eight stacked carousels). The first style is
- * selected on load; the other rows are already in the page, so switching is instant and nothing is fetched.
+ * selected on load; the other rows are already in the page, so switching is instant and nothing is fetched. The carousel shows a few of the
+ * state's places, so a quiet "Encontre aqui" under it opens the search for the visitor's own. `stateOf` = "do Paraná", "de Santa Catarina".
  */
-export function StateStyles({ stateName, styles, sourceSection, buy }: { stateName: string; styles: StateStyle[]; sourceSection: string; buy?: CardBuy }) {
+export function StateStyles({ region, stateOf, styles, sourceSection, buy }: { region: RegionSlug; stateOf: string; styles: StateStyle[]; sourceSection: string; buy?: CardBuy }) {
   const [selectedId, setSelectedId] = useState(styles[0]?.id);
   const selected = styles.find((s) => s.id === selectedId) ?? styles[0];
   if (!selected) return null;
@@ -31,17 +35,23 @@ export function StateStyles({ stateName, styles, sourceSection, buy }: { stateNa
   );
 
   return (
-    <ProductCarousel
-      resetKey={selected.id}
-      items={selected.items}
-      labelledBy="styles-title"
-      title="Escolha o estilo"
-      intro={`As camisetas de ${stateName} em cada jeito. ${selected.name}: ${selected.description}`}
-      viewAllHref={selected.viewAllHref ?? undefined}
-      viewAllLabel={`Ver todas de ${selected.name}`}
-      sourceSection={sourceSection}
-      buy={buy}
-      toolbar={chips}
-    />
+    <>
+      <ProductCarousel
+        resetKey={selected.id}
+        items={selected.items}
+        labelledBy="styles-title"
+        title="Escolha o estilo"
+        intro={`As camisetas ${stateOf} em cada jeito. ${selected.name}: ${selected.description}`}
+        viewAllHref={selected.viewAllHref ?? undefined}
+        viewAllLabel={`Ver todas de ${selected.name}`}
+        sourceSection={sourceSection}
+        buy={buy}
+        toolbar={chips}
+      />
+      <div className="mt-4 flex flex-wrap items-center gap-x-2 text-[0.9375rem] text-ink-soft">
+        <span>Não achou a sua cidade?</span>
+        <SearchDialog region={region} variant="link" label="Encontre aqui" source={SOURCES.stateStylesSearch} />
+      </div>
+    </>
   );
 }

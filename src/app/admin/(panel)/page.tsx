@@ -10,7 +10,7 @@ import { currentScope, scopeName, storeOf } from "@/lib/admin/scope";
 import { collectionsStaleReason } from "@/lib/admin/sync-status";
 import { collectionProblems, readabilityProblems } from "@/lib/admin/validate-draft";
 import { loadWorkspace } from "@/lib/admin/workspace";
-import { collectionPageSlug, stateRowCollections, stateRowsReach } from "@/lib/catalog/collection-source";
+import { collectionPageSlug, stateCategoryCollections, stateRowsReach, stateSubcategoryCollections } from "@/lib/catalog/collection-source";
 import { getCollections } from "@/lib/catalog/collections-file";
 import { getCatalog } from "@/lib/catalog/repository";
 import { snapshotStatus } from "@/lib/catalog/snapshot-file";
@@ -48,11 +48,15 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
   const syncedCollections = getCollections().stores[store];
   const catalogPresent = (snapshotStatus().stores.find((c) => c.storeKey === store)?.productCount ?? 0) > 0;
   const stale = collectionsStaleReason(store);
-  // The owner's own list of state-page rows: the ones that show in no state (the "não aparece em nenhum estado" of Páginas de estado).
-  const stateRows = stateRowCollections(scope, ws.doc);
+  // What the owner CHOSE for the state pages and shows in no state: the categories of an own list, the subcategories brought in by hand (or a legacy list).
+  // Automatic ones that show nowhere are not a problem (a public collection with no product of any state).
+  const categories = stateCategoryCollections(scope, ws.doc);
+  const subcategories = stateSubcategoryCollections(scope, ws.doc);
+  const addedByHand = new Set((ws.doc.collections?.stateSubcategories?.added ?? []).map((r) => r.collectionId));
+  const chosen = [...(categories.own ? categories.records : []), ...subcategories.records.filter((c) => subcategories.legacy || addedByHand.has(c.id))];
   const catalog = getCatalog();
   const reach = stateRowsReach(scope, ws.doc, (s) => catalog.productsOfStore(s));
-  const rowsNowhere = stateRows.own ? stateRows.records.filter((c) => (reach.get(c.id) ?? 0) === 0) : [];
+  const rowsNowhere = chosen.filter((c) => (reach.get(c.id) ?? 0) === 0);
   const preview = scope !== "sul" && ws.baseDoc.launched !== true;
   const waitingParts = [waiting.region.pending ? `rascunho de ${scopeName(scope)}` : null, waiting.pages.length ? `${waiting.pages.length} página(s)` : null, waiting.models.length ? `${waiting.models.length} modelo(s)` : null, waiting.global?.pending ? "configuração global" : null].filter(Boolean);
   const attention = openRequests > 0 || waiting.count > 0 || problems.length > 0 || toSite > 0 || !syncedCollections || !catalogPresent || stale !== null || rowsNowhere.length > 0 || preview;
@@ -92,7 +96,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
             )}
             {rowsNowhere.length > 0 && (
               <li className="flex flex-wrap items-center justify-between gap-3 py-3" data-testid="overview-state-rows">
-                <span>Páginas de estado: <strong>{rowsNowhere.map((c) => c.name).join(", ")}</strong> {rowsNowhere.length === 1 ? "está na lista mas não aparece" : "estão na lista mas não aparecem"} em nenhum estado (poucos produtos que também estejam na coleção do estado).</span>
+                <span>Páginas de estado: <strong>{rowsNowhere.map((c) => c.name).join(", ")}</strong> {rowsNowhere.length === 1 ? "foi escolhida mas não aparece" : "foram escolhidas mas não aparecem"} em nenhum estado (menos de 3 produtos do estado ficam no carrossel).</span>
                 <Link href="/admin/estados" className="a-btn sm ghost">Ver por estado</Link>
               </li>
             )}

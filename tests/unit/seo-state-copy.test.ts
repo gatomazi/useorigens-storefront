@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { STATE_NAMES } from "@/lib/geo/regions";
-import { GRAMMAR_UFS, joinStatesOf, stateDemonym, stateIn, stateOf } from "@/lib/seo/state-copy";
+import { GRAMMAR_UFS, joinStatesOf, stateDemonym, stateIn, stateOf, stateOfUf } from "@/lib/seo/state-copy";
 
 describe("state grammar (one map for every title, description and visible text)", () => {
   test("given the approved Sul states, when the preposition is asked, then it is do Paraná, do Rio Grande do Sul and de Santa Catarina", () => {
@@ -31,6 +31,10 @@ describe("state grammar (one map for every title, description and visible text)"
       expect(stateOf(uf).endsWith(STATE_NAMES[uf]), uf).toBe(true);
       expect(stateIn(uf).endsWith(STATE_NAMES[uf]), uf).toBe(true);
     }
+  });
+
+  test("given a state, when the short label is asked, then it keeps the preposition before the UF: do RS, de SC, do PR, do DF, de GO", () => {
+    expect(["RS", "SC", "PR", "DF", "GO", "sc"].map(stateOfUf)).toEqual(["do RS", "de SC", "do PR", "do DF", "de GO", "de SC"]);
   });
 
   test("given lower case, when the grammar is asked, then it still resolves", () => {
