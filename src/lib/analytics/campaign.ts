@@ -78,8 +78,34 @@ function currentCampaign(): Campaign {
   return memoryCampaign;
 }
 
-/** `href` as the visitor should follow it: with this visit's campaign when it goes to an INK store and measurement is allowed. */
+/**
+ * Single-store mode: the region the visitor is browsing goes along to the single store (`origens_r`), so the INK pages there show this region's
+ * navbar, colours and way back (the Worker remembers it in a cookie of the store). It is not measurement: no consent gate. Set by `CampaignCarry`
+ * from the server's commerce mode; null (regional stores) adds nothing.
+ */
+export const REGION_PARAM = "origens_r";
+let carryRegion: { region: string; host: string } | null = null;
+export function setCarryRegion(value: { region: string; host: string } | null): void {
+  carryRegion = value;
+}
+
+/** `href` with the browsed region when it goes to the single store and does not carry one yet; returned as it is otherwise. */
+export function withRegion(href: string, value: { region: string; host: string } | null): string {
+  if (!value) return href;
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return href;
+  }
+  if (url.protocol !== "https:" || url.host !== value.host || url.searchParams.has(REGION_PARAM)) return href;
+  url.searchParams.set(REGION_PARAM, value.region);
+  return url.href;
+}
+
+/** `href` as the visitor should follow it: with this visit's campaign when it goes to an INK store and measurement is allowed, and the region. */
 export function carryCampaign(href: string): string {
-  if (typeof window === "undefined" || !hasAnalyticsConsent()) return href;
-  return withCampaign(href, currentCampaign());
+  if (typeof window === "undefined") return href;
+  const withRegionHref = withRegion(href, carryRegion);
+  return hasAnalyticsConsent() ? withCampaign(withRegionHref, currentCampaign()) : withRegionHref;
 }

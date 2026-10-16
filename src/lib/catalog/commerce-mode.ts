@@ -182,6 +182,12 @@ export const storeForRegion = (region: RegionSlug): CommerceStoreKey => storeFor
  * store ("loja Use Norte", usenorte). Single-store mode: the single store, named neutrally, since it sells the three regions (the checkout's own
  * name and logo are the `checkout-theme` dependency).
  */
+/** Single-store mode: the region to send along on links to the single store (the INK Worker shows that region there); null in regional mode. */
+export function regionCarryFor(region: RegionSlug): { region: RegionSlug; host: string } | null {
+  if (commercePlan().effective !== "single-store") return null;
+  return { region, host: new URL(LEGACY_STORE_URLS.sul).host };
+}
+
 export function checkoutStoreFor(region: RegionSlug): { finishIn: string; linkLabel: string; url: string } {
   if (commercePlan().effective === "single-store") return { finishIn: "na nossa loja online", linkLabel: "Loja online", url: LEGACY_STORE_URLS.sul };
   return { finishIn: `na loja Use ${REGIONS[region].name}`, linkLabel: `Loja Use ${REGIONS[region].name}`, url: LEGACY_STORE_URLS[region] };

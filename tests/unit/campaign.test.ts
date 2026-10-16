@@ -112,4 +112,16 @@ describe("rememberCampaign / carryCampaign", () => {
     const { carryCampaign } = await import("@/lib/analytics/campaign");
     expect(carryCampaign(INK)).toBe(INK);
   });
+
+  test("given single-store mode, then a link to the single store carries the browsed region, even without consent; other hosts and a link with its own region keep theirs", async () => {
+    vi.stubEnv("NEXT_PUBLIC_MEASUREMENT_REQUIRES_CONSENT", "true");
+    stubWindow("?utm_source=meta");
+    const { carryCampaign, setCarryRegion } = await import("@/lib/analytics/campaign");
+    const sul = "https://www.usesul.com.br/usesul/product/belem-territorio-pa";
+    expect(carryCampaign(sul)).toBe(sul); // regional mode: nothing
+    setCarryRegion({ region: "norte", host: "www.usesul.com.br" });
+    expect(carryCampaign(sul)).toBe(`${sul}?origens_r=norte`); // no utm: measurement not allowed
+    expect(carryCampaign(`${sul}?origens_r=sul`)).toBe(`${sul}?origens_r=sul`);
+    expect(carryCampaign("https://www.usenorte.com.br/usenorte/product/x")).toBe("https://www.usenorte.com.br/usenorte/product/x");
+  });
 });
