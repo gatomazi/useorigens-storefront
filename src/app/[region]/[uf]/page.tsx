@@ -235,7 +235,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
 
       {styles.length > 0 && (
         <section id="estilos" className="wrap pb-10 lg:pb-14" aria-labelledby="styles-title">
-          <StateStyles stateName={STATE_NAMES[uf]} styles={styles} sourceSection={SOURCES.stateStyles} buy={buy} />
+          <StateStyles region={region} stateOf={stateOf(uf)} styles={styles} sourceSection={SOURCES.stateStyles} buy={buy} />
         </section>
       )}
 

@@ -15,6 +15,7 @@ import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import { PodioTeaser } from "@/components/podio/PodioTeaser";
 import { getPodiumLeaders } from "@/lib/podio/server";
 import { SOURCES } from "@/lib/analytics/sources";
+import { SearchDialog } from "@/components/search/SearchDialog";
 import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
@@ -97,6 +98,10 @@ export function HomeSections({
                     {s.title}
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
+                  {/* The styles are shown on ONE example city: a quiet way to the visitor's own, through the same search sheet as the header. */}
+                  <div className="mt-3">
+                    <SearchDialog region={region} variant="link" label="Encontre aqui a sua cidade" source={SOURCES.homeStylesSearch} />
+                  </div>
                 </div>
                 <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buy={cardButton} />
               </>
