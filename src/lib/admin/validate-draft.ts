@@ -10,6 +10,7 @@ import { storeOf } from "./scope";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
 import { isUmaPencaSource, type Customizer, type Page, type ScopeDoc, type Section, type Source } from "../site-config/schema";
 import { groundReadability, readability, type ReadabilityIssue } from "./contrast";
+import { isArticleOfRegion } from "../umapenca/region";
 import { readUmaPencaSnapshot } from "../umapenca/snapshot";
 import { ARTICLE_KIND_LABELS } from "../umapenca/types";
 
@@ -58,12 +59,12 @@ export function sourceStatus(section: Section, doc: ScopeDoc): SourceStatus | nu
     return { label, products: lookup.items.length, internal, problem: entry && entry.matchedCount < MIN_USABLE_PRODUCTS ? `só ${entry.matchedCount} produto(s) elegíveis (mínimo ${MIN_USABLE_PRODUCTS})` : null };
   }
   if (src.kind === "umapenca") {
-    // Same rule as an INK collection: a carousel that would render empty is not published. The count is what the synced feed has now.
+    // Same rule as an INK collection: a carousel that would render empty is not published. The count is what the synced feed has now, for this region.
     const label = `Uma Penca · ${src.articleKinds.map((k) => ARTICLE_KIND_LABELS[k].plural).join(" e ")}`;
     const snapshot = readUmaPencaSnapshot();
     if (!snapshot) return { label, products: null, problem: "o feed da Uma Penca ainda não foi sincronizado (npm run umapenca:sync ou o cron)" };
-    const products = snapshot.articles.filter((a) => src.articleKinds.includes(a.kind)).length;
-    return { label, products: Math.min(products, src.limit), problem: products === 0 ? "o feed da Uma Penca não tem produtos desse tipo agora" : null };
+    const products = snapshot.articles.filter((a) => src.articleKinds.includes(a.kind) && isArticleOfRegion(a, region)).length;
+    return { label, products: Math.min(products, src.limit), problem: products === 0 ? "o feed da Uma Penca não tem produtos desse tipo para esta região agora" : null };
   }
   return { label: "Curadoria manual", products: null, problem: REASONS["manual-source-not-implemented"] };
 }

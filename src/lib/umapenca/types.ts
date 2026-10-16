@@ -1,3 +1,5 @@
+import type { RegionSlug } from "../geo/regions";
+
 /** The kinds of "outros artigos" the storefront shows, in display order. A feed item of any other kind is excluded, never guessed. */
 export const ARTICLE_KINDS = ["caneca", "ecobag"] as const;
 export type ArticleKind = (typeof ARTICLE_KINDS)[number];
@@ -22,6 +24,13 @@ export type UmaPencaArticle = {
   /** Promotional price in BRL, only when lower than `price`. */
   salePrice: number | null;
   color: string | null;
+  /**
+   * The region of the place the title names ("Caneca Lá de Palmas – TO" → norte), or null when it names none (shown in every region).
+   * See region.ts. Absent in a snapshot written before the split: read as null until the next sync.
+   */
+  region?: RegionSlug | null;
+  /** The UF of that place, when it is a single one. */
+  uf?: string | null;
 };
 
 export type ExcludedArticle = { id: string; title: string; reason: string };
