@@ -113,7 +113,8 @@ test("given the desktop header of a region with launched neighbours, when read, 
   await open(page, "/norte");
   const header = page.locator("header.site-header");
   const nav = header.getByRole("navigation", { name: "Principal" });
-  await nav.getByText("Regiões", { exact: true }).click();
+  await nav.getByTestId("header-states").click(); // "Estados" (it was "Regiões" next to the "Norte ▾" region switcher, two menus with the same name)
+  await expect(nav.getByTestId("header-states")).toHaveText("Estados");
   await expect(nav.getByRole("link")).toContainText(["Acre", "Amazonas", "Amapá", "Pará", "Rondônia", "Roraima", "Tocantins"]);
   await page.keyboard.press("Escape");
   await header.getByText("Norte", { exact: true }).click();
@@ -166,10 +167,13 @@ test("given the Menu screen, when the labels, order and visibility are edited, t
   expect(await headings(after)).toEqual(["Por estado", "Comprar", "Categorias", "Explorar outras regiões"]);
   expect(await linksOf(after, "primary")).toContain("Escolha o estado");
   expect(await linksOf(after, "states")).toEqual(STATES.norte);
-  // The desktop header reads the same labels.
+  // The desktop header: the "Estados" dropdown leads to the state chooser ("Ver estados"), so the bar does not repeat the home's states link.
   await page.setViewportSize({ width: 1280, height: 900 });
   await open(page, "/norte");
-  await expect(page.locator("header.site-header").getByRole("navigation", { name: "Principal" }).getByRole("link", { name: "Escolha o estado" })).toHaveAttribute("href", "/norte#estados");
+  const bar = page.locator("header.site-header").getByRole("navigation", { name: "Principal" });
+  await expect(bar.getByRole("link", { name: "Escolha o estado" })).toHaveCount(0);
+  await bar.getByTestId("header-states").click();
+  await expect(bar.getByRole("link", { name: "Ver estados" })).toHaveAttribute("href", "/norte#estados");
   // Sul and Centro-Oeste are untouched.
   const sul = await openPublicMenu(page, "sul");
   expect(await headings(sul)).toEqual(["Comprar", "Categorias", "Estados do Sul", "Explorar outras regiões"]);
