@@ -43,7 +43,7 @@ export function MobileMenuPanel({ blocks, interactive = true, onNavigate }: { bl
                 const rich = Boolean(item.badge || item.detail);
                 const content = rich ? (
                   <>
-                    {item.badge && <span aria-hidden="true" className="w-11 shrink-0 font-display text-[1.5rem] font-extrabold uppercase leading-none" style={{ color: "var(--region-accent, currentColor)" }}>{item.badge}</span>}
+                    {item.badge && <span aria-hidden="true" className="w-11 shrink-0 font-display text-[1.5rem] font-extrabold uppercase leading-none opacity-75">{item.badge}</span>}
                     <span className="min-w-0">
                       <span className="block">{item.label}</span>
                       {item.detail && <span className="mt-0.5 block text-[0.875rem] font-normal leading-snug opacity-80">{item.detail}</span>}

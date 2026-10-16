@@ -165,3 +165,19 @@ describe("the publish screen", () => {
     expect(texts).toContain("\"Da Nossa Terra\": descrição no menu “O estado inteiro numa camiseta”");
   });
 });
+
+describe("the accent as text (the opening's last line, the states' UF)", () => {
+  test("given a configured accent that reads on the page ground, when the theme becomes CSS, then it is also the accent ink", async () => {
+    const { resolveTheme, themeCssVars } = await import("@/lib/site-config/navigation");
+    const theme = resolveTheme("sul", { theme: { mode: "override", colors: { accent: "#b0472f", pageBackground: "#f7f3ec" } } }, undefined);
+    expect(themeCssVars(theme.configured, theme.effective)["--region-accent-ink"]).toBe("#b0472f");
+  });
+
+  test("given an accent too light for text on the page (today's sand on a cream page), or no theme, when the theme becomes CSS, then there is no accent ink (the primary colour is used)", async () => {
+    const { resolveTheme, themeCssVars } = await import("@/lib/site-config/navigation");
+    const light = resolveTheme("sul", { theme: { mode: "override", colors: { accent: "#d6ba8d", pageBackground: "#f7f3ec" } } }, undefined);
+    expect(themeCssVars(light.configured, light.effective)).not.toHaveProperty("--region-accent-ink");
+    const none = resolveTheme("sul", undefined, undefined);
+    expect(themeCssVars(none.configured, none.effective)).toEqual({});
+  });
+});

@@ -31,7 +31,11 @@ if (!published) throw new Error("no live release in the local sandbox: run the p
 const plain = (fill: Appearance["fill"] = { kind: "none" }): Appearance => ({ fill, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } });
 const SUL = "use-sul" as const;
 const COLLECTION = { terra: 152188, fala: 152079, jeito: 152187, feito: 152191, seuLugar: 152078, novidades: 153383 } as const;
-const WARM = "#f3eee4"; // a warm light ground for the bands between the grey of the photos (theme stays as it is)
+/**
+ * The approved palette (deep green, warm cream, a terracotta accent), through the region's own theme in the panel (Menu → Tema): nothing in the code
+ * changes colour, and "Usar o tema padrão" brings today's olive back. The INK photos keep their grey: on the cream they read as framed pictures.
+ */
+const PALETTE = { green: "#213b30", cream: "#f7f3ec", terracotta: "#b0472f" } as const;
 
 async function sulDraft(): Promise<DraftRecord> {
   const current = (await readJson<DraftRecord>(draftFile("sul"))) ?? { scope: "sul", rev: 0, updatedAt: "", baseReleaseId: published!.releaseId, doc: published!.docs.sul };
@@ -51,16 +55,12 @@ async function sulDraft(): Promise<DraftRecord> {
     {
       ...hero,
       variant: "feature",
-      title: "A gente leva\na origem no peito.",
+      title: "A gente leva\na origem\nno peito.",
       subtitle: "Sua cidade, suas histórias, seu jeito de falar. Busque a sua e vista o que te representa.",
-      appearance: {
-        fill: { kind: "none" },
-        image: { mobile: { assetId: "legacy:sul/hero-mobile", alt: "", decorative: true }, desktop: { assetId: "legacy:sul/hero-desktop", alt: "", decorative: true } },
-        focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } },
-        overlay: { preset: "regional-wash" },
-      },
+      // The reading half on the page's cream (a photo can go behind it from the panel); the colour paints the product half: a sage of the green.
+      appearance: plain({ kind: "solid", color: "#dfe3d3" }),
     },
-    { ...states, active: true, variant: "strip", title: "Comece pelo seu estado", subtitle: undefined, appearance: plain({ kind: "solid", color: WARM }) },
+    { ...states, active: true, variant: "strip", title: "Comece pelo seu estado", subtitle: undefined, appearance: plain() },
     {
       ...styles,
       active: true,
@@ -95,7 +95,7 @@ async function sulDraft(): Promise<DraftRecord> {
         },
         { label: "Do Nosso Jeito", caption: "Obras, referências e ícones com sotaque local.", format: "product", color: "#e8c9a9", cta: "Ver coleção", dest: { kind: "collection-page", store: SUL, collectionId: COLLECTION.jeito } },
       ],
-      appearance: plain({ kind: "solid", color: WARM }),
+      appearance: plain(),
     },
     {
       ...campaign,
@@ -127,6 +127,21 @@ async function sulDraft(): Promise<DraftRecord> {
   ];
   for (const s of sections) if (s.subtitle === undefined) delete s.subtitle;
   doc.home = { ...doc.home!, sections };
+  doc.theme = {
+    mode: "override",
+    colors: {
+      brandPrimary: PALETTE.green,
+      headerBackground: PALETTE.cream,
+      headerText: PALETTE.green,
+      mobileMenuBackground: PALETTE.green,
+      mobileMenuText: "#ffffff",
+      accent: PALETTE.terracotta,
+      pageBackground: PALETTE.cream,
+      pageText: PALETTE.green,
+    },
+  };
+  // The strip above the header in the deep green, with the line of the approved direction.
+  doc.topBar = { style: "rotate", colors: { background: PALETTE.green, text: "#ffffff" }, messages: [{ id: "editorial-sotaque", enabled: true, text: "Camisetas com sotaque, história e lugar.", order: 1 }] };
   // The menu's hypothesis (Sua cidade · Estados · Coleções · Novidades · Canecas): the in-page "Estilos" link steps out of the bar (Navegação → links).
   doc.navigation = {
     ...(doc.navigation ?? {}),

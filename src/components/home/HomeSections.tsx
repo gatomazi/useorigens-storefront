@@ -77,7 +77,10 @@ export function HomeSections({
       {sections.map((s, index) => {
         const bg = resolveBackground(s.appearance, media);
         switch (s.template) {
-          case "hero":
+          case "hero": {
+            // The "feature" opening: the colour paints the product half, the photo stays behind the reading half.
+            const feature = s.variant === "feature";
+            const panelColor = feature && bg.fill.kind !== "none" ? cssColor(bg.fill.kind === "solid" ? bg.fill.color : bg.fill.from) : undefined;
             return (
               <RegionHero
                 key={s.id}
@@ -86,12 +89,14 @@ export function HomeSections({
                 trio={heroCards(region, s.featured, home.heroFamilies)}
                 config={{}}
                 copy={s.title && s.subtitle ? { title: s.title, body: s.subtitle } : undefined}
-                backdrop={<SectionBackdrop bg={bg} priority={priorityId === s.id} />}
-                variant={s.variant === "feature" ? "feature" : undefined}
+                backdrop={<SectionBackdrop bg={feature ? { ...bg, fill: { kind: "none" } } : bg} priority={priorityId === s.id} />}
+                variant={feature ? "feature" : undefined}
                 buy={cardButton}
                 statesAnchor={statesAnchor}
+                panelColor={panelColor}
               />
             );
+          }
 
           case "city-styles": {
             if (!showcase || !cityPath) return null;

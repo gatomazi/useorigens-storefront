@@ -33,7 +33,7 @@ const PRESETS = [
 const VARIANT_CHOICES: Partial<Record<Section["template"], readonly (readonly [string, string, string])[]>> = {
   hero: [
     ["", "Três produtos", "O título, a busca e até três produtos em cards pequenos ao lado."],
-    ["feature", "Um produto em destaque", "O título, a busca e um único produto grande (o primeiro dos produtos escolhidos abaixo), com nome, preço e “Ver produto →”. No celular, o produto fica logo abaixo da busca."],
+    ["feature", "Um produto em destaque", "O título (a última linha na cor de destaque), a busca e, na outra metade, um único produto grande (o primeiro dos escolhidos abaixo) com nome, preço e “Ver produto →”. A cor de fundo pinta a metade do produto; a imagem fica atrás do texto. No celular, o produto vem depois da busca."],
   ],
   states: [
     ["", "Cartões com capa", "Um cartão por estado, com a capa, as regiões e a linha do estado."],

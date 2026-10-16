@@ -47,7 +47,7 @@ export function regionChrome(region: RegionSlug): RegionChrome {
   return {
     navigation: resolveNavigation({ region, doc, launched: launchedRegions(), coveredUfs: coveredUfs(region), collections: siteCollectionMenu(region, doc), stateDetails: stateDetails(region) }),
     theme,
-    cssVars: themeCssVars(theme.configured),
+    cssVars: themeCssVars(theme.configured, theme.effective),
   };
 }
 

@@ -80,12 +80,17 @@ export function resolveTheme(region: RegionSlug, doc: Pick<ScopeDoc, "theme"> | 
   return { mode, configured, effective, origin };
 }
 
-/** The CSS custom properties a resolved theme adds to the region wrapper: none at all when nothing is configured. */
-export function themeCssVars(configured: Partial<ThemeColors>): Record<string, string> {
+/**
+ * The CSS custom properties a resolved theme adds to the region wrapper: none at all when nothing is configured. With `effective`, a configured accent
+ * that reads as TEXT on the page ground (3:1, large type) also becomes `--region-accent-ink`: the colour of the few words the store draws in the accent
+ * (the last line of the editorial opening, the UF of a state). Unset, those words keep the region's primary colour (`var(--region-accent-ink, …)`).
+ */
+export function themeCssVars(configured: Partial<ThemeColors>, effective?: ThemeColors): Record<string, string> {
   const vars: Record<string, string> = {};
   const c = configured;
   if (c.brandPrimary) Object.assign(vars, { "--region-primary": c.brandPrimary, "--region-primary-rgb": rgbTriplet(c.brandPrimary), "--region-ink": c.brandPrimary });
   if (c.accent) Object.assign(vars, { "--region-accent": c.accent, "--region-fill": c.accent });
+  if (c.accent && effective && contrastRatio(c.accent, effective.pageBackground) >= CONTRAST_BLOCKING) vars["--region-accent-ink"] = c.accent;
   if (c.headerBackground) vars["--nav-header-bg"] = c.headerBackground;
   if (c.headerText) vars["--nav-header-text"] = c.headerText;
   if (c.mobileMenuBackground) vars["--nav-menu-bg"] = c.mobileMenuBackground;

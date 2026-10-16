@@ -35,9 +35,10 @@ export function StateStrip({
   return (
     <section id={anchor} aria-labelledby={headingId} className={["relative isolate border-y border-line", className].filter(Boolean).join(" ")}>
       {backdrop}
-      <div className="wrap grid gap-x-10 gap-y-4 py-8 md:gap-y-6 lg:py-10 xl:grid-cols-[minmax(12rem,1fr)_minmax(0,3.4fr)] xl:items-center">
+      <div className="wrap grid gap-x-10 gap-y-3 py-6 md:gap-y-4 lg:py-8 xl:grid-cols-[minmax(12rem,1fr)_minmax(0,3.4fr)] xl:items-center">
         <div>
-          <h2 id={headingId} className="text-[1.5rem] font-extrabold leading-tight tracking-[-0.02em] sm:text-[1.75rem]">
+          {/* A quiet label, not a headline: the band is a path to the states, and the opening above it carries the page's voice. */}
+          <h2 id={headingId} className="text-[0.8125rem] font-semibold uppercase leading-snug tracking-[0.14em] text-ink-soft">
             {title}
           </h2>
           {subtitle && <p className="t-small mt-1.5 max-w-sm text-ink-soft">{subtitle}</p>}
@@ -50,7 +51,8 @@ export function StateStrip({
                 params={{ state: state.uf, region, source: SOURCES.stateSelector }}
                 className="group grid min-h-16 grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-x-3 py-3 transition-colors hover:bg-black/[0.035] active:bg-black/[0.06] md:min-h-[5.5rem] md:grid-cols-[3.75rem_minmax(0,1fr)] md:px-5 md:py-4"
               >
-                <span aria-hidden="true" className="font-display text-[2.25rem] font-extrabold uppercase leading-none tracking-[0.01em] text-region-primary md:text-[2.75rem]">
+                {/* The region's accent when it reads on the page (theme), else its primary colour. */}
+                <span aria-hidden="true" className="font-display text-[2.25rem] font-extrabold uppercase leading-none tracking-[0.01em] text-[var(--region-accent-ink,var(--region-primary))] md:text-[2.75rem]">
                   {state.uf}
                 </span>
                 <span className="min-w-0">
