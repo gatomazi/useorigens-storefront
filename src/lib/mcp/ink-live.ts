@@ -1,6 +1,6 @@
 import "server-only";
 import type { CommerceStoreKey } from "../geo/regions";
-import { INK_API_BASE_URL, INK_STORES, tokenFor, writeTokenFor } from "../ink/config";
+import { INK_API_BASE_URL, INK_STORES, storeSlugMatches, tokenFor, writeTokenFor } from "../ink/config";
 import { McpToolError } from "./errors";
 import { toCents } from "./money";
 import { parseMcpOrder, type McpOrder } from "./orders-model";
@@ -235,7 +235,7 @@ export async function storeProduct(store: CommerceStoreKey, productId: string, b
     const p = (typeof body.product === "object" && body.product !== null ? body.product : {}) as Record<string, unknown>;
     const s = (typeof p.store === "object" && p.store !== null ? p.store : {}) as Record<string, unknown>;
     if (String(p.id) !== productId) throw new McpToolError("UPSTREAM_UNAVAILABLE", "A INK devolveu um produto ilegível.");
-    if (s.slug !== INK_STORES[store]?.expectedStoreSlug) throw new McpToolError("NOT_FOUND", "Este produto não pertence a esta loja.");
+    if (!storeSlugMatches(store, s.slug)) throw new McpToolError("NOT_FOUND", "Este produto não pertence a esta loja.");
     const t = (v: unknown, max = 200) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
     const pt = (typeof p.product_type === "object" && p.product_type !== null ? p.product_type : {}) as Record<string, unknown>;
     const variants = Array.isArray(p.product_variants) ? p.product_variants : [];

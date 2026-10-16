@@ -2,6 +2,7 @@ import "server-only";
 import { ConfigError } from "../config/env";
 import type { CommerceStoreKey } from "../geo/regions";
 import { INK_COMMERCE_HOSTS } from "./hosts";
+import { SUL_INK, SUL_INK_ALL, SUL_INK_ORIGIN } from "./sul-domain";
 
 /**
  * Regional INK stores that exist today. Credentials are server-only (never NEXT_PUBLIC_*).
@@ -10,7 +11,7 @@ import { INK_COMMERCE_HOSTS } from "./hosts";
 export const INK_STORES: Readonly<
   Partial<Record<CommerceStoreKey, { tokenEnv: string; writeTokenEnv: string; expectedStoreSlug: string }>>
 > = {
-  "use-sul": { tokenEnv: "INK_TOKEN_SUL", writeTokenEnv: "INK_WRITE_TOKEN_SUL", expectedStoreSlug: "usesul" },
+  "use-sul": { tokenEnv: "INK_TOKEN_SUL", writeTokenEnv: "INK_WRITE_TOKEN_SUL", expectedStoreSlug: SUL_INK.storeSlug },
   "use-norte": { tokenEnv: "INK_TOKEN_NORTE", writeTokenEnv: "INK_WRITE_TOKEN_NORTE", expectedStoreSlug: "usenorte" },
   "use-centro": { tokenEnv: "INK_TOKEN_CENTRO", writeTokenEnv: "INK_WRITE_TOKEN_CENTRO", expectedStoreSlug: "usecentro" },
 };
@@ -38,10 +39,26 @@ export const ALLOWED_COMMERCE_HOSTS: ReadonlySet<string> = new Set(INK_COMMERCE_
  * Every host here must also be in `ALLOWED_COMMERCE_HOSTS` (unit-tested).
  */
 export const STORE_PRODUCT_URL_BASE: Readonly<Partial<Record<CommerceStoreKey, string>>> = {
-  "use-sul": "https://www.usesul.com.br/usesul/product",
+  "use-sul": `${SUL_INK_ORIGIN}${SUL_INK.base}/product`,
   "use-norte": "https://www.usenorte.com.br/usenorte/product",
   "use-centro": "https://www.usecentro.com.br/usecentro/product",
 };
+
+/**
+ * Every product-URL prefix INK may send for a store, the active one first. The single store answers on two domains around its move
+ * (src/lib/ink/sul-domain.ts): a URL of either is INK's own and is accepted; links are always REBUILT from `STORE_PRODUCT_URL_BASE` (the active one).
+ */
+export function acceptedStoreProductBases(storeKey: CommerceStoreKey): readonly string[] {
+  if (storeKey === "use-sul") return SUL_INK_ALL.map((d) => `https://${d.host}${d.base}/product`);
+  const base = STORE_PRODUCT_URL_BASE[storeKey];
+  return base ? [base] : [];
+}
+
+/** INK's own store slug for a product of `storeKey` (both slugs of the single store around its move). */
+export function storeSlugMatches(storeKey: CommerceStoreKey, slug: unknown): boolean {
+  if (storeKey === "use-sul") return SUL_INK_ALL.some((d) => d.storeSlug === slug);
+  return slug === INK_STORES[storeKey]?.expectedStoreSlug;
+}
 
 export function tokenFor(storeKey: CommerceStoreKey): string | null {
   const env = INK_STORES[storeKey]?.tokenEnv;

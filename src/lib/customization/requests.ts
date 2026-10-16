@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import { REGIONS } from "../geo/regions";
+import { SUL_INK } from "../ink/sul-domain";
 import { storeForRegion } from "../catalog/commerce-mode";
 import { isUmaPencaProductUrl, UMAPENCA_STORE_HOST } from "../umapenca/hosts";
 import type { ModelSnapshot, Values } from "./validate";
@@ -127,7 +128,7 @@ export interface RequestStore {
 }
 
 /** The store hosts a product link may point to, per region: ONLY that region's own INK store. */
-const STORE_HOST: Record<CommerceStoreKey, string> = { "use-sul": "www.usesul.com.br", "use-norte": "www.usenorte.com.br", "use-centro": "www.usecentro.com.br", "use-origens": "loja.useorigens.com.br" };
+const STORE_HOST: Record<CommerceStoreKey, string> = { "use-sul": SUL_INK.host, "use-norte": "www.usenorte.com.br", "use-centro": "www.usecentro.com.br", "use-origens": "loja.useorigens.com.br" };
 
 /**
  * Validates the "product ready to buy" link an operator typed: https, no credentials or port, the host EXACTLY the region's INK store (so it can never

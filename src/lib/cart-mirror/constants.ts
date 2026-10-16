@@ -1,7 +1,8 @@
 import type { RegionSlug } from "../geo/regions";
+import { SUL_INK, SUL_INK_ORIGIN } from "../ink/sul-domain";
 
 /** Client-safe: imported by browser code too, so it must not pull in server-only modules (`@/lib/site` does). */
-export const INK_SUL_ORIGIN = "https://www.usesul.com.br";
+export const INK_SUL_ORIGIN = SUL_INK_ORIGIN;
 
 /**
  * One INK store (and one Worker) per region. The cart token minted by a region's Worker lives in THAT Worker's KV only, so the storefront
@@ -9,7 +10,7 @@ export const INK_SUL_ORIGIN = "https://www.usesul.com.br";
  * covered by that region's Worker (the loader turns `?origens_open_cart=1` there into the native cart drawer).
  */
 export const CART_MIRROR_STORES: Readonly<Record<RegionSlug, { origin: string; cartPath: string }>> = {
-  sul: { origin: INK_SUL_ORIGIN, cartPath: "/usesul/product/serra-catarinense" },
+  sul: { origin: INK_SUL_ORIGIN, cartPath: `${SUL_INK.base}/product/serra-catarinense` },
   norte: { origin: "https://www.usenorte.com.br", cartPath: "/usenorte/product/acara-origem-pa-51b9a32f-0281-478d-b641-77b8df830cc2" },
   "centro-oeste": { origin: "https://www.usecentro.com.br", cartPath: "/usecentro/product/goiania-origem-go" },
 };
