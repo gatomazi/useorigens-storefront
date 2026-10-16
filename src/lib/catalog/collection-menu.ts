@@ -20,17 +20,8 @@ export function collectionMenuEntries(region: RegionSlug, doc: ScopeDoc | undefi
   // The store that sells in the region (commerce-mode.ts); in single-store mode only the collections that are the region's (collection-source.ts).
   const store = storeForRegion(region);
   const { menu, own } = effectiveMenu(doc);
-  const records = (getStoreCollections(store, filePath)?.collections ?? []).filter((c) => regionShowsCollection(region, c));
-  const entry = (record: CollectionRecord, position: MenuEntry["position"]): MenuEntry => {
-    const pageSlug = collectionPageSlug(doc, store, record.id, filePath);
-    return {
-      ref: { store, collectionId: record.id },
-      record,
-      position,
-      pagePath: pageSlug ? collectionPagePath(region, pageSlug) : null,
-      inkUrl: record.isAvailable && record.matchedCount >= 1 ? collectionUrl(store, record.slug) : null,
-    };
-  };
+  const records = regionRecords(region, filePath);
+  const entry = (record: CollectionRecord, position: MenuEntry["position"]): MenuEntry => ({ ...links(region, doc, record, filePath), position });
   const top = menu.top.filter((r) => r.store === store).flatMap((r) => {
     const record = records.find((c) => c.id === r.collectionId);
     return record ? [entry(record, "top")] : [];
@@ -40,6 +31,35 @@ export function collectionMenuEntries(region: RegionSlug, doc: ScopeDoc | undefi
     .filter((c) => menuPositionOf(menu, { store, collectionId: c.id }, c.isAvailable) === "more")
     .map((c) => entry(c, "more"));
   return { top, more, own };
+}
+
+/** The region's collections, read against the synced collections of the store that sells in it (single-store mode: only the region's own). */
+const regionRecords = (region: RegionSlug, filePath?: string): CollectionRecord[] => (getStoreCollections(storeForRegion(region), filePath)?.collections ?? []).filter((c) => regionShowsCollection(region, c));
+
+/** Where a collection can link: our page (when the region can show it) and its INK page (when it is public and has products). */
+function links(region: RegionSlug, doc: ScopeDoc | undefined, record: CollectionRecord, filePath?: string): Omit<MenuEntry, "position"> {
+  const store = storeForRegion(region);
+  const pageSlug = collectionPageSlug(doc, store, record.id, filePath);
+  return {
+    ref: { store, collectionId: record.id },
+    record,
+    pagePath: pageSlug ? collectionPagePath(region, pageSlug) : null,
+    inkUrl: record.isAvailable && record.matchedCount >= 1 ? collectionUrl(store, record.slug) : null,
+  };
+}
+
+/**
+ * For the panel's Menu screen: the collections that COULD be in the menu (they link somewhere) but are not, in INK's menu order: a public one the owner
+ * took out ("Não exibir") or an internal one, enabled in the CMS, never brought in.
+ */
+export function offMenuEntries(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): Omit<MenuEntry, "position">[] {
+  const store = storeForRegion(region);
+  const { menu } = effectiveMenu(doc);
+  return regionRecords(region, filePath)
+    .sort((a, b) => a.position - b.position || a.id - b.id)
+    .filter((c) => menuPositionOf(menu, { store, collectionId: c.id }, c.isAvailable) === "none")
+    .map((c) => links(region, doc, c, filePath))
+    .filter((e) => e.pagePath !== null || e.inkUrl !== null);
 }
 
 export type SiteMenuLink = { label: string; href: string };

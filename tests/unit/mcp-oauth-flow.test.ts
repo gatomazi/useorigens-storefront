@@ -102,7 +102,7 @@ describe("authorization request", () => {
     const cases: [Record<string, string>, string][] = [
       [{ code_challenge: "" }, "invalid_request"],
       [{ code_challenge_method: "plain" }, "invalid_request"],
-      [{ scope: "origens.write" }, "invalid_scope"],
+      [{ scope: "origens.admin" }, "invalid_scope"],
       [{ resource: "https://evil.example/api/mcp" }, "invalid_target"],
       [{ response_type: "token" }, "unsupported_response_type"],
     ];

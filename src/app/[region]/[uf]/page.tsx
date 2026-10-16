@@ -12,7 +12,10 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { stateShowcase } from "@/lib/editorial/state-showcase";
 import { stateStyles } from "@/lib/editorial/state-styles";
-import { collectionsForRegion } from "@/lib/catalog/collection-source";
+import { collectionPageSlug, collectionsForRegion, stateCollectionRows } from "@/lib/catalog/collection-source";
+import { collectionPagePath } from "@/lib/site-config/sources";
+import { homeBundle } from "@/lib/site-config/flag";
+import { statePageShows } from "@/lib/site-config/state-page-schema";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
 import { StateStyles } from "@/components/catalog/StateStyles";
 import { SOURCES } from "@/lib/analytics/sources";
@@ -23,7 +26,7 @@ import { normalizeText, slugify } from "@/lib/geo/text";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { stateDescription, stateIntro, stateTitle } from "@/lib/seo/copy";
-import { stateOf } from "@/lib/seo/state-copy";
+import { stateOf, stateOfUf } from "@/lib/seo/state-copy";
 import { breadcrumbList } from "@/lib/seo/jsonld";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { SITE_URL } from "@/lib/site";
@@ -88,6 +91,9 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   if (!uf || !isRegionSlug(region)) notFound();
 
   const catalog = getCatalog();
+  const doc = homeBundle().docs[region];
+  // The sections that are not built from collections: the region shows or hides each one in the panel (Páginas de estado). Absent = shown.
+  const shows = { showcase: statePageShows(doc, "showcase"), styles: statePageShows(doc, "styles"), places: statePageShows(doc, "places") };
   const cities = coveredCitiesOfState(region, uf);
   const counts = stateLocalityCounts(cities);
   const hasRegions = counts.administrativeRegions > 0;
@@ -98,7 +104,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   // count — see state-showcase.ts). Hidden entirely when there's nothing real to show, never a placeholder.
   // In the Federal District the administrative regions are the places: the showcase is THEIR products (one per region, by real sales signal
   // then A–Z), with no "capital" put first and no product of the municipality of Brasília among them.
-  const showcase = stateShowcase({
+  const showcase = !shows.showcase ? [] : stateShowcase({
     uf,
     cities: hasRegions ? cities.filter((c) => c.type === "administrative_region") : cities,
     catalog,
@@ -110,7 +116,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   // style-and-state navigation collection.
   // The store-wide buy button (Aparência, global): on these cards too.
   const buy = storeCardButton();
-  const styles = stateStyles({
+  const styles = !shows.styles ? [] : stateStyles({
     uf,
     cities: hasRegions ? cities.filter((c) => c.type === "administrative_region") : cities,
     catalog,
@@ -118,6 +124,17 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
     collections: collectionsForRegion(region, (s) => catalog.productsOfStore(s)),
     capitalSlug: hasRegions ? undefined : STATE_CAPITAL_SLUG[uf],
   });
+
+  // The state's own collection ("Pará") as a hierarchy: its categories ("Da Nossa Terra", "Fala Daqui"), the subcategories under them ("Fala de Onde"),
+  // and a last row with what none of them took; each product in the deepest row that shows it (collection-source.ts `stateCollectionRows`,
+  // state-hierarchy.ts). None when the store has no collection named after the state.
+  const stateRows = stateCollectionRows(region, uf, doc, (s) => catalog.productsOfStore(s));
+  // "Ver todos" opens the row's collection page on the site: a category or subcategory filtered to this state (`?uf=`, read by its filters), the
+  // state's own collection as it is. None when that collection has no page in the region.
+  const rowHref = (row: (typeof stateRows)[number]): string | undefined => {
+    const slug = collectionPageSlug(doc, storeForRegion(region), row.collection.id);
+    return slug ? `${collectionPagePath(region, slug)}${row.level === "state" ? "" : `?uf=${uf}`}` : undefined;
+  };
 
   // Editorial mesoregion grouping (ADR 0004), navigation only — not the current IBGE division. Cities
   // without one still appear in A–Z. A state with administrative regions groups them apart from its municipality.
@@ -144,6 +161,8 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   const statePhoto = usableBannerAsset("state", bannerFor(region, "state", uf));
   const capital = hasRegions ? undefined : cities.find((c) => c.slug === STATE_CAPITAL_SLUG[uf]);
   const podium = getStatePodium(region, uf);
+  // Its "Ver camisetas" goes up to the first product row, else down to the places; with neither on the page, the pódio has nowhere to send anyone.
+  const podiumAnchor = showcase.length > 0 ? "camisetas" : stateRows[0] ? `colecao-${stateRows[0].collection.slug}` : styles.length > 0 ? "estilos" : shows.places ? "lugares" : null;
 
   // The state's canonical URL — the same path its metadata declares, never the visitor's current one.
   const share = pageShare(`/${region}/${uf.toLowerCase()}`, stateTitle(uf, counts.administrativeRegions));
@@ -201,15 +220,28 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
         </section>
       )}
 
+      {stateRows.map((row) => (
+        <section key={row.collection.id} id={`colecao-${row.collection.slug}`} className="wrap pb-10 lg:pb-14" aria-labelledby={`state-collection-${row.collection.id}`}>
+          <ProductCarousel
+            items={row.items}
+            labelledBy={`state-collection-${row.collection.id}`}
+            title={row.level === "state" ? `Mais ${stateOfUf(uf)}` : `${row.collection.name.replace(/\s+/g, " ").trim()} · ${uf}`}
+            viewAllHref={rowHref(row)}
+            sourceSection={SOURCES.stateCollection}
+            buy={buy}
+          />
+        </section>
+      ))}
+
       {styles.length > 0 && (
         <section id="estilos" className="wrap pb-10 lg:pb-14" aria-labelledby="styles-title">
-          <StateStyles stateName={STATE_NAMES[uf]} styles={styles} sourceSection={SOURCES.stateStyles} buy={buy} />
+          <StateStyles region={region} stateOf={stateOf(uf)} styles={styles} sourceSection={SOURCES.stateStyles} buy={buy} />
         </section>
       )}
 
       {/* "O Pódio": right after the product rows (showcase, styles), before the editorial context (docs/storefront/podio.md). Absent when there is
           no fresh snapshot or no eligible sale in this UF. Its CTA goes back up to the showcase, or down to the places list without one. */}
-      {podium && <StatePodium podium={podium} productsAnchor={showcase.length > 0 ? "camisetas" : "lugares"} />}
+      {podium && podiumAnchor && <StatePodium podium={podium} productsAnchor={podiumAnchor} />}
 
       {/* Short, real context right where the region/A–Z selection starts, with plain links (the region home and the capital when it has products). */}
       <section className="wrap pb-6 lg:pb-8" aria-label={`Sobre as camisetas ${stateOf(uf)}`}>
@@ -232,8 +264,12 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
         </p>
       </section>
 
-      <div id="lugares" />
-      <StateCityBrowser region={region} uf={uf.toLowerCase()} groups={groups} letters={letters} variant={hasRegions ? "localities" : "cities"} />
+      {shows.places && (
+        <>
+          <div id="lugares" />
+          <StateCityBrowser region={region} uf={uf.toLowerCase()} groups={groups} letters={letters} variant={hasRegions ? "localities" : "cities"} />
+        </>
+      )}
     </>
   );
 }

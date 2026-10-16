@@ -18,8 +18,10 @@ test("given a public collection, when its page is opened, then every product is 
   await expect(page.getByRole("heading", { level: 1, name: "Da Nossa Terra" })).toBeVisible();
   const grid = page.locator("section#produtos");
   await expect(grid.getByRole("heading", { name: "Todos os produtos" })).toBeVisible();
-  const count = await grid.getByText(/\d+ produtos · página 1 de \d+/).innerText();
-  const [, total, pages] = /(\d+) produtos · página 1 de (\d+)/.exec(count)!.map(Number);
+  // The compact header carries the total ("83 produtos", thousands with a dot); next to the grid only the page number remains.
+  const hero = page.locator("section", { has: page.getByRole("heading", { level: 1, name: "Da Nossa Terra" }) });
+  const total = Number((await hero.getByText(/^[\d.]+ produtos?$/).innerText()).replace(/\D/g, ""));
+  const pages = Number(/página 1 de (\d+)/.exec(await grid.getByText(/página 1 de \d+/).innerText())![1]);
   expect(pages).toBe(Math.ceil(total / 24));
   await expect(grid.locator("ul > li")).toHaveCount(24);
   // Every card opens the product on INK (detail, cart and checkout stay there).

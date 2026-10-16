@@ -49,9 +49,9 @@ test("given the local CMS, when a collection section is created, styled, reorder
   await page.locator("table.a-table tbody tr", { hasText: "Fé de Origem" }).getByRole("button", { name: "Habilitar" }).click();
   await expect(page.getByText(/“Fé de Origem” habilitada para uso no CMS/)).toBeVisible();
   await expect(page.locator("table.a-table tbody tr", { hasText: "Fé de Origem" })).toContainText("Habilitada no CMS");
-  // Enabling one does not enable its neighbours.
-  await page.goto("/admin/colecoes?q=sul+-+rs", { waitUntil: "domcontentloaded" });
-  await expect(page.locator("table.a-table tbody tr", { hasText: "SUL - RS" }).first().getByRole("button", { name: "Habilitar" })).toBeVisible();
+  // Enabling one does not enable its neighbours (Sul's segment collections are named "ZZ - SU - …" since 10/10/2026; the IDs did not change).
+  await page.goto("/admin/colecoes?q=zz+-+su+-+rs", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("table.a-table tbody tr", { hasText: "ZZ - SU - RS" }).first().getByRole("button", { name: "Habilitar" })).toBeVisible();
 
   // 2b. Autocomplete (keyboard) in the section creator picks it; the saved link is store + id.
   await open(page, "/admin/home");

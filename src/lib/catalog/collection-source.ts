@@ -1,10 +1,12 @@
 import "server-only";
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
-import { PAGE_SLUG, RESERVED_SLUGS, type ScopeDoc } from "../site-config/schema";
+import { effectiveMenu } from "../site-config/collection-menu";
+import { PAGE_SLUG, RESERVED_SLUGS, type CollectionRef, type ScopeDoc, type StateSubcategories } from "../site-config/schema";
 import { arrangeMembers, type CategoryArrangement, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type InkCategorySource, type UnavailableReason } from "../site-config/sources";
 import { discountPercent, formatListPrice, formatPrice } from "../format";
-import { isRegionSlug, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { isRegionSlug, REGIONS, STATE_NAMES, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { normalizeText } from "../geo/text";
 import { commercePlan, storeForRegion } from "./commerce-mode";
 import { getCatalog } from "./repository";
 import { purchaseUrl } from "./commerce";
@@ -12,6 +14,7 @@ import { collectionState, completeMembers, MIN_USABLE_PRODUCTS, type CollectionR
 import { findCollection, getStoreCollections } from "./collections-file";
 import { DESIGN_FAMILIES } from "./families";
 import { localityOfBinding } from "./locality-binding";
+import { stateHierarchyRows, type StateHierarchyRow } from "./state-hierarchy";
 import type { StoreProducts } from "./repository";
 import type { MerchProduct, UnrankedBinding } from "./types";
 import { umaPencaLookup } from "../umapenca/carousel";
@@ -60,10 +63,36 @@ export const selectableEntries = (store: CommerceStoreKey, enabledInternal: Read
 function merchItem(product: MerchProduct): CarouselItem | null {
   const href = purchaseUrl(product);
   if (!href) return null;
+  const state = merchStates(product.commerceStoreKey).get(product.inkProductId);
   return {
     id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href,
     ...(product.garmentTypeId !== undefined ? { garmentTypeId: product.garmentTypeId } : {}),
+    ...(state ? { state } : {}),
   };
+}
+
+const merchStateMaps = new WeakMap<readonly CollectionRecord[], Map<string, string>>();
+/**
+ * The UF of the store's merch products that are in exactly ONE collection named after a state ("Santa Catarina" > "SC"): the owner's own word that
+ * the product is that state's (a merch product has no city to say it). One in two states' collections gets none, never a guess. Cached per synced file.
+ */
+function merchStates(store: CommerceStoreKey): Map<string, string> {
+  const records = getStoreCollections(store)?.collections;
+  if (!records) return new Map();
+  const cached = merchStateMaps.get(records);
+  if (cached) return cached;
+  const map = new Map<string, string>();
+  const twice = new Set<string>();
+  for (const uf of Object.keys(STATE_NAMES)) {
+    const parent = stateCollectionIn(records, uf);
+    for (const id of parent ? (completeMembers(parent) ?? parent.memberIds) : []) {
+      if (map.has(id) && map.get(id) !== uf) twice.add(id);
+      map.set(id, uf);
+    }
+  }
+  for (const id of twice) map.delete(id);
+  merchStateMaps.set(records, map);
+  return map;
 }
 
 /** A city design has no display name of its own: its family and city are the label ("Ponto de Origem" · "Tijucas · SC"). */
@@ -102,21 +131,30 @@ const regionItem = (products: StoreProducts, id: string, region: RegionSlug | un
 
 /**
  * The collections a region may show (search results, collection pages): those of the region's store under the effective commerce mode. In
- * single-store mode one store's collections serve three regions, so a collection belongs to a region only when EVERY member known in the
- * catalog is a product of that region (evidence from the products themselves, never from the collection's name); mixed or unknown ones are
- * left out. In the regional mode every collection of the region's own store qualifies, as before.
+ * single-store mode one store's collections serve three regions and thematic ones mix them ("Da Nossa Terra" has Sul, Norte and Centro-Oeste
+ * products), so a collection is the region's when it has at least MIN_USABLE_PRODUCTS products of that region (evidence from the products
+ * themselves, never from the name), and the region shows only those. In the regional mode every collection of the region's own store qualifies.
  */
 export function collectionsForRegion(region: RegionSlug, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): CollectionRecord[] {
   const store = storeForRegion(region);
   const all = getStoreCollections(store, filePath)?.collections ?? [];
   if (commercePlan().effective !== "single-store") return all;
   const products = productsOf(store);
-  return all.filter((c) => belongsToRegion(c, products, region));
+  // The count the region shows (search results, "N produtos") is its own products', not the whole mixed collection's.
+  return all.flatMap((c) => {
+    const n = regionMemberCount(c, products, region);
+    return n >= MIN_USABLE_PRODUCTS ? [{ ...c, matchedCount: n }] : [];
+  });
 }
 
+/** How many of a collection's products are about `region` (a thematic collection of the single store mixes the three regions). */
+function regionMemberCount(c: CollectionRecord, products: StoreProducts, region: RegionSlug): number {
+  return (completeMembers(c) ?? c.memberIds).filter((id) => regionOfStoreProduct(products, id) === region).length;
+}
+
+/** A collection is the region's when it has at least MIN_USABLE_PRODUCTS products of the region; it then shows only those (`regionItem`). */
 function belongsToRegion(c: CollectionRecord, products: StoreProducts, region: RegionSlug): boolean {
-  const ids = completeMembers(c) ?? c.memberIds;
-  return ids.length > 0 && ids.every((id) => regionOfStoreProduct(products, id) === region);
+  return regionMemberCount(c, products, region) >= MIN_USABLE_PRODUCTS;
 }
 
 /** Whether a collection of the region's selling store is the region's (`collectionsForRegion`'s rule, one record): always in the regional mode. */
@@ -213,6 +251,142 @@ export function collectionPageLookup(
     const pageCount = Math.ceil(all.length / perPage);
     return { status: "ok", items: all.slice((page - 1) * perPage, page * perPage), total: all.length, page, pageCount };
   };
+}
+
+/**
+ * One row of a state page (state-hierarchy.ts): a category ("Fala Daqui"), a subcategory ("Fala de Onde") or the state's own collection ("Pará"), cut
+ * down to the state's products that no deeper row took.
+ */
+export type StateCollectionRow = StateHierarchyRow<CollectionRecord, CarouselItem>;
+
+/** A row with fewer products than this is not shown (a carousel of one or two cards looks broken); its products go up one level. */
+export const STATE_ROW_MIN_ITEMS = 3;
+
+const stateNameKeys = new Set(Object.values(STATE_NAMES).map(normalizeText));
+const byMenuOrder = (a: CollectionRecord, b: CollectionRecord) => a.position - b.position || a.id - b.id;
+/** A collection that may be a level of the hierarchy: synced as it is now, and never one named after a state (those are the parents). */
+const usableLevel = (c: CollectionRecord) => !c.needsResync && !stateNameKeys.has(normalizeText(c.name));
+
+/** The records of a list of refs of `store`, in the list's order (a ref no longer synced, or not usable as a level, is skipped). */
+function recordsOf(store: CommerceStoreKey, records: readonly CollectionRecord[], refs: readonly CollectionRef[]): CollectionRecord[] {
+  const byId = new Map(records.map((c) => [c.id, c]));
+  return refs.filter((r) => r.store === store).map((r) => byId.get(r.collectionId)).filter((c): c is CollectionRecord => c !== undefined && usableLevel(c));
+}
+
+/**
+ * The CATEGORIES of the region's state pages, in the order they show: the region's own list (`collections.stateCategories`) when it made one; otherwise
+ * automatic, the collections on its menu bar (`menu.top`), in that order.
+ */
+export function stateCategoryCollections(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): { own: boolean; records: CollectionRecord[] } {
+  const store = storeForRegion(region);
+  const records = getStoreCollections(store, filePath)?.collections ?? [];
+  const chosen = doc?.collections?.stateCategories;
+  return { own: chosen !== undefined, records: recordsOf(store, records, chosen ?? effectiveMenu(doc).menu.top) };
+}
+
+/**
+ * The SUBCATEGORIES of the region's state pages, in INK's menu order. AUTOMATIC: every PUBLIC collection of the store that is neither a state's nor a
+ * category (so a new one shows up on its own), minus the ones the region took out (`hidden`, returned apart for the panel), plus the internal ones it
+ * brought in (`collections.stateSubcategories`). `legacy` = a document still carries the exact list of the first state page (`collections.stateRows`):
+ * then that list, in its order, is the subcategories (its categories count as categories).
+ */
+export function stateSubcategoryCollections(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): { legacy: boolean; records: CollectionRecord[]; hidden: CollectionRecord[] } {
+  const store = storeForRegion(region);
+  const records = getStoreCollections(store, filePath)?.collections ?? [];
+  const categories = new Set(stateCategoryCollections(region, doc, filePath).records.map((c) => c.id));
+  const notCategory = (c: CollectionRecord) => !categories.has(c.id);
+  const legacy = doc?.collections?.stateRows;
+  if (legacy) return { legacy: true, records: recordsOf(store, records, legacy).filter(notCategory), hidden: [] };
+  const ids = (refs: readonly CollectionRef[] | undefined) => new Set((refs ?? []).filter((r) => r.store === store).map((r) => r.collectionId));
+  const hidden = ids(doc?.collections?.stateSubcategories?.hidden);
+  const added = ids(doc?.collections?.stateSubcategories?.added);
+  const all = records.filter((c) => usableLevel(c) && notCategory(c) && (c.isAvailable || added.has(c.id))).sort(byMenuOrder);
+  return { legacy: false, records: all.filter((c) => !(c.isAvailable && hidden.has(c.id))), hidden: all.filter((c) => c.isAvailable && hidden.has(c.id)) };
+}
+
+/**
+ * The region's subcategory choice in the shape it is stored (`stateSubcategories`): the stored one, or, for a document that still has the legacy exact
+ * list (`stateRows`), the same choice re-expressed: every automatic collection left out of it is `hidden`, every internal one in it is `added`.
+ */
+export function stateSubcategoryChoice(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): StateSubcategories {
+  const legacy = doc?.collections?.stateRows;
+  const stored = doc?.collections?.stateSubcategories;
+  if (!legacy) return { hidden: [...(stored?.hidden ?? [])], added: [...(stored?.added ?? [])] };
+  const store = storeForRegion(region);
+  const categories = new Set(stateCategoryCollections(region, doc, filePath).records.map((c) => c.id));
+  const kept = new Set(legacy.filter((r) => r.store === store).map((r) => r.collectionId));
+  const records = (getStoreCollections(store, filePath)?.collections ?? []).filter((c) => usableLevel(c) && !categories.has(c.id)).sort(byMenuOrder);
+  const ref = (c: CollectionRecord): CollectionRef => ({ store, collectionId: c.id });
+  return { hidden: records.filter((c) => c.isAvailable && !kept.has(c.id)).map(ref), added: records.filter((c) => !c.isAvailable && kept.has(c.id)).map(ref) };
+}
+
+/** The collection named after a state ("Paraná") among a store's collections, or null. */
+function stateCollectionIn(records: readonly CollectionRecord[], uf: string): CollectionRecord | null {
+  const wanted = normalizeText(STATE_NAMES[uf] ?? "");
+  if (!wanted) return null;
+  return records.filter((c) => normalizeText(c.name) === wanted && !c.needsResync).sort(byMenuOrder)[0] ?? null;
+}
+
+/** The collection named after the state ("Paraná"), the parent of that state's rows; null when the region's store has none. */
+export function stateParentCollection(region: RegionSlug, uf: string, filePath?: string): CollectionRecord | null {
+  return stateCollectionIn(getStoreCollections(storeForRegion(region), filePath)?.collections ?? [], uf);
+}
+
+/** The cards of `ids` as collection `c` shows them in the region: in its arrangement (hidden ones out), only products of the catalog and of this region. */
+function stateRowItems(region: RegionSlug, c: CollectionRecord, ids: readonly string[], doc: ScopeDoc | undefined, products: StoreProducts): CarouselItem[] {
+  return arrangeMembers(ids, arrangementOf(doc, storeForRegion(region), c.id))
+    .map((id) => regionItem(products, id, region))
+    .filter((item): item is CarouselItem => item !== null);
+}
+
+/**
+ * The state page's rows. INK has no parent/child between collections, so the hierarchy is ours (state-hierarchy.ts): the state's own collection ("Pará",
+ * usually internal) > the region's categories > its subcategories, each product in the deepest row that shows it, and a last row with what is left of
+ * the state. Each row in its collection's arrangement for the region, only products of the catalog and of this region, at least `STATE_ROW_MIN_ITEMS`.
+ * No parent, no rows.
+ */
+export function stateCollectionRows(region: RegionSlug, uf: string, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): StateCollectionRow[] {
+  const parent = stateParentCollection(region, uf, filePath);
+  if (!parent) return [];
+  const products = productsOf(storeForRegion(region));
+  return stateHierarchyRows({
+    state: parent,
+    categories: stateCategoryCollections(region, doc, filePath).records,
+    subcategories: stateSubcategoryCollections(region, doc, filePath).records,
+    members: (c) => completeMembers(c) ?? c.memberIds,
+    items: (c, ids) => stateRowItems(region, c, ids, doc, products),
+    min: STATE_ROW_MIN_ITEMS,
+  });
+}
+
+/** One state of the region as the panel explains it: its own collection ("Paraná", with how many of its products the store can show) or none. */
+export type StateParentView = { uf: string; name: string; parent: { id: number; name: string; products: number } | null };
+
+/**
+ * For the panel ("Páginas de estado"): every state's own collection and, for each category and subcategory, how many products its carousel shows on each
+ * state page AFTER the hierarchy (0 = no row there: too few products of the state left for it, or no collection named after the state).
+ */
+export function stateRowMatrix(region: RegionSlug, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): { states: StateParentView[]; counts: Map<number, Record<string, number>> } {
+  const products = productsOf(storeForRegion(region));
+  const candidates = [...stateCategoryCollections(region, doc, filePath).records, ...stateSubcategoryCollections(region, doc, filePath).records];
+  const counts = new Map<number, Record<string, number>>(candidates.map((c) => [c.id, {}]));
+  const states: StateParentView[] = REGIONS[region].ufs.map((uf) => {
+    const parent = stateParentCollection(region, uf, filePath);
+    const rows = parent ? stateCollectionRows(region, uf, doc, productsOf, filePath) : [];
+    for (const c of candidates) counts.get(c.id)![uf] = rows.find((r) => r.level !== "state" && r.collection.id === c.id)?.items.length ?? 0;
+    const members = parent ? (completeMembers(parent) ?? parent.memberIds) : [];
+    return { uf, name: STATE_NAMES[uf] ?? uf, parent: parent ? { id: parent.id, name: parent.name, products: members.filter((id) => regionItem(products, id, region) !== null).length } : null };
+  });
+  return { states, counts };
+}
+
+/** For the panel: in how many of the region's states each category or subcategory shows as a row (0 = it shows nowhere), by collection id. */
+export function stateRowsReach(region: RegionSlug, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): Map<number, number> {
+  const reach = new Map<number, number>();
+  for (const uf of REGIONS[region].ufs) {
+    for (const row of stateCollectionRows(region, uf, doc, productsOf, filePath)) if (row.level !== "state") reach.set(row.collection.id, (reach.get(row.collection.id) ?? 0) + 1);
+  }
+  return reach;
 }
 
 /** The slug of a PUBLIC collection only. An internal collection has no verified public page on INK, so it never gets a link there. */

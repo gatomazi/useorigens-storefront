@@ -67,3 +67,6 @@ next-env.d.ts
 /prototipos/meu-pequeno-mundo/dados/
 /prototipos/meu-pequeno-mundo/pacote/
 /prototipos/meu-pequeno-mundo/contexto/
+
+# rodada de curadoria do "Meu Pequeno Mundo": base do IBGE, rascunhos, cache de páginas (scripts/mundo-curadoria)
+/.mundo-curadoria/

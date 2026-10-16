@@ -1,12 +1,14 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { describe, expect, test } from "vitest";
+import type { CollectionRecord, CollectionsSnapshot } from "@/lib/catalog/collections";
 import { buildStoreIndex } from "@/lib/catalog/indexer";
 import type { CatalogSnapshot } from "@/lib/catalog/types";
 import type { GarmentIndex } from "@/lib/catalog/garment-index-file";
 import { citiesByName } from "@/lib/geo/cities";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { buildProductIndex, searchProducts } from "@/lib/mcp/catalog-index";
+import { buildCategoryIndex, resolveCategories } from "@/lib/mcp/categories";
 import { buildCatalogContext, classifyProduct } from "@/lib/mcp/classify";
 import { decodeCursor, encodeCursor } from "@/lib/mcp/cursor";
 import { McpToolError } from "@/lib/mcp/errors";
@@ -14,17 +16,20 @@ import type { Budget, OrderQuery } from "@/lib/mcp/ink-live";
 import { toCents } from "@/lib/mcp/money";
 import { parseMcpOrder, type McpOrder } from "@/lib/mcp/orders-model";
 import { inPeriod, resolvePeriod } from "@/lib/mcp/period";
+import type { ConfiguredPromotions } from "@/lib/mcp/promotions";
 import { salesRanking, salesSummary } from "@/lib/mcp/sales";
 import { createUseOrigensMcpServer } from "@/lib/mcp/server";
 import * as tools from "@/lib/mcp/tools";
+import type { AllDeps } from "@/lib/mcp/write-tools";
 import { product } from "./fixtures";
+import { fakeWrite } from "./mcp-write-fakes";
 
 // ── Synthetic catalog: Sul sells Joinville/SC (with a garment sibling) and a GO design copied from the Centro-Oeste; Centro sells Goiânia ──
 const SYNC = "2026-10-14T03:00:00.000Z";
 const sul = buildStoreIndex("use-sul", [
   product("Joinville | Origem SC", { id: "101", clusterId: "900" }),
   product("Joinville | Coordenadas SC", { id: "102" }),
-  product("Caneca Use Sul", { id: "103" }),
+  product("Caneca Use Sul", { id: "103", price: 40, listPrice: 50 }),
   product("Bom Jesus | Origem", { id: "104" }),
 ], SYNC);
 const centro = buildStoreIndex("use-centro", [product("Goiânia | Origem GO", { id: "201", storeKey: "use-centro" })], SYNC);
@@ -32,6 +37,30 @@ const snapshot: CatalogSnapshot = { version: 1, stores: { "use-sul": sul, "use-c
 const garments: GarmentIndex = { version: 1, stores: { "use-sul": { syncedAt: SYNC, clusters: { "900": [[178, "150", "joinville-oversized", "product_v2/main_image/150.jpg", 139.9]] } } } };
 const ctx = buildCatalogContext(snapshot, garments);
 const index = buildProductIndex(snapshot, garments);
+// ── Synthetic INK categories: "Território" exists in two stores (two categories, same slug); "SUL - SC" is an internal segmentation ──
+const col = (id: number, name: string, slug: string, position: number, isAvailable: boolean, ids: string[], merch = 0): CollectionRecord => ({ id, name, slug, position, isAvailable, reportedProductCount: ids.length + 3, matchedCount: ids.length, merchCount: merch, cityDesignCount: ids.length - merch, memberIds: ids, allMemberIds: ids });
+const collections: CollectionsSnapshot = {
+  version: 2,
+  stores: {
+    "use-sul": { commerceStoreKey: "use-sul", syncedAt: "2026-10-14T04:00:00.000Z", catalogSyncedAt: SYNC, totalCount: 4, collections: [col(1001, "Território", "territorio", 1, true, ["101", "102"]), col(1002, "Canecas", "canecas", 2, true, ["103"], 1), col(1003, "SUL - SC", "sul-sc", 3, false, ["101", "102", "103"], 1), col(1004, "Vazia", "vazia", 4, true, [])] },
+    "use-centro": { commerceStoreKey: "use-centro", syncedAt: "2026-10-14T04:00:00.000Z", catalogSyncedAt: SYNC, totalCount: 1, collections: [col(2001, "Território", "territorio", 1, true, ["201"])] },
+  },
+};
+const categories = buildCategoryIndex(collections);
+const promotions: ConfiguredPromotions = {
+  source: "published",
+  asOf: "2026-10-14T10:00:00.000Z",
+  regions: [
+    {
+      region: "sul",
+      items: [
+        { id: "leve-mais", type: "coupon", enabled: true, title: "LEVE MAIS", code: "LEVEMAIS", description: "3 peças: R$ 25 OFF", order: 2 },
+        { id: "primeira", type: "coupon", enabled: true, title: "PRIMEIRA COMPRA", code: "PRIMEIRACOMPRA", description: "10% OFF", order: 1, endsAt: "2026-10-01T00:00:00-03:00" },
+        { id: "frete", type: "promotion", enabled: true, title: "Frete Grátis", description: "Frete grátis no Sul", order: 3, startsAt: "2026-11-01T00:00:00-03:00" },
+      ],
+    },
+  ],
+};
 const JOINVILLE = citiesByName("Joinville", ["SC"])[0].id;
 const GOIANIA = citiesByName("Goiânia", ["GO"])[0].id;
 
@@ -61,7 +90,7 @@ const order = (id: number, createdAt: string, items: unknown[], o: Record<string
 const sum = (...v: number[]) => v.reduce((a, b) => a + b, 0);
 const rawSul = [
   // In the period: SC ×2, GO (copied design sold by the Sul) ×1, merch ×1; shipping 15, promotion 10 → total 374.70
-  order(1, "2026-10-13T23:30:00-03:00", [item("101", "Joinville | Origem SC", "109.90", 2), item("999", "Goiânia | Origem GO", "99.90", 1), item("103", "Caneca Use Sul", "50.00", 1)], { shipping_value: "15.00", promotion_value: "10.00", total_value: (sum(219.8, 99.9, 50, 15) - 10).toFixed(2) }),
+  order(1, "2026-10-13T23:30:00-03:00", [item("101", "Joinville | Origem SC", "109.90", 2), item("999", "Goiânia | Origem GO", "99.90", 1), item("103", "Caneca Use Sul", "50.00", 1)], { shipping_value: "15.00", promotion_value: "10.00", promotion_code: "levemais", total_value: (sum(219.8, 99.9, 50, 15) - 10).toFixed(2) }),
   order(2, "2026-10-10T12:00:00-03:00", [item("101", "Joinville | Origem SC", "109.90", 1)], { is_exchange: true, total_value: "109.90" }),
   order(4, "2026-10-10T12:00:00-03:00", [item("101", "Joinville | Origem SC", "109.90", 1)], { payment_status: "Expirado", total_value: "109.90" }),
   // 00:00 of the day after the period, São Paulo time: outside.
@@ -193,7 +222,7 @@ describe("catalog index", () => {
 });
 
 // ── Tools through the MCP protocol, with fake INK ──
-function fakeDeps(over: Partial<tools.ToolDeps> = {}): tools.ToolDeps & { calls: OrderQuery[] } {
+function fakeDeps(over: Partial<AllDeps> = {}): AllDeps & { calls: OrderQuery[] } {
   const calls: OrderQuery[] = [];
   const byStore: Record<string, McpOrder[]> = { "use-sul": parse(rawSul, "use-sul"), "use-centro": parse(rawCentro, "use-centro"), "use-norte": [] };
   return {
@@ -202,6 +231,8 @@ function fakeDeps(over: Partial<tools.ToolDeps> = {}): tools.ToolDeps & { calls:
     stores: ["use-sul", "use-norte", "use-centro"],
     hasCredential: (s) => s !== "use-norte",
     catalog: () => ({ index, ctx }),
+    categories: () => categories,
+    promotions: () => promotions,
     newBudget: (): Budget => ({ maxRequests: 45, used: 0, deadline: Date.now() + 50_000 }),
     storeOrders: async (store, q, budget) => {
       calls.push(q);
@@ -217,13 +248,14 @@ function fakeDeps(over: Partial<tools.ToolDeps> = {}): tools.ToolDeps & { calls:
     storeProduct: async () => {
       throw new McpToolError("UPSTREAM_UNAVAILABLE", "fora do ar");
     },
+    write: fakeWrite(),
     ...over,
   };
 }
 
 const GRANT = { subject: "01J00000000000000000000000", email: "dono@example.com", clientId: "mcp_testclient000000000000", scopes: ["origens.read"], expiresAt: 2_000_000_000, resource: "https://www.useorigens.com.br/api/mcp" };
 
-async function connect(deps: tools.ToolDeps, log: (l: Record<string, unknown>) => void = () => undefined) {
+async function connect(deps: AllDeps, log: (l: Record<string, unknown>) => void = () => undefined) {
   const server = createUseOrigensMcpServer(GRANT, deps, log);
   const [a, b] = InMemoryTransport.createLinkedPair();
   await server.connect(a);
@@ -233,10 +265,10 @@ async function connect(deps: tools.ToolDeps, log: (l: Record<string, unknown>) =
 }
 
 describe("MCP server", () => {
-  test("lists the eight tools, all annotated read-only, idempotent and non-destructive, each with an output schema", async () => {
+  test("a read-only grant lists the twelve read tools, all annotated read-only, idempotent and non-destructive, each with an output schema", async () => {
     const client = await connect(fakeDeps());
     const { tools: listed } = await client.listTools();
-    expect(listed.map((t) => t.name).sort()).toEqual(["origens_capabilities", "origens_catalog_status", "origens_get_order", "origens_get_product", "origens_list_orders", "origens_sales_ranking", "origens_sales_summary", "origens_search_products"]);
+    expect(listed.map((t) => t.name).sort()).toEqual(["origens_capabilities", "origens_catalog_status", "origens_get_exchange", "origens_get_order", "origens_get_product", "origens_list_categories", "origens_list_exchanges", "origens_list_orders", "origens_promotions", "origens_sales_ranking", "origens_sales_summary", "origens_search_products"]);
     for (const t of listed) {
       expect(t.annotations).toMatchObject({ readOnlyHint: true, destructiveHint: false, idempotentHint: true });
       expect(t.outputSchema).toBeTruthy();
@@ -303,5 +335,122 @@ describe("MCP server", () => {
     const r = await client.callTool({ name: "origens_sales_ranking", arguments: { dimension: "cpf_do_cliente" } });
     expect(r.isError).toBe(true);
     expect(deps.calls).toHaveLength(0);
+  });
+});
+
+// ── Categories (INK collections) and promotions ──
+type Rows = Record<string, unknown>[];
+const structured = (r: unknown) => (r as { structuredContent: tools.ToolResult }).structuredContent;
+const errorCode = (r: unknown) => JSON.parse((r as { content: { text: string }[] }).content[0].text).error.code as string;
+const PERIOD = { start_date: "2026-09-15", end_date: "2026-10-13" };
+
+describe("categories", () => {
+  test("a slug or name may name a category in several stores, an id names one; an unknown one is an error, never a guess", () => {
+    expect(resolveCategories(categories, "territorio").map((c) => `${c.store}:${c.id}`)).toEqual(["use-sul:1001", "use-centro:2001"]);
+    expect(resolveCategories(categories, "Território", ["use-centro"]).map((c) => c.id)).toEqual([2001]);
+    expect(resolveCategories(categories, "1003").map((c) => c.visibility)).toEqual(["internal"]);
+    expect(() => resolveCategories(categories, "inexistente")).toThrow(McpToolError);
+    expect(categories.entries.find((c) => c.id === 1001)?.url).toBe("https://www.usesul.com.br/usesul/collections/territorio");
+    expect(categories.entries.find((c) => c.id === 1003)?.url).toBeNull();
+  });
+
+  test("ranking by category: a product counts in each of its categories, shares are over the lines, unknown membership is reported apart", async () => {
+    const r = await tools.salesRankingTool(fakeDeps(), { ...PERIOD, dimension: "category" });
+    const data = r.data as { rows: Rows; not_placed: unknown; overlapping: boolean; category_coverage: unknown };
+    expect(data.rows.map((x) => [x.key, x.label, x.units_net, x.share_of_metric])).toEqual([["use-sul:1001", "Território · use-sul", 2, 0.4], ["use-sul:1002", "Canecas · use-sul", 1, 0.2]]);
+    // Goiânia sold by the Sul (999) and the Centro's 777 are not in the catalog: their category is unknown, not "none".
+    expect(data.not_placed).toMatchObject({ reason: "category_membership_unknown", units_net: 2 });
+    expect(data.overlapping).toBe(true);
+    expect(data.category_coverage).toMatchObject({ units_in_some_category: 3, units_without_category: 0, units_membership_unknown: 2 });
+    expect(r.meta.coverage.status).toBe("partial");
+    expect(r.meta.coverage.reason).toContain("fora do snapshot de categorias");
+    const all = (await tools.salesRankingTool(fakeDeps(), { ...PERIOD, dimension: "category", category_visibility: "all" })).data as { rows: Rows };
+    expect(all.rows.map((x) => [x.key, x.units_net])).toEqual([["use-sul:1003", 3], ["use-sul:1001", 2], ["use-sul:1002", 1]]);
+  });
+
+  test("summary filtered by a category that exists in two stores", async () => {
+    const r = await tools.salesSummaryTool(fakeDeps(), { ...PERIOD, category: "territorio" });
+    expect(r.data).toMatchObject({ scope: "items", units_net: 2, orders_with_matching_items: 1, category_coverage: { units_membership_unknown: 2 } });
+    expect(r.meta.filters_applied).toMatchObject({ category: "territorio" });
+    expect(r.meta.coverage.reason).toContain("use-norte");
+    expect(r.meta.coverage.reason).toContain("categoria");
+  });
+
+  test("search by category and on sale; a product shows its categories, and a garment sibling's are unknown", async () => {
+    const client = await connect(fakeDeps());
+    const byCat = structured(await client.callTool({ name: "origens_search_products", arguments: { category: "territorio" } })).data.products as Rows;
+    expect(byCat.map((p) => `${p.store}:${p.product_id}`).sort()).toEqual(["use-centro:201", "use-sul:101", "use-sul:102"]);
+    const onSale = structured(await client.callTool({ name: "origens_search_products", arguments: { on_sale: true } })).data.products as Rows;
+    expect(onSale).toEqual([expect.objectContaining({ product_id: "103", on_sale: true, discount_percent: 20, price: { cents: 4000, brl: "40.00" }, list_price: { cents: 5000, brl: "50.00" } })]);
+    const one = structured(await client.callTool({ name: "origens_get_product", arguments: { store: "use-sul", product_id: "101" } }));
+    expect(one.data.categories).toEqual([{ category_id: 1001, name: "Território", slug: "territorio", visibility: "public" }, { category_id: 1003, name: "SUL - SC", slug: "sul-sc", visibility: "internal" }]);
+    const sibling = structured(await client.callTool({ name: "origens_get_product", arguments: { store: "use-sul", product_id: "150" } }));
+    expect(sibling.data.categories).toMatch(/^desconhecida/);
+  });
+
+  test("list: every category of the synced stores, filters, and a store without categories declared", async () => {
+    const client = await connect(fakeDeps());
+    const all = structured(await client.callTool({ name: "origens_list_categories", arguments: {} }));
+    expect((all.data.categories as Rows).map((c) => `${c.store}:${c.category_id}`)).toEqual(["use-centro:2001", "use-sul:1001", "use-sul:1002", "use-sul:1003"]);
+    expect(all.meta.coverage).toMatchObject({ status: "partial" });
+    expect(all.meta.coverage.reason).toContain("use-norte");
+    const pub = structured(await client.callTool({ name: "origens_list_categories", arguments: { store: "use-sul", visibility: "public", include_empty: true } }));
+    expect((pub.data.categories as Rows).map((c) => c.category_id)).toEqual([1001, 1002, 1004]);
+    expect((pub.data.categories as Rows)[0]).toMatchObject({ products_in_catalog: 2, city_designs: 2, reported_by_ink: 5, url: "https://www.usesul.com.br/usesul/collections/territorio" });
+  });
+
+  test("without a categories snapshot, the category tools say so and the others never read it", async () => {
+    const deps = fakeDeps({
+      categories: () => {
+        throw new McpToolError("CATALOG_UNAVAILABLE", "As categorias da INK ainda não foram sincronizadas neste servidor.");
+      },
+    });
+    const client = await connect(deps);
+    expect(errorCode(await client.callTool({ name: "origens_list_categories", arguments: {} }))).toBe("CATALOG_UNAVAILABLE");
+    expect(errorCode(await client.callTool({ name: "origens_sales_ranking", arguments: { ...PERIOD, dimension: "category" } }))).toBe("CATALOG_UNAVAILABLE");
+    expect((await client.callTool({ name: "origens_sales_summary", arguments: PERIOD })).isError).toBeFalsy();
+    expect(structured(await client.callTool({ name: "origens_capabilities", arguments: {} })).data.categories).toBeNull();
+  });
+});
+
+describe("promotions", () => {
+  test("without a period: the panel's items with their status now, and no INK read", async () => {
+    const deps = fakeDeps();
+    const client = await connect(deps);
+    const r = structured(await client.callTool({ name: "origens_promotions", arguments: {} }));
+    expect(r.meta).toMatchObject({ source: "use_origens_panel", data_as_of: "2026-10-14T10:00:00.000Z", period: null });
+    expect((r.data.configured as Rows).map((i) => [i.id, i.code ?? null, i.status])).toEqual([["primeira", "PRIMEIRACOMPRA", "ended"], ["leve-mais", "LEVEMAIS", "live"], ["frete", null, "scheduled"]]);
+    expect(r.data.usage).toBeNull();
+    expect(deps.calls).toHaveLength(0);
+  });
+
+  test("with a period: usage per code (case ignored) tied to the panel's coupon; orders without code and unused coupons apart", async () => {
+    const r = await tools.promotionsTool(fakeDeps(), PERIOD);
+    const u = r.data.usage as { by_code: Rows; without_code: unknown; configured_coupons_without_orders: unknown };
+    expect(u).toMatchObject({ orders_in_period: 2, orders_with_code: 1, share_of_orders_with_code: 0.5, promotion_discount_total: { cents: 1000 } });
+    expect(u.by_code).toEqual([
+      expect.objectContaining({ code: "LEVEMAIS", stores: ["use-sul"], orders: 1, units_net: 4, order_total: { cents: 37470, brl: "374.70" }, promotion_discount: { cents: 1000, brl: "10.00" }, configured_in_panel: [{ region: "sul", id: "leve-mais", title: "LEVE MAIS", status: "live" }] }),
+    ]);
+    expect(u.without_code).toMatchObject({ orders: 1, units_net: 1, order_total: { cents: 20980 }, orders_with_promotion_discount: 0 });
+    expect(u.configured_coupons_without_orders).toEqual([{ code: "PRIMEIRACOMPRA", region: "sul", id: "primeira", title: "PRIMEIRA COMPRA", status: "ended" }]);
+    expect(r.meta).toMatchObject({ source: "ink_api+use_origens_panel", date_basis: tools.SALES_DATE_BASIS, coverage: { status: "partial" } });
+  });
+
+  test("a region narrows the usage to its own store", async () => {
+    const deps = fakeDeps();
+    const r = await tools.promotionsTool(deps, { ...PERIOD, region: "sul" });
+    expect(r.meta.filters_applied).toEqual({ region: "sul", stores: ["use-sul"] });
+    expect(r.data.usage).toMatchObject({ orders_in_period: 1, orders_with_code: 1 });
+    expect(r.meta.coverage.status).toBe("complete");
+  });
+
+  test("ranking with a coupon code, and by the variant's size", async () => {
+    const withCode = (await tools.salesRankingTool(fakeDeps(), { ...PERIOD, dimension: "design_uf", promotion_code: "LEVEMAIS" })).data as { rows: Rows };
+    expect(withCode.rows.map((x) => [x.key, x.units_net])).toEqual([["SC", 2], ["GO", 1]]);
+    const none = (await tools.salesSummaryTool(fakeDeps(), { ...PERIOD, promotion_code: "OUTRO" })).data;
+    expect(none).toMatchObject({ scope: "items", units_net: 0, orders_with_matching_items: 0 });
+    const bySize = (await tools.salesRankingTool(fakeDeps(), { ...PERIOD, dimension: "size" })).data as { rows: Rows; not_placed: unknown };
+    expect(bySize.rows.map((x) => [x.key, x.label, x.units_net])).toEqual([["m", "M", 5]]);
+    expect(bySize.not_placed).toMatchObject({ reason: "unknown_variant", units_net: 0 });
   });
 });

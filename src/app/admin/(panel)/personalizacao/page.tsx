@@ -31,8 +31,7 @@ export default async function CustomizationScreen({ searchParams }: { searchPara
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Personalização <span className="a-muted">· {scopeName(scope)}</span></h1>
-        <p className="mt-2 flex gap-2"><Link href="/admin/personalizacao" aria-current="page" className="a-btn sm">Modelos</Link><Link href="/admin/personalizacao/solicitacoes" className="a-btn sm ghost">Solicitações</Link></p>
-        <p className="a-muted mt-3 max-w-3xl">Modelos são o que o cliente pode personalizar (linhas de texto, cidade, legenda…). Cada modelo é de uma coleção da INK desta região (camisetas) ou da Uma Penca (canecas e ecobags: o modelo aparece como “Crie a sua” em Outros artigos). <strong>Publicar a página de personalização abre o formulário de solicitação (com nome e contato do cliente) e cada envio cai na fila. Não há checkout: a equipe cria a estampa, fala com o cliente e o orienta a comprar na loja.</strong></p>
+        <p className="a-muted mt-3 max-w-3xl">Modelos são o que o cliente pode personalizar (linhas de texto, cidade, legenda…). Cada modelo é de uma coleção da INK desta região (camisetas) ou da Uma Penca (canecas e ecobags: o modelo aparece como “Crie a sua” em Outros artigos). <strong>Publicar a página de personalização abre o formulário de solicitação (com nome e contato do cliente) e cada envio cai na fila (<Link href="/admin/personalizacao/solicitacoes" className="a-link">Atendimento → Solicitações</Link>). Não há checkout: a equipe cria a estampa, fala com o cliente e o orienta a comprar na loja.</strong></p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
 

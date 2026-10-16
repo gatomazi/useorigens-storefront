@@ -14,6 +14,7 @@ import { validateMundo } from "./mundo-schema";
 import { validateNavigation, validateTheme } from "./navigation-schema";
 import { validateInkTheme } from "./ink-theme-schema";
 import { validatePodio } from "./podio-schema";
+import { validateStatePage } from "./state-page-schema";
 import { validatePromotions } from "./promotions-schema";
 import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
@@ -154,7 +155,8 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // And the pódio switch: an invalid one means the pódio stays on, as before the switch existed.
   // And the "Meu Pequeno Mundo" switch: an invalid one means the env alone decides, as before the switch existed.
   // And the "Tema da INK": an invalid one means every INK surface stays native (never a guessed look).
-  for (const key of ["navigation", "theme", "promotions", "cards", "podio", "mundo", "inkTheme"] as const) {
+  // And the state-page switches: an invalid one means every section shows, as before they existed.
+  for (const key of ["navigation", "theme", "promotions", "cards", "podio", "mundo", "statePage", "inkTheme"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
@@ -162,6 +164,7 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
       : key === "cards" ? validateCards(candidate[key], scope, `${scope}.cards`)
       : key === "podio" ? validatePodio(candidate[key], scope, `${scope}.podio`)
       : key === "mundo" ? validateMundo(candidate[key], scope, `${scope}.mundo`)
+      : key === "statePage" ? validateStatePage(candidate[key], scope, `${scope}.statePage`)
       : key === "inkTheme" ? validateInkTheme(candidate[key], scope, `${scope}.inkTheme`)
       : validatePromotions(candidate[key], scope, `${scope}.promotions`);
     if (!r.ok) {

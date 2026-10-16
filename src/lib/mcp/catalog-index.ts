@@ -109,7 +109,11 @@ export type ProductFilters = {
   family?: DesignFamilyId;
   kind?: ProductEntry["kind"];
   visibility?: ProductEntry["visibility"];
+  /** true = INK's promotional price is below the regular one (`listPriceCents` holds the regular price); false = no promotion. */
+  on_sale?: boolean;
 };
+
+export const isOnSale = (e: Pick<ProductEntry, "priceCents" | "listPriceCents">): boolean => e.priceCents !== null && e.listPriceCents !== null && e.priceCents < e.listPriceCents;
 
 /** Deterministic order: city designs first, then garment variants, then merch; inside, by name, store, id. */
 const KIND_ORDER = { city_design: 0, garment_variant: 1, merch: 2 } as const;
@@ -120,7 +124,7 @@ export function searchProducts(index: ProductIndex, f: ProductFilters): ProductE
   return index.entries
     .filter((e) => (!f.store || e.store === f.store) && (!f.design_region || e.designRegion === f.design_region) && (!f.uf || e.uf === f.uf))
     .filter((e) => (!f.locality_id || e.localityKey === f.locality_id) && (!city || fold(e.localityName ?? "") === city) && (!f.family || e.family === f.family))
-    .filter((e) => (!f.kind || e.kind === f.kind) && (!f.visibility || e.visibility === f.visibility))
+    .filter((e) => (!f.kind || e.kind === f.kind) && (!f.visibility || e.visibility === f.visibility) && (f.on_sale === undefined || isOnSale(e) === f.on_sale))
     .filter((e) => words.every((w) => e.search.includes(w)))
     .sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind] || a.name.localeCompare(b.name, "pt-BR") || a.store.localeCompare(b.store) || a.productId.localeCompare(b.productId));
 }

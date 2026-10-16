@@ -15,6 +15,7 @@ import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import { PodioTeaser } from "@/components/podio/PodioTeaser";
 import { getPodiumLeaders } from "@/lib/podio/server";
 import { SOURCES } from "@/lib/analytics/sources";
+import { SearchDialog } from "@/components/search/SearchDialog";
 import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
@@ -97,6 +98,10 @@ export function HomeSections({
                     {s.title}
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
+                  {/* The styles are shown on ONE example city: a quiet way to the visitor's own, through the same search sheet as the header. */}
+                  <div className="mt-3">
+                    <SearchDialog region={region} variant="link" label="Encontre aqui a sua cidade" source={SOURCES.homeStylesSearch} />
+                  </div>
                 </div>
                 <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buy={cardButton} />
               </>
@@ -307,11 +312,12 @@ function CarouselSection({
   );
   const pagedFooter = pages && <Pagination key="pages" page={pages.page} pageCount={pages.pageCount} hrefOf={paging?.hrefOf} label={`Páginas de ${s.title}`} dark={tone === "dark"} className="mt-10 justify-center lg:mt-14" />;
   // The facets of the WHOLE collection (every page), counted here on the server: what the filters offer before anything is chosen.
-  const everyCard = pages && searchSlug && pages.total > SEARCH_FROM && s.source.kind === "ink-category" && collectionPage ? collectionPage({ ...s.source, limit: Number.MAX_SAFE_INTEGER }, 1) : null;
+  const everyCard = pages && searchSlug && s.source.kind === "ink-category" && collectionPage ? collectionPage({ ...s.source, limit: Number.MAX_SAFE_INTEGER }, 1) : null;
   const facets = everyCard?.status === "ok" ? collectionFacets(everyCard.items, {}) : null;
   const carousel = pages && pagedGrid ? (
-    // A collection with more than a screenful of products gets its own search and filters, over every page of it.
-    searchSlug && pages.total > SEARCH_FROM && facets ? (
+    // A collection with more than a screenful of products gets its own search and filters, over every page of it; so does a smaller one with products
+    // of more than one state (a state page's "Ver todos" opens it filtered to that state).
+    searchSlug && facets && (pages.total > SEARCH_FROM || facets.state.length > 1) ? (
       <CollectionBrowser region={region} slug={searchSlug} grid={{ ...pagedGrid, compact }} items={items} aside={pagedAside} footer={pagedFooter} facets={facets} />
     ) : (
       <ProductGrid {...pagedGrid} compact={compact} items={items} aside={pagedAside} footer={pagedFooter} />

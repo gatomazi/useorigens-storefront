@@ -18,6 +18,9 @@ o número de perfis não pesa no carregamento.
 4. Rode `npm run mundo:validar`. Corrija todo `FAIL`. Leia os `WARN`.
 5. Gere o protótipo e o pacote, se precisar mostrar fora da loja: `npm run mundo:dados && npm run mundo:prototipo && npm run mundo:pacote`.
 
+Para pesquisar muitas cidades de uma vez (base do IBGE por script, um rascunho por cidade e cada fato conferido pelo trecho literal da
+fonte), siga `docs/mundo/curadoria-agentes.md` com as ferramentas de `scripts/mundo-curadoria/`.
+
 ## Regras de texto
 
 - **Só fato com fonte.** Cada frase do resumo, cada referência e cada curiosidade apontam para pelo menos uma fonte em `fontes`.

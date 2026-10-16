@@ -8,11 +8,13 @@ import type { ProdutoBruto } from "@/lib/catalog/unificado/produto-bruto";
 import { classificarDesenhosSul, classificarRegioesSul, COLECAO_SUL, COLECAO_ZZ_CO, COLECAO_ZZ_NO } from "@/lib/catalog/unificado/reconciliar";
 import { montarColecoes, montarLojaUnica } from "@/lib/catalog/unificado/loja-unica";
 import { syncLojaUnica, IDENTITY_FILE } from "@/lib/catalog/unificado/sync-loja-unica";
-import { categoryLookup, collectionsForRegion, regionShowsCollection } from "@/lib/catalog/collection-source";
+import { categoryLookup, collectionsForRegion } from "@/lib/catalog/collection-source";
+import type { CollectionRecord } from "@/lib/catalog/collections";
+import type { StoreProducts } from "@/lib/catalog/repository";
 import { SINGLE_STORE_DIR } from "@/lib/catalog/commerce-mode";
 import { getCatalog } from "@/lib/catalog/repository";
-import { getStoreCollections, writeCollectionsFile, collectionsPath } from "@/lib/catalog/collections-file";
-import type { InkProductNormalized } from "@/lib/catalog/types";
+import { writeCollectionsFile, collectionsPath } from "@/lib/catalog/collections-file";
+import type { InkProductNormalized, MerchProduct } from "@/lib/catalog/types";
 
 let seq = 7000;
 function produto(name: string, extra: Partial<ProdutoBruto> = {}): ProdutoBruto {
@@ -143,29 +145,26 @@ describe("coleções da loja única", () => {
       for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k];
       else process.env[k] = v;
     });
-    test("then a collection belongs to a region only when every member is of that region; a mixed one is shown nowhere", async () => {
+    test("then a collection is a region's when it has at least 3 of its products, and the region counts only those: a mixed thematic one serves every region it has enough of", async () => {
       const r = montarLojaUnica(classificar(), { modo: "simulacao", syncedAt: "t", fonte: FONTE });
       const d = path.join(dir, SINGLE_STORE_DIR);
       mkdirSync(d, { recursive: true });
-      writeFileSync(path.join(d, "catalog-snapshot.json"), JSON.stringify(r.catalogo));
-      await writeCollectionsFile({ version: 2, stores: { "use-sul": montarColecoes("use-sul", paginas({ "Sul Puro": [curitiba.id], "Norte Puro": [belem.id], Mista: [curitiba.id, belem.id] }), r.catalogo.stores["use-sul"]!, "t") } }, collectionsPath(d));
-      const c = getCatalog();
-      const nomes = (reg: "sul" | "norte" | "centro-oeste") => collectionsForRegion(reg, (s) => c.productsOfStore(s)).map((x) => x.name);
-      expect(nomes("sul")).toEqual(["Sul Puro"]);
-      expect(nomes("norte")).toEqual(["Norte Puro"]);
-      expect(nomes("centro-oeste")).toEqual([]);
+      writeFileSync(path.join(d, "catalog-snapshot.json"), JSON.stringify(r.catalogo)); // makes single-store effective
+      const merch = (id: string, regionSlug: "sul" | "norte"): MerchProduct => ({ inkProductId: id, commerceStoreKey: "use-sul", regionSlug, name: id, slug: id, storeProductUrl: `https://www.usesul.com.br/usesul/product/${id}`, imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/x.jpg", price: 109.9, totalSalesCount: 0, syncedAt: "t" });
+      const fake: StoreProducts = { merch: new Map([...["s1", "s2", "s3"].map((id) => [id, merch(id, "sul")] as const), ...["n1", "n2", "n3", "n4"].map((id) => [id, merch(id, "norte")] as const)]), cityDesigns: new Map() };
+      const rec = (id: number, name: string, ids: string[]): CollectionRecord => ({ id, name, slug: name.toLowerCase().replace(/\s+/g, "-"), position: id, isAvailable: true, reportedProductCount: ids.length, matchedCount: ids.length, merchCount: ids.length, cityDesignCount: 0, memberIds: ids, allMemberIds: ids });
+      await writeCollectionsFile({ version: 2, stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 3, collections: [rec(1, "Sul Puro", ["s1", "s2", "s3"]), rec(2, "Da Nossa Terra", ["s1", "n1", "s2", "n2", "s3", "n3"]), rec(3, "Pouco Norte", ["s1", "s2", "s3", "n4"])] } } }, collectionsPath(d));
+      const of = (reg: "sul" | "norte" | "centro-oeste") => collectionsForRegion(reg, () => fake).map((x) => [x.name, x.matchedCount]);
+      expect(of("sul")).toEqual([["Sul Puro", 3], ["Da Nossa Terra", 3], ["Pouco Norte", 3]]);
+      expect(of("norte")).toEqual([["Da Nossa Terra", 3]]); // "Pouco Norte" has one Norte product: below the minimum
+      expect(of("centro-oeste")).toEqual([]);
     });
 
-    test("then a collection page, the menu and the guide follow the same rule, and a ref to a store that does not sell in the region resolves to nothing", async () => {
+    test("then a ref to a store that does not sell in the region resolves to nothing", async () => {
       const r = montarLojaUnica(classificar(), { modo: "simulacao", syncedAt: "t", fonte: FONTE });
       const d = path.join(dir, SINGLE_STORE_DIR);
       mkdirSync(d, { recursive: true });
       writeFileSync(path.join(d, "catalog-snapshot.json"), JSON.stringify(r.catalogo));
-      await writeCollectionsFile({ version: 2, stores: { "use-sul": montarColecoes("use-sul", paginas({ "Norte Puro": [belem.id], Mista: [curitiba.id, belem.id] }), r.catalogo.stores["use-sul"]!, "t") } }, collectionsPath(d));
-      const byName = (n: string) => getStoreCollections("use-sul")!.collections.find((c) => c.name === n)!;
-      expect(regionShowsCollection("norte", byName("Norte Puro"))).toBe(true);
-      expect(regionShowsCollection("sul", byName("Norte Puro"))).toBe(false);
-      expect(regionShowsCollection("norte", byName("Mista"))).toBe(false);
       const c = getCatalog();
       // A Norte document still pointing at the old regional store: the single store sells Norte now, so that section has nothing to show.
       const lookup = categoryLookup((s) => c.productsOfStore(s), () => new Set(), undefined, undefined, "norte");

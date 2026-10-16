@@ -41,24 +41,25 @@ export const SINGLE_STORE_DIR = "loja-unica";
 export const SINGLE_STORE_DEPENDENCIES: ReadonlyArray<{ id: string; ready: boolean; detail: string }> = [
   {
     id: "cart-mirror-worker",
-    ready: false,
+    ready: true,
     detail:
-      "use-origens-workers: o Worker/KV do espelho de carrinho da usesul.com.br precisa aceitar a volta para /norte e /centro-oeste (hoje cada região tem Worker, KV e origem próprios)",
+      "worker-lojas#25 (no ar em 16/10/2026, use-sul-widget a58d66e4): a usesul atende Sul/Norte/CO pela região de origem (SERVE_REGIONS + cookie origens_r); o espelho volta para /<região> com o cart_ref, lido pela chave da Sul (cartRegionFor)",
   },
   {
     id: "buy-session-worker",
-    ready: false,
-    detail: "use-origens-workers: list-watch.js na usesul.com.br precisa atender ?ls= de listas montadas em /norte e /centro-oeste",
+    ready: true,
+    detail: "worker-lojas#25: a sessão de compra (?ls=) é da loja, não da região — a usesul atende listas montadas em qualquer região; o storefront cunha a sessão na loja que vende",
   },
   {
     id: "checkout-theme",
-    ready: false,
-    detail: "tema/identidade regional no checkout da loja única (nome, logo e links de volta para a região de navegação)",
+    ready: true,
+    detail: "logo nova (três regiões) e nome da loja trocados no painel da INK da usesul pelo dono em 16/10/2026; os textos do storefront já são neutros (checkoutStoreFor)",
   },
   {
     id: "cms-references",
-    ready: false,
-    detail: "publicação do CMS de Norte/Centro-Oeste ainda aponta coleções/produtos de use-norte/use-centro: re-apontar para use-sul antes da virada",
+    ready: true,
+    detail:
+      "não bloqueia: refs antigas de use-norte/use-centro deixam de resolver sem quebrar (a seção some, o painel diz o motivo) e o painel só oferece as coleções da use-sul depois da virada — re-apontar as vitrines de Norte/CO logo após ligar",
   },
 ];
 
@@ -131,7 +132,8 @@ function readSingleStoreSource(file: string): SourceRead {
 
 let lastLogged = "";
 
-export function commercePlan(): CommercePlan {
+/** `dependencies`: tests only (the gate with one still pending). */
+export function commercePlan(dependencies: ReadonlyArray<{ id: string; ready: boolean }> = SINGLE_STORE_DEPENDENCIES): CommercePlan {
   const base = catalogSnapshotDir();
   const setting = commerceModeSetting();
   const diagnostics: string[] = [];
@@ -158,7 +160,7 @@ export function commercePlan(): CommercePlan {
     if (!commerceSimulationAllowed()) return refuse("o snapshot é uma SIMULAÇÃO e COMMERCE_SIMULATION não está ligado");
     diagnostics.push("SIMULAÇÃO: itens ocultos na INK aparecem como ativados e sem link de compra; não usar em produção");
   } else {
-    const pending = SINGLE_STORE_DEPENDENCIES.filter((d) => !d.ready);
+    const pending = dependencies.filter((d) => !d.ready);
     if (pending.length > 0) return refuse(`dependências externas pendentes: ${pending.map((d) => d.id).join(", ")}`);
   }
   return report({ requested: "single-store", effective: "single-store", simulation: read.source.simulation, dataDir: dir, source: read.source, diagnostics });
@@ -182,6 +184,12 @@ export const storeForRegion = (region: RegionSlug): CommerceStoreKey => storeFor
  * store ("loja Use Norte", usenorte). Single-store mode: the single store, named neutrally, since it sells the three regions (the checkout's own
  * name and logo are the `checkout-theme` dependency).
  */
+/** Single-store mode: the region to send along on links to the single store (the INK Worker shows that region there); null in regional mode. */
+export function regionCarryFor(region: RegionSlug): { region: RegionSlug; host: string } | null {
+  if (commercePlan().effective !== "single-store") return null;
+  return { region, host: new URL(LEGACY_STORE_URLS.sul).host };
+}
+
 export function checkoutStoreFor(region: RegionSlug): { finishIn: string; linkLabel: string; url: string } {
   if (commercePlan().effective === "single-store") return { finishIn: "na nossa loja online", linkLabel: "Loja online", url: LEGACY_STORE_URLS.sul };
   return { finishIn: `na loja Use ${REGIONS[region].name}`, linkLabel: `Loja Use ${REGIONS[region].name}`, url: LEGACY_STORE_URLS[region] };

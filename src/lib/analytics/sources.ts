@@ -19,6 +19,10 @@ export const SOURCES = {
   stateSearch: "state_search",
   /** A city page's "Busque outra cidade" field under the styles (it opens the search sheet). */
   citySearch: "city_search",
+  /** "Encontre aqui a sua cidade" under the styles that show one example city (the home's "Sua cidade, de 8 jeitos"); it opens the search sheet. */
+  homeStylesSearch: "home_styles_search",
+  /** "Não achou a sua cidade? Encontre aqui" under a state page's "Escolha o estilo"; it opens the search sheet. */
+  stateStylesSearch: "state_styles_search",
 
   // City selection, outside of search.
   stateMesoregion: "state_mesoregion",
@@ -53,6 +57,8 @@ export const SOURCES = {
   /** The text search results page (`/<region>/busca`): a product card that opens the INK product. */
   search: "search_results",
   stateShowcase: "state_showcase",
+  /** A state page's row of one collection cut down to the state ("Fala Daqui · Pará", collection-source.ts `stateCollectionRows`). */
+  stateCollection: "state_colecao",
   /** "Escolha o estilo" on a state page: the state's city designs of one style (chips switch the style). */
   stateStyles: "state_styles",
   cityStyles: "city_styles",

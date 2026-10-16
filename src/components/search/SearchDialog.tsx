@@ -8,19 +8,22 @@ import { GlobalSearch, SearchIcon } from "./GlobalSearch";
 
 /**
  * The global search (places, designs, collections) as a native modal <dialog> (focus trap and Esc come from the platform): a full-screen sheet
- * on phones, a wide sheet on larger screens. Its triggers: the header icon, the hero field, and the field under a heading of its own (`field`, a
- * city page's "Busque outra cidade"). A field low on a page opens the sheet instead of searching inline, so the phone keyboard never covers
- * the results.
+ * on phones, a wide sheet on larger screens. Its triggers: the header icon, the hero field, the field under a heading of its own (`field`, a
+ * city page's "Busque outra cidade") and a quiet text link next to styles shown on an example (`link`, "Encontre aqui a sua cidade"). A field
+ * low on a page opens the sheet instead of searching inline, so the phone keyboard never covers the results.
  */
 export function SearchDialog({
   region,
   variant = "header",
   source,
+  label = "Busque a sua cidade",
 }: {
   region: RegionSlug;
   variant?: "header" | "hero" | "field" | "cta" | "link";
   /** GA4 `source` for select_city when a result is chosen; defaults to the trigger's own (hero or dialog). */
   source?: string;
+  /** The words of the `link` trigger. */
+  label?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const copy = placeSearchCopy(region);
@@ -51,8 +54,9 @@ export function SearchDialog({
           Encontrar minha cidade
         </button>
       ) : variant === "link" ? (
-        <button type="button" onClick={open} aria-haspopup="dialog" className="link-static min-h-11 font-semibold">
-          Busque a sua cidade
+        <button type="button" onClick={open} aria-haspopup="dialog" className="link-static inline-flex min-h-11 items-center gap-1.5 font-semibold">
+          <SearchIcon className="h-4 w-4 shrink-0" />
+          {label}
         </button>
       ) : (
         <button type="button" onClick={open} className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 px-2 font-semibold sm:px-3" aria-haspopup="dialog">

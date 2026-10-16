@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { currentActor, requireAdminSurface } from "@/lib/admin/auth/guard";
 import { authorizeParams } from "@/lib/mcp/auth/authorize-params";
-import { checkAuthorizeRequest, isLoopbackRedirect, OFFLINE_SCOPE } from "@/lib/mcp/auth/oauth";
+import { checkAuthorizeRequest, isLoopbackRedirect, OFFLINE_SCOPE, WRITE_SCOPE } from "@/lib/mcp/auth/oauth";
 import { mcpResourceFromHeaders, oauthStore } from "@/lib/mcp/auth/resource";
 
 /**
@@ -48,21 +48,33 @@ export default async function AuthorizePage({ searchParams }: { searchParams: Pr
       <div>
         <p className="a-label">O que fica liberado</p>
         <ul className="a-muted mt-2 list-disc space-y-1 pl-5">
-          <li>Consultar produtos, vendas e pedidos das lojas, somente leitura. Nada é alterado na INK.</li>
+          <li>Consultar produtos, categorias, cupons, vendas, pedidos e trocas das lojas.</li>
           <li>Dados de comprador (nome, e-mail, telefone, documento, endereço completo) nunca são enviados ao Claude.</li>
           {scope.includes(OFFLINE_SCOPE) && <li>Manter a conexão ativa: o acesso se renova sozinho e cai depois de 30 dias sem uso.</li>}
         </ul>
       </div>
-      <form method="post" action="/admin/oauth/authorize/decision" className="flex gap-3">
+      <form method="post" action="/admin/oauth/authorize/decision" className="flex flex-col gap-4">
         {[...params.entries()].map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />
         ))}
-        <button className="a-btn" type="submit" name="decision" value="approve">
-          Aprovar
-        </button>
-        <button className="a-btn ghost" type="submit" name="decision" value="deny">
-          Negar
-        </button>
+        <label className="a-card flex items-start gap-3">
+          <input type="checkbox" name="allow_write" value="yes" defaultChecked={scope.includes(WRITE_SCOPE)} className="mt-1" />
+          <span>
+            <strong>Também permitir alterações na INK</strong>
+            <span className="a-muted mt-1 block">
+              Preço, publicar/ocultar, nome, descrição, tags e categorias de produtos; trocar item antes da fábrica; abrir troca. Cada alteração mostra uma prévia e só é gravada
+              com o código de confirmação dela. Sem marcar, a conexão é somente leitura.
+            </span>
+          </span>
+        </label>
+        <div className="flex gap-3">
+          <button className="a-btn" type="submit" name="decision" value="approve">
+            Aprovar
+          </button>
+          <button className="a-btn ghost" type="submit" name="decision" value="deny">
+            Negar
+          </button>
+        </div>
       </form>
       <p className="a-muted text-[0.875rem]">Você pode desconectar a qualquer momento nas configurações de conectores do Claude.</p>
     </main>

@@ -12,6 +12,7 @@ import { validateMundo, type MundoConfig } from "./mundo-schema";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validateInkTheme, type InkThemeConfig } from "./ink-theme-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
+import { validateStatePage, type StatePageConfig } from "./state-page-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
 import { REGIONS, regionMayUseStore, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS, type ArticleKind } from "../umapenca/types";
@@ -312,6 +313,8 @@ export type ScopeDoc = {
   mundo?: MundoConfig;
   /** REGION only: "O Pódio" switched off (home teaser, state pages and the daily calculation, `podio-schema.ts`). Absent = on. Published with the region. */
   podio?: PodioConfig;
+  /** REGION only: the state-page sections switched off ("Destaques", "Escolha o estilo", "Regiões e cidades", `state-page-schema.ts`). Absent = all on. */
+  statePage?: StatePageConfig;
   /** REGION only: "Tema da INK" (`ink-theme-schema.ts`): how the INK product page, cart and checkout look, by preset. Absent = all off. Published with the region. */
   inkTheme?: InkThemeConfig;
   /**
@@ -354,8 +357,29 @@ export type ScopeDoc = {
      * explicitly, over whatever an older section had.
      */
     arrangements?: CollectionArrangement[];
+    /**
+     * The state page (`/<region>/<uf>`) is a hierarchy: the state's own collection ("Pará") > these CATEGORIES ("Seu Lugar", "Do Nosso Jeito", "Da Nossa
+     * Terra", "Feito Para Você", "Fala Daqui") > the SUBCATEGORIES (`stateSubcategories`; state-hierarchy.ts). Absent = the region's menu bar
+     * (`menu.top`), in its order; present = exactly these, in this order.
+     */
+    stateCategories?: CollectionRef[];
+    /**
+     * The SUBCATEGORIES of the state page ("Fala de Onde" inside "Fala Daqui") are AUTOMATIC: every public collection that is neither a state's nor a
+     * category, in INK's menu order, so a new one shows up on its own. Only what departs from that is stored: `hidden` = public ones the region took out,
+     * `added` = internal ones it brought in. A collection is in at most one list.
+     */
+    stateSubcategories?: StateSubcategories;
+    /**
+     * LEGACY (round 1 of the state page, before the hierarchy): the exact list of collections that became rows. Still read while present (its categories
+     * count as categories, the rest as the only subcategories); the next subcategory edit replaces it with `stateSubcategories`. Never written by new code.
+     */
+    stateRows?: CollectionRef[];
   };
 };
+
+/** At most this many collections chosen for the state page (per list). */
+export const MAX_STATE_ROWS = 20;
+export type StateSubcategories = { hidden: CollectionRef[]; added: CollectionRef[] };
 
 /** `variants` (uploads only): the pre-sized WebP widths the storefront uses as a `srcset`, so an uploaded image never goes through the image optimizer. */
 export type MediaAssetInfo = { src: string; width: number; height: number; variants?: { w: number; src: string }[] };
@@ -849,6 +873,16 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
       items.forEach((r) => { if (isRecord(r)) earlier.add(key(r)); });
     }
   }
+  if (v.stateCategories !== undefined) checkRefList(c, `${path}.stateCategories`, v.stateCategories, MAX_STATE_ROWS);
+  if (v.stateSubcategories !== undefined) {
+    const sub = v.stateSubcategories;
+    if (!isRecord(sub) || !Array.isArray(sub.hidden) || !Array.isArray(sub.added) || Object.keys(sub).some((k) => k !== "hidden" && k !== "added")) return c.fail(`${path}.stateSubcategories`, "must be { hidden: [...], added: [...] }");
+    checkRefList(c, `${path}.stateSubcategories.hidden`, sub.hidden, 300);
+    checkRefList(c, `${path}.stateSubcategories.added`, sub.added, MAX_STATE_ROWS);
+    const hidden = new Set(sub.hidden.filter(isRecord).map((r) => `${r.store}:${r.collectionId}`));
+    sub.added.forEach((r, i) => { if (isRecord(r) && hidden.has(`${r.store}:${r.collectionId}`)) c.fail(`${path}.stateSubcategories.added[${i}]`, "already in hidden"); });
+  }
+  if (v.stateRows !== undefined) checkRefList(c, `${path}.stateRows`, v.stateRows, MAX_STATE_ROWS);
   if (v.arrangements !== undefined) {
     checkRefList(c, `${path}.arrangements`, v.arrangements, MAX_ARRANGEMENTS);
     if (Array.isArray(v.arrangements)) v.arrangements.forEach((a, i) => {
@@ -899,6 +933,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
     const r = validatePodio(input.podio, sc, "doc.podio");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
+  if (input.statePage !== undefined) {
+    const r = validateStatePage(input.statePage, sc, "doc.statePage");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
   if (input.inkTheme !== undefined) {
     const r = validateInkTheme(input.inkTheme, sc, "doc.inkTheme");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
@@ -914,6 +952,9 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
         const lists: [string, unknown][] = [
           ["enabled", input.collections.enabled], ["navbar", input.collections.navbar], ["navbarGroups.top", groups.top], ["navbarGroups.more", groups.more],
           ["menu.top", menu.top], ["menu.hidden", menu.hidden], ["menu.added", menu.added], ["arrangements", input.collections.arrangements],
+          ["stateCategories", input.collections.stateCategories], ["stateRows", input.collections.stateRows],
+          ["stateSubcategories.hidden", isRecord(input.collections.stateSubcategories) ? input.collections.stateSubcategories.hidden : undefined],
+          ["stateSubcategories.added", isRecord(input.collections.stateSubcategories) ? input.collections.stateSubcategories.added : undefined],
         ];
         for (const [key, list] of lists) {
           if (!Array.isArray(list)) continue;

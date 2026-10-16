@@ -7,6 +7,7 @@ import type { StoreIndex } from "@/lib/catalog/types";
 const mocks = vi.hoisted(() => ({ fetchStoreProducts: vi.fn(), buildStoreIndex: vi.fn() }));
 vi.mock("@/lib/ink/client", () => ({ fetchStoreProducts: mocks.fetchStoreProducts }));
 vi.mock("@/lib/catalog/indexer", () => ({ buildStoreIndex: mocks.buildStoreIndex }));
+vi.mock("@/lib/catalog/unificado/leitura", () => ({ lerColecoes: async () => ({ todas: [], membros: [], paginas: [] }) }));
 
 const index = (over: Partial<StoreIndex> = {}): StoreIndex => ({
   commerceStoreKey: "use-sul",

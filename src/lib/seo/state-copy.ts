@@ -40,6 +40,8 @@ const grammarOf = (uf: string): StateGrammar => {
 
 /** "do Paraná" */
 export const stateOf = (uf: string): string => grammarOf(uf).of;
+/** "do PR", "de SC": the same preposition, before the UF instead of the name (a short label, like a row title on the state page). */
+export const stateOfUf = (uf: string): string => `${grammarOf(uf).of.split(" ")[0]} ${uf.toUpperCase()}`;
 /** "no Paraná" */
 export const stateIn = (uf: string): string => grammarOf(uf).in;
 /** "paranaenses", or undefined when no demonym was approved for the state. */

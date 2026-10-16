@@ -1,7 +1,9 @@
 import { familyById, type DesignFamilyId } from "../catalog/families";
+import { discountPercent } from "../format";
 import { localitiesOfRegion, localityById } from "../geo/localities";
 import { REGIONS, STATE_NAMES, UF_TO_REGION, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
-import { searchProducts, type ProductEntry, type ProductFilters, type ProductIndex } from "./catalog-index";
+import { isOnSale, searchProducts, type ProductEntry, type ProductFilters, type ProductIndex } from "./catalog-index";
+import { categoryKey, resolveCategories, searchCategories, type CategoryEntry, type CategoryFilters, type CategoryIndex } from "./categories";
 import type { CatalogContext } from "./classify";
 import { classifyProduct } from "./classify";
 import { decodeCursor, page } from "./cursor";
@@ -10,10 +12,11 @@ import type { Budget, InkLiveProduct, OrderQuery, StoreOrders } from "./ink-live
 import { money } from "./money";
 import { KNOWN_ORDER_STATUSES, netUnits, type McpOrder } from "./orders-model";
 import { describePeriod, inPeriod, resolvePeriod, TIME_ZONE, type Period } from "./period";
-import { fold, salesRanking, salesSummary, type ItemFilters, type RankDimension, type RankMetric } from "./sales";
+import { configuredRows, promotionUsage, type ConfiguredPromotions } from "./promotions";
+import { fold, salesRanking, salesSummary, type CategoryMatcher, type CategoryTag, type CategoryVisibility, type ItemFilters, type RankDimension, type RankMetric } from "./sales";
 
 /**
- * The eight read-only tools, as plain functions over injected dependencies (the route wires the real INK reader and catalog; tests wire
+ * The ten read-only tools, as plain functions over injected dependencies (the route wires the real INK reader and catalog; tests wire
  * synthetic ones). Each returns `{ meta, data }`: `meta` is the provenance every answer must carry (source, generated_at, data_as_of,
  * period, date_basis, filters_applied, coverage, unclassified_count, next_cursor). "Not available" and "incomplete" are answers; a missing
  * number is never turned into a zero.
@@ -23,6 +26,10 @@ export type ToolDeps = {
   stores: readonly CommerceStoreKey[];
   hasCredential: (store: CommerceStoreKey) => boolean;
   catalog: () => { index: ProductIndex; ctx: CatalogContext };
+  /** INK categories (collections snapshot); throws CATALOG_UNAVAILABLE when never synced. */
+  categories: () => CategoryIndex;
+  /** Coupons and promotions as published in the panel, per region. */
+  promotions: () => ConfiguredPromotions;
   newBudget: () => Budget;
   storeOrders: (store: CommerceStoreKey, q: OrderQuery, budget: Budget) => Promise<StoreOrders>;
   storeOrder: (store: CommerceStoreKey, orderId: string, budget: Budget) => Promise<{ order: McpOrder; fetchedAt: Date }>;
@@ -31,7 +38,7 @@ export type ToolDeps = {
 
 export type Coverage = { status: "complete" | "partial" | "unavailable"; reason: string | null };
 export type Meta = {
-  source: "ink_api" | "use_origens_index" | "ink_api+use_origens_index";
+  source: "ink_api" | "use_origens_index" | "ink_api+use_origens_index" | "use_origens_panel" | "ink_api+use_origens_panel";
   generated_at: string;
   data_as_of: string | null;
   period: ReturnType<typeof describePeriod> | null;
@@ -47,14 +54,14 @@ export const SALES_MAX_DAYS = 186;
 export const ORDERS_MAX_DAYS = 92;
 export const SALES_DATE_BASIS = "order_created_at (dia de São Paulo) com pagamento aprovado no momento da consulta";
 
-const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0)));
-const iso = (d: Date) => d.toISOString();
+export const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0)));
+export const iso = (d: Date) => d.toISOString();
 const oldest = (dates: readonly Date[]) => (dates.length ? iso(new Date(Math.min(...dates.map((d) => d.getTime())))) : null);
 
 // ── Shared input handling ────────────────────────────────────────────────────────────────────────────────────
 
 export type PeriodInput = { start_date?: string; end_date?: string; last_days?: number; include_today?: boolean };
-export type DesignFilterInput = { design_region?: RegionSlug; design_uf?: string; design_city?: string; design_locality_id?: string; family?: DesignFamilyId; product_id?: string; delivery_uf?: string; delivery_city?: string };
+export type DesignFilterInput = { design_region?: RegionSlug; design_uf?: string; design_city?: string; design_locality_id?: string; family?: DesignFamilyId; product_id?: string; delivery_uf?: string; delivery_city?: string; category?: string; promotion_code?: string };
 
 function checkUf(uf: string | undefined, field: string): string | undefined {
   if (uf === undefined) return undefined;
@@ -84,10 +91,52 @@ function itemFilters(input: DesignFilterInput): ItemFilters {
   const design_uf = checkUf(input.design_uf, "design_uf");
   const design_locality = resolveDesignLocality({ ...input, design_uf });
   if (input.design_region && design_uf && UF_TO_REGION[design_uf] !== input.design_region) throw new McpToolError("INVALID_INPUT", "design_uf não pertence à design_region informada.");
-  return clean({ design_region: input.design_region, design_uf, design_locality, family: input.family, product_id: input.product_id, delivery_uf: checkUf(input.delivery_uf, "delivery_uf"), delivery_city: input.delivery_city?.trim() || undefined }) as ItemFilters;
+  return clean({
+    design_region: input.design_region,
+    design_uf,
+    design_locality,
+    family: input.family,
+    product_id: input.product_id,
+    delivery_uf: checkUf(input.delivery_uf, "delivery_uf"),
+    delivery_city: input.delivery_city?.trim() || undefined,
+    category: input.category?.trim() || undefined,
+    promotion_code: input.promotion_code?.trim() || undefined,
+  }) as ItemFilters;
 }
 
-function pickStores(deps: ToolDeps, requested: readonly CommerceStoreKey[] | undefined): { stores: CommerceStoreKey[]; skipped: CommerceStoreKey[] } {
+const categoryTag = (e: CategoryEntry): CategoryTag => ({ key: categoryKey(e), label: `${e.name} · ${e.store}`, store: e.store, id: e.id, slug: e.slug, visibility: e.visibility });
+
+/**
+ * The category side of a sales question, built only when the question uses categories (the snapshot is not read otherwise). The sync matched
+ * members against the catalog's city designs and merch only, so any other sold product (a garment sibling, a product delisted since) has an
+ * UNKNOWN membership (`null`), as has every product of a store whose categories were never synced, or that still has categories recorded by an
+ * older sync with only part of their members.
+ */
+function categoryMatcher(deps: ToolDeps, ref: string | undefined, stores: readonly CommerceStoreKey[], needed: boolean): CategoryMatcher | undefined {
+  if (!ref && !needed) return undefined;
+  const cats = deps.categories();
+  const { index } = deps.catalog();
+  const selected = ref ? new Set(resolveCategories(cats, ref, stores).map(categoryKey)) : undefined;
+  const reliable = new Set(cats.stores.filter((s) => s.incomplete === 0).map((s) => s.store));
+  return {
+    selected,
+    of: (store, productId) => {
+      const k = `${store}:${productId}`;
+      const entry = index.byKey.get(k);
+      if (!entry || entry.kind === "garment_variant" || !reliable.has(store)) return null;
+      return (cats.byProduct.get(k) ?? []).map(categoryTag);
+    },
+  };
+}
+
+/** Units whose category membership is unknown make a category answer partial: said in the coverage, never folded into "no category". */
+function withCategoryCoverage(coverage: Coverage, cc: { units_membership_unknown: number; membership_unknown_share: number } | undefined): Coverage {
+  if (!cc || cc.units_membership_unknown === 0) return coverage;
+  const reason = `${cc.units_membership_unknown} unidade(s) (${Math.round(cc.membership_unknown_share * 1000) / 10}%) são de produtos fora do snapshot de categorias (outros modelos vendidos por link, produtos retirados): a categoria delas não é conhecida`;
+  return { status: "partial", reason: coverage.reason ? `${coverage.reason}; ${reason}` : reason };
+}
+
+export function pickStores(deps: Pick<ToolDeps, "stores" | "hasCredential">, requested: readonly CommerceStoreKey[] | undefined): { stores: CommerceStoreKey[]; skipped: CommerceStoreKey[] } {
   if (requested && requested.length > 0) {
     for (const s of requested) {
       if (!deps.stores.includes(s)) throw new McpToolError("FORBIDDEN", `Loja ${s} não está entre as lojas desta integração.`);
@@ -123,6 +172,12 @@ export async function capabilities(deps: ToolDeps): Promise<ToolResult> {
   } catch (err) {
     catalogError = err instanceof McpToolError ? err.message : "catálogo indisponível";
   }
+  let categories: CategoryIndex["stores"] | null = null;
+  try {
+    categories = deps.categories().stores;
+  } catch {
+    // reported as null: the categories tools then answer CATALOG_UNAVAILABLE
+  }
   return {
     meta: { source: "ink_api+use_origens_index", generated_at: iso(now), data_as_of: catalog ? oldest(catalog.stores.map((s) => new Date(s.syncedAt))) : null, period: null, date_basis: null, filters_applied: {}, coverage: catalogError ? { status: "partial", reason: catalogError } : { status: "complete", reason: null }, unclassified_count: null, next_cursor: null },
     data: {
@@ -131,8 +186,11 @@ export async function capabilities(deps: ToolDeps): Promise<ToolResult> {
       sources: {
         catalog: "Índice da Use Origens (snapshot do catálogo INK + índice de peças por cluster), atualizado pelos syncs do site; preços atuais da INK no momento do sync.",
         orders_and_sales: "API INK ao vivo a cada pergunta (sem base própria de pedidos), cache de 5 minutos por consulta.",
+        categories: "Categorias (coleções) da INK por loja, do snapshot sincronizado pelo site: nome, visibilidade na INK e os produtos do catálogo que pertencem a cada uma.",
+        promotions: "Cupons e promoções como publicados no painel da Use Origens (por região) + promotion_code e promotion_value dos pedidos da INK. A configuração das promoções dentro da INK (regra, valor) não é lida.",
       },
       catalog,
+      categories,
       history: "Pedidos: o histórico que a API INK devolve para cada loja (filtro por dia de criação). Não há histórico de lojas antigas fora da INK.",
       limits: { sales_period_max_days: SALES_MAX_DAYS, orders_period_max_days: ORDERS_MAX_DAYS, list_limit_default: 20, list_limit_max: 100, ranking_limit_default: 10, ranking_limit_max: 50, ink_requests_per_question_max: 45, ink_pace_per_store: "1 requisição/s (a INK permite 100/min por loja, compartilhado com os syncs)" },
       definitions: {
@@ -144,11 +202,24 @@ export async function capabilities(deps: ToolDeps): Promise<ToolResult> {
         design_vs_delivery: "Região/UF/cidade da ESTAMPA vêm da classificação do produto na Use Origens; cidade/UF de ENTREGA vêm do pedido. Loja comercial = origem do pedido, não a região da estampa.",
         unclassified: "Itens sem estampa reconhecida (merch, nome ambíguo, cidade não encontrada) ficam em unclassified com participação informada; nunca são atribuídos por aproximação.",
         campaign: "Não há atribuição de campanha nos pedidos da INK: estes dados não dizem qual anúncio gerou uma venda.",
+        categories:
+          "Categoria = coleção da INK (public = aparece na loja INK; internal = segmentação oculta). Um produto pode estar em várias, então os totais por categoria se sobrepõem. A pertença só é conhecida para estampas clássicas e merch do catálogo; outros modelos (Oversized, Body…) ficam como 'categoria desconhecida', nunca como 'sem categoria'.",
+        promotions:
+          "O painel descreve o cupom; a INK aplica. Status do painel (live, scheduled, ended, disabled) é o de agora. Uso = pedidos pagos do período com aquele promotion_code (sem diferenciar maiúsculas); promotion_discount = promotion_value informado pela INK. Pedido com cupom não prova que o cupom causou a venda.",
+        on_sale: "Produto em promoção = preço promocional da INK abaixo do preço normal no último sync (list_price = preço normal; discount_percent truncado como na INK).",
       },
-      tools: ["origens_capabilities", "origens_search_products", "origens_get_product", "origens_sales_summary", "origens_sales_ranking", "origens_list_orders", "origens_get_order", "origens_catalog_status"],
+      tools: ["origens_capabilities", "origens_search_products", "origens_get_product", "origens_list_categories", "origens_promotions", "origens_sales_summary", "origens_sales_ranking", "origens_list_orders", "origens_get_order", "origens_list_exchanges", "origens_get_exchange", "origens_catalog_status"],
+      write_tools: {
+        tools: ["origens_preview_product_changes", "origens_preview_order_item_edit", "origens_preview_exchange", "origens_confirm_change", "origens_change_status"],
+        available: "Só em conexões autorizadas com \"Também permitir alterações na INK\" e nas lojas com credencial de escrita.",
+        rule: "Toda alteração é prévia (nada muda) → aprovação explícita do dono → origens_confirm_change com o código. Até 25 produtos por prévia; sem excluir, sem reembolso.",
+      },
     },
   };
 }
+
+/** INK's own "% OFF" (truncated, as its page shows it), from cents. */
+const discountOf = (price: number | null, list: number | null): number | undefined => (price === null || list === null ? undefined : discountPercent({ price: price / 100, listPrice: list / 100 }));
 
 const productOut = (e: ProductEntry) =>
   clean({
@@ -166,21 +237,31 @@ const productOut = (e: ProductEntry) =>
     variant: e.designVariant && e.designVariant !== "base" ? e.designVariant : undefined,
     price: e.priceCents === null ? null : money(e.priceCents),
     list_price: e.listPriceCents === null ? undefined : money(e.listPriceCents),
+    on_sale: isOnSale(e) || undefined,
+    discount_percent: discountOf(e.priceCents, e.listPriceCents),
     url: e.url,
     cluster_id: e.clusterId,
   });
 
-export async function searchProductsTool(deps: ToolDeps, input: ProductFilters & { cursor?: string; limit?: number }): Promise<ToolResult> {
+export async function searchProductsTool(deps: ToolDeps, input: ProductFilters & { category?: string; cursor?: string; limit?: number }): Promise<ToolResult> {
   const { index } = deps.catalog();
-  const { cursor, limit = 20, ...filters } = input;
-  const query = clean({ ...filters, uf: checkUf(filters.uf, "uf") }) as ProductFilters;
-  const all = searchProducts(index, query);
+  const { cursor, limit = 20, category, ...filters } = input;
+  const query = clean({ ...filters, uf: checkUf(filters.uf, "uf"), category: category?.trim() || undefined }) as ProductFilters & { category?: string };
+  let all = searchProducts(index, query);
+  if (query.category) {
+    const members = new Set(resolveCategories(deps.categories(), query.category, query.store ? [query.store] : undefined).flatMap((c) => [...c.members].map((id) => `${c.store}:${id}`)));
+    all = all.filter((e) => members.has(`${e.store}:${e.productId}`));
+  }
   const offset = decodeCursor(cursor, query);
   const p = page(all, offset, limit, query);
   const syncs = index.stores.filter((s) => !query.store || s.store === query.store).map((s) => new Date(s.syncedAt));
   return {
     meta: { source: "use_origens_index", generated_at: iso(deps.now()), data_as_of: oldest(syncs), period: null, date_basis: null, filters_applied: query, coverage: { status: "complete", reason: null }, unclassified_count: null, next_cursor: p.next_cursor },
-    data: { total_matches: all.length, products: p.items.map(productOut), note: "Preços atuais da INK no último sync do catálogo. Produtos sem classificação ficam fora desta busca: veja origens_catalog_status." },
+    data: {
+      total_matches: all.length,
+      products: p.items.map(productOut),
+      note: `Preços atuais da INK no último sync do catálogo. Produtos sem classificação ficam fora desta busca: veja origens_catalog_status.${query.category ? " Com categoria, só entram estampas clássicas e merch: a pertença de outros modelos não é conhecida." : ""}`,
+    },
   };
 }
 
@@ -203,6 +284,15 @@ export async function getProductTool(deps: ToolDeps, input: { store: CommerceSto
     }
   }
   if (!entry && !live) throw new McpToolError("NOT_FOUND", "Produto não encontrado no índice desta loja.");
+  let categories: unknown = null;
+  try {
+    const known = entry && entry.kind !== "garment_variant";
+    const list = known ? (deps.categories().byProduct.get(`${input.store}:${input.product_id}`) ?? []).map((c) => ({ category_id: c.id, name: c.name, slug: c.slug, visibility: c.visibility })) : null;
+    categories = !list ? "desconhecida: só estampas clássicas e merch do catálogo têm a pertença sincronizada" : list.length ? list : "nenhuma no último sync de categorias";
+  } catch (err) {
+    if (!(err instanceof McpToolError)) throw err;
+    categories = "indisponível: categorias da INK não sincronizadas neste servidor";
+  }
   const design = classifyProduct(input.store, { id: input.product_id, name: live?.name ?? entry?.name ?? "", tags: live?.tags ?? [] }, ctx);
   return {
     meta: { source: live && entry ? "ink_api+use_origens_index" : live ? "ink_api" : "use_origens_index", generated_at: iso(deps.now()), data_as_of: liveAt ? iso(liveAt) : (entry?.syncedAt ?? null), period: null, date_basis: null, filters_applied: { store: input.store, product_id: input.product_id }, coverage, unclassified_count: design.status === "unclassified" ? 1 : 0, next_cursor: null },
@@ -210,6 +300,7 @@ export async function getProductTool(deps: ToolDeps, input: { store: CommerceSto
       index: entry ? productOut(entry) : null,
       in_index: Boolean(entry),
       classification: design.status === "classified" ? { status: "classified", via: design.via, design_uf: design.uf, design_region: design.region, design_locality_id: design.localityKey, design_city: design.localityName, family: design.family } : design,
+      categories,
       live: live
         ? clean({
             name: live.name,
@@ -218,6 +309,7 @@ export async function getProductTool(deps: ToolDeps, input: { store: CommerceSto
             visible_in_store: live.visibleInStore,
             price: live.priceCents === null ? null : money(live.priceCents),
             promotional_price: live.promotionalPriceCents === null ? undefined : money(live.promotionalPriceCents),
+            discount_percent: discountOf(live.promotionalPriceCents, live.priceCents),
             product_type: live.productType,
             cluster_id: live.clusterId,
             url: live.storeProductUrl,
@@ -237,24 +329,113 @@ export async function salesSummaryTool(deps: ToolDeps, input: PeriodInput & Desi
   const filters = itemFilters(input);
   const { stores, skipped } = pickStores(deps, input.stores);
   const { ctx } = deps.catalog();
+  const categories = categoryMatcher(deps, filters.category, stores, false);
   const fetched = await ordersOfPeriod(deps, stores, period, { paymentStatus: "paid" });
-  const summary = salesSummary(fetched.orders, period, ctx, filters);
+  const summary = salesSummary(fetched.orders, period, ctx, filters, categories);
+  const coverage = withCategoryCoverage(ordersCoverage(skipped, fetched.unreadable), "category_coverage" in summary ? summary.category_coverage : undefined);
   return {
-    meta: { source: "ink_api+use_origens_index", generated_at: iso(deps.now()), data_as_of: fetched.dataAsOf, period: describePeriod(period), date_basis: SALES_DATE_BASIS, filters_applied: { stores, ...filters }, coverage: ordersCoverage(skipped, fetched.unreadable), unclassified_count: summary.design_coverage.unclassified_units, next_cursor: null },
+    meta: { source: "ink_api+use_origens_index", generated_at: iso(deps.now()), data_as_of: fetched.dataAsOf, period: describePeriod(period), date_basis: SALES_DATE_BASIS, filters_applied: { stores, ...filters }, coverage, unclassified_count: summary.design_coverage.unclassified_units, next_cursor: null },
     data: { ...summary, ink_requests: fetched.requests, from_cache: fetched.fromCache },
   };
 }
 
-export async function salesRankingTool(deps: ToolDeps, input: PeriodInput & DesignFilterInput & { stores?: CommerceStoreKey[]; dimension: RankDimension; metric?: RankMetric; limit?: number }): Promise<ToolResult> {
+const RANK_CRITERIA: Partial<Record<RankDimension, string>> = {
+  category: "Pelas categorias (coleções da INK) do produto vendido: um produto em várias categorias conta em cada uma, então as linhas se sobrepõem e as participações não somam 100%.",
+  model: "Pelo modelo da variante vendida, como a INK grava no pedido.",
+  size: "Pelo tamanho da variante vendida, como a INK grava no pedido.",
+  color: "Pela cor da variante vendida, como a INK grava no pedido.",
+};
+
+export async function salesRankingTool(
+  deps: ToolDeps,
+  input: PeriodInput & DesignFilterInput & { stores?: CommerceStoreKey[]; dimension: RankDimension; metric?: RankMetric; limit?: number; category_visibility?: CategoryVisibility },
+): Promise<ToolResult> {
   const period = resolvePeriod(input, deps.now(), SALES_MAX_DAYS);
   const filters = itemFilters(input);
   const { stores, skipped } = pickStores(deps, input.stores);
   const { ctx } = deps.catalog();
+  const categories = categoryMatcher(deps, filters.category, stores, input.dimension === "category");
   const fetched = await ordersOfPeriod(deps, stores, period, { paymentStatus: "paid" });
-  const ranking = salesRanking(fetched.orders, period, ctx, { dimension: input.dimension, metric: input.metric ?? "units", limit: input.limit ?? 10, filters });
+  const categoryVisibility = input.dimension === "category" ? (input.category_visibility ?? "public") : undefined;
+  const ranking = salesRanking(fetched.orders, period, ctx, { dimension: input.dimension, metric: input.metric ?? "units", limit: input.limit ?? 10, filters, categories, categoryVisibility });
+  const cc = "category_coverage" in ranking ? ranking.category_coverage : undefined;
+  const criterion = RANK_CRITERIA[input.dimension] ?? (input.dimension.startsWith("design_") || input.dimension === "family" ? "Pela estampa do produto vendido (não pelo endereço de entrega)." : input.dimension.startsWith("delivery_") ? "Pelo endereço de entrega do pedido." : "Por produto/loja.");
   return {
-    meta: { source: "ink_api+use_origens_index", generated_at: iso(deps.now()), data_as_of: fetched.dataAsOf, period: describePeriod(period), date_basis: SALES_DATE_BASIS, filters_applied: { stores, ...filters, dimension: input.dimension, metric: input.metric ?? "units" }, coverage: ordersCoverage(skipped, fetched.unreadable), unclassified_count: ranking.design_coverage.unclassified_units, next_cursor: null },
-    data: { ...ranking, criterion: input.dimension.startsWith("design_") || input.dimension === "family" ? "Pela estampa do produto vendido (não pelo endereço de entrega)." : input.dimension.startsWith("delivery_") ? "Pelo endereço de entrega do pedido." : "Por produto/loja.", ink_requests: fetched.requests },
+    meta: { source: "ink_api+use_origens_index", generated_at: iso(deps.now()), data_as_of: fetched.dataAsOf, period: describePeriod(period), date_basis: SALES_DATE_BASIS, filters_applied: clean({ stores, ...filters, dimension: input.dimension, metric: input.metric ?? "units", category_visibility: categoryVisibility }), coverage: withCategoryCoverage(ordersCoverage(skipped, fetched.unreadable), cc), unclassified_count: ranking.design_coverage.unclassified_units, next_cursor: null },
+    data: { ...ranking, criterion, ink_requests: fetched.requests },
+  };
+}
+
+const categoryOut = (c: CategoryEntry) =>
+  clean({
+    store: c.store,
+    category_id: c.id,
+    name: c.name,
+    slug: c.slug,
+    visibility: c.visibility,
+    position: c.position,
+    products_in_catalog: c.productsInCatalog,
+    city_designs: c.cityDesigns,
+    merch: c.merch,
+    reported_by_ink: c.reportedProducts,
+    url: c.url,
+    membership_complete: c.membershipComplete ? undefined : false,
+  });
+
+export async function listCategoriesTool(deps: ToolDeps, input: CategoryFilters & { cursor?: string; limit?: number }): Promise<ToolResult> {
+  const cats = deps.categories();
+  const { cursor, limit = 50, ...filters } = input;
+  const query = clean(filters) as CategoryFilters;
+  const all = searchCategories(cats, query);
+  const p = page(all, decodeCursor(cursor, query), limit, query);
+  const stores = cats.stores.filter((s) => !query.store || s.store === query.store);
+  const missing = deps.stores.filter((s) => !cats.stores.some((x) => x.store === s));
+  const incomplete = stores.filter((s) => s.incomplete > 0);
+  const reasons = [...(missing.length && !query.store ? [`sem categorias sincronizadas: ${missing.join(", ")}`] : []), ...incomplete.map((s) => `${s.store}: ${s.incomplete} categoria(s) de um sync antigo, com só parte dos produtos (rodar collections:sync)`)];
+  return {
+    meta: { source: "use_origens_index", generated_at: iso(deps.now()), data_as_of: oldest(stores.map((s) => new Date(s.syncedAt))), period: null, date_basis: null, filters_applied: query, coverage: reasons.length ? { status: "partial", reason: reasons.join("; ") } : { status: "complete", reason: null }, unclassified_count: null, next_cursor: p.next_cursor },
+    data: {
+      total_matches: all.length,
+      categories: p.items.map(categoryOut),
+      stores: stores.map((s) => ({ store: s.store, synced_at: s.syncedAt, catalog_synced_at: s.catalogSyncedAt, categories: s.categories, public: s.public })),
+      note: "products_in_catalog = estampas clássicas e merch do catálogo da loja que estão na categoria (a contagem útil); reported_by_ink conta também produtos ocultos e não publicados. Vendas por categoria: origens_sales_ranking com dimension=category.",
+    },
+  };
+}
+
+export async function promotionsTool(deps: ToolDeps, input: PeriodInput & { region?: RegionSlug; stores?: CommerceStoreKey[] }): Promise<ToolResult> {
+  const now = deps.now();
+  const config = deps.promotions();
+  const configured = configuredRows(config, now.getTime(), input.region);
+  const notes = [
+    "O painel descreve o cupom ou a promoção; quem aplica é a INK. A configuração dentro da INK (regra, valor, limite) não é lida por este conector.",
+    "status é o de agora (live, scheduled, ended, disabled): o painel não guarda quando um item esteve ligado.",
+    ...(config.source === "seed" ? ["Nada publicado no painel ainda: sem cupons configurados."] : []),
+  ];
+  const wantsUsage = input.start_date !== undefined || input.end_date !== undefined || input.last_days !== undefined;
+  if (!wantsUsage) {
+    return {
+      meta: { source: "use_origens_panel", generated_at: iso(now), data_as_of: config.asOf, period: null, date_basis: null, filters_applied: clean({ region: input.region }), coverage: { status: "complete", reason: null }, unclassified_count: null, next_cursor: null },
+      data: { configured, usage: null, notes: [...notes, "Para ver o uso dos códigos nos pedidos, passe last_days ou start_date/end_date."] },
+    };
+  }
+  const period = resolvePeriod(input, now, SALES_MAX_DAYS);
+  const { stores, skipped } = pickStores(deps, input.stores ?? (input.region ? [REGIONS[input.region].storeKey] : undefined));
+  const fetched = await ordersOfPeriod(deps, stores, period, { paymentStatus: "paid" });
+  const usage = promotionUsage(fetched.orders, period, config, stores, now.getTime());
+  return {
+    meta: { source: "ink_api+use_origens_panel", generated_at: iso(now), data_as_of: fetched.dataAsOf, period: describePeriod(period), date_basis: SALES_DATE_BASIS, filters_applied: clean({ region: input.region, stores }), coverage: ordersCoverage(skipped, fetched.unreadable), unclassified_count: null, next_cursor: null },
+    data: {
+      configured,
+      usage,
+      notes: [
+        ...notes,
+        "Pedido com cupom não prova que o cupom causou a venda: o ticket com e sem código é uma comparação, não um efeito.",
+        "Promoção sem código (ex.: frete grátis automático) não aparece por código; um desconto da INK sem código entra em without_code.orders_with_promotion_discount.",
+        "Para as estampas ou produtos vendidos com um cupom: origens_sales_ranking com promotion_code.",
+      ],
+      ink_requests: fetched.requests,
+    },
   };
 }
 
@@ -320,6 +501,7 @@ export async function getOrderTool(deps: ToolDeps, input: { store: CommerceStore
       product_id: i.productId,
       product_name: i.productName,
       sku: i.sku,
+      variant_id: i.variant.id,
       model: i.variant.model,
       color: i.variant.color,
       size: i.variant.size,
@@ -343,6 +525,7 @@ export async function getOrderTool(deps: ToolDeps, input: { store: CommerceStore
       order_status_label: o.orderStatusLabel,
       payment_status: o.paymentStatusLabel,
       is_exchange: o.isExchange,
+      exchange: { items_editable: o.itemsEditable, exchangeable: o.exchangeable, how: o.itemsEditable ? "antes da fábrica: trocar o item no pedido (origens_preview_order_item_edit)" : o.exchangeable ? "abrir troca (origens_preview_exchange)" : "a INK não aceita edição nem troca agora" },
       totals: { total: m(o.totalCents), shipping: m(o.shippingCents), promotion_discount: m(o.promotionCents), payment_discount: m(o.paymentDiscountCents), freight_value_difference: m(o.freightDifferenceCents), store_payout_reported_by_ink: m(o.kickbackCents) },
       promotion_code: o.promotionCode,
       destination: o.destination,
@@ -363,6 +546,18 @@ export async function getOrderTool(deps: ToolDeps, input: { store: CommerceStore
   };
 }
 
+function categoriesStatus(deps: ToolDeps, store: CommerceStoreKey | undefined, now: Date) {
+  try {
+    return deps
+      .categories()
+      .stores.filter((s) => !store || s.store === store)
+      .map((s) => ({ ...s, sync_age_hours: Math.round(((now.getTime() - Date.parse(s.syncedAt)) / 3_600_000) * 10) / 10 }));
+  } catch (err) {
+    if (!(err instanceof McpToolError)) throw err;
+    return err.message;
+  }
+}
+
 export async function catalogStatusTool(deps: ToolDeps, input: { store?: CommerceStoreKey; include_unclassified?: boolean; cursor?: string; limit?: number }): Promise<ToolResult> {
   const { index } = deps.catalog();
   const stores = index.stores.filter((s) => !input.store || s.store === input.store);
@@ -380,6 +575,7 @@ export async function catalogStatusTool(deps: ToolDeps, input: { store?: Commerc
     data: clean({
       stores: stores.map((s) => ({ ...s, sync_age_hours: Math.round(((now.getTime() - Date.parse(s.syncedAt)) / 3_600_000) * 10) / 10 })),
       garment_index_present: index.garmentIndexPresent,
+      categories: categoriesStatus(deps, input.store, now),
       unclassified_products: unclassified,
       note: "excluded = produtos visíveis na INK que o indexador não conseguiu ligar a uma cidade/família (ficam fora do site). Classificações existentes não são reinterpretadas aqui.",
     }),

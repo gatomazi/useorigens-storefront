@@ -105,9 +105,11 @@ As três regiões respondem 200 e estão no sitemap. A raiz `/` redireciona (307
 8. Fala de Onde;
 9. campanha.
 
-**Página do estado** (`/sul/sc`) [prod]
-- Busca em destaque, "Destaques de Santa Catarina", "Escolha o estilo" e "O Pódio de Santa Catarina".
+**Página do estado** (`/sul/sc`) [local, PR aberto]
+- Busca em destaque, "Destaques de Santa Catarina", os carrosséis de categoria, "Escolha o estilo" e "O Pódio de Santa Catarina".
 - Depois, as cidades agrupadas por mesorregião ou em lista de A a Z.
+- Os carrosséis de categoria seguem uma hierarquia nossa, porque a INK não tem categoria pai/filha: **Estado** (a coleção "Santa Catarina") > **categorias** (as do topo do menu, ou a lista própria do painel: Seu Lugar, Do Nosso Jeito, Da Nossa Terra, Feito Para Você, Fala Daqui) > **subcategorias** (toda outra coleção pública, automática; o painel tira uma ou inclui uma interna). Cada produto fica no carrossel mais fundo que aparece: subcategoria, depois a categoria com o que sobrou, depois "Mais de Santa Catarina". Um carrossel precisa de 3 produtos; com menos, eles sobem um nível (`state-hierarchy.ts`).
+- "Destaques", "Escolha o estilo" e a lista de lugares não são categorias: cada um tem liga/desliga no painel (Coleções → Seções da página do estado). O Pódio tem o seu.
 
 **Página da cidade** (`/sul/sc/florianopolis`) [prod]
 - No topo: trilha "Sul / Santa Catarina / Florianópolis", título grande, "Santa Catarina · Grande Florianópolis" e "Compartilhar".
@@ -287,7 +289,7 @@ O proxy não passa pelas rotas `/api`, então elas não têm a trava de catálog
 
 **Modelo de dados**
 - Um **documento por escopo**: `global`, `sul`, `norte` e `centro-oeste` (`src/lib/site-config/schema.ts`).
-- Campos do documento: `home.sections`, `pages`, `customizers`, `collections` (`enabled`, `menu`, `arrangements` e os campos antigos), `navigation`, `theme`, `promotions`, `tracking` e `launched`.
+- Campos do documento: `home.sections`, `pages`, `customizers`, `collections` (`enabled`, `menu`, `arrangements`, `stateCategories`, `stateSubcategories` e os campos antigos), `navigation`, `theme`, `promotions`, `podio`, `statePage`, `tracking` e `launched`.
 - Validação: estrita no editor e na publicação. Na loja ela é tolerante: uma seção inválida é descartada, e um hero ou rodapé inválido devolve o escopo inteiro ao padrão.
 
 **Rascunho e publicação**

@@ -28,7 +28,20 @@ export type ItemFilters = {
   delivery_uf?: string;
   /** Delivery city name, compared without accents/case. */
   delivery_city?: string;
+  /** INK category (collection) as the owner gave it (id, slug or name); the matching uses `CategoryMatcher.selected`. */
+  category?: string;
+  /** Order-level: the coupon code INK recorded on the order, compared without case. */
+  promotion_code?: string;
 };
+
+/**
+ * What the category filter and dimension need (categories.ts, wired in tools.ts): the categories of a sold product, or `null` when its
+ * membership is UNKNOWN (a product outside the categories snapshot: garment siblings, products delisted since the sync). `selected` holds the
+ * category keys (`store:id`) of the filter.
+ */
+export type CategoryTag = { key: string; label: string; store: CommerceStoreKey; id: number; slug: string; visibility: "public" | "internal" };
+export type CategoryMatcher = { of: (store: CommerceStoreKey, productId: string) => readonly CategoryTag[] | null; selected?: ReadonlySet<string> };
+export type CategoryVisibility = "public" | "internal" | "all";
 
 export const fold = (s: string) => s.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().trim();
 
@@ -76,10 +89,15 @@ function linesOf(orders: readonly McpOrder[], ctx: CatalogContext): Line[] {
 
 const hasItemFilter = (f: ItemFilters) => Object.values(f).some((v) => v !== undefined);
 
-function lineMatches(line: Line, f: ItemFilters): boolean {
+function lineMatches(line: Line, f: ItemFilters, cat?: CategoryMatcher): boolean {
   if (f.product_id && line.item.productId !== f.product_id) return false;
   if (f.delivery_uf && line.order.destination.uf !== f.delivery_uf) return false;
   if (f.delivery_city && fold(line.order.destination.city ?? "") !== fold(f.delivery_city)) return false;
+  if (f.promotion_code && fold(line.order.promotionCode ?? "") !== fold(f.promotion_code)) return false;
+  if (f.category) {
+    const tags = cat?.of(line.order.store, line.item.productId);
+    if (!tags || !tags.some((t) => cat?.selected?.has(t.key))) return false;
+  }
   const needsDesign = f.design_region || f.design_uf || f.design_locality || f.family;
   if (!needsDesign) return true;
   const d = line.design;
@@ -116,9 +134,24 @@ function designCoverage(lines: readonly Line[]) {
   return { classified_units: classified, unclassified_units: unclassified, unclassified_share: total ? Math.round((unclassified / total) * 1000) / 1000 : 0, unclassified_by_reason: reasons };
 }
 
+/** How much of the period's units the categories snapshot can place at all: an unknown membership is reported, never read as "no category". */
+function categoryCoverage(lines: readonly Line[], cat: CategoryMatcher) {
+  let inSome = 0;
+  let none = 0;
+  let unknown = 0;
+  for (const l of lines) {
+    const tags = cat.of(l.order.store, l.item.productId);
+    if (tags === null) unknown += l.units;
+    else if (tags.length === 0) none += l.units;
+    else inSome += l.units;
+  }
+  const total = inSome + none + unknown;
+  return { units_in_some_category: inSome, units_without_category: none, units_membership_unknown: unknown, membership_unknown_share: total ? Math.round((unknown / total) * 1000) / 1000 : 0 };
+}
+
 export type SalesSummary = ReturnType<typeof salesSummary>;
 
-export function salesSummary(orders: readonly McpOrder[], period: Pick<Period, "start" | "endExclusive">, ctx: CatalogContext, filters: ItemFilters) {
+export function salesSummary(orders: readonly McpOrder[], period: Pick<Period, "start" | "endExclusive">, ctx: CatalogContext, filters: ItemFilters, cat?: CategoryMatcher) {
   const { orders: kept, excluded } = eligibleOrders(orders, period);
   const lines = linesOf(kept, ctx);
   const coverage = designCoverage(lines);
@@ -158,7 +191,7 @@ export function salesSummary(orders: readonly McpOrder[], period: Pick<Period, "
     };
   }
 
-  const matching = lines.filter((l) => lineMatches(l, filters));
+  const matching = lines.filter((l) => lineMatches(l, filters, cat));
   const ordersWith = new Set(matching.map((l) => `${l.order.store}:${l.order.orderId}`));
   const linesByOrder = new Map<string, Line[]>();
   for (const l of lines) {
@@ -166,7 +199,7 @@ export function salesSummary(orders: readonly McpOrder[], period: Pick<Period, "
     linesByOrder.set(k, [...(linesByOrder.get(k) ?? []), l]);
   }
   let ordersOnly = 0;
-  for (const k of ordersWith) if ((linesByOrder.get(k) ?? []).every((l) => lineMatches(l, filters))) ordersOnly++;
+  for (const k of ordersWith) if ((linesByOrder.get(k) ?? []).every((l) => lineMatches(l, filters, cat))) ordersOnly++;
   const value = sumKnown(matching.map((l) => l.valueCents));
   const storeOrders: Record<string, number> = {};
   for (const k of ordersWith) storeOrders[k.split(":")[0]] = (storeOrders[k.split(":")[0]] ?? 0) + 1;
@@ -180,6 +213,7 @@ export function salesSummary(orders: readonly McpOrder[], period: Pick<Period, "
     orders_in_period: kept.length,
     by_store_orders_with_matching_items: storeOrders,
     design_coverage: coverage,
+    ...(filters.category && cat ? { category_coverage: categoryCoverage(lines, cat) } : {}),
     excluded,
     unknown_money_fields: value.unknown,
     limitation:
@@ -187,64 +221,106 @@ export function salesSummary(orders: readonly McpOrder[], period: Pick<Period, "
   };
 }
 
-export const RANK_DIMENSIONS = ["product", "design_city", "design_uf", "design_region", "family", "delivery_city", "delivery_uf", "store"] as const;
+export const RANK_DIMENSIONS = ["product", "design_city", "design_uf", "design_region", "family", "category", "model", "size", "color", "delivery_city", "delivery_uf", "store"] as const;
 export type RankDimension = (typeof RANK_DIMENSIONS)[number];
 export const RANK_METRICS = ["units", "items_value", "orders"] as const;
 export type RankMetric = (typeof RANK_METRICS)[number];
 
 const DESIGN_DIMENSIONS: ReadonlySet<RankDimension> = new Set(["design_city", "design_uf", "design_region", "family"]);
+const VARIANT_DIMENSIONS: ReadonlySet<RankDimension> = new Set(["model", "size", "color"]);
 
-type Bucket = { key: string; label: string; detail?: Record<string, string | null>; units: number; valueCents: number; unknownValue: number; orders: Set<string> };
+type Key = { key: string; label: string; detail?: Record<string, string | number | null> };
+type Bucket = Key & { units: number; valueCents: number; unknownValue: number; orders: Set<string> };
+type Tally = { units: number; valueCents: number; orders: Set<string> };
 
-function keyOf(line: Line, dim: RankDimension): { key: string; label: string; detail?: Record<string, string | null> } | null {
+/** The keys a line counts under: one for every dimension but `category` (a product may be in several); `null` = the line cannot be placed. */
+function keysOf(line: Line, dim: RankDimension, cat: CategoryMatcher | undefined, visibility: CategoryVisibility): Key[] | null {
   const d = line.design;
+  const one = (k: Key | null) => (k ? [k] : null);
   switch (dim) {
     case "product":
-      return { key: `${line.order.store}:${line.item.productId}`, label: line.item.productName || `Produto ${line.item.productId}`, detail: { store: line.order.store, product_id: line.item.productId } };
+      return [{ key: `${line.order.store}:${line.item.productId}`, label: line.item.productName || `Produto ${line.item.productId}`, detail: { store: line.order.store, product_id: line.item.productId } }];
     case "design_city":
-      return d.status === "classified" && d.localityKey ? { key: d.localityKey, label: `${d.localityName ?? d.localityKey} (${d.uf})`, detail: { locality_id: d.localityKey, uf: d.uf } } : null;
+      return one(d.status === "classified" && d.localityKey ? { key: d.localityKey, label: `${d.localityName ?? d.localityKey} (${d.uf})`, detail: { locality_id: d.localityKey, uf: d.uf } } : null);
     case "design_uf":
-      return d.status === "classified" ? { key: d.uf, label: STATE_NAMES[d.uf] ?? d.uf, detail: { uf: d.uf } } : null;
+      return one(d.status === "classified" ? { key: d.uf, label: STATE_NAMES[d.uf] ?? d.uf, detail: { uf: d.uf } } : null);
     case "design_region":
-      return d.status === "classified" && d.region ? { key: d.region, label: REGIONS[d.region].name, detail: { region: d.region } } : null;
+      return one(d.status === "classified" && d.region ? { key: d.region, label: REGIONS[d.region].name, detail: { region: d.region } } : null);
     case "family":
-      return d.status === "classified" && d.family ? { key: d.family, label: familyById(d.family)?.name ?? d.family, detail: { family: d.family } } : null;
+      return one(d.status === "classified" && d.family ? { key: d.family, label: familyById(d.family)?.name ?? d.family, detail: { family: d.family } } : null);
+    case "category": {
+      const tags = cat?.of(line.order.store, line.item.productId) ?? null;
+      if (tags === null) return null;
+      return tags.filter((t) => visibility === "all" || t.visibility === visibility).map((t) => ({ key: t.key, label: t.label, detail: { store: t.store, category_id: t.id, slug: t.slug, visibility: t.visibility } }));
+    }
+    case "model":
+    case "size":
+    case "color": {
+      const v = line.item.variant[dim];
+      return one(v ? { key: fold(v), label: v } : null);
+    }
     case "delivery_city":
-      return line.order.destination.city && line.order.destination.uf
-        ? { key: `${line.order.destination.uf}:${fold(line.order.destination.city)}`, label: `${line.order.destination.city} (${line.order.destination.uf})`, detail: { uf: line.order.destination.uf } }
-        : null;
+      return one(
+        line.order.destination.city && line.order.destination.uf
+          ? { key: `${line.order.destination.uf}:${fold(line.order.destination.city)}`, label: `${line.order.destination.city} (${line.order.destination.uf})`, detail: { uf: line.order.destination.uf } }
+          : null,
+      );
     case "delivery_uf":
-      return line.order.destination.uf ? { key: line.order.destination.uf, label: STATE_NAMES[line.order.destination.uf] ?? line.order.destination.uf, detail: { uf: line.order.destination.uf } } : null;
+      return one(line.order.destination.uf ? { key: line.order.destination.uf, label: STATE_NAMES[line.order.destination.uf] ?? line.order.destination.uf, detail: { uf: line.order.destination.uf } } : null);
     case "store":
-      return { key: line.order.store, label: line.order.store, detail: { store: line.order.store as CommerceStoreKey } };
+      return [{ key: line.order.store, label: line.order.store, detail: { store: line.order.store } }];
   }
 }
 
-export function salesRanking(orders: readonly McpOrder[], period: Pick<Period, "start" | "endExclusive">, ctx: CatalogContext, args: { dimension: RankDimension; metric: RankMetric; limit: number; filters: ItemFilters }) {
+const tally = (): Tally => ({ units: 0, valueCents: 0, orders: new Set() });
+function count(t: Tally, line: Line): void {
+  t.units += line.units;
+  t.valueCents += line.valueCents ?? 0;
+  t.orders.add(`${line.order.store}:${line.order.orderId}`);
+}
+const tallyOut = (t: Tally) => ({ units_net: t.units, items_value: money(t.valueCents), orders: t.orders.size });
+
+function notPlacedReason(dim: RankDimension): string | null {
+  if (DESIGN_DIMENSIONS.has(dim)) return "unclassified_design";
+  if (dim === "category") return "category_membership_unknown";
+  if (VARIANT_DIMENSIONS.has(dim)) return "unknown_variant";
+  return dim.startsWith("delivery_") ? "unknown_destination" : null;
+}
+
+export function salesRanking(
+  orders: readonly McpOrder[],
+  period: Pick<Period, "start" | "endExclusive">,
+  ctx: CatalogContext,
+  args: { dimension: RankDimension; metric: RankMetric; limit: number; filters: ItemFilters; categories?: CategoryMatcher; categoryVisibility?: CategoryVisibility },
+) {
   const { orders: kept, excluded } = eligibleOrders(orders, period);
-  const lines = linesOf(kept, ctx).filter((l) => lineMatches(l, args.filters));
+  const allLines = linesOf(kept, ctx);
+  const lines = allLines.filter((l) => lineMatches(l, args.filters, args.categories));
+  const visibility = args.categoryVisibility ?? "public";
   const buckets = new Map<string, Bucket>();
-  const outside: { units: number; valueCents: number; orders: Set<string> } = { units: 0, valueCents: 0, orders: new Set() };
+  const outside = tally();
+  const withoutCategory = tally();
+  const all = tally();
   for (const line of lines) {
-    const k = keyOf(line, args.dimension);
-    const orderKey = `${line.order.store}:${line.order.orderId}`;
-    if (!k) {
-      outside.units += line.units;
-      outside.valueCents += line.valueCents ?? 0;
-      outside.orders.add(orderKey);
-      continue;
+    count(all, line);
+    const keys = keysOf(line, args.dimension, args.categories, visibility);
+    if (keys === null) count(outside, line);
+    else if (keys.length === 0) count(withoutCategory, line);
+    for (const k of keys ?? []) {
+      const b = buckets.get(k.key) ?? { ...k, units: 0, valueCents: 0, unknownValue: 0, orders: new Set<string>() };
+      b.units += line.units;
+      if (line.valueCents === null) b.unknownValue++;
+      else b.valueCents += line.valueCents;
+      b.orders.add(`${line.order.store}:${line.order.orderId}`);
+      buckets.set(k.key, b);
     }
-    const b = buckets.get(k.key) ?? { ...k, units: 0, valueCents: 0, unknownValue: 0, orders: new Set<string>() };
-    b.units += line.units;
-    if (line.valueCents === null) b.unknownValue++;
-    else b.valueCents += line.valueCents;
-    b.orders.add(orderKey);
-    buckets.set(k.key, b);
   }
-  const metricOf = (b: { units: number; valueCents: number; orders: Set<string> }) => (args.metric === "units" ? b.units : args.metric === "items_value" ? b.valueCents : b.orders.size);
-  const all = [...buckets.values()].sort((a, b) => metricOf(b) - metricOf(a) || b.units - a.units || a.key.localeCompare(b.key));
-  const totalMetric = all.reduce((a, b) => a + metricOf(b), 0) + metricOf(outside);
-  const rows = all.slice(0, args.limit).map((b, i) => ({
+  const metricOf = (b: Tally) => (args.metric === "units" ? b.units : args.metric === "items_value" ? b.valueCents : b.orders.size);
+  const ranked = [...buckets.values()].sort((a, b) => metricOf(b) - metricOf(a) || b.units - a.units || a.key.localeCompare(b.key));
+  // A line counts under every category of its product, so category shares are over the lines themselves (they do not add up to 1).
+  const overlapping = args.dimension === "category";
+  const totalMetric = overlapping ? metricOf(all) : ranked.reduce((a, b) => a + metricOf(b), 0) + metricOf(outside);
+  const rows = ranked.slice(0, args.limit).map((b, i) => ({
     position: i + 1,
     key: b.key,
     label: b.label,
@@ -259,11 +335,13 @@ export function salesRanking(orders: readonly McpOrder[], period: Pick<Period, "
     dimension: args.dimension,
     metric: args.metric,
     rows,
-    ranked_keys: all.length,
-    // Lines the dimension cannot place: no reliable design (design dimensions) or no destination (delivery dimensions). Reported, never ranked.
-    not_placed: { reason: DESIGN_DIMENSIONS.has(args.dimension) ? "unclassified_design" : args.dimension.startsWith("delivery_") ? "unknown_destination" : null, units_net: outside.units, items_value: money(outside.valueCents), orders: outside.orders.size },
+    ranked_keys: ranked.length,
+    ...(overlapping ? { category_visibility: visibility, overlapping: true, without_category: tallyOut(withoutCategory) } : {}),
+    ...(args.categories && (overlapping || args.filters.category) ? { category_coverage: categoryCoverage(allLines, args.categories) } : {}),
+    // Lines the dimension cannot place: no reliable design (design dimensions), unknown category membership, no variant field or no destination. Reported, never ranked.
+    not_placed: { reason: notPlacedReason(args.dimension), ...tallyOut(outside) },
     orders_in_period: kept.length,
-    design_coverage: designCoverage(linesOf(kept, ctx)),
+    design_coverage: designCoverage(allLines),
     excluded,
   };
 }
