@@ -7,6 +7,9 @@ aparecem na loja e, pelo Worker (feature `top-bar`), na faixa preta do cabeçalh
 
 - **Como as mensagens aparecem**: **passando** (letreiro, o padrão, no estilo da Aphago: todas numa linha que corre da direita para a esquerda,
   separadas por um ponto, e para sob o mouse ou com o foco) ou **uma de cada vez** (troca a cada 5 s). Quem desativou animações no sistema vê só a primeira, parada.
+- **Cores da faixa**: fundo e fonte da faixa inteira (presets Vermelho Natal, Verde Natal, Dourado, Black Friday, ou qualquer cor). Valem na loja e na INK
+  enquanto houver mensagem no ar; sem cor, a faixa preta de sempre. Contraste abaixo de 3:1 não salva; abaixo de 4,5:1 o editor avisa e sugere fonte
+  branca ou preta.
 - **Prazo de produção da INK (dias úteis)**: o "DLO". É só o tempo de produção, porque a entrega depende do CEP (a INK calcula no carrinho). Aparece no
   texto pelo marcador `{producao}` ("7 dias úteis").
 - **Mensagens** (até 10): texto de uma linha (até 90 caracteres), link opcional para uma página da própria região (`/sul/h/natal`), início e fim
@@ -35,7 +38,7 @@ aparecem na loja e, pelo Worker (feature `top-bar`), na faixa preta do cabeçalh
 ## Para a INK (Worker)
 
 - `GET /api/top-bar/<região>`: público, somente leitura, cache de 30 s. Contrato `v: 1`:
-  `{ v: 1, region, style: "marquee" | "rotate", messages: [{ id, text, href?, endsAt? }] }`, só as mensagens no ar, com o texto **já preenchido**.
+  `{ v: 1, region, style: "marquee" | "rotate", colors?: { background, text }, messages: [{ id, text, href?, endsAt? }] }`, só as mensagens no ar, com o texto **já preenchido**.
 - O Worker (`use-origens-workers`, `src/top-bar-gateway.js` + `src/loader/top-bar.js`, feature opt-in `top-bar`) re-serve isso em `/__origens/top-bar`
   e troca as frases nativas da faixa da INK pelas nossas. Sem mensagem no ar, com erro ou com a feature desligada, a faixa da INK fica como está.
   Na loja única, cada visitante vê a faixa da região dele (a mesma regra da navbar).

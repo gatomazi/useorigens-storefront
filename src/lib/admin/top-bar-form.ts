@@ -23,7 +23,8 @@ export type TopBarRow = {
 const str = (v: unknown): string => (typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "");
 
 /** `style`: "rotate" = one at a time; anything else = the marquee (the default, so it is not stored). */
-export function topBarFromForm(rows: unknown, productionDays: string, scope: Scope, style = ""): Parsed<TopBarConfig> {
+/** `colors`: both empty = the default black strip; otherwise both must be colours (the validator checks the contrast). */
+export function topBarFromForm(rows: unknown, productionDays: string, scope: Scope, style = "", colors: { background?: string; text?: string } = {}): Parsed<TopBarConfig> {
   if (!Array.isArray(rows)) return { ok: false, errors: ["Lista de mensagens inválida. Recarregue a página e tente de novo."] };
   if (rows.length > MAX_TOP_BAR_MESSAGES) return { ok: false, errors: [`No máximo ${MAX_TOP_BAR_MESSAGES} mensagens por região.`] };
   const errors: string[] = [];
@@ -56,12 +57,19 @@ export function topBarFromForm(rows: unknown, productionDays: string, scope: Sco
   if (errors.length > 0) return { ok: false, errors };
   const config: TopBarConfig = production === undefined ? { messages } : { productionDays: production, messages };
   if (style === "rotate") config.style = "rotate";
+  const background = (colors.background ?? "").trim().toLowerCase();
+  const color = (colors.text ?? "").trim().toLowerCase();
+  if (background || color) config.colors = { background, text: color };
   const checked = validateTopBar(config, scope);
   return checked.ok ? { ok: true, value: checked.value } : { ok: false, errors: checked.errors.map((e) => readableTopBarError(e, scope)) };
 }
 
 /** `topBar.messages[1].text: …` → `Mensagem 2: …`, something the owner can act on. */
 export function readableTopBarError(error: string, scope: Scope): string {
+  if (error.includes(".colors")) {
+    const ratio = /contrast ([\d.]+):1/.exec(error);
+    return ratio ? `As cores da faixa quase não se leem juntas (contraste ${ratio[1].replace(".", ",")}:1; o mínimo aceito é 3:1). Use a sugestão de cor da fonte ou um fundo mais claro/escuro.` : "Escolha as duas cores da faixa (fundo e fonte) ou volte ao padrão.";
+  }
   if (error.includes(".style")) return "Escolha como as mensagens aparecem: passando ou uma de cada vez.";
   if (error.includes("productionDays")) return `O prazo de produção é um número inteiro de 1 a ${MAX_PRODUCTION_DAYS} dias úteis (ou fica vazio).`;
   const m = /messages\[(\d+)\]\.?(\w*)/.exec(error);

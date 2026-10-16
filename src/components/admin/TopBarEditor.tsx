@@ -5,7 +5,8 @@ import type { TopBarRow } from "@/lib/admin/top-bar-form";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { formatBrasilia, fromBrasiliaInput, promotionStatus, toBrasiliaInput, type PromotionStatus } from "@/lib/site-config/promotions";
 import { TopBarMessages } from "@/components/layout/TopBarMessages";
-import { liveTopBarMessages, MAX_PRODUCTION_DAYS, MAX_TOP_BAR_MESSAGES, TOP_BAR_TEXT_COMFORT, TOP_BAR_TEXT_MAX, topBarText, type TopBarMessage, type TopBarStyle } from "@/lib/site-config/top-bar";
+import { contrastRatio, HEX_COLOR } from "@/lib/site-config/color";
+import { liveTopBarMessages, MAX_PRODUCTION_DAYS, MAX_TOP_BAR_MESSAGES, TOP_BAR_TEXT_COMFORT, TOP_BAR_TEXT_MAX, topBarText, TOP_BAR_COLOR_PRESETS as PRESETS, type TopBarColors, type TopBarMessage, type TopBarStyle } from "@/lib/site-config/top-bar";
 
 const STATUS: Record<PromotionStatus, { text: string; cls: string }> = {
   live: { text: "No ar ao publicar", cls: "ok" },
@@ -13,6 +14,9 @@ const STATUS: Record<PromotionStatus, { text: string; cls: string }> = {
   ended: { text: "Encerrada", cls: "bad" },
   disabled: { text: "Desativada", cls: "" },
 };
+
+/** White or black, whichever reads better on `background`. */
+const readableOn = (background: string): string => (contrastRatio(background, "#ffffff") >= contrastRatio(background, "#111111") ? "#ffffff" : "#111111");
 
 const toRow = (m: TopBarMessage): TopBarRow => ({ id: m.id, enabled: m.enabled, text: m.text, href: m.href ?? "", startsAt: toBrasiliaInput(m.startsAt), endsAt: toBrasiliaInput(m.endsAt) });
 const blank = (patch: Partial<TopBarRow> = {}): TopBarRow => ({ id: "", enabled: true, text: "", href: "", startsAt: "", endsAt: "", ...patch });
@@ -37,8 +41,18 @@ function asMessage(r: TopBarRow, i: number): TopBarMessage | null {
   return message;
 }
 
-export function TopBarEditor({ region, style: savedStyle, productionDays, messages, now, readOnly, action, rev }: { region: RegionSlug; style?: TopBarStyle; productionDays?: number; messages: TopBarMessage[]; now: number; readOnly: boolean; action: (fd: FormData) => Promise<void>; rev: string }) {
+export function TopBarEditor({ region, style: savedStyle, colors: savedColors, productionDays, messages, now, readOnly, action, rev }: { region: RegionSlug; style?: TopBarStyle; colors?: TopBarColors; productionDays?: number; messages: TopBarMessage[]; now: number; readOnly: boolean; action: (fd: FormData) => Promise<void>; rev: string }) {
   const [style, setStyle] = useState<TopBarStyle>(savedStyle ?? "marquee");
+  const [custom, setCustom] = useState(savedColors !== undefined);
+  const [background, setBackground] = useState(savedColors?.background ?? "#000000");
+  const [fontColor, setFontColor] = useState(savedColors?.text ?? "#ffffff");
+  const colorsOk = HEX_COLOR.test(background) && HEX_COLOR.test(fontColor);
+  const ratio = colorsOk ? contrastRatio(background, fontColor) : 0;
+  const colors: TopBarColors | undefined = custom && colorsOk ? { background, text: fontColor } : undefined;
+  const pickPreset = (c: TopBarColors | null) => {
+    setCustom(c !== null);
+    if (c) { setBackground(c.background); setFontColor(c.text); }
+  };
   const [days, setDays] = useState(productionDays === undefined ? "" : String(productionDays));
   const [rows, setRows] = useState<TopBarRow[]>(() => messages.map(toRow));
   const [at, setAt] = useState(() => toBrasiliaInput(new Date(now).toISOString()));
@@ -68,6 +82,44 @@ export function TopBarEditor({ region, style: savedStyle, productionDays, messag
         <input type="hidden" name="messages" value={JSON.stringify(rows)} />
 
         <input type="hidden" name="style" value={style} />
+        <input type="hidden" name="colorBackground" value={custom ? background : ""} />
+        <input type="hidden" name="colorText" value={custom ? fontColor : ""} />
+        <fieldset className="a-card space-y-3 p-5">
+          <legend className="a-label">Cores da faixa</legend>
+          <div className="flex flex-wrap gap-2">
+            {PRESETS.map((p) => {
+              const on = p.colors === null ? !custom : custom && background === p.colors.background && fontColor === p.colors.text;
+              return (
+                <button key={p.name} type="button" className={`a-btn sm ${on ? "" : "ghost"}`} disabled={readOnly} onClick={() => pickPreset(p.colors)} aria-pressed={on} data-testid={`top-bar-preset-${p.name}`}>
+                  <span aria-hidden="true" className="mr-1 inline-block h-3 w-3 border border-black/30 align-middle" style={{ background: p.colors?.background ?? "#000000" }} />
+                  {p.name}
+                </button>
+              );
+            })}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {([["bg", "Fundo", background, setBackground], ["fg", "Fonte", fontColor, setFontColor]] as const).map(([id, label, value, set]) => (
+              <div key={id}>
+                <label className="a-label" htmlFor={`tb_color_${id}`}>{label}</label>
+                <div className="flex items-center gap-2">
+                  <input type="color" aria-label={`${label} (seletor)`} className="h-10 w-12 cursor-pointer border border-black/30" value={HEX_COLOR.test(value) ? value : "#000000"} disabled={readOnly} onChange={(e) => { setCustom(true); set(e.target.value); }} />
+                  <input id={`tb_color_${id}`} className="a-input font-mono" value={value} maxLength={7} disabled={readOnly} onChange={(e) => { setCustom(true); set(e.target.value.trim()); }} data-testid={`top-bar-color-${id}`} />
+                </div>
+              </div>
+            ))}
+          </div>
+          {custom && (
+            <p className="text-[0.8125rem]" data-testid="top-bar-contrast">
+              {!colorsOk ? <strong>Use cores no formato #rrggbb.</strong>
+                : ratio < 3 ? <strong className="text-[#8c1d18]">Contraste {ratio.toFixed(1).replace(".", ",")}:1: quase não se lê. Não dá para salvar assim.</strong>
+                : ratio < 4.5 ? <strong className="text-[#6b4a0c]">Contraste {ratio.toFixed(1).replace(".", ",")}:1: lê, mas abaixo do recomendado (4,5:1).</strong>
+                : <span className="a-muted">Contraste {ratio.toFixed(1).replace(".", ",")}:1: boa leitura.</span>}
+              {colorsOk && fontColor !== readableOn(background) && ratio < 4.5 && !readOnly ? <> <button type="button" className="a-link underline" onClick={() => setFontColor(readableOn(background))}>Usar fonte {readableOn(background) === "#ffffff" ? "branca" : "preta"}</button></> : null}
+            </p>
+          )}
+          <p className="a-muted text-[0.8125rem]">Vale para a faixa inteira, na loja e nas páginas da INK, enquanto houver mensagem no ar. Sem mensagem, a faixa padrão continua preta.</p>
+        </fieldset>
+
         <fieldset className="a-card space-y-2 p-5">
           <legend className="a-label">Como as mensagens aparecem</legend>
           {([["marquee", "Passando (letreiro)", "Todas numa linha só, correndo da direita para a esquerda, separadas por •. Chama atenção e cabe texto longo no celular. Para sob o mouse."],
@@ -175,7 +227,7 @@ export function TopBarEditor({ region, style: savedStyle, productionDays, messag
             <>
               <p className="a-muted text-[0.75rem]">Celular (390 px), como na loja{live.length > 1 ? ` · ${live.length} mensagens` : ""}</p>
               <div className="on-ink w-full max-w-[390px] overflow-hidden" data-testid="top-bar-preview-item">
-                <TopBarMessages key={style} schedule={{ style, productionDays: production, messages: live }} renderedAt={previewAt} fixedNow={previewAt}>{null}</TopBarMessages>
+                <TopBarMessages key={style} schedule={{ style, colors, productionDays: production, messages: live }} renderedAt={previewAt} fixedNow={previewAt}>{null}</TopBarMessages>
               </div>
             </>
           )}
