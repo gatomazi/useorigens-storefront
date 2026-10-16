@@ -194,7 +194,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   }
   if (op.type === "set-top-bar") {
     if (doc.scope === "global") return fail("the top strip belongs to a region");
-    const empty = op.topBar.messages.length === 0 && op.topBar.productionDays === undefined;
+    const empty = op.topBar.messages.length === 0 && op.topBar.productionDays === undefined && op.topBar.style === undefined;
     const next: ScopeDoc = { ...doc, topBar: op.topBar };
     if (empty) delete next.topBar;
     const check = validateScopeDoc(next);

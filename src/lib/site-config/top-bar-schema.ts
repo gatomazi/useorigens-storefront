@@ -22,7 +22,13 @@ export type TopBarMessage = {
   endsAt?: string;
 };
 
+/** How the live messages show: `marquee` (default) = all of them in one line that keeps scrolling; `rotate` = one at a time, taking turns. */
+export const TOP_BAR_STYLES = ["marquee", "rotate"] as const;
+export type TopBarStyle = (typeof TOP_BAR_STYLES)[number];
+
 export type TopBarConfig = {
+  /** Absent = `marquee`. */
+  style?: TopBarStyle;
   /** Estimated INK production time, in business days (delivery depends on the CEP and is not promised here). Absent = `{producao}` cannot be used. */
   productionDays?: number;
   messages: TopBarMessage[];
@@ -84,7 +90,8 @@ export function validateTopBar(input: unknown, scope: Scope, path = "topBar"): V
   if (scope === "global") return { ok: false, errors: [`${path}: belongs to a region`] };
   if (!isRecord(input)) return { ok: false, errors: [`${path}: must be { messages: [...] }`] };
   const errors: string[] = [];
-  for (const key of Object.keys(input)) if (key !== "messages" && key !== "productionDays") errors.push(`${path}.${key}: unknown field`);
+  for (const key of Object.keys(input)) if (key !== "messages" && key !== "productionDays" && key !== "style") errors.push(`${path}.${key}: unknown field`);
+  if (input.style !== undefined && !(TOP_BAR_STYLES as readonly unknown[]).includes(input.style)) errors.push(`${path}.style: marquee or rotate`);
   const days = input.productionDays;
   if (days !== undefined && (typeof days !== "number" || !Number.isInteger(days) || days < 1 || days > MAX_PRODUCTION_DAYS)) errors.push(`${path}.productionDays: an integer from 1 to ${MAX_PRODUCTION_DAYS}`);
   if (!Array.isArray(input.messages) || input.messages.length > MAX_TOP_BAR_MESSAGES) return { ok: false, errors: [...errors, `${path}.messages: a list of at most ${MAX_TOP_BAR_MESSAGES} messages`] };

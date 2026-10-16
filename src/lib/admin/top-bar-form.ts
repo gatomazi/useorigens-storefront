@@ -22,7 +22,8 @@ export type TopBarRow = {
 
 const str = (v: unknown): string => (typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "");
 
-export function topBarFromForm(rows: unknown, productionDays: string, scope: Scope): Parsed<TopBarConfig> {
+/** `style`: "rotate" = one at a time; anything else = the marquee (the default, so it is not stored). */
+export function topBarFromForm(rows: unknown, productionDays: string, scope: Scope, style = ""): Parsed<TopBarConfig> {
   if (!Array.isArray(rows)) return { ok: false, errors: ["Lista de mensagens inválida. Recarregue a página e tente de novo."] };
   if (rows.length > MAX_TOP_BAR_MESSAGES) return { ok: false, errors: [`No máximo ${MAX_TOP_BAR_MESSAGES} mensagens por região.`] };
   const errors: string[] = [];
@@ -54,12 +55,14 @@ export function topBarFromForm(rows: unknown, productionDays: string, scope: Sco
   });
   if (errors.length > 0) return { ok: false, errors };
   const config: TopBarConfig = production === undefined ? { messages } : { productionDays: production, messages };
+  if (style === "rotate") config.style = "rotate";
   const checked = validateTopBar(config, scope);
   return checked.ok ? { ok: true, value: checked.value } : { ok: false, errors: checked.errors.map((e) => readableTopBarError(e, scope)) };
 }
 
 /** `topBar.messages[1].text: …` → `Mensagem 2: …`, something the owner can act on. */
 export function readableTopBarError(error: string, scope: Scope): string {
+  if (error.includes(".style")) return "Escolha como as mensagens aparecem: passando ou uma de cada vez.";
   if (error.includes("productionDays")) return `O prazo de produção é um número inteiro de 1 a ${MAX_PRODUCTION_DAYS} dias úteis (ou fica vazio).`;
   const m = /messages\[(\d+)\]\.?(\w*)/.exec(error);
   if (!m) return error.includes("at most") ? `No máximo ${MAX_TOP_BAR_MESSAGES} mensagens por região.` : `Faixa do topo: ${error.replace(/^[^:]*:\s*/, "")}`;

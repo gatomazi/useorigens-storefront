@@ -4,7 +4,8 @@ import { useMemo, useState } from "react";
 import type { TopBarRow } from "@/lib/admin/top-bar-form";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { formatBrasilia, fromBrasiliaInput, promotionStatus, toBrasiliaInput, type PromotionStatus } from "@/lib/site-config/promotions";
-import { liveTopBarMessages, MAX_PRODUCTION_DAYS, MAX_TOP_BAR_MESSAGES, TOP_BAR_TEXT_COMFORT, TOP_BAR_TEXT_MAX, topBarText, type TopBarMessage } from "@/lib/site-config/top-bar";
+import { TopBarMessages } from "@/components/layout/TopBarMessages";
+import { liveTopBarMessages, MAX_PRODUCTION_DAYS, MAX_TOP_BAR_MESSAGES, TOP_BAR_TEXT_COMFORT, TOP_BAR_TEXT_MAX, topBarText, type TopBarMessage, type TopBarStyle } from "@/lib/site-config/top-bar";
 
 const STATUS: Record<PromotionStatus, { text: string; cls: string }> = {
   live: { text: "No ar ao publicar", cls: "ok" },
@@ -36,7 +37,8 @@ function asMessage(r: TopBarRow, i: number): TopBarMessage | null {
   return message;
 }
 
-export function TopBarEditor({ region, productionDays, messages, now, readOnly, action, rev }: { region: RegionSlug; productionDays?: number; messages: TopBarMessage[]; now: number; readOnly: boolean; action: (fd: FormData) => Promise<void>; rev: string }) {
+export function TopBarEditor({ region, style: savedStyle, productionDays, messages, now, readOnly, action, rev }: { region: RegionSlug; style?: TopBarStyle; productionDays?: number; messages: TopBarMessage[]; now: number; readOnly: boolean; action: (fd: FormData) => Promise<void>; rev: string }) {
+  const [style, setStyle] = useState<TopBarStyle>(savedStyle ?? "marquee");
   const [days, setDays] = useState(productionDays === undefined ? "" : String(productionDays));
   const [rows, setRows] = useState<TopBarRow[]>(() => messages.map(toRow));
   const [at, setAt] = useState(() => toBrasiliaInput(new Date(now).toISOString()));
@@ -64,6 +66,19 @@ export function TopBarEditor({ region, productionDays, messages, now, readOnly, 
         <input type="hidden" name="scope" value={region} />
         <input type="hidden" name="rev" value={rev} />
         <input type="hidden" name="messages" value={JSON.stringify(rows)} />
+
+        <input type="hidden" name="style" value={style} />
+        <fieldset className="a-card space-y-2 p-5">
+          <legend className="a-label">Como as mensagens aparecem</legend>
+          {([["marquee", "Passando (letreiro)", "Todas numa linha só, correndo da direita para a esquerda, separadas por •. Chama atenção e cabe texto longo no celular. Para sob o mouse."],
+            ["rotate", "Uma de cada vez", "Uma mensagem centralizada, trocando a cada 5 segundos."]] as const).map(([value, label, hint]) => (
+            <label key={value} className="flex items-start gap-2 text-[0.9375rem]">
+              <input type="radio" name="style_choice" className="mt-1" checked={style === value} disabled={readOnly} onChange={() => setStyle(value)} data-testid={`top-bar-style-${value}`} />
+              <span><strong>{label}</strong><span className="a-muted block text-[0.8125rem]">{hint}</span></span>
+            </label>
+          ))}
+          <p className="a-muted text-[0.8125rem]">Quem desativou animações no sistema vê só a primeira mensagem, parada.</p>
+        </fieldset>
 
         <div className="a-card space-y-2 p-5">
           <label className="a-label" htmlFor="tb_productionDays">Prazo de produção da INK (dias úteis)</label>
@@ -135,7 +150,7 @@ export function TopBarEditor({ region, productionDays, messages, now, readOnly, 
 
         <p className="a-muted text-[0.875rem]">
           Marcadores: <code>{"{producao}"}</code> = o prazo de produção acima; <code>{"{faltam}"}</code> = os dias até o fim da mensagem (“faltam 3 dias”, “falta 1 dia”,
-          “último dia”), por isso precisa de data de fim. Com mais de uma mensagem no ar, elas se revezam a cada 5 segundos, na ordem da lista.
+          “último dia”), por isso precisa de data de fim. Emojis funcionam (🎄 🚚 ⭐). As mensagens seguem a ordem da lista.
         </p>
 
         {readOnly ? <p className="a-muted">Somente leitura para o seu perfil.</p> : (
@@ -156,14 +171,14 @@ export function TopBarEditor({ region, productionDays, messages, now, readOnly, 
         <div className="mt-4 space-y-3" data-testid="top-bar-preview-list">
           {live.length === 0 ? (
             <p className="a-muted text-[0.9375rem]" data-testid="top-bar-preview-empty">Nenhuma mensagem: a loja mostra a faixa padrão e a INK, a dela.</p>
-          ) : live.map((m, i) => (
-            <div key={m.id}>
-              <p className="a-muted mb-1 text-[0.75rem]">{live.length > 1 ? `${i + 1} de ${live.length} · ` : ""}celular (390 px){m.href ? ` · link ${m.href}` : ""}</p>
-              <div className="w-full max-w-[390px] bg-black px-4 py-2 text-center text-[0.8125rem] font-medium leading-snug text-white" data-testid="top-bar-preview-item">
-                {topBarText(m, production, previewAt)}
+          ) : (
+            <>
+              <p className="a-muted text-[0.75rem]">Celular (390 px), como na loja{live.length > 1 ? ` · ${live.length} mensagens` : ""}</p>
+              <div className="on-ink w-full max-w-[390px] overflow-hidden" data-testid="top-bar-preview-item">
+                <TopBarMessages key={style} schedule={{ style, productionDays: production, messages: live }} renderedAt={previewAt} fixedNow={previewAt}>{null}</TopBarMessages>
               </div>
-            </div>
-          ))}
+            </>
+          )}
         </div>
       </section>
     </div>

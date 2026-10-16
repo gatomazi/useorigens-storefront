@@ -3,13 +3,13 @@
  * storefront strip (server and browser), the CMS editor, the public API and the tests run the very same rules. The Worker of the INK keeps its own check
  * of the payload (`use-origens-workers/src/top-bar-gateway.js`): the contract between the two is `v: 1` below.
  */
-import { TOP_BAR_TOKENS, type TopBarConfig, type TopBarMessage } from "./top-bar-schema";
+import { TOP_BAR_TOKENS, type TopBarConfig, type TopBarMessage, type TopBarStyle } from "./top-bar-schema";
 
 export * from "./top-bar-schema";
 
 /** One message as the public sees it: the text already filled in, the link and, when it has one, the end (a client drops it once it is over). */
 export type PublicTopBarMessage = { id: string; text: string; href?: string; endsAt?: string };
-export type PublicTopBar = { v: 1; region: string; messages: PublicTopBarMessage[] };
+export type PublicTopBar = { v: 1; region: string; style: TopBarStyle; messages: PublicTopBarMessage[] };
 
 const at = (iso: string | undefined): number | null => (iso === undefined ? null : Date.parse(iso));
 
@@ -53,7 +53,10 @@ export function topBarText(message: Pick<TopBarMessage, "text" | "endsAt">, prod
   return startsWithToken ? filled.charAt(0).toLocaleUpperCase("pt-BR") + filled.slice(1) : filled;
 }
 
-/** The public, read-only payload of a region: only live messages, filled in, and only display fields (never `enabled`, `startsAt` or drafts). */
+/**
+ * The public, read-only payload of a region: how the messages show (`style`) and only the live messages, filled in, with display fields only (never
+ * `enabled`, `startsAt` or drafts).
+ */
 export function topBarPayload(region: string, config: TopBarConfig | undefined, now: number): PublicTopBar {
   const messages = liveTopBarMessages(config, now).map((m) => {
     const out: PublicTopBarMessage = { id: m.id, text: topBarText(m, config?.productionDays, now) };
@@ -61,7 +64,7 @@ export function topBarPayload(region: string, config: TopBarConfig | undefined, 
     if (m.endsAt) out.endsAt = m.endsAt;
     return out;
   });
-  return { v: 1, region, messages };
+  return { v: 1, region, style: config?.style ?? "marquee", messages };
 }
 
 /**
@@ -72,5 +75,8 @@ export function topBarSchedule(config: TopBarConfig | undefined, now: number): T
   if (!config) return undefined;
   const messages = config.messages.filter((m) => m.enabled && (m.endsAt === undefined || Date.parse(m.endsAt) > now));
   if (messages.length === 0) return undefined;
-  return config.productionDays === undefined ? { messages } : { productionDays: config.productionDays, messages };
+  const out: TopBarConfig = { messages };
+  if (config.productionDays !== undefined) out.productionDays = config.productionDays;
+  if (config.style !== undefined) out.style = config.style;
+  return out;
 }

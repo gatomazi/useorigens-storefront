@@ -60,6 +60,7 @@ describe("Faixa do topo: what is live and how it reads", () => {
     expect(payload).toEqual({
       v: 1,
       region: "sul",
+      style: "marquee",
       messages: [
         { id: "prazo-natal", text: "Peça até 06/12 e receba a tempo do Natal · produção em 7 dias úteis", endsAt: natal.endsAt },
         { id: "black-friday", text: "Black Friday: faltam 2 dias", href: "/sul/h/black-friday", endsAt: bf.endsAt },
@@ -67,7 +68,8 @@ describe("Faixa do topo: what is live and how it reads", () => {
       ],
     });
     expect(JSON.stringify(payload)).not.toMatch(/enabled|startsAt|order/);
-    expect(topBarPayload("sul", undefined, Date.now())).toEqual({ v: 1, region: "sul", messages: [] });
+    expect(topBarPayload("sul", undefined, Date.now())).toEqual({ v: 1, region: "sul", style: "marquee", messages: [] });
+    expect(topBarPayload("sul", { ...config, style: "rotate" }, Date.now()).style).toBe("rotate");
   });
 
   test("the page carries what is live AND what is scheduled, never what is over (the browser decides with its own clock)", () => {
@@ -84,6 +86,17 @@ describe("Faixa do topo: contract", () => {
   test("a valid configuration passes; an empty list too", () => {
     expect(validateTopBar(config, "sul").ok).toBe(true);
     expect(validateTopBar({ messages: [] }, "sul").ok).toBe(true);
+  });
+
+  test("style: marquee (the default, not stored) or rotate; anything else is refused", () => {
+    expect(validateTopBar({ ...config, style: "rotate" }, "sul").ok).toBe(true);
+    expect(validateTopBar({ ...config, style: "marquee" }, "sul").ok).toBe(true);
+    expect(validateTopBar({ ...config, style: "blink" }, "sul").ok).toBe(false);
+    const rotate = topBarFromForm([row({ text: "Parcele em até 5x" })], "", "sul", "rotate");
+    expect(rotate.ok && rotate.value.style).toBe("rotate");
+    const marquee = topBarFromForm([row({ text: "Parcele em até 5x" })], "", "sul", "marquee");
+    expect(marquee.ok && "style" in marquee.value).toBe(false);
+    expect(topBarSchedule({ ...config, style: "rotate" }, at("2026-11-20T12:00:00-03:00"))?.style).toBe("rotate");
   });
 
   test("placeholders: {producao} needs the production time, {faltam} needs an end, anything else is refused", () => {
@@ -144,6 +157,8 @@ describe("Faixa do topo: editor, draft and publish", () => {
     const texts = diffDocs(sul, r.doc).filter((c) => c.kind === "top-bar").map((c) => c.text);
     expect(texts).toContain("Faixa do topo, prazo de produção da INK: sem prazo → 7 dias úteis");
     expect(texts).toContain('Faixa do topo: mensagem "Black Friday: {faltam}" adicionada');
+    const rotating = applyOp(r.doc, { type: "set-top-bar", topBar: { ...config, style: "rotate" } }, ctx);
+    expect(rotating.ok && diffDocs(r.doc, rotating.doc).map((c) => c.text)).toContain("Faixa do topo, como as mensagens aparecem: passando (letreiro) → uma de cada vez");
     const off = applyOp(r.doc, { type: "set-top-bar", topBar: { messages: [] } }, ctx);
     expect(off.ok && "topBar" in off.doc).toBe(false);
     expect(applyOp(structuredClone(seed().docs.global), { type: "set-top-bar", topBar: config }, ctx).ok).toBe(false);

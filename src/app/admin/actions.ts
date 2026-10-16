@@ -672,7 +672,7 @@ export async function saveTopBarAction(fd: FormData) {
   } catch {
     back(here, { err: ["Não foi possível ler a lista. Recarregue a página e tente de novo."] });
   }
-  const parsed = topBarFromForm(rows, text(fd, "productionDays"), scope);
+  const parsed = topBarFromForm(rows, text(fd, "productionDays"), scope, text(fd, "style"));
   if (!parsed.ok) back(here, { err: parsed.errors });
   const outcome = await applyAndSave(scope, { type: "set-top-bar", topBar: parsed.value }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");

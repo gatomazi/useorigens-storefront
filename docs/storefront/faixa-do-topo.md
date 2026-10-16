@@ -5,6 +5,8 @@ aparecem na loja e, pelo Worker (feature `top-bar`), na faixa preta do cabeçalh
 
 ## No painel
 
+- **Como as mensagens aparecem**: **passando** (letreiro, o padrão, no estilo da Aphago: todas numa linha que corre da direita para a esquerda,
+  separadas por um ponto, e para sob o mouse ou com o foco) ou **uma de cada vez** (troca a cada 5 s). Quem desativou animações no sistema vê só a primeira, parada.
 - **Prazo de produção da INK (dias úteis)**: o "DLO". É só o tempo de produção, porque a entrega depende do CEP (a INK calcula no carrinho). Aparece no
   texto pelo marcador `{producao}` ("7 dias úteis").
 - **Mensagens** (até 10): texto de uma linha (até 90 caracteres), link opcional para uma página da própria região (`/sul/h/natal`), início e fim
@@ -23,14 +25,17 @@ aparecem na loja e, pelo Worker (feature `top-bar`), na faixa preta do cabeçalh
 - As páginas ficam em cache (ISR, 1 h), por isso a página leva a **agenda inteira** (as mensagens no ar e as agendadas, nunca as encerradas). O navegador
   decide com o próprio relógio e confere de novo a cada 30 s: a Black Friday começa à meia-noite, não quando o cache vencer. O primeiro desenho usa o
   instante em que a página foi gerada (igual ao HTML, sem erro de hidratação).
-- Com mais de uma no ar, elas se revezam a cada 5 s na ordem do painel, com pausa sob o ponteiro e com o foco. Com `prefers-reduced-motion`, fica a primeira.
+- Letreiro: dois grupos iguais lado a lado e a trilha andando metade da largura (laço sem emenda); cada grupo repete as mensagens até cobrir a faixa e a
+  duração acompanha a largura (45 px/s), então a velocidade é a mesma com uma ou dez mensagens. Só a primeira passagem é lida pelo leitor de tela e
+  alcançada pelo Tab. "Uma de cada vez": troca a cada 5 s. Os dois param sob o ponteiro e com o foco; com `prefers-reduced-motion`, fica a primeira, parada.
+- Emojis funcionam no texto (🎄 🚚).
 - Código: `src/lib/site-config/top-bar-schema.ts` (contrato), `top-bar.ts` (regras puras), `top-bar-public.ts`, `src/components/layout/TopBarMessages.tsx`,
   `AnnouncementBar` em `SiteChrome.tsx`, `src/components/admin/TopBarEditor.tsx`, `src/lib/admin/top-bar-form.ts`. Testes: `tests/unit/top-bar.test.ts`.
 
 ## Para a INK (Worker)
 
 - `GET /api/top-bar/<região>`: público, somente leitura, cache de 30 s. Contrato `v: 1`:
-  `{ v: 1, region, messages: [{ id, text, href?, endsAt? }] }`, só as mensagens no ar, com o texto **já preenchido**.
+  `{ v: 1, region, style: "marquee" | "rotate", messages: [{ id, text, href?, endsAt? }] }`, só as mensagens no ar, com o texto **já preenchido**.
 - O Worker (`use-origens-workers`, `src/top-bar-gateway.js` + `src/loader/top-bar.js`, feature opt-in `top-bar`) re-serve isso em `/__origens/top-bar`
   e troca as frases nativas da faixa da INK pelas nossas. Sem mensagem no ar, com erro ou com a feature desligada, a faixa da INK fica como está.
   Na loja única, cada visitante vê a faixa da região dele (a mesma regra da navbar).
@@ -40,3 +45,7 @@ aparecem na loja e, pelo Worker (feature `top-bar`), na faixa preta do cabeçalh
 1. Mergear e publicar o storefront (a rota `/api/top-bar/<região>` precisa existir antes do Worker).
 2. Preencher e publicar a faixa no painel.
 3. Publicar o Worker da Sul com `top-bar` somado às features que já estão no ar.
+
+## Capturas
+
+`docs/screenshots/faixa-do-topo/`: loja com o letreiro (desktop e celular), movimento reduzido, painel e tela Publicar.

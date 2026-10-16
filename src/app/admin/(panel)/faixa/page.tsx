@@ -33,7 +33,7 @@ export default async function TopBarPage({ searchParams }: { searchParams: Promi
         <p className="mt-2 text-[0.9375rem]" data-testid="top-bar-published-now"><strong>Publicado e no ar agora:</strong> {liveNow === 0 ? "nenhuma mensagem (faixa padrão)" : `${liveNow} ${liveNow === 1 ? "mensagem" : "mensagens"}`}.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
-      <TopBarEditor region={scope} productionDays={ws.doc.topBar?.productionDays} messages={ws.doc.topBar?.messages ?? []} now={now} readOnly={!canEdit(actor, scope)} action={saveTopBarAction} rev={String(ws.record?.rev ?? "null")} />
+      <TopBarEditor region={scope} style={ws.doc.topBar?.style} productionDays={ws.doc.topBar?.productionDays} messages={ws.doc.topBar?.messages ?? []} now={now} readOnly={!canEdit(actor, scope)} action={saveTopBarAction} rev={String(ws.record?.rev ?? "null")} />
     </div>
   );
 }
