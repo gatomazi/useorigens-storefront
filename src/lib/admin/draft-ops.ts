@@ -16,7 +16,8 @@ import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-sc
 import type { PromotionsConfig } from "../site-config/promotions-schema";
 import type { CardsConfig } from "../site-config/cards-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type StateSubcategories, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid">;
 
@@ -52,13 +53,23 @@ export type DraftOp =
   /** Gives a document from before the collection menu its own menu, unchanged (the Worker then follows it once published). */
   | { type: "adopt-collection-menu" }
   /**
-   * The state page's rows (`collections.stateRows`): puts a collection in (`on`) or takes it out, or moves it one step. `base` is what the page shows
-   * now (the automatic list, computed by the caller from the synced collections), so the first edit starts from it instead of from nothing.
+   * The state page's CATEGORIES (`collections.stateCategories`): puts a collection in (`on`) or takes it out, or moves it one step. `base` is what the
+   * list is now (the menu bar while the region has no list of its own, computed by the caller), so the first edit starts from it instead of from nothing.
    */
-  | ({ type: "set-state-row"; on: boolean; base: CollectionRef[] } & CollectionRef)
-  | ({ type: "move-state-row"; direction: "up" | "down"; base: CollectionRef[] } & CollectionRef)
-  /** Back to the automatic list (every public collection with products of the state, in INK's order). */
-  | { type: "reset-state-rows" }
+  | ({ type: "set-state-category"; on: boolean; base: CollectionRef[] } & CollectionRef)
+  | ({ type: "move-state-category"; direction: "up" | "down"; base: CollectionRef[] } & CollectionRef)
+  /** Back to the menu bar. */
+  | { type: "reset-state-categories" }
+  /**
+   * The state page's SUBCATEGORIES (`collections.stateSubcategories`, automatic): takes a collection out (`on: false`) or puts it back / brings an
+   * internal one in (`on: true`). `isPublic` = public on INK (only those are automatic). `base` = the current choice in that shape, computed by the
+   * caller (from a legacy `stateRows` list, if the document still has one, which this edit then replaces).
+   */
+  | ({ type: "set-state-subcategory"; on: boolean; isPublic: boolean; base: StateSubcategories } & CollectionRef)
+  /** Back to automatic: every public collection that is neither a state's nor a category. */
+  | { type: "reset-state-subcategories" }
+  /** REGION only: shows or hides one state-page section that is not built from collections ("Destaques", "Escolha o estilo", "Regiões e cidades"). */
+  | { type: "set-state-page-section"; section: StatePageSection; shown: boolean }
   /** Creates the home of a region that has none yet, from sections the caller built out of REAL sources (see admin/region-seed.ts). */
   | { type: "init-home"; sections: Section[] }
   /** Replaces the tracking configuration of the document (validated: formats, legacy only for Sul, an inactive ID only in global). */
@@ -143,7 +154,14 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-collection-arrangement") return setCollectionArrangement(doc, op);
   if (op.type === "link-collection-pages") return linkCollectionPages(doc, op.refs);
   if (op.type === "set-collection-menu-position" || op.type === "move-collection-menu" || op.type === "adopt-collection-menu") return editMenu(doc, op);
-  if (op.type === "set-state-row" || op.type === "move-state-row" || op.type === "reset-state-rows") return editStateRows(doc, op);
+  if (op.type === "set-state-category" || op.type === "move-state-category" || op.type === "reset-state-categories") return editStateCategories(doc, op);
+  if (op.type === "set-state-subcategory" || op.type === "reset-state-subcategories") return editStateSubcategories(doc, op);
+  if (op.type === "set-state-page-section") {
+    if (doc.scope === "global") return fail("global has no state pages");
+    const next = withStatePageSection(doc, op.section, op.shown);
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
   if (op.type === "init-home") {
     if (doc.scope === "global") return fail("global has no home");
     if (doc.home) return fail("this region already has a home");
@@ -383,17 +401,17 @@ function editMenu(doc: ScopeDoc, op: MenuOp): OpResult {
   return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
 }
 
-/** Edits the state page's rows. Only references are kept; which ones show in each state is decided when the page is read (collection-source.ts). */
-type StateRowsOp = Extract<DraftOp, { type: "set-state-row" | "move-state-row" | "reset-state-rows" }>;
-function editStateRows(doc: ScopeDoc, op: StateRowsOp): OpResult {
+/** Edits the state page's categories. Only references are kept; which rows show in each state is decided when the page is read (state-hierarchy.ts). */
+type StateCategoriesOp = Extract<DraftOp, { type: "set-state-category" | "move-state-category" | "reset-state-categories" }>;
+function editStateCategories(doc: ScopeDoc, op: StateCategoriesOp): OpResult {
   if (doc.scope === "global") return fail("global has no state pages");
   const collections = doc.collections ?? { enabled: [] };
   let next: CollectionRef[] | undefined;
-  if (op.type === "reset-state-rows") next = undefined;
+  if (op.type === "reset-state-categories") next = undefined;
   else {
     const same = (r: CollectionRef) => r.store === op.store && r.collectionId === op.collectionId;
-    const list = (collections.stateRows ?? op.base).map((r) => ({ store: r.store, collectionId: r.collectionId }));
-    if (op.type === "set-state-row") next = op.on ? (list.some(same) ? list : [...list, { store: op.store, collectionId: op.collectionId }]) : list.filter((r) => !same(r));
+    const list = (collections.stateCategories ?? op.base).map((r) => ({ store: r.store, collectionId: r.collectionId }));
+    if (op.type === "set-state-category") next = op.on ? (list.some(same) ? list : [...list, { store: op.store, collectionId: op.collectionId }]) : list.filter((r) => !same(r));
     else {
       const i = list.findIndex(same);
       const j = op.direction === "up" ? i - 1 : i + 1;
@@ -403,8 +421,30 @@ function editStateRows(doc: ScopeDoc, op: StateRowsOp): OpResult {
     }
   }
   const edited: ScopeDoc = { ...doc, collections: { ...collections } };
-  if (next) edited.collections!.stateRows = next;
-  else delete edited.collections!.stateRows;
+  if (next) edited.collections!.stateCategories = next;
+  else delete edited.collections!.stateCategories;
+  const check = validateScopeDoc(edited);
+  return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
+}
+
+/** Edits the state page's subcategories (automatic, so only what departs from it is kept). The legacy flat list goes away on the first edit. */
+type StateSubcategoriesOp = Extract<DraftOp, { type: "set-state-subcategory" | "reset-state-subcategories" }>;
+function editStateSubcategories(doc: ScopeDoc, op: StateSubcategoriesOp): OpResult {
+  if (doc.scope === "global") return fail("global has no state pages");
+  const { stateRows: _legacy, stateSubcategories: current, ...rest } = doc.collections ?? { enabled: [] };
+  void _legacy;
+  const collections: NonNullable<ScopeDoc["collections"]> = { ...rest, enabled: rest.enabled ?? [] };
+  if (op.type === "set-state-subcategory") {
+    const same = (r: CollectionRef) => r.store === op.store && r.collectionId === op.collectionId;
+    const entry: CollectionRef = { store: op.store, collectionId: op.collectionId };
+    const start = current ?? op.base;
+    const hidden = start.hidden.filter((r) => !same(r)).map((r) => ({ store: r.store, collectionId: r.collectionId }));
+    const added = start.added.filter((r) => !same(r)).map((r) => ({ store: r.store, collectionId: r.collectionId }));
+    if (op.isPublic && !op.on) hidden.push(entry);
+    if (!op.isPublic && op.on) added.push(entry);
+    if (hidden.length > 0 || added.length > 0) collections.stateSubcategories = { hidden, added };
+  }
+  const edited: ScopeDoc = { ...doc, collections };
   const check = validateScopeDoc(edited);
   return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
 }

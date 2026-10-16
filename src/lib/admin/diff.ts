@@ -1,6 +1,7 @@
 import { effectiveMenu, menuPositionOf, type MenuPosition } from "../site-config/collection-menu";
 import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlockConfig } from "../site-config/navigation";
 import { podioEnabledIn } from "../site-config/podio-schema";
+import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
 
@@ -47,19 +48,42 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft));
   return changes;
 }
 
-/** The state page's rows changed: the owner's list (names, in order) or back to the automatic one. Pure. */
+/** The state page's hierarchy changed: its categories (the owner's list, in order, or back to the menu bar) or its subcategories (taken out, brought in). Pure. */
 function stateRowsChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer): Change[] {
-  const was = published.collections?.stateRows;
-  const now = draft.collections?.stateRows;
-  if (json(was) === json(now)) return [];
-  const text = now
-    ? `Página do estado: ${now.length === 0 ? "nenhuma coleção" : now.map((r) => nameOf(r) ?? `#${r.collectionId}`).join(", ")}`
-    : "Página do estado: volta ao automático (todas as coleções públicas com produtos do estado)";
-  return [{ kind: "edited", sectionId: "state-rows", text }];
+  const name = (r: CollectionRef) => nameOf(r) ?? `#${r.collectionId}`;
+  const out: Change[] = [];
+  const wasCategories = published.collections?.stateCategories;
+  const nowCategories = draft.collections?.stateCategories;
+  if (json(wasCategories) !== json(nowCategories)) {
+    const text = nowCategories ? (nowCategories.length === 0 ? "nenhuma" : nowCategories.map(name).join(", ")) : "volta ao automático (as coleções do topo do menu)";
+    out.push({ kind: "edited", sectionId: "state-categories", text: `Página do estado · categorias: ${text}` });
+  }
+  const key = (r: CollectionRef) => `${r.store}:${r.collectionId}`;
+  const was = published.collections?.stateSubcategories ?? { hidden: [], added: [] };
+  const now = draft.collections?.stateSubcategories ?? { hidden: [], added: [] };
+  const newIn = (a: CollectionRef[], b: CollectionRef[]) => a.filter((r) => !b.some((x) => key(x) === key(r)));
+  const lines: [CollectionRef[], string][] = [
+    [newIn(now.hidden, was.hidden), "sai das subcategorias"],
+    [newIn(was.hidden, now.hidden), "volta às subcategorias"],
+    [newIn(now.added, was.added), "entra nas subcategorias (interna)"],
+    [newIn(was.added, now.added), "sai das subcategorias (interna)"],
+  ];
+  for (const [refs, what] of lines) for (const r of refs) out.push({ kind: "edited", sectionId: "state-subcategories", text: `Página do estado: “${name(r)}” ${what}` });
+  if (published.collections?.stateRows && !draft.collections?.stateRows) out.push({ kind: "edited", sectionId: "state-rows", text: "Página do estado: a lista antiga de carrosséis dá lugar às subcategorias automáticas" });
+  return out;
+}
+
+/** A state-page section switched on or off. Pure. */
+function statePageChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  return STATE_PAGE_SECTIONS.flatMap((section) => {
+    const now = statePageShows(draft, section);
+    if (statePageShows(published, section) === now) return [];
+    return [{ kind: now ? ("activated" as const) : ("deactivated" as const), sectionId: `state-page-${section}`, text: `Página do estado: "${STATE_PAGE_SECTION_LABELS[section]}" ${now ? "volta a aparecer" : "sai da página"}` }];
+  });
 }
 
 /** The order / hidden products of a collection changed (they belong to the collection, not to a section: every section and its page follow them). Pure. */
