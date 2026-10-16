@@ -5731,6 +5731,139 @@
       "publicador": "Instituto Mauro Borges / Governo de Goiás",
       "referencia": "Painel de dezembro de 2016, p. 1",
       "consultadoEm": "2026-10-15"
+    },
+    "breves-icmbio-mapua": {
+      "titulo": "Resex Mapuá",
+      "url": "https://www.gov.br/icmbio/pt-br/assuntos/unidade-de-conservacao/unidades-de-biomas/amazonia/lista-de-ucs/resex-mapua/resex-mapua/",
+      "publicador": "ICMBio",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "breves-icmbio-comunidades": {
+      "titulo": "Práticas inovadoras na gestão de áreas protegidas — Reserva Extrativista Mapuá",
+      "url": "https://www.gov.br/icmbio/pt-br/centrais-de-conteudo/publicacoes/publicacoes-diversas/revista_praticas_inovadoras_2014.pdf",
+      "publicador": "ICMBio",
+      "referencia": "Publicação de 2014, p. 78–79",
+      "consultadoEm": "2026-10-15"
+    },
+    "breves-ufra-planejamento": {
+      "titulo": "Uso do Sistema de Informações Geográficas como subsídio para o planejamento ambiental do município de Breves/PA",
+      "url": "https://bdta.ufra.edu.br/jspui/bitstream/123456789/4294/1/USO_DO_SIG_%20COMO_SUBSIDIO_PARA_O_PLANEJAMENTO_AMBIENTAL_DO_MUNICIPIO_DE_BREVES_PA.pdf",
+      "publicador": "Raíssa Vitória Moreira da Silva / Universidade Federal Rural da Amazônia",
+      "referencia": "Trabalho de conclusão de curso aprovado em 28/03/2025, p. 37 e 41",
+      "consultadoEm": "2026-10-15"
+    },
+    "breves-prefeitura-guia": {
+      "titulo": "Guia Turístico Breves-Pará",
+      "url": "https://breves.pa.gov.br/wp-content/uploads/2023/01/GUIAR-TURISTICO-BREVES-PA.pdf",
+      "publicador": "Prefeitura de Breves — Cultura, Turismo, Eventos e Esportes",
+      "referencia": "Guia disponibilizado em janeiro de 2023 (sem data interna)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-breves-pa": {
+      "titulo": "Biblioteca IBGE — Breves: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em BREVES (PA). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1501808",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "paragominas-prefeitura-parque": {
+      "titulo": "Parque Ambiental Ademar Monteiro reabre as portas para receber a população",
+      "url": "https://paragominas.pa.gov.br/parque-ambiental-ademar-monteiro-reabre-as-portas-para-receber-a-populacao/",
+      "publicador": "Prefeitura de Paragominas",
+      "referencia": "Notícia de 10/05/2018",
+      "consultadoEm": "2026-10-15"
+    },
+    "paragominas-pca-lagos": {
+      "titulo": "Plano de Contratação Anual 2026 — Secretaria Municipal de Urbanismo",
+      "url": "https://paragominas.pa.gov.br/wp-content/uploads/2026/01/14-SEMUR.pdf",
+      "publicador": "Prefeitura de Paragominas — SEMUR",
+      "referencia": "Plano de 2026, itens 20 e 27",
+      "consultadoEm": "2026-10-15"
+    },
+    "paragominas-plano-residuos": {
+      "titulo": "Plano Municipal de Gestão Integrada de Resíduos Sólidos de Paragominas",
+      "url": "https://paragominas.pa.gov.br/wp-content/uploads/2020/04/PLANO_MUNICIPAL_GIRSP.pdf",
+      "publicador": "Prefeitura de Paragominas — Secretaria Municipal de Urbanismo",
+      "referencia": "Plano disponibilizado em abril de 2020, p. 26",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-paragominas-pa": {
+      "titulo": "Biblioteca IBGE — Paragominas: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Paragominas (PA). Prefeitura. 2009. Ofício encaminhado ao IBGE contendo o histórico do município)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=1505502",
+      "referencia": "Registro de 2001",
+      "consultadoEm": "2026-10-15"
+    },
+    "mateiros-doe-localizacao-dunas": {
+      "titulo": "Instrução Normativa nº 002/2022/GABSEC/SECTUR",
+      "publicador": "Governo do Tocantins — Secretaria da Cultura e Turismo",
+      "url": "https://doe.to.gov.br/diario/4640/download",
+      "referencia": "Diário Oficial nº 6091, 19/05/2022, p. 19",
+      "consultadoEm": "2026-10-15"
+    },
+    "erechim-estado-parque": {
+      "titulo": "Parque Municipal Longines Malinowski",
+      "url": "https://www.turismo.rs.gov.br/turismo/atrativo/visualizar/698",
+      "publicador": "Secretaria de Turismo do Rio Grande do Sul",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-erechim-rs": {
+      "titulo": "Biblioteca IBGE — Erechim: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em ERECHIM (RS). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=4307005",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "erechim-prefeitura-castelinho": {
+      "titulo": "Castelinho",
+      "url": "https://www.pmerechim.rs.gov.br//pagina/352/castelinho",
+      "publicador": "Prefeitura de Erechim",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "erechim-prefeitura-estacao": {
+      "titulo": "Estação Ferroviária",
+      "url": "https://www.pmerechim.rs.gov.br/pagina/362/estacao-ferroviaria",
+      "publicador": "Prefeitura de Erechim",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "erechim-plano-manejo": {
+      "titulo": "Plano de Manejo — Parque Natural Municipal Longines Malinowski",
+      "url": "https://www.pmerechim.rs.gov.br/uploads/paginas/515b35ff2c97e4536c58f83c593d6cb7.pdf",
+      "publicador": "Prefeitura de Erechim / equipe do Plano de Manejo",
+      "referencia": "Plano de dezembro de 2011, p. 112",
+      "consultadoEm": "2026-10-15"
+    },
+    "jatai-prefeitura-cidade": {
+      "titulo": "A cidade de Jataí",
+      "url": "https://www.jatai.go.gov.br/cidade-jatai/",
+      "publicador": "Prefeitura de Jataí",
+      "referencia": "Página institucional (sem data)",
+      "consultadoEm": "2026-10-15"
+    },
+    "jatai-prefeitura-museu-historico": {
+      "titulo": "Exposição no Museu Histórico de Jataí valoriza a deficiência",
+      "url": "https://www.jatai.go.gov.br/exposicao-no-museu-historico-de-jatai-valoriza-a-deficiencia/",
+      "publicador": "Prefeitura de Jataí",
+      "referencia": "Notícia de 11/09/2025",
+      "consultadoEm": "2026-10-15"
+    },
+    "ibge-biblioteca-jatai-go": {
+      "titulo": "Biblioteca IBGE — Jataí: histórico, gentílico e formação administrativa",
+      "publicador": "IBGE (histórico com fonte em Jataí (GO). Prefeitura. 2015)",
+      "url": "https://servicodados.ibge.gov.br/api/v1/biblioteca?codmun=5211909",
+      "referencia": "Registro de 2002",
+      "consultadoEm": "2026-10-15"
+    },
+    "jatai-goias-turismo": {
+      "titulo": "Município de Jataí — levantamento dos subsistemas naturais",
+      "url": "https://goias.gov.br/turismo/wp-content/uploads/sites/4/2023/12/20-%E2%80%93-Municipio-de-Jatai.pdf",
+      "publicador": "Goiás Turismo / Governo de Goiás",
+      "referencia": "Documento disponibilizado em dezembro de 2023, p. 4",
+      "consultadoEm": "2026-10-15"
     }
   },
   "cidades": {
@@ -25678,7 +25811,8 @@
         "resumo": "A paisagem de Mateiros inclui a Cachoeira do Formiga e dunas formadas por partículas de arenito trazidas pelo vento da Serra do Espírito Santo. O município foi criado em 1991 e instalado em 1993. O histórico do IBGE destaca a produção de artesanato de capim dourado na comunidade quilombola Mumbuca.",
         "fontesResumo": [
           "mateiros-estado-jalapao",
-          "ibge-biblioteca-mateiros-to"
+          "ibge-biblioteca-mateiros-to",
+          "mateiros-doe-localizacao-dunas"
         ],
         "referencias": [
           {
@@ -25687,7 +25821,8 @@
             "titulo": "Dunas do Jalapão",
             "texto": "O portal estadual explica sua formação pela ação do vento sobre partículas de arenito vindas da Serra do Espírito Santo. A maquete destaca essa paisagem de areia no interior do país.",
             "fontes": [
-              "mateiros-estado-jalapao"
+              "mateiros-estado-jalapao",
+              "mateiros-doe-localizacao-dunas"
             ],
             "descoberta": {
               "modulo": "dunas",
@@ -26565,6 +26700,536 @@
         "status": "curadoria inicial",
         "em": "2026-10-15",
         "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Uma evidência MANUAL: nota oficial de 07/04/2026 publicada apenas em imagem, lida integralmente. Registra interrupção do tráfego em 01/04/2026, sem se presumir situação atual ou conclusão da restauração. Revisar permanência do marco e condições de conservação. Data de distrito diverge: 1842 na apresentação municipal de 2021, 1852 no IBGE; ficou de fora. Relevo baixo é síntese do vale, não medição topográfica."
+      }
+    },
+    "1501808": {
+      "identidade": {
+        "id": "1501808",
+        "ibge": "1501808",
+        "nome": "Breves",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Furos, floresta e saberes do artesanato no Marajó.",
+        "resumo": "Breves fica na região dos Furos de Breves; um estudo da UFRA de 2025 descreveu seu relevo predominantemente plano e a presença de floresta aluvial. Foi elevada a vila em 1851 e a cidade em 1909. Na Reserva Extrativista Mapuá, o ICMBio registrou em 2014 atividades como o manejo do açaí e o cultivo da mandioca.",
+        "fontesResumo": [
+          "breves-prefeitura-guia",
+          "breves-ufra-planejamento",
+          "ibge-biblioteca-breves-pa",
+          "breves-icmbio-comunidades"
+        ],
+        "referencias": [
+          {
+            "id": "reserva-mapua",
+            "tipo": "natureza",
+            "titulo": "Reserva Extrativista Mapuá",
+            "texto": "Criada em 2005, a reserva fica em Breves. Uma publicação do ICMBio de 2014 descreveu o manejo do açaí e o cultivo da mandioca entre as atividades das comunidades.",
+            "fontes": [
+              "breves-icmbio-mapua",
+              "breves-icmbio-comunidades"
+            ]
+          },
+          {
+            "id": "praca-ceu",
+            "tipo": "cultura",
+            "titulo": "Praça CEU",
+            "texto": "O guia municipal apresenta a praça como espaço de cultura, lazer e práticas esportivas na cidade de Breves.",
+            "fontes": [
+              "breves-prefeitura-guia"
+            ]
+          },
+          {
+            "id": "artesanato-local",
+            "tipo": "tradicao",
+            "titulo": "Artesanato de cipó, palha e barro",
+            "texto": "O guia turístico municipal registra o uso de cipós, talas de palmeiras, madeira, barro e palha. Entre as peças citadas estão cestarias, paneiros, tipitis, matapis e panelas de barro.",
+            "fontes": [
+              "breves-prefeitura-guia"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "brevense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-breves-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -1.6913,
+          "lon": -50.4831,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 106968,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 9566.572,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Breves",
+          "intermediaria": "Breves",
+          "mesorregiao": "Marajó",
+          "microrregiao": "Furos de Breves",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "amazonia",
+        "ambientes": [
+          "urbano",
+          "rio",
+          "floresta"
+        ],
+        "rotulo": "Cidade de furos e floresta aluvial",
+        "relevo": {
+          "modulo": "planicie"
+        },
+        "vegetacao": [
+          [
+            "mata",
+            8
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "rio"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. O cenário de planície e floresta tem apoio em pesquisa da UFRA de 2025, não apenas em associação regional. Revisar o uso de TCC como fonte geográfica e a apresentação dos saberes comunitários. O histórico do IBGE tem datas incoerentes (1970 e 1981 em contexto colonial), omitidas. A área da Resex diverge entre ficha atual e publicação de 2014; não foi publicada. Guia turístico sem data interna: serviços, agenda de festas e obras anunciadas ficaram de fora. Sem marcos por falta de formas e comprovação de edifícios específicos."
+      }
+    },
+    "1505502": {
+      "identidade": {
+        "id": "1505502",
+        "ibge": "1505502",
+        "nome": "Paragominas",
+        "uf": "PA",
+        "regiaoLoja": "norte"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "O Uraim cruza a cidade entre colinas e áreas verdes.",
+        "resumo": "O Uraim atravessa Paragominas, cujo relevo inclui colinas, tabuleiros, terraços e várzeas descritos no plano municipal de resíduos. O município foi criado e instalado em 1965. O Parque Ambiental Adhemar Monteiro e o Lago Verde integram suas referências urbanas de água e lazer.",
+        "fontesResumo": [
+          "paragominas-plano-residuos",
+          "ibge-biblioteca-paragominas-pa",
+          "paragominas-prefeitura-parque",
+          "paragominas-pca-lagos"
+        ],
+        "referencias": [
+          {
+            "id": "parque-ambiental",
+            "tipo": "natureza",
+            "titulo": "Parque Ambiental Adhemar Monteiro",
+            "texto": "Às margens do Uraim, o parque é apresentado pela Prefeitura como lugar de lazer e educação ambiental. O nome também aparece no planejamento municipal de 2026.",
+            "fontes": [
+              "paragominas-prefeitura-parque",
+              "paragominas-pca-lagos"
+            ]
+          },
+          {
+            "id": "rio-uraim",
+            "tipo": "paisagem",
+            "titulo": "Rio Uraim",
+            "texto": "O curso d’água atravessa a cidade e acompanha o Parque Ambiental. É um dos elementos que ajudam a ler a paisagem urbana de Paragominas.",
+            "fontes": [
+              "paragominas-plano-residuos",
+              "paragominas-prefeitura-parque"
+            ]
+          },
+          {
+            "id": "lago-verde",
+            "tipo": "paisagem",
+            "titulo": "Lago Verde",
+            "texto": "O plano municipal de contratações de 2026 registra atividades de limpeza e manutenção do Lago Verde e dos lagos do Parque Ambiental. O documento distingue esses espaços aquáticos no planejamento da cidade.",
+            "fontes": [
+              "paragominas-pca-lagos"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "paragominense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-paragominas-pa"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -3,
+          "lon": -47.3554,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 105550,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 19342.565,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Norte",
+          "imediata": "Paragominas",
+          "intermediaria": "Castanhal",
+          "mesorregiao": "Sudeste Paraense",
+          "microrregiao": "Paragominas",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "vale",
+        "ambientes": [
+          "urbano",
+          "rio"
+        ],
+        "rotulo": "Cidade cortada pelo Uraim, com colinas suaves",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.4
+        },
+        "vegetacao": [
+          [
+            "redonda",
+            6
+          ],
+          [
+            "arbusto",
+            5
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "rio"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Não foram criados marcos para o lago ou para as pontes do parque: as formas disponíveis acrescentariam detalhes sem fonte ou não confirmados hoje. A notícia de 2018 documenta o parque, mas não fundamenta afirmação sobre funcionamento atual. O PCA de 2026 prevê compras e manutenção: não se afirma execução nem existência de equipamentos previstos. A paisagem não generaliza floresta primária para todo o município."
+      }
+    },
+    "4307005": {
+      "identidade": {
+        "id": "4307005",
+        "ibge": "4307005",
+        "nome": "Erechim",
+        "uf": "RS",
+        "regiaoLoja": "sul"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Mata com araucárias e memória ferroviária no núcleo urbano.",
+        "resumo": "No perímetro urbano de Erechim, o Parque Longines Malinowski conserva mata com araucárias sobre um relevo irregular descrito em seu plano de manejo. A formação da cidade se liga à ferrovia entre o Rio Grande do Sul e São Paulo. O município foi criado em 1918, desmembrado de Passo Fundo. O Castelinho foi construído para abrigar a Comissão de Terras do Estado.",
+        "fontesResumo": [
+          "erechim-estado-parque",
+          "erechim-plano-manejo",
+          "ibge-biblioteca-erechim-rs",
+          "erechim-prefeitura-castelinho"
+        ],
+        "referencias": [
+          {
+            "id": "parque-longines",
+            "tipo": "natureza",
+            "titulo": "Parque Natural Municipal Longines Malinowski",
+            "texto": "O parque conserva um fragmento de mata com araucária dentro do perímetro urbano. O portal estadual descreve uma área de 24 hectares próxima ao centro antigo.",
+            "fontes": [
+              "erechim-estado-parque"
+            ]
+          },
+          {
+            "id": "castelinho",
+            "tipo": "patrimonio",
+            "titulo": "Castelinho",
+            "texto": "O edifício de madeira foi construído entre 1912 e 1915 para a Comissão de Terras do Estado. Sua inauguração ocorreu em 1916.",
+            "fontes": [
+              "erechim-prefeitura-castelinho"
+            ]
+          },
+          {
+            "id": "estacao-ferroviaria",
+            "tipo": "patrimonio",
+            "titulo": "Estação Ferroviária",
+            "texto": "Inaugurado em 3 de agosto de 1910, o prédio da estação se liga à expansão da cidade e da região, segundo a Prefeitura.",
+            "fontes": [
+              "erechim-prefeitura-estacao"
+            ],
+            "descoberta": {
+              "modulo": "estacao",
+              "nota": "Na maquete, estação genérica; plataforma, trilho, locomotiva, cores e proporções são ilustrativos."
+            },
+            "curto": "Estação inaugurada em 1910, ligada à expansão de Erechim e do norte gaúcho."
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "erechinense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-erechim-rs"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -27.6353,
+          "lon": -52.2743,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 105705,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 429.164,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Sul",
+          "imediata": "Erechim",
+          "intermediaria": "Passo Fundo",
+          "mesorregiao": "Noroeste Rio-grandense",
+          "microrregiao": "Erechim",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "serra",
+        "ambientes": [
+          "urbano",
+          "floresta"
+        ],
+        "rotulo": "Núcleo urbano com araucárias e estação",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.45
+        },
+        "vegetacao": [
+          [
+            "araucaria",
+            6
+          ],
+          [
+            "redonda",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [
+          {
+            "modulo": "estacao",
+            "referencia": "estacao-ferroviaria"
+          }
+        ]
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Castelinho apenas em texto: não há módulo apropriado para o prédio de madeira e a página municipal o informa em restauração, sem se presumir reabertura. A forma da estação é genérica e não comprova operação de trens ou visitação. A geomorfologia citada é a do parque no plano de 2011, não de todo o município. A data de transferência do parque diverge entre fontes (1939/1948), omitida."
+      }
+    },
+    "5211909": {
+      "identidade": {
+        "id": "5211909",
+        "ibge": "5211909",
+        "nome": "Jataí",
+        "uf": "GO",
+        "regiaoLoja": "centro-oeste"
+      },
+      "cobertura": "completo",
+      "conteudo": {
+        "frase": "Relevo suave do Cerrado, lago e espaços de memória.",
+        "resumo": "O levantamento da Goiás Turismo descreve Jataí com relevo plano a suavemente ondulado e cobertura de Cerrado. Paraíso tornou-se vila em 1882; em 1895, foi elevada a cidade com o nome Jataí. O Memorial JK e o Museu Histórico Francisco Honório de Campos integram seus espaços de memória.",
+        "fontesResumo": [
+          "jatai-goias-turismo",
+          "ibge-biblioteca-jatai-go",
+          "jatai-prefeitura-cidade",
+          "jatai-prefeitura-museu-historico"
+        ],
+        "referencias": [
+          {
+            "id": "memorial-jk",
+            "tipo": "cultura",
+            "titulo": "Memorial JK",
+            "texto": "Dentro do Parque JK, o memorial se dedica aos arquivos e à memória de Juscelino Kubitschek. A apresentação municipal o relaciona à história da mudança da capital federal.",
+            "fontes": [
+              "jatai-prefeitura-cidade"
+            ]
+          },
+          {
+            "id": "museu-historico",
+            "tipo": "cultura",
+            "titulo": "Museu Histórico de Jataí Francisco Honório de Campos",
+            "texto": "Na Rua José Manoel Vilela, o museu compõe os espaços de memória da cidade. Em setembro de 2025, a Prefeitura anunciou ali a exposição Memória, História e defiCiência, sobre percursos anticapacitistas.",
+            "fontes": [
+              "jatai-prefeitura-museu-historico"
+            ]
+          },
+          {
+            "id": "lago-bonsucesso",
+            "tipo": "paisagem",
+            "titulo": "Lago Bonsucesso",
+            "texto": "O lago é referência do Polo Turístico Vale do Paraíso, situado pela Prefeitura às suas margens, junto à BR-158.",
+            "fontes": [
+              "jatai-prefeitura-cidade"
+            ]
+          }
+        ],
+        "curiosidades": [],
+        "gentilico": {
+          "oficial": "jataiense",
+          "variantes": [],
+          "fontes": [
+            "ibge-biblioteca-jatai-go"
+          ]
+        }
+      },
+      "geografia": {
+        "sede": {
+          "lat": -17.8858,
+          "lon": -51.724,
+          "definicao": "Sede municipal (IBGE, Localidades 2022)",
+          "fontes": [
+            "ibge-localidades-2022"
+          ]
+        },
+        "populacao": {
+          "censo": {
+            "valor": 105729,
+            "ano": 2022,
+            "fontes": [
+              "ibge-censo-2022-4714"
+            ]
+          },
+          "estimativa": null
+        },
+        "area": {
+          "km2": 7178.792,
+          "ano": 2022,
+          "fontes": [
+            "ibge-censo-2022-4714"
+          ]
+        },
+        "regioes": {
+          "grandeRegiao": "Centro-Oeste",
+          "imediata": "Jataí-Mineiros",
+          "intermediaria": "Rio Verde",
+          "mesorregiao": "Sul Goiano",
+          "microrregiao": "Sudoeste de Goiás",
+          "fontes": [
+            "ibge-localidades-api"
+          ]
+        }
+      },
+      "visual": {
+        "base": "cerrado",
+        "ambientes": [
+          "urbano",
+          "cerrado"
+        ],
+        "rotulo": "Relevo suave do Cerrado e o Lago Bonsucesso",
+        "relevo": {
+          "modulo": "vale-montes",
+          "altura": 0.3
+        },
+        "vegetacao": [
+          [
+            "cerrado",
+            7
+          ],
+          [
+            "arbusto",
+            4
+          ]
+        ],
+        "construcoes": {
+          "estilo": "urbano",
+          "casas": 8,
+          "predios": 2
+        },
+        "extras": [],
+        "marcos": [],
+        "agua": {
+          "modulo": "lago"
+        }
+      },
+      "revisao": {
+        "status": "curadoria inicial",
+        "em": "2026-10-15",
+        "observacao": "Texto escrito a partir das fontes listadas; falta revisão editorial da Use Origens. Sem marco: o lago não ganhou ilha ou trampolim sem fonte; o memorial e o museu permanecem em texto, sem reproduzir arquitetura ou esculturas. A fonte do museu registra um anúncio de exposição em 2025, não programação vigente. O painel IMB de 2016 foi descartado para geografia por dados suspeitos de altitude e hidrografia; usou-se levantamento da Goiás Turismo. Referência histórica a JK, sem política atual."
       }
     }
   }
