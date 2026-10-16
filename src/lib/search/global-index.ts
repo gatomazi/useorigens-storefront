@@ -23,6 +23,7 @@ import { readPublished } from "../site-config/published";
 import type { PublishedBundle, ScopeDoc, Source as CarouselSource } from "../site-config/schema";
 import { collectionPagePath, collectionUrl, resolveSource, type EditorialItems, type SourceResult } from "../site-config/sources";
 import { umaPencaLookup } from "../umapenca/carousel";
+import { isArticleOfRegion } from "../umapenca/region";
 import { readUmaPencaSnapshot, umaPencaSnapshotPath } from "../umapenca/snapshot";
 import { prepareGlobalDocs, type GlobalDoc, type PreparedGlobalDoc } from "./global";
 
@@ -252,7 +253,7 @@ export function globalSearchIndex(): Built {
   const started = performance.now();
   const garmentIndex = getGarmentIndex();
   const bundle = cms?.bundle;
-  const umaPenca = readUmaPencaSnapshot()?.articles.length ?? 0;
+  const umaPenca = readUmaPencaSnapshot()?.articles ?? [];
   const byRegion = new Map<RegionSlug, PreparedGlobalDoc[]>();
   const byKind: Record<string, number> = {};
   let approxBytes = 0;
@@ -267,7 +268,7 @@ export function globalSearchIndex(): Built {
       const result: SourceResult = resolveSource(source, editorial, categories, umaPencaLookup(region));
       return result.status === "ok" ? result.items.length : 0;
     };
-    const docs = buildGlobalDocs({ region, catalog, garmentIndex, doc, media: bundle?.media, collections: store ? collectionsForRegion(region, (s) => catalog.productsOfStore(s)) : [], collectionStore, carouselItems, umaPencaArticles: umaPenca });
+    const docs = buildGlobalDocs({ region, catalog, garmentIndex, doc, media: bundle?.media, collections: store ? collectionsForRegion(region, (s) => catalog.productsOfStore(s)) : [], collectionStore, carouselItems, umaPencaArticles: umaPenca.filter((a) => isArticleOfRegion(a, region)).length });
     for (const d of docs) {
       byKind[d.kind] = (byKind[d.kind] ?? 0) + 1;
       approxBytes += JSON.stringify(d).length;

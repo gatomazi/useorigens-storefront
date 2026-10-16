@@ -34,6 +34,8 @@ describe("Uma Penca feed parser", () => {
         price: 59.99,
         salePrice: null,
         color: "Multicolorido",
+        region: null,
+        uf: null,
       },
     ]);
   });
@@ -82,6 +84,8 @@ describe("Uma Penca feed parser", () => {
         price: 90,
         salePrice: null,
         color: "Multicolorido",
+        region: "sul",
+        uf: "RS",
       },
     ]);
   });
