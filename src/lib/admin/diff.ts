@@ -3,10 +3,11 @@ import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlo
 import { podioEnabledIn } from "../site-config/podio-schema";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
+import type { TopBarMessage } from "../site-config/top-bar-schema";
 import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "podio"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "podio"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
@@ -48,7 +49,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft));
   return changes;
 }
 
@@ -170,6 +171,38 @@ function mundoChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   if (was === now) return [];
   const text = (m: typeof was) => (m ? MUNDO_TEXTO[m] : "segue o servidor");
   return [{ kind: "theme", sectionId: "mundo", text: `Meu Pequeno Mundo: ${text(was)} → ${text(now)}` }];
+}
+
+const barName = (m: TopBarMessage) => `mensagem "${m.text}"`;
+const daysName = (days: number | undefined) => (days === undefined ? "sem prazo" : `${days} ${days === 1 ? "dia útil" : "dias úteis"}`);
+
+/** "Faixa do topo": messages added, removed, switched, edited or reordered, and the production time. Pure. */
+function topBarChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const before = published.topBar?.messages ?? [];
+  const after = draft.topBar?.messages ?? [];
+  const out: Change[] = [];
+  const was = published.topBar?.productionDays;
+  const now = draft.topBar?.productionDays;
+  const styleName = (doc: ScopeDoc) => (doc.topBar?.style === "rotate" ? "uma de cada vez" : "passando (letreiro)");
+  if (styleName(published) !== styleName(draft)) out.push({ kind: "top-bar", sectionId: "top-bar:style", text: `Faixa do topo, como as mensagens aparecem: ${styleName(published)} → ${styleName(draft)}` });
+  if (was !== now) out.push({ kind: "top-bar", sectionId: "top-bar:production", text: `Faixa do topo, prazo de produção da INK: ${daysName(was)} → ${daysName(now)}` });
+  const old = new Map(before.map((m) => [m.id, m]));
+  for (const m of after) {
+    const id = `top-bar:${m.id}`;
+    const prev = old.get(m.id);
+    if (!prev) out.push({ kind: "top-bar", sectionId: id, text: `Faixa do topo: ${barName(m)} adicionada${m.enabled ? "" : " (desativada)"}` });
+    else {
+      if (prev.enabled !== m.enabled) out.push({ kind: "top-bar", sectionId: id, text: `Faixa do topo: ${barName(m)} ${m.enabled ? "ativada" : "desativada"}` });
+      const { enabled: _a, order: _b, ...restOld } = prev;
+      const { enabled: _c, order: _d, ...restNew } = m;
+      if (json(restOld) !== json(restNew)) out.push({ kind: "top-bar", sectionId: id, text: `Faixa do topo: ${barName(m)} editada` });
+    }
+  }
+  const ids = new Set(after.map((m) => m.id));
+  for (const m of before) if (!ids.has(m.id)) out.push({ kind: "top-bar", sectionId: `top-bar:${m.id}`, text: `Faixa do topo: ${barName(m)} removida` });
+  const order = (list: TopBarMessage[]) => list.filter((m) => ids.has(m.id) && old.has(m.id)).map((m) => m.id).join(",");
+  if (order(before) !== order(after)) out.push({ kind: "top-bar", sectionId: "top-bar:order", text: "Faixa do topo: nova ordem das mensagens" });
+  return out;
 }
 
 /** "O Pódio" switched on or off in the region (it belongs to the document, not to a section). Pure. */

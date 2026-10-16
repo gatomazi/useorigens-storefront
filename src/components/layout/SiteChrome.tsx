@@ -24,13 +24,28 @@ import { CartMirrorMenu } from "../cart-mirror/CartMirrorMenu";
 import { cartRegionFor, checkoutStoreFor } from "@/lib/catalog/commerce-mode";
 import { FavoritesMenu } from "../favorites/FavoritesMenu";
 import { SearchDialog } from "../search/SearchDialog";
+import { TopBarMessages } from "./TopBarMessages";
+import { topBarSchedule, type TopBarConfig } from "@/lib/site-config/top-bar";
+import { publishedTopBar } from "@/lib/site-config/top-bar-public";
 
-export function AnnouncementBar({ region, cityCount }: { region: RegionSlug; cityCount: number }) {
+/** The instant of this render (the strip's schedule is decided against it, then again in the browser). */
+const renderTime = (): number => Date.now();
+
+/**
+ * The strip above the header: the region's "Faixa do topo" messages (CMS, published only) when one is live, otherwise the default line. `topBar`
+ * overrides the published configuration (the CMS preview of a draft).
+ */
+export function AnnouncementBar({ region, cityCount, topBar }: { region: RegionSlug; cityCount: number; topBar?: TopBarConfig }) {
+  const now = renderTime();
+  const schedule = topBarSchedule(topBar ?? publishedTopBar(region), now);
+  const fallback = (
+    <p className="wrap py-2 text-center text-[0.8125rem] font-medium leading-snug sm:text-[0.875rem]">
+      {numberPt.format(cityCount)} cidades do {REGIONS[region].name} em camiseta.<span className="hidden sm:inline"> Você escolhe aqui e finaliza a compra {checkoutStoreFor(region).finishIn}.</span>
+    </p>
+  );
   return (
     <div className="on-ink">
-      <p className="wrap py-2 text-center text-[0.8125rem] font-medium leading-snug sm:text-[0.875rem]">
-        {numberPt.format(cityCount)} cidades do {REGIONS[region].name} em camiseta.<span className="hidden sm:inline"> Você escolhe aqui e finaliza a compra {checkoutStoreFor(region).finishIn}.</span>
-      </p>
+      {schedule ? <TopBarMessages schedule={schedule} renderedAt={now}>{fallback}</TopBarMessages> : fallback}
     </div>
   );
 }
