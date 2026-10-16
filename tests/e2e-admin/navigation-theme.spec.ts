@@ -125,10 +125,10 @@ test("given the desktop header of a region with launched neighbours, when read, 
   await expect(header.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
 });
 
-test("given Navegação, when the labels, order and visibility are edited, then the preview follows live, the store only changes after publishing, and the states stay automatic", async ({ page }) => {
+test("given the Menu screen, when the labels, order and visibility are edited, then the preview follows live, the store only changes after publishing, and the states stay automatic", async ({ page }) => {
   await chooseRegion(page, "Norte");
   await open(page, "/admin/navegacao");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("Navegação");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("Menu");
   // No manual list of states or regions exists on the screen: they are shown as read-only facts.
   await expect(page.getByTestId("auto-states")).toContainText("Acre, Amazonas, Amapá, Pará, Rondônia, Roraima, Tocantins");
   await expect(page.getByTestId("auto-regions")).toContainText("Sul, Centro-Oeste");
@@ -239,8 +239,11 @@ test("given the global palette, when a region inherits it, then the region shows
   await expect(global.getByTestId("contrast-global-menu")).toHaveAttribute("data-level", "ok");
   await global.getByTestId("save-theme-global").click();
   await expect(flash(page, /Rascunho da aparência da Use Origens salvo/)).toBeVisible();
+  // The global document is published from Publicar (Aparência only points there).
+  await expect(page.getByTestId("global-pending")).toContainText("paleta da Use Origens");
+  await open(page, "/admin/publicar");
   await page.getByTestId("publish-global-theme").click();
-  await expect(flash(page, /Paleta global publicada/)).toBeVisible({ timeout: 300_000 });
+  await expect(flash(page, /Configuração global publicada .*paleta da Use Origens/)).toBeVisible({ timeout: 300_000 });
 
   // 2. Nobody changed by themselves: Norte has no config, Centro-Oeste neither, Sul has its own.
   for (const [slug, bg] of [["norte", "rgb(35, 75, 80)"], ["centro-oeste", "rgb(140, 59, 31)"], ["sul", "rgb(31, 42, 68)"]] as const) {
@@ -267,8 +270,11 @@ test("given the global palette, when a region inherits it, then the region shows
   await page.getByTestId("theme-global").getByTestId("color-mobileMenuBackground").fill("#0b3d2e");
   await page.getByTestId("theme-global").getByTestId("save-theme-global").click();
   await expect(flash(page, /Rascunho da aparência da Use Origens salvo/)).toBeVisible();
+  // The global document is published from Publicar (Aparência only points there).
+  await expect(page.getByTestId("global-pending")).toContainText("paleta da Use Origens");
+  await open(page, "/admin/publicar");
   await page.getByTestId("publish-global-theme").click();
-  await expect(flash(page, /Paleta global publicada/)).toBeVisible({ timeout: 300_000 });
+  await expect(flash(page, /Configuração global publicada .*paleta da Use Origens/)).toBeVisible({ timeout: 300_000 });
   await expect(await openPublicMenu(page, "norte"), "followed the global").toHaveCSS("background-color", "rgb(11, 61, 46)");
   await expect(await openPublicMenu(page, "sul"), "own palette still its own").toHaveCSS("background-color", "rgb(31, 42, 68)");
   await expect(await openPublicMenu(page, "centro-oeste"), "no config still today's look").toHaveCSS("background-color", "rgb(140, 59, 31)");

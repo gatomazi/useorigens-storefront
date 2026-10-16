@@ -15,10 +15,11 @@ async function open(page: Page, url: string) {
 type Entry = { id: number; title: string; slug: string; url: string; order: number };
 const navbar = async (page: Page) => (await (await page.request.get("/api/navbar/sul")).json()) as { v: number; region: string; states: { uf: string }[]; top: Entry[]; more: Entry[]; moreLabel?: string };
 const titles = (l: Entry[]) => l.map((e) => e.title);
-const row = (page: Page, name: string) => page.locator("table.a-table tbody tr", { has: page.locator("p.font-bold", { hasText: new RegExp(`^${name}$`) }) }).first();
+// The collection menu is on the Menu screen: every collection that can link somewhere sits in one of its lists (Topo, Categorias, Não exibidas).
+const item = (page: Page, name: string) => page.getByTestId("collection-menu").locator("li", { has: page.locator("span.font-semibold", { hasText: new RegExp(`^${name}$`) }) }).first();
 const place = async (page: Page, name: string, position: "Não exibir" | "Topo" | "Categorias") => {
-  await open(page, `/admin/colecoes?q=${encodeURIComponent(name)}`);
-  await row(page, name).getByRole("button", { name: position, exact: true }).click();
+  await open(page, "/admin/navegacao");
+  await item(page, name).getByRole("button", { name: position, exact: true }).click();
   await expect(page.getByText(/depois que você publicar/)).toBeVisible();
 };
 const publish = async (page: Page, note: string) => {
@@ -39,10 +40,11 @@ test("given the local CMS, when collections are put on top, hidden, published, r
   expect([before.v, before.region, before.top, before.more, before.moreLabel], "no menu yet: the Worker gets what it always got").toEqual([2, "sul", [], [], undefined]);
   expect(before.states.map((s) => s.uf)).toEqual(["PR", "SC", "RS"]); // Regiões is fixed
 
-  // The library states the rules; the site already lists every public collection under Categorias.
-  await open(page, "/admin/colecoes");
+  // The Menu screen states the rules; the site already lists every public collection under Categorias. The library keeps the search coverage.
+  await open(page, "/admin/navegacao");
   await expect(page.getByTestId("collection-menu")).toContainText("Toda coleção pública entra sozinha em Categorias");
   await expect(page.getByTestId("menu-adopt")).toBeVisible();
+  await open(page, "/admin/colecoes");
   const coverage = page.getByTestId("search-coverage");
   await expect(coverage).toContainText("Busca do site por nome de coleção");
   if (process.env.EXPECT_SEARCH_COVERAGE === "complete") await expect(coverage).not.toContainText("parcial");
@@ -52,14 +54,15 @@ test("given the local CMS, when collections are put on top, hidden, published, r
   // Several on top (no cap; "Novidades" is just a name) and one taken out.
   for (const name of ["Novidades", "Do Nosso Jeito", "Feito Para Você", "Fala Daqui"]) await place(page, name, "Topo");
   await place(page, "Paraná", "Não exibir");
-  await open(page, "/admin/colecoes");
+  await open(page, "/admin/navegacao");
   await expect(page.getByTestId("menu-top")).toContainText("Topo (4)");
   await expect(page.getByTestId("menu-categories")).not.toContainText("Paraná");
+  await expect(page.getByTestId("menu-off")).toContainText("Paraná");
   expect((await navbar(page)).top, "a draft is not public").toEqual([]);
 
   // An internal collection enabled in the CMS (an earlier spec enabled "Fé de Origem") can be brought in: on the site only, it has no INK page.
   await place(page, "Fé de Origem", "Categorias");
-  await open(page, "/admin/colecoes");
+  await open(page, "/admin/navegacao");
   await expect(page.getByTestId("menu-categories").locator("li", { hasText: "Fé de Origem" })).toContainText("só no site");
 
   // A menu-only change is publishable and says what changes, the INK navbar included.
@@ -90,7 +93,7 @@ test("given the local CMS, when collections are put on top, hidden, published, r
 
   // Regroup and reorder: only the menu changes, nothing is duplicated.
   await place(page, "Fala Daqui", "Categorias");
-  await open(page, "/admin/colecoes");
+  await open(page, "/admin/navegacao");
   await page.getByRole("button", { name: "Subir Feito Para Você" }).click();
   await expect(page.getByText(/Ordem do topo alterada/)).toBeVisible();
   await publish(page, "menu: Fala Daqui para Categorias, reordena");

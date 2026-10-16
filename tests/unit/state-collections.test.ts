@@ -2,7 +2,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { stateCollectionRows, stateRowsReach } from "@/lib/catalog/collection-source";
+import { stateCollectionRows, stateRowMatrix, stateRowsReach } from "@/lib/catalog/collection-source";
 import { applyOp } from "@/lib/admin/draft-ops";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 import type { CollectionRecord } from "@/lib/catalog/collections";
@@ -46,6 +46,20 @@ describe("a state's collections on its page", () => {
       ["Da Nossa Terra", ["1", "2", "7"]], // "5" is Paraná's; "Carnaval" is internal; "8" is not in the catalog
       ["Fala Daqui", ["3", "4", "6"]],
     ]); // "Novidades" shares one product with the state: below the minimum of 3, no row
+  });
+
+  test("given the panel's matrix, then every state says whether it has a parent collection and each candidate row how many products it would show there", () => {
+    const { states, counts } = stateRowMatrix("sul", undefined, () => products(), filePath);
+    expect(states).toEqual([
+      { uf: "PR", name: "Paraná", parent: { id: 31, name: "Paraná", products: 1 } },
+      { uf: "SC", name: "Santa Catarina", parent: { id: 30, name: "Santa Catarina", products: 6 } }, // "8" is not in the catalog
+      { uf: "RS", name: "Rio Grande do Sul", parent: null },
+    ]);
+    expect(Object.fromEntries(counts)).toEqual({
+      11: { PR: 1, SC: 3, RS: 0 }, // Da Nossa Terra: shows in SC only (3 is the minimum)
+      10: { PR: 0, SC: 3, RS: 0 },
+      12: { PR: 0, SC: 1, RS: 0 }, // Novidades: counted, below the minimum
+    });
   });
 
   test("given the region's own list, then exactly those collections in that order, internal ones too; a row below 3 products still does not show", () => {
