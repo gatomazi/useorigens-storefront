@@ -183,6 +183,8 @@ function topBarChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   const out: Change[] = [];
   const was = published.topBar?.productionDays;
   const now = draft.topBar?.productionDays;
+  const colorsName = (doc: ScopeDoc) => (doc.topBar?.colors ? `fundo ${doc.topBar.colors.background}, fonte ${doc.topBar.colors.text}` : "preta (padrão)");
+  if (colorsName(published) !== colorsName(draft)) out.push({ kind: "top-bar", sectionId: "top-bar:colors", text: `Faixa do topo, cores: ${colorsName(published)} → ${colorsName(draft)}` });
   const styleName = (doc: ScopeDoc) => (doc.topBar?.style === "rotate" ? "uma de cada vez" : "passando (letreiro)");
   if (styleName(published) !== styleName(draft)) out.push({ kind: "top-bar", sectionId: "top-bar:style", text: `Faixa do topo, como as mensagens aparecem: ${styleName(published)} → ${styleName(draft)}` });
   if (was !== now) out.push({ kind: "top-bar", sectionId: "top-bar:production", text: `Faixa do topo, prazo de produção da INK: ${daysName(was)} → ${daysName(now)}` });
