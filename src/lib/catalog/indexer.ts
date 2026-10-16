@@ -25,6 +25,8 @@ export function buildStoreIndex(
   products: readonly InkProductNormalized[],
   syncedAt: string,
   scope?: IndexScope,
+  /** Merchandise ids that belong to another region (its segmentation collection), with that region: excluded, never shown as this store's. */
+  foreignMerch?: ReadonlyMap<string, RegionSlug>,
 ): StoreIndex {
   const bindings: UnrankedBinding[] = [];
   const merch: MerchProduct[] = [];
@@ -35,6 +37,11 @@ export function buildStoreIndex(
     const parsed = parseProductName(product.name);
 
     if (parsed.kind === "other") {
+      const foreign = foreignMerch?.get(product.id);
+      if (foreign && foreign !== region) {
+        excluded.push({ inkProductId: product.id, commerceStoreKey: storeKey, name: product.name, reason: "other-region", detail: foreign });
+        continue;
+      }
       if (region) {
         merch.push({
           inkProductId: product.id,
