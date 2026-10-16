@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { adminSurface, currentActor } from "@/lib/admin/auth/guard";
 import { platform } from "@/lib/admin/platform";
 import { authorizeParams } from "@/lib/mcp/auth/authorize-params";
-import { checkAuthorizeRequest, errorRedirect, issueCode } from "@/lib/mcp/auth/oauth";
+import { checkAuthorizeRequest, errorRedirect, issueCode, withWriteChoice } from "@/lib/mcp/auth/oauth";
 import { mcpResourceFromHeaders, oauthStore } from "@/lib/mcp/auth/resource";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
   if (!check.ok && check.kind === "page") return page(400, check.message);
   if (!check.ok) return NextResponse.redirect(check.url, 303);
 
-  const req = check.request;
+  const req = { ...check.request, scope: withWriteChoice(check.request.scope, form.get("allow_write") === "yes") };
   if (form.get("decision") !== "approve") return NextResponse.redirect(errorRedirect(req.redirectUri, "access_denied", "the owner denied the request", req.state, where.issuer), 303);
   const url = await issueCode(store, req, actor.id, { issuer: where.issuer, now: Date.now() });
   await platform()

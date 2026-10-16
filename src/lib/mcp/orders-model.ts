@@ -18,7 +18,7 @@ export type McpOrderItem = {
   productName: string;
   productTags: string[];
   sku: string | null;
-  variant: { model: string | null; color: string | null; size: string | null };
+  variant: { id: string | null; model: string | null; color: string | null; size: string | null };
   quantity: number;
   refundedQuantity: number;
   freeQuantity: number;
@@ -35,6 +35,10 @@ export type McpOrder = {
   orderStatusLabel: string;
   paymentStatusLabel: string;
   isExchange: boolean;
+  /** INK: a troca (POST /v1/stores/exchanges) is accepted now — before production, or up to 30 days after delivery. */
+  exchangeable: boolean | null;
+  /** INK: the items may still be swapped in place (same price), before the order enters the factory. Never true with `exchangeable`. */
+  itemsEditable: boolean | null;
   totalCents: number | null;
   shippingCents: number | null;
   promotionCents: number | null;
@@ -85,7 +89,7 @@ export function parseMcpOrder(raw: unknown, store: CommerceStoreKey): McpOrder |
       productName: str(p.name) ?? "",
       productTags: Array.isArray(p.tags) ? p.tags.filter((t): t is string => typeof t === "string").map((t) => t.slice(0, 80)).slice(0, 20) : [],
       sku: str(it.sku, 80) ?? str(v.sku, 80),
-      variant: { model: str(v.model, 80), color: str(v.color, 80), size: str(v.size, 20) },
+      variant: { id: id(v.id), model: str(v.model, 80), color: str(v.color, 80), size: str(v.size, 20) },
       quantity: it.quantity,
       refundedQuantity: count(it.refunded_quantity),
       freeQuantity: count(it.free_quantity),
@@ -110,6 +114,8 @@ export function parseMcpOrder(raw: unknown, store: CommerceStoreKey): McpOrder |
     orderStatusLabel: str(o.formatted_order_status, 60) ?? "",
     paymentStatusLabel: str(o.payment_status, 60) ?? "",
     isExchange: o.is_exchange === true,
+    exchangeable: bool(o.exchangeable),
+    itemsEditable: bool(o.items_editable),
     totalCents: toCents(o.total_value),
     shippingCents: toCents(o.shipping_value),
     promotionCents: toCents(o.promotion_value),

@@ -8,11 +8,11 @@ import { INK_COMMERCE_HOSTS } from "./hosts";
  * When the operation consolidates, add "use-origens" here and reorder COMMERCE_STORE_PRIORITY.
  */
 export const INK_STORES: Readonly<
-  Partial<Record<CommerceStoreKey, { tokenEnv: string; expectedStoreSlug: string }>>
+  Partial<Record<CommerceStoreKey, { tokenEnv: string; writeTokenEnv: string; expectedStoreSlug: string }>>
 > = {
-  "use-sul": { tokenEnv: "INK_TOKEN_SUL", expectedStoreSlug: "usesul" },
-  "use-norte": { tokenEnv: "INK_TOKEN_NORTE", expectedStoreSlug: "usenorte" },
-  "use-centro": { tokenEnv: "INK_TOKEN_CENTRO", expectedStoreSlug: "usecentro" },
+  "use-sul": { tokenEnv: "INK_TOKEN_SUL", writeTokenEnv: "INK_WRITE_TOKEN_SUL", expectedStoreSlug: "usesul" },
+  "use-norte": { tokenEnv: "INK_TOKEN_NORTE", writeTokenEnv: "INK_WRITE_TOKEN_NORTE", expectedStoreSlug: "usenorte" },
+  "use-centro": { tokenEnv: "INK_TOKEN_CENTRO", writeTokenEnv: "INK_WRITE_TOKEN_CENTRO", expectedStoreSlug: "usecentro" },
 };
 
 function validatedInkApiBaseUrl(): string {
@@ -45,6 +45,16 @@ export const STORE_PRODUCT_URL_BASE: Readonly<Partial<Record<CommerceStoreKey, s
 
 export function tokenFor(storeKey: CommerceStoreKey): string | null {
   const env = INK_STORES[storeKey]?.tokenEnv;
+  const token = env ? process.env[env] : undefined;
+  return token && token.length > 0 ? token : null;
+}
+
+/**
+ * The credential with WRITE scopes, used only by the MCP's confirmed changes (docs/mcp/README.md §9): kept apart from the read token the
+ * syncs use, so the storefront never holds write power and removing this variable switches every write off for that store.
+ */
+export function writeTokenFor(storeKey: CommerceStoreKey): string | null {
+  const env = INK_STORES[storeKey]?.writeTokenEnv;
   const token = env ? process.env[env] : undefined;
   return token && token.length > 0 ? token : null;
 }
