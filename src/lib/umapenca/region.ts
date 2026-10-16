@@ -10,14 +10,15 @@ import { normalizeText } from "../geo/text";
  * - "Lá de/da/do/das/dos <lugar>" names a municipality, an administrative region of the DF or a state, matched EXACTLY (accent- and
  *   case-insensitive) — never by proximity or by guess.
  * - A name that exists in more than one region (Palmas PR/TO, Rio Branco AC/MT, Santa Maria RS/DF…) needs the UF at the end of the title:
- *   "Caneca Lá de Palmas – TO" (also "- TO", "/TO", "(TO)" or " TO"). Without it the article is left out, with the reason, so it is fixed
- *   in the Uma Penca store instead of landing in the wrong region. Any title may carry the UF; it must then agree with the place.
+ *   "Caneca Lá de Palmas | TO", the store's naming (also "– TO", "- TO", "/TO", "(TO)" or " TO"). Without it the article is left out,
+ *   with the reason, so it is fixed in the Uma Penca store instead of landing in the wrong region. Any title may carry the UF; it must
+ *   then agree with the place.
  * - A title without "Lá de …" names no place (a generic article): it belongs to every region, as every article did before the split.
  */
 export type ArticlePlace = { ok: true; region: RegionSlug | null; uf: string | null } | { ok: false; reason: string };
 
 const PLACE_RE = /\bl[aá]\s+(?:de|da|do|das|dos)\s+(.+)$/iu;
-const UF_SUFFIX_RE = /^(.+?)\s*(?:[-–—/,]\s*|\(\s*|\s)([A-Z]{2})\s*\)?$/u;
+const UF_SUFFIX_RE = /^(.+?)\s*(?:[|\-–—/,]\s*|\(\s*|\s)([A-Z]{2})\s*\)?$/u;
 const BRAZIL_UFS = new Set(["AC", "AL", "AM", "AP", "BA", "CE", "DF", "ES", "GO", "MA", "MG", "MS", "MT", "PA", "PB", "PE", "PI", "PR", "RJ", "RN", "RO", "RR", "RS", "SC", "SE", "SP", "TO"]);
 
 /** Every place of the storefront's regions called `name`: municipalities, DF administrative regions and states. */
@@ -47,7 +48,7 @@ export function articlePlace(title: string): ArticlePlace {
   if (places.length === 0) return { ok: false, reason: uf ? `"${name}" is not a place of ${uf}` : `"${name}" is not a known city, DF administrative region or state` };
   const ufs = [...new Set(places.map((p) => p.uf))].sort();
   const regions = new Set(places.map((p) => p.region));
-  if (regions.size > 1) return { ok: false, reason: `"${name}" exists in ${ufs.join(", ")}: put the UF at the end of the title (e.g. "Lá de ${name} – ${ufs[0]}")` };
+  if (regions.size > 1) return { ok: false, reason: `"${name}" exists in ${ufs.join(", ")}: put the UF at the end of the title (e.g. "Lá de ${name} | ${ufs[0]}")` };
   return { ok: true, region: places[0].region, uf: ufs.length === 1 ? ufs[0] : null };
 }
 

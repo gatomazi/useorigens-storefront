@@ -25,16 +25,19 @@ describe("Uma Penca article region, from the title", () => {
       expect(r.ok, title).toBe(false);
       expect(!r.ok && r.reason).toContain("put the UF at the end of the title");
     }
-    for (const title of ["Caneca Lá de Palmas – TO", "Caneca Lá de Palmas - TO", "Caneca Lá de Palmas/TO", "Caneca Lá de Palmas (TO)", "Caneca Lá de Palmas TO"]) {
+    for (const title of ["Caneca Lá de Palmas | TO", "Caneca Lá de Palmas|TO", "Caneca Lá de Palmas – TO", "Caneca Lá de Palmas - TO", "Caneca Lá de Palmas/TO", "Caneca Lá de Palmas (TO)", "Caneca Lá de Palmas TO"]) {
       expect(articlePlace(title), title).toEqual({ ok: true, region: "norte", uf: "TO" });
     }
+    // The store's naming puts the UF on every title, repeated name or not.
+    expect(articlePlace("Caneca Lá de Aceguá | RS")).toEqual({ ok: true, region: "sul", uf: "RS" });
+    expect(articlePlace("Caneca Lá da Ceilândia | DF")).toEqual({ ok: true, region: "centro-oeste", uf: "DF" });
     expect(articlePlace("Caneca Lá de Palmas – PR")).toEqual({ ok: true, region: "sul", uf: "PR" });
     expect(articlePlace("Caneca Lá de Rio Branco – AC")).toEqual({ ok: true, region: "norte", uf: "AC" });
     expect(articlePlace("Caneca Lá de Santa Maria – DF")).toEqual({ ok: true, region: "centro-oeste", uf: "DF" });
   });
 
   test("a UF that does not agree with the place, a UF of no storefront region, or an unknown place is refused — never guessed", () => {
-    expect(articlePlace("Caneca Lá de Curitiba – SC")).toMatchObject({ ok: false, reason: expect.stringContaining("not a place of SC") });
+    expect(articlePlace("Caneca Lá de Curitiba | SC")).toMatchObject({ ok: false, reason: expect.stringContaining("not a place of SC") });
     expect(articlePlace("Caneca Lá de Campinas – SP")).toMatchObject({ ok: false, reason: expect.stringContaining("UF SP") });
     expect(articlePlace("Caneca Lá de Curitba")).toMatchObject({ ok: false, reason: expect.stringContaining("not a known city") });
   });
@@ -52,7 +55,7 @@ describe("Uma Penca feed split by region", () => {
   const IMG = "https://umapenca.imgix.net/1/x.jpg";
   const entry = (id: string, title: string) =>
     `<entry><g:id>${id}</g:id><g:title><![CDATA[${title}]]></g:title><g:link>https://artigos.useorigens.com.br/caneca/${id}.html</g:link><g:image_link>${IMG}</g:image_link><g:availability>in stock</g:availability><g:price>72.90 BRL</g:price><g:category><![CDATA[Caneca]]></g:category></entry>`;
-  const xml = `<feed>${[entry("1", "Caneca Lá de Guarapuava"), entry("2", "Caneca Lá de Manaus"), entry("3", "Caneca Lá de Palmas"), entry("4", "Caneca Lá de Palmas – TO"), entry("5", "Caneca Lá de Cuiabá"), entry("6", "Caneca Use Origens")].join("")}</feed>`;
+  const xml = `<feed>${[entry("1", "Caneca Lá de Guarapuava"), entry("2", "Caneca Lá de Manaus"), entry("3", "Caneca Lá de Palmas"), entry("4", "Caneca Lá de Palmas | TO"), entry("5", "Caneca Lá de Cuiabá"), entry("6", "Caneca Use Origens")].join("")}</feed>`;
 
   test("the parser stores region and UF, and leaves out the ambiguous one with the reason", () => {
     const { articles, excluded } = parseUmaPencaFeed(xml);

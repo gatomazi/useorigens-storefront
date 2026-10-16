@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 /**
  * "Outros artigos": canecas and ecobags from the Uma Penca feed (src/lib/umapenca). Each region shows the articles whose title names
- * one of its places ("Caneca Lá de Palmas – TO" only in the Norte), plus the generic ones that name none (region.ts). Each kind opens with the region's published Uma Penca personalization models ("Crie a sua", leading
+ * one of its places ("Caneca Lá de Palmas | TO" only in the Norte), plus the generic ones that name none (region.ts). Each kind opens with the region's published Uma Penca personalization models ("Crie a sua", leading
  * to /personalizar/<slug>), then the feed's articles (each opening the Uma Penca product page). A kind with neither is left out,
  * and with nothing at all the page is a 404, so no link ever lands on an empty shelf.
  */

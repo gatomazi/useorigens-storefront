@@ -25,7 +25,7 @@ export type UmaPencaArticle = {
   salePrice: number | null;
   color: string | null;
   /**
-   * The region of the place the title names ("Caneca Lá de Palmas – TO" → norte), or null when it names none (shown in every region).
+   * The region of the place the title names ("Caneca Lá de Palmas | TO" → norte), or null when it names none (shown in every region).
    * See region.ts. Absent in a snapshot written before the split: read as null until the next sync.
    */
   region?: RegionSlug | null;
