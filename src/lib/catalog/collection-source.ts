@@ -103,21 +103,30 @@ const regionItem = (products: StoreProducts, id: string, region: RegionSlug | un
 
 /**
  * The collections a region may show (search results, collection pages): those of the region's store under the effective commerce mode. In
- * single-store mode one store's collections serve three regions, so a collection belongs to a region only when EVERY member known in the
- * catalog is a product of that region (evidence from the products themselves, never from the collection's name); mixed or unknown ones are
- * left out. In the regional mode every collection of the region's own store qualifies, as before.
+ * single-store mode one store's collections serve three regions and thematic ones mix them ("Da Nossa Terra" has Sul, Norte and Centro-Oeste
+ * products), so a collection is the region's when it has at least MIN_USABLE_PRODUCTS products of that region (evidence from the products
+ * themselves, never from the name), and the region shows only those. In the regional mode every collection of the region's own store qualifies.
  */
 export function collectionsForRegion(region: RegionSlug, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): CollectionRecord[] {
   const store = storeForRegion(region);
   const all = getStoreCollections(store, filePath)?.collections ?? [];
   if (commercePlan().effective !== "single-store") return all;
   const products = productsOf(store);
-  return all.filter((c) => belongsToRegion(c, products, region));
+  // The count the region shows (search results, "N produtos") is its own products', not the whole mixed collection's.
+  return all.flatMap((c) => {
+    const n = regionMemberCount(c, products, region);
+    return n >= MIN_USABLE_PRODUCTS ? [{ ...c, matchedCount: n }] : [];
+  });
 }
 
+/** How many of a collection's products are about `region` (a thematic collection of the single store mixes the three regions). */
+function regionMemberCount(c: CollectionRecord, products: StoreProducts, region: RegionSlug): number {
+  return (completeMembers(c) ?? c.memberIds).filter((id) => regionOfStoreProduct(products, id) === region).length;
+}
+
+/** A collection is the region's when it has at least MIN_USABLE_PRODUCTS products of the region; it then shows only those (`regionItem`). */
 function belongsToRegion(c: CollectionRecord, products: StoreProducts, region: RegionSlug): boolean {
-  const ids = completeMembers(c) ?? c.memberIds;
-  return ids.length > 0 && ids.every((id) => regionOfStoreProduct(products, id) === region);
+  return regionMemberCount(c, products, region) >= MIN_USABLE_PRODUCTS;
 }
 
 /** Whether a collection of the region's selling store is the region's (`collectionsForRegion`'s rule, one record): always in the regional mode. */
