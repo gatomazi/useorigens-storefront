@@ -351,8 +351,17 @@ export type ScopeDoc = {
      * explicitly, over whatever an older section had.
      */
     arrangements?: CollectionArrangement[];
+    /**
+     * The state page (`/<region>/<uf>`): which collections become a row of the state's products ("Fala Daqui · Pará") and in what order. Absent =
+     * automatic: every public collection sharing products with the state's own collection, in INK's menu order (collection-source.ts
+     * `stateCollectionRows`). Present = exactly these, in this order; a collection that shares too few products with a state shows nothing there.
+     */
+    stateRows?: CollectionRef[];
   };
 };
+
+/** At most this many collections chosen for the state page. */
+export const MAX_STATE_ROWS = 20;
 
 /** `variants` (uploads only): the pre-sized WebP widths the storefront uses as a `srcset`, so an uploaded image never goes through the image optimizer. */
 export type MediaAssetInfo = { src: string; width: number; height: number; variants?: { w: number; src: string }[] };
@@ -846,6 +855,7 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
       items.forEach((r) => { if (isRecord(r)) earlier.add(key(r)); });
     }
   }
+  if (v.stateRows !== undefined) checkRefList(c, `${path}.stateRows`, v.stateRows, MAX_STATE_ROWS);
   if (v.arrangements !== undefined) {
     checkRefList(c, `${path}.arrangements`, v.arrangements, MAX_ARRANGEMENTS);
     if (Array.isArray(v.arrangements)) v.arrangements.forEach((a, i) => {
@@ -907,6 +917,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
         const lists: [string, unknown][] = [
           ["enabled", input.collections.enabled], ["navbar", input.collections.navbar], ["navbarGroups.top", groups.top], ["navbarGroups.more", groups.more],
           ["menu.top", menu.top], ["menu.hidden", menu.hidden], ["menu.added", menu.added], ["arrangements", input.collections.arrangements],
+          ["stateRows", input.collections.stateRows],
         ];
         for (const [key, list] of lists) {
           if (!Array.isArray(list)) continue;

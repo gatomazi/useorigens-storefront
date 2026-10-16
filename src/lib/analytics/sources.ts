@@ -53,6 +53,8 @@ export const SOURCES = {
   /** The text search results page (`/<region>/busca`): a product card that opens the INK product. */
   search: "search_results",
   stateShowcase: "state_showcase",
+  /** A state page's row of one collection cut down to the state ("Fala Daqui · Pará", collection-source.ts `stateCollectionRows`). */
+  stateCollection: "state_colecao",
   /** "Escolha o estilo" on a state page: the state's city designs of one style (chips switch the style). */
   stateStyles: "state_styles",
   cityStyles: "city_styles",

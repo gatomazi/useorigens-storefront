@@ -51,6 +51,14 @@ export type DraftOp =
   | ({ type: "move-collection-menu"; direction: "up" | "down" } & CollectionRef)
   /** Gives a document from before the collection menu its own menu, unchanged (the Worker then follows it once published). */
   | { type: "adopt-collection-menu" }
+  /**
+   * The state page's rows (`collections.stateRows`): puts a collection in (`on`) or takes it out, or moves it one step. `base` is what the page shows
+   * now (the automatic list, computed by the caller from the synced collections), so the first edit starts from it instead of from nothing.
+   */
+  | ({ type: "set-state-row"; on: boolean; base: CollectionRef[] } & CollectionRef)
+  | ({ type: "move-state-row"; direction: "up" | "down"; base: CollectionRef[] } & CollectionRef)
+  /** Back to the automatic list (every public collection with products of the state, in INK's order). */
+  | { type: "reset-state-rows" }
   /** Creates the home of a region that has none yet, from sections the caller built out of REAL sources (see admin/region-seed.ts). */
   | { type: "init-home"; sections: Section[] }
   /** Replaces the tracking configuration of the document (validated: formats, legacy only for Sul, an inactive ID only in global). */
@@ -135,6 +143,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-collection-arrangement") return setCollectionArrangement(doc, op);
   if (op.type === "link-collection-pages") return linkCollectionPages(doc, op.refs);
   if (op.type === "set-collection-menu-position" || op.type === "move-collection-menu" || op.type === "adopt-collection-menu") return editMenu(doc, op);
+  if (op.type === "set-state-row" || op.type === "move-state-row" || op.type === "reset-state-rows") return editStateRows(doc, op);
   if (op.type === "init-home") {
     if (doc.scope === "global") return fail("global has no home");
     if (doc.home) return fail("this region already has a home");
@@ -370,6 +379,32 @@ function editMenu(doc: ScopeDoc, op: MenuOp): OpResult {
     : movedOnTop(menu, { store: op.store, collectionId: op.collectionId }, op.direction);
   if (next === menu && own) return { ok: true, doc }; // nothing changed
   const edited = withMenu(doc, next);
+  const check = validateScopeDoc(edited);
+  return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
+}
+
+/** Edits the state page's rows. Only references are kept; which ones show in each state is decided when the page is read (collection-source.ts). */
+type StateRowsOp = Extract<DraftOp, { type: "set-state-row" | "move-state-row" | "reset-state-rows" }>;
+function editStateRows(doc: ScopeDoc, op: StateRowsOp): OpResult {
+  if (doc.scope === "global") return fail("global has no state pages");
+  const collections = doc.collections ?? { enabled: [] };
+  let next: CollectionRef[] | undefined;
+  if (op.type === "reset-state-rows") next = undefined;
+  else {
+    const same = (r: CollectionRef) => r.store === op.store && r.collectionId === op.collectionId;
+    const list = (collections.stateRows ?? op.base).map((r) => ({ store: r.store, collectionId: r.collectionId }));
+    if (op.type === "set-state-row") next = op.on ? (list.some(same) ? list : [...list, { store: op.store, collectionId: op.collectionId }]) : list.filter((r) => !same(r));
+    else {
+      const i = list.findIndex(same);
+      const j = op.direction === "up" ? i - 1 : i + 1;
+      if (i < 0 || j < 0 || j >= list.length) return fail("this collection cannot move that way");
+      [list[i], list[j]] = [list[j], list[i]];
+      next = list;
+    }
+  }
+  const edited: ScopeDoc = { ...doc, collections: { ...collections } };
+  if (next) edited.collections!.stateRows = next;
+  else delete edited.collections!.stateRows;
   const check = validateScopeDoc(edited);
   return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
 }

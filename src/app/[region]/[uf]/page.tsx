@@ -12,7 +12,8 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { stateShowcase } from "@/lib/editorial/state-showcase";
 import { stateStyles } from "@/lib/editorial/state-styles";
-import { collectionsForRegion } from "@/lib/catalog/collection-source";
+import { collectionsForRegion, stateCollectionRows } from "@/lib/catalog/collection-source";
+import { homeBundle } from "@/lib/site-config/flag";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
 import { StateStyles } from "@/components/catalog/StateStyles";
 import { SOURCES } from "@/lib/analytics/sources";
@@ -119,6 +120,11 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
     capitalSlug: hasRegions ? undefined : STATE_CAPITAL_SLUG[uf],
   });
 
+  // The state's own collection ("Pará") broken down by the store's public collections ("Da Nossa Terra", "Fala Daqui"): one carousel each, in INK's
+  // menu order and the region's arrangement of that collection (collection-source.ts `stateCollectionRows`). None when the store has no collection
+  // named after the state.
+  const stateRows = stateCollectionRows(region, uf, homeBundle().docs[region], (s) => catalog.productsOfStore(s));
+
   // Editorial mesoregion grouping (ADR 0004), navigation only — not the current IBGE division. Cities
   // without one still appear in A–Z. A state with administrative regions groups them apart from its municipality.
   const groups: BrowserGroup[] = stateLocalityGroups(uf, cities).map((g) => ({
@@ -200,6 +206,18 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
           />
         </section>
       )}
+
+      {stateRows.map((row) => (
+        <section key={row.collection.id} id={`colecao-${row.collection.slug}`} className="wrap pb-10 lg:pb-14" aria-labelledby={`state-collection-${row.collection.id}`}>
+          <ProductCarousel
+            items={row.items}
+            labelledBy={`state-collection-${row.collection.id}`}
+            title={`${row.collection.name.replace(/\s+/g, " ").trim()} · ${STATE_NAMES[uf]}`}
+            sourceSection={SOURCES.stateCollection}
+            buy={buy}
+          />
+        </section>
+      ))}
 
       {styles.length > 0 && (
         <section id="estilos" className="wrap pb-10 lg:pb-14" aria-labelledby="styles-title">
