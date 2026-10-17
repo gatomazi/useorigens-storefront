@@ -5,7 +5,7 @@ import { currentScope, scopeName } from "@/lib/admin/scope";
 import { canEdit } from "@/lib/admin/store/ports";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { REGIONS } from "@/lib/geo/regions";
-import { INK_INCENTIVE_CHECKLIST, INK_INCENTIVE_LIMITS, INK_PRESET_LABEL, INK_SURFACE_LABEL, INK_THEME_SURFACES, inkIncentiveText, inkThemeOf, inkThemeTokens, type InkThemeConfig, type InkThemeTokens } from "@/lib/site-config/ink-theme";
+import { INK_INCENTIVE_CHECKLIST, INK_INCENTIVE_LIMITS, INK_PRESET_LABEL, INK_SURFACE_LABEL, INK_THEME_SURFACES, inkIncentiveText, inkThemeOf, inkThemeTokens, paletteOf, type InkThemeConfig, type InkThemeTokens } from "@/lib/site-config/ink-theme";
 import { readPublished } from "@/lib/site-config/published";
 
 const SURFACE_HELP: Record<(typeof INK_THEME_SURFACES)[number], string> = {
@@ -44,13 +44,13 @@ export default async function InkThemePage({ searchParams }: { searchParams: Pro
   const live = inkThemeOf(state.source === "published" ? state.bundle.docs[scope] : undefined);
   const { tokens, warnings } = inkThemeTokens(scope, draft);
   const readOnly = !canEdit(actor, scope);
-  const radios = <K extends "action" | "ground" | "corners" | "font">(key: K, title: string) => (
+  const radios = <K extends "action" | "ground" | "corners" | "font" | "palette">(key: K, title: string) => (
     <fieldset className="mt-4">
       <legend className="a-label">{title}</legend>
       <div className="mt-1 flex flex-wrap gap-x-6 gap-y-2">
         {(Object.entries(INK_PRESET_LABEL[key]) as [InkThemeConfig[K], string][]).map(([value, label]) => (
           <label key={value} className="flex items-center gap-2 text-[0.9375rem]">
-            <input type="radio" name={key} value={value} defaultChecked={draft[key] === value} disabled={readOnly} data-testid={`ink-${key}-${value}`} /> {label}
+            <input type="radio" name={key} value={value} defaultChecked={(key === "palette" ? paletteOf(draft) : draft[key]) === value} disabled={readOnly} data-testid={`ink-${key}-${value}`} /> {label}
           </label>
         ))}
       </div>
@@ -97,6 +97,7 @@ export default async function InkThemePage({ searchParams }: { searchParams: Pro
           {radios("ground", "Fundo da página de produto")}
           {radios("corners", "Cantos de botões, seletores e campos")}
           {radios("font", "Fonte")}
+          {radios("palette", "Cores do carrinho e do checkout")}
           {warnings.map((w) => <p key={w} className="a-flash err mt-3">{w}</p>)}
         </div>
         <div id="ink-incentivo" className="scroll-mt-4">

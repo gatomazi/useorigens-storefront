@@ -729,7 +729,9 @@ export async function saveInkThemeAction(fd: FormData) {
     ground: text(fd, "ground"),
     corners: text(fd, "corners"),
     font: text(fd, "font"),
+    palette: text(fd, "palette") || undefined,
   } as InkThemeConfig;
+  if (!inkTheme.palette) delete inkTheme.palette;
   // Incentivo: só é guardado quando a regra foi preenchida (mínimo de peças e estados). Ligar exige a confirmação (o validador recusa sem ela).
   const threshold = text(fd, "incentiveThreshold");
   const ufs = fd.getAll("incentiveUfs").map(String);
