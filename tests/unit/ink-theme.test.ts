@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { applyOp } from "@/lib/admin/draft-ops";
 import { diffDocs } from "@/lib/admin/diff";
 import { contrastRatio } from "@/lib/site-config/color";
-import { DEFAULT_INK_THEME, inkThemeOf, inkThemePayload, inkThemeTokens, validateInkTheme, type InkThemeConfig } from "@/lib/site-config/ink-theme";
+import { DEFAULT_INK_THEME, inkThemeOf, inkThemePayload, inkThemeTokens, paletteOf, validateInkTheme, type InkThemeConfig } from "@/lib/site-config/ink-theme";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
@@ -131,5 +131,26 @@ describe("Tema da INK: incentivo de frete no carrinho", () => {
     const on = ok(off, { type: "set-ink-theme", inkTheme: { ...ON, incentive: RULE } });
     expect(diffDocs(off, on).map((c) => c.text)).toContain("Tema da INK, incentivo de frete no carrinho: ligado: frete grátis a partir de 2 peças (RS, PR, SC)");
     expect(diffDocs(on, ok(on, { type: "set-ink-theme", inkTheme: ON })).map((c) => c.text)).toContain("Tema da INK, incentivo de frete no carrinho: sem regra");
+  });
+});
+
+describe("cart and checkout palette (proposal B, chosen on 17/10/2026)", () => {
+  test("given no palette (a setting saved before the choice) or the default, then the payload carries the chosen one: green with an ochre accent", () => {
+    expect(inkThemePayload("sul", undefined).palette).toBe("acento");
+    expect(inkThemePayload("sul", { ...DEFAULT_INK_THEME, palette: undefined }).palette).toBe("acento");
+    expect(paletteOf({})).toBe("acento");
+  });
+
+  test("given the neutral palette, then it is published by name; an unknown one is refused in Portuguese terms the editor shows", () => {
+    expect(inkThemePayload("sul", { ...DEFAULT_INK_THEME, palette: "neutra" }).palette).toBe("neutra");
+    expect(validateInkTheme({ ...DEFAULT_INK_THEME, palette: "neutra" }, "sul").ok).toBe(true);
+    const r = validateInkTheme({ ...DEFAULT_INK_THEME, palette: "neon" }, "sul");
+    expect(r.ok).toBe(false);
+  });
+
+  test("given a palette change in the draft, then the publish screen names it", () => {
+    const base = { schemaVersion: 1, scope: "sul", tracking: { meta: { mode: "disabled" }, ga4: { mode: "disabled" } } } as const;
+    const texts = diffDocs({ ...base, inkTheme: DEFAULT_INK_THEME } as never, { ...base, inkTheme: { ...DEFAULT_INK_THEME, palette: "neutra" } } as never).map((c) => c.text);
+    expect(texts.some((t) => t.startsWith("Tema da INK, cores do carrinho e do checkout:"))).toBe(true);
   });
 });

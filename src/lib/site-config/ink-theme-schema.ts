@@ -15,6 +15,13 @@ export const INK_THEME_ACTIONS = ["ink", "region"] as const;
 export const INK_THEME_GROUNDS = ["vitrine", "branco"] as const;
 export const INK_THEME_CORNERS = ["retos", "suaves"] as const;
 export const INK_THEME_FONTS = ["vitrine", "ink"] as const;
+/**
+ * Colours of the cart and the checkout: "acento" = green with an ochre accent (the art direction's proposal B, chosen on 17/10/2026: charcoal button,
+ * straw free-shipping strip with the icon on the region's sand-gold, choices in a livelier green, warm off-white surfaces); "neutra" = tints derived from
+ * the presets above, as before. A palette only the Worker knows how to draw (per region; Sul has "acento"), so the owner picks a name, never a colour.
+ */
+export const INK_THEME_PALETTES = ["acento", "neutra"] as const;
+export type InkThemePalette = (typeof INK_THEME_PALETTES)[number];
 
 /**
  * REGION only. `surfaces` = the owner's switch per surface (the Worker's deploy flags stay the ceiling). Absent = everything off and the presets of
@@ -32,6 +39,8 @@ export type InkThemeConfig = {
   font: (typeof INK_THEME_FONTS)[number];
   /** Optional: the cart's free-shipping incentive. Absent = no incentive (and no rule recorded). */
   incentive?: InkCartIncentive;
+  /** Colours of the cart and the checkout (`INK_THEME_PALETTES`). Absent = "acento", the chosen direction (`paletteOf`). */
+  palette?: InkThemePalette;
 };
 
 /**
@@ -66,6 +75,7 @@ export const DEFAULT_INK_THEME: InkThemeConfig = Object.freeze({
   ground: "branco",
   corners: "retos",
   font: "vitrine",
+  palette: "acento",
 }) as InkThemeConfig;
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
@@ -74,7 +84,7 @@ const oneOf = <T extends string>(list: readonly T[], v: unknown): v is T => type
 export function validateInkTheme(input: unknown, scope: Scope, path = "inkTheme"): ValidationResult<InkThemeConfig> {
   if (scope === "global") return { ok: false, errors: [`${path}: belongs to a region`] };
   if (!isRecord(input)) return { ok: false, errors: [`${path}: must be { surfaces, action, ground, corners, font }`] };
-  const errors = Object.keys(input).filter((k) => !["surfaces", "action", "ground", "corners", "font", "incentive"].includes(k)).map((k) => `${path}.${k}: unknown field`);
+  const errors = Object.keys(input).filter((k) => !["surfaces", "action", "ground", "corners", "font", "incentive", "palette"].includes(k)).map((k) => `${path}.${k}: unknown field`);
   const s = input.surfaces;
   if (!isRecord(s)) errors.push(`${path}.surfaces: must be { pdp, cart, checkout }`);
   else {
@@ -85,12 +95,15 @@ export function validateInkTheme(input: unknown, scope: Scope, path = "inkTheme"
   if (!oneOf(INK_THEME_GROUNDS, input.ground)) errors.push(`${path}.ground: must be one of ${INK_THEME_GROUNDS.join(", ")}`);
   if (!oneOf(INK_THEME_CORNERS, input.corners)) errors.push(`${path}.corners: must be one of ${INK_THEME_CORNERS.join(", ")}`);
   if (!oneOf(INK_THEME_FONTS, input.font)) errors.push(`${path}.font: must be one of ${INK_THEME_FONTS.join(", ")}`);
+  if (input.palette !== undefined && !oneOf(INK_THEME_PALETTES, input.palette)) errors.push(`${path}.palette: must be one of ${INK_THEME_PALETTES.join(", ")}`);
   if (input.incentive !== undefined) errors.push(...incentiveErrors(input.incentive, scope, `${path}.incentive`));
   return errors.length === 0 ? { ok: true, value: input as InkThemeConfig } : { ok: false, errors };
 }
 
 /** The region's setting as the editor and the payload see it (no document or no setting = the defaults, every surface off). */
 export const inkThemeOf = (doc: { inkTheme?: InkThemeConfig } | null | undefined): InkThemeConfig => doc?.inkTheme ?? DEFAULT_INK_THEME;
+/** The cart and checkout palette of a setting ("acento" when the setting predates the choice). */
+export const paletteOf = (config: Pick<InkThemeConfig, "palette">): InkThemePalette => config.palette ?? "acento";
 
 const INCENTIVE_KEYS = ["enabled", "confirmed", "kind", "unit", "threshold", "ufs"];
 // Mensagens em português: o dono chega a elas pelo formulário (ex.: ligar sem confirmar). O caminho fica no fim, para quem depura.
