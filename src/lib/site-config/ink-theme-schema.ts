@@ -9,7 +9,8 @@
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import type { Scope, ValidationResult } from "./schema";
 
-export const INK_THEME_SURFACES = ["pdp", "cart", "checkout"] as const;
+/** `account`: the INK's account pages (sign-in, orders and an order, tracking, review, exchanges). Added after the others: a setting saved without it reads as off. */
+export const INK_THEME_SURFACES = ["pdp", "cart", "checkout", "account"] as const;
 export type InkThemeSurface = (typeof INK_THEME_SURFACES)[number];
 export const INK_THEME_ACTIONS = ["ink", "region"] as const;
 export const INK_THEME_GROUNDS = ["vitrine", "branco"] as const;
@@ -70,7 +71,7 @@ export const INK_INCENTIVE_CHECKLIST = [
 ] as const;
 
 export const DEFAULT_INK_THEME: InkThemeConfig = Object.freeze({
-  surfaces: Object.freeze({ pdp: false, cart: false, checkout: false }),
+  surfaces: Object.freeze({ pdp: false, cart: false, checkout: false, account: false }),
   action: "ink",
   ground: "branco",
   corners: "retos",
@@ -86,10 +87,10 @@ export function validateInkTheme(input: unknown, scope: Scope, path = "inkTheme"
   if (!isRecord(input)) return { ok: false, errors: [`${path}: must be { surfaces, action, ground, corners, font }`] };
   const errors = Object.keys(input).filter((k) => !["surfaces", "action", "ground", "corners", "font", "incentive", "palette"].includes(k)).map((k) => `${path}.${k}: unknown field`);
   const s = input.surfaces;
-  if (!isRecord(s)) errors.push(`${path}.surfaces: must be { pdp, cart, checkout }`);
+  if (!isRecord(s)) errors.push(`${path}.surfaces: must be { pdp, cart, checkout, account? }`);
   else {
     for (const k of Object.keys(s)) if (!(INK_THEME_SURFACES as readonly string[]).includes(k)) errors.push(`${path}.surfaces.${k}: unknown surface`);
-    for (const k of INK_THEME_SURFACES) if (typeof s[k] !== "boolean") errors.push(`${path}.surfaces.${k}: must be boolean`);
+    for (const k of INK_THEME_SURFACES) if (typeof s[k] !== "boolean" && !(k === "account" && s[k] === undefined)) errors.push(`${path}.surfaces.${k}: must be boolean`);
   }
   if (!oneOf(INK_THEME_ACTIONS, input.action)) errors.push(`${path}.action: must be one of ${INK_THEME_ACTIONS.join(", ")}`);
   if (!oneOf(INK_THEME_GROUNDS, input.ground)) errors.push(`${path}.ground: must be one of ${INK_THEME_GROUNDS.join(", ")}`);
@@ -101,7 +102,11 @@ export function validateInkTheme(input: unknown, scope: Scope, path = "inkTheme"
 }
 
 /** The region's setting as the editor and the payload see it (no document or no setting = the defaults, every surface off). */
-export const inkThemeOf = (doc: { inkTheme?: InkThemeConfig } | null | undefined): InkThemeConfig => doc?.inkTheme ?? DEFAULT_INK_THEME;
+export const inkThemeOf = (doc: { inkTheme?: InkThemeConfig } | null | undefined): InkThemeConfig => {
+  const c = doc?.inkTheme ?? DEFAULT_INK_THEME;
+  // A setting saved before the account surface existed: off, as every surface is until the owner turns it on.
+  return c.surfaces.account === undefined ? { ...c, surfaces: { ...c.surfaces, account: false } } : c;
+};
 /** The cart and checkout palette of a setting ("acento" when the setting predates the choice). */
 export const paletteOf = (config: Pick<InkThemeConfig, "palette">): InkThemePalette => config.palette ?? "acento";
 

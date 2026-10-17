@@ -719,12 +719,12 @@ export async function discardGlobalAction() {
 // ── Tema da INK (por região) ─────────────────────────────────────────────────────────────────────────────────────
 
 /**
- * Saves the region's "Tema da INK" as a DRAFT: which INK surfaces (product page, cart, checkout) wear the storefront's look and the presets of that look.
+ * Saves the region's "Tema da INK" as a DRAFT: which INK surfaces (product page, cart, checkout, account) wear the storefront's look and the presets of that look.
  * Only fixed choices are read from the form (checkboxes and radio values checked against the lists); anything else is refused by the validator.
  */
 export async function saveInkThemeAction(fd: FormData) {
   const inkTheme = {
-    surfaces: { pdp: fd.get("pdp") === "on", cart: fd.get("cart") === "on", checkout: fd.get("checkout") === "on" },
+    surfaces: { pdp: fd.get("pdp") === "on", cart: fd.get("cart") === "on", checkout: fd.get("checkout") === "on", account: fd.get("account") === "on" },
     action: text(fd, "action"),
     ground: text(fd, "ground"),
     corners: text(fd, "corners"),
