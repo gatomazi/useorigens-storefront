@@ -108,6 +108,12 @@ Anote a versão nova.
 node scripts/domain-move-routes.mjs apply --step=drop-old
 ```
 
+**5b. Escrita: rotas da zona fora do TOML.** O tema da compra (worker-lojas #24) cria as rotas das telas do checkout direto na zona, e o deploy do passo 4 não as leva. O `plan` mostra se há alguma (linha `copy-extra`); se houver:
+```bash
+node scripts/domain-move-routes.mjs apply --step=copy-extra
+```
+Depois, confira no `plan` que só existem rotas do checkout de **tela** (`contact_and_shipping_details*`, `payment_methods*`) no host novo, nunca uma que cubra os envios do checkout.
+
 **6. Escrita: storefront.** No Railway, crie a variável e o Railway refaz o build sozinho, porque `NEXT_PUBLIC_*` entra no build:
 ```bash
 railway variables --service useorigens-storefront --set "NEXT_PUBLIC_INK_SUL_DOMAIN=next"
