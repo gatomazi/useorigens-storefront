@@ -43,6 +43,7 @@ import type { DraftOp } from "@/lib/admin/draft-ops";
 import { parseNavigationForm, parseThemeForm, readableNavigationError } from "@/lib/admin/navigation-form";
 import { themeProblems } from "@/lib/site-config/navigation";
 import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-form";
+import type { InkThemeConfig } from "@/lib/site-config/ink-theme-schema";
 import { readableTopBarError, topBarFromForm } from "@/lib/admin/top-bar-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
@@ -638,6 +639,31 @@ export async function discardGlobalAction() {
   await audit(actor, "draft.discard", "global");
   revalidatePath("/admin", "layout");
   back("/admin/publicar", { ok: "Rascunho da configuração global descartado: paleta, botão nos cards, Meu Pequeno Mundo e tracking global voltaram ao publicado." });
+}
+
+// ── Tema da INK (por região) ─────────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Saves the region's "Tema da INK" as a DRAFT: which INK surfaces (product page, cart, checkout) wear the storefront's look and the presets of that look.
+ * Only fixed choices are read from the form (checkboxes and radio values checked against the lists); anything else is refused by the validator.
+ */
+export async function saveInkThemeAction(fd: FormData) {
+  const inkTheme = {
+    surfaces: { pdp: fd.get("pdp") === "on", cart: fd.get("cart") === "on", checkout: fd.get("checkout") === "on" },
+    action: text(fd, "action"),
+    ground: text(fd, "ground"),
+    corners: text(fd, "corners"),
+    font: text(fd, "font"),
+  } as InkThemeConfig;
+  // Incentivo: só é guardado quando a regra foi preenchida (mínimo de peças e estados). Ligar exige a confirmação (o validador recusa sem ela).
+  const threshold = text(fd, "incentiveThreshold");
+  const ufs = fd.getAll("incentiveUfs").map(String);
+  const enabled = fd.get("incentiveEnabled") === "on";
+  const confirmed = fd.get("incentiveConfirmed") === "on";
+  if (threshold !== "" || ufs.length > 0 || enabled || confirmed) {
+    inkTheme.incentive = { enabled, confirmed, kind: "free-shipping", unit: "items", threshold: /^\d{1,3}$/.test(threshold) ? Number(threshold) : Number.NaN, ufs };
+  }
+  return run(fd, { type: "set-ink-theme", inkTheme }, "Rascunho do tema da INK salvo. A INK só muda depois de publicar em Publicar.", "/admin/tema-ink");
 }
 
 // ── Cupons e promoções (por região) ─────────────────────────────────────────────────────────────────────────────

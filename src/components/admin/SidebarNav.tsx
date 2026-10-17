@@ -56,6 +56,7 @@ export function SidebarNav({ pendingRequests = 0, owner = false, regionName = "S
       title: "Configuração",
       items: [
         { href: "/admin/aparencia", label: "Aparência" },
+        { href: "/admin/tema-ink", label: "Tema da INK" },
         { href: "/admin/sincronizacao", label: "Sincronização" },
         ...(owner ? [{ href: "/admin/usuarios", label: "Pessoas" }] : []),
       ],

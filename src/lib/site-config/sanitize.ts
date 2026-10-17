@@ -12,6 +12,7 @@
 import { validateCards } from "./cards-schema";
 import { validateMundo } from "./mundo-schema";
 import { validateNavigation, validateTheme } from "./navigation-schema";
+import { validateInkTheme } from "./ink-theme-schema";
 import { validatePodio } from "./podio-schema";
 import { validateStatePage } from "./state-page-schema";
 import { validatePromotions } from "./promotions-schema";
@@ -154,9 +155,10 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // The cards' setting as well: an invalid one means each section decides, as before (never the global scope, which carries the tracking, back to the seed).
   // And the pódio switch: an invalid one means the pódio stays on, as before the switch existed.
   // And the "Meu Pequeno Mundo" switch: an invalid one means the env alone decides, as before the switch existed.
+  // And the "Tema da INK": an invalid one means every INK surface stays native (never a guessed look).
   // And the state-page switches: an invalid one means every section shows, as before they existed.
   // And the top strip: an invalid one means the storefront's default strip and the INK's own on its pages.
-  for (const key of ["navigation", "theme", "promotions", "cards", "podio", "mundo", "statePage", "topBar"] as const) {
+  for (const key of ["navigation", "theme", "promotions", "cards", "podio", "mundo", "statePage", "topBar", "inkTheme"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
@@ -166,6 +168,7 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
       : key === "mundo" ? validateMundo(candidate[key], scope, `${scope}.mundo`)
       : key === "statePage" ? validateStatePage(candidate[key], scope, `${scope}.statePage`)
       : key === "topBar" ? validateTopBar(candidate[key], scope, `${scope}.topBar`)
+      : key === "inkTheme" ? validateInkTheme(candidate[key], scope, `${scope}.inkTheme`)
       : validatePromotions(candidate[key], scope, `${scope}.promotions`);
     if (!r.ok) {
       diagnostics.push(`${scope}: ${key} is invalid and was ignored (${r.errors[0]})`);
