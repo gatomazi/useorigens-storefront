@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 /**
  * The buy button at the foot of a product card, in the store's own CTA shape (rectangular, solid, uppercase). It is NOT a second link: it sits inside
  * the card's own link, so it opens the same product page and the click is reported once, exactly as without it. The card's `group` drives the hover.
@@ -35,5 +37,25 @@ export function CardFab({ label }: { label: string }) {
       </svg>
       <span className="sr-only">{label}</span>
     </span>
+  );
+}
+
+/**
+ * The written style of the same button (`CardBuy.style === "link"`): the price and the call ("Ver produto →") together at the foot of the card, over a
+ * hairline, so the price reads as part of the product AND of the action instead of a loose line with a loose arrow. Not a second link either: it is
+ * drawn inside the card's own link (same page, the click reported once), visible without hover. On a narrow card the call wraps under the price.
+ * `price`: the card's price line (absent when the store sent none: then only the call). `dark`: on a dark section.
+ */
+export function CardCall({ label, price, dark = false, className = "" }: { label: string; price?: ReactNode; dark?: boolean; className?: string }) {
+  return (
+    <div className={`mt-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-t pt-2.5 ${dark ? "border-white/25" : "border-black/15"} ${className}`}>
+      {price}
+      <span className="ml-auto inline-flex min-h-6 items-center gap-1 whitespace-nowrap text-[0.875rem] font-semibold leading-tight underline decoration-region-accent decoration-2 underline-offset-4 transition-colors group-hover:decoration-current">
+        {label}
+        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </span>
+    </div>
   );
 }

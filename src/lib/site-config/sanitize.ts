@@ -177,6 +177,16 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   }
   if (!pages) delete (candidate as { pages?: unknown }).pages;
   if (!customizers) delete (candidate as { customizers?: unknown }).customizers;
+  // The home's theme is cosmetic and the kept theme is never drawn: an invalid one is dropped (the live sections keep rendering, on the original look).
+  for (const key of ["homeTheme", "homeThemes"] as const) {
+    if (candidate[key] === undefined) continue;
+    const alone = { schemaVersion: 1, scope, tracking: candidate.tracking, ...(key === "homeThemes" && candidate.homeTheme ? { homeTheme: candidate.homeTheme } : {}), [key]: candidate[key] };
+    const r = validateScopeDoc(alone);
+    if (!r.ok) {
+      diagnostics.push(`${scope}: ${key} is invalid and was ignored (${r.errors[0]})`);
+      delete candidate[key];
+    }
+  }
   if (candidate.collections !== undefined && !validateScopeDoc({ ...candidate, home: undefined, collections: candidate.collections }).ok) {
     // A malformed enablement list must not take the home down: without it, sections on internal collections are simply not rendered.
     diagnostics.push(`${scope}: collections list is invalid and was ignored`);

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { resetNavigationAction, saveNavigationAction } from "@/app/admin/actions";
 import { CollectionMenuCard } from "@/components/admin/CollectionMenuCard";
+import { CollectionNotesCard } from "@/components/admin/CollectionNotesCard";
 import { Flash } from "@/components/admin/Flash";
 import { NavigationEditor } from "@/components/admin/NavigationEditor";
 import { requireAdmin } from "@/lib/admin/auth/guard";
@@ -38,6 +39,8 @@ export default async function NavigationPage({ searchParams }: { searchParams: P
       <Flash ok={sp.ok} err={sp.err} />
 
       {synced ? <CollectionMenuCard region={scope} doc={ws.doc} rev={ws.record?.rev ?? null} /> : <p className="a-flash err">As coleções desta loja ainda não foram sincronizadas: sem elas não há menu de coleções. Sincronize em <Link href="/admin/sincronizacao" className="a-link">Sincronização</Link>.</p>}
+
+      {synced && <CollectionNotesCard region={scope} doc={ws.doc} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} />}
 
       <section className="a-card p-5" aria-labelledby="links-secoes" data-testid="menu-section-links">
         <h2 id="links-secoes" className="a-h2">Seções da home na barra do topo</h2>

@@ -84,6 +84,7 @@ export function ProductCarousel({
   toolbar,
   resetKey,
   solidCards = false,
+  eager = true,
 }: {
   /** When set, this card is ALWAYS the first one; `items` are the ordinary products after it. */
   leading?: LeadingCard;
@@ -109,6 +110,8 @@ export function ProductCarousel({
   buy?: CardBuy;
   /** The section's tags on the product pictures (`layout.tags`); absent = none. */
   tags?: ProductTags;
+  /** The first two pictures load right away (a section near the top); false = every picture loads lazily (a section below the fold). */
+  eager?: boolean;
   /** Opaque light cards (`SOLID_CARDS`), for a section on a photo: the picture behind would show through the cards otherwise. */
   solidCards?: boolean;
 }) {
@@ -152,7 +155,7 @@ export function ProductCarousel({
           )}
           {items.map((item, i) => (
             <li key={item.id} className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
-              <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={i < 2} sourceSection={sourceSection} buy={buy} tags={tags} />
+              <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={eager && i < 2} sourceSection={sourceSection} buy={buy} tags={tags} />
             </li>
           ))}
         </ul>

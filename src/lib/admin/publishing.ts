@@ -123,6 +123,13 @@ export function linkProblems(composed: ScopeDoc, sections: Section[]): string[] 
     const name = `"${s.title ?? s.id}"`;
     const links: [string, Destination | undefined][] = [["o botão", s.cta?.dest], ["o botão", s.nav?.dest], ...(s.tiles ?? []).map((t): [string, Destination] => [`o bloco "${t.label}"`, t.dest])];
     for (const [what, dest] of links) {
+      // A personalisation model is published on its own (Personalização): the home only links to one that is live.
+      if (dest?.kind === "customizer") {
+        const model = composed.customizers?.find((m) => m.id === dest.customizerId);
+        if (!model) out.push(`${name}: ${what} leva a um modelo de personalização que ainda não foi publicado. Publique o modelo antes.`);
+        else if (!model.active) out.push(`${name}: ${what} leva ao modelo "${model.name}", que está desativado.`);
+        continue;
+      }
       if (dest?.kind !== "page") continue;
       const page = composed.pages?.find((p) => p.kind === dest.pageKind && p.slug === dest.slug);
       if (!page) out.push(`${name}: ${what} leva à página "${dest.slug}", que não existe ou ainda não foi publicada. Publique a página antes.`);

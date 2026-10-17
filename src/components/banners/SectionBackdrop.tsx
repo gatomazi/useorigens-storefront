@@ -25,7 +25,7 @@ const TOKEN_VAR: Record<string, string> = {
   "token:region-primary": "var(--region-primary)",
   "token:near-black": "#0a0c0a",
 };
-const cssColor = (c: Color): string => TOKEN_VAR[c] ?? c;
+export const cssColor = (c: Color): string => TOKEN_VAR[c] ?? c;
 
 /** Class for named colours (static, so Tailwind emits it), inline style for everything else. */
 function fillProps(fill: Fill): { className: string; style?: CSSProperties } {

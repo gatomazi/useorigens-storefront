@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { trackSelectState } from "@/lib/analytics/track";
 import { SOURCES } from "@/lib/analytics/sources";
 import type { NavBlockData, NavItemData } from "@/lib/site-config/navigation";
@@ -36,17 +37,34 @@ export function MobileMenuPanel({ blocks, interactive = true, onNavigate }: { bl
               {block.label}
             </h2>
             <ul className={listClass}>
-              {block.items.map((item) => (
-                <li key={item.href} className="min-w-0">
-                  {interactive ? (
-                    <Link href={item.href} onClick={() => onNavigate?.(item)} className={`flex min-h-11 items-center py-1 ${itemClass}`}>
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <span className={`flex min-h-11 items-center py-1 ${itemClass}`}>{item.label}</span>
-                  )}
-                </li>
-              ))}
+              {block.items.map((item) => {
+                // A state: its UF before the name and its number of places under it; a collection with a description (CMS): a full row, the
+                // description under the name. Everything else: the label alone. One link per entry either way.
+                const rich = Boolean(item.badge || item.detail);
+                const content = rich ? (
+                  <>
+                    {item.badge && <span aria-hidden="true" className="w-11 shrink-0 font-display text-[1.5rem] font-extrabold uppercase leading-none opacity-75">{item.badge}</span>}
+                    <span className="min-w-0">
+                      <span className="block">{item.label}</span>
+                      {item.detail && <span className="mt-0.5 block text-[0.875rem] font-normal leading-snug opacity-80">{item.detail}</span>}
+                    </span>
+                  </>
+                ) : (
+                  item.label
+                );
+                const rowClass = `flex min-h-11 items-center py-1 ${rich ? "gap-3 py-1.5" : ""} ${itemClass}`;
+                return (
+                  <li key={item.href} className={`min-w-0 ${block.kind === "categories" && item.detail ? "col-span-2" : ""}`}>
+                    {interactive ? (
+                      <Link href={item.href} onClick={() => onNavigate?.(item)} className={rowClass}>
+                        {content}
+                      </Link>
+                    ) : (
+                      <span className={rowClass}>{content}</span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </div>
         );
@@ -66,10 +84,17 @@ const CLOSE_ICON = (
  * Escape closes it. On top of that: the first focus lands on the menu itself (predictable, no stray ring on the close control), focus returns to the
  * button that opened it, the page behind does not scroll, and the close row stays put while the list scrolls (safe areas respected).
  */
-export function MobileMenu({ blocks }: { blocks: NavBlockData[] }) {
+export function MobileMenu({ blocks, search }: { blocks: NavBlockData[]; /** "Sua cidade": the city search, first thing in the menu (the store's own search sheet). */ search?: ReactNode }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
+  const searchHeading = useId();
+  const pathname = usePathname();
+
+  // Any navigation closes the menu, also one that did not come from its own links (a city chosen in the search opened from it, back/forward).
+  useEffect(() => {
+    if (dialog.current?.open) dialog.current.close();
+  }, [pathname]);
 
   useEffect(() => {
     // Rotating a tablet or widening the window past the mobile layout closes the drawer instead of leaving it over the desktop header.
@@ -89,6 +114,8 @@ export function MobileMenu({ blocks }: { blocks: NavBlockData[] }) {
   // Wrapping keeps keyboard and screen-reader users inside the menu until they close it.
   function trapTab(event: React.KeyboardEvent<HTMLDialogElement>) {
     if (event.key !== "Tab") return;
+    // The search sheet opened from the menu is a dialog of its own (nested in this one's DOM): its own Tab order, never this trap's.
+    if (event.target instanceof Element && event.target.closest("dialog") !== event.currentTarget) return;
     const focusable = [...event.currentTarget.querySelectorAll<HTMLElement>("a[href], button:not([disabled])")];
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
@@ -126,6 +153,15 @@ export function MobileMenu({ blocks }: { blocks: NavBlockData[] }) {
             </button>
           </div>
           <div ref={panel} tabIndex={-1} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-[max(2.5rem,env(safe-area-inset-bottom))] pt-3 outline-none">
+            {search && (
+              <div role="group" aria-labelledby={searchHeading} data-block="search" className="mb-7 border-b border-current/25 pb-6">
+                <h2 id={searchHeading} className="mb-3 flex items-center gap-2.5 text-[0.8125rem] font-semibold uppercase leading-none tracking-[0.14em]">
+                  <span aria-hidden="true" className="inline-block h-[3px] w-5" style={{ background: "var(--region-accent, currentColor)" }} />
+                  Sua cidade
+                </h2>
+                {search}
+              </div>
+            )}
             <MobileMenuPanel
               blocks={blocks}
               onNavigate={(item) => {

@@ -13,7 +13,7 @@ import { SectionEditorForm } from "@/components/admin/SectionEditorForm";
 import { listMedia } from "@/lib/admin/media";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { collectionOrderArrangement, collectionOrderMembers, sourceStatus } from "@/lib/admin/validate-draft";
-import { loadWorkspace } from "@/lib/admin/workspace";
+import { loadEditorWorkspace } from "@/lib/admin/workspace";
 import { campaignStatus, cityStylesStatus, imageGridStatus, statesStatus } from "@/lib/admin/structured-status";
 import { currentScope, storeOf } from "@/lib/admin/scope";
 import { toComboEntries } from "@/lib/admin/combo";
@@ -25,7 +25,7 @@ export default async function EditSection({ params, searchParams }: { params: Pr
   const scope = await currentScope(actor);
   const store = storeOf(scope);
   const [{ id }, sp] = await Promise.all([params, searchParams]);
-  const ws = await loadWorkspace(scope);
+  const ws = await loadEditorWorkspace(scope);
   const section = ws.doc.home?.sections.find((s) => s.id === id);
   if (!section) notFound();
 

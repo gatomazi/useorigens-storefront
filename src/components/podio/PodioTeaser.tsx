@@ -9,11 +9,12 @@ import { TrackedPodioLink } from "./TrackedPodioLink";
  * link to the full podium on the state page (#podio). Cards follow the site's editorial state order: the 1º is "leader of that state",
  * never a ranking between states. Hidden entirely when no state has data. Same snapshot and projection as the state page.
  */
-export function PodioTeaser({ region, leaders }: { region: RegionSlug; leaders: PodiumLeader[] }) {
+/** `spaced`: after a state chooser that ends in a band of its own (the "strip"), the teaser brings its own room above the heading. */
+export function PodioTeaser({ region, leaders, spaced = false }: { region: RegionSlug; leaders: PodiumLeader[]; spaced?: boolean }) {
   if (leaders.length === 0) return null;
   const cols = leaders.length >= 4 ? "md:grid-cols-2 lg:grid-cols-4" : leaders.length === 3 ? "md:grid-cols-3" : "md:grid-cols-2";
   return (
-    <section id="podio" aria-labelledby="podio-teaser-title" className="wrap pb-14 lg:pb-24">
+    <section id="podio" aria-labelledby="podio-teaser-title" className={`wrap pb-14 lg:pb-24 ${spaced ? "pt-12 lg:pt-16" : ""}`}>
       <h2 id="podio-teaser-title" className="t-h2">
         Quem está no pódio?
       </h2>

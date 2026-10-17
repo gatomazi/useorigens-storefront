@@ -55,6 +55,13 @@ export type Appearance = {
   overlay: Overlay;
 };
 
+/** The themes of a region's home (see `ScopeDoc.homeTheme`). */
+export const HOME_THEMES = ["original", "editorial"] as const;
+export type HomeThemeName = (typeof HOME_THEMES)[number];
+export const homeThemeOf = (doc: Pick<ScopeDoc, "homeTheme"> | undefined): HomeThemeName => doc?.homeTheme ?? "original";
+/** A theme not in use: its sections and its palette, exactly as the theme in use keeps them in `home.sections` and `theme`. */
+export type KeptHomeTheme = { sections: Section[]; theme?: ThemeConfig };
+
 export type PageKind = "hotpage" | "categoryLanding";
 export const PAGE_KINDS: readonly PageKind[] = ["hotpage", "categoryLanding"];
 /** Public path segment of each page kind under `/<region>/…` (static segments: they never collide with `[uf]`). */
@@ -73,6 +80,11 @@ export type Destination =
    * Resolved at render time; a collection the region cannot use (internal and not enabled, too few products) has no page, so the button is left out.
    */
   | { kind: "collection-page"; store: CommerceStoreKey; collectionId: number }
+  /**
+   * The page of one of this region's personalisation models (`/<region>/personalizar/<slug>`, e.g. "Localidade"), by its stable id: resolved at
+   * render time, so renaming the model's address never breaks the button; a model that is missing or switched off has no page, so the button is left out.
+   */
+  | { kind: "customizer"; customizerId: string }
   | { kind: "external"; url: string };
 
 export type Source =
@@ -136,7 +148,32 @@ export const DEFAULT_PAGE_PRODUCTS = 24;
  * so a tile never shows a price or a count it could get wrong; the destination goes through the same rules as any button (own region, live page).
  * A tile without a picture is drawn as a plain colour block with its name (a "Ver tudo" tile, or a grid still waiting for its photos).
  */
-export type GridTile = { label: string; caption?: string; image?: MediaRef; dest: Destination };
+export type GridTile = {
+  label: string;
+  caption?: string;
+  image?: MediaRef;
+  dest: Destination;
+  /**
+   * How the tile is drawn (absent = the classic tile: the picture with its name under or over it). "product": a REAL shirt of the destination
+   * collection (its first product in the region's own order, read from the catalog snapshot at render time, never a copy) on the tile's colour, with
+   * the name, the caption and the call under it. "banner": the picture fills the card (a mini banner), the name and the call over its lower edge.
+   */
+  format?: TileFormat;
+  /** Banner only: the phone's own crop (absent = the same picture). */
+  imageMobile?: MediaRef;
+  /** Banner only: the point of the picture that stays in frame, per screen (0..100; absent = the centre). */
+  focal?: { mobile: Point; desktop: Point };
+  /** "product" / "banner": the card's colour (under the shirt; under the picture while it loads). Absent = the region's colour. */
+  color?: Color;
+  /** "product" / "banner": the text over that colour or picture. "dark" = dark text (a light colour or picture), "light" = white text. */
+  tone?: "light" | "dark";
+  /** The explicit call at the foot of the tile ("Ver coleção"). Absent: none on a classic tile, "Ver coleção" on the other two. */
+  cta?: string;
+};
+export const TILE_FORMATS = ["product", "banner"] as const;
+export type TileFormat = (typeof TILE_FORMATS)[number];
+export const DEFAULT_TILE_CTA = "Ver coleção";
+export const MAX_TILE_CTA = 24;
 export const GRID_COLUMNS = [2, 3, 4] as const;
 export const GRID_ASPECTS = ["square", "portrait", "landscape"] as const;
 export const GRID_LABELS = ["below", "overlay"] as const;
@@ -144,6 +181,19 @@ export const GRID_LABELS = ["below", "overlay"] as const;
 export type GridLayout = { columns: (typeof GRID_COLUMNS)[number]; aspect: (typeof GRID_ASPECTS)[number]; labels: (typeof GRID_LABELS)[number] };
 export const MIN_GRID_TILES = 2;
 export const MAX_GRID_TILES = 12;
+
+/**
+ * The composition of a structured section, per template (absent = its original look, so documents saved before this existed stay as they were):
+ *   hero "feature"        headline, search and ONE large featured product (the first eligible of `featured`) instead of three small cards;
+ *   states "strip"        a band of one entry per state (UF, name, number of places and the call), each entry one link, instead of the cover cards;
+ *   city-styles "split"   the heading in a column of its own beside the style cards;
+ *   city-styles "list"    the heading in a column of its own, the styles' names in a list and ONE card beside it, the style chosen (all eight
+ *                         within reach without eight cards on screen);
+ *   campaign "split"      the picture (or real shirts) on one half and the text on a colour of its own on the other, edge to edge.
+ */
+export const SECTION_VARIANTS = { hero: ["feature"], states: ["strip"], "city-styles": ["split", "list"], campaign: ["split"] } as const satisfies Partial<Record<TemplateKey, readonly string[]>>;
+export type SectionVariant = (typeof SECTION_VARIANTS)[keyof typeof SECTION_VARIANTS][number];
+export const variantsOf = (template: TemplateKey): readonly string[] => (SECTION_VARIANTS as Partial<Record<TemplateKey, readonly string[]>>)[template] ?? [];
 
 export type Section = {
   id: string;
@@ -186,6 +236,8 @@ export type Section = {
   tiles?: GridTile[];
   /** Image grid only. */
   grid?: GridLayout;
+  /** Hero, state chooser, city styles and campaign only: their composition (`SECTION_VARIANTS`); absent = the original one. */
+  variant?: SectionVariant;
   appearance: Appearance;
 };
 
@@ -213,6 +265,9 @@ export const MAX_ARRANGEMENTS = 300;
  * collections taken out of "Categorias"; `added` = internal collections brought into it (site only). A collection is in at most one list.
  */
 export type CollectionMenu = { top: CollectionRef[]; hidden: CollectionRef[]; added: CollectionRef[] };
+/** One short line that says what a collection is ("Camisetas com o estado inteiro"), shown under its name in the storefront's open menus. */
+export type CollectionNote = CollectionRef & { text: string };
+export const MAX_COLLECTION_NOTE = 80;
 
 /**
  * A page of a region outside the home: an editorial hotpage or a parent-category landing. Made of the SAME sections as the home (rendered by the
@@ -304,6 +359,18 @@ export type ScopeDoc = {
    */
   theme?: ThemeConfig;
   /**
+   * The THEME of the region's home, like a theme of a shop platform: "original" (the look the store has had, absent) or "editorial" (the approved editorial
+   * direction: a deep-green, cream and terracotta palette as the base of `theme`, a green strip and footer). `home.sections` are ALWAYS the sections of
+   * this theme (the one being edited in the draft, or the one live once published); the other theme keeps its own sections in `homeThemes`, edited
+   * with the very same section editor once the owner switches to it. Switching swaps the two lists; nothing is lost.
+   */
+  homeTheme?: Exclude<HomeThemeName, "original">;
+  /**
+   * The theme(s) not in use, kept as they were left (at most one entry per theme, never the one in use): their sections and their own palette (`theme`,
+   * absent = the region's current look). The panel edits a kept theme in place, without putting it on the store.
+   */
+  homeThemes?: Partial<Record<HomeThemeName, KeptHomeTheme>>;
+  /**
    * "Cupons e promoções" of this REGION: copyable coupons and announcements without a code, each with its own texts, order and optional window.
    * Absent or empty = no button anywhere. Published with the region (never with a page); the public reads only live items (site-config/promotions.ts).
    */
@@ -357,6 +424,8 @@ export type ScopeDoc = {
      * the next edit).
      */
     menu?: CollectionMenu;
+    /** A short description per collection (at most one each), under its name in the header's "Coleções" and in the phone menu. Absent = names only. */
+    descriptions?: CollectionNote[];
     /**
      * Order and hidden products per collection (at most one entry per collection). Before this existed each section kept its own (`Source.productIds` /
      * `hiddenIds`): those are read only while the collection has no entry here (`arrangementOf`), so an entry with neither list means "INK's order"
@@ -497,6 +566,8 @@ function checkDestination(c: Collector, path: string, v: unknown): void {
     if (typeof v.slug !== "string" || !PAGE_SLUG.test(v.slug) || v.slug.length > 60) c.fail(`${path}.slug`, "invalid page slug");
   } else if (v.kind === "anchor") {
     if (typeof v.anchor !== "string" || !SLUG.test(v.anchor)) c.fail(`${path}.anchor`, "must match [a-z0-9-]{1,40}");
+  } else if (v.kind === "customizer") {
+    if (typeof v.customizerId !== "string" || !ID.test(v.customizerId)) c.fail(`${path}.customizerId`, "invalid customizer id");
   } else if (v.kind === "external") {
     let ok = false;
     if (typeof v.url === "string") {
@@ -508,7 +579,7 @@ function checkDestination(c: Collector, path: string, v: unknown): void {
       }
     }
     if (!ok) c.fail(`${path}.url`, "must be https on an allowed store host");
-  } else c.fail(`${path}.kind`, "must be route | page | anchor | ink-collection | collection-page | external");
+  } else c.fail(`${path}.kind`, "must be route | page | anchor | ink-collection | collection-page | customizer | external");
 }
 
 /** An ink-category's own order / hidden list: at most the products a collection keeps for showcases (MAX_STORED_MEMBERS = 48), with room to spare. */
@@ -626,6 +697,27 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       if (t.caption !== undefined && !isStr(t.caption, 80)) c.fail(`${at}.caption`, "1..80 chars");
       if (t.image !== undefined) checkMediaRef(c, `${at}.image`, t.image);
       checkDestination(c, `${at}.dest`, t.dest);
+      if (t.format !== undefined && !(TILE_FORMATS as readonly unknown[]).includes(t.format)) c.fail(`${at}.format`, `must be ${TILE_FORMATS.join(" | ")}`);
+      const styled = t.format === "product" || t.format === "banner";
+      if (t.imageMobile !== undefined) {
+        if (t.format !== "banner") c.fail(`${at}.imageMobile`, "banner tiles only");
+        else checkMediaRef(c, `${at}.imageMobile`, t.imageMobile);
+      }
+      if (t.focal !== undefined) {
+        if (t.format !== "banner" || !isRecord(t.focal)) c.fail(`${at}.focal`, "banner tiles only: { mobile, desktop }");
+        else {
+          checkPoint(c, `${at}.focal.mobile`, t.focal.mobile);
+          checkPoint(c, `${at}.focal.desktop`, t.focal.desktop);
+        }
+      }
+      if (t.color !== undefined) {
+        if (!styled) c.fail(`${at}.color`, "product or banner tiles only");
+        else checkColor(c, `${at}.color`, t.color);
+      }
+      if (t.tone !== undefined && (!styled || (t.tone !== "light" && t.tone !== "dark"))) c.fail(`${at}.tone`, "product or banner tiles only: light | dark");
+      if (t.cta !== undefined && (!isStr(t.cta, MAX_TILE_CTA) || t.cta.trim() !== t.cta)) c.fail(`${at}.cta`, `1..${MAX_TILE_CTA} chars, no leading or trailing spaces`);
+      // A product tile shows a shirt OF its destination: only a collection has one.
+      if (t.format === "product" && isRecord(t.dest) && t.dest.kind !== "collection-page" && t.dest.kind !== "ink-collection") c.fail(`${at}.dest`, "a product tile leads to a collection (its shirt comes from it)");
     });
   }
   if (v.grid !== undefined) {
@@ -639,6 +731,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     if (!v.tiles) c.fail(`${path}.tiles`, "required for an image grid");
     if (!v.grid) c.fail(`${path}.grid`, "required for an image grid");
   }
+  if (v.variant !== undefined && !variantsOf(v.template as TemplateKey).includes(v.variant as string)) c.fail(`${path}.variant`, "not a composition of this template");
   if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > 8)) c.fail(`${path}.count`, "city styles only, an integer 1..8");
   if (v.template === "page-hero" && !v.title) c.fail(`${path}.title`, "required for a page hero");
   if (v.template === "product-carousel") {
@@ -879,6 +972,12 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
       items.forEach((r) => { if (isRecord(r)) earlier.add(key(r)); });
     }
   }
+  if (v.descriptions !== undefined) {
+    checkRefList(c, `${path}.descriptions`, v.descriptions, MAX_NAVBAR_GROUP * 4);
+    if (Array.isArray(v.descriptions)) v.descriptions.forEach((d, i) => {
+      if (isRecord(d) && (!isStr(d.text, MAX_COLLECTION_NOTE) || d.text.trim() !== d.text || /[\u0000-\u001f\u007f]/.test(d.text))) c.fail(`${path}.descriptions[${i}].text`, `1..${MAX_COLLECTION_NOTE} chars, one line`);
+    });
+  }
   if (v.stateCategories !== undefined) checkRefList(c, `${path}.stateCategories`, v.stateCategories, MAX_STATE_ROWS);
   if (v.stateSubcategories !== undefined) {
     const sub = v.stateSubcategories;
@@ -896,6 +995,54 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
       if (a.productIds !== undefined && !isInkIdList(a.productIds)) c.fail(`${path}.arrangements[${i}].productIds`, `must be ≤ ${MAX_ARRANGED_IDS} distinct numeric INK ids`);
       if (a.hiddenIds !== undefined && !isInkIdList(a.hiddenIds)) c.fail(`${path}.arrangements[${i}].hiddenIds`, `must be ≤ ${MAX_ARRANGED_IDS} distinct numeric INK ids`);
     });
+  }
+}
+
+/** The rules of a home's section list (the live home and every theme kept for later): `path` is where its errors are reported. */
+function checkHomeSections(c: Collector, path: string, sections: unknown, sc: Scope): void {
+  if (!Array.isArray(sections)) c.fail(path, "must be an array");
+  else {
+    sections.forEach((s, i) => checkSection(c, `${path}[${i}]`, s));
+    // Sources and "Ver todos" targets must come from THIS region's INK store (a Norte section can never show or link Sul's collection).
+    const ownStore = REGIONS[sc as RegionSlug]?.storeKey;
+    if (ownStore) {
+      sections.forEach((s, i) => {
+        if (!isRecord(s)) return;
+        if (isRecord(s.source) && s.source.kind === "ink-category" && !regionMayUseStore(sc as RegionSlug, s.source.store)) c.fail(`${path}[${i}].source.store`, "belongs to another region's INK store");
+        const dest = isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null;
+        if (dest && (dest.kind === "ink-collection" || dest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, dest.store)) c.fail(`${path}[${i}].cta.dest.store`, "belongs to another region's INK store");
+        if (isRecord(s.layout) && s.layout.display === "paged") c.fail(`${path}[${i}].layout.display`, "a paged grid belongs to a parent-category landing");
+        // A state cover belongs to a state of THIS region.
+        if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(REGIONS[sc as RegionSlug]?.ufs as readonly string[] | undefined)?.includes(uf)) c.fail(`${path}[${i}].stateCovers.${uf}`, "not a state of this region");
+        // The hero's cards are products of THIS region's own INK store (a Norte card can never be a Sul product).
+        if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`${path}[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
+        const navDest = isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null;
+        if (navDest && (navDest.kind === "ink-collection" || navDest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, navDest.store)) c.fail(`${path}[${i}].nav.dest.store`, "belongs to another region's INK store");
+        if (navDest && navDest.kind === "route" && typeof navDest.path === "string" && navDest.path !== `/${sc}` && !navDest.path.startsWith(`/${sc}/`)) c.fail(`${path}[${i}].nav.dest.path`, "must be a page of this region");
+        if (s.template === "page-hero") c.fail(`${path}[${i}].template`, "the page hero belongs to pages, not to the home");
+        checkTileRegion(c, `${path}[${i}]`, s.tiles, sc);
+        // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
+        if (dest && dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`${path}[${i}].cta.dest.path`, "must be a page of this region");
+      });
+    }
+    const anchors = new Set<string>();
+    const ids = new Set<string>();
+    sections.forEach((s, i) => {
+      if (!isRecord(s)) return;
+      if (typeof s.anchor === "string") {
+        if (anchors.has(s.anchor)) c.fail(`${path}[${i}].anchor`, "duplicate anchor");
+        anchors.add(s.anchor);
+      }
+      if (typeof s.id === "string") {
+        if (ids.has(s.id)) c.fail(`${path}[${i}].id`, "duplicate id");
+        ids.add(s.id);
+      }
+    });
+    const first = sections[0];
+    const last = sections[sections.length - 1];
+    if (sections.length > 0 && (!isRecord(first) || first.template !== "hero")) c.fail(path, "the first section must be the hero");
+    if (sections.length > 0 && (!isRecord(last) || last.template !== "footer")) c.fail(path, "the last section must be the footer");
+    if (sections.filter((s) => isRecord(s) && (s.template === "hero" || s.template === "footer")).length > 2) c.fail(path, "hero and footer appear once");
   }
 }
 
@@ -977,50 +1124,25 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.home !== undefined) {
     if (sc === "global") c.fail("doc.home", "global has no home in V1");
-    const sections = isRecord(input.home) ? input.home.sections : undefined;
-    if (!Array.isArray(sections)) c.fail("doc.home.sections", "must be an array");
+    checkHomeSections(c, "doc.home.sections", isRecord(input.home) ? input.home.sections : undefined, sc);
+  }
+  if (input.homeTheme !== undefined && (sc === "global" || input.homeTheme !== "editorial")) c.fail("doc.homeTheme", "a region's home theme: editorial (absent = original)");
+  if (input.homeThemes !== undefined) {
+    if (sc === "global" || !isRecord(input.homeThemes)) c.fail("doc.homeThemes", "a region's kept home themes");
     else {
-      sections.forEach((s, i) => checkSection(c, `doc.home.sections[${i}]`, s));
-      // Sources and "Ver todos" targets must come from THIS region's INK store (a Norte section can never show or link Sul's collection).
-      const ownStore = REGIONS[sc as RegionSlug]?.storeKey;
-      if (ownStore) {
-        sections.forEach((s, i) => {
-          if (!isRecord(s)) return;
-          if (isRecord(s.source) && s.source.kind === "ink-category" && !regionMayUseStore(sc as RegionSlug, s.source.store)) c.fail(`doc.home.sections[${i}].source.store`, "belongs to another region's INK store");
-          const dest = isRecord(s.cta) && isRecord(s.cta.dest) ? s.cta.dest : null;
-          if (dest && (dest.kind === "ink-collection" || dest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, dest.store)) c.fail(`doc.home.sections[${i}].cta.dest.store`, "belongs to another region's INK store");
-          if (isRecord(s.layout) && s.layout.display === "paged") c.fail(`doc.home.sections[${i}].layout.display`, "a paged grid belongs to a parent-category landing");
-          // A state cover belongs to a state of THIS region.
-          if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(REGIONS[sc as RegionSlug]?.ufs as readonly string[] | undefined)?.includes(uf)) c.fail(`doc.home.sections[${i}].stateCovers.${uf}`, "not a state of this region");
-          // The hero's cards are products of THIS region's own INK store (a Norte card can never be a Sul product).
-          if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`doc.home.sections[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
-          const navDest = isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null;
-          if (navDest && (navDest.kind === "ink-collection" || navDest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, navDest.store)) c.fail(`doc.home.sections[${i}].nav.dest.store`, "belongs to another region's INK store");
-          if (navDest && navDest.kind === "route" && typeof navDest.path === "string" && navDest.path !== `/${sc}` && !navDest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].nav.dest.path`, "must be a page of this region");
-          if (s.template === "page-hero") c.fail(`doc.home.sections[${i}].template`, "the page hero belongs to pages, not to the home");
-          checkTileRegion(c, `doc.home.sections[${i}]`, s.tiles, sc);
-          // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
-          if (dest && dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`doc.home.sections[${i}].cta.dest.path`, "must be a page of this region");
-        });
+      const inUse = (input.homeTheme as string | undefined) ?? "original";
+      for (const [name, kept] of Object.entries(input.homeThemes)) {
+        if (!(HOME_THEMES as readonly string[]).includes(name)) c.fail(`doc.homeThemes.${name}`, "unknown theme");
+        else if (name === inUse) c.fail(`doc.homeThemes.${name}`, "the theme in use lives in home.sections");
+        else {
+          checkHomeSections(c, `doc.homeThemes.${name}.sections`, isRecord(kept) ? kept.sections : undefined, sc);
+          if (isRecord(kept) && kept.theme !== undefined) {
+            const r = validateTheme(kept.theme, sc, `doc.homeThemes.${name}.theme`);
+            if (!r.ok) for (const e of r.errors) c.fail(`doc.homeThemes.${name}.theme`, e);
+          }
+          if (isRecord(kept)) for (const key of Object.keys(kept)) if (key !== "sections" && key !== "theme") c.fail(`doc.homeThemes.${name}.${key}`, "unknown field");
+        }
       }
-      const anchors = new Set<string>();
-      const ids = new Set<string>();
-      sections.forEach((s, i) => {
-        if (!isRecord(s)) return;
-        if (typeof s.anchor === "string") {
-          if (anchors.has(s.anchor)) c.fail(`doc.home.sections[${i}].anchor`, "duplicate anchor");
-          anchors.add(s.anchor);
-        }
-        if (typeof s.id === "string") {
-          if (ids.has(s.id)) c.fail(`doc.home.sections[${i}].id`, "duplicate id");
-          ids.add(s.id);
-        }
-      });
-      const first = sections[0];
-      const last = sections[sections.length - 1];
-      if (sections.length > 0 && (!isRecord(first) || first.template !== "hero")) c.fail("doc.home.sections", "the first section must be the hero");
-      if (sections.length > 0 && (!isRecord(last) || last.template !== "footer")) c.fail("doc.home.sections", "the last section must be the footer");
-      if (sections.filter((s) => isRecord(s) && (s.template === "hero" || s.template === "footer")).length > 2) c.fail("doc.home.sections", "hero and footer appear once");
     }
   }
   if (input.pages !== undefined) {
@@ -1080,7 +1202,7 @@ export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
   if (!doc) return [];
   const out: MediaRef[] = [];
   const ofSection = (s: Section) => {
-    for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), s.customizerCard?.image, ...(s.tiles ?? []).map((t) => t.image)]) if (r) out.push(r);
+    for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), s.customizerCard?.image, ...(s.tiles ?? []).flatMap((t) => [t.image, t.imageMobile])]) if (r) out.push(r);
   };
   for (const s of doc.home?.sections ?? []) ofSection(s);
   for (const p of doc.pages ?? []) {

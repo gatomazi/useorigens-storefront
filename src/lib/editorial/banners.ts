@@ -36,6 +36,8 @@ export type BannerAsset = {
   alt: string;
   /** CSS object-position for the crop ("50% 30%"). Keeps the subject when the frame changes. */
   focal?: string;
+  /** Its own object-position from 1024px, where the desktop picture takes over (absent = `focal` everywhere). */
+  focalDesktop?: string;
 };
 
 export type BannerConfig = {

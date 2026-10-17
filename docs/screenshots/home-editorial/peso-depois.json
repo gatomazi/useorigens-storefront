@@ -1,0 +1,68 @@
+[
+  {
+    "vp": 360,
+    "overflowX": 0,
+    "firstKB": 4841,
+    "firstImagesKB": 186,
+    "firstImgCount": 10,
+    "totalKB": 4861,
+    "imagesKB": 206,
+    "imgCount": 14,
+    "pageHeight": 5757
+  },
+  {
+    "vp": 390,
+    "overflowX": 0,
+    "firstKB": 4863,
+    "firstImagesKB": 208,
+    "firstImgCount": 10,
+    "totalKB": 4883,
+    "imagesKB": 228,
+    "imgCount": 14,
+    "pageHeight": 5672
+  },
+  {
+    "vp": 430,
+    "overflowX": 0,
+    "firstKB": 4863,
+    "firstImagesKB": 208,
+    "firstImgCount": 10,
+    "totalKB": 4904,
+    "imagesKB": 249,
+    "imgCount": 14,
+    "pageHeight": 5816
+  },
+  {
+    "vp": 1366,
+    "overflowX": 0,
+    "firstKB": 4833,
+    "firstImagesKB": 178,
+    "firstImgCount": 14,
+    "totalKB": 4833,
+    "imagesKB": 178,
+    "imgCount": 14,
+    "pageHeight": 4709
+  },
+  {
+    "vp": 1440,
+    "overflowX": 0,
+    "firstKB": 4833,
+    "firstImagesKB": 178,
+    "firstImgCount": 14,
+    "totalKB": 4833,
+    "imagesKB": 178,
+    "imgCount": 14,
+    "pageHeight": 4787
+  },
+  {
+    "vp": 1920,
+    "overflowX": 0,
+    "firstKB": 4853,
+    "firstImagesKB": 198,
+    "firstImgCount": 13,
+    "totalKB": 4853,
+    "imagesKB": 198,
+    "imgCount": 13,
+    "pageHeight": 4791
+  }
+]

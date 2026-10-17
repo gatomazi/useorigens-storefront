@@ -2,12 +2,15 @@ import { saveCardsAction, saveMundoAction, saveThemeAction } from "@/app/admin/a
 import { Flash } from "@/components/admin/Flash";
 import { GlobalPendingNote } from "@/components/admin/GlobalPendingNote";
 import { ThemeEditor } from "@/components/admin/ThemeEditor";
+import { HomeThemeCard } from "@/components/admin/HomeThemeCard";
+import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { currentScope, REGION_SCOPES, scopeName } from "@/lib/admin/scope";
 import { canEdit } from "@/lib/admin/store/ports";
-import { loadWorkspace } from "@/lib/admin/workspace";
+import { loadEditorWorkspace, loadWorkspace } from "@/lib/admin/workspace";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
+import { CARD_BUY_STYLE_NAME } from "@/lib/site-config/cards-schema";
 import { siteCollectionMenu } from "@/lib/catalog/collection-menu";
 import { coveredUfs } from "@/lib/site-config/chrome";
 import { navData, type NavData } from "@/lib/site-config/navigation";
@@ -28,7 +31,8 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
   const scope = await currentScope(actor);
   const sp = await searchParams;
   const owner = actor.role === "owner";
-  const [ws, global] = await Promise.all([loadWorkspace(scope), loadWorkspace("global")]);
+  // The region's palette is the palette of the home theme being edited (each theme keeps its own).
+  const [ws, global] = await Promise.all([loadEditorWorkspace(scope), loadWorkspace("global")]);
   const launched = launchedRegions();
   // Real menu data per region for the previews (the home's own sections, launched regions, states that have products).
   const navByRegion = Object.fromEntries(
@@ -50,8 +54,10 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
       <Flash ok={sp.ok} err={sp.err} />
       <GlobalPendingNote global={global} owner={owner} />
 
+      <HomeThemeCard region={scope} doc={ws.doc} editing={ws.editingTheme} active={ws.activeTheme} live={ws.liveTheme} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} to="/admin/aparencia" />
+
       <ThemeEditor
-        key={`region-${scope}-${ws.record?.rev ?? "null"}`}
+        key={`region-${scope}-${ws.editingTheme}-${ws.record?.rev ?? "null"}`}
         scope={scope}
         region={scope}
         theme={ws.doc.theme}
@@ -61,7 +67,7 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
         readOnly={!canEdit(actor, scope)}
         action={saveThemeAction}
         rev={String(ws.record?.rev ?? "null")}
-        title={`Identidade visual de ${scopeName(scope)}`}
+        title={`Cores do tema ${HOME_THEME_LABEL[ws.editingTheme]} · ${scopeName(scope)}`}
         note={inherits ? "Esta região herda a paleta da Use Origens." : "Escolha manter o visual atual, herdar a paleta global ou definir cores próprias."}
       />
 
@@ -103,6 +109,7 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
                   {([
                     ["button", "Botão embaixo", "Uma barra com o texto, no pé de cada card."],
                     ["fab", "Carrinho na imagem", "Um botão redondo de carrinho no canto da foto; o texto vira o nome dele para leitores de tela."],
+                    ["link", "Chamada ao lado do preço", "O texto com uma seta, na mesma linha do preço (“Ver produto →”), sobre um fio no pé do card. Em card estreito, desce para baixo do preço."],
                   ] as const).map(([value, label, help]) => (
                     <label key={value} className="flex max-w-xs cursor-pointer gap-2 border border-black/20 p-3 has-[:checked]:border-black has-[:checked]:bg-white">
                       <input type="radio" name="cards_buy_style" value={value} defaultChecked={(draft?.buyStyle ?? "button") === value} disabled={!owner} className="mt-1" data-testid={`cards-buy-style-${value}`} />
@@ -111,7 +118,7 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
                   ))}
                 </div>
               </fieldset>
-              <p className="text-[0.875rem]" data-testid="cards-live"><strong>Na loja agora:</strong> {live ? `${live.buyStyle === "fab" ? "carrinho na imagem" : "botão"} “${live.buyLabel}” em todos os cards` : "cada seção decide"}.{JSON.stringify(draft ?? null) !== JSON.stringify(live ?? null) && " O rascunho tem outra escolha: publique a configuração global em Publicar."}</p>
+              <p className="text-[0.875rem]" data-testid="cards-live"><strong>Na loja agora:</strong> {live ? `${CARD_BUY_STYLE_NAME[live.buyStyle ?? "button"]} “${live.buyLabel}” em todos os cards` : "cada seção decide"}.{JSON.stringify(draft ?? null) !== JSON.stringify(live ?? null) && " O rascunho tem outra escolha: publique a configuração global em Publicar."}</p>
               {owner ? <button type="submit" className="a-btn" data-testid="save-cards">Salvar rascunho do botão</button> : <p className="a-muted">Só o owner altera.</p>}
             </form>
           );

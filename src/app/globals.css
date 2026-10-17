@@ -432,7 +432,8 @@ a:hover > .photo img,
   transition: height 280ms var(--ease-out);
 }
 .site-header[data-scrolled="true"] {
-  border-bottom-color: rgb(255 255 255 / 0.16);
+  /* From the header's own text colour: a light hairline on the dark header, a dark one on a light header (CMS palette). */
+  border-bottom-color: color-mix(in srgb, currentColor 16%, transparent);
   box-shadow: 0 1px 0 rgb(0 0 0 / 0.08);
 }
 .site-header[data-scrolled="true"] .site-header-row {
@@ -459,6 +460,15 @@ a:hover > .photo img,
 
 .paper {
   background: var(--paper);
+}
+
+/* The footer of the editorial home theme: the theme's green, light text (its muted text and hairlines follow). */
+.on-brand {
+  background: var(--footer-bg, var(--region-primary));
+  color: #fff;
+  --ink-soft: rgb(255 255 255 / 0.86);
+  --ink-mute: rgb(255 255 255 / 0.72);
+  --line: rgb(255 255 255 / 0.22);
 }
 
 /*

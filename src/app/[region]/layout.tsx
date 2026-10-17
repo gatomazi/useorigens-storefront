@@ -51,7 +51,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
   const catalog = getCatalog();
   const tracking = publishedTracking(region);
   // The CMS palette (global or the region's own) as CSS variables over the region's; empty, and so a no-op, when nothing is configured.
-  const { cssVars } = regionChrome(region);
+  const { cssVars, homeTheme } = regionChrome(region);
   return (
     <ConsentProvider>
       {/* The cart lives in the store that sells (commerce-mode.ts): the region's own in multi-store, the single store's otherwise. */}
@@ -67,7 +67,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
         <AnnouncementBar region={region} cityCount={catalog.coveredCityIds(region).size} />
         <Header region={region} />
         <main id="conteudo">{children}</main>
-        <Footer region={region} syncedAt={catalog.syncedAt} />
+        <Footer region={region} syncedAt={catalog.syncedAt} onBrand={homeTheme === "editorial"} />
       </div>
       {/* useSearchParams inside MetaPixel/GoogleAnalytics needs a Suspense boundary so the rest of the tree can still prerender. */}
       <Suspense fallback={null}>

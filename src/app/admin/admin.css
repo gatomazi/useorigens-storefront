@@ -52,3 +52,9 @@ html.a-dragging, html.a-dragging * { cursor: grabbing !important; user-select: n
   .a-table.a-stack td { border-bottom: 0; padding: 0.3rem 0.75rem; text-align: left !important; }
   .a-table.a-stack td[data-label]::before { content: attr(data-label); display: block; font-size: 0.6875rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 0.15rem; }
 }
+
+/* The block a panel search led to (AdminSearch): a short outline in the region's colour, fading out unless motion is reduced. */
+.a-found { outline: 3px solid var(--region-primary); outline-offset: 4px; scroll-margin-top: 1rem; }
+[data-search-target]:focus:not(.a-found) { outline: none; }
+@media (prefers-reduced-motion: no-preference) { .a-found { animation: a-found 2s ease-out forwards; } }
+@keyframes a-found { 0%, 60% { outline-color: var(--region-primary); } 100% { outline-color: transparent; } }

@@ -17,6 +17,8 @@ import { usePathname } from "next/navigation";
  * - A real route change (selecting an option, or navigating some other way while open) closes it too.
  * - Clicking the trigger itself still toggles normally — `<details>` already does that; this component
  *   never intercepts that click.
+ * - Choosing a link inside it closes it, even one that stays on the same page (a `#estados` anchor changes no route).
+ * - Only one header dropdown is open at a time: opening one (mouse, touch or keyboard) closes the others.
  * - Exactly one global pointerdown + one keydown listener per open dropdown, both removed on close/unmount.
  */
 export function HeaderDropdown({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -60,7 +62,19 @@ export function HeaderDropdown({ children, className }: { children: React.ReactN
   }, [pathname]);
 
   return (
-    <details ref={ref} className={className}>
+    <details
+      ref={ref}
+      className={className}
+      data-header-dropdown=""
+      onToggle={(event) => {
+        const details = event.currentTarget;
+        if (!details.open) return;
+        for (const other of document.querySelectorAll<HTMLDetailsElement>("details[data-header-dropdown][open]")) if (other !== details) other.open = false;
+      }}
+      onClick={(event) => {
+        if (event.target instanceof Element && event.target.closest("a[href]") && ref.current?.open) ref.current.open = false;
+      }}
+    >
       {children}
     </details>
   );

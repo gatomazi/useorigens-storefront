@@ -92,7 +92,7 @@ export default async function TrackingPage({ searchParams }: { searchParams: Pro
       </div>
       <Flash ok={sp.ok} err={sp.err} />
 
-      <section className="a-card overflow-x-auto" aria-label="IDs efetivos">
+      <section id="ids-efetivos" className="a-card scroll-mt-4 overflow-x-auto" aria-label="IDs efetivos">
         <table className="a-table a-stack">
           <caption className="a-h2 p-4 text-left">IDs efetivos por região</caption>
           <thead><tr><th scope="col">Região</th><th scope="col">Ferramenta</th><th scope="col">No ar agora</th><th scope="col">Se publicar o rascunho</th></tr></thead>

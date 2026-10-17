@@ -19,15 +19,19 @@ import type { CardsConfig } from "../site-config/cards-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
 import type { InkThemeConfig } from "../site-config/ink-theme-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, type Appearance, type CollectionRef, type StateSubcategories, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, type Appearance, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { HOME_THEME_LABEL, hasHomeTheme, newEditorialTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
+import type { RegionSlug } from "../geo/regions";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid" | "variant">;
 
 export type DraftOp =
   /** `display: "grid"` creates the section already as a product grid (absent = a carousel). */
   | { type: "add-carousel"; title: string; source: Source; cta?: Section["cta"]; display?: ProductDisplay }
   /** Adds one of the structured home components (city styles, state chooser, regional campaign, image grid) with the defaults of THIS region. */
   | { type: "add-structured"; template: StructuredTemplate }
+  /** A split campaign that opens one personalisation model (e.g. "Localidade"): its name, description and picture, the button to its page. */
+  | { type: "add-customizer-section"; customizerId: string }
   | { type: "duplicate"; id: string }
   | { type: "move"; id: string; direction: "up" | "down" }
   /** The whole order at once (drag and drop in the panel): the same sections, the hero first and the footer last, fixed sections where they were. */
@@ -54,6 +58,20 @@ export type DraftOp =
   | ({ type: "move-collection-menu"; direction: "up" | "down" } & CollectionRef)
   /** Gives a document from before the collection menu its own menu, unchanged (the Worker then follows it once published). */
   | { type: "adopt-collection-menu" }
+  /**
+   * The home's theme: the current sections are kept under the current theme and the chosen theme's come back (the editorial one, the first time, is
+   * built from the current sections with `collections`, the real collections the server found in the region's store).
+   */
+  | { type: "set-home-theme"; theme: HomeThemeName; collections?: EditorialCollections }
+  /** Sets up a theme the region does not have yet (the editorial one, built from the current sections), WITHOUT putting it in use. */
+  | { type: "create-home-theme"; theme: HomeThemeName; collections?: EditorialCollections }
+  /**
+   * Any other operation, applied to the sections (and palette) of `theme` instead of the theme in use: the panel edits a kept theme in place, and the
+   * theme in use is left exactly as it was.
+   */
+  | { type: "in-home-theme"; theme: HomeThemeName; op: DraftOp }
+  /** The short descriptions of the menu's collections, all at once (the panel's form). An empty list removes them. */
+  | { type: "set-collection-descriptions"; descriptions: CollectionNote[] }
   /**
    * The state page's CATEGORIES (`collections.stateCategories`): puts a collection in (`on`) or takes it out, or moves it one step. `base` is what the
    * list is now (the menu bar while the region has no list of its own, computed by the caller), so the first edit starts from it instead of from nothing.
@@ -162,6 +180,42 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-collection-menu-position" || op.type === "move-collection-menu" || op.type === "adopt-collection-menu") return editMenu(doc, op);
   if (op.type === "set-state-category" || op.type === "move-state-category" || op.type === "reset-state-categories") return editStateCategories(doc, op);
   if (op.type === "set-state-subcategory" || op.type === "reset-state-subcategories") return editStateSubcategories(doc, op);
+  if (op.type === "set-home-theme" || op.type === "create-home-theme") {
+    if (doc.scope === "global" || !doc.home) return fail("only a region's home has a theme");
+    const created = op.theme === "editorial" && !hasHomeTheme(doc, "editorial") ? newEditorialTheme(doc.scope as RegionSlug, doc.home.sections, op.collections ?? {}, ctx.newId) : undefined;
+    let next: ScopeDoc | null;
+    if (op.type === "set-home-theme") {
+      next = swapHomeTheme(doc, op.theme, created);
+      if (!next) return fail(`o tema ${HOME_THEME_LABEL[op.theme]} não existe nesta região`);
+    } else {
+      if (hasHomeTheme(doc, op.theme)) return { ok: true, doc };
+      if (!created) return fail(`o tema ${HOME_THEME_LABEL[op.theme]} não pode ser criado`);
+      next = { ...doc, homeThemes: { ...(doc.homeThemes ?? {}), [op.theme]: created } };
+    }
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "in-home-theme") {
+    if (doc.scope === "global" || op.theme === homeThemeOf(doc)) return applyOp(doc, op.op, ctx);
+    if (op.op.type === "in-home-theme" || op.op.type === "set-home-theme" || op.op.type === "create-home-theme") return fail("a theme operation is never applied inside another theme");
+    const view = swapHomeTheme(doc, op.theme);
+    if (!view) return fail(`o tema ${HOME_THEME_LABEL[op.theme]} ainda não foi criado nesta região`);
+    const r = applyOp(view, op.op, ctx);
+    if (!r.ok) return r;
+    const back = swapHomeTheme(r.doc, homeThemeOf(doc));
+    if (!back) return fail("the theme in use could not be restored");
+    const check = validateScopeDoc(back);
+    return check.ok ? { ok: true, doc: back, ...(r.focusId ? { focusId: r.focusId } : {}) } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-collection-descriptions") {
+    if (doc.scope === "global") return fail("global has no collections");
+    const collections = { ...(doc.collections ?? { enabled: [] }) };
+    if (op.descriptions.length > 0) collections.descriptions = op.descriptions.map((d) => ({ store: d.store, collectionId: d.collectionId, text: d.text }));
+    else delete collections.descriptions;
+    const next: ScopeDoc = { ...doc, collections };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
   if (op.type === "set-state-page-section") {
     if (doc.scope === "global") return fail("global has no state pages");
     const next = withStatePageSection(doc, op.section, op.shown);
@@ -271,6 +325,30 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       // where a new carousel goes (before the closing campaign).
       const at = op.template === "city-styles" ? 1 : ctx.mode === "page" ? next.length : op.template === "image-grid" ? Math.max(1, next.length - 2) : next.length - 1;
       next.splice(at, 0, created);
+      return withSections(next, id);
+    }
+    case "add-customizer-section": {
+      if (doc.scope === "global") return fail("global has no home");
+      const model = doc.customizers?.find((m) => m.id === op.customizerId);
+      if (!model) return fail("unknown personalisation model");
+      const id = `${CUSTOM_PREFIX}${ctx.newId()}`;
+      const taken = new Set(sections.map((s) => s.anchor));
+      const anchor = uniqueAnchor(`personalizar-${model.slug}`, taken);
+      const base = structuredDefaults("campaign", doc.scope, id, taken);
+      // The model's own words to start from (the owner rewrites them), its picture beside them (no picture of the section's own: see HomeSections),
+      // on a warm light ground so it never reads as a second closing campaign.
+      const created: Section = {
+        ...base, anchor, headingId: `${anchor}-title`, variant: "split",
+        title: model.name.slice(0, 120),
+        ...(model.description ? { subtitle: model.description.slice(0, 300) } : {}),
+        cta: { label: "Personalizar a minha", dest: { kind: "customizer", customizerId: model.id } },
+        appearance: { ...base.appearance, fill: { kind: "solid", color: "#e8c9a9" } },
+      };
+      if (!model.description) delete created.subtitle;
+      const check = validateSection(created);
+      if (!check.ok) return { ok: false, errors: check.errors };
+      // Before the footer (a page has none: at the end).
+      next.splice(ctx.mode === "page" ? next.length : next.length - 1, 0, created);
       return withSections(next, id);
     }
     case "duplicate": {
@@ -570,9 +648,13 @@ function customizerOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-custom
     const copy: Customizer = { ...structuredClone(model), id: `cz-${ctx.newId()}`, slug: uniqueSlug(`${model.slug}-copia`, taken), name: `${model.name} (cópia)`.slice(0, 80), active: false, version: 1 };
     return withCustomizers(doc, [...list, copy], copy.id);
   }
-  // remove: refused while any section still shows it as the first card
-  const users = [...(doc.home?.sections ?? []).map((s) => ({ where: "a home", s })), ...(doc.pages ?? []).flatMap((p) => p.sections.map((s) => ({ where: `a página "${p.title}"`, s })))].filter(({ s }) => s.customizerCard?.customizerId === model.id);
+  // remove: refused while any section still shows it as the first card, or a button or a tile still opens it
+  const sectionsWhere = [...(doc.home?.sections ?? []).map((s) => ({ where: "a home", s })), ...(doc.pages ?? []).flatMap((p) => p.sections.map((s) => ({ where: `a página "${p.title}"`, s })))];
+  const users = sectionsWhere.filter(({ s }) => s.customizerCard?.customizerId === model.id);
   if (users.length > 0) return fail(`Este modelo é o primeiro card de "${users[0].s.title ?? users[0].s.id}" em ${users[0].where}. Troque ou remova o card antes.`);
+  const opens = (d: Destination | undefined) => d?.kind === "customizer" && d.customizerId === model.id;
+  const linked = sectionsWhere.find(({ s }) => opens(s.cta?.dest) || (s.tiles ?? []).some((t) => opens(t.dest)));
+  if (linked) return fail(`A seção "${linked.s.title ?? linked.s.id}" em ${linked.where} tem um botão ou bloco que abre este modelo. Troque o destino ou remova a seção antes.`);
   list.splice(index, 1);
   return withCustomizers(doc, list);
 }

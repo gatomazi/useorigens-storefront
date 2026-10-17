@@ -13,11 +13,14 @@ import ilhas from "./ilhas-piloto.jpg";
  */
 const href = (params: Record<string, string>) => `${MUNDO_CAMINHO}?${new URLSearchParams(params).toString()}`;
 
-/** Home: a compact block right after the state chooser. */
+/**
+ * Home: a compact block right after the state chooser. Its tint runs edge to edge (the section's own background); only the content keeps to the
+ * page container, so on a wide screen the colour never stops short of the window.
+ */
 export function MundoBlocoHome({ region }: { region: RegionSlug }) {
   return (
-    <section aria-labelledby="mundo-home-titulo" className="wrap pb-14 lg:pb-24">
-      <div className="grid items-center gap-6 border-t-[3px] border-region-accent bg-[rgb(var(--region-primary-rgb)/0.06)] px-4 py-6 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-10 md:px-8 md:py-8">
+    <section aria-labelledby="mundo-home-titulo" className="border-t-[3px] border-region-accent bg-[rgb(var(--region-primary-rgb)/0.06)]">
+      <div className="wrap grid items-center gap-6 py-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] md:gap-10 md:py-12">
         <div className="order-2 md:order-1">
           <p className="t-label">Meu Pequeno Mundo</p>
           <h2 id="mundo-home-titulo" className="t-h2 mt-2">

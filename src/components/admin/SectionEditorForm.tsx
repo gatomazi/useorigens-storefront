@@ -29,6 +29,27 @@ const PRESETS = [
   ["regional-wash-dark", "Véu escuro (texto claro)"],
 ] as const;
 
+/** The compositions a template offers (`SECTION_VARIANTS`), with the original first ("" = never stored). */
+const VARIANT_CHOICES: Partial<Record<Section["template"], readonly (readonly [string, string, string])[]>> = {
+  hero: [
+    ["", "Três produtos", "O título, a busca e até três produtos em cards pequenos ao lado."],
+    ["feature", "Um produto em destaque", "O título (a última linha na cor de destaque), a busca e, na outra metade, um único produto grande (o primeiro dos escolhidos abaixo) com nome, preço e “Ver produto →”. A cor de fundo pinta a metade do produto; uma imagem entra no lugar do produto, como banner (com a barra do produto embaixo, se houver um). No celular, essa metade vem depois da busca."],
+  ],
+  states: [
+    ["", "Cartões com capa", "Um cartão por estado, com a capa, as regiões e a linha do estado."],
+    ["strip", "Faixa compacta", "Uma faixa de ponta a ponta: sigla, nome e “Ver 399 cidades →” em cada estado; o estado inteiro é um link. No celular, uma linha por estado."],
+  ],
+  "city-styles": [
+    ["", "Grade", "O título em cima e os estilos em grade (até 4 por linha)."],
+    ["split", "Título ao lado", "O título numa coluna e os estilos ao lado, três por linha (combina com 3 estilos). No celular, os cards rolam para o lado."],
+    ["list", "Lista com destaque", "O título numa coluna, os nomes dos estilos numa lista e UM card grande ao lado, o do estilo escolhido (clicar num nome, ou parar o mouse sobre ele, troca o card). Mostra todos os modelos (até 8) sem encher a tela. No celular, os nomes viram uma fileira que rola para o lado, com o card embaixo."],
+  ],
+  campaign: [
+    ["", "Bloco escuro", "O texto sobre a foto (com véu) ou sobre a cor, com recortes de camisetas quando não há foto."],
+    ["split", "Dividida", "A foto de um lado (ou recortes de camisetas reais) e o texto sobre a cor do outro, de ponta a ponta. A cor do fundo pinta o lado do texto; sem cor, usa a da região."],
+  ],
+};
+
 export const previewSrc = (m: MediaOption | undefined) => (m ? (m.kind === "banner" ? m.src.replace(/\.[a-z]+$/i, "-640.webp") : m.src) : undefined);
 const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
 
@@ -137,7 +158,7 @@ export function SectionEditorForm({
   const maxCards = maxSectionProducts(display);
   const [buyOn, setBuyOn] = useState(Boolean(section.layout?.buyLabel));
   const [tagOn, setTagOn] = useState(Boolean(section.layout?.tags?.text));
-  const [ctaKind, setCtaKind] = useState<"none" | "collection-page" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
+  const [ctaKind, setCtaKind] = useState<"none" | "collection-page" | "ink-collection" | "external" | "route" | "page" | "anchor" | "customizer">(section.cta?.dest.kind ?? "none");
   // The collections a "Ver todos" may lead to a page of: every one the region can use (public, or internal and enabled), the section's own first.
   const pageEntries = collections.filter((e) => e.selectable);
   const ctaCollection = section.cta && (section.cta.dest.kind === "collection-page" || section.cta.dest.kind === "ink-collection") ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : srcEntry?.value ?? currentRef ?? "";
@@ -176,6 +197,20 @@ export function SectionEditorForm({
           <textarea id="subtitle" name="subtitle" defaultValue={section.subtitle} className="a-textarea" maxLength={300} />
           {section.template === "city-styles" && <p className="a-muted mt-1 text-[0.8125rem]">Use <code>{"{city}"}</code> onde o nome da cidade de exemplo deve aparecer.</p>}
         </div>
+        {VARIANT_CHOICES[section.template] && (
+          <fieldset>
+            <legend className="a-label">Composição</legend>
+            <input type="hidden" name="variant_present" value="1" />
+            <div className="flex flex-wrap gap-3">
+              {VARIANT_CHOICES[section.template]!.map(([value, label, help]) => (
+                <label key={value || "original"} className="flex max-w-xs cursor-pointer gap-2 border border-black/20 p-3 has-[:checked]:border-black has-[:checked]:bg-white">
+                  <input type="radio" name="variant" value={value} defaultChecked={(section.variant ?? "") === value} className="mt-1" data-testid={`variant-${value || "original"}`} />
+                  <span><span className="block font-bold">{label}</span><span className="a-muted block text-[0.8125rem]">{help}</span></span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
         {section.template === "city-styles" && (
           <div className="max-w-[12rem]">
             <label className="a-label" htmlFor="count">Quantos estilos mostrar</label>
@@ -226,6 +261,7 @@ export function SectionEditorForm({
           collections={pageEntries}
           pages={pages}
           anchors={anchors.filter((x) => x.anchor !== section.anchor)}
+          customizers={customizers}
         />
       )}
 
@@ -290,11 +326,26 @@ export function SectionEditorForm({
                 <option value="route">Página desta região (endereço)</option>
                 <option value="page">Hotpage ou categoria-pai publicada</option>
                 <option value="anchor">Uma seção desta página</option>
+                <option value="customizer">Página de personalização (um modelo, ex.: Localidade)</option>
                 <option value="external">URL da loja Use (Sul, Norte ou Centro)</option>
               </select>
             </div>
             {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver mais"} className="a-input" maxLength={32} /></div>}
           </div>
+          {ctaKind === "customizer" && (
+            <div>
+              <label className="a-label" htmlFor="cta_customizer">Modelo</label>
+              <select id="cta_customizer" name="cta_customizer" className="a-select" defaultValue={section.cta?.dest.kind === "customizer" ? section.cta.dest.customizerId : ""} required>
+                <option value="" disabled>Escolha…</option>
+                {customizers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.live ? "" : " (ainda não publicado)"}{c.active ? "" : " (desativado)"}</option>)}
+              </select>
+              {customizers.length === 0 ? (
+                <p className="a-flash err mt-2 text-[0.875rem]">Esta região ainda não tem modelos. Cadastre em Personalização.</p>
+              ) : (
+                section.template === "campaign" && <p className="a-muted mt-1 text-[0.8125rem]">Na composição “Dividida” sem imagem, a foto do modelo entra no lugar da imagem.</p>
+              )}
+            </div>
+          )}
           {ctaKind === "collection-page" && (
             <div>
               <label className="a-label" htmlFor="cta_collection">Coleção</label>
@@ -446,8 +497,9 @@ export function SectionEditorForm({
                   <fieldset className="mt-3">
                     <legend className="a-label">Formato</legend>
                     <div className="flex flex-wrap gap-4">
-                      <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="button" defaultChecked={section.layout?.buyStyle !== "fab"} /> Botão embaixo</label>
+                      <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="button" defaultChecked={!section.layout?.buyStyle || section.layout.buyStyle === "button"} /> Botão embaixo</label>
                       <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="fab" defaultChecked={section.layout?.buyStyle === "fab"} /> Carrinho na imagem</label>
+                      <label className="flex items-center gap-2"><input type="radio" name="layout_buy_style" value="link" defaultChecked={section.layout?.buyStyle === "link"} /> Chamada ao lado do preço (“{DEFAULT_BUY_LABEL} →”)</label>
                     </div>
                   </fieldset>
                 </div>

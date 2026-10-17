@@ -64,8 +64,11 @@ async function openPublicMenu(page: Page, slug: string, width = 375, height = 81
   await expect(dialog).toBeVisible();
   return dialog;
 }
-const headings = (dialog: Locator) => dialog.getByRole("heading", { level: 2 }).allTextContents();
-const linksOf = (dialog: Locator, block: "primary" | "categories" | "states" | "regions") => dialog.locator(`[data-block="${block}"]`).getByRole("link").allTextContents();
+/** The configurable blocks of the phone menu, in order (the city search, "Sua cidade", always comes first and is not configurable). */
+const headings = (dialog: Locator) => dialog.locator("[data-block]:not([data-block='search'])").getByRole("heading", { level: 2 }).allTextContents();
+/** The names of a block's links; a state's link also shows its UF before and its number of places after the name ("PR Paraná 399 cidades"). */
+const linksOf = async (dialog: Locator, block: "primary" | "categories" | "states" | "regions") =>
+  (await dialog.locator(`[data-block="${block}"]`).getByRole("link").allTextContents()).map((t) => (block === "states" ? t.replace(/^[A-Z]{2}/, "").replace(/\s*\d[\d.]*\s+(cidades?|localidades?)$/, "").trim() : t));
 const previewHeadings = (page: Page) => page.getByTestId("navigation-preview-drawer").getByRole("heading", { level: 2 }).allTextContents();
 
 const SHOTS = path.join(process.cwd(), "docs", "screenshots", "navigation-theme-round");
@@ -84,6 +87,7 @@ test("given Norte and Centro-Oeste are launched, when each mobile menu opens, th
   for (const region of REGIONS) {
     for (const width of [320, 390]) {
       const dialog = await openPublicMenu(page, region.slug, width);
+      await expect(dialog.locator("[data-block]").first()).toHaveAttribute("data-block", "search");
       expect(await headings(dialog), `${region.slug} @${width}`).toEqual(["Comprar", "Categorias", expected[region.slug].label, "Explorar outras regiões"]);
       expect(await linksOf(dialog, "states")).toEqual(STATES[region.slug as keyof typeof STATES]);
       const regions = await linksOf(dialog, "regions");

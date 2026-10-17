@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { getImageProps } from "next/image";
 import { BANNER_VARIANTS } from "@/lib/editorial/banner-variants.generated";
 import type { BannerAsset, BannerImage } from "@/lib/editorial/banners";
@@ -25,11 +26,15 @@ function localSet(image: BannerImage): { srcSet: string; src: string } {
   return { srcSet: entry.variants.map((v) => `${v.src} ${v.w}w`).join(", "), src: mid.src };
 }
 
-/** `sizes`: the rendered width (default the whole viewport, as a section background); a grid tile passes its own column width. */
-export function BannerBackground({ asset, priority = false, sizes = "100vw" }: { asset: BannerAsset; priority?: boolean; sizes?: string }) {
+/**
+ * `sizes`: the rendered width (default the whole viewport, as a section background); a grid tile passes its own column width. `alt`: a picture
+ * that carries meaning (a collection card's banner the owner described); empty by default, the caller then hides it from assistive tech.
+ */
+export function BannerBackground({ asset, priority = false, sizes = "100vw", alt = "" }: { asset: BannerAsset; priority?: boolean; sizes?: string; alt?: string }) {
   const isLocal = (i: BannerImage) => i.src.startsWith("/") || (i.variants?.length ?? 0) > 0; // "local" = never the optimizer
-  const imgClass = "absolute inset-0 h-full w-full object-cover";
-  const style = { objectPosition: asset.focal ?? "50% 50%" };
+  // One framing, or one per picture (the desktop one from 1024px, where the <picture> switches): a variable per breakpoint, never two <img>.
+  const imgClass = `absolute inset-0 h-full w-full object-cover ${asset.focalDesktop ? "[object-position:var(--focal)] lg:[object-position:var(--focal-lg)]" : ""}`;
+  const style = asset.focalDesktop ? ({ "--focal": asset.focal ?? "50% 50%", "--focal-lg": asset.focalDesktop } as CSSProperties) : { objectPosition: asset.focal ?? "50% 50%" };
   const loading = priority ? ("eager" as const) : ("lazy" as const);
   const fetchPriority = priority ? ("high" as const) : undefined;
 
@@ -40,7 +45,7 @@ export function BannerBackground({ asset, priority = false, sizes = "100vw" }: {
       <picture>
         <source media="(min-width: 1024px)" srcSet={desktop.srcSet} sizes={sizes} />
         <source srcSet={mobile.srcSet} sizes={sizes} />
-        <img src={mobile.src} width={asset.mobile.width} height={asset.mobile.height} alt="" loading={loading} fetchPriority={fetchPriority} decoding="async" className={imgClass} style={style} />
+        <img src={mobile.src} width={asset.mobile.width} height={asset.mobile.height} alt={alt} loading={loading} fetchPriority={fetchPriority} decoding="async" className={imgClass} style={style} />
       </picture>
     );
   }
@@ -56,7 +61,7 @@ export function BannerBackground({ asset, priority = false, sizes = "100vw" }: {
     <picture>
       <source media="(min-width: 1024px)" srcSet={desktopSrcSet} />
       <source srcSet={mobile.props.srcSet} />
-      <img {...imgProps} alt="" loading={loading} fetchPriority={fetchPriority} className={imgClass} style={style} />
+      <img {...imgProps} alt={alt} loading={loading} fetchPriority={fetchPriority} className={imgClass} style={style} />
     </picture>
   );
 }

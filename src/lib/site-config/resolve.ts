@@ -2,6 +2,7 @@
  * Pure resolution rules for the storefront CMS configuration: tracking inheritance and the image / colour / gradient
  * fallback (docs/admin/cms-v1-plan.md §2.6 and §6.1). No I/O; everything here is unit-tested in isolation.
  */
+import type { BannerAsset } from "../editorial/banners";
 import type { Appearance, Fill, MediaAssetInfo, Overlay, Point, PublishedBundle, Scope, ScopeDoc, Section, VendorSetting } from "./schema";
 
 // ── Tracking ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -144,4 +145,18 @@ export function resolveCustomizerCard(section: Section, doc: ScopeDoc | undefine
     button: card.button,
     image: { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}), alt: ref.decorative ? "" : ref.alt || card.title },
   };
+}
+
+/**
+ * The picture of a personalisation model (its card picture, else its page mockup) as a banner, for a campaign whose button opens that model and that
+ * has no picture of its own ("Localidade": the customised shirt stands beside the text). Null when the model is missing, switched off or has no
+ * picture in the published media.
+ */
+export function customizerFigure(doc: ScopeDoc | undefined, media: PublishedBundle["media"], customizerId: string): BannerAsset | null {
+  const model = doc?.customizers?.find((m) => m.id === customizerId);
+  const ref = model?.active ? (model.cardImage ?? model.pageMockup) : undefined;
+  const info = ref ? media[ref.assetId] : undefined;
+  if (!ref || !info) return null;
+  const pic = { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}) };
+  return { mobile: pic, desktop: pic, alt: ref.decorative ? "" : ref.alt || model!.name, focal: "50% 50%" };
 }

@@ -69,7 +69,10 @@ export type ResolvedTheme = {
   origin: Record<ThemeColorKey, ThemeOrigin>;
 };
 
-/** Region with no theme → current look; `override` → its own colours over the current look; `inherit` → the global colours over the current look. */
+/**
+ * Region with no theme → current look; `override` → its own colours over the current look; `inherit` → the global colours over the current look. Each home
+ * theme keeps its own palette (`theme` of the theme in use; the editorial one starts with the editorial colours), so nothing here depends on the theme.
+ */
 export function resolveTheme(region: RegionSlug, doc: Pick<ScopeDoc, "theme"> | undefined, global: Pick<ScopeDoc, "theme"> | undefined): ResolvedTheme {
   const own = doc?.theme;
   const mode: ResolvedTheme["mode"] = !own ? "default" : own.mode;
@@ -80,12 +83,26 @@ export function resolveTheme(region: RegionSlug, doc: Pick<ScopeDoc, "theme"> | 
   return { mode, configured, effective, origin };
 }
 
-/** The CSS custom properties a resolved theme adds to the region wrapper: none at all when nothing is configured. */
-export function themeCssVars(configured: Partial<ThemeColors>): Record<string, string> {
+/**
+ * What the editorial theme adds beyond its palette: the strip above the header and the footer on the palette's main colour (so they follow it when the
+ * owner edits it; the strip's own colours, CMS "Faixa do topo", still win). Empty for the original theme: nothing changes.
+ */
+export function homeThemeCssVars(doc: Pick<ScopeDoc, "homeTheme"> | undefined, effective: ThemeColors): Record<string, string> {
+  if (doc?.homeTheme !== "editorial") return {};
+  return { "--strip-bg": effective.brandPrimary, "--footer-bg": effective.brandPrimary };
+}
+
+/**
+ * The CSS custom properties a resolved theme adds to the region wrapper: none at all when nothing is configured. With `effective`, a configured accent
+ * that reads as TEXT on the page ground (3:1, large type) also becomes `--region-accent-ink`: the colour of the few words the store draws in the accent
+ * (the last line of the editorial opening, the UF of a state). Unset, those words keep the region's primary colour (`var(--region-accent-ink, …)`).
+ */
+export function themeCssVars(configured: Partial<ThemeColors>, effective?: ThemeColors): Record<string, string> {
   const vars: Record<string, string> = {};
   const c = configured;
   if (c.brandPrimary) Object.assign(vars, { "--region-primary": c.brandPrimary, "--region-primary-rgb": rgbTriplet(c.brandPrimary), "--region-ink": c.brandPrimary });
   if (c.accent) Object.assign(vars, { "--region-accent": c.accent, "--region-fill": c.accent });
+  if (c.accent && effective && contrastRatio(c.accent, effective.pageBackground) >= CONTRAST_BLOCKING) vars["--region-accent-ink"] = c.accent;
   if (c.headerBackground) vars["--nav-header-bg"] = c.headerBackground;
   if (c.headerText) vars["--nav-header-text"] = c.headerText;
   if (c.mobileMenuBackground) vars["--nav-menu-bg"] = c.mobileMenuBackground;
@@ -151,6 +168,10 @@ export const statePath = (region: RegionSlug, uf: string): string => `/${region}
 export type NavItemData = {
   label: string;
   href: string;
+  /** A short mark drawn before the label in the open menus: a state's UF. */
+  badge?: string;
+  /** One short line under the label in the open menus: a state's number of places, a collection's description. */
+  detail?: string;
   /** Present only on state entries, so `select_state` can still fire (plain data: the menu is rendered from a Server Component). */
   trackState?: { state: string; region: string };
 };
@@ -188,6 +209,8 @@ export type NavigationInput = {
   coveredUfs: readonly string[] | null;
   /** The region's collection menu with links (`catalog/collection-menu.ts`); none = no collection in the header. */
   collections?: CollectionNavData;
+  /** Per UF, how many places the state has ("399 cidades"), drawn under its name in the open menus; absent = the name alone. */
+  stateDetails?: Readonly<Record<string, string>>;
 };
 
 export function navData(input: NavigationInput): NavData {
@@ -199,7 +222,7 @@ export function navData(input: NavigationInput): NavData {
     // The region's own (editorial) order, as the storefront has always listed them; only launched states (with products) when that is known.
     states: REGIONS[input.region].ufs
       .filter((uf) => (covered ? covered.has(uf) : true))
-      .map((uf) => ({ label: STATE_NAMES[uf], href: statePath(input.region, uf), trackState: { state: uf, region: input.region } })),
+      .map((uf) => ({ label: STATE_NAMES[uf], href: statePath(input.region, uf), badge: uf, ...(input.stateDetails?.[uf] ? { detail: input.stateDetails[uf] } : {}), trackState: { state: uf, region: input.region } })),
     regions: REGION_SLUGS.filter((slug) => slug !== input.region && input.launched.includes(slug)).map((slug) => ({ label: REGIONS[slug].name, href: regionPath(slug) })),
   };
 }

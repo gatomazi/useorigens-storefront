@@ -72,7 +72,7 @@ export default async function SyncScreen({ searchParams }: { searchParams: Promi
       </div>
       <Flash ok={sp.ok} err={sp.err} />
 
-      <section className="a-card grid gap-6 p-5 lg:grid-cols-2" aria-label={`Loja INK de ${scopeName(scope)}`} data-testid="sync-store">
+      <section id="sincronizar-loja" className="a-card scroll-mt-4 grid gap-6 p-5 lg:grid-cols-2" aria-label={`Loja INK de ${scopeName(scope)}`} data-testid="sync-store">
         <div className="text-[0.9375rem]">
           <p className="a-h2">Coleções da loja {STORE_NAME[store]}</p>
           {synced ? (

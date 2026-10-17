@@ -62,12 +62,18 @@ export function offMenuEntries(region: RegionSlug, doc: ScopeDoc | undefined, fi
     .filter((e) => e.pagePath !== null || e.inkUrl !== null);
 }
 
-export type SiteMenuLink = { label: string; href: string };
+/** `detail`: the collection's short description (CMS `collections.descriptions`), under its name in the open menus. */
+export type SiteMenuLink = { label: string; href: string; detail?: string };
 
 /** What the storefront header shows: the bar, and "Categorias" = the bar first, then the rest. Only collections with a page of ours. */
 export function siteCollectionMenu(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): { top: SiteMenuLink[]; categories: SiteMenuLink[] } {
   const { top, more } = collectionMenuEntries(region, doc, filePath);
-  const link = (e: MenuEntry): SiteMenuLink[] => (e.pagePath ? [{ label: e.record.name, href: e.pagePath }] : []);
+  const notes = new Map((doc?.collections?.descriptions ?? []).map((d) => [`${d.store}:${d.collectionId}`, d.text]));
+  const link = (e: MenuEntry): SiteMenuLink[] => {
+    if (!e.pagePath) return [];
+    const detail = notes.get(`${e.ref.store}:${e.ref.collectionId}`);
+    return [{ label: e.record.name, href: e.pagePath, ...(detail ? { detail } : {}) }];
+  };
   const bar = top.flatMap(link);
   return { top: bar, categories: [...bar, ...more.flatMap(link)] };
 }

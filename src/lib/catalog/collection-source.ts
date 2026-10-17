@@ -428,6 +428,10 @@ export function categoryProps(productsOf: (store: CommerceStoreKey) => StoreProd
     // A button to the INK page of a collection of a store that does not sell in the region now (an old or a re-pointed ref): no link.
     inkSlug: (store, collectionId) => (regionOfDoc(doc) && storeForRegion(regionOfDoc(doc)!) !== store ? null : publicCollectionSlug(store, collectionId)),
     pageSlug: (store, collectionId) => collectionPageSlug(doc, store, collectionId),
+    customizerSlug: (customizerId) => {
+      const model = doc?.customizers?.find((m) => m.id === customizerId);
+      return model?.active ? model.slug : null;
+    },
   };
   return {
     categories: categoryLookup(productsOf, enabled, undefined, arrangementIn(doc), regionOfDoc(doc)),

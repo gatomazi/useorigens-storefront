@@ -9,7 +9,8 @@ import { GlobalSearch, SearchIcon } from "./GlobalSearch";
 /**
  * The global search (places, designs, collections) as a native modal <dialog> (focus trap and Esc come from the platform): a full-screen sheet
  * on phones, a wide sheet on larger screens. Its triggers: the header icon, the hero field, the field under a heading of its own (`field`, a
- * city page's "Busque outra cidade") and a quiet text link next to styles shown on an example (`link`, "Encontre aqui a sua cidade"). A field
+ * city page's "Busque outra cidade"), a quiet text link next to styles shown on an example (`link`, "Encontre aqui a sua cidade") and the first word of
+ * the header's menu (`nav`, "Sua cidade"). A field
  * low on a page opens the sheet instead of searching inline, so the phone keyboard never covers the results.
  */
 export function SearchDialog({
@@ -17,13 +18,16 @@ export function SearchDialog({
   variant = "header",
   source,
   label = "Busque a sua cidade",
+  arrow = false,
 }: {
   region: RegionSlug;
-  variant?: "header" | "hero" | "field" | "cta" | "link";
+  variant?: "header" | "hero" | "field" | "cta" | "link" | "nav";
   /** GA4 `source` for select_city when a result is chosen; defaults to the trigger's own (hero or dialog). */
   source?: string;
-  /** The words of the `link` trigger. */
+  /** The words of the `link` and `nav` triggers. */
   label?: string;
+  /** `hero` / `field`: the field ends in a solid square with an arrow (the editorial opening) instead of the word "Buscar". Still one button. */
+  arrow?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const copy = placeSearchCopy(region);
@@ -47,11 +51,25 @@ export function SearchDialog({
         >
           <SearchIcon className="h-6 w-6 shrink-0" />
           <span className="flex-1 text-[1.0625rem] font-medium text-ink-mute sm:text-[1.1875rem]">{variant === "hero" ? copy.hero : copy.field}</span>
-          <span className="hidden text-[0.9375rem] font-semibold sm:inline">Buscar</span>
+          {arrow ? (
+            // Drawn inside the one button (it opens the same sheet): a mark of the action, not a second control.
+            <span aria-hidden="true" className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center bg-ink text-white transition-colors group-hover:bg-region-primary sm:-mr-3 sm:h-12 sm:w-12">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
+          ) : (
+            <span className="hidden text-[0.9375rem] font-semibold sm:inline">Buscar</span>
+          )}
         </button>
       ) : variant === "cta" ? (
         <button type="button" onClick={open} aria-haspopup="dialog" className="btn btn-light">
           Encontrar minha cidade
+        </button>
+      ) : variant === "nav" ? (
+        // A word in the header's menu ("Sua cidade"): it opens the search, so it is a button, drawn like the menu's links.
+        <button type="button" onClick={open} aria-haspopup="dialog" className="inline-flex min-h-11 items-center whitespace-nowrap py-1 text-[0.9375rem] font-semibold" data-testid="header-city-search">
+          <span className="link-line">{label}</span>
         </button>
       ) : variant === "link" ? (
         <button type="button" onClick={open} aria-haspopup="dialog" className="link-static inline-flex min-h-11 items-center gap-1.5 font-semibold">

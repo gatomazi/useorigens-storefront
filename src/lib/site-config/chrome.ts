@@ -2,12 +2,13 @@ import "server-only";
 import { siteCollectionMenu } from "../catalog/collection-menu";
 import { getCatalog } from "../catalog/repository";
 import { citiesOfRegion } from "../geo/cities";
+import { localitiesOfRegion, stateLocalityCounts, stateLocalityLabel } from "../geo/localities";
 import type { RegionSlug } from "../geo/regions";
 import { launchedRegions } from "../regions/launched";
 import { siteConfigHomeEnabled } from "./flag";
 import { readPublished } from "./published";
-import { resolveNavigation, resolveTheme, themeCssVars, type ResolvedNavigation, type ResolvedTheme } from "./navigation";
-import type { ScopeDoc } from "./schema";
+import { homeThemeCssVars, resolveNavigation, resolveTheme, themeCssVars, type ResolvedNavigation, type ResolvedTheme } from "./navigation";
+import { homeThemeOf, type HomeThemeName, type ScopeDoc } from "./schema";
 
 /**
  * What the storefront header, the mobile menu and the region wrapper need, resolved on the SERVER from the PUBLISHED configuration (the local
@@ -15,7 +16,8 @@ import type { ScopeDoc } from "./schema";
  * regions, the states of the region that have products and the collections of its menu that have a page. With the config-driven home off, or nothing published, the config is empty and the
  * result is the default menu hierarchy in the region's current colours.
  */
-export type RegionChrome = { navigation: ResolvedNavigation; theme: ResolvedTheme; cssVars: Record<string, string> };
+/** `homeTheme`: the theme of the region's home ("original" / "editorial"): the footer follows it. */
+export type RegionChrome = { navigation: ResolvedNavigation; theme: ResolvedTheme; cssVars: Record<string, string>; homeTheme: HomeThemeName };
 
 function publishedDocs(region: RegionSlug): { doc: ScopeDoc | undefined; global: ScopeDoc | undefined } {
   if (!siteConfigHomeEnabled()) return { doc: undefined, global: undefined };
@@ -31,13 +33,23 @@ export function coveredUfs(region: RegionSlug): string[] | null {
   return [...new Set(citiesOfRegion(region).filter((c) => covered.has(c.id)).map((c) => c.uf))];
 }
 
+/** Per UF of the region, how many places with products it has, in the words the home uses ("399 cidades", "36 localidades"). */
+function stateDetails(region: RegionSlug): Record<string, string> {
+  const covered = getCatalog().coveredLocalityIds(region);
+  const localities = localitiesOfRegion(region).filter((l) => covered.has(l.id));
+  const out: Record<string, string> = {};
+  for (const uf of new Set(localities.map((l) => l.uf))) out[uf] = stateLocalityLabel(stateLocalityCounts(localities.filter((l) => l.uf === uf)));
+  return out;
+}
+
 export function regionChrome(region: RegionSlug): RegionChrome {
   const { doc, global } = publishedDocs(region);
   const theme = resolveTheme(region, doc, global);
   return {
-    navigation: resolveNavigation({ region, doc, launched: launchedRegions(), coveredUfs: coveredUfs(region), collections: siteCollectionMenu(region, doc) }),
+    navigation: resolveNavigation({ region, doc, launched: launchedRegions(), coveredUfs: coveredUfs(region), collections: siteCollectionMenu(region, doc), stateDetails: stateDetails(region) }),
     theme,
-    cssVars: themeCssVars(theme.configured),
+    cssVars: { ...themeCssVars(theme.configured, theme.effective), ...homeThemeCssVars(doc, theme.effective) },
+    homeTheme: homeThemeOf(doc),
   };
 }
 

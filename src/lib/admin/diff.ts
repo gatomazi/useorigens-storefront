@@ -5,7 +5,9 @@ import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkIncentiveText, inkThemeOf, INK_
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
-import type { CollectionRef, ScopeDoc, Section } from "../site-config/schema";
+import { HOME_THEMES, homeThemeOf, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
+import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
+import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
 export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "podio" | "ink-theme"; sectionId: string; text: string };
@@ -14,7 +16,7 @@ const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
 
 const EDITED_FIELDS: [keyof Section, string][] = [
-  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["featured", "produtos em destaque do hero"], ["count", "quantidade de estilos"], ["stateCovers", "banners dos estados"], ["nav", "menu do topo"], ["fallback", "alternativa sem imagem"], ["tiles", "blocos da grade"], ["grid", "layout da grade"],
+  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["featured", "produtos em destaque do hero"], ["count", "quantidade de estilos"], ["stateCovers", "banners dos estados"], ["nav", "menu do topo"], ["fallback", "alternativa sem imagem"], ["tiles", "blocos da grade"], ["grid", "layout da grade"], ["variant", "composição"],
 ];
 
 /** Name of an INK collection for the publish screen (injected: this module stays pure). */
@@ -23,9 +25,24 @@ export type CollectionNamer = (ref: CollectionRef) => string | null;
 export type CollectionVisibility = (ref: CollectionRef) => boolean;
 
 export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer = () => null, isPublic: CollectionVisibility = () => true): Change[] {
-  const before = published.home?.sections ?? [];
+  // Sections and colours are compared with the SAME theme as published (switching themes is one line, not every section of both).
+  const sameTheme = swapHomeTheme(published, homeThemeOf(draft)) ?? published;
+  const before = sameTheme.home?.sections ?? [];
   const after = draft.home?.sections ?? [];
   const changes: Change[] = [];
+  // The home's theme first: when it changes, every section below is the other theme's (the previous ones stay kept, not deleted).
+  const themeWas = homeThemeOf(published);
+  const themeNow = homeThemeOf(draft);
+  if (themeWas !== themeNow) changes.push({ kind: "theme", sectionId: "home-theme", text: `Tema da home: ${HOME_THEME_LABEL[themeWas]} → ${HOME_THEME_LABEL[themeNow]} (as seções do ${HOME_THEME_LABEL[themeWas]} ficam guardadas)` });
+  // A theme that is not on the store (kept) is published with the region too: say what changed in it, in one line.
+  for (const name of HOME_THEMES) {
+    if (name === themeNow) continue;
+    const was = name === themeWas ? { sections: published.home?.sections ?? [], ...(published.theme ? { theme: published.theme } : {}) } : published.homeThemes?.[name];
+    const now = draft.homeThemes?.[name];
+    if (!now || json(was) === json(now)) continue;
+    const parts = !was ? ["criado"] : [json(was.sections) !== json(now.sections) ? "seções alteradas" : "", json(was.theme) !== json(now.theme) ? "cores alteradas" : ""].filter(Boolean);
+    changes.push({ kind: "theme", sectionId: `home-theme:${name}`, text: `Tema ${HOME_THEME_LABEL[name]} (fora da loja): ${parts.join(" e ")}` });
+  }
   const beforeIds = new Set(before.map((s) => s.id));
   const afterIds = new Set(after.map((s) => s.id));
   for (const s of after) if (!beforeIds.has(s.id)) changes.push({ kind: "added", sectionId: s.id, text: `Nova seção "${label(s)}"` });
@@ -50,7 +67,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft));
   return changes;
 }
 
@@ -131,6 +148,17 @@ function menuChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNam
   // Order of the bar, among the collections that stay on it.
   const stay = (a: CollectionRef[], b: CollectionRef[]) => a.filter((r) => b.some((o) => key(o) === key(r))).map(key);
   if (stay(before.menu.top, after.menu.top).join() !== stay(after.menu.top, before.menu.top).join()) out.push({ kind: "navbar-moved", sectionId: "navbar:order:top", text: "A ordem do topo do menu mudou" });
+  // The short descriptions under the collections' names in the open menus.
+  const notes = (doc: ScopeDoc) => new Map((doc.collections?.descriptions ?? []).map((d) => [key(d), d]));
+  const was = notes(published);
+  const now = notes(draft);
+  for (const k of new Set([...was.keys(), ...now.keys()])) {
+    const a = was.get(k)?.text;
+    const b = now.get(k)?.text;
+    if (a === b) continue;
+    const ref = (now.get(k) ?? was.get(k))!;
+    out.push({ kind: "navbar-moved", sectionId: `navbar:note:${k}`, text: b ? `${named(ref)}: descrição no menu “${b}”` : `${named(ref)}: sem descrição no menu` });
+  }
   return out;
 }
 
@@ -159,7 +187,7 @@ function cardsChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   const was = published.cards;
   const now = draft.cards;
   if (was?.buyLabel === now?.buyLabel && was?.buyStyle === now?.buyStyle) return [];
-  const text = (cards: typeof was) => (cards ? `${cards.buyStyle === "fab" ? "carrinho na imagem" : "botão"} “${cards.buyLabel}” em todos os cards` : "cada seção decide");
+  const text = (cards: typeof was) => (cards ? `${CARD_BUY_STYLE_NAME[cards.buyStyle ?? "button"]} “${cards.buyLabel}” em todos os cards` : "cada seção decide");
   return [{ kind: "theme", sectionId: "cards:buy", text: `Botão nos cards de produto: ${text(was)} → ${text(now)}` }];
 }
 

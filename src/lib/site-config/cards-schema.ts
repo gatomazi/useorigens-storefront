@@ -9,11 +9,17 @@ export const MAX_BUY_LABEL = 20;
 
 /**
  * How a card shows its buy button: "button" = the bar under the price (the default, also when absent); "fab" = a small round cart button over the
- * bottom-right corner of the picture, with the label as its accessible name and tooltip. Both are part of the card's own link: same store page,
- * same click reported.
+ * bottom-right corner of the picture, with the label as its accessible name and tooltip; "link" = the label as a written call next to the price
+ * ("Ver produto →"), price and call on one line at the foot of the card (the call drops under the price on a narrow card). All three are part of
+ * the card's own link: same store page, same click reported.
  */
-export const CARD_BUY_STYLES = ["button", "fab"] as const;
+export const CARD_BUY_STYLES = ["button", "fab", "link"] as const;
 export type CardBuyStyle = (typeof CARD_BUY_STYLES)[number];
+/** The style in the panel's words ("botão", "carrinho na imagem", "chamada ao lado do preço"). */
+export const CARD_BUY_STYLE_NAME: Record<CardBuyStyle, string> = { button: "botão", fab: "carrinho na imagem", link: "chamada ao lado do preço" };
+/** A posted style ("fab" / "link"), or undefined for the default bar (never stored). */
+export const postedBuyStyle = (value: string): Exclude<CardBuyStyle, "button"> | undefined => (value === "fab" || value === "link" ? value : undefined);
+
 /** What a card draws: the label and its style, resolved from the section's own choice or the store-wide one. */
 export type CardBuy = { label: string; style: CardBuyStyle };
 /** A label (absent = no button) and a style (absent = "button") as a `CardBuy`. */
@@ -22,7 +28,7 @@ export const cardBuy = (label: string | undefined, style?: CardBuyStyle): CardBu
 /**
  * GLOBAL only ("Use Origens", every region): `buyLabel` = a buy button with this text under EVERY product card of the store (the product sections,
  * the collection pages, the styles of a city, the search results, the Uma Penca articles). Absent = each section decides, as before. A section that
- * set a text of its own keeps it. `buyStyle`: "fab" puts it as a cart button on the picture; absent = the button under the price ("button" is
+ * set a text of its own keeps it. `buyStyle`: "fab" puts it as a cart button on the picture, "link" as a written call beside the price; absent = the button under the price ("button" is
  * never stored, so the documents saved before the choice existed stay as they were).
  */
 export type CardsConfig = { buyLabel: string; buyStyle?: CardBuyStyle };
