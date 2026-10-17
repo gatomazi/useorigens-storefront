@@ -11,7 +11,7 @@ import type { RegionSlug } from "../geo/regions";
 import { REGION_THEME } from "../theme/region-theme";
 import { contrastRatio } from "./color";
 import { REGIONS } from "../geo/regions";
-import { DEFAULT_INK_THEME, type InkThemeConfig } from "./ink-theme-schema";
+import { DEFAULT_INK_THEME, paletteOf, type InkThemeConfig, type InkThemePalette } from "./ink-theme-schema";
 
 export * from "./ink-theme-schema";
 
@@ -22,7 +22,8 @@ export type InkThemeTokens = {
 };
 /** `incentive` only when the owner turned it on AND confirmed the rule is active in the INK (otherwise the key is absent). */
 export type PublicInkIncentive = { enabled: true; kind: "free-shipping"; unit: "items"; threshold: number; ufs: string[] };
-export type PublicInkTheme = { v: 1; region: RegionSlug; surfaces: InkThemeConfig["surfaces"]; tokens: InkThemeTokens; incentive?: PublicInkIncentive };
+/** `palette`: the cart and checkout colours by name (the Worker draws them; a Worker that does not know the name keeps the tints derived from the tokens). */
+export type PublicInkTheme = { v: 1; region: RegionSlug; surfaces: InkThemeConfig["surfaces"]; tokens: InkThemeTokens; palette: InkThemePalette; incentive?: PublicInkIncentive };
 
 // The storefront's neutral tokens (src/app/globals.css). `line` is `rgb(0 0 0 / 0.22)` composed over the ground, as a solid colour.
 export const STOREFRONT_NEUTRALS = Object.freeze({ ground: "#e5e5e5", paper: "#f2f2f0", ink: "#000000", inkSoft: "#33332f", inkMute: "#56564f", line: "#b3b3b0", white: "#ffffff" });
@@ -58,7 +59,7 @@ export function inkThemeTokens(region: RegionSlug, config: InkThemeConfig): { to
 
 export function inkThemePayload(region: RegionSlug, config: InkThemeConfig | undefined): PublicInkTheme {
   const c = config ?? DEFAULT_INK_THEME;
-  const payload: PublicInkTheme = { v: 1, region, surfaces: { pdp: c.surfaces.pdp, cart: c.surfaces.cart, checkout: c.surfaces.checkout }, tokens: inkThemeTokens(region, c).tokens };
+  const payload: PublicInkTheme = { v: 1, region, surfaces: { pdp: c.surfaces.pdp, cart: c.surfaces.cart, checkout: c.surfaces.checkout }, tokens: inkThemeTokens(region, c).tokens, palette: paletteOf(c) };
   const i = c.incentive;
   if (i && i.enabled && i.confirmed) {
     payload.incentive = { enabled: true, kind: "free-shipping", unit: "items", threshold: i.threshold, ufs: REGIONS[region].ufs.filter((uf) => i.ufs.includes(uf)) };
@@ -77,6 +78,7 @@ export const INK_PRESET_LABEL = {
   ground: { branco: "Claro (o cinza fica só atrás da camiseta)", vitrine: "Cinza do site na página inteira" },
   corners: { retos: "Retos (como o site)", suaves: "Levemente arredondados" },
   font: { vitrine: "Hanken Grotesk (a do site)", ink: "Poppins (a da INK)" },
+  palette: { acento: "Verde com acento ocre (botão carvão, faixa de frete palha, escolhas em verde)", neutra: "Neutra (tons tirados das escolhas acima)" },
 } as const;
 
 /** One line for the publish diff and the editor: the incentive as the cart would show it, or that it is off. */
