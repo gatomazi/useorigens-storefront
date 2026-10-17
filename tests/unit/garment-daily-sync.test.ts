@@ -287,6 +287,15 @@ describe("daily incremental garment sync (fake INK, temp Volume)", () => {
     expect((await readGarmentSyncState()).stores["use-sul"]).toBeUndefined();
   });
 
+  test("given no storeKeys (the daily cron), then the retired Norte and Centro-Oeste stores are not read; an explicit list still reaches them", async () => {
+    const asked: string[][] = [];
+    const catalog = { startedAt: "s", finishedAt: "f", changed: false, outcomes: [] };
+    const syncCatalogImpl = (async (keys: string[]) => { asked.push([...keys]); return catalog; }) as never;
+    await runDailyGarmentSync({ onCatalogChanged: () => undefined, revalidatePaths: () => undefined, syncCatalogImpl, fetchStore: opts().fetchStore, minPieces: 1, lojaUnicaImpl: null, log: () => undefined });
+    await runDailyGarmentSync({ storeKeys: ["use-norte"], onCatalogChanged: () => undefined, revalidatePaths: () => undefined, syncCatalogImpl, fetchStore: opts().fetchStore, minPieces: 1, lojaUnicaImpl: null, log: () => undefined });
+    expect(asked).toEqual([["use-sul"], ["use-norte"]]);
+  });
+
   test("given the base catalog did not change, then the page caches are not cleared", async () => {
     const catalog = { startedAt: "s", finishedAt: "f", changed: false, outcomes: [{ storeKey: "use-sul", ok: true, productCount: 1, bindingCount: 1, merchCount: 0, excludedCount: 0, rejected: 0, requests: 3 }] };
     const onCatalogChanged = vi.fn();
