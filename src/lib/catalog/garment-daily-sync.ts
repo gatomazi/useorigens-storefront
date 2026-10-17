@@ -11,6 +11,14 @@ import { runGarmentSync } from "./garment-sync-service";
 import { SINGLE_STORE_KEY, singleStoreDataDir } from "./commerce-mode";
 import { IDENTITY_FILE, syncLojaUnica, type LojaUnicaSyncResult } from "./unificado/sync-loja-unica";
 
+/**
+ * Regional stores the daily job no longer reads: Use Norte and Use Centro-Oeste had their INK plans switched off after the single store went live
+ * (16/10/2026) and their sites redirect to it (worker-lojas legacy-redirect). Their products live in the single store, refreshed by its own step.
+ * An explicit `storeKeys` (a manual POST) still reaches them.
+ */
+export const RETIRED_STORES: readonly CommerceStoreKey[] = ["use-norte", "use-centro"];
+export const DAILY_STORES: readonly CommerceStoreKey[] = GARMENT_REVALIDATE_STORES.filter((key) => !RETIRED_STORES.includes(key));
+
 /** INK requests the single store's piece crawl may spend per daily run (it resumes from its checkpoint the next day). */
 const LOJA_UNICA_GARMENT_REQUESTS = 300;
 
@@ -87,7 +95,7 @@ export async function runDailyGarmentSync(options: DailyGarmentSyncOptions): Pro
   }
   const began = Date.now();
   try {
-    const requested = (options.storeKeys?.length ? options.storeKeys : GARMENT_REVALIDATE_STORES).filter((key) => key in INK_STORES && tokenFor(key));
+    const requested = (options.storeKeys?.length ? options.storeKeys : DAILY_STORES).filter((key) => key in INK_STORES && tokenFor(key));
     log("start", { stores: requested });
 
     const catalog: SyncResult = await (options.syncCatalogImpl ?? syncCatalog)(requested, undefined, {}, { skipWriteWhenUnchanged: true });
