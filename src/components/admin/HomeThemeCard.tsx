@@ -1,7 +1,7 @@
 import { editHomeThemeAction, setHomeThemeAction } from "@/app/admin/actions";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { EDITORIAL_PALETTE, hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
-import { HOME_THEMES, type HomeThemeName, type ScopeDoc } from "@/lib/site-config/schema";
+import { HOME_THEMES, homeThemeOf, type HomeThemeName, type ScopeDoc } from "@/lib/site-config/schema";
 import { REGION_THEME } from "@/lib/theme/region-theme";
 
 const ABOUT: Record<HomeThemeName, string> = {
@@ -28,9 +28,17 @@ export function HomeThemeCard({ region, doc, editing, active, live, rev, readOnl
   readOnly: boolean;
   to: "/admin/home" | "/admin/aparencia";
 }) {
-  const swatches: Record<HomeThemeName, string[]> = {
-    original: [REGION_THEME[region].primary, "#e5e5e5", REGION_THEME[region].accent, "#000000"],
-    editorial: [EDITORIAL_PALETTE.colors.brandPrimary!, EDITORIAL_PALETTE.colors.pageBackground!, EDITORIAL_PALETTE.colors.accent!, "#dfe3d3"],
+  // Each theme's OWN colours as they are in the draft (the one in use carries `doc.theme`, a kept one its own), over the look it has with none set.
+  // Main colour, page background and accent.
+  const fallback: Record<HomeThemeName, string[]> = {
+    original: [REGION_THEME[region].primary, "#e5e5e5", REGION_THEME[region].accent],
+    editorial: [EDITORIAL_PALETTE.colors.brandPrimary!, EDITORIAL_PALETTE.colors.pageBackground!, EDITORIAL_PALETTE.colors.accent!],
+  };
+  const swatches = (name: HomeThemeName): string[] => {
+    const theme = homeThemeOf(doc) === name ? doc.theme : doc.homeThemes?.[name]?.theme;
+    const c = theme?.mode === "override" ? theme.colors : {};
+    const [primary, page, accent] = fallback[name];
+    return [c.brandPrimary ?? primary, c.pageBackground ?? page, c.accent ?? accent];
   };
   const hidden = (theme: HomeThemeName) => (
     <>
@@ -58,7 +66,7 @@ export function HomeThemeCard({ region, doc, editing, active, live, rev, readOnl
                 {!exists && <span className="a-badge">ainda não criado</span>}
               </div>
               <div className="mt-3 flex gap-1.5" aria-hidden="true">
-                {swatches[name].map((c, i) => <span key={i} className="h-6 w-10 border border-black/15" style={{ background: c }} />)}
+                {swatches(name).map((c, i) => <span key={i} className="h-6 w-10 border border-black/15" style={{ background: c }} />)}
               </div>
               <p className="a-muted mt-3 text-[0.875rem]">{ABOUT[name]}</p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
