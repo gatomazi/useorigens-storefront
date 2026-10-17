@@ -16,6 +16,7 @@ import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { podioEnabledIn } from "@/lib/site-config/podio-schema";
 import type { Section } from "@/lib/site-config/schema";
+import { isArticleOfRegion } from "@/lib/umapenca/region";
 import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
@@ -57,7 +58,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const entries = toComboEntries(libraryEntries(store, enabledInternalIds(ws.doc, store)));
   const umaPenca = readUmaPencaSnapshot();
   const umaPencaSyncedAt = umaPenca?.syncedAt ?? null;
-  const umaPencaCounts = Object.fromEntries(ARTICLE_KINDS.map((k) => [k, umaPenca?.articles.filter((a) => a.kind === k).length ?? 0])) as Record<(typeof ARTICLE_KINDS)[number], number>;
+  const umaPencaCounts = Object.fromEntries(ARTICLE_KINDS.map((k) => [k, umaPenca?.articles.filter((a) => a.kind === k && isArticleOfRegion(a, scope)).length ?? 0])) as Record<(typeof ARTICLE_KINDS)[number], number>;
   const anySelectable = entries.some((e) => e.selectable);
   const problems = collectionProblems(ws.doc);
 
@@ -177,8 +178,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         <p className="a-muted mt-3 text-[0.8125rem]">Carrossel: uma fileira que a pessoa arrasta (até 24 cards). Grade: todos os produtos na página, 4 por linha no desktop e 2 no celular (até 48). Dá para trocar depois, no editor da seção. A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A seção começa na ordem devolvida pela INK (não é “mais vendidos” nem “mais recentes”); depois de criada, você muda a ordem e esconde produtos no editor dela. A seção nova entra só no rascunho, antes da campanha.</p>
 
         <h3 className="mt-8 font-extrabold">Produtos: canecas e ecobags da Uma Penca</h3>
-        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os produtos vêm do feed da loja da Uma Penca (sincronizado a cada 6 horas), sem coleção da INK. O botão “Ver todos” já leva para <code>/{scope}/outros-artigos</code>. Para pôr o seu modelo “Crie a sua” como primeiro card, edite a seção depois de criada e marque “Destacar um produto personalizável”.</p>
-        <p className="a-muted mt-1 text-[0.8125rem]" data-testid="umapenca-feed-count">No feed agora: {ARTICLE_KINDS.map((k) => `${umaPencaCounts[k]} ${umaPencaCounts[k] === 1 ? ARTICLE_KIND_LABELS[k].singular.toLowerCase() : ARTICLE_KIND_LABELS[k].plural.toLowerCase()}`).join(" · ")}{umaPencaSyncedAt ? "" : " (o feed ainda não foi sincronizado)"}</p>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os produtos vêm do feed da loja da Uma Penca (sincronizado a cada 6 horas), sem coleção da INK. Cada região recebe os produtos cujo nome diz um lugar dela (“Caneca Lá de Guarapuava” só no Sul); nome repetido em outra região precisa da UF no fim (“Caneca Lá de Palmas | TO”). O botão “Ver todos” já leva para <code>/{scope}/outros-artigos</code>. Para pôr o seu modelo “Crie a sua” como primeiro card, edite a seção depois de criada e marque “Destacar um produto personalizável”.</p>
+        <p className="a-muted mt-1 text-[0.8125rem]" data-testid="umapenca-feed-count">No feed agora, para esta região: {ARTICLE_KINDS.map((k) => `${umaPencaCounts[k]} ${umaPencaCounts[k] === 1 ? ARTICLE_KIND_LABELS[k].singular.toLowerCase() : ARTICLE_KIND_LABELS[k].plural.toLowerCase()}`).join(" · ")}{umaPencaSyncedAt ? "" : " (o feed ainda não foi sincronizado)"}</p>
         <form action={addUmaPencaSection} aria-label="Nova seção de canecas e ecobags da Uma Penca" className="mt-3 grid gap-4 md:grid-cols-[2fr_2fr_1.2fr_1fr_auto] md:items-start">
           <input type="hidden" name="rev" value={rev ?? "null"} />
           <input type="hidden" name="scope" value={scope} />

@@ -39,7 +39,7 @@ O menu lateral é agrupado pelo que a pessoa está fazendo; **Publicar** fica na
 | Catálogo | **Coleções** (`/admin/colecoes`) | A biblioteca: status, habilitar internas, página da coleção no site. |
 | | **Personalização** (`/admin/personalizacao`) | Modelos personalizáveis. |
 | Atendimento | **Solicitações** (`/admin/personalizacao/solicitacoes`) | A fila de personalização, com o contador. |
-| Marketing | **Cupons e promoções**, **Tracking** | Botão de cupons; Meta Pixel e GA4 por região e global. |
+| Marketing | **Cupons e promoções**, **Faixa do topo**, **Tracking** | Botão de cupons; mensagens agendadas da faixa preta (loja e INK) e prazo de produção; Meta Pixel e GA4 por região e global. |
 | Configuração | **Aparência** | Paleta da região e paleta global, botão nos cards, Meu Pequeno Mundo. |
 | | **Sincronização** (`/admin/sincronizacao`) | Catálogo e coleções da INK (sincronizar, só owner) e o estado técnico da publicação. |
 | | **Pessoas** (só owner, produção) | Quem entra e em que regiões. |

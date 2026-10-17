@@ -2,11 +2,12 @@ import "server-only";
 import { discountPercent, formatListPrice, formatPrice } from "../format";
 import type { SourceResult, UmaPencaLookup } from "../site-config/sources";
 import { umaPencaHoverPhotos } from "./hover";
+import { isArticleOfRegion } from "./region";
 import { readUmaPencaSnapshot } from "./snapshot";
 import type { ArticleKind, UmaPencaSnapshot } from "./types";
 
 /**
- * The Uma Penca articles of the chosen kinds as carousel items (a home section with `source.kind === "umapenca"`), in feed order, at most
+ * The Uma Penca articles of the chosen kinds and of `region` (region.ts) as carousel items (a home section with `source.kind === "umapenca"`), in feed order, at most
  * `limit`, with the article's hover photo when one was fetched. Each item carries `umaPenca` so its click fires GoToPenca / go_to_umapenca, never GoToInk. No snapshot yet is "unavailable"
  * (the section is hidden), never an invented product. `read` is only ever overridden by tests.
  */
@@ -16,7 +17,7 @@ export function umaPencaLookup(region: string, read: () => UmaPencaSnapshot | nu
     if (!snapshot) return { status: "unavailable", reason: "umapenca-not-synced" };
     const hover = hoverPhotos();
     const items = snapshot.articles
-      .filter((a) => kinds.includes(a.kind))
+      .filter((a) => kinds.includes(a.kind) && isArticleOfRegion(a, region))
       .slice(0, limit)
       .map((a) => {
         const current = a.salePrice ?? a.price;

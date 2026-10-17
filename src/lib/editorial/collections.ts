@@ -1,3 +1,5 @@
+import { SUL_INK, SUL_INK_ORIGIN } from "../ink/sul-domain";
+
 /**
  * Real store collection URLs ("Ver todos" destinations), verified by fetching the live page and checking its
  * own heading and product listing — never guessed. See CLAUDE_HOME_LENDA_ORDER_VIEW_ALL.md and the verification
@@ -17,9 +19,10 @@
  *   own "Ver todos" is deliberately NOT set (see home page.tsx): pointing it here too would duplicate this
  *   section's own link to the same URL, and there is no distinct destination to give it instead.
  */
+const SUL_COLLECTIONS = `${SUL_INK_ORIGIN}${SUL_INK.base}/collections`; // the single store's domain (ink/sul-domain.ts)
 export const REAL_COLLECTIONS = {
-  terra: "https://www.usesul.com.br/usesul/collections/da-nossa-terra",
-  feitoParaVoce: "https://www.usesul.com.br/usesul/collections/feito-para-voce",
-  redesenhos: "https://www.usesul.com.br/usesul/collections/do-nosso-jeito",
-  fala: "https://www.usesul.com.br/usesul/collections/fala-daqui",
+  terra: `${SUL_COLLECTIONS}/da-nossa-terra`,
+  feitoParaVoce: `${SUL_COLLECTIONS}/feito-para-voce`,
+  redesenhos: `${SUL_COLLECTIONS}/do-nosso-jeito`,
+  fala: `${SUL_COLLECTIONS}/fala-daqui`,
 } as const;

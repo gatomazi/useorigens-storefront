@@ -1,6 +1,7 @@
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import type { ArticleKind } from "../umapenca/types";
+import { SUL_INK, SUL_INK_ORIGIN } from "../ink/sul-domain";
 import { PAGE_SEGMENT, type Destination, type EditorialModuleKey, type Source } from "./schema";
 
 /**
@@ -75,6 +76,7 @@ const STORE_SITE: Partial<Record<CommerceStoreKey, string>> = { "use-sul": "uses
 const COLLECTION_SLUG = /^[a-z0-9][a-z0-9-]{0,80}$/;
 
 export function collectionUrl(store: CommerceStoreKey, slug: string): string | null {
+  if (store === "use-sul") return COLLECTION_SLUG.test(slug) ? `${SUL_INK_ORIGIN}${SUL_INK.base}/collections/${slug}` : null; // the single store's domain (ink/sul-domain.ts)
   const site = STORE_SITE[store];
   return site && COLLECTION_SLUG.test(slug) ? `https://www.${site}.com.br/${site}/collections/${slug}` : null;
 }

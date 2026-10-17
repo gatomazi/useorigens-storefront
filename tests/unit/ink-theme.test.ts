@@ -113,7 +113,7 @@ describe("Tema da INK: incentivo de frete no carrinho", () => {
       return r.ok ? [] : r.errors;
     };
     expect(errs(RULE)).toEqual([]);
-    expect(errs({ ...RULE, enabled: false, confirmed: false })).toEqual([], "a rule kept off without confirmation is fine");
+    expect(errs({ ...RULE, enabled: false, confirmed: false }), "a rule kept off without confirmation is fine").toEqual([]);
     expect(errs({ ...RULE, confirmed: false }).join(" ")).toMatch(/para ligar, confirme que a regra está cadastrada e ativa na INK/);
     expect(errs({ ...RULE, threshold: 1 }).join(" ")).toMatch(/mínimo de peças, de 2 a 20/);
     expect(errs({ ...RULE, threshold: Number.NaN }).join(" ")).toMatch(/mínimo de peças/);

@@ -7,6 +7,7 @@ import { publishedFor } from "@/lib/pages/public";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { createYourOwnCards } from "@/lib/umapenca/customizer-cards";
 import { umaPencaHoverPhotos } from "@/lib/umapenca/hover";
+import { isArticleOfRegion } from "@/lib/umapenca/region";
 import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 import { storeCardButton } from "@/lib/site-config/cards";
@@ -32,8 +33,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * "Outros artigos": canecas and ecobags from the Uma Penca feed (src/lib/umapenca). The same articles in every region — they
- * are not tied to a city. Each kind opens with the region's published Uma Penca personalization models ("Crie a sua", leading
+ * "Outros artigos": canecas and ecobags from the Uma Penca feed (src/lib/umapenca). Each region shows the articles whose title names
+ * one of its places ("Caneca Lá de Palmas | TO" only in the Norte), plus the generic ones that name none (region.ts). Each kind opens with the region's published Uma Penca personalization models ("Crie a sua", leading
  * to /personalizar/<slug>), then the feed's articles (each opening the Uma Penca product page). A kind with neither is left out,
  * and with nothing at all the page is a 404, so no link ever lands on an empty shelf.
  */
@@ -42,7 +43,7 @@ export default async function OutrosArtigosPage({ params }: Props) {
   // The store-wide buy button (Aparência, global): on the articles' cards too.
   const buy = storeCardButton();
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
-  const articles = readUmaPencaSnapshot()?.articles ?? [];
+  const articles = (readUmaPencaSnapshot()?.articles ?? []).filter((a) => isArticleOfRegion(a, region));
   const hover = umaPencaHoverPhotos();
   const published = publishedFor(region);
   const groups = ARTICLE_KINDS.map((kind) => ({

@@ -1,4 +1,5 @@
 import { isUmaPencaImageUrl, isUmaPencaProductUrl } from "./hosts";
+import { articlePlace } from "./region";
 import type { ArticleKind, ExcludedArticle, UmaPencaArticle } from "./types";
 
 /**
@@ -7,7 +8,8 @@ import type { ArticleKind, ExcludedArticle, UmaPencaArticle } from "./types";
  *
  * Deliberately not a general XML parser: the feed is flat (one level of `g:*` children per entry), so a tolerant scan of
  * those children is enough and keeps the app free of an XML dependency. An entry missing an id, title, a verified link or a
- * verified photo, out of stock, or of a kind the storefront does not show is excluded with a reason, never repaired.
+ * verified photo, out of stock, of a kind the storefront does not show, or naming a place whose region is not certain (region.ts) is
+ * excluded with a reason, never repaired.
  */
 
 const ENTRY_RE = /<(entry|item)\b[^>]*>([\s\S]*?)<\/\1>/g;
@@ -126,6 +128,12 @@ export function parseUmaPencaFeed(xml: string): ParsedFeed {
       continue;
     }
 
+    const place = articlePlace(title);
+    if (!place.ok) {
+      exclude(`region unknown: ${place.reason}`);
+      continue;
+    }
+
     const price = parsePrice(field(entry, "price"));
     const sale = parsePrice(field(entry, "sale_price"));
     seen.add(id);
@@ -140,6 +148,8 @@ export function parseUmaPencaFeed(xml: string): ParsedFeed {
       price,
       salePrice: sale !== null && price !== null && sale < price ? sale : null,
       color: field(entry, "color") || null,
+      region: place.region,
+      uf: place.uf,
     });
   }
 

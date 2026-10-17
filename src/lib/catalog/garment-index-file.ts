@@ -4,7 +4,7 @@ import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { catalogSnapshotDir } from "../config/env";
 import type { CommerceStoreKey } from "../geo/regions";
-import { STORE_PRODUCT_URL_BASE } from "../ink/config";
+import { acceptedStoreProductBases, STORE_PRODUCT_URL_BASE } from "../ink/config";
 import type { GarmentBinding } from "./types";
 
 /**
@@ -96,10 +96,9 @@ export async function writeGarmentIndex(index: GarmentIndex, filePath: string = 
   }
 }
 
-/** True only when the real INK URL is exactly `<store base>/<slug>` — the shape `expandTuple` rebuilds. */
+/** True only when the real INK URL is exactly `<store base>/<slug>` — the shape `expandTuple` rebuilds (with the ACTIVE base; either domain of the single store is accepted). */
 export function urlMatchesShape(storeKey: CommerceStoreKey, slug: string, storeProductUrl: string): boolean {
-  const base = STORE_PRODUCT_URL_BASE[storeKey];
-  return base !== undefined && storeProductUrl === `${base}/${slug}`;
+  return acceptedStoreProductBases(storeKey).some((base) => storeProductUrl === `${base}/${slug}`);
 }
 
 /** Null when the piece cannot be stored compactly (no price). The caller has already checked the URL shape. */

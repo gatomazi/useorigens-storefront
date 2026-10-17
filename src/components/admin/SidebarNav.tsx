@@ -48,6 +48,7 @@ export function SidebarNav({ pendingRequests = 0, owner = false, regionName = "S
       title: "Marketing",
       items: [
         { href: "/admin/promocoes", label: "Cupons e promoções" },
+        { href: "/admin/faixa", label: "Faixa do topo" },
         { href: "/admin/tracking", label: "Tracking" },
       ],
     },

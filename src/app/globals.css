@@ -176,6 +176,60 @@ body {
   background: #000;
   color: #fff;
 }
+/* "Faixa do topo": each message fades in when it takes its turn (components/layout/TopBarMessages.tsx). */
+.top-bar-in {
+  animation: top-bar-in 320ms ease-out;
+}
+@keyframes top-bar-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .top-bar-in { animation: none; }
+}
+/* Marquee ("passando"): two identical groups, the track moves by half its width and starts over. Paused under the pointer and with the focus inside. */
+.top-bar-marquee {
+  overflow: hidden;
+  padding-block: 0.5rem;
+}
+.top-bar-track {
+  display: flex;
+  width: max-content;
+  animation: top-bar-scroll var(--top-bar-seconds, 30s) linear infinite;
+}
+.top-bar-marquee:hover .top-bar-track,
+.top-bar-marquee:focus-within .top-bar-track {
+  animation-play-state: paused;
+}
+.top-bar-group {
+  display: flex;
+  flex-shrink: 0;
+}
+.top-bar-item {
+  position: relative;
+  white-space: nowrap;
+  padding-inline: 1.75rem;
+}
+/* The dot between messages, drawn (the brand font's bullet is a square). */
+.top-bar-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+  transform: translate(-50%, -50%);
+}
+@keyframes top-bar-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .top-bar-track { animation: none; }
+}
 .on-ink .t-caption {
   color: rgb(255 255 255 / 0.68);
 }
