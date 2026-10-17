@@ -7,6 +7,7 @@ import { currentScope, editableScopes, scopeName } from "@/lib/admin/scope";
 import { seedForEnv } from "@/lib/admin/publishing";
 import { siteUrl } from "@/lib/config/env";
 import { regionThemeStyle } from "@/lib/theme/region-theme";
+import { AdminSearch } from "@/components/admin/AdminSearch";
 import { SidebarNav } from "@/components/admin/SidebarNav";
 
 /**
@@ -34,6 +35,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <span className="block text-[1.6rem] font-extrabold uppercase leading-none tracking-wide [font-family:var(--font-display-stack)]">Use Origens</span>
           <span className="mt-1 block text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/70">{prod ? "Painel" : "Painel · local"}</span>
         </Link>
+        <AdminSearch region={scope} owner={prod && actor.role === "owner"} />
         <SidebarNav pendingRequests={openRequests} owner={prod && actor.role === "owner"} regionName={scopeName(scope)} storeHref={launchedIn(scope) ? (prod ? `${siteUrl().replace(/\/$/, "")}/${scope}` : `/${scope}`) : null} storeLabel={prod ? "Abrir a loja ↗" : "Abrir a loja local ↗"} />
         <div className="mt-auto hidden text-[0.75rem] leading-snug text-white/70 lg:block">
           {prod ? (

@@ -84,7 +84,7 @@ export function TopBarEditor({ region, style: savedStyle, colors: savedColors, p
         <input type="hidden" name="style" value={style} />
         <input type="hidden" name="colorBackground" value={custom ? background : ""} />
         <input type="hidden" name="colorText" value={custom ? fontColor : ""} />
-        <fieldset className="a-card space-y-3 p-5">
+        <fieldset id="faixa-cores" className="a-card scroll-mt-4 space-y-3 p-5">
           <legend className="a-label">Cores da faixa</legend>
           <div className="flex flex-wrap gap-2">
             {PRESETS.map((p) => {
@@ -120,7 +120,7 @@ export function TopBarEditor({ region, style: savedStyle, colors: savedColors, p
           <p className="a-muted text-[0.8125rem]">Vale para a faixa inteira, na loja e nas páginas da INK, enquanto houver mensagem no ar. Sem mensagem, a faixa padrão continua preta.</p>
         </fieldset>
 
-        <fieldset className="a-card space-y-2 p-5">
+        <fieldset id="faixa-estilo" className="a-card scroll-mt-4 space-y-2 p-5">
           <legend className="a-label">Como as mensagens aparecem</legend>
           {([["marquee", "Passando (letreiro)", "Todas numa linha só, correndo da direita para a esquerda, separadas por •. Chama atenção e cabe texto longo no celular. Para sob o mouse."],
             ["rotate", "Uma de cada vez", "Uma mensagem centralizada, trocando a cada 5 segundos."]] as const).map(([value, label, hint]) => (
