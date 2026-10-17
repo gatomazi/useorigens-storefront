@@ -65,7 +65,8 @@ async function openPublicMenu(page: Page, slug: string, width = 375, height = 81
   return dialog;
 }
 /** The configurable blocks of the phone menu, in order (the city search, "Sua cidade", always comes first and is not configurable). */
-const headings = (dialog: Locator) => dialog.locator("[data-block]:not([data-block='search'])").getByRole("heading", { level: 2 }).allTextContents();
+// The CMS blocks only: the city search opens the menu and the store's account closes it (both fixed, not configured in the panel).
+const headings = (dialog: Locator) => dialog.locator("[data-block]:not([data-block='search']):not([data-block='account'])").getByRole("heading", { level: 2 }).allTextContents();
 /** The names of a block's links; a state's link also shows its UF before and its number of places after the name ("PR Paraná 399 cidades"). */
 const linksOf = async (dialog: Locator, block: "primary" | "categories" | "states" | "regions") =>
   (await dialog.locator(`[data-block="${block}"]`).getByRole("link").allTextContents()).map((t) => (block === "states" ? t.replace(/^[A-Z]{2}/, "").replace(/\s*\d[\d.]*\s+(cidades?|localidades?)$/, "").trim() : t));

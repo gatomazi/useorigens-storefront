@@ -18,10 +18,14 @@ async function openMenu(page: import("@playwright/test").Page, width: number, he
 
 test.describe("mobile menu hierarchy", () => {
   for (const width of MOBILE) {
-    test(`given ${width}px, when the menu opens, then it is Sua cidade (the search), Comprar then Estados do Sul, each a list of real links, with no region block`, async ({ page }) => {
+    test(`given ${width}px, when the menu opens, then it is Sua cidade (the search), Comprar, Estados do Sul and Sua conta, each a list of real links, with no region block`, async ({ page }) => {
       const dialog = await openMenu(page, width);
       const sections = dialog.locator("[data-block]");
-      await expect(sections).toHaveCount(3);
+      await expect(sections).toHaveCount(4);
+      // The store's account (the header has no room for a fourth icon on phones): the same entries as the store's own menu.
+      await expect(sections.nth(3).getByRole("heading", { level: 2 })).toHaveText("Sua conta");
+      await expect(sections.nth(3).getByRole("link")).toHaveText(["Meus pedidos", "Rastrear meu pedido", "Trocar meu pedido", "Avaliar meu pedido", "Entrar | Cadastrar"]);
+      await expect(sections.nth(3).getByRole("link").first()).toHaveAttribute("href", /\/orders$/);
       // The first path: the visitor's own city, through the store's search (a button: it opens the search sheet).
       await expect(sections.nth(0).getByRole("heading", { level: 2 })).toHaveText("Sua cidade");
       await expect(sections.nth(0).getByRole("button", { name: /Cidade, estampa ou coleção/ })).toBeVisible();

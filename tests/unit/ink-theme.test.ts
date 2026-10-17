@@ -15,12 +15,12 @@ const ok = (d: ScopeDoc, op: Parameters<typeof applyOp>[1]) => {
   if (!r.ok) throw new Error(r.errors.join("; "));
   return r.doc;
 };
-const ON: InkThemeConfig = { surfaces: { pdp: true, cart: true, checkout: false }, action: "ink", ground: "branco", corners: "retos", font: "vitrine" };
+const ON: InkThemeConfig = { surfaces: { pdp: true, cart: true, checkout: false, account: false }, action: "ink", ground: "branco", corners: "retos", font: "vitrine" };
 const HEX = /^#[0-9a-f]{6}$/;
 
 describe("Tema da INK: contract", () => {
   test("given the defaults, then every surface is off and the presets reproduce the storefront product page", () => {
-    expect(DEFAULT_INK_THEME.surfaces).toEqual({ pdp: false, cart: false, checkout: false });
+    expect(DEFAULT_INK_THEME.surfaces).toEqual({ pdp: false, cart: false, checkout: false, account: false });
     expect(inkThemeOf(undefined)).toBe(DEFAULT_INK_THEME);
     const p = inkThemePayload("sul", undefined);
     expect(p).toMatchObject({ v: 1, region: "sul", surfaces: { pdp: false, cart: false, checkout: false } });
@@ -67,8 +67,8 @@ describe("Tema da INK: draft, publication and diff", () => {
     const bundle = seed();
     const raw = { ...bundle, releaseId: "r1", docs: { ...bundle.docs, sul: { ...bundle.docs.sul, inkTheme: ON } } };
     const read = sanitizeBundle(raw, bundle).bundle!;
-    expect(inkThemePayload("sul", read.docs.sul.inkTheme).surfaces).toEqual({ pdp: true, cart: true, checkout: false });
-    expect(inkThemePayload("norte", read.docs.norte.inkTheme).surfaces).toEqual({ pdp: false, cart: false, checkout: false });
+    expect(inkThemePayload("sul", read.docs.sul.inkTheme).surfaces).toEqual({ pdp: true, cart: true, checkout: false, account: false });
+    expect(inkThemePayload("norte", read.docs.norte.inkTheme).surfaces).toEqual({ pdp: false, cart: false, checkout: false, account: false });
     const bad = { ...raw, docs: { ...raw.docs, sul: { ...raw.docs.sul, inkTheme: { ...ON, font: "Arial" } } } };
     const r = sanitizeBundle(bad, bundle);
     expect(r.bundle?.docs.sul.inkTheme).toBeUndefined();
@@ -152,5 +152,28 @@ describe("cart and checkout palette (proposal B, chosen on 17/10/2026)", () => {
     const base = { schemaVersion: 1, scope: "sul", tracking: { meta: { mode: "disabled" }, ga4: { mode: "disabled" } } } as const;
     const texts = diffDocs({ ...base, inkTheme: DEFAULT_INK_THEME } as never, { ...base, inkTheme: { ...DEFAULT_INK_THEME, palette: "neutra" } } as never).map((c) => c.text);
     expect(texts.some((t) => t.startsWith("Tema da INK, cores do carrinho e do checkout:"))).toBe(true);
+  });
+});
+
+describe("the account surface (sign-in, orders, tracking, review, exchanges)", () => {
+  const before = { surfaces: { pdp: true, cart: true, checkout: true }, action: "ink", ground: "branco", corners: "retos", font: "vitrine" };
+
+  test("given a setting saved before the account surface existed, then it is still valid and reads as off (nothing published changes)", () => {
+    expect(validateInkTheme(before, "sul").ok).toBe(true);
+    const doc = { inkTheme: before as unknown as InkThemeConfig };
+    expect(inkThemeOf(doc).surfaces).toEqual({ pdp: true, cart: true, checkout: true, account: false });
+    expect(inkThemePayload("sul", inkThemeOf(doc)).surfaces.account).toBe(false);
+  });
+
+  test("given the account turned on, then the payload carries it; a non-boolean is refused; the publish screen names it", () => {
+    const on = { ...before, surfaces: { ...before.surfaces, account: true } } as InkThemeConfig;
+    expect(validateInkTheme(on, "sul").ok).toBe(true);
+    expect(inkThemePayload("sul", on).surfaces.account).toBe(true);
+    expect(validateInkTheme({ ...before, surfaces: { ...before.surfaces, account: "sim" } }, "sul").ok).toBe(false);
+    const base = { schemaVersion: 1, scope: "sul", tracking: { meta: { mode: "disabled" }, ga4: { mode: "disabled" } } } as const;
+    const texts = diffDocs({ ...base, inkTheme: before } as never, { ...base, inkTheme: on } as never).map((c) => c.text);
+    expect(texts).toContain("Tema da INK, conta (entrar, compras, rastreio, avaliação e trocas): ligado");
+    // Saved without it and saved with it off: the same thing, no change line.
+    expect(diffDocs({ ...base, inkTheme: before } as never, { ...base, inkTheme: { ...before, surfaces: { ...before.surfaces, account: false } } } as never).filter((c) => c.kind === "ink-theme")).toEqual([]);
   });
 });

@@ -59,7 +59,7 @@ export function inkThemeTokens(region: RegionSlug, config: InkThemeConfig): { to
 
 export function inkThemePayload(region: RegionSlug, config: InkThemeConfig | undefined): PublicInkTheme {
   const c = config ?? DEFAULT_INK_THEME;
-  const payload: PublicInkTheme = { v: 1, region, surfaces: { pdp: c.surfaces.pdp, cart: c.surfaces.cart, checkout: c.surfaces.checkout }, tokens: inkThemeTokens(region, c).tokens, palette: paletteOf(c) };
+  const payload: PublicInkTheme = { v: 1, region, surfaces: { pdp: c.surfaces.pdp, cart: c.surfaces.cart, checkout: c.surfaces.checkout, account: c.surfaces.account === true }, tokens: inkThemeTokens(region, c).tokens, palette: paletteOf(c) };
   const i = c.incentive;
   if (i && i.enabled && i.confirmed) {
     payload.incentive = { enabled: true, kind: "free-shipping", unit: "items", threshold: i.threshold, ufs: REGIONS[region].ufs.filter((uf) => i.ufs.includes(uf)) };
@@ -72,6 +72,7 @@ export const INK_SURFACE_LABEL: Record<keyof InkThemeConfig["surfaces"], string>
   pdp: "Página de produto",
   cart: "Carrinho e confirmação de adição",
   checkout: "Checkout (contato, entrega e pagamento)",
+  account: "Conta (entrar, compras, rastreio, avaliação e trocas)",
 };
 export const INK_PRESET_LABEL = {
   action: { ink: "Preto (como o botão do site)", region: "Cor da região" },

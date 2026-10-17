@@ -12,6 +12,7 @@ const SURFACE_HELP: Record<(typeof INK_THEME_SURFACES)[number], string> = {
   pdp: "Título, preço, seletores de modelo/cor/tamanho, botão de compra e a barra fixa do celular, com a fonte, as cores e os botões do site.",
   cart: "O carrinho lateral (itens, cupom, CEP, totais, “Finalizar compra”) e a confirmação depois de adicionar.",
   checkout: "As telas de contato/entrega e de pagamento: campos, opções de frete e pagamento, resumo e botões. Só aparência; nada da INK é mudado.",
+  account: "As páginas da conta: entrar, Compras e o detalhe de cada pedido, rastreio, avaliação e trocas (o “voltar” e o logo do login levam ao site). Só aparência; o login e os pedidos continuam sendo da INK.",
 };
 
 /** A small, static sample of the purchase area in the draft's tokens (the real check is the preview on the INK pages: see the note below). */

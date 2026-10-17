@@ -84,11 +84,18 @@ const CLOSE_ICON = (
  * Escape closes it. On top of that: the first focus lands on the menu itself (predictable, no stray ring on the close control), focus returns to the
  * button that opened it, the page behind does not scroll, and the close row stays put while the list scrolls (safe areas respected).
  */
-export function MobileMenu({ blocks, search }: { blocks: NavBlockData[]; /** "Sua cidade": the city search, first thing in the menu (the store's own search sheet). */ search?: ReactNode }) {
+export function MobileMenu({ blocks, search, account = [] }: {
+  blocks: NavBlockData[];
+  /** "Sua cidade": the city search, first thing in the menu (the store's own search sheet). */
+  search?: ReactNode;
+  /** "Sua conta": the store's account links (AccountMenu), last in the menu; on phones the header has no room for a fourth icon. */
+  account?: { label: string; href: string }[];
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const searchHeading = useId();
+  const accountHeading = `${searchHeading}-conta`;
   const pathname = usePathname();
 
   // Any navigation closes the menu, also one that did not come from its own links (a city chosen in the search opened from it, back/forward).
@@ -169,6 +176,24 @@ export function MobileMenu({ blocks, search }: { blocks: NavBlockData[]; /** "Su
                 dialog.current?.close();
               }}
             />
+            {account.length > 0 && (
+              <div role="group" aria-labelledby={accountHeading} data-block="account" className="mt-7 border-t border-current/25 pt-5">
+                <h2 id={accountHeading} className="mb-2 flex items-center gap-2.5 text-[0.8125rem] font-semibold uppercase leading-none tracking-[0.14em]">
+                  <span aria-hidden="true" className="inline-block h-[3px] w-5" style={{ background: "var(--region-accent, currentColor)" }} />
+                  Sua conta
+                </h2>
+                <ul className="space-y-0.5">
+                  {account.map((l) => (
+                    <li key={l.label}>
+                      {/* The store's own pages (plain links: the region and the campaign go along on the click, CampaignCarry). */}
+                      <a href={l.href} onClick={() => dialog.current?.close()} className="flex min-h-11 items-center py-1 text-[1.25rem] font-semibold leading-snug">
+                        {l.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </div>
       </dialog>

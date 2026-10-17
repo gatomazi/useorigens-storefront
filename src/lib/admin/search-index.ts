@@ -66,7 +66,7 @@ export const ADMIN_SEARCH_INDEX: readonly AdminSearchEntry[] = [
   { title: "Botão nos cards de produto", where: "Aparência · todas as regiões", href: "/admin/aparencia", anchor: "botao-cards", keywords: ["botao", "card", "cards", "ver produto", "carrinho no card", "comprar"] },
   { title: "Meu Pequeno Mundo", where: "Aparência · todas as regiões", href: "/admin/aparencia", anchor: "meu-pequeno-mundo", keywords: ["mundo", "pequeno mundo", "experiencia"] },
   { title: "Tema da INK", where: "Configuração", href: "/admin/tema-ink", keywords: ["ink", "loja ink", "pagina de produto da ink", "compra"] },
-  { title: "Onde aplicar o tema da INK", where: "Tema da INK", href: "/admin/tema-ink", anchor: "ink-onde-aplicar", keywords: ["checkout", "carrinho", "pagamento", "pagina de produto", "pdp"] },
+  { title: "Onde aplicar o tema da INK", where: "Tema da INK", href: "/admin/tema-ink", anchor: "ink-onde-aplicar", keywords: ["checkout", "carrinho", "pagamento", "pagina de produto", "pdp", "conta", "login", "entrar", "pedidos", "rastreio"] },
   { title: "Cores do carrinho e do checkout", where: "Tema da INK", href: "/admin/tema-ink", anchor: "ink-aparencia", keywords: ["cores do carrinho", "cores do checkout", "botao principal", "finalizar compra", "fonte", "cantos"] },
   { title: "Incentivo de frete grátis no carrinho", where: "Tema da INK", href: "/admin/tema-ink", anchor: "ink-incentivo", keywords: ["frete gratis", "frete", "incentivo", "falta 1 peca", "pecas", "entrega gratis"] },
   { title: "Sincronização", where: "Configuração", href: "/admin/sincronizacao", keywords: ["sincronizar", "sync", "atualizar catalogo", "catalogo", "atualizar colecoes"] },
