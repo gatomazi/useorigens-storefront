@@ -158,7 +158,7 @@ export function SectionEditorForm({
   const maxCards = maxSectionProducts(display);
   const [buyOn, setBuyOn] = useState(Boolean(section.layout?.buyLabel));
   const [tagOn, setTagOn] = useState(Boolean(section.layout?.tags?.text));
-  const [ctaKind, setCtaKind] = useState<"none" | "collection-page" | "ink-collection" | "external" | "route" | "page" | "anchor">(section.cta?.dest.kind ?? "none");
+  const [ctaKind, setCtaKind] = useState<"none" | "collection-page" | "ink-collection" | "external" | "route" | "page" | "anchor" | "customizer">(section.cta?.dest.kind ?? "none");
   // The collections a "Ver todos" may lead to a page of: every one the region can use (public, or internal and enabled), the section's own first.
   const pageEntries = collections.filter((e) => e.selectable);
   const ctaCollection = section.cta && (section.cta.dest.kind === "collection-page" || section.cta.dest.kind === "ink-collection") ? `${section.cta.dest.store}:${section.cta.dest.collectionId}` : srcEntry?.value ?? currentRef ?? "";
@@ -261,6 +261,7 @@ export function SectionEditorForm({
           collections={pageEntries}
           pages={pages}
           anchors={anchors.filter((x) => x.anchor !== section.anchor)}
+          customizers={customizers}
         />
       )}
 
@@ -325,11 +326,26 @@ export function SectionEditorForm({
                 <option value="route">Página desta região (endereço)</option>
                 <option value="page">Hotpage ou categoria-pai publicada</option>
                 <option value="anchor">Uma seção desta página</option>
+                <option value="customizer">Página de personalização (um modelo, ex.: Localidade)</option>
                 <option value="external">URL da loja Use (Sul, Norte ou Centro)</option>
               </select>
             </div>
             {ctaKind !== "none" && <div><label className="a-label" htmlFor="cta_label">Texto do botão</label><input id="cta_label" name="cta_label" defaultValue={section.cta?.label ?? "Ver mais"} className="a-input" maxLength={32} /></div>}
           </div>
+          {ctaKind === "customizer" && (
+            <div>
+              <label className="a-label" htmlFor="cta_customizer">Modelo</label>
+              <select id="cta_customizer" name="cta_customizer" className="a-select" defaultValue={section.cta?.dest.kind === "customizer" ? section.cta.dest.customizerId : ""} required>
+                <option value="" disabled>Escolha…</option>
+                {customizers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.live ? "" : " (ainda não publicado)"}{c.active ? "" : " (desativado)"}</option>)}
+              </select>
+              {customizers.length === 0 ? (
+                <p className="a-flash err mt-2 text-[0.875rem]">Esta região ainda não tem modelos. Cadastre em Personalização.</p>
+              ) : (
+                section.template === "campaign" && <p className="a-muted mt-1 text-[0.8125rem]">Na composição “Dividida” sem imagem, a foto do modelo entra no lugar da imagem.</p>
+              )}
+            </div>
+          )}
           {ctaKind === "collection-page" && (
             <div>
               <label className="a-label" htmlFor="cta_collection">Coleção</label>

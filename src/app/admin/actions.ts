@@ -189,6 +189,12 @@ export async function addStructuredSection(fd: FormData) {
   return run(fd, { type: "add-structured", template: template as StructuredTemplate }, "Seção criada no rascunho. Ajuste os textos e a aparência; nada vai para a loja até publicar.", "/admin/home", true);
 }
 
+export async function addCustomizerSection(fd: FormData) {
+  const customizerId = text(fd, "customizer");
+  if (!customizerId) back("/admin/home", { err: ["Escolha o modelo de personalização."] });
+  return run(fd, { type: "add-customizer-section", customizerId }, "Seção de personalização criada no rascunho. Ajuste o título e o texto; nada vai para a loja até publicar.", "/admin/home", true);
+}
+
 export async function duplicateSection(fd: FormData) {
   return run(fd, { type: "duplicate", id: text(fd, "id") }, "Seção duplicada (a cópia começa oculta).", "/admin/home", true);
 }

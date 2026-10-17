@@ -2,7 +2,7 @@ import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import type { ArticleKind } from "../umapenca/types";
 import { SUL_INK, SUL_INK_ORIGIN } from "../ink/sul-domain";
-import { PAGE_SEGMENT, type Destination, type EditorialModuleKey, type Source } from "./schema";
+import { CUSTOMIZER_SEGMENT, PAGE_SEGMENT, type Destination, type EditorialModuleKey, type Source } from "./schema";
 
 /**
  * Section data sources (docs/admin/cms-v1-round2.md §3, docs/admin/cms-v1-round3.md §3). A source either yields items or says,
@@ -85,7 +85,12 @@ export function collectionUrl(store: CommerceStoreKey, slug: string): string | n
  * How a collection becomes a link, from the server's snapshot: `inkSlug` = the slug of its PUBLIC page on INK; `pageSlug` = the slug of the storefront's own
  * collection page, when the region can show that collection (null otherwise: no page, no link).
  */
-export type CollectionLinks = { inkSlug?: (store: CommerceStoreKey, collectionId: number) => string | null; pageSlug?: (store: CommerceStoreKey, collectionId: number) => string | null };
+export type CollectionLinks = {
+  inkSlug?: (store: CommerceStoreKey, collectionId: number) => string | null;
+  pageSlug?: (store: CommerceStoreKey, collectionId: number) => string | null;
+  /** The address of a personalisation model of the rendered region, when it is live (null: missing or switched off, no link). */
+  customizerSlug?: (customizerId: string) => string | null;
+};
 
 /** The storefront's own page of a collection: a parent-category landing address (a published landing with the same address takes its place). */
 export const collectionPagePath = (region: RegionSlug, slug: string): string => `/${region}/${PAGE_SEGMENT.categoryLanding}/${slug}`;
@@ -102,6 +107,10 @@ export function destinationHref(dest: Destination, links?: CollectionLinks, regi
   if (dest.kind === "collection-page") {
     const slug = region ? links?.pageSlug?.(dest.store, dest.collectionId) : null;
     return region && slug ? collectionPagePath(region, slug) : null;
+  }
+  if (dest.kind === "customizer") {
+    const slug = region ? links?.customizerSlug?.(dest.customizerId) : null;
+    return region && slug ? `/${region}/${CUSTOMIZER_SEGMENT}/${slug}` : null;
   }
   const slug = links?.inkSlug?.(dest.store, dest.collectionId);
   return slug ? collectionUrl(dest.store, slug) : null;

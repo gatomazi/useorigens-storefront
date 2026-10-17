@@ -80,6 +80,10 @@ function parseDest(f: Fields, prefix: string): Destination | null {
   if (kind === "route") return { kind: "route", path: str(f, `${prefix}_route`) };
   if (kind === "page") return parsePageRef(str(f, `${prefix}_page`));
   if (kind === "anchor") return { kind: "anchor", anchor: str(f, `${prefix}_anchor`) };
+  if (kind === "customizer") {
+    const id = str(f, `${prefix}_customizer`);
+    return id ? { kind: "customizer", customizerId: id } : null;
+  }
   return null;
 }
 

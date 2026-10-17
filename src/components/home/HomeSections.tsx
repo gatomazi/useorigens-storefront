@@ -24,7 +24,7 @@ import { heroCards } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
-import { firstImageSectionId, focalToCss, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
+import { customizerFigure, firstImageSectionId, focalToCss, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
 import { cardBuy, cardButtonOf, type CardBuy } from "@/lib/site-config/cards-schema";
 import { DEFAULT_TILE_CTA, type Color, type Fill, type MediaRef, type Page, type PublishedBundle, type Section } from "@/lib/site-config/schema";
 import { Pagination } from "@/components/catalog/Pagination";
@@ -221,7 +221,8 @@ export function HomeSections({
             const ctaHref = s.cta ? destinationHref(s.cta.dest, links, region) : null;
             if (s.variant === "split") {
               // The picture becomes the figure half (its own crop and framing per screen); the fill paints the text half (the region's colour when none).
-              const figure = splitFigure(bg);
+              // No picture of its own and a button to a personalisation model ("Localidade"): the model's own picture.
+              const figure = splitFigure(bg) ?? (s.cta?.dest.kind === "customizer" ? customizerFigure(doc, media, s.cta.dest.customizerId) : null);
               const panelFill = bg.fill.kind === "none" ? null : <SectionBackdrop bg={{ ...bg, images: { mobile: null, desktop: null } }} />;
               // Without a picture, the shirts the button leads to stand in (the first two of its collection, real photos), else the home's own crops.
               const dest = s.cta?.dest;

@@ -7,6 +7,10 @@ import { navData } from "@/lib/site-config/navigation";
 import { mediaRefsOfDoc, validateScopeDoc, validateSection, type GridTile, type ScopeDoc, type Section } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 import { structuredDefaults } from "@/lib/site-config/structured";
+import { collectionProblems } from "@/lib/admin/validate-draft";
+import { linkProblems } from "@/lib/admin/publishing";
+import { customizerFigure } from "@/lib/site-config/resolve";
+import { destinationHref } from "@/lib/site-config/sources";
 
 /** The editorial home (CLAUDE_REFINAMENTO_HOME_MENU_USE_ORIGENS): compositions per section, collection cards A/B, the written card call, menu details. */
 
@@ -181,5 +185,80 @@ describe("the accent as text (the opening's last line, the states' UF)", () => {
     expect(themeCssVars(light.configured, light.effective)).not.toHaveProperty("--region-accent-ink");
     const none = resolveTheme("sul", undefined, undefined);
     expect(themeCssVars(none.configured, none.effective)).toEqual({});
+  });
+});
+
+describe("a section that opens a personalisation model (Localidade)", () => {
+  const LOCALIDADE = {
+    id: "loc1", slug: "localidade", name: "Localidade", description: "Bairro, distrito ou comunidade: o nome do seu lugar na camiseta.",
+    source: { store: "use-sul", collectionId: 1 }, fields: [], previewMode: "mockupWithTextSummary", active: true, version: 1,
+    pageMockup: { assetId: "m1", alt: "Camiseta Localidade", decorative: false },
+  } as unknown as NonNullable<ScopeDoc["customizers"]>[number];
+  const withModel = (active = true): ScopeDoc => ({ ...sul(), customizers: [{ ...LOCALIDADE, active }] });
+  const ctx = { newId: () => "p1" };
+
+  test("given a button to a model, then it validates by the model's id; a malformed id is refused", () => {
+    expect(validateSection({ ...section("campaign"), cta: { label: "Personalizar", dest: { kind: "customizer", customizerId: "loc1" } } }).ok).toBe(true);
+    expect(validateSection({ ...section("campaign"), cta: { label: "Personalizar", dest: { kind: "customizer", customizerId: "../x" } } }).ok).toBe(false);
+  });
+
+  test("given a live model, then the button opens its page; switched off or missing, then no link at all", () => {
+    const links = { customizerSlug: (id: string) => (id === "loc1" ? "localidade" : null) };
+    expect(destinationHref({ kind: "customizer", customizerId: "loc1" }, links, "sul")).toBe("/sul/personalizar/localidade");
+    expect(destinationHref({ kind: "customizer", customizerId: "outro" }, links, "sul")).toBeNull();
+    expect(destinationHref({ kind: "customizer", customizerId: "loc1" }, links)).toBeNull();
+  });
+
+  test("given the shortcut, when a model is chosen, then a split campaign with its name, text and button is added before the footer", () => {
+    const r = applyOp(withModel(), { type: "add-customizer-section", customizerId: "loc1" }, ctx);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    const list = r.doc.home!.sections;
+    const added = list.at(-2)!;
+    expect(list.at(-1)!.template).toBe("footer");
+    expect(added).toMatchObject({ template: "campaign", variant: "split", title: "Localidade", subtitle: LOCALIDADE.description, cta: { label: "Personalizar a minha", dest: { kind: "customizer", customizerId: "loc1" } } });
+    const check = validateScopeDoc(r.doc);
+    expect(check.ok ? [] : check.errors).toEqual([]);
+    expect(applyOp(withModel(), { type: "add-customizer-section", customizerId: "nada" }, ctx).ok).toBe(false);
+  });
+
+  test("given a model switched off, then publishing is held with the reason", () => {
+    const r = applyOp(withModel(), { type: "add-customizer-section", customizerId: "loc1" }, ctx);
+    if (!r.ok) throw new Error(r.errors.join("; "));
+    expect(collectionProblems(r.doc)).toEqual([]);
+    const off = { ...r.doc, customizers: [{ ...LOCALIDADE, active: false }] };
+    expect(collectionProblems(off).some((p) => p.includes("modelo de Personalização"))).toBe(true);
+  });
+
+  test("given a campaign without a picture of its own, then the model's picture stands beside the text", () => {
+    const media = { m1: { src: "https://media.example/m1.webp", width: 1200, height: 1500 } } as never;
+    expect(customizerFigure(withModel(), media, "loc1")).toMatchObject({ mobile: { src: "https://media.example/m1.webp" }, alt: "Camiseta Localidade" });
+    expect(customizerFigure(withModel(false), media, "loc1")).toBeNull();
+  });
+
+  test("given the editor's fields, then the button to a model is read from cta_customizer", () => {
+    const parsed = parseSectionForm(form({ cta_kind: "customizer", cta_customizer: "loc1", cta_label: "Personalizar" }) as never, section("campaign"));
+    expect(parsed.cta).toEqual({ label: "Personalizar", dest: { kind: "customizer", customizerId: "loc1" } });
+  });
+});
+
+describe("a personalisation model still opened by a section", () => {
+  test("given a button to the model, when the owner removes the model, then it is refused with the section's name", () => {
+    const doc: ScopeDoc = { ...structuredClone(seed.docs.sul), customizers: [{ id: "loc1", slug: "localidade", name: "Localidade", source: { store: "use-sul", collectionId: 1 }, fields: [], previewMode: "mockupWithTextSummary", active: false, version: 1 } as never] };
+    const added = applyOp(doc, { type: "add-customizer-section", customizerId: "loc1" }, { newId: () => "p1" });
+    if (!added.ok) throw new Error(added.errors.join("; "));
+    const r = applyOp(added.doc, { type: "remove-customizer", id: "loc1" }, { newId: () => "x" });
+    expect(r.ok).toBe(false);
+    expect(r.ok ? "" : r.errors.join(" ")).toContain("abre este modelo");
+  });
+});
+
+describe("publishing a button to a personalisation model", () => {
+  const model = { id: "loc1", slug: "localidade", name: "Localidade", source: { store: "use-sul", collectionId: 1 }, fields: [], previewMode: "mockupWithTextSummary", active: true, version: 1 } as never;
+  const campaign = { ...structuredDefaults("campaign", "sul", "custom-c", new Set()), cta: { label: "Personalizar a minha", dest: { kind: "customizer" as const, customizerId: "loc1" } } };
+  test("given the model only in the draft (models are published on their own), then the home publish is held until the model is published", () => {
+    expect(linkProblems({ ...sul(), customizers: [] }, [campaign])[0]).toContain("ainda não foi publicado");
+    expect(linkProblems({ ...sul(), customizers: [model] }, [campaign])).toEqual([]);
+    expect(linkProblems({ ...sul(), customizers: [{ ...(model as object), active: false } as never] }, [campaign])[0]).toContain("desativado");
   });
 });

@@ -5,14 +5,14 @@ import type { ComboEntry } from "@/components/admin/CollectionCombobox";
 import type { MediaOption } from "@/components/admin/SectionEditorForm";
 import { DEFAULT_TILE_CTA, MAX_GRID_TILES, MAX_TILE_CTA, MIN_GRID_TILES, type GridLayout, type GridTile, type TileFormat } from "@/lib/site-config/schema";
 
-type DestKind = "collection-page" | "ink-collection" | "page" | "route" | "anchor" | "external";
+type DestKind = "collection-page" | "ink-collection" | "page" | "route" | "anchor" | "customizer" | "external";
 type Row = {
-  key: number; label: string; caption: string; image: string; kind: DestKind; collection: string; page: string; route: string; url: string; anchor: string;
+  key: number; label: string; caption: string; image: string; kind: DestKind; collection: string; page: string; route: string; url: string; anchor: string; customizer: string;
   /** "" = the classic tile. */
   format: "" | TileFormat; color: string; tone: "" | "light" | "dark"; cta: string; imageMobile: string; alt: string; fmx: number; fmy: number; fdx: number; fdy: number;
 };
 
-const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "", format: "", color: "", tone: "", cta: "", imageMobile: "", alt: "", fmx: 50, fmy: 50, fdx: 50, fdy: 50 });
+const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "", customizer: "", format: "", color: "", tone: "", cta: "", imageMobile: "", alt: "", fmx: 50, fmy: 50, fdx: 50, fdy: 50 });
 
 /** The card colours offered first (the theme's own, then a few warm grounds that sit well with the region's palette); any #rrggbb is accepted too. */
 const COLOR_CHOICES = [
@@ -37,6 +37,7 @@ function toRow(t: GridTile, key: number, scope: string): Row {
     route: d.kind === "route" ? d.path : `/${scope}`,
     url: d.kind === "external" ? d.url : "",
     anchor: d.kind === "anchor" ? d.anchor : "",
+    customizer: d.kind === "customizer" ? d.customizerId : "",
     format: t.format ?? "",
     color: t.color ?? "",
     tone: t.tone ?? "",
@@ -57,7 +58,7 @@ const ASPECT_CLASS: Record<GridLayout["aspect"], string> = { square: "aspect-squ
  * rows post as `tile_<i>_*` in their current order plus `tile_count`, parsed by `parseGridTiles` (src/lib/admin/section-form.ts).
  */
 export function GridTilesEditor({
-  scope, tiles, layout, media, thumbOf, collections, pages, anchors,
+  scope, tiles, layout, media, thumbOf, collections, pages, anchors, customizers = [],
 }: {
   scope: string;
   tiles: GridTile[];
@@ -68,6 +69,8 @@ export function GridTilesEditor({
   collections: ComboEntry[];
   pages: { value: string; label: string; live: boolean }[];
   anchors: { anchor: string; label: string }[];
+  /** The region's personalisation models ("Localidade", "Canecas"…), for a tile that opens one. */
+  customizers?: { id: string; name: string; active: boolean }[];
 }) {
   const nextKey = useRef(tiles.length);
   const [rows, setRows] = useState<Row[]>(() => tiles.map((t, i) => toRow(t, i, scope)));
@@ -244,9 +247,20 @@ export function GridTilesEditor({
                           <option value="page">Hotpage ou categoria-pai publicada</option>
                           <option value="route">Página desta loja (endereço)</option>
                           <option value="anchor">Uma seção desta página</option>
+                          <option value="customizer">Página de personalização (um modelo)</option>
                           <option value="external">URL da loja Use (Sul, Norte ou Centro)</option>
                         </select>
                       </div>
+                      {r.kind === "customizer" && (
+                        <div>
+                          <label className="a-label" htmlFor={id("customizer")}>Modelo</label>
+                          <select id={id("customizer")} name={id("customizer")} className="a-select" value={r.customizer} onChange={(e) => patch(r.key, { customizer: e.target.value })} required>
+                            <option value="" disabled>Escolha…</option>
+                            {customizers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.active ? "" : " (desativado)"}</option>)}
+                          </select>
+                          {customizers.length === 0 && <p className="a-flash err mt-2 text-[0.875rem]">Esta região ainda não tem modelos. Cadastre em Personalização.</p>}
+                        </div>
+                      )}
                       {(r.kind === "ink-collection" || r.kind === "collection-page") && (
                         <div>
                           <label className="a-label" htmlFor={id("collection")}>Coleção</label>

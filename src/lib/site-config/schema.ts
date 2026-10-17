@@ -80,6 +80,11 @@ export type Destination =
    * Resolved at render time; a collection the region cannot use (internal and not enabled, too few products) has no page, so the button is left out.
    */
   | { kind: "collection-page"; store: CommerceStoreKey; collectionId: number }
+  /**
+   * The page of one of this region's personalisation models (`/<region>/personalizar/<slug>`, e.g. "Localidade"), by its stable id: resolved at
+   * render time, so renaming the model's address never breaks the button; a model that is missing or switched off has no page, so the button is left out.
+   */
+  | { kind: "customizer"; customizerId: string }
   | { kind: "external"; url: string };
 
 export type Source =
@@ -561,6 +566,8 @@ function checkDestination(c: Collector, path: string, v: unknown): void {
     if (typeof v.slug !== "string" || !PAGE_SLUG.test(v.slug) || v.slug.length > 60) c.fail(`${path}.slug`, "invalid page slug");
   } else if (v.kind === "anchor") {
     if (typeof v.anchor !== "string" || !SLUG.test(v.anchor)) c.fail(`${path}.anchor`, "must match [a-z0-9-]{1,40}");
+  } else if (v.kind === "customizer") {
+    if (typeof v.customizerId !== "string" || !ID.test(v.customizerId)) c.fail(`${path}.customizerId`, "invalid customizer id");
   } else if (v.kind === "external") {
     let ok = false;
     if (typeof v.url === "string") {
@@ -572,7 +579,7 @@ function checkDestination(c: Collector, path: string, v: unknown): void {
       }
     }
     if (!ok) c.fail(`${path}.url`, "must be https on an allowed store host");
-  } else c.fail(`${path}.kind`, "must be route | page | anchor | ink-collection | collection-page | external");
+  } else c.fail(`${path}.kind`, "must be route | page | anchor | ink-collection | collection-page | customizer | external");
 }
 
 /** An ink-category's own order / hidden list: at most the products a collection keeps for showcases (MAX_STORED_MEMBERS = 48), with room to spare. */

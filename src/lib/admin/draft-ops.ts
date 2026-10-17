@@ -19,7 +19,7 @@ import type { CardsConfig } from "../site-config/cards-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
 import type { InkThemeConfig } from "../site-config/ink-theme-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, type Appearance, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, type Appearance, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 import { HOME_THEME_LABEL, hasHomeTheme, newEditorialTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
 import type { RegionSlug } from "../geo/regions";
 
@@ -30,6 +30,8 @@ export type DraftOp =
   | { type: "add-carousel"; title: string; source: Source; cta?: Section["cta"]; display?: ProductDisplay }
   /** Adds one of the structured home components (city styles, state chooser, regional campaign, image grid) with the defaults of THIS region. */
   | { type: "add-structured"; template: StructuredTemplate }
+  /** A split campaign that opens one personalisation model (e.g. "Localidade"): its name, description and picture, the button to its page. */
+  | { type: "add-customizer-section"; customizerId: string }
   | { type: "duplicate"; id: string }
   | { type: "move"; id: string; direction: "up" | "down" }
   /** The whole order at once (drag and drop in the panel): the same sections, the hero first and the footer last, fixed sections where they were. */
@@ -323,6 +325,30 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       // where a new carousel goes (before the closing campaign).
       const at = op.template === "city-styles" ? 1 : ctx.mode === "page" ? next.length : op.template === "image-grid" ? Math.max(1, next.length - 2) : next.length - 1;
       next.splice(at, 0, created);
+      return withSections(next, id);
+    }
+    case "add-customizer-section": {
+      if (doc.scope === "global") return fail("global has no home");
+      const model = doc.customizers?.find((m) => m.id === op.customizerId);
+      if (!model) return fail("unknown personalisation model");
+      const id = `${CUSTOM_PREFIX}${ctx.newId()}`;
+      const taken = new Set(sections.map((s) => s.anchor));
+      const anchor = uniqueAnchor(`personalizar-${model.slug}`, taken);
+      const base = structuredDefaults("campaign", doc.scope, id, taken);
+      // The model's own words to start from (the owner rewrites them), its picture beside them (no picture of the section's own: see HomeSections),
+      // on a warm light ground so it never reads as a second closing campaign.
+      const created: Section = {
+        ...base, anchor, headingId: `${anchor}-title`, variant: "split",
+        title: model.name.slice(0, 120),
+        ...(model.description ? { subtitle: model.description.slice(0, 300) } : {}),
+        cta: { label: "Personalizar a minha", dest: { kind: "customizer", customizerId: model.id } },
+        appearance: { ...base.appearance, fill: { kind: "solid", color: "#e8c9a9" } },
+      };
+      if (!model.description) delete created.subtitle;
+      const check = validateSection(created);
+      if (!check.ok) return { ok: false, errors: check.errors };
+      // Before the footer (a page has none: at the end).
+      next.splice(ctx.mode === "page" ? next.length : next.length - 1, 0, created);
       return withSections(next, id);
     }
     case "duplicate": {
@@ -622,9 +648,13 @@ function customizerOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-custom
     const copy: Customizer = { ...structuredClone(model), id: `cz-${ctx.newId()}`, slug: uniqueSlug(`${model.slug}-copia`, taken), name: `${model.name} (cópia)`.slice(0, 80), active: false, version: 1 };
     return withCustomizers(doc, [...list, copy], copy.id);
   }
-  // remove: refused while any section still shows it as the first card
-  const users = [...(doc.home?.sections ?? []).map((s) => ({ where: "a home", s })), ...(doc.pages ?? []).flatMap((p) => p.sections.map((s) => ({ where: `a página "${p.title}"`, s })))].filter(({ s }) => s.customizerCard?.customizerId === model.id);
+  // remove: refused while any section still shows it as the first card, or a button or a tile still opens it
+  const sectionsWhere = [...(doc.home?.sections ?? []).map((s) => ({ where: "a home", s })), ...(doc.pages ?? []).flatMap((p) => p.sections.map((s) => ({ where: `a página "${p.title}"`, s })))];
+  const users = sectionsWhere.filter(({ s }) => s.customizerCard?.customizerId === model.id);
   if (users.length > 0) return fail(`Este modelo é o primeiro card de "${users[0].s.title ?? users[0].s.id}" em ${users[0].where}. Troque ou remova o card antes.`);
+  const opens = (d: Destination | undefined) => d?.kind === "customizer" && d.customizerId === model.id;
+  const linked = sectionsWhere.find(({ s }) => opens(s.cta?.dest) || (s.tiles ?? []).some((t) => opens(t.dest)));
+  if (linked) return fail(`A seção "${linked.s.title ?? linked.s.id}" em ${linked.where} tem um botão ou bloco que abre este modelo. Troque o destino ou remova a seção antes.`);
   list.splice(index, 1);
   return withCustomizers(doc, list);
 }

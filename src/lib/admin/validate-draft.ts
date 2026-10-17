@@ -117,8 +117,16 @@ export function collectionProblems(doc: ScopeDoc): string[] {
       const c = findCollection(s.cta.dest.store, s.cta.dest.collectionId);
       if (!c?.isAvailable) out.push(`${name}: o botão "Ver todos" aponta para uma coleção interna ou inexistente (sem página pública verificada)`);
     }
+    if (s.cta?.dest.kind === "customizer") {
+      const id = s.cta.dest.customizerId;
+      if (!doc.customizers?.some((m) => m.id === id && m.active)) out.push(`${name}: o botão aponta para um modelo de Personalização que não existe ou está desativado`);
+    }
     if (s.cta?.dest.kind === "collection-page" && !collectionPageSlug(doc, s.cta.dest.store, s.cta.dest.collectionId)) out.push(`${name}: o botão "Ver todos" aponta para a página de uma coleção que a região não pode mostrar (interna não habilitada, sem produtos ou inexistente)`);
     for (const t of s.tiles ?? []) {
+      if (t.dest.kind === "customizer") {
+        const id = t.dest.customizerId;
+        if (!doc.customizers?.some((m) => m.id === id && m.active)) out.push(`${name}: o bloco "${t.label}" aponta para um modelo de Personalização que não existe ou está desativado`);
+      }
       if (t.dest.kind === "collection-page" && !collectionPageSlug(doc, t.dest.store, t.dest.collectionId)) out.push(`${name}: o bloco "${t.label}" aponta para a página de uma coleção que a região não pode mostrar`);
       if (t.dest.kind !== "ink-collection") continue;
       const c = findCollection(t.dest.store, t.dest.collectionId);

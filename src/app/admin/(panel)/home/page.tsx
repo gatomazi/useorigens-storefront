@@ -2,7 +2,7 @@ import Link from "next/link";
 import { HomeThemeCard } from "@/components/admin/HomeThemeCard";
 import { canEdit } from "@/lib/admin/store/ports";
 import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
-import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, setSectionActive } from "@/app/admin/actions";
+import { addCollectionSection, addCustomizerSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, setSectionActive } from "@/app/admin/actions";
 import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
 import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
@@ -208,6 +208,25 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           </div>
           <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
         </form>
+
+        <h3 id="nova-secao-personalizacao" className="mt-8 font-extrabold">Personalização: chamada para um modelo (ex.: Localidade)</h3>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Um bloco dividido com o nome e o texto do modelo, a foto dele ao lado e o botão “Personalizar a minha” para a página de personalização. Depois de criada, ajuste o título, o texto e a cor no editor da seção (ou ponha uma imagem própria).</p>
+        {(ws.doc.customizers ?? []).length === 0 ? (
+          <p className="a-flash err mt-3">Esta região ainda não tem modelos. <Link className="a-link" href="/admin/personalizacao">Cadastre em Personalização</Link>.</p>
+        ) : (
+          <form action={addCustomizerSection} aria-label="Nova seção de personalização" className="mt-3 grid gap-4 md:grid-cols-[minmax(0,22rem)_auto] md:items-end">
+            <input type="hidden" name="rev" value={rev ?? "null"} />
+            <input type="hidden" name="scope" value={scope} />
+            <div>
+              <label className="a-label" htmlFor="customizer">Modelo</label>
+              <select id="customizer" name="customizer" className="a-select" defaultValue="" required>
+                <option value="" disabled>Escolha…</option>
+                {(ws.doc.customizers ?? []).map((m) => <option key={m.id} value={m.id}>{m.name}{m.active ? "" : " (desativado)"}</option>)}
+              </select>
+            </div>
+            <button type="submit" className="a-btn">Criar seção</button>
+          </form>
+        )}
 
         <h3 className="mt-8 font-extrabold">Componentes da home</h3>
         <ul className="mt-3 grid gap-4 md:grid-cols-2 xl:grid-cols-4" aria-label="Componentes da home">
