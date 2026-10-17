@@ -21,7 +21,8 @@ import { HeaderShell } from "./HeaderShell";
 import { MobileMenu } from "./MobileMenu";
 import { PriorityLinks } from "./PriorityLinks";
 import { CartMirrorMenu } from "../cart-mirror/CartMirrorMenu";
-import { cartRegionFor, checkoutStoreFor } from "@/lib/catalog/commerce-mode";
+import { cartRegionFor, checkoutStoreFor, storeForRegion } from "@/lib/catalog/commerce-mode";
+import { AccountMenu, accountLinks } from "./AccountMenu";
 import { FavoritesMenu } from "../favorites/FavoritesMenu";
 import { SearchDialog } from "../search/SearchDialog";
 import { TopBarMessages } from "./TopBarMessages";
@@ -77,7 +78,7 @@ export function Header({ region }: { region: RegionSlug }) {
     <HeaderShell>
       <div className="wrap site-header-row flex items-center justify-between gap-3">
         <div className="flex items-center gap-1">
-          <MobileMenu blocks={navigation.blocks} search={<SearchDialog region={region} variant="field" source={SOURCES.searchDialog} />} />
+          <MobileMenu blocks={navigation.blocks} search={<SearchDialog region={region} variant="field" source={SOURCES.searchDialog} />} account={accountLinks(storeForRegion(region))} />
           <Link href={regionPath(region)} className="flex min-h-11 items-center gap-2.5" aria-label={`Use Origens ${REGIONS[region].name}, página inicial`}>
             <Image src={`/brand/logo-${region === "centro-oeste" ? "centro" : region}.png`} alt="" width={40} height={40} className="h-9 w-9" priority unoptimized />
             <span translate="no" className="font-display text-[1.6rem] font-black uppercase leading-none tracking-[0.02em]">Use Origens</span>
@@ -178,6 +179,7 @@ export function Header({ region }: { region: RegionSlug }) {
             </HeaderDropdown>
           )}
           <FavoritesMenu region={region} />
+          <AccountMenu store={storeForRegion(region)} />
           <CartMirrorMenu region={cartRegionFor(region)} navRegion={region} />
           <SearchDialog region={region} />
         </div>
