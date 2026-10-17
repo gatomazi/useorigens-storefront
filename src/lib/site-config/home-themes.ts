@@ -56,8 +56,9 @@ export function editorialSeed(region: RegionSlug, sections: readonly Section[], 
     {
       ...styles,
       active: true,
-      variant: "split",
-      count: 3,
+      // Every style of the example city by name, one card at a time (all eight models without eight cards on screen).
+      variant: "list",
+      count: 8,
       title: "Sua cidade, do seu jeito.",
       subtitle: "O mapa, o nome ou as coordenadas. O exemplo aqui é {city}; ao abrir a sua, você vê só os estilos que existem para ela.",
       appearance: plain(),

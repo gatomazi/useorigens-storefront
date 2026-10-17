@@ -182,9 +182,11 @@ export const MAX_GRID_TILES = 12;
  *   hero "feature"        headline, search and ONE large featured product (the first eligible of `featured`) instead of three small cards;
  *   states "strip"        a band of one entry per state (UF, name, number of places and the call), each entry one link, instead of the cover cards;
  *   city-styles "split"   the heading in a column of its own beside the style cards;
+ *   city-styles "list"    the heading in a column of its own, the styles' names in a list and ONE card beside it, the style chosen (all eight
+ *                         within reach without eight cards on screen);
  *   campaign "split"      the picture (or real shirts) on one half and the text on a colour of its own on the other, edge to edge.
  */
-export const SECTION_VARIANTS = { hero: ["feature"], states: ["strip"], "city-styles": ["split"], campaign: ["split"] } as const satisfies Partial<Record<TemplateKey, readonly string[]>>;
+export const SECTION_VARIANTS = { hero: ["feature"], states: ["strip"], "city-styles": ["split", "list"], campaign: ["split"] } as const satisfies Partial<Record<TemplateKey, readonly string[]>>;
 export type SectionVariant = (typeof SECTION_VARIANTS)[keyof typeof SECTION_VARIANTS][number];
 export const variantsOf = (template: TemplateKey): readonly string[] => (SECTION_VARIANTS as Partial<Record<TemplateKey, readonly string[]>>)[template] ?? [];
 

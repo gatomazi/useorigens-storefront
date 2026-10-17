@@ -23,6 +23,7 @@ describe("section compositions (variant)", () => {
     expect(validateSection({ ...section("hero"), variant: "feature" }).ok).toBe(true);
     expect(validateSection({ ...section("states"), variant: "strip" }).ok).toBe(true);
     expect(validateSection({ ...section("city-styles"), variant: "split" }).ok).toBe(true);
+    expect(validateSection({ ...section("city-styles"), variant: "list", count: 8 }).ok).toBe(true);
     expect(validateSection({ ...section("campaign"), variant: "split" }).ok).toBe(true);
     expect(validateSection(section("hero")).ok).toBe(true);
   });
@@ -30,6 +31,7 @@ describe("section compositions (variant)", () => {
   test("given a composition of another template or an unknown one, when validated, then it is rejected", () => {
     expect(validateSection({ ...section("hero"), variant: "strip" } as Section).ok).toBe(false);
     expect(validateSection({ ...section("states"), variant: "feature" } as Section).ok).toBe(false);
+    expect(validateSection({ ...section("hero"), variant: "list" } as Section).ok).toBe(false);
     expect(validateSection({ ...section("product-carousel"), variant: "split" } as Section).ok).toBe(false);
     expect(validateSection({ ...section("campaign"), variant: "mosaic" } as never).ok).toBe(false);
   });

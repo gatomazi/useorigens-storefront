@@ -42,6 +42,7 @@ const VARIANT_CHOICES: Partial<Record<Section["template"], readonly (readonly [s
   "city-styles": [
     ["", "Grade", "O título em cima e os estilos em grade (até 4 por linha)."],
     ["split", "Título ao lado", "O título numa coluna e os estilos ao lado, três por linha (combina com 3 estilos). No celular, os cards rolam para o lado."],
+    ["list", "Lista com destaque", "O título numa coluna, os nomes dos estilos numa lista e UM card grande ao lado, o do estilo escolhido (clicar num nome, ou parar o mouse sobre ele, troca o card). Mostra todos os modelos (até 8) sem encher a tela. No celular, os nomes viram uma fileira que rola para o lado, com o card embaixo."],
   ],
   campaign: [
     ["", "Bloco escuro", "O texto sobre a foto (com véu) ou sobre a cor, com recortes de camisetas quando não há foto."],

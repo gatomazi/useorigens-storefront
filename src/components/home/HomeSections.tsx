@@ -106,9 +106,10 @@ export function HomeSections({
             const ownStore = storeForRegion(region);
             const entries = showcase.families.filter((f) => f.primary.commerceStoreKey === ownStore).slice(0, s.count ?? 8);
             if (entries.length === 0) return null;
-            const split = s.variant === "split";
+            const split = s.variant === "split" || s.variant === "list";
             const content = split ? (
-              // The heading in a column of its own beside the cards (three across from 768px; a row that scrolls on phones).
+              // The heading in a column of its own beside the cards (split: three across from 768px, a row that scrolls on phones; list: the styles'
+              // names with ONE card beside them, the style chosen).
               <div className="grid gap-6 md:gap-8 lg:grid-cols-12 lg:gap-10">
                 <div className="lg:col-span-4 xl:col-span-3">
                   <h2 id={s.headingId} className="t-h2">
@@ -120,7 +121,7 @@ export function HomeSections({
                   </div>
                 </div>
                 <div className="min-w-0 lg:col-span-8 xl:col-span-9">
-                  <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buy={cardButton} layout="split" />
+                  <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buy={cardButton} layout={s.variant === "list" ? "pick" : "split"} />
                 </div>
               </div>
             ) : (

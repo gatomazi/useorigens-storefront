@@ -3,6 +3,7 @@
 import type { FamilyCardModel } from "@/lib/catalog/family-card";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { FamilyCardView } from "./FamilyCardView";
+import { FamilyPickView } from "./FamilyPickView";
 
 /** Width of one style card: four columns from 1024px, three from 768px, two on phones (the same steps as ProductGrid and the search results). */
 export const FAMILY_CARD_SIZES = "(min-width: 1024px) 23vw, (min-width: 768px) 30vw, 46vw";
@@ -14,8 +15,9 @@ export const FAMILY_CARD_SIZES = "(min-width: 1024px) 23vw, (min-width: 768px) 3
 /** The split home composition: three columns beside the heading from 768px; on phones a row that scrolls sideways (a third card would sit alone). */
 const SPLIT_SIZES = "(min-width: 1024px) 19vw, (min-width: 768px) 30vw, 72vw";
 
-export function FamilyGridView({ cards, buy, layout = "grid" }: { cards: FamilyCardModel[]; buy?: CardBuy; layout?: "grid" | "split" }) {
+export function FamilyGridView({ cards, buy, layout = "grid" }: { cards: FamilyCardModel[]; buy?: CardBuy; layout?: "grid" | "split" | "pick" }) {
   if (cards.length === 0) return null;
+  if (layout === "pick") return <FamilyPickView cards={cards} buy={buy} />;
   if (layout === "split") {
     return (
       <ul className="no-scrollbar -mx-[var(--gutter)] flex snap-x snap-mandatory scroll-pl-[var(--gutter)] gap-3 overflow-x-auto px-[var(--gutter)] pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0 lg:gap-5">

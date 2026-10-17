@@ -33,6 +33,8 @@ describe("switching the home theme", () => {
     const t = doc.home!.sections;
     expect(t[0]).toMatchObject({ template: "hero", variant: "feature" });
     expect(t.map((s) => s.template).slice(0, 6)).toEqual(["hero", "states", "city-styles", "image-grid", "campaign", "product-carousel"]);
+    // The styles as a list of names with one card beside it: every model of the example city (up to eight).
+    expect(t[2]).toMatchObject({ variant: "list", count: 8 });
     expect(t.at(-1)!.template).toBe("footer");
     // The curated showcases the editorial composition already covers come along switched off, never deleted.
     expect(t.filter((s) => s.source?.kind === "editorial-module").every((s) => !s.active)).toBe(true);
