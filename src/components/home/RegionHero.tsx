@@ -152,8 +152,9 @@ const ALIGN_END = "lg:pr-[max(var(--gutter),calc(100%-var(--content-max)/2+var(-
  * product page as the three-card hero. The section's own colour (CMS fill) paints the product half; its picture (CMS image) takes the product's place
  * there as a banner, with the product's bar under it when there is a product.
  *
- * Phones: the reading area, then the product half full width (the search stays in the first screen). Neither a product nor a picture: the reading
- * area alone.
+ * Phones and tablets: the reading area, then the product as ONE compact row on the same tint (a thumbnail beside its name, place, price and call),
+ * so it never takes a screen of its own under the search; a picture keeps its band with the product's bar under it. Neither a product nor a picture:
+ * the reading area alone.
  */
 function FeatureHero({
   region, cityCount, product, copy, backdrop, buy, statesLink, panelColor, panelImage,
@@ -199,7 +200,7 @@ function FeatureHero({
         </div>
 
         {(product || panelImage) && (
-          <HeroPanel href={product?.href} color={panelColor}>
+          <HeroPanel href={product?.href} color={panelColor} row={!panelImage}>
             {panelImage ? (
               // A banner in the product's place (the owner's picture, its own crop and framing per screen); the product's bar stays under it.
               <span className="relative block min-h-[20rem] flex-1 sm:min-h-[24rem] lg:min-h-0">
@@ -207,15 +208,20 @@ function FeatureHero({
               </span>
             ) : (
               product && (
-                <span className={`flex flex-1 items-center justify-center px-[var(--gutter)] py-8 lg:py-14 ${ALIGN_END} lg:pl-14`}>
-                  <span className="block w-full max-w-[17rem] overflow-hidden rounded-md sm:max-w-[20rem] lg:max-w-[26rem]">
-                    <ProductPhoto src={product.imageUrl} alt={`Camiseta ${product.familyName} de ${product.cityName}`} sizes="(min-width: 1024px) 26rem, 20rem" priority className="photo-contain" />
+                // One picture for every width: a thumbnail in the phone's row, the large photo from 1024px.
+                <span className={`flex shrink-0 items-center justify-center py-4 pl-[var(--gutter)] lg:flex-1 lg:py-14 ${ALIGN_END} lg:pl-14`}>
+                  <span className="block w-24 overflow-hidden rounded-md sm:w-28 lg:w-full lg:max-w-[26rem]">
+                    <ProductPhoto src={product.imageUrl} alt={`Camiseta ${product.familyName} de ${product.cityName}`} sizes="(min-width: 1024px) 26rem, 7rem" priority className="photo-contain" />
                   </span>
                 </span>
               )
             )}
             {product && (
-              <span className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-t border-[rgb(var(--region-primary-rgb)/0.18)] bg-[rgb(var(--region-primary-rgb)/0.07)] px-[var(--gutter)] py-4 ${ALIGN_END} lg:pl-14 lg:py-5`}>
+              <span
+                className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-2 ${
+                  panelImage ? "border-t px-[var(--gutter)]" : "min-w-0 flex-1 py-4 pl-4 pr-[var(--gutter)] lg:flex-none lg:border-t lg:pl-14"
+                } border-[rgb(var(--region-primary-rgb)/0.18)] py-4 lg:bg-[rgb(var(--region-primary-rgb)/0.07)] ${panelImage ? "bg-[rgb(var(--region-primary-rgb)/0.07)]" : ""} ${ALIGN_END} lg:pl-14 lg:py-5`}
+              >
                 <span className="min-w-0">
                   <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
                   <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
@@ -240,9 +246,12 @@ function FeatureHero({
   );
 }
 
-/** The product half: ONE link to the product page when there is a product (the whole half answers the pointer), a plain block for a banner alone. */
-function HeroPanel({ href, color, children }: { href?: string; color?: string; children: ReactNode }) {
-  const className = `group relative isolate flex min-h-full flex-col text-ink ${color ? "" : "bg-[rgb(var(--region-primary-rgb)/0.13)]"}`;
+/**
+ * The product half: ONE link to the product page when there is a product (the whole half answers the pointer), a plain block for a banner alone.
+ * `row`: the product without a picture, a single row below 1024px (thumbnail beside its bar) and the column of the large photo from there.
+ */
+function HeroPanel({ href, color, row = false, children }: { href?: string; color?: string; row?: boolean; children: ReactNode }) {
+  const className = `group relative isolate flex min-h-full ${row ? "flex-row items-center lg:flex-col lg:items-stretch" : "flex-col"} text-ink ${color ? "" : "bg-[rgb(var(--region-primary-rgb)/0.13)]"}`;
   const style = color ? { background: color } : undefined;
   if (!href) return <div className={className} style={style}>{children}</div>;
   return (
