@@ -1,59 +1,82 @@
-import Link from "next/link";
-import { setHomeThemeAction } from "@/app/admin/actions";
+import { editHomeThemeAction, setHomeThemeAction } from "@/app/admin/actions";
 import type { RegionSlug } from "@/lib/geo/regions";
-import { EDITORIAL_COLORS } from "@/lib/site-config/navigation";
-import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
-import { HOME_THEMES, homeThemeOf, type HomeThemeName, type ScopeDoc } from "@/lib/site-config/schema";
+import { EDITORIAL_PALETTE, hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
+import { HOME_THEMES, type HomeThemeName, type ScopeDoc } from "@/lib/site-config/schema";
 import { REGION_THEME } from "@/lib/theme/region-theme";
 
 const ABOUT: Record<HomeThemeName, string> = {
-  original: "O visual que a loja já tem: header na cor da região, o cinza das fotos como fundo, e as seções nas composições de sempre.",
-  editorial: "A direção editorial aprovada: verde profundo, fundo creme e terracota pontual; abertura com um produto (ou banner) em destaque, faixa de estados, estilos com o título ao lado, cards de coleção e campanha dividida. A faixa do topo e o rodapé ficam no verde.",
+  original: "O visual que a loja já tem: header na cor da região, o cinza das fotos como fundo, as seções nas composições de sempre.",
+  editorial: "A direção editorial: verde profundo, fundo creme e terracota; abertura com produto ou banner em destaque, faixa de estados, cards de coleção e campanha dividida. Faixa do topo e rodapé no verde.",
 };
 
 /**
- * The THEME of the region's home, like the themes of a shop platform: two looks, each with its OWN sections (the same section types, edited in Home).
- * Switching only changes the draft (nothing is lost: the other theme's sections stay kept), and "Ver prévia" shows either theme without switching.
+ * The THEMES of the region's home, like the themes of a shop platform: each with its OWN sections and its OWN colours. The panel EDITS one theme at a
+ * time (Home and Aparência show and save only that theme's sections and colours) and, separately, chooses the theme the STORE uses. Editing a theme never
+ * puts it on the store; choosing the store's theme never loses the other one.
+ *
+ * `doc`: the region's document as the editor sees it (every theme is in it, in use or kept). `to`: the screen to come back to.
  */
-export function HomeThemeCard({ region, doc, live, rev, readOnly }: { region: RegionSlug; doc: ScopeDoc; live: ScopeDoc; rev: number | null; readOnly: boolean }) {
-  const inDraft = homeThemeOf(doc);
-  const onStore = homeThemeOf(live);
+export function HomeThemeCard({ region, doc, editing, active, live, rev, readOnly, to }: {
+  region: RegionSlug;
+  doc: ScopeDoc;
+  editing: HomeThemeName;
+  /** The theme the store uses in the draft. */
+  active: HomeThemeName;
+  /** The theme the store uses now (published). */
+  live: HomeThemeName;
+  rev: number | null;
+  readOnly: boolean;
+  to: "/admin/home" | "/admin/aparencia";
+}) {
   const swatches: Record<HomeThemeName, string[]> = {
     original: [REGION_THEME[region].primary, "#e5e5e5", REGION_THEME[region].accent, "#000000"],
-    editorial: [EDITORIAL_COLORS.brandPrimary, EDITORIAL_COLORS.pageBackground, EDITORIAL_COLORS.accent, "#dfe3d3"],
+    editorial: [EDITORIAL_PALETTE.colors.brandPrimary!, EDITORIAL_PALETTE.colors.pageBackground!, EDITORIAL_PALETTE.colors.accent!, "#dfe3d3"],
   };
+  const hidden = (theme: HomeThemeName) => (
+    <>
+      <input type="hidden" name="scope" value={region} />
+      <input type="hidden" name="rev" value={rev ?? "null"} />
+      <input type="hidden" name="home_theme" value={theme} />
+      <input type="hidden" name="to" value={to} />
+    </>
+  );
   return (
     <section id="tema-da-home" className="a-card scroll-mt-4 p-5" aria-labelledby="tema-da-home-titulo" data-testid="home-theme">
       <h2 id="tema-da-home-titulo" className="a-h2">Tema da home</h2>
-      <p className="a-muted mt-2 max-w-3xl">Dois temas, como numa plataforma de loja. Cada um tem as <strong>próprias seções</strong> (os mesmos tipos de seção, editados em <Link href="/admin/home" className="a-link">Home</Link>), e trocar de tema não apaga nada: as seções do outro ficam guardadas. A troca vale no rascunho; a loja muda quando a região for publicada. As cores que você definir abaixo, em Identidade visual, valem por cima do tema.</p>
-      <div className="mt-4 grid gap-4 md:grid-cols-2">
+      <p className="a-muted mt-2 max-w-3xl">Dois temas, como numa plataforma de loja: cada um tem as <strong>próprias seções</strong> e as <strong>próprias cores</strong>. Escolha qual tema editar; Home e Aparência passam a mostrar e salvar só o dele. Editar um tema não o coloca na loja: isso é o botão “Usar na loja”, que vale quando a região for publicada.</p>
+      <div className="mt-4 grid gap-4 md:grid-cols-2" role="group" aria-label="Temas da home">
         {HOME_THEMES.map((name) => {
-          const kept = name !== inDraft && Boolean(doc.homeThemes?.[name]);
+          const exists = hasHomeTheme(doc, name);
+          const isEditing = name === editing;
           return (
-            <div key={name} className={`border p-4 ${name === inDraft ? "border-black bg-white" : "border-black/20"}`} data-testid={`home-theme-${name}`}>
+            <div key={name} className={`border p-4 ${isEditing ? "border-black bg-white" : "border-black/20"}`} data-testid={`home-theme-${name}`} aria-current={isEditing ? "true" : undefined}>
               <div className="flex flex-wrap items-center gap-2">
                 <p className="text-[1.0625rem] font-extrabold">{HOME_THEME_LABEL[name]}</p>
-                {name === inDraft && <span className="a-badge ok">no rascunho</span>}
-                {name === onStore && <span className="a-badge">na loja</span>}
-                {kept && <span className="a-badge">seções guardadas</span>}
+                {isEditing && <span className="a-badge ok">editando</span>}
+                {name === active && <span className="a-badge">na loja{active !== live ? " (rascunho)" : ""}</span>}
+                {name === live && active !== live && <span className="a-badge">na loja agora</span>}
+                {!exists && <span className="a-badge">ainda não criado</span>}
               </div>
               <div className="mt-3 flex gap-1.5" aria-hidden="true">
                 {swatches[name].map((c, i) => <span key={i} className="h-6 w-10 border border-black/15" style={{ background: c }} />)}
               </div>
               <p className="a-muted mt-3 text-[0.875rem]">{ABOUT[name]}</p>
               <div className="mt-4 flex flex-wrap items-center gap-3">
-                {name !== inDraft && !readOnly && (
-                  <form action={setHomeThemeAction}>
-                    <input type="hidden" name="scope" value={region} />
-                    <input type="hidden" name="rev" value={rev ?? "null"} />
-                    <input type="hidden" name="home_theme" value={name} />
-                    <button type="submit" className="a-btn sm" data-testid={`use-home-theme-${name}`}>Usar o tema {HOME_THEME_LABEL[name]} no rascunho</button>
+                {!isEditing && !readOnly && (
+                  <form action={editHomeThemeAction}>
+                    {hidden(name)}
+                    <button type="submit" className="a-btn sm" data-testid={`edit-home-theme-${name}`}>{exists ? `Editar o tema ${HOME_THEME_LABEL[name]}` : `Criar e editar o tema ${HOME_THEME_LABEL[name]}`}</button>
                   </form>
                 )}
-                {(name === inDraft || kept) && (
-                  <a href={`/admin/preview?tema=${name}`} target="_blank" rel="noopener" className="a-link text-[0.875rem]">Ver prévia do tema {HOME_THEME_LABEL[name]}</a>
+                {exists && name !== active && !readOnly && (
+                  <form action={setHomeThemeAction}>
+                    {hidden(name)}
+                    <button type="submit" className="a-btn sm ghost" data-testid={`use-home-theme-${name}`}>Usar na loja</button>
+                  </form>
                 )}
-                {name !== inDraft && !kept && name === "editorial" && <span className="a-muted text-[0.8125rem]">Na primeira vez, o tema é montado com as seções atuais e as coleções reais da região.</span>}
+                {exists && (
+                  <a href={`/admin/preview?tema=${name}`} target="_blank" rel="noopener" className="a-link text-[0.875rem]">Ver prévia</a>
+                )}
               </div>
             </div>
           );

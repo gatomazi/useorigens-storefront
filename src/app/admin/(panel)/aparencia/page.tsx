@@ -3,10 +3,11 @@ import { Flash } from "@/components/admin/Flash";
 import { GlobalPendingNote } from "@/components/admin/GlobalPendingNote";
 import { ThemeEditor } from "@/components/admin/ThemeEditor";
 import { HomeThemeCard } from "@/components/admin/HomeThemeCard";
+import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { currentScope, REGION_SCOPES, scopeName } from "@/lib/admin/scope";
 import { canEdit } from "@/lib/admin/store/ports";
-import { loadWorkspace } from "@/lib/admin/workspace";
+import { loadEditorWorkspace, loadWorkspace } from "@/lib/admin/workspace";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
 import { CARD_BUY_STYLE_NAME } from "@/lib/site-config/cards-schema";
@@ -30,7 +31,8 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
   const scope = await currentScope(actor);
   const sp = await searchParams;
   const owner = actor.role === "owner";
-  const [ws, global] = await Promise.all([loadWorkspace(scope), loadWorkspace("global")]);
+  // The region's palette is the palette of the home theme being edited (each theme keeps its own).
+  const [ws, global] = await Promise.all([loadEditorWorkspace(scope), loadWorkspace("global")]);
   const launched = launchedRegions();
   // Real menu data per region for the previews (the home's own sections, launched regions, states that have products).
   const navByRegion = Object.fromEntries(
@@ -52,21 +54,20 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
       <Flash ok={sp.ok} err={sp.err} />
       <GlobalPendingNote global={global} owner={owner} />
 
-      <HomeThemeCard region={scope} doc={ws.doc} live={ws.baseDoc} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} />
+      <HomeThemeCard region={scope} doc={ws.doc} editing={ws.editingTheme} active={ws.activeTheme} live={ws.liveTheme} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} to="/admin/aparencia" />
 
       <ThemeEditor
-        key={`region-${scope}-${ws.record?.rev ?? "null"}`}
+        key={`region-${scope}-${ws.editingTheme}-${ws.record?.rev ?? "null"}`}
         scope={scope}
         region={scope}
         theme={ws.doc.theme}
         globalTheme={global.doc.theme}
-        homeTheme={ws.doc.homeTheme}
         navigation={ws.doc.navigation}
         navData={navByRegion}
         readOnly={!canEdit(actor, scope)}
         action={saveThemeAction}
         rev={String(ws.record?.rev ?? "null")}
-        title={`Identidade visual de ${scopeName(scope)}`}
+        title={`Cores do tema ${HOME_THEME_LABEL[ws.editingTheme]} · ${scopeName(scope)}`}
         note={inherits ? "Esta região herda a paleta da Use Origens." : "Escolha manter o visual atual, herdar a paleta global ou definir cores próprias."}
       />
 

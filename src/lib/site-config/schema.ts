@@ -58,6 +58,8 @@ export type Appearance = {
 export const HOME_THEMES = ["original", "editorial"] as const;
 export type HomeThemeName = (typeof HOME_THEMES)[number];
 export const homeThemeOf = (doc: Pick<ScopeDoc, "homeTheme"> | undefined): HomeThemeName => doc?.homeTheme ?? "original";
+/** A theme not in use: its sections and its palette, exactly as the theme in use keeps them in `home.sections` and `theme`. */
+export type KeptHomeTheme = { sections: Section[]; theme?: ThemeConfig };
 
 export type PageKind = "hotpage" | "categoryLanding";
 export const PAGE_KINDS: readonly PageKind[] = ["hotpage", "categoryLanding"];
@@ -355,8 +357,11 @@ export type ScopeDoc = {
    * with the very same section editor once the owner switches to it. Switching swaps the two lists; nothing is lost.
    */
   homeTheme?: Exclude<HomeThemeName, "original">;
-  /** The sections of the theme(s) not in use, kept as they were left (at most one entry per theme, never the one in use). */
-  homeThemes?: Partial<Record<HomeThemeName, { sections: Section[] }>>;
+  /**
+   * The theme(s) not in use, kept as they were left (at most one entry per theme, never the one in use): their sections and their own palette (`theme`,
+   * absent = the region's current look). The panel edits a kept theme in place, without putting it on the store.
+   */
+  homeThemes?: Partial<Record<HomeThemeName, KeptHomeTheme>>;
   /**
    * "Cupons e promoções" of this REGION: copyable coupons and announcements without a code, each with its own texts, order and optional window.
    * Absent or empty = no button anywhere. Published with the region (never with a page); the public reads only live items (site-config/promotions.ts).
@@ -1113,7 +1118,14 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
       for (const [name, kept] of Object.entries(input.homeThemes)) {
         if (!(HOME_THEMES as readonly string[]).includes(name)) c.fail(`doc.homeThemes.${name}`, "unknown theme");
         else if (name === inUse) c.fail(`doc.homeThemes.${name}`, "the theme in use lives in home.sections");
-        else checkHomeSections(c, `doc.homeThemes.${name}.sections`, isRecord(kept) ? kept.sections : undefined, sc);
+        else {
+          checkHomeSections(c, `doc.homeThemes.${name}.sections`, isRecord(kept) ? kept.sections : undefined, sc);
+          if (isRecord(kept) && kept.theme !== undefined) {
+            const r = validateTheme(kept.theme, sc, `doc.homeThemes.${name}.theme`);
+            if (!r.ok) for (const e of r.errors) c.fail(`doc.homeThemes.${name}.theme`, e);
+          }
+          if (isRecord(kept)) for (const key of Object.keys(kept)) if (key !== "sections" && key !== "theme") c.fail(`doc.homeThemes.${name}.${key}`, "unknown field");
+        }
       }
     }
   }

@@ -8,7 +8,7 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { composeForPreview } from "@/lib/admin/ops";
 import { withPreviewMedia } from "@/lib/admin/preview-media";
-import { loadWorkspace } from "@/lib/admin/workspace";
+import { editingHomeTheme, loadWorkspace } from "@/lib/admin/workspace";
 import { currentScope } from "@/lib/admin/scope";
 import { getRegionHome } from "@/lib/home";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
@@ -33,9 +33,11 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
   const customizerId = customizerParam && /^[A-Za-z0-9_-]{1,40}$/.test(customizerParam) ? customizerParam : null;
   const ws = await loadWorkspace(scope);
   const usingPublished = source === "published";
-  // ?tema=original|editorial: the home with THAT theme (the one in use, or the one kept), without switching anything.
-  const theme = (HOME_THEMES as readonly string[]).includes(tema ?? "") ? (tema as HomeThemeName) : null;
-  const doc = theme ? withHomeTheme(usingPublished ? ws.baseDoc : ws.doc, theme) : usingPublished ? ws.baseDoc : ws.doc;
+  // ?tema=original|editorial: the home with THAT theme (the one in use, or the one kept), without switching anything; none = the theme being edited.
+  const theme = (HOME_THEMES as readonly string[]).includes(tema ?? "") ? (tema as HomeThemeName) : await editingHomeTheme(ws.doc);
+  const source_ = usingPublished ? ws.baseDoc : ws.doc;
+  // A theme asked for by name must exist; the one being edited may not be published yet (then the published home is shown).
+  const doc = withHomeTheme(source_, theme) ?? (tema ? null : source_);
   if (!doc) notFound();
   const global = await loadWorkspace("global");
   const palette = resolveTheme(scope, doc, usingPublished ? global.baseDoc : global.doc);

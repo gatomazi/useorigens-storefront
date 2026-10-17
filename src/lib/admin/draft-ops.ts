@@ -19,7 +19,7 @@ import type { CardsConfig } from "../site-config/cards-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
 import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, type Appearance, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
-import { editorialSeed, type EditorialCollections } from "../site-config/home-themes";
+import { HOME_THEME_LABEL, hasHomeTheme, newEditorialTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
 import type { RegionSlug } from "../geo/regions";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid" | "variant">;
@@ -60,6 +60,13 @@ export type DraftOp =
    * built from the current sections with `collections`, the real collections the server found in the region's store).
    */
   | { type: "set-home-theme"; theme: HomeThemeName; collections?: EditorialCollections }
+  /** Sets up a theme the region does not have yet (the editorial one, built from the current sections), WITHOUT putting it in use. */
+  | { type: "create-home-theme"; theme: HomeThemeName; collections?: EditorialCollections }
+  /**
+   * Any other operation, applied to the sections (and palette) of `theme` instead of the theme in use: the panel edits a kept theme in place, and the
+   * theme in use is left exactly as it was.
+   */
+  | { type: "in-home-theme"; theme: HomeThemeName; op: DraftOp }
   /** The short descriptions of the menu's collections, all at once (the panel's form). An empty list removes them. */
   | { type: "set-collection-descriptions"; descriptions: CollectionNote[] }
   /**
@@ -168,20 +175,32 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-collection-menu-position" || op.type === "move-collection-menu" || op.type === "adopt-collection-menu") return editMenu(doc, op);
   if (op.type === "set-state-category" || op.type === "move-state-category" || op.type === "reset-state-categories") return editStateCategories(doc, op);
   if (op.type === "set-state-subcategory" || op.type === "reset-state-subcategories") return editStateSubcategories(doc, op);
-  if (op.type === "set-home-theme") {
+  if (op.type === "set-home-theme" || op.type === "create-home-theme") {
     if (doc.scope === "global" || !doc.home) return fail("only a region's home has a theme");
-    const from = homeThemeOf(doc);
-    if (from === op.theme) return { ok: true, doc };
-    const kept = { ...(doc.homeThemes ?? {}) };
-    const target = kept[op.theme]?.sections ?? (op.theme === "editorial" ? editorialSeed(doc.scope as RegionSlug, doc.home.sections, op.collections ?? {}, ctx.newId) : null);
-    if (!target) return fail("o tema Original não tem seções guardadas nesta região");
-    kept[from] = { sections: doc.home.sections };
-    delete kept[op.theme];
-    const next: ScopeDoc = { ...doc, home: { ...doc.home, sections: target }, homeThemes: kept };
-    if (op.theme === "original") delete next.homeTheme;
-    else next.homeTheme = op.theme;
+    const created = op.theme === "editorial" && !hasHomeTheme(doc, "editorial") ? newEditorialTheme(doc.scope as RegionSlug, doc.home.sections, op.collections ?? {}, ctx.newId) : undefined;
+    let next: ScopeDoc | null;
+    if (op.type === "set-home-theme") {
+      next = swapHomeTheme(doc, op.theme, created);
+      if (!next) return fail(`o tema ${HOME_THEME_LABEL[op.theme]} não existe nesta região`);
+    } else {
+      if (hasHomeTheme(doc, op.theme)) return { ok: true, doc };
+      if (!created) return fail(`o tema ${HOME_THEME_LABEL[op.theme]} não pode ser criado`);
+      next = { ...doc, homeThemes: { ...(doc.homeThemes ?? {}), [op.theme]: created } };
+    }
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "in-home-theme") {
+    if (doc.scope === "global" || op.theme === homeThemeOf(doc)) return applyOp(doc, op.op, ctx);
+    if (op.op.type === "in-home-theme" || op.op.type === "set-home-theme" || op.op.type === "create-home-theme") return fail("a theme operation is never applied inside another theme");
+    const view = swapHomeTheme(doc, op.theme);
+    if (!view) return fail(`o tema ${HOME_THEME_LABEL[op.theme]} ainda não foi criado nesta região`);
+    const r = applyOp(view, op.op, ctx);
+    if (!r.ok) return r;
+    const back = swapHomeTheme(r.doc, homeThemeOf(doc));
+    if (!back) return fail("the theme in use could not be restored");
+    const check = validateScopeDoc(back);
+    return check.ok ? { ok: true, doc: back, ...(r.focusId ? { focusId: r.focusId } : {}) } : { ok: false, errors: check.errors };
   }
   if (op.type === "set-collection-descriptions") {
     if (doc.scope === "global") return fail("global has no collections");

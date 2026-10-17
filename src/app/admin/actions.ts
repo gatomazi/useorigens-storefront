@@ -27,7 +27,7 @@ import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collec
 import { MUNDO_MODOS, type MundoModo } from "@/lib/site-config/mundo-schema";
 import { DEFAULT_BUY_LABEL, HOME_THEMES, isUmaPencaSource, MAX_BUY_LABEL, MAX_COLLECTION_NOTE, maxSectionProducts, MIN_SECTION_PRODUCTS, type CollectionNote, type HomeThemeName, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { CARD_BUY_STYLE_NAME, postedBuyStyle } from "@/lib/site-config/cards-schema";
-import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
+import { hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
 import { editorialCollections } from "@/lib/catalog/editorial-collections";
 import { sourceProblem } from "@/lib/admin/validate-draft";
 import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
@@ -41,7 +41,7 @@ import { buildRegionSeed } from "@/lib/admin/region-seed";
 import { STRUCTURED_TEMPLATES, type StructuredTemplate } from "@/lib/site-config/structured";
 import { launchBlockers } from "@/lib/admin/launch";
 import { isRegionScope, REGION_SCOPES, SCOPE_COOKIE, scopeName, scopeOf, storeOf } from "@/lib/admin/scope";
-import { applyAndSave, discardDraft, loadWorkspace, type SaveOutcome } from "@/lib/admin/workspace";
+import { applyAndSave, discardDraft, EDIT_THEME_COOKIE, loadEditorWorkspace, loadWorkspace, type SaveOutcome } from "@/lib/admin/workspace";
 import type { DraftOp } from "@/lib/admin/draft-ops";
 import { parseNavigationForm, parseThemeForm, readableNavigationError } from "@/lib/admin/navigation-form";
 import { themeProblems } from "@/lib/site-config/navigation";
@@ -199,7 +199,8 @@ export async function removeSection(fd: FormData) {
 export async function saveSection(fd: FormData) {
   const { scope } = await editScope(fd);
   const id = text(fd, "id");
-  const ws = await loadWorkspace(scope);
+  // The home's sections of the theme being edited (a kept theme's too); pages are the same in every theme.
+  const ws = await loadEditorWorkspace(scope);
   const pageId = text(fd, "page");
   const container = pageId ? ws.doc.pages?.find((p) => p.id === pageId)?.sections : ws.doc.home?.sections;
   const section = container?.find((s) => s.id === id);
@@ -397,14 +398,42 @@ export async function setStatePageSectionAction(fd: FormData) {
 }
 
 /** Menu: a region from before the collection menu keeps what it shows and the INK navbar starts following it (once published). */
+const HOME_THEME_SCREENS = ["/admin/home", "/admin/aparencia"] as const;
+const themeScreen = (fd: FormData) => {
+  const to = text(fd, "to");
+  return (HOME_THEME_SCREENS as readonly string[]).includes(to) ? to : "/admin/home";
+};
+
 /**
- * Aparência: the THEME of the region's home ("original" / "editorial"). The current sections are kept under the current theme and the chosen theme's
- * come back; the editorial theme, the first time, is built from the current sections and the region's real collections. Saved in the draft only.
+ * Which home theme the panel EDITS in this region (Home and Aparência show and save that theme's sections and palette). Choosing one the region does not
+ * have yet creates it (the editorial one is built from the current sections and the region's real collections) WITHOUT putting it on the store.
+ */
+export async function editHomeThemeAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const theme = text(fd, "home_theme") as HomeThemeName;
+  const here = themeScreen(fd);
+  if (!(HOME_THEMES as readonly string[]).includes(theme)) back(here, { err: ["Tema desconhecido."] });
+  const ws = await loadWorkspace(scope);
+  let created = false;
+  if (!hasHomeTheme(ws.doc, theme)) {
+    const outcome = await applyAndSave(scope, { type: "create-home-theme", theme, collections: editorialCollections(scope, ws.doc) }, revNumber(fd), actor);
+    if (!outcome.ok) back(here, { err: outcome.errors });
+    await audit(actor, "draft.save", scope, `create-home-theme:${theme}`);
+    created = true;
+  }
+  (await cookies()).set(EDIT_THEME_COOKIE, theme, { httpOnly: true, secure: true, sameSite: "lax", path: "/admin", maxAge: 60 * 60 * 24 * 30 });
+  revalidatePath("/admin", "layout");
+  back(`${here}${here === "/admin/aparencia" ? "#tema-da-home" : ""}`, { ok: created ? `Tema ${HOME_THEME_LABEL[theme]} criado no rascunho, a partir das seções atuais. Agora você edita as seções e as cores dele; a loja continua no tema de antes até você escolher este para a loja e publicar.` : `Editando o tema ${HOME_THEME_LABEL[theme]}: as seções e as cores mostradas são as dele.` });
+}
+
+/**
+ * The home theme the STORE uses (in the draft; live once the region is published). The current theme's sections and palette are kept; the chosen one's
+ * come in (created first if the region does not have it). The panel goes on editing the theme it was editing.
  */
 export async function setHomeThemeAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const theme = text(fd, "home_theme") as HomeThemeName;
-  const here = "/admin/aparencia";
+  const here = themeScreen(fd);
   if (!(HOME_THEMES as readonly string[]).includes(theme)) back(here, { err: ["Tema desconhecido."] });
   const ws = await loadWorkspace(scope);
   const collections = theme === "editorial" ? editorialCollections(scope, ws.doc) : undefined;
@@ -412,7 +441,7 @@ export async function setHomeThemeAction(fd: FormData) {
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(here, { err: outcome.errors });
   await audit(actor, "draft.save", scope, `set-home-theme:${theme}`);
-  back(`${here}#tema-da-home`, { ok: `Rascunho: a home de ${scopeName(scope)} agora usa o tema ${HOME_THEME_LABEL[theme]}. As seções do outro tema ficam guardadas. Confira em Home e na prévia, e publique para valer na loja.` });
+  back(`${here}${here === "/admin/aparencia" ? "#tema-da-home" : ""}`, { ok: `Rascunho: a loja de ${scopeName(scope)} passa a usar o tema ${HOME_THEME_LABEL[theme]} quando a região for publicada. As seções e as cores do outro tema ficam guardadas.` });
 }
 
 /**
@@ -614,7 +643,7 @@ export async function saveThemeAction(fd: FormData) {
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back("/admin/aparencia", { err: outcome.errors });
   await audit(actor, "draft.save", scope, "set-theme");
-  const saved = (await loadWorkspace(scope)).doc;
+  const saved = (await loadEditorWorkspace(scope)).doc; // the palette of the home theme being edited
   const problems = saved.theme ? themeProblems(scope, saved, (await loadWorkspace("global")).doc) : { blocking: [], warnings: [] };
   const what = scope === "global" ? "da Use Origens" : `de ${scopeName(scope)}`;
   if (problems.blocking.length > 0) back("/admin/aparencia", { err: [`Rascunho ${what} salvo, mas NÃO poderá ser publicado assim:`, ...problems.blocking] });

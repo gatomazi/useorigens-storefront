@@ -18,7 +18,6 @@ import {
   type ThemeConfig,
   type ThemeMode,
 } from "@/lib/site-config/navigation";
-import type { HomeThemeName } from "@/lib/site-config/schema";
 
 type Mode = ThemeMode | "none";
 
@@ -40,10 +39,8 @@ const LEVEL_TEXT = { ok: "OK", warning: "Abaixo do AA", blocking: "Bloqueia a pu
  * the contrast of every text/background pair and the two previews are computed from what is typed, with the same rules the publisher enforces. A colour
  * left empty is "not set" and keeps the region's current one.
  */
-export function ThemeEditor({ scope, region, theme, globalTheme, homeTheme, navigation, navData, readOnly, action, rev, title, note }: {
+export function ThemeEditor({ scope, region, theme, globalTheme, navigation, navData, readOnly, action, rev, title, note }: {
   scope: "global" | RegionSlug;
-  /** The region's home theme: the editorial one is the base of the palette (its colours show as "do tema"). */
-  homeTheme?: HomeThemeName;
   region: RegionSlug;
   theme: ThemeConfig | undefined;
   globalTheme: ThemeConfig | undefined;
@@ -74,8 +71,8 @@ export function ThemeEditor({ scope, region, theme, globalTheme, homeTheme, navi
   const shownRegion = isGlobal ? previewRegion : region;
   // Global palette preview: what a region that INHERITS it would look like.
   const resolved = useMemo(
-    () => (isGlobal ? resolveTheme(shownRegion, { theme: { mode: "inherit", colors: {} } }, { theme: current }) : resolveTheme(shownRegion, { theme: current, homeTheme: homeTheme === "editorial" ? "editorial" : undefined }, { theme: globalTheme })),
-    [isGlobal, shownRegion, current, globalTheme, homeTheme],
+    () => (isGlobal ? resolveTheme(shownRegion, { theme: { mode: "inherit", colors: {} } }, { theme: current }) : resolveTheme(shownRegion, { theme: current }, { theme: globalTheme })),
+    [isGlobal, shownRegion, current, globalTheme],
   );
   const contrast = useMemo(() => themeContrast(resolved.effective), [resolved]);
   const preview = useMemo(() => assembleNavigation(shownRegion, isGlobal ? undefined : navigation, navData[shownRegion]), [isGlobal, shownRegion, navigation, navData]);
@@ -121,7 +118,7 @@ export function ThemeEditor({ scope, region, theme, globalTheme, homeTheme, navi
                 <label className="a-label" htmlFor={`${scope}-${key}`}>{THEME_COLOR_LABEL[key]}</label>
                 <div className="flex items-center gap-2">
                   <input aria-label={`${THEME_COLOR_LABEL[key]}: seletor de cor`} type="color" value={shown} disabled={!editable} onChange={(e) => setColors((c) => ({ ...c, [key]: e.target.value }))} className="h-10 w-12 shrink-0 cursor-pointer border border-black/38 bg-white p-0.5 disabled:cursor-not-allowed" />
-                  <input id={`${scope}-${key}`} name={`color_${key}`} className="a-input font-mono" placeholder={resolved.origin[key] === "default" ? `${shown} (atual)` : resolved.origin[key] === "theme" ? `${shown} (do tema)` : shown} value={mode === "override" ? colors[key] : ""} disabled={!editable} onChange={(e) => setColors((c) => ({ ...c, [key]: e.target.value }))} spellCheck={false} autoComplete="off" maxLength={7} data-testid={`color-${key}`} />
+                  <input id={`${scope}-${key}`} name={`color_${key}`} className="a-input font-mono" placeholder={resolved.origin[key] === "default" ? `${shown} (atual)` : shown} value={mode === "override" ? colors[key] : ""} disabled={!editable} onChange={(e) => setColors((c) => ({ ...c, [key]: e.target.value }))} spellCheck={false} autoComplete="off" maxLength={7} data-testid={`color-${key}`} />
                 </div>
                 <p className="a-muted mt-1 text-[0.75rem]">{HINT[key]}{mode !== "none" && resolved.origin[key] === "global" ? " Vem do global." : ""}</p>
               </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { HomeThemeCard } from "@/components/admin/HomeThemeCard";
+import { canEdit } from "@/lib/admin/store/ports";
 import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
-import { homeThemeOf } from "@/lib/site-config/schema";
 import { addCollectionSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, setSectionActive } from "@/app/admin/actions";
 import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
@@ -10,7 +11,7 @@ import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { collectionProblems, sectionReadability, sourceStatus } from "@/lib/admin/validate-draft";
-import { loadWorkspace } from "@/lib/admin/workspace";
+import { loadEditorWorkspace } from "@/lib/admin/workspace";
 import { currentScope, scopeName, storeOf } from "@/lib/admin/scope";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
 import { toComboEntries } from "@/lib/admin/combo";
@@ -54,7 +55,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const scope = await currentScope(actor);
   const store = storeOf(scope);
   const sp = await searchParams;
-  const ws = await loadWorkspace(scope);
+  const ws = await loadEditorWorkspace(scope);
   const rev = ws.record?.rev ?? null;
   const sections = ws.doc.home?.sections ?? [];
   const entries = toComboEntries(libraryEntries(store, enabledInternalIds(ws.doc, store)));
@@ -68,8 +69,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="a-h1">Home · Seções <span className="a-muted">· {scopeName(scope)} · tema {HOME_THEME_LABEL[homeThemeOf(ws.doc)]}</span></h1>
-          <p className="a-muted mt-1 text-[0.875rem]" data-testid="home-theme-note">Estas são as seções do tema <strong>{HOME_THEME_LABEL[homeThemeOf(ws.doc)]}</strong>{homeThemeOf(ws.baseDoc) !== homeThemeOf(ws.doc) ? ` (na loja ainda está o ${HOME_THEME_LABEL[homeThemeOf(ws.baseDoc)]})` : ""}. O outro tema guarda as dele; troque em <Link href="/admin/aparencia#tema-da-home" className="a-link">Aparência → Tema da home</Link>.</p>
+          <h1 className="a-h1">Home · Seções <span className="a-muted">· {scopeName(scope)} · tema {HOME_THEME_LABEL[ws.editingTheme]}</span></h1>
+
           <p className="a-muted mt-2 max-w-2xl">A ordem abaixo é a ordem da home: arraste uma seção pela alça para mudá-la de lugar (a ordem é salva no rascunho ao soltar). O hero fica sempre no topo e o rodapé no fim. As seções originais podem ser editadas, movidas e ocultadas; só as criadas aqui podem ser removidas.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -78,6 +79,8 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         </div>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
+      {/* Only the sections of the theme being edited: each theme has its own (add, edit and order them here, for that theme alone). */}
+      <HomeThemeCard region={scope} doc={ws.doc} editing={ws.editingTheme} active={ws.activeTheme} live={ws.liveTheme} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} to="/admin/home" />
       {problems.length > 0 && (
         <div className="a-flash err">
           <p className="font-extrabold">Estas seções não aparecerão na loja até serem corrigidas:</p>

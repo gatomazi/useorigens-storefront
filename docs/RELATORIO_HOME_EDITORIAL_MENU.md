@@ -7,7 +7,12 @@ A home passou a ter **dois temas**, como numa plataforma de loja:
 - **Original:** o visual de hoje.
 - **Editorial:** a direção aprovada, com verde profundo, creme e terracota.
 
-Os dois temas usam os mesmos tipos de seção, editados no mesmo editor (Home), e cada um **guarda as próprias seções**. A troca fica em **Aparência → Tema da home**: vale no rascunho e não apaga nada. Sem trocar e publicar, a loja continua no Original.
+Cada tema tem as **próprias seções** e as **próprias cores**. No painel, há duas escolhas separadas:
+
+- **Qual tema editar.** Home e Aparência mostram e salvam só as seções e as cores desse tema, inclusive para criar seções novas.
+- **Qual tema vai para a loja** (botão "Usar na loja"). Vale quando a região for publicada.
+
+Editar um tema não o coloca na loja, e trocar o tema da loja não apaga o outro. Sem trocar e publicar, a loja continua no Original.
 
 **O que muda com o deploy, sem passar pelo painel:**
 
@@ -36,12 +41,24 @@ npm run cms:dev                            # depois: /admin/publicar → "Public
 
 | | Original | Editorial |
 | --- | --- | --- |
-| Paleta | a da região (oliva, cinza das fotos), ou a definida em Aparência | verde profundo `#213b30`, creme `#f7f3ec`, terracota `#b0472f`; as cores de Aparência valem por cima, uma a uma |
-| Faixa do topo e rodapé | preta / fundo da página | no verde do tema (as cores próprias da faixa, no painel, continuam valendo) |
-| Seções | as de hoje | montadas na primeira troca a partir das atuais: abertura "Um produto em destaque", faixa de estados, estilos com o título ao lado, cards de coleção (A/B), campanha dividida e seleção de Novidades. O resto vem junto: as vitrines que os cards e a campanha já cobrem ficam desligadas, e as demais (como Canecas) continuam como estavam. |
-| Edição | Home, como sempre | Home, igual: mesmos tipos de seção e mesmas opções |
+| Cores | as de hoje (ou as definidas em Aparência) | começa com verde profundo `#213b30`, creme `#f7f3ec` e terracota `#b0472f`, como paleta própria do tema: **todas editáveis** em Aparência, sem trava |
+| Faixa do topo e rodapé | preta / fundo da página | na cor principal do tema (seguem a cor quando você a edita; as cores próprias da faixa, no painel, continuam valendo) |
+| Seções | as de hoje | criadas na primeira vez a partir das atuais: abertura "Um produto em destaque", faixa de estados, estilos com o título ao lado, cards de coleção (A/B), campanha dividida e seleção de Novidades. As vitrines já cobertas vêm desligadas; as demais (como Canecas) continuam como estavam. |
+| Edição | Home e Aparência, com o tema escolhido para edição | igual: mesmos tipos de seção e mesmas opções; cada tema tem o cadastro dele |
 
-A troca de tema é testada nos dois sentidos: Original → Editorial → Original devolve cada tema exatamente como foi deixado. Se o tema guardado no arquivo publicado estiver inválido, só ele é descartado; a home continua.
+**Como usar no painel** (cartão **Tema da home**, no topo da Home e da Aparência):
+
+- **Editar o tema X:** a Home passa a listar só as seções de X, e criar, editar, ordenar ou ocultar vale só para X. A Aparência mostra as cores de X.
+- **Criar e editar o tema Editorial:** na primeira vez, ele é montado a partir das seções atuais, sem ir para a loja.
+- **Usar na loja:** define o tema da loja no rascunho; vale ao publicar a região.
+- **Ver prévia:** mostra qualquer tema. A prévia sem parâmetro mostra o tema em edição.
+- **Publicar:** o resumo diz o que mudou também no tema que não está na loja, por exemplo "Tema Original (fora da loja): seções alteradas".
+
+Garantias testadas:
+
+- Original → Editorial → Original devolve cada tema exatamente como foi deixado, seções e cores.
+- Editar o tema que não está na loja não toca no tema da loja.
+- Se o tema guardado no arquivo publicado estiver inválido, só ele é descartado; a home continua.
 
 A terracota só vira cor de texto (última linha do título, siglas dos estados) quando tem contraste com o fundo, de pelo menos 3:1 em título grande; senão, esses textos usam a cor principal.
 
@@ -92,9 +109,9 @@ O Pódio ("Quem está no pódio?") continua logo depois dos estados, com respiro
 
 | Onde | Opção |
 | --- | --- |
-| Aparência → Tema da home | Original ou Editorial, cada um com as próprias seções; "Ver prévia" de cada tema. |
+| Home e Aparência → Tema da home | Qual tema editar (Original / Editorial), criar o Editorial, qual tema vai para a loja, prévia de cada um. |
 | Home → seção de abertura | Composição: "Três produtos" (atual) ou "Um produto em destaque" (o primeiro dos produtos escolhidos; a última linha do título fica na cor de destaque). Cor de fundo: pinta a metade do produto. Imagem do celular e do desktop: um banner no lugar do produto. Enquadramento. |
-| Aparência → Identidade visual | Paleta da região (já existia): vale por cima do tema, cor a cor. |
+| Aparência → Cores do tema | As cores do tema em edição, todas editáveis (cada tema tem as suas). |
 | Home → Escolha seu estado | Composição: "Cartões com capa" (atual) ou "Faixa compacta". Cor de fundo. |
 | Home → Estilos da cidade | Composição: "Grade" (atual) ou "Título ao lado". Quantidade de estilos. |
 | Home → Campanha | Composição: "Bloco escuro" (atual) ou "Dividida". A imagem vira a metade da foto; sem imagem, entram duas camisetas da coleção do botão. A cor pinta o lado do texto. |
@@ -119,7 +136,13 @@ Detalhes e evidências em `docs/screenshots/home-editorial/`.
   - celular 390: 0,91 MB → 0,23 MB (51 → 14).
 
   É peso de imagens; não é medida de conversão.
-- **Testes:** unitários 1610 de 1610 (28 novos, 11 deles dos temas).
+- **Testes:** unitários 1613 de 1613 (31 novos, 14 deles dos temas).
+- **Painel, fluxo real:**
+  - editar o Original mostra só as seções dele;
+  - uma seção criada nele vai só para ele (o Editorial e a loja não mudam);
+  - as cores do Editorial aparecem preenchidas e editáveis;
+  - a prévia mostra o tema em edição;
+  - descartar devolve tudo.
 - **e2e da vitrine:** `sul`, `tracking-and-nav`, `mobile-menu`, `global-search`, `seo`, `city-garment-tabs`, `share-size-guide` e `cart-mirror`, 192 testes. Ficam só as 4 falhas que já existiam:
   - a altura da página de estado, que mede os mesmos 6809 px sem as minhas mudanças;
   - 3 testes do seletor "Sul", que não existe com uma região só no ar.

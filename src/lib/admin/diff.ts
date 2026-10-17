@@ -4,8 +4,8 @@ import { podioEnabledIn } from "../site-config/podio-schema";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
-import { homeThemeOf, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
-import { HOME_THEME_LABEL } from "../site-config/home-themes";
+import { HOME_THEMES, homeThemeOf, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
+import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
@@ -24,13 +24,24 @@ export type CollectionNamer = (ref: CollectionRef) => string | null;
 export type CollectionVisibility = (ref: CollectionRef) => boolean;
 
 export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer = () => null, isPublic: CollectionVisibility = () => true): Change[] {
-  const before = published.home?.sections ?? [];
+  // Sections and colours are compared with the SAME theme as published (switching themes is one line, not every section of both).
+  const sameTheme = swapHomeTheme(published, homeThemeOf(draft)) ?? published;
+  const before = sameTheme.home?.sections ?? [];
   const after = draft.home?.sections ?? [];
   const changes: Change[] = [];
   // The home's theme first: when it changes, every section below is the other theme's (the previous ones stay kept, not deleted).
   const themeWas = homeThemeOf(published);
   const themeNow = homeThemeOf(draft);
   if (themeWas !== themeNow) changes.push({ kind: "theme", sectionId: "home-theme", text: `Tema da home: ${HOME_THEME_LABEL[themeWas]} → ${HOME_THEME_LABEL[themeNow]} (as seções do ${HOME_THEME_LABEL[themeWas]} ficam guardadas)` });
+  // A theme that is not on the store (kept) is published with the region too: say what changed in it, in one line.
+  for (const name of HOME_THEMES) {
+    if (name === themeNow) continue;
+    const was = name === themeWas ? { sections: published.home?.sections ?? [], ...(published.theme ? { theme: published.theme } : {}) } : published.homeThemes?.[name];
+    const now = draft.homeThemes?.[name];
+    if (!now || json(was) === json(now)) continue;
+    const parts = !was ? ["criado"] : [json(was.sections) !== json(now.sections) ? "seções alteradas" : "", json(was.theme) !== json(now.theme) ? "cores alteradas" : ""].filter(Boolean);
+    changes.push({ kind: "theme", sectionId: `home-theme:${name}`, text: `Tema ${HOME_THEME_LABEL[name]} (fora da loja): ${parts.join(" e ")}` });
+  }
   const beforeIds = new Set(before.map((s) => s.id));
   const afterIds = new Set(after.map((s) => s.id));
   for (const s of after) if (!beforeIds.has(s.id)) changes.push({ kind: "added", sectionId: s.id, text: `Nova seção "${label(s)}"` });
@@ -55,7 +66,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(published, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft));
   return changes;
 }
 

@@ -9,7 +9,8 @@
  * off, the rest as they were. From then on the owner edits that theme like any home.
  */
 import type { RegionSlug } from "../geo/regions";
-import type { Appearance, CollectionRef, GridTile, HomeThemeName, ScopeDoc, Section } from "./schema";
+import type { ThemeConfig } from "./navigation-schema";
+import { homeThemeOf, type Appearance, type CollectionRef, type GridTile, type HomeThemeName, type KeptHomeTheme, type ScopeDoc, type Section } from "./schema";
 import { structuredDefaults, uniqueAnchor } from "./structured";
 
 export const HOME_THEME_LABEL: Record<HomeThemeName, string> = { original: "Original", editorial: "Editorial" };
@@ -130,16 +131,45 @@ export function editorialSeed(region: RegionSlug, sections: readonly Section[], 
   return out;
 }
 
+/** The editorial theme's own palette when it is created: deep green, warm cream, terracotta. An ordinary palette from then on (Aparência edits it). */
+export const EDITORIAL_PALETTE: ThemeConfig = {
+  mode: "override",
+  colors: { brandPrimary: "#213b30", headerBackground: "#f7f3ec", headerText: "#213b30", mobileMenuBackground: "#213b30", mobileMenuText: "#ffffff", accent: "#b0472f", pageBackground: "#f7f3ec", pageText: "#213b30" },
+};
+
+/** A new editorial theme for a region, built from the sections it has now (see `editorialSeed`), with the editorial palette. */
+export function newEditorialTheme(region: RegionSlug, sections: readonly Section[], collections: EditorialCollections, newId: () => string): KeptHomeTheme {
+  return { sections: editorialSeed(region, sections, collections, newId), theme: structuredClone(EDITORIAL_PALETTE) };
+}
+
 /**
- * The document as it would be with `name` in use, for a PREVIEW only (nothing is saved): the kept theme's sections take the place of the current ones.
- * Null when that theme has nothing kept (it was never set up in this region).
+ * The document with `name` in use: its sections and palette come in, the current theme's go into `homeThemes`, untouched. `created` is used when that
+ * theme was never set up (null: nothing to swap to). Pure and lossless: swapping back gives the very same document.
  */
-export function withHomeTheme(doc: ScopeDoc, name: HomeThemeName): ScopeDoc | null {
-  if ((doc.homeTheme ?? "original") === name) return doc;
-  const kept = doc.homeThemes?.[name]?.sections;
-  if (!kept || !doc.home) return null;
-  const next: ScopeDoc = { ...doc, home: { ...doc.home, sections: kept } };
+export function swapHomeTheme(doc: ScopeDoc, name: HomeThemeName, created?: KeptHomeTheme): ScopeDoc | null {
+  const from = homeThemeOf(doc);
+  if (from === name) return doc;
+  if (!doc.home) return null;
+  const kept = { ...(doc.homeThemes ?? {}) };
+  const target = kept[name] ?? created;
+  if (!target) return null;
+  kept[from] = { sections: doc.home.sections, ...(doc.theme ? { theme: doc.theme } : {}) };
+  delete kept[name];
+  const next: ScopeDoc = { ...doc, home: { ...doc.home, sections: target.sections }, homeThemes: kept };
+  if (target.theme) next.theme = target.theme;
+  else delete next.theme;
   if (name === "original") delete next.homeTheme;
   else next.homeTheme = name;
   return next;
+}
+
+/** Whether the region has `name` set up (in use, or kept). */
+export const hasHomeTheme = (doc: Pick<ScopeDoc, "homeTheme" | "homeThemes">, name: HomeThemeName): boolean => homeThemeOf(doc) === name || Boolean(doc.homeThemes?.[name]);
+
+/**
+ * The document as it would be with `name` in use, for a PREVIEW or for EDITING a kept theme in the panel (the same swap, nothing saved by itself). Null
+ * when that theme has nothing kept (it was never set up in this region).
+ */
+export function withHomeTheme(doc: ScopeDoc, name: HomeThemeName): ScopeDoc | null {
+  return swapHomeTheme(doc, name);
 }
