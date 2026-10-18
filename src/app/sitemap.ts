@@ -15,14 +15,14 @@ export const dynamic = "force-dynamic";
  * Only URLs that answer 200 and are meant to rank: launched regions, states and places with real products (cities, and the Federal District's
  * administrative regions that have products — an RA with none answers 404, so it is never listed), the design-family pages that
  * exist for a place, and CMS pages the owner marked indexable. Left out on purpose: /busca and /personalizar (noindex), request tokens,
- * /admin and /api, and `/` (redirects to /sul).
+ * /admin and /api. The root is the public region chooser.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const catalog = getCatalog();
   const lastModified = catalog.syncedAt ? new Date(catalog.syncedAt) : undefined;
   const entry = (path: string): MetadataRoute.Sitemap[number] => ({ url: `${SITE_URL.replace(/\/$/, "")}${path}`, ...(lastModified ? { lastModified } : {}) });
 
-  const entries: MetadataRoute.Sitemap = [];
+  const entries: MetadataRoute.Sitemap = [{ url: `${SITE_URL.replace(/\/$/, "")}/` }];
   const cmsBundle = siteConfigHomeEnabled() ? homeBundle() : null;
 
   for (const region of launchedRegions()) {

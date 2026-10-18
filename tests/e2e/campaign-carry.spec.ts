@@ -74,11 +74,15 @@ test.describe("campaign carried to INK", () => {
     await expect(card).toHaveAttribute("href", rendered!);
   });
 
-  test("given the bare domain with a campaign, then the redirect to /sul keeps the whole query", async ({ page }) => {
-    const response = await page.request.get(`/?${LANDING_QUERY}`, { maxRedirects: 0 });
-    expect(response.status()).toBe(307);
-    expect(response.headers().location).toBe(`/sul?${LANDING_QUERY}`);
-    const plain = await page.request.get("/", { maxRedirects: 0 });
-    expect(plain.headers().location).toBe("/sul");
+  test("given the bare domain with a campaign, then the region chooser keeps the whole query when Sul is selected", async ({ page }) => {
+    const response = await page.goto(`/?${LANDING_QUERY}`);
+    expect(response!.status()).toBe(200);
+    await expect(page).toHaveURL(`/?${LANDING_QUERY}`);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Seu lugar começa aqui.");
+    await expect(page.getByRole("link", { name: "Explorar Sul", exact: true })).toHaveAttribute("href", `/sul?${LANDING_QUERY}`);
+    await expect(page.getByRole("link", { name: "Explorar Norte", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Explorar Centro-Oeste", exact: true })).toBeVisible();
+    await page.getByRole("heading", { name: "Sul", exact: true }).click();
+    await expect(page).toHaveURL(`/sul?${LANDING_QUERY}`);
   });
 });
