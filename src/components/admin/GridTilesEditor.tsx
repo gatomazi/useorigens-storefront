@@ -1,5 +1,6 @@
 "use client";
 
+import { GRID_BANNER_MOBILE, GRID_TILE, sizeHintText } from "@/lib/admin/image-sizes";
 import { useRef, useState } from "react";
 import type { ComboEntry } from "@/components/admin/CollectionCombobox";
 import type { MediaOption } from "@/components/admin/SectionEditorForm";
@@ -197,6 +198,7 @@ export function GridTilesEditor({
                         {uploads.length > 0 && <optgroup label="Enviadas">{uploads.map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
                         <optgroup label="Banners do projeto">{banners.map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>
                       </select>
+                      <p className="a-muted mt-1 text-[0.8125rem]">{sizeHintText(GRID_TILE[aspect])}</p>
                     </div>
                     {r.format === "banner" && (
                       <>
@@ -208,6 +210,7 @@ export function GridTilesEditor({
                               {uploads.length > 0 && <optgroup label="Enviadas">{uploads.map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
                               <optgroup label="Banners do projeto">{banners.map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>
                             </select>
+                            <p className="a-muted mt-1 text-[0.8125rem]">{sizeHintText(GRID_BANNER_MOBILE)}</p>
                           </div>
                           <div>
                             <label className="a-label" htmlFor={id("alt")}>Texto alternativo (opcional)</label>

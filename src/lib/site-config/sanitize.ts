@@ -142,6 +142,18 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
         }));
         sections[sections.length - 1] = { ...last, stateCovers: Object.keys(kept).length > 0 ? kept : undefined };
       }
+      // A product's banner the table does not know is dropped: that product shows with the section's picture (or its own photo), never a broken one.
+      const hero = sections[sections.length - 1];
+      if (hero.featured?.some((f) => f.image && !(f.image.assetId in media))) {
+        sections[sections.length - 1] = {
+          ...hero,
+          featured: hero.featured.map(({ image, ...ref }) => {
+            if (!image || image.assetId in media) return image ? { ...ref, image } : ref;
+            diagnostics.push(`${scope}: "${section.id}" banner of product ${ref.productId} "${image.assetId}" is not in the media table and was dropped`);
+            return ref;
+          }),
+        };
+      }
     }
     if (sections[0]?.template !== "hero" || sections[sections.length - 1]?.template !== "footer") {
       diagnostics.push(`${scope}: hero first / footer last not satisfied, using the seed`);

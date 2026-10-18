@@ -113,8 +113,20 @@ export type Source =
   /** Canecas/ecobags from the synced Uma Penca feed (src/lib/umapenca), in feed order. No INK collection is involved. */
   | { kind: "umapenca"; articleKinds: ArticleKind[]; limit: number };
 
-export type FeaturedProductRef = { store: CommerceStoreKey; productId: string };
-export const MAX_FEATURED = 3;
+/**
+ * A product of the hero, by stable reference. `image` ("feature" opening only): the banner drawn in the product's half while this product is the one
+ * shown, instead of the section's picture; absent = the section's picture, else the product's own photo.
+ */
+export type FeaturedProductRef = { store: CommerceStoreKey; productId: string; image?: MediaRef };
+/** The products a hero keeps: the "feature" opening shows them one at a time (`featuredRotation`); the three-card hero, the first `HERO_CARDS`. */
+export const MAX_FEATURED = 8;
+export const HERO_CARDS = 3;
+/**
+ * How the "feature" opening goes through its products: "random" = one drawn at each visit; "slide" = they pass sideways by themselves (with dots, a
+ * pause and swipe). Absent = always the first one (what the opening did before the choice existed).
+ */
+export const FEATURED_ROTATIONS = ["random", "slide"] as const;
+export type FeaturedRotation = (typeof FEATURED_ROTATIONS)[number];
 
 /**
  * `display` (product sections only): "carousel" = one row that scrolls sideways (the default, also when absent); "grid" = every card laid out on the page,
@@ -185,7 +197,8 @@ export const MAX_GRID_TILES = 12;
 
 /**
  * The composition of a structured section, per template (absent = its original look, so documents saved before this existed stay as they were):
- *   hero "feature"        headline, search and ONE large featured product (the first eligible of `featured`) instead of three small cards;
+ *   hero "feature"        headline, search and ONE large featured product at a time (the first eligible of `featured`, or one of them by
+ *                         `featuredRotation`), each with its own banner, instead of three small cards;
  *   states "strip"        a band of one entry per state (UF, name, number of places and the call), each entry one link, instead of the cover cards;
  *   city-styles "split"   the heading in a column of its own beside the style cards;
  *   city-styles "list"    the heading in a column of its own, the styles' names in a list and ONE card beside it, the style chosen (all eight
@@ -221,6 +234,8 @@ export type Section = {
    * the code has always shown, the other regions show none. `[]` = customised to show no card.
    */
   featured?: FeaturedProductRef[];
+  /** Hero "feature" only: how it goes through `featured` (`FEATURED_ROTATIONS`); absent = always the first. */
+  featuredRotation?: FeaturedRotation;
   /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. `dest` sends the link to a page instead of this section. */
   nav?: { label: string; dest?: Destination };
   /**
@@ -662,13 +677,16 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     else {
       const seen = new Set<string>();
       v.featured.forEach((ref, i) => {
-        if (!isRecord(ref) || typeof ref.store !== "string" || !STORES.includes(ref.store) || typeof ref.productId !== "string" || !/^\d{1,20}$/.test(ref.productId)) return c.fail(`${path}.featured[${i}]`, "must be { store, productId (numeric INK id) }");
+        if (!isRecord(ref) || typeof ref.store !== "string" || !STORES.includes(ref.store) || typeof ref.productId !== "string" || !/^\d{1,20}$/.test(ref.productId)) return c.fail(`${path}.featured[${i}]`, "must be { store, productId (numeric INK id), image? }");
+        for (const key of Object.keys(ref)) if (key !== "store" && key !== "productId" && key !== "image") c.fail(`${path}.featured[${i}].${key}`, "unknown field");
+        if (ref.image !== undefined) checkMediaRef(c, `${path}.featured[${i}].image`, ref.image);
         const key = `${ref.store}:${ref.productId}`;
         if (seen.has(key)) c.fail(`${path}.featured[${i}]`, "the same product twice");
         seen.add(key);
       });
     }
   }
+  if (v.featuredRotation !== undefined && (v.template !== "hero" || !(FEATURED_ROTATIONS as readonly unknown[]).includes(v.featuredRotation))) c.fail(`${path}.featuredRotation`, `hero only: ${FEATURED_ROTATIONS.join(" | ")}`);
   if (v.nav !== undefined) {
     if (v.template === "hero" || v.template === "footer" || v.template === "page-hero" || !isRecord(v.nav) || !isStr(v.nav.label, 24)) c.fail(`${path}.nav`, "not for the hero or footer; label 1..24 characters");
     else if (v.nav.dest !== undefined) checkDestination(c, `${path}.nav.dest`, v.nav.dest);
@@ -1209,7 +1227,7 @@ export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
   if (!doc) return [];
   const out: MediaRef[] = [];
   const ofSection = (s: Section) => {
-    for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), s.customizerCard?.image, ...(s.tiles ?? []).flatMap((t) => [t.image, t.imageMobile])]) if (r) out.push(r);
+    for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), ...(s.featured ?? []).map((f) => f.image), s.customizerCard?.image, ...(s.tiles ?? []).flatMap((t) => [t.image, t.imageMobile])]) if (r) out.push(r);
   };
   for (const s of doc.home?.sections ?? []) ofSection(s);
   for (const p of doc.pages ?? []) {

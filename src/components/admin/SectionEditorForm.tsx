@@ -8,7 +8,8 @@ import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/
 import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
-import { DEFAULT_BUY_LABEL, MAX_BUY_LABEL, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
+import { PRODUCT_CARD_IMAGE, sectionImageSizes, sizeHintText, STATE_COVER } from "@/lib/admin/image-sizes";
+import { DEFAULT_BUY_LABEL, HERO_CARDS, MAX_BUY_LABEL, MAX_FEATURED, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
 import { customizerCardFieldDefaults } from "@/lib/admin/section-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
@@ -242,6 +243,7 @@ export function SectionEditorForm({
                     <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>
                     {media.some((m) => m.kind === "upload") && <optgroup label="Enviadas">{media.filter((m) => m.kind === "upload").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
                   </select>
+                  <p className="a-muted mt-1 text-[0.8125rem]">{sizeHintText(STATE_COVER)}</p>
                   <label className="a-label mt-2" htmlFor={`state_alt_${st.uf}`}>Descrição da imagem (opcional; vazio = decorativa)</label>
                   <input id={`state_alt_${st.uf}`} name={`state_alt_${st.uf}`} defaultValue={current?.alt ?? ""} className="a-input" maxLength={200} />
                 </div>
@@ -265,7 +267,21 @@ export function SectionEditorForm({
         />
       )}
 
-      {section.template === "hero" && featured && <HeroFeaturedProducts scope={scope} regionName={featured.regionName} mode={featured.mode} initial={featured.initial} eligible={featured.eligible} search={featured.search} />}
+      {section.template === "hero" && featured && (
+        <HeroFeaturedProducts
+          scope={scope}
+          regionName={featured.regionName}
+          mode={featured.mode}
+          initial={featured.initial}
+          eligible={featured.eligible}
+          search={featured.search}
+          feature={section.variant === "feature"}
+          max={section.variant === "feature" ? MAX_FEATURED : HERO_CARDS}
+          media={media}
+          thumbOf={(assetId) => previewSrc(byId.get(assetId))}
+          rotation={section.featuredRotation}
+        />
+      )}
 
       {section.template === "page-hero" && (
         <fieldset className="space-y-3">
@@ -306,6 +322,7 @@ export function SectionEditorForm({
                     {media.some((m) => m.kind === "upload") && <optgroup label="Enviadas">{media.filter((m) => m.kind === "upload").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
                     <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label}</option>)}</optgroup>
                   </select>
+                  <p className="a-muted mt-1 text-[0.8125rem]">{sizeHintText(PRODUCT_CARD_IMAGE)}</p>
                 </div>
                 <div><label className="a-label" htmlFor="cc_alt">Descrição da imagem (acessibilidade)</label><input id="cc_alt" name="cc_alt" defaultValue={section.customizerCard?.image?.alt ?? ""} className="a-input" maxLength={200} /></div>
               </div>
@@ -563,6 +580,7 @@ export function SectionEditorForm({
                   <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>
                   {media.some((m) => m.kind === "upload") && <optgroup label="Enviadas neste computador">{media.filter((m) => m.kind === "upload").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
                 </select>
+                <p className="a-muted mt-1 text-[0.8125rem]">{sizeHintText(sectionImageSizes(section.template, section.variant)[k])}</p>
               </div>
             ))}
           </div>

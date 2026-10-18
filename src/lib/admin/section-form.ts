@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { variantsOf } from "../site-config/schema";
+import { FEATURED_ROTATIONS, MAX_FEATURED, variantsOf, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
 import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, type TileFormat, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
@@ -313,18 +313,30 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
 }
 
 /**
- * The hero's featured-product fields: `featured_1..3` hold "store:productId" (or nothing). Returns the references in slot order (empty slots
- * closed up: the cards are a list, not fixed holes) and the malformed values, which are refused instead of silently dropped.
+ * The hero's featured-product fields: `featured_1..MAX_FEATURED` hold "store:productId" (or nothing), and, for the "feature" opening, `featured_image_N` /
+ * `featured_alt_N` that product's banner (an empty alt = decorative). Returns the references in slot order (empty slots closed up: the products are a
+ * list, not fixed holes) and the malformed values, which are refused instead of silently dropped.
  */
-export function parseFeaturedFields(f: Fields): { refs: { store: CommerceStoreKey; productId: string }[]; invalid: string[] } {
-  const refs: { store: CommerceStoreKey; productId: string }[] = [];
+export function parseFeaturedFields(f: Fields): { refs: FeaturedProductRef[]; invalid: string[] } {
+  const refs: FeaturedProductRef[] = [];
   const invalid: string[] = [];
-  for (const slot of [1, 2, 3]) {
+  for (let slot = 1; slot <= MAX_FEATURED; slot++) {
     const raw = str(f, `featured_${slot}`);
     if (!raw) continue;
     const m = /^(use-sul|use-norte|use-centro):(\d{1,20})$/.exec(raw);
-    if (m) refs.push({ store: m[1] as CommerceStoreKey, productId: m[2] });
-    else invalid.push(`posição ${slot}`);
+    if (!m) {
+      invalid.push(`posição ${slot}`);
+      continue;
+    }
+    const assetId = str(f, `featured_image_${slot}`);
+    const alt = str(f, `featured_alt_${slot}`).slice(0, 200);
+    refs.push({ store: m[1] as CommerceStoreKey, productId: m[2], ...(assetId ? { image: { assetId, alt, decorative: alt === "" } } : {}) });
   }
   return { refs, invalid };
 }
+
+/** The "feature" opening's rotation (`featured_rotation`): "random" / "slide", or undefined for always the first. */
+export const parseFeaturedRotation = (f: Fields): FeaturedRotation | undefined => {
+  const posted = str(f, "featured_rotation");
+  return (FEATURED_ROTATIONS as readonly string[]).includes(posted) ? (posted as FeaturedRotation) : undefined;
+};

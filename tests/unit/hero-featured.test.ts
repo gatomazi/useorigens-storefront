@@ -3,9 +3,10 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { applyOp } from "@/lib/admin/draft-ops";
-import { parseFeaturedFields } from "@/lib/admin/section-form";
+import { parseFeaturedFields, parseFeaturedRotation } from "@/lib/admin/section-form";
+import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { cityBySlug } from "@/lib/geo/cities";
-import { validateScopeDoc, validateSection } from "@/lib/site-config/schema";
+import { mediaRefsOfDoc, validateScopeDoc, validateSection } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 
 const belem = cityBySlug("PA", "belem")!;
@@ -74,10 +75,23 @@ describe("hero featured products resolve against the region's own catalog snapsh
 
   test("given no customisation, when the cards are built, then Sul keeps its original cards and Norte/Centro-Oeste show none (never Sul's)", () => {
     const legacy = [{ familyId: "ponto-de-origem", familyName: "Ponto de Origem", cityName: "Porto Alegre", uf: "RS", imageUrl: "x", price: "R$ 1", href: "/sul/rs/porto-alegre/ponto-de-origem" }];
-    expect(mod.heroCards("sul", undefined, legacy)).toBe(legacy);
+    expect(mod.heroCards("sul", undefined, legacy)).toEqual(legacy);
     expect(mod.heroCards("norte", undefined, legacy)).toEqual([]);
     expect(mod.heroCards("centro-oeste", undefined, legacy)).toEqual([]);
     expect(mod.heroCards("norte", [], legacy)).toEqual([]);
+  });
+
+  test("given products with their own banners, when the opening's products are built, then each keeps its banner and an ineligible one is still omitted", () => {
+    const image = { assetId: "upload:norte-belem", alt: "Belém ao entardecer", decorative: false };
+    const slides = mod.heroSlides("norte", [{ store: "use-norte", productId: "7002", image }, { store: "use-norte", productId: "1", image }, { store: "use-norte", productId: "7001" }], []);
+    expect(slides.map((sl) => [sl.card.familyName, sl.image ?? null])).toEqual([["Coordenadas", image], ["Ponto de Origem", null]]);
+  });
+
+  test("given more than three products (kept for the feature opening), when the three-card hero is built, then it shows only the first three eligible", () => {
+    const sul = [{ familyId: "a", familyName: "A", cityName: "X", uf: "RS", imageUrl: "x", price: null, href: "/a" }];
+    const legacy = [1, 2, 3, 4, 5].map((n) => ({ ...sul[0], familyId: `f${n}`, familyName: `F${n}` }));
+    expect(mod.heroCards("sul", undefined, legacy).map((c) => c.familyName)).toEqual(["F1", "F2", "F3"]);
+    expect(mod.heroSlides("sul", undefined, legacy)).toHaveLength(5);
   });
 });
 
@@ -123,9 +137,10 @@ describe("the hero's featured references in the document", () => {
     expect(none.ok && none.doc.home!.sections[0].featured).toEqual([]);
   });
 
-  test("given a reference of another region's store, four cards, a duplicate or a bad id, when saved, then it is rejected and nothing changes", () => {
+  test("given a reference of another region's store, more than eight products, a duplicate or a bad id, when saved, then it is rejected and nothing changes", () => {
     expect(set([{ store: "use-centro", productId: "9001" }]).ok).toBe(false);
-    expect(set([1, 2, 3, 4].map((n) => ({ store: "use-norte", productId: `70${n}` }))).ok).toBe(false);
+    expect(set([1, 2, 3, 4, 5, 6, 7, 8].map((n) => ({ store: "use-norte", productId: `70${n}` }))).ok).toBe(true);
+    expect(set([1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => ({ store: "use-norte", productId: `70${n}` }))).ok).toBe(false);
     expect(set([{ store: "use-norte", productId: "7001" }, { store: "use-norte", productId: "7001" }]).ok).toBe(false);
     expect(set([{ store: "use-norte", productId: "abc" }]).ok).toBe(false);
   });
@@ -141,5 +156,40 @@ describe("the hero's featured references in the document", () => {
     const f = (o: Record<string, string>) => ({ get: (k: string) => (k in o ? o[k] : null) });
     expect(parseFeaturedFields(f({ featured_1: "", featured_2: "use-norte:7001", featured_3: "use-norte:7002" })).refs).toEqual([{ store: "use-norte", productId: "7001" }, { store: "use-norte", productId: "7002" }]);
     expect(parseFeaturedFields(f({ featured_1: "use-outra:1" })).invalid).toEqual(["posição 1"]);
+  });
+
+  test("given a banner per product, when saved, then each product keeps its own; a broken banner, an unknown field or a rotation off the hero is refused", () => {
+    const image = { assetId: "upload:norte-belem", alt: "", decorative: true };
+    const ok = set([{ store: "use-norte", productId: "7001", image }, { store: "use-norte", productId: "7002" }]);
+    expect(ok.ok && ok.doc.home!.sections[0].featured).toEqual([{ store: "use-norte", productId: "7001", image }, { store: "use-norte", productId: "7002" }]);
+    expect(set([{ store: "use-norte", productId: "7001", image: { assetId: "upload:x", alt: "", decorative: false } }]).ok).toBe(false); // meaningful without a description
+    expect(set([{ store: "use-norte", productId: "7001", price: "1" }]).ok).toBe(false);
+    const sul = seed.docs.sul.home!.sections;
+    expect(validateSection({ ...sul[0], featuredRotation: "slide" }).ok).toBe(true);
+    expect(validateSection({ ...sul[0], featuredRotation: "shuffle" } as never).ok).toBe(false);
+    expect(validateSection({ ...sul[1], featuredRotation: "random" }).ok).toBe(false);
+  });
+
+  test("given the feature opening's fields, when parsed, then up to eight products come with their banners (empty alt = decorative) and the rotation", () => {
+    const f = (o: Record<string, string>) => ({ get: (k: string) => (k in o ? o[k] : null) });
+    const fields = f({ featured_1: "use-norte:7001", featured_image_1: "upload:a", featured_alt_1: "Praia", featured_8: "use-norte:7008", featured_image_8: "upload:b", featured_alt_8: "", featured_rotation: "random" });
+    expect(parseFeaturedFields(fields).refs).toEqual([
+      { store: "use-norte", productId: "7001", image: { assetId: "upload:a", alt: "Praia", decorative: false } },
+      { store: "use-norte", productId: "7008", image: { assetId: "upload:b", alt: "", decorative: true } },
+    ]);
+    expect(parseFeaturedRotation(fields)).toBe("random");
+    expect(parseFeaturedRotation(f({ featured_rotation: "" }))).toBeUndefined();
+    expect(parseFeaturedRotation(f({ featured_rotation: "shuffle" }))).toBeUndefined();
+  });
+
+  test("given a published hero whose product banner is not in the media table, when read, then only that banner is dropped and it is listed among the media refs", () => {
+    const doc = norteHome();
+    const image = { assetId: "upload:norte-belem", alt: "", decorative: true };
+    doc.home.sections[0] = { ...doc.home.sections[0], featured: [{ store: "use-norte", productId: "7001", image }] };
+    expect(mediaRefsOfDoc(doc)).toContainEqual(image);
+    const raw = { ...seed, releaseId: "r1", docs: { ...seed.docs, norte: doc } };
+    const read = sanitizeBundle(raw, seed);
+    expect(read.bundle?.docs.norte.home?.sections[0].featured).toEqual([{ store: "use-norte", productId: "7001" }]);
+    expect(read.diagnostics.some((d) => d.includes("banner of product 7001"))).toBe(true);
   });
 });
