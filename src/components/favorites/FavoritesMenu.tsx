@@ -14,7 +14,8 @@ function HeartIcon({ className }: { className: string }) {
 }
 
 /** Header trigger for "Meus Lugares": heart + count, same shape as CartMirrorMenu's own trigger. Always visible (no token gate — this is local, not a mirror of anything remote). */
-export function FavoritesMenu({ region }: { region: RegionSlug }) {
+/** `labelled`: the word next to the heart from 640px (the menu's "Ícones do topo"); otherwise the icon only, the word for screen readers and the tooltip. */
+export function FavoritesMenu({ region, labelled = true }: { region: RegionSlug; labelled?: boolean }) {
   const count = useSyncExternalStore(
     subscribeFavorites,
     () => getFavorites().length,
@@ -25,6 +26,7 @@ export function FavoritesMenu({ region }: { region: RegionSlug }) {
     <Link
       href={`/${region}/meus-lugares`}
       data-testid="favorites-trigger"
+      title={labelled ? undefined : "Meus Lugares"}
       className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 px-2 font-semibold sm:px-3"
     >
       <span className="relative inline-flex">
@@ -35,8 +37,8 @@ export function FavoritesMenu({ region }: { region: RegionSlug }) {
           </span>
         ) : null}
       </span>
-      <span className="hidden sm:inline">Meus Lugares</span>
-      <span className="sr-only sm:hidden">Meus Lugares{count > 0 ? `, ${count} ${count === 1 ? "estampa salva" : "estampas salvas"}` : ""}</span>
+      {labelled && <span className="hidden sm:inline">Meus Lugares</span>}
+      <span className={labelled ? "sr-only sm:hidden" : "sr-only"}>Meus Lugares{count > 0 ? `, ${count} ${count === 1 ? "estampa salva" : "estampas salvas"}` : ""}</span>
     </Link>
   );
 }

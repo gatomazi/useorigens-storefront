@@ -1,5 +1,6 @@
 import { effectiveMenu, menuPositionOf, type MenuPosition } from "../site-config/collection-menu";
 import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlockConfig } from "../site-config/navigation";
+import { HEADER_ACTIONS, HEADER_ACTION_LABEL, headerActionsOf } from "../site-config/navigation-schema";
 import { podioEnabledIn } from "../site-config/podio-schema";
 import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkIncentiveText, inkThemeOf, INK_THEME_SURFACES, paletteOf } from "../site-config/ink-theme";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
@@ -178,6 +179,10 @@ function navigationChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
     const was = before?.primaryLinks?.find((l) => l.destination === destination);
     const now = after?.primaryLinks?.find((l) => l.destination === destination);
     if (json(was) !== json(now)) out.push({ kind: "navigation", sectionId: `navigation:link:${destination}`, text: `Navegação, link ${NAV_DESTINATION_LABEL[destination]}: ${blockText(was)} → ${blockText(now)}` });
+  }
+  const [wasActions, nowActions] = [headerActionsOf(before), headerActionsOf(after)];
+  for (const action of HEADER_ACTIONS) {
+    if (wasActions[action] !== nowActions[action]) out.push({ kind: "navigation", sectionId: `navigation:header:${action}`, text: `Topo do site, ${HEADER_ACTION_LABEL[action]}: ${nowActions[action] === "label" ? "ícone e texto" : "só o ícone"}` });
   }
   return out;
 }

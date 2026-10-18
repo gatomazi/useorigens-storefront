@@ -3,6 +3,7 @@ import { resetNavigationAction, saveNavigationAction } from "@/app/admin/actions
 import { CollectionMenuCard } from "@/components/admin/CollectionMenuCard";
 import { CollectionNotesCard } from "@/components/admin/CollectionNotesCard";
 import { Flash } from "@/components/admin/Flash";
+import { HeaderActionsCard } from "@/components/admin/HeaderActionsCard";
 import { NavigationEditor } from "@/components/admin/NavigationEditor";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { currentScope, scopeName } from "@/lib/admin/scope";
@@ -16,8 +17,8 @@ import { coveredUfs } from "@/lib/site-config/chrome";
 import { navData, resolveTheme } from "@/lib/site-config/navigation";
 
 /**
- * "Menu": everything that makes up the store's menu, in one place. The collections on the bar and in "Categorias" (also the INK navbar), the home sections
- * that are links on the bar, and the phone menu's blocks. All of it is draft until Publicar.
+ * "Menu": everything that makes up the store's menu, in one place. The header's icons, the collections on the bar and in "Categorias" (also the INK
+ * navbar), the home sections that are links on the bar, and the phone menu's blocks. All of it is draft until Publicar.
  */
 export default async function NavigationPage({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
   const actor = await requireAdmin();
@@ -37,6 +38,8 @@ export default async function NavigationPage({ searchParams }: { searchParams: P
         <p className="a-muted mt-2 max-w-3xl">O menu da loja em um lugar só: as <strong>coleções</strong> da barra do topo e de “Categorias” (que também vão para a navbar da INK), as <strong>seções da home</strong> que viram link na barra e os <strong>blocos do menu do celular</strong>. Tudo é rascunho: a loja só muda depois de <Link href="/admin/publicar" className="a-link">Publicar</Link>.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
+
+      <HeaderActionsCard scope={scope} navigation={ws.doc.navigation} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} />
 
       {synced ? <CollectionMenuCard region={scope} doc={ws.doc} rev={ws.record?.rev ?? null} /> : <p className="a-flash err">As coleções desta loja ainda não foram sincronizadas: sem elas não há menu de coleções. Sincronize em <Link href="/admin/sincronizacao" className="a-link">Sincronização</Link>.</p>}
 

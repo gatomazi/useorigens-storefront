@@ -24,7 +24,24 @@ export type NavigationConfig = {
   statesBlock?: NavBlockConfig;
   /** "Explorar outras regiões": automatic as well. */
   regionsBlock?: NavBlockConfig;
+  /** The header's buttons on the right ("Meus Lugares", "Conta", "Buscar"): the icon only or the icon with its word, each on its own (`headerActionsOf`). */
+  headerActions?: Partial<Record<HeaderAction, HeaderActionStyle>>;
 };
+
+/**
+ * The header's action buttons. From 640px each one is the icon only (the default: the words competed with the menu) or the icon with its word; phones
+ * always show the icon. Icon only keeps the word for screen readers and as the pointer's tooltip.
+ */
+export const HEADER_ACTIONS = ["favorites", "account", "search"] as const;
+export type HeaderAction = (typeof HEADER_ACTIONS)[number];
+export const HEADER_ACTION_STYLES = ["icon", "label"] as const;
+export type HeaderActionStyle = (typeof HEADER_ACTION_STYLES)[number];
+export const HEADER_ACTION_LABEL: Record<HeaderAction, string> = { favorites: "Meus Lugares", account: "Conta", search: "Buscar" };
+export const headerActionsOf = (nav: Pick<NavigationConfig, "headerActions"> | null | undefined): Record<HeaderAction, HeaderActionStyle> => ({
+  favorites: nav?.headerActions?.favorites ?? "icon",
+  account: nav?.headerActions?.account ?? "icon",
+  search: nav?.headerActions?.search ?? "icon",
+});
 
 export const THEME_COLOR_KEYS = ["brandPrimary", "headerBackground", "headerText", "mobileMenuBackground", "mobileMenuText", "accent", "pageBackground", "pageText"] as const;
 export type ThemeColorKey = (typeof THEME_COLOR_KEYS)[number];
@@ -60,7 +77,15 @@ export function validateNavigation(input: unknown, scope: Scope, path = "navigat
   const errors: string[] = [];
   if (scope === "global") return { ok: false, errors: [`${path}: the navigation belongs to a region`] };
   if (!isRecord(input)) return { ok: false, errors: [`${path}: must be an object`] };
-  for (const key of Object.keys(input)) if (!["primaryBlock", "primaryLinks", "categoriesBlock", "statesBlock", "regionsBlock"].includes(key)) errors.push(`${path}.${key}: unknown field`);
+  for (const key of Object.keys(input)) if (!["primaryBlock", "primaryLinks", "categoriesBlock", "statesBlock", "regionsBlock", "headerActions"].includes(key)) errors.push(`${path}.${key}: unknown field`);
+  if (input.headerActions !== undefined) {
+    const h = input.headerActions;
+    if (!isRecord(h)) errors.push(`${path}.headerActions: must be { favorites?, account?, search? }`);
+    else {
+      for (const key of Object.keys(h)) if (!(HEADER_ACTIONS as readonly string[]).includes(key)) errors.push(`${path}.headerActions.${key}: unknown button`);
+      for (const key of HEADER_ACTIONS) if (h[key] !== undefined && !(HEADER_ACTION_STYLES as readonly unknown[]).includes(h[key])) errors.push(`${path}.headerActions.${key}: must be icon | label`);
+    }
+  }
   for (const key of ["primaryBlock", "categoriesBlock", "statesBlock", "regionsBlock"] as const) if (input[key] !== undefined) checkBlock(errors, `${path}.${key}`, input[key]);
   if (input.primaryLinks !== undefined) {
     if (!Array.isArray(input.primaryLinks) || input.primaryLinks.length > NAV_DESTINATIONS.length) errors.push(`${path}.primaryLinks: a list of at most ${NAV_DESTINATIONS.length} known links`);

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CustomizerPageView } from "@/components/customization/CustomizerPageView";
+import { headerActionsOf } from "@/lib/site-config/navigation-schema";
 import { PreviewShell } from "@/components/admin/PreviewShell";
 import { HomeSections } from "@/components/home/HomeSections";
 import { categoryProps } from "@/lib/catalog/collection-source";
@@ -58,7 +59,7 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
   const model = customizerId ? effective.docs[scope].customizers?.find((m) => m.id === customizerId) : undefined;
   const label = `${usingPublished ? "Pré-visualização · publicado" : `Pré-visualização · rascunho${ws.record ? ` rev ${ws.record.rev}` : " (sem alterações)"}`} · tema ${HOME_THEME_LABEL[homeThemeOf(doc)]}`;
   return (
-    <PreviewShell region={scope} cityCount={home.cityCount} syncedAt={catalog.syncedAt} label={label} cssVars={cssVars} onBrand={homeThemeOf(doc) === "editorial"}>
+    <PreviewShell region={scope} cityCount={home.cityCount} syncedAt={catalog.syncedAt} label={label} cssVars={cssVars} onBrand={homeThemeOf(doc) === "editorial"} headerActions={headerActionsOf(doc.navigation)}>
       {customizerId ? (
         model ? <CustomizerPageView region={scope} model={model} bundle={effective} preview /> : <p className="wrap py-14">Este modelo tem um problema de configuração e não pode ser desenhado (corrija os avisos no editor).</p>
       ) : pageId ? (

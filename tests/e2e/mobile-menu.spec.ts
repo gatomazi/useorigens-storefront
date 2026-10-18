@@ -167,6 +167,9 @@ test.describe("the rest of the header is untouched", () => {
       await page.keyboard.press("Escape");
       await expect(header.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
       await expect(header.getByRole("link", { name: /Meus Lugares/ })).toBeVisible();
+      // No setting (Menu › Ícones do topo): the three buttons on the right are the icon only, the word kept for screen readers.
+      for (const id of ["favorites-trigger", "account-trigger"]) expect((await header.getByTestId(id).boundingBox())!.width, id).toBeLessThan(60);
+      expect((await header.getByRole("button", { name: "Buscar", exact: true }).boundingBox())!.width).toBeLessThan(60);
         expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
     });
   }

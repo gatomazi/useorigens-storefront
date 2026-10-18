@@ -30,14 +30,14 @@ function PersonIcon({ className }: { className: string }) {
 }
 
 /** From 640px; on phones the same links are the menu's "Sua conta" block (MobileMenu), the header has no room for a fourth icon. */
-export function AccountMenu({ store }: { store: CommerceStoreKey }) {
+export function AccountMenu({ store, labelled = true }: { store: CommerceStoreKey; /** The word next to the icon (the menu's "Ícones do topo"). */ labelled?: boolean }) {
   const links = accountLinks(store);
   if (links.length === 0) return null;
   return (
     <HeaderDropdown className="relative hidden sm:block">
-      <summary className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center gap-2 px-3 font-semibold [&::-webkit-details-marker]:hidden" data-testid="account-trigger">
+      <summary className="flex min-h-11 min-w-11 cursor-pointer list-none items-center justify-center gap-2 px-3 font-semibold [&::-webkit-details-marker]:hidden" data-testid="account-trigger" title={labelled ? undefined : "Conta"}>
         <PersonIcon className="h-5 w-5" />
-        <span>Conta</span>
+        <span className={labelled ? undefined : "sr-only"}>Conta</span>
       </summary>
       {/* Its own white surface: reset the text colour, the header above it is on a coloured background. */}
       <ul className="absolute right-0 top-full z-50 mt-1 w-64 border-2 border-ink bg-white py-1 text-ink" data-testid="account-menu">
