@@ -174,3 +174,26 @@ export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSec
     </a>
   );
 }
+
+/**
+ * The last card of a carousel ("Ver todas as 128 peças dessa coleção", Aparência → Card no fim dos carrosséis): the same address as the section's "Ver
+ * todos", for whoever scrolled to the end without seeing the button above. Same frame and height as the products of the row, filled with the region's
+ * colour (white on a section that already sits on it) so it never reads as one more product.
+ */
+export function ViewAllCardLink({ href, label, dark }: { href: string; label: string; dark: boolean }) {
+  return (
+    <a
+      href={href}
+      draggable={false}
+      data-carousel-end
+      className={`group flex h-full min-h-56 flex-col justify-between gap-6 overflow-hidden rounded-lg border p-4 transition-colors md:p-5 ${dark ? "border-white bg-white text-ink hover:bg-white/90" : "border-region-primary bg-region-primary text-white hover:bg-[rgb(var(--region-primary-rgb)/0.9)]"}`}
+    >
+      <span aria-hidden="true" className={`inline-flex h-12 w-12 items-center justify-center rounded-full border-2 transition-transform group-hover:translate-x-1 ${dark ? "border-ink" : "border-white"}`}>
+        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12h14M13 6l6 6-6 6" />
+        </svg>
+      </span>
+      <span className="text-[1.25rem] font-bold leading-[1.2] md:text-[1.375rem]">{label}</span>
+    </a>
+  );
+}

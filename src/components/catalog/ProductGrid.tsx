@@ -51,6 +51,8 @@ export function ProductGrid({
   tone?: "light" | "dark";
   viewAllHref?: string;
   viewAllLabel?: string;
+  /** Accepted for the carousel's sake and never drawn: a grid already ends in its own "Ver todos" under the cards. */
+  endLabel?: string;
   sourceSection: string;
   /** The section's buy button ("Comprar") on every product card, under the price or as a cart on the picture; absent = none. */
   buy?: CardBuy;

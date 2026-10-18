@@ -67,7 +67,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...cardsChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft));
   return changes;
 }
 
@@ -189,6 +189,15 @@ function cardsChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   if (was?.buyLabel === now?.buyLabel && was?.buyStyle === now?.buyStyle) return [];
   const text = (cards: typeof was) => (cards ? `${CARD_BUY_STYLE_NAME[cards.buyStyle ?? "button"]} “${cards.buyLabel}” em todos os cards` : "cada seção decide");
   return [{ kind: "theme", sectionId: "cards:buy", text: `Botão nos cards de produto: ${text(was)} → ${text(now)}` }];
+}
+
+/** The last card of the product carousels (global scope). Pure. */
+function carouselEndChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const was = published.carouselEnd?.label;
+  const now = draft.carouselEnd?.label;
+  if (was === now) return [];
+  const text = (label: typeof was) => (label ? `“${label}”` : "desligado");
+  return [{ kind: "theme", sectionId: "carousel-end", text: `Card no fim dos carrosséis: ${text(was)} → ${text(now)}` }];
 }
 
 const MUNDO_TEXTO = { on: "página e entradas na loja", pagina: "só a página, sem entradas", off: "desligado" } as const;

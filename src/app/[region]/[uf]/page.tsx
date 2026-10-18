@@ -12,7 +12,7 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { stateShowcase } from "@/lib/editorial/state-showcase";
 import { stateStyles } from "@/lib/editorial/state-styles";
-import { collectionPageSlug, collectionsForRegion, stateCollectionRows } from "@/lib/catalog/collection-source";
+import { categoryProps, collectionPageSlug, collectionsForRegion, stateCollectionRows } from "@/lib/catalog/collection-source";
 import { collectionPagePath } from "@/lib/site-config/sources";
 import { homeBundle } from "@/lib/site-config/flag";
 import { statePageShows } from "@/lib/site-config/state-page-schema";
@@ -32,7 +32,8 @@ import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { SITE_URL } from "@/lib/site";
 import { pageShare } from "@/lib/share/server";
 import { ShareButton } from "@/components/share/ShareButton";
-import { storeCardButton } from "@/lib/site-config/cards";
+import { storeCardButton, storeCarouselEnd } from "@/lib/site-config/cards";
+import { carouselEndText } from "@/lib/site-config/carousel-end-schema";
 
 export const revalidate = 3600;
 
@@ -116,6 +117,9 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   // style-and-state navigation collection.
   // The store-wide buy button (Aparência, global): on these cards too.
   const buy = storeCardButton();
+  // The store-wide last card of the carousels (Aparência, global), to the row's "Ver todos". The styles open an INK collection: no number there.
+  const carouselEnd = storeCarouselEnd();
+  const endLabel = carouselEnd ? carouselEndText(carouselEnd.label) : undefined;
   const styles = !shows.styles ? [] : stateStyles({
     uf,
     cities: hasRegions ? cities.filter((c) => c.type === "administrative_region") : cities,
@@ -134,6 +138,16 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
   const rowHref = (row: (typeof stateRows)[number]): string | undefined => {
     const slug = collectionPageSlug(doc, storeForRegion(region), row.collection.id);
     return slug ? `${collectionPagePath(region, slug)}${row.level === "state" ? "" : `?uf=${uf}`}` : undefined;
+  };
+
+  // A row's last card counts what its "Ver todos" lists: the collection page (same lookup), filtered to this state like its `?uf=` filter (a deeper
+  // row takes some of a category's products, so the page has more than the row).
+  const collectionPage = carouselEnd ? categoryProps((s) => catalog.productsOfStore(s), doc).collectionPage : null;
+  const rowEndLabel = (row: (typeof stateRows)[number]): string | undefined => {
+    if (!carouselEnd || !collectionPage) return undefined;
+    const all = collectionPage({ kind: "ink-category", store: storeForRegion(region), collectionId: row.collection.id, order: "category", limit: Number.MAX_SAFE_INTEGER }, 1);
+    const count = all.status !== "ok" ? null : row.level === "state" ? all.total : all.items.filter((item) => item.state === uf).length;
+    return carouselEndText(carouselEnd.label, count);
   };
 
   // Editorial mesoregion grouping (ADR 0004), navigation only — not the current IBGE division. Cities
@@ -227,6 +241,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
             labelledBy={`state-collection-${row.collection.id}`}
             title={row.level === "state" ? `Mais ${stateOfUf(uf)}` : `${row.collection.name.replace(/\s+/g, " ").trim()} · ${uf}`}
             viewAllHref={rowHref(row)}
+            endLabel={rowEndLabel(row)}
             sourceSection={SOURCES.stateCollection}
             buy={buy}
           />
@@ -235,7 +250,7 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
 
       {styles.length > 0 && (
         <section id="estilos" className="wrap pb-10 lg:pb-14" aria-labelledby="styles-title">
-          <StateStyles region={region} stateOf={stateOf(uf)} styles={styles} sourceSection={SOURCES.stateStyles} buy={buy} />
+          <StateStyles region={region} stateOf={stateOf(uf)} styles={styles} sourceSection={SOURCES.stateStyles} buy={buy} endLabel={endLabel} />
         </section>
       )}
 

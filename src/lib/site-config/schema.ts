@@ -9,6 +9,7 @@
 import { isAllowedMediaSrc } from "./media-hosts";
 import { CARD_BUY_STYLES, DEFAULT_BUY_LABEL, MAX_BUY_LABEL, validateCards, type CardBuyStyle, type CardsConfig } from "./cards-schema";
 import { validateMundo, type MundoConfig } from "./mundo-schema";
+import { validateCarouselEnd, type CarouselEndConfig } from "./carousel-end-schema";
 import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validateInkTheme, type InkThemeConfig } from "./ink-theme-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
@@ -377,6 +378,8 @@ export type ScopeDoc = {
   promotions?: PromotionsConfig;
   /** GLOBAL only: the store-wide setting of the product cards (a buy button on every one of them, `cards-schema.ts`). Published with the global scope. */
   cards?: CardsConfig;
+  /** GLOBAL only: one more card at the end of every product carousel with a "Ver todos" ("Ver todas as {n} peças…", `carousel-end-schema.ts`). Published with the global scope. */
+  carouselEnd?: CarouselEndConfig;
   /** GLOBAL only: how far "Meu Pequeno Mundo" is open (`mundo-schema.ts`); the MEU_PEQUENO_MUNDO env stays the ceiling. Published with the global scope. */
   mundo?: MundoConfig;
   /** REGION only: "O Pódio" switched off (home teaser, state pages and the daily calculation, `podio-schema.ts`). Absent = on. Published with the region. */
@@ -1076,6 +1079,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.cards !== undefined) {
     const r = validateCards(input.cards, sc, "doc.cards");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.carouselEnd !== undefined) {
+    const r = validateCarouselEnd(input.carouselEnd, sc, "doc.carouselEnd");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.mundo !== undefined) {

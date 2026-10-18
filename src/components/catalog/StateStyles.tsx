@@ -13,7 +13,7 @@ import { ProductCarousel } from "./ProductCarousel";
  * selected on load; the other rows are already in the page, so switching is instant and nothing is fetched. The carousel shows a few of the
  * state's places, so a quiet "Encontre aqui" under it opens the search for the visitor's own. `stateOf` = "do Paraná", "de Santa Catarina".
  */
-export function StateStyles({ region, stateOf, styles, sourceSection, buy }: { region: RegionSlug; stateOf: string; styles: StateStyle[]; sourceSection: string; buy?: CardBuy }) {
+export function StateStyles({ region, stateOf, styles, sourceSection, buy, endLabel }: { region: RegionSlug; stateOf: string; styles: StateStyle[]; sourceSection: string; buy?: CardBuy; /** The carousels' last card (Aparência), to the style's "Ver todas". */ endLabel?: string }) {
   const [selectedId, setSelectedId] = useState(styles[0]?.id);
   const selected = styles.find((s) => s.id === selectedId) ?? styles[0];
   if (!selected) return null;
@@ -44,6 +44,7 @@ export function StateStyles({ region, stateOf, styles, sourceSection, buy }: { r
         intro={`As camisetas ${stateOf} em cada jeito. ${selected.name}: ${selected.description}`}
         viewAllHref={selected.viewAllHref ?? undefined}
         viewAllLabel={`Ver todas de ${selected.name}`}
+        endLabel={endLabel}
         sourceSection={sourceSection}
         buy={buy}
         toolbar={chips}

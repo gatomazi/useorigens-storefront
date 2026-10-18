@@ -1,4 +1,4 @@
-import { saveCardsAction, saveMundoAction, saveThemeAction } from "@/app/admin/actions";
+import { saveCardsAction, saveCarouselEndAction, saveMundoAction, saveThemeAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { GlobalPendingNote } from "@/components/admin/GlobalPendingNote";
 import { ThemeEditor } from "@/components/admin/ThemeEditor";
@@ -11,6 +11,7 @@ import { loadEditorWorkspace, loadWorkspace } from "@/lib/admin/workspace";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { launchedRegions } from "@/lib/regions/launched";
 import { CARD_BUY_STYLE_NAME } from "@/lib/site-config/cards-schema";
+import { carouselEndText, COUNT_TOKEN, DEFAULT_CAROUSEL_END_LABEL, MAX_CAROUSEL_END_LABEL } from "@/lib/site-config/carousel-end-schema";
 import { siteCollectionMenu } from "@/lib/catalog/collection-menu";
 import { coveredUfs } from "@/lib/site-config/chrome";
 import { navData, type NavData } from "@/lib/site-config/navigation";
@@ -120,6 +121,32 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
               </fieldset>
               <p className="text-[0.875rem]" data-testid="cards-live"><strong>Na loja agora:</strong> {live ? `${CARD_BUY_STYLE_NAME[live.buyStyle ?? "button"]} “${live.buyLabel}” em todos os cards` : "cada seção decide"}.{JSON.stringify(draft ?? null) !== JSON.stringify(live ?? null) && " O rascunho tem outra escolha: publique a configuração global em Publicar."}</p>
               {owner ? <button type="submit" className="a-btn" data-testid="save-cards">Salvar rascunho do botão</button> : <p className="a-muted">Só o owner altera.</p>}
+            </form>
+          );
+        })()}
+      </section>
+
+      <section id="fim-carrossel" className="a-card scroll-mt-4 p-5" aria-labelledby="carousel-end-title" data-testid="carousel-end-setting">
+        <h2 id="carousel-end-title" className="a-h2">Card no fim dos carrosséis · todas as regiões</h2>
+        <p className="a-muted mt-1 max-w-3xl text-[0.9375rem]">Ligado, todo carrossel de produtos que tem “Ver todos” ganha um último card com este texto, depois do último produto: quem rolou até o fim vê que a coleção continua. O card abre o mesmo endereço do “Ver todos” de cima. Escreva <code>{COUNT_TOKEN}</code> onde vai o número de peças: ele é preenchido quando o destino é uma página de coleção do site; nos outros destinos o número sai do texto. Carrossel sem “Ver todos” não ganha o card.</p>
+        {(() => {
+          const draft = global.doc.carouselEnd;
+          const live = global.baseDoc.carouselEnd;
+          const label = draft?.label ?? DEFAULT_CAROUSEL_END_LABEL;
+          return (
+            <form action={saveCarouselEndAction} className="mt-4 space-y-4">
+              <input type="hidden" name="rev" value={String(global.record?.rev ?? "null")} />
+              <label className="flex min-h-10 items-center gap-2 text-[0.9375rem] font-semibold">
+                <input type="checkbox" name="carousel_end" defaultChecked={Boolean(draft)} disabled={!owner} data-testid="carousel-end" />
+                Mostrar o card no fim dos carrosséis
+              </label>
+              <div className="max-w-md">
+                <label className="a-label" htmlFor="carousel_end_label">Texto do card</label>
+                <input id="carousel_end_label" name="carousel_end_label" className="a-input" defaultValue={label} maxLength={MAX_CAROUSEL_END_LABEL} disabled={!owner} data-testid="carousel-end-label" />
+                <p className="a-muted mt-1 text-[0.8125rem]">Fica assim: “{carouselEndText(label, 128)}” com o número, ou “{carouselEndText(label)}” sem ele.</p>
+              </div>
+              <p className="text-[0.875rem]" data-testid="carousel-end-live"><strong>Na loja agora:</strong> {live ? `card “${live.label}” no fim dos carrosséis` : "desligado"}.{JSON.stringify(draft ?? null) !== JSON.stringify(live ?? null) && " O rascunho tem outra escolha: publique a configuração global em Publicar."}</p>
+              {owner ? <button type="submit" className="a-btn" data-testid="save-carousel-end">Salvar rascunho do card</button> : <p className="a-muted">Só o owner altera.</p>}
             </form>
           );
         })()}
