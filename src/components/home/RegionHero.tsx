@@ -285,14 +285,22 @@ function FeaturePanel({ product, image, color, call, priority }: { product: Hero
       )}
       {product && (
         <span
-          className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-2 ${
+          className={`flex flex-wrap ${image ? "items-center" : "items-end"} justify-between gap-x-6 gap-y-2 ${
             image ? "border-t px-[var(--gutter)]" : "min-w-0 flex-1 py-4 pl-4 pr-[var(--gutter)] lg:flex-none lg:border-t lg:pl-14"
           } border-[rgb(var(--region-primary-rgb)/0.18)] py-4 lg:bg-[rgb(var(--region-primary-rgb)/0.07)] ${image ? "bg-[rgb(var(--region-primary-rgb)/0.07)]" : ""} ${ALIGN_END} lg:pl-14 lg:py-5`}
         >
-          <span className="min-w-0">
-            <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
-            <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
-              {product.cityName} · {product.uf}
+          <span className="flex min-w-0 items-center gap-3 lg:gap-4">
+            {/* Under a banner (a photo of the shirt worn, a landscape) the product itself is not in sight: its mockup, small, beside its name. */}
+            {image && (
+              <span className="block w-12 shrink-0 overflow-hidden rounded-md lg:w-14">
+                <ProductPhoto src={product.imageUrl} alt="" sizes="3.5rem" priority={false} className="photo-contain" />
+              </span>
+            )}
+            <span className="min-w-0">
+              <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
+              <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
+                {product.cityName} · {product.uf}
+              </span>
             </span>
           </span>
           <span className="flex items-baseline gap-4">
