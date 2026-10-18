@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { FEATURED_ROTATIONS, MAX_FEATURED, variantsOf, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
+import { FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, variantsOf, type HeroColors, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
 import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, type TileFormat, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
@@ -287,6 +287,16 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     // "Mostrar no menu" + the apelido; unchecked clears it. An empty apelido is not defaulted here: the validator refuses it and says so.
     const navDest = str(f, "nav_dest") ? parsePageRef(str(f, "nav_dest")) : null;
     patch.nav = f.get("nav_show") !== null ? { label: str(f, "nav_label"), ...(navDest ? { dest: navDest } : {}) } : undefined;
+  }
+  if (section.template === "hero" && f.get("hero_colors_present") !== null) {
+    // "Cores do lado do texto": "" = the theme's own; a colour not posted (the ground, absent from the three-card hero's form) keeps what was saved.
+    const colors: HeroColors = {};
+    for (const key of HERO_COLOR_KEYS) {
+      const posted = f.get(`hc_${key}`);
+      const value = posted === null ? section.heroColors?.[key] : str(f, `hc_${key}`);
+      if (value && (/^#[0-9a-fA-F]{6}$/.test(value) || value.startsWith("token:"))) colors[key] = value as HeroColors[typeof key];
+    }
+    patch.heroColors = Object.keys(colors).length > 0 ? colors : undefined;
   }
   if (section.template === "states" && f.get("state_covers_present") !== null) {
     // One picture per state; an empty choice clears that state's cover (it then keeps the code's own cover, if any).

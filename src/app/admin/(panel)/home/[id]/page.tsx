@@ -39,9 +39,11 @@ export default async function EditSection({ params, searchParams }: { params: Pr
   // Sul that was never customised keeps the three cards the code has always shown (read-only until the owner customises them).
   const featured =
     section.template === "hero"
-      ? section.featured === undefined && scope === "sul"
+      ? section.featured === undefined && scope === "sul" && section.variant !== "feature"
         ? { mode: "legacy" as const, initial: slotViews(legacyFeaturedRefs("sul")), eligible: eligibleFeaturedCount(scope), regionName: REGIONS[scope].name, search: searchHeroProductsAction }
-        : { mode: "edit" as const, initial: slotViews(section.featured ?? []), eligible: eligibleFeaturedCount(scope), regionName: REGIONS[scope].name, search: searchHeroProductsAction }
+        : // "Um produto em destaque" never customised (Sul): the editor opens on the code's three cards, so the banners and the rotation are in sight at once
+          // (the first save keeps those three as the list).
+          { mode: "edit" as const, initial: slotViews(section.featured ?? (scope === "sul" ? legacyFeaturedRefs("sul") : [])), eligible: eligibleFeaturedCount(scope), regionName: REGIONS[scope].name, search: searchHeroProductsAction }
       : undefined;
   // State chooser: the region's states (and, for Sul, which ones already have a cover in code).
   const stateCovers = section.template === "states" ? REGIONS[scope].ufs.map((uf) => ({ uf, name: STATE_NAMES[uf], legacy: usableBannerAsset("state", bannerFor(scope, "state", uf)) !== null })) : undefined;

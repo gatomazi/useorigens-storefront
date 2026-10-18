@@ -9,7 +9,7 @@ import type { RegionSlug } from "../geo/regions";
 import { storeOf } from "./scope";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
 import { isUmaPencaSource, type Customizer, type Page, type ScopeDoc, type Section, type Source } from "../site-config/schema";
-import { groundReadability, readability, type ReadabilityIssue } from "./contrast";
+import { groundReadability, heroTextColors, readability, type ReadabilityIssue } from "./contrast";
 import { isArticleOfRegion } from "../umapenca/region";
 import { readUmaPencaSnapshot } from "../umapenca/snapshot";
 import { ARTICLE_KIND_LABELS } from "../umapenca/types";
@@ -153,7 +153,7 @@ export function sectionReadability(section: Section): ReadabilityIssue[] {
   const hasImage = Boolean(image?.mobile || image?.desktop);
   // The campaign keeps its own dark surface (with product crops) when it has neither image nor fill, so only judge what is configured.
   if (section.template === "campaign" && !hasImage && section.appearance.fill.kind === "none") return [];
-  return readability(section.appearance, tone, hasImage);
+  return readability(section.appearance, tone, hasImage, heroTextColors(section));
 }
 
 /** Blocking readability problems of a page's own ground (its text over its colour); warnings stay in the editor. */

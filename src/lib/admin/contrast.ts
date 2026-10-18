@@ -7,7 +7,7 @@
  * A `blocking` result stops a publish (unreadable text is a bug); a `warning` is shown but allowed.
  */
 import { contrastRatio, relativeLuminance as luminance } from "../site-config/color";
-import type { Appearance, Color, Fill, Overlay, PageBackdrop } from "../site-config/schema";
+import type { Appearance, Color, Fill, Overlay, PageBackdrop, Section } from "../site-config/schema";
 
 const TOKEN_HEX: Record<string, string> = { "token:ground": "#e5e5e5", "token:region-primary": "#4d543d", "token:near-black": "#0a0c0a" };
 
@@ -25,12 +25,13 @@ function fillColors(fill: Fill): string[] {
 
 export type ReadabilityIssue = { level: "blocking" | "warning"; message: string };
 
-export function readability(appearance: Appearance, tone: "light" | "dark", hasImage: boolean): ReadabilityIssue[] {
-  const text = tone === "dark" ? "#ffffff" : "#000000";
+/** `own`: the exact colours the owner gave the section's text (the hero's "Cores do lado do texto"), measured instead of the tone's white or black. */
+export function readability(appearance: Appearance, tone: "light" | "dark", hasImage: boolean, own?: Color[]): ReadabilityIssue[] {
+  const texts = own && own.length > 0 ? own.map(hexOf) : [tone === "dark" ? "#ffffff" : "#000000"];
   const issues: ReadabilityIssue[] = [];
   if (!hasImage) {
-    const worst = Math.min(...fillColors(appearance.fill).map((c) => contrastRatio(text, c)));
-    if (worst < 3) issues.push({ level: "blocking", message: `O texto ${tone === "dark" ? "claro" : "escuro"} quase não se lê sobre este fundo (contraste ${worst.toFixed(1)}:1; o mínimo aceito é 3:1).` });
+    const worst = Math.min(...fillColors(appearance.fill).flatMap((c) => texts.map((text) => contrastRatio(text, c))));
+    if (worst < 3) issues.push({ level: "blocking", message: `O texto ${own?.length ? "nas cores escolhidas" : tone === "dark" ? "claro" : "escuro"} quase não se lê sobre este fundo (contraste ${worst.toFixed(1)}:1; o mínimo aceito é 3:1).` });
     else if (worst < 4.5) issues.push({ level: "warning", message: `Contraste ${worst.toFixed(1)}:1: legível para títulos, fraco para textos pequenos (o ideal é 4,5:1).` });
     return issues;
   }
@@ -50,6 +51,17 @@ export function groundReadability(backdrop: PageBackdrop): ReadabilityIssue[] {
   const issues = readability({ fill: { kind: "solid", color: backdrop.color }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } }, backdrop.tone, false);
   if (backdrop.pattern && backdrop.pattern.opacity > 0.5) issues.push({ level: "warning", message: "Pattern forte: títulos e preços ficam por cima dele. Se atrapalhar a leitura, diminua a intensidade." });
   return issues;
+}
+
+/**
+ * The three-card hero's text in the owner's own colours ("Cores do lado do texto"): the headline and the supporting text, the theme's dark ink where one is
+ * left alone. None for the "feature" opening (its text sits on a ground of its own; the section's colour paints the product half) or without colours.
+ */
+export function heroTextColors(section: Pick<Section, "template" | "variant" | "heroColors">): Color[] | undefined {
+  if (section.template !== "hero" || section.variant === "feature" || !section.heroColors) return undefined;
+  const { title, text } = section.heroColors;
+  if (!title && !text) return undefined;
+  return [title ?? "#000000", text ?? "#000000"];
 }
 
 /** The text tone that reads best on a colour: light text on a dark ground, dark text on a light one. */

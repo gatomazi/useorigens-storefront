@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { applyOp } from "@/lib/admin/draft-ops";
-import { parseFeaturedFields, parseFeaturedRotation } from "@/lib/admin/section-form";
+import { parseFeaturedFields, parseFeaturedRotation, parseSectionForm } from "@/lib/admin/section-form";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { cityBySlug } from "@/lib/geo/cities";
 import { mediaRefsOfDoc, validateScopeDoc, validateSection } from "@/lib/site-config/schema";
@@ -168,6 +168,22 @@ describe("the hero's featured references in the document", () => {
     expect(validateSection({ ...sul[0], featuredRotation: "slide" }).ok).toBe(true);
     expect(validateSection({ ...sul[0], featuredRotation: "shuffle" } as never).ok).toBe(false);
     expect(validateSection({ ...sul[1], featuredRotation: "random" }).ok).toBe(false);
+  });
+
+  test("given colours of the text side, when validated, then theme tokens and exact colours pass on the hero only; an unknown element or colour is refused", () => {
+    const sul = seed.docs.sul.home!.sections;
+    expect(validateSection({ ...sul[0], heroColors: { background: "#213b30", title: "#ffffff", field: "token:region-primary" } }).ok).toBe(true);
+    expect(validateSection({ ...sul[0], heroColors: { shadow: "#000000" } } as never).ok).toBe(false);
+    expect(validateSection({ ...sul[0], heroColors: { title: "red" } } as never).ok).toBe(false);
+    expect(validateSection({ ...sul[1], heroColors: { title: "#ffffff" } }).ok).toBe(false);
+  });
+
+  test("given the colour fields, when parsed, then an empty one is the theme's and a colour the form does not post (the ground, in the three-card hero) is kept", () => {
+    const f = (o: Record<string, string>) => ({ get: (k: string) => (k in o ? o[k] : null) });
+    const hero = { ...seed.docs.sul.home!.sections[0], heroColors: { background: "#213b30" as const, title: "#000000" as const } };
+    const patch = parseSectionForm(f({ hero_colors_present: "1", hc_title: "#ffffff", hc_text: "", hc_field: "token:near-black" }), hero);
+    expect(patch.heroColors).toEqual({ background: "#213b30", title: "#ffffff", field: "token:near-black" });
+    expect(parseSectionForm(f({ hero_colors_present: "1", hc_background: "", hc_title: "" }), hero).heroColors).toBeUndefined();
   });
 
   test("given the feature opening's fields, when parsed, then up to eight products come with their banners (empty alt = decorative) and the rotation", () => {
