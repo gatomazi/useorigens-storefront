@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { placeSearchCopy } from "@/lib/search/copy";
+import { fetchResults } from "@/lib/search/fetch-results";
 import type { GlobalGroup, GlobalResult, GlobalSearchResponse } from "@/lib/search/global";
 import { SOURCES } from "@/lib/analytics/sources";
 import { carryCampaign } from "@/lib/analytics/campaign";
@@ -44,22 +45,6 @@ export function SearchIcon({ className }: { className: string }) {
 }
 
 const DEBOUNCE_MS = 140;
-const responses = new Map<string, Promise<GlobalSearchResponse>>();
-
-function fetchResults(region: RegionSlug, q: string, signal: AbortSignal): Promise<GlobalSearchResponse> {
-  const key = `${region}|${q}`;
-  let promise = responses.get(key);
-  if (!promise) {
-    promise = fetch(`/api/busca?${new URLSearchParams({ region, q })}`, { signal }).then((res) => {
-      if (!res.ok) throw new Error(`search ${res.status}`);
-      return res.json() as Promise<GlobalSearchResponse>;
-    });
-    promise.catch(() => responses.delete(key)); // a failed or aborted query can be asked again
-    responses.set(key, promise);
-    if (responses.size > 60) responses.delete(responses.keys().next().value!);
-  }
-  return promise;
-}
 
 const INK_IMAGES = "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/";
 const GROUP_LABEL: Record<Exclude<GlobalGroup, "places">, string> = { designs: "Estampas", editorial: "Coleções e temas" };
