@@ -332,6 +332,27 @@ export function stateSubcategoryChoice(region: RegionSlug, doc: ScopeDoc | undef
   return { hidden: records.filter((c) => c.isAvailable && !kept.has(c.id)).map(ref), added: records.filter((c) => !c.isAvailable && kept.has(c.id)).map(ref) };
 }
 
+const statelessMerch = new WeakMap<readonly CollectionRecord[], WeakMap<StoreProducts, Set<string>>>();
+/**
+ * The store's merch products that are in NO collection named after a state ("Bah | Dizeres", "Made In Sul"): of no state in particular, so every
+ * state page of their region shows them in its categories and subcategories (state-hierarchy.ts `everyState`; `regionItem` keeps them to their
+ * region). City designs are never in it: their city says their state. Cached per synced file and catalog.
+ */
+function merchOfNoState(records: readonly CollectionRecord[], products: StoreProducts): Set<string> {
+  let byCatalog = statelessMerch.get(records);
+  if (!byCatalog) statelessMerch.set(records, (byCatalog = new WeakMap()));
+  const cached = byCatalog.get(products);
+  if (cached) return cached;
+  const inSomeState = new Set<string>();
+  for (const uf of Object.keys(STATE_NAMES)) {
+    const parent = stateCollectionIn(records, uf);
+    for (const id of parent ? (completeMembers(parent) ?? parent.memberIds) : []) inSomeState.add(id);
+  }
+  const out = new Set([...products.merch.keys()].filter((id) => !inSomeState.has(id)));
+  byCatalog.set(products, out);
+  return out;
+}
+
 /** The collection named after a state ("Paraná") among a store's collections, or null. */
 function stateCollectionIn(records: readonly CollectionRecord[], uf: string): CollectionRecord | null {
   const wanted = normalizeText(STATE_NAMES[uf] ?? "");
@@ -354,7 +375,7 @@ function stateRowItems(region: RegionSlug, c: CollectionRecord, ids: readonly st
 /**
  * The state page's rows. INK has no parent/child between collections, so the hierarchy is ours (state-hierarchy.ts): the state's own collection ("Pará",
  * usually internal) > the region's categories > its subcategories, each product in the deepest row that shows it, and a last row with what is left of
- * the state. Each row in its collection's arrangement for the region, only products of the catalog and of this region, at least `STATE_ROW_MIN_ITEMS`
+ * the state; merch of no state counts as every state's (`merchOfNoState`). Each row in its collection's arrangement for the region, only products of the catalog and of this region, at least `STATE_ROW_MIN_ITEMS`
  * (`STATE_GRID_MIN_ITEMS` for a row the region shows as a grid).
  * No parent, no rows.
  */
@@ -365,6 +386,7 @@ export function stateCollectionRows(region: RegionSlug, uf: string, doc: ScopeDo
   const display = (c: CollectionRecord) => stateRowDisplay(region, doc, c.id);
   return stateHierarchyRows({
     state: parent,
+    everyState: merchOfNoState(getStoreCollections(storeForRegion(region), filePath)?.collections ?? [], products),
     categories: stateCategoryCollections(region, doc, filePath).records,
     subcategories: stateSubcategoryCollections(region, doc, filePath).records,
     members: (c) => completeMembers(c) ?? c.memberIds,

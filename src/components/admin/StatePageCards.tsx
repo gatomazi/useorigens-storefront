@@ -209,7 +209,7 @@ export function StatePageCards({ scope, rev, doc, baseDoc }: Props) {
                 {!c.isAvailable && <span className="a-badge" title="Coleção interna na INK, incluída por você">interna</span>}
                 {homeOf(c.id) && <span className="a-muted text-[0.8125rem]">em {homeOf(c.id)}</span>}
                 {perStateCounts(c)}
-                {subcategories.manual && shownIn(c.id).every((x) => x.count === 0) && <span className="a-badge warn" title="Nenhum estado tem produtos suficientes desta coleção na coleção do estado">não aparece em nenhum estado</span>}
+                {subcategories.manual && shownIn(c.id).every((x) => x.count === 0) && <span className="a-badge warn" title="Nenhum estado tem produtos suficientes desta coleção: conta o que está na coleção do estado e o merch que não está em estado nenhum. Em carrossel são 3; experimente a grade.">não aparece em nenhum estado</span>}
                 <div className="ml-auto flex flex-wrap gap-1">
                   {displayForm(c, "estado-subcategorias")}
                   {subcategories.manual ? (
@@ -290,7 +290,7 @@ export function StatePageCards({ scope, rev, doc, baseDoc }: Props) {
 
       <section id="estado-previa" className="a-card scroll-mt-4 p-5" aria-labelledby="estado-previa-titulo" data-testid="state-tree">
         <h2 id="estado-previa-titulo" className="a-h2">Como fica cada estado</h2>
-        <p className="a-muted mt-2 max-w-3xl text-[0.875rem]">Os carrosséis de categoria de cada página, na ordem em que aparecem, com o rascunho de agora. Cada produto fica no carrossel mais fundo que aparece: subcategoria, depois categoria, depois o do próprio estado (“Mais {stateOfUf(ufs[0])}”).</p>
+        <p className="a-muted mt-2 max-w-3xl text-[0.875rem]">Os carrosséis de categoria de cada página, na ordem em que aparecem, com o rascunho de agora. Cada produto fica no carrossel mais fundo que aparece: subcategoria, depois categoria, depois o do próprio estado (“Mais {stateOfUf(ufs[0])}”). Um produto que não está em nenhuma coleção de estado (ex.: “Bah | Dizeres”) aparece nas categorias e subcategorias de todos os estados da região.</p>
         <div className="mt-3 grid gap-4 md:grid-cols-3">
           {ufs.map((uf) => (
             <div key={uf}>
