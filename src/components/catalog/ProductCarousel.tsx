@@ -4,7 +4,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { useCallback, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import type { ProductTags } from "@/lib/site-config/schema";
-import { CustomizerCardLink, ProductCardLink, ProductSectionHeading, SOLID_CARDS } from "./ProductCard";
+import { CustomizerCardLink, ProductCardLink, ProductSectionHeading, SOLID_CARDS, ViewAllCardLink } from "./ProductCard";
 
 export type CarouselItem = {
   id: string;
@@ -66,7 +66,8 @@ const CARD_SIZES = "(min-width: 1280px) 19vw, (min-width: 1024px) 22vw, (min-wid
  *
  * `viewAllHref`, when given, is a real store collection URL, verified live (never guessed — see
  * editorial/collections.ts). It renders as an outlined "Ver todos" button next to the title, on every width (quieter than
- * the cards' filled buttons, the arrows' height); if the title is too long to share the row, it wraps to its own line underneath.
+ * the cards' filled buttons, the arrows' height); if the title is too long to share the row, it wraps to its own line underneath. With `endLabel`
+ * (Aparência → Card no fim dos carrosséis) the row also ends in one more card to that same address, for whoever scrolls to the end instead.
  */
 export function ProductCarousel({
   items,
@@ -77,6 +78,7 @@ export function ProductCarousel({
   tone = "light",
   viewAllHref,
   viewAllLabel = "Ver todos",
+  endLabel,
   sourceSection,
   leading,
   buy,
@@ -98,6 +100,8 @@ export function ProductCarousel({
   /** Real store collection URL for "Ver todos". Omit when there is no single real destination. */
   viewAllHref?: string;
   viewAllLabel?: string;
+  /** The text of the last card ("Ver todas as 128 peças dessa coleção", `carouselEndText`), to `viewAllHref`; absent (or no `viewAllHref`) = no last card. */
+  endLabel?: string;
   /** GoToInk `source_section` — one value for the whole carousel instance, e.g. "home_terra". This is the one
    * shared click point behind five of the home's sections (Da Nossa Terra, Redesenhos, Feito Para Você, Fala
    * daqui, DDD) — CLAUDE_ADENDO_4_EVENTOS_META_STOREFRONT.md §2. */
@@ -158,6 +162,12 @@ export function ProductCarousel({
               <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={eager && i < 2} sourceSection={sourceSection} buy={buy} tags={tags} />
             </li>
           ))}
+          {viewAllHref && endLabel && (
+            // On a phone the row runs to the screen's edge (the next card peeks in): the last card keeps the page's gutter after it instead.
+            <li key="view-all-card" className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 pr-4 sm:basis-[34%] sm:pr-0 sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
+              <ViewAllCardLink href={viewAllHref} label={endLabel} dark={dark} />
+            </li>
+          )}
         </ul>
       </div>
     </div>

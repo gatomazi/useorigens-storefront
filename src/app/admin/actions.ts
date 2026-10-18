@@ -27,6 +27,7 @@ import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collec
 import { MUNDO_MODOS, type MundoModo } from "@/lib/site-config/mundo-schema";
 import { DEFAULT_BUY_LABEL, HOME_THEMES, isUmaPencaSource, MAX_BUY_LABEL, MAX_COLLECTION_NOTE, maxSectionProducts, MIN_SECTION_PRODUCTS, type CollectionNote, type HomeThemeName, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { CARD_BUY_STYLE_NAME, postedBuyStyle } from "@/lib/site-config/cards-schema";
+import { DEFAULT_CAROUSEL_END_LABEL, MAX_CAROUSEL_END_LABEL } from "@/lib/site-config/carousel-end-schema";
 import { hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
 import { editorialCollections } from "@/lib/catalog/editorial-collections";
 import { sourceProblem } from "@/lib/admin/validate-draft";
@@ -659,7 +660,7 @@ export async function saveThemeAction(fd: FormData) {
 }
 
 /**
- * Publishes the GLOBAL document (owner only), from Publicar: the Use Origens palette, the cards' button, Meu Pequeno Mundo and the global tracking, all
+ * Publishes the GLOBAL document (owner only), from Publicar: the Use Origens palette, the cards' button, the carousels' last card, Meu Pequeno Mundo and the global tracking, all
  * at once (they are one document). Regions that inherit change together, so a change of an effective tracking ID needs the confirmation.
  */
 export async function publishGlobalAction(fd: FormData) {
@@ -674,6 +675,21 @@ export async function publishGlobalAction(fd: FormData) {
   await audit(actor, result.outcome.status === "failed" ? "publish.failed" : "publish", "global", result.outcome.releaseId, { status: result.outcome.status });
   if (result.outcome.status === "failed") back(here, { err: ["A publicação falhou ao gravar o arquivo; a versão anterior continua no ar."] });
   back(here, { ok: `Configuração global publicada (release ${result.outcome.releaseId})${parts.length ? `: ${parts.join(", ")}` : ""}.` });
+}
+
+/**
+ * Aparência (owner): the last card of every product carousel with a "Ver todos" ("Ver todas as {n} peças dessa coleção"), saved in the GLOBAL draft.
+ * On: the card opens the same address as the "Ver todos" above the carousel. Off: no last card, as before. Published from Publicar → Configuração global.
+ */
+export async function saveCarouselEndAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const on = fd.get("carousel_end") === "on";
+  const label = text(fd, "carousel_end_label").replace(/\s+/g, " ").slice(0, MAX_CAROUSEL_END_LABEL).trim() || DEFAULT_CAROUSEL_END_LABEL;
+  const outcome = await applyAndSave("global", { type: "set-carousel-end", carouselEnd: on ? { label } : null }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/aparencia#fim-carrossel", { err: outcome.errors.map((e) => (e.includes("carouselEnd") ? `O texto do card precisa ter de 1 a ${MAX_CAROUSEL_END_LABEL} caracteres.` : e)) });
+  await audit(actor, "draft.save", "global", "set-carousel-end");
+  back("/admin/aparencia#fim-carrossel", { ok: on ? `Rascunho salvo: card “${label}” no fim dos carrosséis. Publique a configuração global para valer na loja.` : "Rascunho salvo: os carrosséis voltam a terminar no último produto. Publique a configuração global para valer na loja." });
 }
 
 /**

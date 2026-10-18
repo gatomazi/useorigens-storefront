@@ -11,6 +11,7 @@
  */
 import { validateCards } from "./cards-schema";
 import { validateMundo } from "./mundo-schema";
+import { validateCarouselEnd } from "./carousel-end-schema";
 import { validateNavigation, validateTheme } from "./navigation-schema";
 import { validateInkTheme } from "./ink-theme-schema";
 import { validatePodio } from "./podio-schema";
@@ -153,17 +154,19 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // Navigation and theme are optional and cosmetic: an invalid one is dropped (the region keeps its current look and the default menu), never the region.
   // Promotions too: an invalid list means no button (never a broken region, never a half-checked coupon).
   // The cards' setting as well: an invalid one means each section decides, as before (never the global scope, which carries the tracking, back to the seed).
+  // And the carousels' last card: an invalid one means no last card, as before it existed.
   // And the pódio switch: an invalid one means the pódio stays on, as before the switch existed.
   // And the "Meu Pequeno Mundo" switch: an invalid one means the env alone decides, as before the switch existed.
   // And the "Tema da INK": an invalid one means every INK surface stays native (never a guessed look).
   // And the state-page switches: an invalid one means every section shows, as before they existed.
   // And the top strip: an invalid one means the storefront's default strip and the INK's own on its pages.
-  for (const key of ["navigation", "theme", "promotions", "cards", "podio", "mundo", "statePage", "topBar", "inkTheme"] as const) {
+  for (const key of ["navigation", "theme", "promotions", "cards", "carouselEnd", "podio", "mundo", "statePage", "topBar", "inkTheme"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
       : key === "theme" ? validateTheme(candidate[key], scope, `${scope}.theme`)
       : key === "cards" ? validateCards(candidate[key], scope, `${scope}.cards`)
+      : key === "carouselEnd" ? validateCarouselEnd(candidate[key], scope, `${scope}.carouselEnd`)
       : key === "podio" ? validatePodio(candidate[key], scope, `${scope}.podio`)
       : key === "mundo" ? validateMundo(candidate[key], scope, `${scope}.mundo`)
       : key === "statePage" ? validateStatePage(candidate[key], scope, `${scope}.statePage`)

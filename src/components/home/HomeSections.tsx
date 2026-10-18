@@ -26,6 +26,7 @@ import type { RegionSlug } from "@/lib/geo/regions";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
 import { customizerFigure, firstImageSectionId, focalToCss, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
 import { cardBuy, cardButtonOf, type CardBuy } from "@/lib/site-config/cards-schema";
+import { carouselEndOf, carouselEndText, type CarouselEndConfig } from "@/lib/site-config/carousel-end-schema";
 import { DEFAULT_TILE_CTA, type Color, type Fill, type MediaRef, type Page, type PublishedBundle, type Section } from "@/lib/site-config/schema";
 import { Pagination } from "@/components/catalog/Pagination";
 import { numberPt } from "@/lib/format";
@@ -57,6 +58,8 @@ export function HomeSections({
   const doc = bundle.docs[region];
   // The store-wide buy button (Aparência, global): on every product card, unless a section set a text of its own.
   const cardButton = cardButtonOf(bundle);
+  // The store-wide last card of the carousels (Aparência, global): "Ver todas as {n} peças dessa coleção", to the section's "Ver todos".
+  const carouselEnd = carouselEndOf(bundle);
   // A page (hotpage / landing) is drawn by the very same renderer: its sections instead of the home's.
   const sections = page ? page.sections.filter((s) => s.active && s.template !== "footer") : renderableSections(doc);
   const media = bundle.media;
@@ -213,7 +216,7 @@ export function HomeSections({
           }
 
           case "product-carousel":
-            return <CarouselSection key={s.id} eager={index < 2} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} compact={compactHero} />;
+            return <CarouselSection key={s.id} eager={index < 2} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} carouselEnd={carouselEnd} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} compact={compactHero} />;
 
           case "campaign": {
             const image = hasImage(bg);
@@ -304,6 +307,7 @@ function CarouselSection({
   card,
   pageTone,
   cardButton,
+  carouselEnd,
   searchSlug,
   compact = false,
   eager,
@@ -315,6 +319,8 @@ function CarouselSection({
   compact?: boolean;
   /** The store-wide buy button (global `cards`); the section's own button (text and style) wins. */
   cardButton?: CardBuy;
+  /** The store-wide last card of the carousels (global `carouselEnd`); absent = the row ends at its last product. */
+  carouselEnd?: CarouselEndConfig;
   /** The address of the collection page this paged grid is on, live (never in the panel's preview): it gets the mini search. */
   searchSlug?: string;
   /** The ground of the page the section is on, when that page has one of its own (PageGround). */
@@ -352,6 +358,10 @@ function CarouselSection({
   const onLight = pageTone === "dark" && ownSurface && tone === "light" ? "on-light" : "";
   // A paged grid already IS every product: no "Ver todos" there.
   const href = s.cta && !paged ? destinationHref(s.cta.dest, links, region) : null;
+  // The last card counts the products only where the "Ver todos" opens a collection page of the site: the very products that page lists (the same lookup).
+  const carouselRow = s.layout.display !== "grid" && carouselEnd;
+  const destination = carouselRow && href && s.cta?.dest.kind === "collection-page" && collectionPage ? collectionPage({ kind: "ink-category", store: s.cta.dest.store, collectionId: s.cta.dest.collectionId, order: "category", limit: 1 }, 1) : null;
+  const endLabel = carouselRow && href ? carouselEndText(carouselRow.label, destination?.status === "ok" ? destination.total : null) : undefined;
   // Carousel (a row that scrolls) or grid (every card on the page): same heading, cards and click tracking.
   const Display = s.layout.display === "grid" ? ProductGrid : ProductCarousel;
   const pages = paged?.status === "ok" ? paged : null;
@@ -397,6 +407,7 @@ function CarouselSection({
       intro={s.subtitle}
       viewAllHref={href ?? undefined}
       viewAllLabel={s.cta?.label}
+      endLabel={endLabel}
       sourceSection={SOURCES[s.analyticsSource]}
       buy={buy}
       tags={s.layout.tags}

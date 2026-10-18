@@ -16,6 +16,7 @@ import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-sc
 import type { PromotionsConfig } from "../site-config/promotions-schema";
 import type { TopBarConfig } from "../site-config/top-bar-schema";
 import type { CardsConfig } from "../site-config/cards-schema";
+import type { CarouselEndConfig } from "../site-config/carousel-end-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
 import type { InkThemeConfig } from "../site-config/ink-theme-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
@@ -104,6 +105,8 @@ export type DraftOp =
   | { type: "set-top-bar"; topBar: TopBarConfig }
   /** GLOBAL only: a buy button on every product card of the store (`cards.buyLabel`), or `null` to leave it to each section again. */
   | { type: "set-cards"; cards: CardsConfig | null }
+  /** GLOBAL only: the last card of every product carousel ("Ver todas as {n} peças dessa coleção"), or `null` to take it out again. */
+  | { type: "set-carousel-end"; carouselEnd: CarouselEndConfig | null }
   | { type: "set-mundo"; modo: MundoModo | null }
   /** REGION only: switches "O Pódio" on or off (home teaser, state pages and the daily calculation); on removes the setting (the default). */
   | { type: "set-podio"; enabled: boolean }
@@ -261,6 +264,13 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     if (doc.scope !== "global") return fail("the cards' setting belongs to the global scope");
     const next: ScopeDoc = { ...doc, cards: op.cards ?? undefined };
     if (!op.cards) delete next.cards;
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-carousel-end") {
+    if (doc.scope !== "global") return fail("the carousels' last card belongs to the global scope");
+    const next: ScopeDoc = { ...doc, carouselEnd: op.carouselEnd ?? undefined };
+    if (!op.carouselEnd) delete next.carouselEnd;
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }
