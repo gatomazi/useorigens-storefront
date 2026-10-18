@@ -2,6 +2,8 @@ import { isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { MAX_GLOBAL_QUERY, searchGlobal } from "@/lib/search/global";
 import { globalSearchIndex } from "@/lib/search/global-index";
+import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
+import { searchShowsDesigns } from "@/lib/site-config/search-schema";
 
 // One response per query: never prerendered. The work is an in-process scan of the prepared index (see global-index.ts) — no INK, no database.
 export const dynamic = "force-dynamic";
@@ -19,7 +21,9 @@ export async function GET(request: Request) {
 
   const started = performance.now();
   const index = globalSearchIndex();
-  const result = searchGlobal(index.byRegion, region, q);
+  // "Estampas na busca" (Aparência, global): switched off, the designs group is left out of the answer, not just hidden on screen.
+  const hidden = siteConfigHomeEnabled() && !searchShowsDesigns(homeBundle()) ? (["designs"] as const) : [];
+  const result = searchGlobal(index.byRegion, region, q, hidden);
   const ms = (performance.now() - started).toFixed(1);
   return Response.json(result, {
     headers: {

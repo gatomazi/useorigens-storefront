@@ -29,8 +29,8 @@ const isPublic = (ref: CollectionRef) => findCollection(ref.store, ref.collectio
 
 /** What a publish of the global document carries, in words: the parts of its draft that differ from what is published. Pure. */
 export function globalParts(published: ScopeDoc, draft: ScopeDoc): string[] {
-  const differs = (k: "theme" | "tracking" | "cards" | "carouselEnd" | "mundo") => json(published[k]) !== json(draft[k]);
-  return [differs("theme") ? "paleta da Use Origens" : null, differs("cards") ? "botão nos cards" : null, differs("carouselEnd") ? "card no fim dos carrosséis" : null, differs("mundo") ? "Meu Pequeno Mundo" : null, differs("tracking") ? "tracking global" : null].filter((x): x is string => x !== null);
+  const differs = (k: "theme" | "tracking" | "cards" | "carouselEnd" | "search" | "mundo") => json(published[k]) !== json(draft[k]);
+  return [differs("theme") ? "paleta da Use Origens" : null, differs("cards") ? "botão nos cards" : null, differs("carouselEnd") ? "card no fim dos carrosséis" : null, differs("search") ? "estampas na busca" : null, differs("mundo") ? "Meu Pequeno Mundo" : null, differs("tracking") ? "tracking global" : null].filter((x): x is string => x !== null);
 }
 
 /** The region document's own differences (pages and models are published separately and never count here). Pure on the two documents. */

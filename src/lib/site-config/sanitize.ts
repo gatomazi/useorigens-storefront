@@ -12,6 +12,7 @@
 import { validateCards } from "./cards-schema";
 import { validateMundo } from "./mundo-schema";
 import { validateCarouselEnd } from "./carousel-end-schema";
+import { validateSearch } from "./search-schema";
 import { validateNavigation, validateTheme } from "./navigation-schema";
 import { validateInkTheme } from "./ink-theme-schema";
 import { validatePodio } from "./podio-schema";
@@ -172,13 +173,14 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // And the "Tema da INK": an invalid one means every INK surface stays native (never a guessed look).
   // And the state-page switches: an invalid one means every section shows, as before they existed.
   // And the top strip: an invalid one means the storefront's default strip and the INK's own on its pages.
-  for (const key of ["navigation", "theme", "promotions", "cards", "carouselEnd", "podio", "mundo", "statePage", "topBar", "inkTheme"] as const) {
+  for (const key of ["navigation", "theme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "inkTheme"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
       : key === "theme" ? validateTheme(candidate[key], scope, `${scope}.theme`)
       : key === "cards" ? validateCards(candidate[key], scope, `${scope}.cards`)
       : key === "carouselEnd" ? validateCarouselEnd(candidate[key], scope, `${scope}.carouselEnd`)
+      : key === "search" ? validateSearch(candidate[key], scope, `${scope}.search`)
       : key === "podio" ? validatePodio(candidate[key], scope, `${scope}.podio`)
       : key === "mundo" ? validateMundo(candidate[key], scope, `${scope}.mundo`)
       : key === "statePage" ? validateStatePage(candidate[key], scope, `${scope}.statePage`)

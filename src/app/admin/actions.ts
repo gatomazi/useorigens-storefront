@@ -758,6 +758,20 @@ export async function publishGlobalAction(fd: FormData) {
 }
 
 /**
+ * Aparência (owner): the "Estampas" group of the global search, saved in the GLOBAL draft. Off: the search answers places and editorial pages only, in
+ * every region. Published from Publicar → Configuração global.
+ */
+export async function saveSearchAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const on = fd.get("search_designs") === "on";
+  const outcome = await applyAndSave("global", { type: "set-search-designs", on }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/aparencia#busca", { err: outcome.errors });
+  await audit(actor, "draft.save", "global", "set-search-designs");
+  back("/admin/aparencia#busca", { ok: on ? "Rascunho salvo: a busca volta a mostrar as estampas. Publique a configuração global para valer na loja." : "Rascunho salvo: a busca deixa de mostrar as estampas (só lugares e páginas). Publique a configuração global para valer na loja." });
+}
+
+/**
  * Aparência (owner): the last card of every product carousel with a "Ver todos" ("Ver todas as {n} peças dessa coleção"), saved in the GLOBAL draft.
  * On: the card opens the same address as the "Ver todos" above the carousel. Off: no last card, as before. Published from Publicar → Configuração global.
  */

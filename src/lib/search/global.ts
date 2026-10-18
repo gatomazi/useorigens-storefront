@@ -153,12 +153,17 @@ const toResult = ({ names: _n, strong: _s, weak: _w, rank: _r, sales: _sa, ...re
  * then the other launched regions' clearly relevant matches in one "Em outras regiões" block. Regions not present in `byRegion` (not launched)
  * are simply never searched.
  */
-export function searchGlobal(byRegion: ReadonlyMap<RegionSlug, readonly PreparedGlobalDoc[]>, region: RegionSlug, rawQuery: string): GlobalSearchResponse {
+/**
+ * `hidden`: groups the store switched off (Aparência → "Estampas na busca"): their documents never rank, in this region or the others, so the first
+ * result (what Enter opens) and the counts are of what is shown.
+ */
+export function searchGlobal(byRegion: ReadonlyMap<RegionSlug, readonly PreparedGlobalDoc[]>, region: RegionSlug, rawQuery: string, hidden: readonly GlobalGroup[] = []): GlobalSearchResponse {
   const query = rawQuery.replace(/\s+/g, " ").trim().slice(0, MAX_GLOBAL_QUERY);
   const empty: GlobalSearchResponse = { query, region, groups: [], others: [], total: 0 };
   if (normalizeText(query).length === 0) return empty;
 
-  const own = rankGlobal(byRegion.get(region) ?? [], query);
+  const shown = (docs: readonly PreparedGlobalDoc[]) => (hidden.length === 0 ? docs : docs.filter((d) => !hidden.includes(GROUP_OF[d.doc.kind])));
+  const own = rankGlobal(shown(byRegion.get(region) ?? []), query);
   const groups: GlobalSearchResponse["groups"] = [];
   for (const group of ["places", "designs", "editorial"] as const) {
     const all = own.filter((h) => GROUP_OF[h.doc.kind] === group);
@@ -170,7 +175,7 @@ export function searchGlobal(byRegion: ReadonlyMap<RegionSlug, readonly Prepared
   const elsewhere: GlobalHit[] = [];
   for (const [other, docs] of byRegion) {
     if (other === region) continue;
-    for (const hit of rankGlobal(docs, query)) if (Math.floor(hit.score / 10) >= OTHERS_MIN_CLASS && !ownKeys.has(hit.doc.key)) elsewhere.push(hit);
+    for (const hit of rankGlobal(shown(docs), query)) if (Math.floor(hit.score / 10) >= OTHERS_MIN_CLASS && !ownKeys.has(hit.doc.key)) elsewhere.push(hit);
   }
   const others = elsewhere.sort(compareHits).slice(0, OTHERS_LIMIT).map((h) => toResult(h.doc));
   return { query, region, groups, others, total: own.length };

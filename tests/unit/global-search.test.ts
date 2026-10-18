@@ -8,8 +8,11 @@ import type { RegionSlug } from "@/lib/geo/regions";
 import { placeSearchCopy } from "@/lib/search/copy";
 import { prepareGlobalDocs, searchGlobal, type GlobalDoc } from "@/lib/search/global";
 import { buildGlobalDocs, clusterPieces } from "@/lib/search/global-index";
-import type { ScopeDoc } from "@/lib/site-config/schema";
+import { validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
+import { applyOp } from "@/lib/admin/draft-ops";
+import { diffDocs } from "@/lib/admin/diff";
+import { searchShowsDesigns, validateSearch } from "@/lib/site-config/search-schema";
 import { indexOf, tuple } from "./garment-index-fixture";
 
 const place = (region: RegionSlug, name: string, uf: string) => {
@@ -96,6 +99,33 @@ describe("global search: places", () => {
 
   test("an exact place outranks the designs that carry its name", () => {
     expect(searchGlobal(index(), "sul", "bagé").groups.map((g) => g.group)).toEqual(["places", "designs"]);
+  });
+});
+
+describe("global search: the store's \"Estampas na busca\" switch", () => {
+  test("off, the designs group is left out of the answer, in this region and the others; places stay and the total counts what is shown", () => {
+    const idx = index();
+    const on = searchGlobal(idx, "sul", "bagé");
+    const off = searchGlobal(idx, "sul", "bagé", ["designs"]);
+    expect(off.groups.map((g) => g.group)).toEqual(["places"]);
+    expect(titles(off, "places")).toEqual(titles(on, "places"));
+    expect(off.total).toBe(on.groups.find((g) => g.group === "places")!.total);
+    expect([...off.others].every((r) => r.kind !== "design")).toBe(true);
+  });
+
+  test("the panel switch: off keeps { designs: false } in the global document, on removes it; only the global scope; the publish screen says it", () => {
+    const seed = buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null });
+    const global = structuredClone(seed.docs.global);
+    const off = applyOp(global, { type: "set-search-designs", on: false }, { newId: () => "x" });
+    expect(off.ok && off.doc.search).toEqual({ designs: false });
+    expect(off.ok && validateScopeDoc(off.doc).ok).toBe(true);
+    const on = off.ok ? applyOp(off.doc, { type: "set-search-designs", on: true }, { newId: () => "x" }) : null;
+    expect(on?.ok && on.doc).toEqual(global);
+    expect(applyOp(structuredClone(seed.docs.sul), { type: "set-search-designs", on: false }, { newId: () => "x" }).ok).toBe(false);
+    expect(off.ok && diffDocs(global, off.doc).map((c) => c.text)).toEqual(["Estampas na busca: mostradas → escondidas"]);
+    expect(off.ok && searchShowsDesigns({ ...seed, docs: { ...seed.docs, global: off.doc } })).toBe(false);
+    expect(searchShowsDesigns(seed)).toBe(true);
+    expect(validateSearch({ designs: true }, "global").ok).toBe(false);
   });
 });
 
