@@ -4,7 +4,7 @@
  * goes through `validateSection` in `applyOp`.
  */
 import { FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, variantsOf, type HeroColors, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
-import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, type TileFormat, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
+import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, TILE_VEILS, type TileFormat, type TileVeil, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { postedBuyStyle } from "../site-config/cards-schema";
@@ -136,6 +136,9 @@ export function parseGridTiles(f: Fields): { tiles: GridTile[]; problems: string
     }
     const cta = str(f, `tile_${i}_cta`).slice(0, MAX_TILE_CTA).trim();
     if (cta) tile.cta = cta;
+    // A veil behind the text: only where text sits on a picture (never the product card, whose text is on a plain colour).
+    const veil = str(f, `tile_${i}_veil`);
+    if (format !== "product" && (TILE_VEILS as readonly string[]).includes(veil)) tile.veil = veil as TileVeil;
     if (format === "banner") {
       const mobileId = str(f, `tile_${i}_image_mobile`);
       if (mobileId) tile.imageMobile = { assetId: mobileId, alt: "", decorative: true };

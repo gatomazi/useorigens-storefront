@@ -19,6 +19,8 @@ export type GridTileView = {
   color?: string;
   tone?: "light" | "dark";
   cta?: string;
+  /** A translucent block behind the text over the picture (CMS `veil`); absent = none. */
+  veil?: "soft" | "strong";
   /** "product": the first product of the destination collection (null: none resolved, the card keeps its colour and text). */
   product?: { imageUrl: string } | null;
 };
@@ -54,6 +56,16 @@ const ARROW = (
     <path d="M5 12h14M13 6l6 6-6 6" />
   </svg>
 );
+
+/**
+ * The veil behind text over a picture: a block the size of the text (its parent lines its children up at the start), dark under white text and light
+ * under dark text, with a slight blur of the photo behind. None without `veil`.
+ */
+const VEIL: Record<"light" | "dark", Record<"soft" | "strong", string>> = {
+  light: { soft: "bg-black/40", strong: "bg-black/65" },
+  dark: { soft: "bg-white/60", strong: "bg-white/85" },
+};
+const veilClass = (veil: GridTileView["veil"], text: "light" | "dark") => (veil ? `rounded-md px-3 py-2.5 backdrop-blur-[2px] ${VEIL[text][veil]}` : "");
 
 /** Name, caption and call of a collection card, in its tone (white text over a dark colour or the banner's scrim, ink over a light one). */
 function TileText({ tile, size }: { tile: GridTileView; size: "card" | "banner" }) {
@@ -114,7 +126,13 @@ function BannerTile({ tile, aspect, sizes }: { tile: GridTileView; aspect: strin
       )}
       <span aria-hidden="true" className={`absolute inset-x-0 bottom-0 block h-3/4 ${light ? "bg-gradient-to-t from-black/75 via-black/35 to-transparent" : "bg-gradient-to-t from-white/90 via-white/55 to-transparent"}`} />
       <span className="absolute inset-x-0 bottom-0 flex flex-col items-start p-4 sm:p-5">
-        <TileText tile={tile} size="banner" />
+        {tile.veil ? (
+          <span className={`flex max-w-full flex-col items-start ${veilClass(tile.veil, light ? "light" : "dark")}`}>
+            <TileText tile={tile} size="banner" />
+          </span>
+        ) : (
+          <TileText tile={tile} size="banner" />
+        )}
       </span>
     </TileLink>
   );
@@ -179,9 +197,11 @@ export function ImageGrid({
                   </svg>
                 )}
                 {overlay && (
-                  <span className={`absolute inset-x-0 bottom-0 block px-3 pb-3 pt-12 text-white sm:px-4 sm:pb-4 ${tile.image ? "bg-gradient-to-t from-black/75 via-black/35 to-transparent" : ""}`}>
-                    <span className="block text-[1.0625rem] font-extrabold leading-tight tracking-tight sm:text-[1.25rem]">{tile.label}</span>
-                    {tile.caption && <span className="mt-0.5 block text-[0.8125rem] leading-snug text-white/85 sm:text-[0.875rem]">{tile.caption}</span>}
+                  <span className={`absolute inset-x-0 bottom-0 flex flex-col items-start px-3 pb-3 pt-12 text-white sm:px-4 sm:pb-4 ${tile.image ? "bg-gradient-to-t from-black/75 via-black/35 to-transparent" : ""}`}>
+                    <span className={`block max-w-full ${tile.image ? veilClass(tile.veil, "light") : ""}`}>
+                      <span className="block text-[1.0625rem] font-extrabold leading-tight tracking-tight sm:text-[1.25rem]">{tile.label}</span>
+                      {tile.caption && <span className="mt-0.5 block text-[0.8125rem] leading-snug text-white/85 sm:text-[0.875rem]">{tile.caption}</span>}
+                    </span>
                   </span>
                 )}
               </span>
