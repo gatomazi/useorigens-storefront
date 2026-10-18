@@ -3,7 +3,7 @@
  * fallback (docs/admin/cms-v1-plan.md §2.6 and §6.1). No I/O; everything here is unit-tested in isolation.
  */
 import type { BannerAsset } from "../editorial/banners";
-import type { Appearance, Fill, MediaAssetInfo, Overlay, Point, PublishedBundle, Scope, ScopeDoc, Section, VendorSetting } from "./schema";
+import type { Appearance, Fill, MediaAssetInfo, MediaRef, Overlay, Point, PublishedBundle, Scope, ScopeDoc, Section, VendorSetting } from "./schema";
 
 // ── Tracking ──────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -125,6 +125,13 @@ export function resolveStateCovers(section: Section, media: PublishedBundle["med
     out[uf] = { mobile: image, desktop: image, alt: ref.decorative ? "" : ref.alt };
   }
   return out;
+}
+/** One picture of the document as a banner (the same file on both breakpoints, centred), or null when the media table does not know it. */
+export function mediaFigure(ref: MediaRef | undefined, media: PublishedBundle["media"]): { mobile: BannerImageLike; desktop: BannerImageLike; alt: string } | null {
+  const info = ref ? media[ref.assetId] : undefined;
+  if (!ref || !info) return null;
+  const image = { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}) };
+  return { mobile: image, desktop: image, alt: ref.decorative ? "" : ref.alt };
 }
 export type BannerImageLike = { src: string; width: number; height: number; variants?: { w: number; src: string }[] };
 

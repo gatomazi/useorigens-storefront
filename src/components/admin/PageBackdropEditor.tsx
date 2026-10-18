@@ -62,7 +62,7 @@ export function PageBackdropEditor({ backdrop, media, hidden, action }: { backdr
                 {media.some((m) => m.kind === "upload") && <optgroup label="Enviadas">{media.filter((m) => m.kind === "upload").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
                 <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label}</option>)}</optgroup>
               </select>
-              <p className="a-muted mt-1 text-[0.8125rem]">A imagem se repete lado a lado por toda a página. Funciona melhor um PNG/WebP com fundo transparente ou um desenho que encaixe nas bordas. Envie em Mídia.</p>
+              <p className="a-muted mt-1 text-[0.8125rem]">A imagem se repete lado a lado por toda a página. Funciona melhor um PNG/WebP com fundo transparente ou um desenho que encaixe nas bordas. Envie em Mídia. Tamanho recomendado: quadrada, o dobro do tamanho de cada repetição ({size * 2}×{size * 2} px para {size}px).</p>
             </div>
             {pattern && (
               <div className="grid gap-4 sm:grid-cols-2">

@@ -24,7 +24,7 @@ import { validateCustomizer, validatePage, validateScopeDoc, validateSection, ho
 import { HOME_THEME_LABEL, hasHomeTheme, newEditorialTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
 import type { RegionSlug } from "../geo/regions";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "nav" | "customizerCard" | "tiles" | "grid" | "variant">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "featuredRotation" | "nav" | "customizerCard" | "tiles" | "grid" | "variant">;
 
 export type DraftOp =
   /** `display: "grid"` creates the section already as a product grid (absent = a carousel). */

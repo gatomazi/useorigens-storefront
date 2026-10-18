@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CUSTOMIZER_MOCKUP, sizeHintText } from "@/lib/admin/image-sizes";
 import { notFound } from "next/navigation";
 import { publishTargetAction, removeCustomizerAction, restoreTargetAction, saveCustomizerAction } from "@/app/admin/actions";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
@@ -96,6 +97,7 @@ export default async function CustomizerEditor({ params, searchParams }: { param
                     {media.filter((m) => m.kind === "upload").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}
                     <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label}</option>)}</optgroup>
                   </select>
+                  <p className="a-muted mt-1 text-[0.8125rem]">{sizeHintText(CUSTOMIZER_MOCKUP)}</p>
                   <label className="a-label mt-2" htmlFor="mockup_alt">Descrição do mockup (acessibilidade)</label>
                   <input id="mockup_alt" name="mockup_alt" defaultValue={model.pageMockup?.alt ?? ""} className="a-input" maxLength={200} placeholder={`${customizerProductLabel(source)} ${model.name}`} />
                 </div>

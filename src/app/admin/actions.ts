@@ -31,7 +31,7 @@ import { DEFAULT_CAROUSEL_END_LABEL, MAX_CAROUSEL_END_LABEL } from "@/lib/site-c
 import { hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
 import { editorialCollections } from "@/lib/catalog/editorial-collections";
 import { sourceProblem } from "@/lib/admin/validate-draft";
-import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
+import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseFeaturedRotation, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
 import { parsePageBackdrop } from "@/lib/admin/page-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
@@ -228,6 +228,8 @@ export async function saveSection(fd: FormData) {
       const rejected = slots.filter((sl) => !sl.ok && !kept.has(`${sl.ref.store}:${sl.ref.productId}`));
       if (rejected.length > 0) back(`/admin/home/${id}`, { err: rejected.map((sl) => `Produto ${sl.ref.productId} não pode ser usado: ${sl.reason}.`) });
       patch.featured = refs;
+      // The "feature" opening only: how it goes through the products (absent = always the first).
+      patch.featuredRotation = ("variant" in patch ? patch.variant : section.variant) === "feature" ? parseFeaturedRotation(fd) : section.featuredRotation;
     } else if (mode === "seed") patch.featured = legacyFeaturedRefs(scope);
     else if (mode === "reset" && scope === "sul") patch.featured = undefined;
   }

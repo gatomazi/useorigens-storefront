@@ -20,11 +20,11 @@ import { PodioTeaser } from "@/components/podio/PodioTeaser";
 import { getPodiumLeaders } from "@/lib/podio/server";
 import { SOURCES } from "@/lib/analytics/sources";
 import { SearchDialog } from "@/components/search/SearchDialog";
-import { heroCards } from "@/lib/hero-featured";
+import { heroCards, heroSlides } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
-import { customizerFigure, firstImageSectionId, focalToCss, hasImage, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
+import { customizerFigure, firstImageSectionId, focalToCss, hasImage, mediaFigure, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
 import { cardBuy, cardButtonOf, type CardBuy } from "@/lib/site-config/cards-schema";
 import { carouselEndOf, carouselEndText, type CarouselEndConfig } from "@/lib/site-config/carousel-end-schema";
 import { DEFAULT_TILE_CTA, type Color, type Fill, type MediaRef, type Page, type PublishedBundle, type Section } from "@/lib/site-config/schema";
@@ -98,6 +98,8 @@ export function HomeSections({
                 statesAnchor={statesAnchor}
                 panelColor={panelColor}
                 panelImage={feature ? splitFigure(bg) : null}
+                slides={feature ? heroSlides(region, s.featured, home.heroFamilies).map((sl) => ({ product: sl.card, image: mediaFigure(sl.image, media) })) : undefined}
+                rotation={feature ? s.featuredRotation : undefined}
               />
             );
           }

@@ -7,6 +7,7 @@ import { eligibleFeaturedCount, legacyFeaturedRefs, resolveFeatured } from "@/li
 import { REGIONS, STATE_NAMES } from "@/lib/geo/regions";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import type { FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
+import type { FeaturedProductRef } from "@/lib/site-config/schema";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { SectionEditorForm } from "@/components/admin/SectionEditorForm";
@@ -33,8 +34,8 @@ export default async function EditSection({ params, searchParams }: { params: Pr
   const status = sourceStatus(section, ws.doc);
   const media = await listMedia();
   const anchor = section.template === "hero" ? undefined : section.anchor;
-  const slotViews = (refs: { store: string; productId: string }[]): FeaturedSlotView[] =>
-    resolveFeatured(scope, refs as never).map((sl) => ({ value: `${sl.ref.store}:${sl.ref.productId}`, ok: sl.ok, reason: sl.reason, familyName: sl.card?.familyName, cityName: sl.card?.cityName, uf: sl.card?.uf, price: sl.card?.price, imageUrl: sl.imageUrl, buyUrl: sl.buyUrl }));
+  const slotViews = (refs: FeaturedProductRef[]): FeaturedSlotView[] =>
+    resolveFeatured(scope, refs as never).map((sl) => ({ value: `${sl.ref.store}:${sl.ref.productId}`, ok: sl.ok, reason: sl.reason, familyName: sl.card?.familyName, cityName: sl.card?.cityName, uf: sl.card?.uf, price: sl.card?.price, imageUrl: sl.imageUrl, buyUrl: sl.buyUrl, ...(sl.ref.image ? { image: { assetId: sl.ref.image.assetId, alt: sl.ref.image.alt } } : {}) }));
   // Sul that was never customised keeps the three cards the code has always shown (read-only until the owner customises them).
   const featured =
     section.template === "hero"

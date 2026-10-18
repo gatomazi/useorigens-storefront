@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SHARE_IMAGE, sizeHintText } from "@/lib/admin/image-sizes";
 import { notFound } from "next/navigation";
 import { addCollectionSection, addStructuredSection, archivePageAction, duplicateSection, publishTargetAction, removePageAction, removeSection, reorderSections, restoreTargetAction, savePageBackdropAction, setSectionActive, updatePageAction } from "@/app/admin/actions";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
@@ -92,6 +93,7 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
               {media.filter((m) => m.kind === "upload").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}
               <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label}</option>)}</optgroup>
             </select>
+            <p className="a-muted mt-1 text-[0.8125rem]">{sizeHintText(SHARE_IMAGE)}</p>
           </div>
           <div><label className="a-label" htmlFor="seo_og_alt">Descrição da imagem (opcional)</label><input id="seo_og_alt" name="seo_og_alt" defaultValue={page.seo.ogImage?.alt ?? ""} className="a-input" maxLength={200} /></div>
           <div className="md:col-span-2">

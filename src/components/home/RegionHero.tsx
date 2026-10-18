@@ -12,6 +12,8 @@ import { DEFAULT_BUY_LABEL, type CardBuy } from "@/lib/site-config/cards-schema"
 import { CardButton, CardCall, CardFab } from "@/components/catalog/CardButton";
 import { CARD_PRICE } from "@/components/catalog/ProductCard";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
+import type { FeaturedRotation } from "@/lib/site-config/schema";
+import { HeroSlides } from "./HeroSlides";
 
 const HERO_COPY = { title: "O seu lugar,\ndo seu jeito.", body: "Encontre sua cidade e vista o lugar que faz parte de você." };
 
@@ -42,6 +44,8 @@ export function RegionHero({
   statesAnchor = "estados",
   panelColor,
   panelImage,
+  slides,
+  rotation,
 }: {
   region: RegionSlug;
   cityCount: number;
@@ -61,6 +65,10 @@ export function RegionHero({
   panelColor?: string;
   /** "feature" only: the section's picture (CMS), a banner in the product's place (the product's bar stays over it when there is one). */
   panelImage?: BannerAsset | null;
+  /** "feature" only: the products it goes through, each with its own banner (null = the section's picture); absent = the first of `trio`. */
+  slides?: { product: HeroFamilyCard; image: BannerAsset | null }[];
+  /** "feature" only: how it goes through `slides` (CMS `featuredRotation`); absent = always the first. */
+  rotation?: FeaturedRotation;
 }) {
   const r = REGIONS[region];
   const background = backdrop === undefined ? usableBannerAsset("hero", config) : null;
@@ -69,7 +77,7 @@ export function RegionHero({
       Ou explore por estado.
     </a>
   ) : null;
-  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} product={trio[0]} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} panelImage={panelImage ?? null} />;
+  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} slides={slides ?? trio.slice(0, 1).map((product) => ({ product, image: null }))} rotation={rotation} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} panelImage={panelImage ?? null} />;
   return (
     <section aria-labelledby="hero-title" className="relative isolate">
       {backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />}
@@ -157,11 +165,12 @@ const ALIGN_END = "lg:pr-[max(var(--gutter),calc(100%-var(--content-max)/2+var(-
  * the reading area alone.
  */
 function FeatureHero({
-  region, cityCount, product, copy, backdrop, buy, statesLink, panelColor, panelImage,
+  region, cityCount, slides, rotation, copy, backdrop, buy, statesLink, panelColor, panelImage,
 }: {
   region: RegionSlug;
   cityCount: number;
-  product: HeroFamilyCard | undefined;
+  slides: { product: HeroFamilyCard; image: BannerAsset | null }[];
+  rotation?: FeaturedRotation;
   copy: { title: string; body: string };
   backdrop: ReactNode;
   buy?: CardBuy;
@@ -172,10 +181,22 @@ function FeatureHero({
   const r = REGIONS[region];
   const call = buy?.label ?? DEFAULT_BUY_LABEL;
   const lines = copy.title.split("\n");
+  const product = slides[0]?.product;
+  // One product (or none, or "always the first"): one half, as before. Several, drawn or sliding: one half per product, its own banner or the section's.
+  const several = rotation !== undefined && slides.length > 1;
+  const panel = several ? (
+    <HeroSlides mode={rotation} labels={slides.map((sl) => `${sl.product.familyName}, ${sl.product.cityName} · ${sl.product.uf}`)}>
+      {/* A drawn product is not known on the server, so no picture is loaded first; a sliding one, only the first. */}
+      {slides.map((sl, i) => <FeaturePanel key={sl.product.familyId} product={sl.product} image={sl.image ?? panelImage} color={panelColor} call={call} priority={rotation === "slide" && i === 0} />)}
+    </HeroSlides>
+  ) : (
+    (product || panelImage) && <FeaturePanel product={product} image={slides[0]?.image ?? panelImage} color={panelColor} call={call} priority />
+  );
   return (
     <section aria-labelledby="hero-title" className="relative isolate border-y border-line">
       {backdrop}
-      <div className={`grid ${product ? "lg:grid-cols-2" : ""}`}>
+      {/* Columns that never grow with their content (minmax(0, 1fr)): the row of sliding products is wider than the screen by design. */}
+      <div className={`grid grid-cols-1 ${product || panelImage ? "lg:grid-cols-2" : ""}`}>
         <div className={`flex items-center px-[var(--gutter)] pb-10 pt-8 lg:py-20 lg:pr-14 ${product ? ALIGN_START : "wrap"}`}>
           <div className="w-full max-w-[40rem]">
             <span aria-hidden="true" className="mb-4 block h-[3px] w-12 bg-region-accent lg:mb-5" />
@@ -199,50 +220,59 @@ function FeatureHero({
           </div>
         </div>
 
-        {(product || panelImage) && (
-          <HeroPanel href={product?.href} color={panelColor} row={!panelImage}>
-            {panelImage ? (
-              // A banner in the product's place (the owner's picture, its own crop and framing per screen); the product's bar stays under it.
-              <span className="relative block min-h-[20rem] flex-1 sm:min-h-[24rem] lg:min-h-0">
-                <BannerBackground asset={panelImage} priority sizes="(min-width: 1024px) 50vw, 100vw" alt={panelImage.alt} />
-              </span>
-            ) : (
-              product && (
-                // One picture for every width: a thumbnail in the phone's row, the large photo from 1024px.
-                <span className={`flex shrink-0 items-center justify-center py-4 pl-[var(--gutter)] lg:flex-1 lg:py-14 ${ALIGN_END} lg:pl-14`}>
-                  <span className="block w-24 overflow-hidden rounded-md sm:w-28 lg:w-full lg:max-w-[26rem]">
-                    <ProductPhoto src={product.imageUrl} alt={`Camiseta ${product.familyName} de ${product.cityName}`} sizes="(min-width: 1024px) 26rem, 7rem" priority className="photo-contain" />
-                  </span>
-                </span>
-              )
-            )}
-            {product && (
-              <span
-                className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-2 ${
-                  panelImage ? "border-t px-[var(--gutter)]" : "min-w-0 flex-1 py-4 pl-4 pr-[var(--gutter)] lg:flex-none lg:border-t lg:pl-14"
-                } border-[rgb(var(--region-primary-rgb)/0.18)] py-4 lg:bg-[rgb(var(--region-primary-rgb)/0.07)] ${panelImage ? "bg-[rgb(var(--region-primary-rgb)/0.07)]" : ""} ${ALIGN_END} lg:pl-14 lg:py-5`}
-              >
-                <span className="min-w-0">
-                  <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
-                  <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
-                    {product.cityName} · {product.uf}
-                  </span>
-                </span>
-                <span className="flex items-baseline gap-4">
-                  {product.price && <span className={CARD_PRICE}><PriceText price={product.price} listPrice={product.listPrice} /></span>}
-                  <span className="inline-flex min-h-6 items-center gap-1 whitespace-nowrap text-[0.9375rem] font-semibold underline decoration-region-accent decoration-2 underline-offset-4 transition-colors group-hover:decoration-current">
-                    {call}
-                    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12h14M13 6l6 6-6 6" />
-                    </svg>
-                  </span>
-                </span>
-              </span>
-            )}
-          </HeroPanel>
-        )}
+        {panel}
       </div>
     </section>
+  );
+}
+
+/**
+ * The product half of the "feature" opening, for one product: its banner (the owner's picture, its own crop and framing per screen) with the product's
+ * bar under it, or the product's photo on the tint (a compact row below 1024px); a banner alone when there is no product. `priority`: its picture is
+ * the first thing the page loads (false for a product that may not be the one shown).
+ */
+function FeaturePanel({ product, image, color, call, priority }: { product: HeroFamilyCard | undefined; image: BannerAsset | null; color?: string; call: string; priority: boolean }) {
+  return (
+    <HeroPanel href={product?.href} color={color} row={!image}>
+      {image ? (
+        // A banner in the product's place (the owner's picture, its own crop and framing per screen); the product's bar stays under it.
+        <span className="relative block min-h-[20rem] flex-1 sm:min-h-[24rem] lg:min-h-0">
+          <BannerBackground asset={image} priority={priority} sizes="(min-width: 1024px) 50vw, 100vw" alt={image.alt} />
+        </span>
+      ) : (
+        product && (
+          // One picture for every width: a thumbnail in the phone's row, the large photo from 1024px.
+          <span className={`flex shrink-0 items-center justify-center py-4 pl-[var(--gutter)] lg:flex-1 lg:py-14 ${ALIGN_END} lg:pl-14`}>
+            <span className="block w-24 overflow-hidden rounded-md sm:w-28 lg:w-full lg:max-w-[26rem]">
+              <ProductPhoto src={product.imageUrl} alt={`Camiseta ${product.familyName} de ${product.cityName}`} sizes="(min-width: 1024px) 26rem, 7rem" priority={priority} className="photo-contain" />
+            </span>
+          </span>
+        )
+      )}
+      {product && (
+        <span
+          className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-2 ${
+            image ? "border-t px-[var(--gutter)]" : "min-w-0 flex-1 py-4 pl-4 pr-[var(--gutter)] lg:flex-none lg:border-t lg:pl-14"
+          } border-[rgb(var(--region-primary-rgb)/0.18)] py-4 lg:bg-[rgb(var(--region-primary-rgb)/0.07)] ${image ? "bg-[rgb(var(--region-primary-rgb)/0.07)]" : ""} ${ALIGN_END} lg:pl-14 lg:py-5`}
+        >
+          <span className="min-w-0">
+            <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
+            <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
+              {product.cityName} · {product.uf}
+            </span>
+          </span>
+          <span className="flex items-baseline gap-4">
+            {product.price && <span className={CARD_PRICE}><PriceText price={product.price} listPrice={product.listPrice} /></span>}
+            <span className="inline-flex min-h-6 items-center gap-1 whitespace-nowrap text-[0.9375rem] font-semibold underline decoration-region-accent decoration-2 underline-offset-4 transition-colors group-hover:decoration-current">
+              {call}
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </span>
+          </span>
+        </span>
+      )}
+    </HeroPanel>
   );
 }
 
@@ -251,7 +281,7 @@ function FeatureHero({
  * `row`: the product without a picture, a single row below 1024px (thumbnail beside its bar) and the column of the large photo from there.
  */
 function HeroPanel({ href, color, row = false, children }: { href?: string; color?: string; row?: boolean; children: ReactNode }) {
-  const className = `group relative isolate flex min-h-full ${row ? "flex-row items-center lg:flex-col lg:items-stretch" : "flex-col"} text-ink ${color ? "" : "bg-[rgb(var(--region-primary-rgb)/0.13)]"}`;
+  const className = `group relative isolate flex min-h-full flex-1 ${row ? "flex-row items-center lg:flex-col lg:items-stretch" : "flex-col"} text-ink ${color ? "" : "bg-[rgb(var(--region-primary-rgb)/0.13)]"}`;
   const style = color ? { background: color } : undefined;
   if (!href) return <div className={className} style={style}>{children}</div>;
   return (

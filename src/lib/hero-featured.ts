@@ -14,7 +14,7 @@ import type { CommerceStoreKey, RegionSlug } from "./geo/regions";
 import { normalizeText } from "./geo/text";
 import { HERO_FAMILIES } from "./editorial/sul";
 import type { HeroFamilyCard } from "./home";
-import { MAX_FEATURED, type FeaturedProductRef } from "./site-config/schema";
+import { HERO_CARDS, MAX_FEATURED, type FeaturedProductRef, type MediaRef } from "./site-config/schema";
 
 /**
  * The products the hero shows as cards, configured per region in the CMS as stable references (store + INK product id). Everything shown
@@ -57,13 +57,21 @@ export function resolveFeatured(region: RegionSlug, refs: readonly FeaturedProdu
   });
 }
 
+/** One product of the "feature" opening as the public draws it: the card and, when the owner gave it one, its own banner. */
+export type HeroSlide = { card: HeroFamilyCard; image?: MediaRef };
+
 /**
- * The cards the public hero draws. `featured === undefined` (never customised): Sul keeps its three original cards (`legacy`, resolved by the
- * code exactly as before) and every other region shows none. A configured list shows only its eligible cards, in order.
+ * The products the public hero draws, each with its banner. `featured === undefined` (never customised): Sul keeps its three original cards
+ * (`legacy`, resolved by the code exactly as before) and every other region shows none. A configured list shows only its eligible products, in order.
  */
+export function heroSlides(region: RegionSlug, featured: readonly FeaturedProductRef[] | undefined, legacy: HeroFamilyCard[]): HeroSlide[] {
+  if (featured === undefined) return (region === "sul" ? legacy : []).map((card) => ({ card }));
+  return resolveFeatured(region, featured).flatMap((s) => (s.card ? [{ card: s.card, ...(s.ref.image ? { image: s.ref.image } : {}) }] : []));
+}
+
+/** The cards of the three-card hero: its first `HERO_CARDS` eligible products (a list kept for the "feature" opening may hold more). */
 export function heroCards(region: RegionSlug, featured: readonly FeaturedProductRef[] | undefined, legacy: HeroFamilyCard[]): HeroFamilyCard[] {
-  if (featured === undefined) return region === "sul" ? legacy : [];
-  return resolveFeatured(region, featured).flatMap((s) => (s.card ? [s.card] : []));
+  return heroSlides(region, featured, legacy).slice(0, HERO_CARDS).map((s) => s.card);
 }
 
 /** The references of the three cards the Sul hero has always shown (Porto Alegre · Ponto de Origem, Curitiba · Feito em, Joinville · Coordenadas). Sul only. */
