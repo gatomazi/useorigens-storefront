@@ -46,6 +46,7 @@ import { applyAndSave, discardDraft, EDIT_THEME_COOKIE, loadEditorWorkspace, loa
 import type { DraftOp } from "@/lib/admin/draft-ops";
 import { parseNavigationForm, parseThemeForm, readableNavigationError } from "@/lib/admin/navigation-form";
 import { themeProblems } from "@/lib/site-config/navigation";
+import { HEADER_ACTIONS, type HeaderAction, type HeaderActionStyle } from "@/lib/site-config/navigation-schema";
 import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-form";
 import type { InkThemeConfig } from "@/lib/site-config/ink-theme-schema";
 import { readableTopBarError, topBarFromForm } from "@/lib/admin/top-bar-form";
@@ -618,17 +619,32 @@ export async function saveNavigationAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const parsed = parseNavigationForm(fd, scope);
   if (!parsed.ok) back("/admin/navegacao", { err: parsed.errors });
-  const outcome = await applyAndSave(scope, { type: "set-navigation", navigation: parsed.value }, revNumber(fd), actor);
+  // The header's icons are saved by their own card ("Ícones do topo"): the menu editor keeps them as they are.
+  const headerActions = (await loadWorkspace(scope)).doc.navigation?.headerActions;
+  const outcome = await applyAndSave(scope, { type: "set-navigation", navigation: headerActions ? { ...parsed.value, headerActions } : parsed.value }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back("/admin/navegacao", { err: outcome.errors.map(readableNavigationError) });
   await audit(actor, "draft.save", scope, "set-navigation");
   back("/admin/navegacao", { ok: `Rascunho da navegação de ${scopeName(scope)} salvo. Nada muda na loja até você publicar.` });
 }
 
+/** The header's buttons ("Meus Lugares", "Conta", "Buscar"): icon only or icon and word, each on its own, as a DRAFT of the region's navigation. */
+export async function saveHeaderActionsAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const headerActions = Object.fromEntries(HEADER_ACTIONS.map((a) => [a, text(fd, `header_${a}`) === "label" ? "label" : "icon"])) as Record<HeaderAction, HeaderActionStyle>;
+  const current = (await loadWorkspace(scope)).doc.navigation;
+  const outcome = await applyAndSave(scope, { type: "set-navigation", navigation: { ...(current ?? {}), headerActions } }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/navegacao", { err: outcome.errors.map(readableNavigationError) });
+  await audit(actor, "draft.save", scope, "set-navigation");
+  back("/admin/navegacao", { ok: `Rascunho dos ícones do topo de ${scopeName(scope)} salvo. Nada muda na loja até você publicar.` });
+}
+
 /** Back to the default menu (default labels, order and visibility) as a draft. */
 export async function resetNavigationAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
-  const outcome = await applyAndSave(scope, { type: "set-navigation", navigation: null }, revNumber(fd), actor);
+  const headerActions = (await loadWorkspace(scope)).doc.navigation?.headerActions;
+  const outcome = await applyAndSave(scope, { type: "set-navigation", navigation: headerActions ? { headerActions } : null }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back("/admin/navegacao", { err: outcome.errors });
   await audit(actor, "draft.save", scope, "set-navigation");

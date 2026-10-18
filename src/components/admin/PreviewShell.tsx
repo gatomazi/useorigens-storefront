@@ -1,6 +1,7 @@
 import { AnnouncementBar, Footer, Header } from "@/components/layout/SiteChrome";
 import { ConsentProvider } from "@/lib/consent/ConsentProvider";
 import type { RegionSlug } from "@/lib/geo/regions";
+import type { HeaderAction, HeaderActionStyle } from "@/lib/site-config/navigation-schema";
 import { regionThemeStyle } from "@/lib/theme/region-theme";
 import { PreviewGuard } from "./PreviewGuard";
 
@@ -9,12 +10,13 @@ import { PreviewGuard } from "./PreviewGuard";
  * `src/app/[region]/layout.tsx` — but WITHOUT MetaPixel, GoogleAnalytics or the consent banner, and with links and forms disabled.
  */
 /** `cssVars` / `onBrand`: the palette and the home theme of the document under preview (the draft's), drawn like the region layout does. */
-export function PreviewShell({ region, cityCount, syncedAt, label, cssVars = {}, onBrand = false, children }: { region: RegionSlug; cityCount: number; syncedAt: string | null; label: string; cssVars?: Record<string, string>; onBrand?: boolean; children: React.ReactNode }) {
+/** `headerActions`: the header's buttons as the draft has them (Menu › Ícones do topo). */
+export function PreviewShell({ region, cityCount, syncedAt, label, cssVars = {}, onBrand = false, headerActions, children }: { region: RegionSlug; cityCount: number; syncedAt: string | null; label: string; cssVars?: Record<string, string>; onBrand?: boolean; headerActions?: Record<HeaderAction, HeaderActionStyle>; children: React.ReactNode }) {
   return (
     <ConsentProvider>
       <div data-region={region} style={{ ...regionThemeStyle(region), ...cssVars, ...(cssVars["--ground"] ? { background: "var(--ground)" } : {}), ...(cssVars["--ink"] ? { color: "var(--ink)" } : {}) }} className="relative">
         <AnnouncementBar region={region} cityCount={cityCount} />
-        <Header region={region} />
+        <Header region={region} headerActions={headerActions} />
         <main id="conteudo">{children}</main>
         <Footer region={region} syncedAt={syncedAt} onBrand={onBrand} />
       </div>

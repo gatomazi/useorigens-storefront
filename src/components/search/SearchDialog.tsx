@@ -19,6 +19,7 @@ export function SearchDialog({
   source,
   label = "Busque a sua cidade",
   arrow = false,
+  labelled = true,
 }: {
   region: RegionSlug;
   variant?: "header" | "hero" | "field" | "cta" | "link" | "nav";
@@ -28,6 +29,8 @@ export function SearchDialog({
   label?: string;
   /** `hero` / `field`: the field ends in a solid square with an arrow (the editorial opening) instead of the word "Buscar". Still one button. */
   arrow?: boolean;
+  /** `header`: the word next to the magnifier from 640px (the menu's "Ícones do topo"); otherwise the icon only, the word for screen readers and the tooltip. */
+  labelled?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const copy = placeSearchCopy(region);
@@ -77,10 +80,10 @@ export function SearchDialog({
           {label}
         </button>
       ) : (
-        <button type="button" onClick={open} className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 px-2 font-semibold sm:px-3" aria-haspopup="dialog">
+        <button type="button" onClick={open} className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 px-2 font-semibold sm:px-3" aria-haspopup="dialog" title={labelled ? undefined : copy.trigger}>
           <SearchIcon className="h-5 w-5" />
-          <span className="hidden sm:inline">{copy.trigger}</span>
-          <span className="sr-only sm:hidden">{copy.trigger}</span>
+          {labelled && <span className="hidden sm:inline">{copy.trigger}</span>}
+          <span className={labelled ? "sr-only sm:hidden" : "sr-only"}>{copy.trigger}</span>
         </button>
       )}
 

@@ -9,6 +9,7 @@ import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
 import { regionChrome } from "@/lib/site-config/chrome";
 import { hasStatesSection } from "@/lib/site-config/nav";
 import { regionPath } from "@/lib/site-config/navigation";
+import { headerActionsOf, type HeaderAction, type HeaderActionStyle } from "@/lib/site-config/navigation-schema";
 
 /** Another region: this site's own page once that region is publicly launched, otherwise the legacy INK store it has always linked to. */
 const otherRegionHref = (slug: RegionSlug, launched: readonly RegionSlug[]): string => (launched.includes(slug) ? `/${slug}` : LEGACY_STORE_URLS[slug]);
@@ -57,10 +58,13 @@ function headerDoc(region: RegionSlug) {
   return siteConfigHomeEnabled() ? homeBundle().docs[region] : undefined;
 }
 
-export function Header({ region }: { region: RegionSlug }) {
+/** `headerActions`: the look of the buttons on the right when drawing a DRAFT (the panel's preview); absent = the region's published menu. */
+export function Header({ region, headerActions }: { region: RegionSlug; headerActions?: Record<HeaderAction, HeaderActionStyle> }) {
   // One source for mobile and desktop (site-config/navigation.ts): the region's links, its launched states and the other LAUNCHED regions, with the
   // labels / order / visibility the CMS published. Nothing here lists a state or a region by hand.
   const { navigation } = regionChrome(region);
+  // The buttons on the right: icon only or icon and word, each as the region's menu says (Menu › Ícones do topo).
+  const actions = headerActions ?? headerActionsOf(headerDoc(region)?.navigation);
   // The home's links first, then the collections the owner put on the bar: when the row is too short for all of them, the last ones step out (they are
   // all in "Categorias" anyway).
   const states = navigation.states;
@@ -178,10 +182,10 @@ export function Header({ region }: { region: RegionSlug }) {
               </ul>
             </HeaderDropdown>
           )}
-          <FavoritesMenu region={region} />
-          <AccountMenu store={storeForRegion(region)} />
+          <FavoritesMenu region={region} labelled={actions.favorites === "label"} />
+          <AccountMenu store={storeForRegion(region)} labelled={actions.account === "label"} />
           <CartMirrorMenu region={cartRegionFor(region)} navRegion={region} />
-          <SearchDialog region={region} />
+          <SearchDialog region={region} labelled={actions.search === "label"} />
         </div>
       </div>
     </HeaderShell>
