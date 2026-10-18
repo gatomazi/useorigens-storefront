@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 /**
  * `GET /api/busca?region=sul&q=tij` — the global search of the storefront (places, designs, editorial pages), asked from one region: that region's
  * results grouped by kind, then the other launched regions' clearly relevant ones. Public data only (titles, links, images, piece counts and the
- * lowest real price); never sales counts. CDN-cacheable for a few minutes: the index only changes when a snapshot or the published config does.
+ * lowest real price); never sales counts. The prepared index is cached in process, but each response reads the current published settings.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   const ms = (performance.now() - started).toFixed(1);
   return Response.json(result, {
     headers: {
-      "Cache-Control": "public, max-age=60, s-maxage=300, stale-while-revalidate=3600",
+      "Cache-Control": "no-store",
       "Server-Timing": `search;dur=${ms}`,
     },
   });
