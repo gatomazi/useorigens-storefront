@@ -22,7 +22,8 @@ import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
 import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { ALL_SCOPES } from "@/lib/admin/auth/authorize";
 import { canEdit, type Actor } from "@/lib/admin/store/ports";
-import { collectionPageSlug, stateCategoryCollections, stateSubcategoryChoice } from "@/lib/catalog/collection-source";
+import { collectionPageSlug, stateCategoryCollections, stateSubcategoriesInUse, stateSubcategoryChoice } from "@/lib/catalog/collection-source";
+import { getCatalog } from "@/lib/catalog/repository";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, type StatePageSection } from "@/lib/site-config/state-page-schema";
 import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
@@ -40,7 +41,7 @@ import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
 import { parsePageBackdrop } from "@/lib/admin/page-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
 import { nextStatuses, productLinkFor, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
-import type { PageKind } from "@/lib/site-config/schema";
+import type { CollectionRef, PageKind } from "@/lib/site-config/schema";
 import { legacyFeaturedRefs, resolveFeatured, searchFeaturedCandidates, type FeaturedCandidate } from "@/lib/hero-featured";
 import { buildRegionSeed } from "@/lib/admin/region-seed";
 import { STRUCTURED_TEMPLATES, type StructuredTemplate } from "@/lib/site-config/structured";
@@ -400,6 +401,63 @@ export async function setStateSubcategoryAction(fd: FormData) {
 
 export async function resetStateSubcategoriesAction(fd: FormData) {
   return run(fd, { type: "reset-state-subcategories" }, "As subcategorias da página do estado voltam ao automático (vale depois que você publicar).", "/admin/estados#estado-subcategorias");
+}
+
+/** The subcategories in use now, as refs: where a hand-picked list starts from (so switching to manual changes nothing on the site). */
+async function subcategoriesInUse(scope: RegionSlug): Promise<CollectionRef[]> {
+  const catalog = getCatalog();
+  return stateSubcategoriesInUse(scope, (await loadWorkspace(scope)).doc, (s) => catalog.productsOfStore(s)).map((c) => ({ store: storeOf(scope), collectionId: c.id }));
+}
+
+/** "Página do estado" → Subcategorias: from automatic to a hand-picked list that starts with what shows today. */
+export async function startManualSubcategoriesAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const outcome = await applyAndSave(scope, { type: "start-manual-subcategories", base: await subcategoriesInUse(scope) }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back("/admin/estados", { err: outcome.errors });
+  back("/admin/estados#estado-subcategorias", { ok: "As subcategorias agora são escolhidas por você: começam com as que aparecem hoje, e coleção nova não entra sozinha (vale depois que você publicar)." });
+}
+
+/** "Página do estado" → Subcategorias (lista manual): puts a collection in (`on`) or takes it out. */
+export async function setManualSubcategoryAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
+  const to = "/admin/estados";
+  if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
+  const record = findCollection(ref!.store, ref!.collectionId);
+  if (!record) back(to, { err: ["Coleção não encontrada nas coleções sincronizadas."] });
+  const on = text(fd, "on") === "1";
+  const outcome = await applyAndSave(scope, { type: "set-manual-subcategory", ...ref!, on, base: await subcategoriesInUse(scope) }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  back(`${to}#estado-subcategorias`, { ok: on ? `“${record!.name}” está nas subcategorias (vale depois que você publicar).` : `“${record!.name}” saiu das subcategorias: os produtos dela ficam na categoria (vale depois que você publicar).` });
+}
+
+export async function moveManualSubcategoryAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
+  const direction = text(fd, "direction");
+  const to = "/admin/estados";
+  if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
+  if (direction !== "up" && direction !== "down") back(to, { err: ["Direção inválida."] });
+  const outcome = await applyAndSave(scope, { type: "move-manual-subcategory", ...ref!, direction, base: await subcategoriesInUse(scope) }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  back(`${to}#estado-subcategorias`, { ok: "Ordem das subcategorias alterada (vale depois que você publicar)." });
+}
+
+/** "Página do estado": one row (category, subcategory or a state's own) shown as a grid or as a carousel. */
+export async function setStateRowDisplayAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const ref = parseCollectionRef(text(fd, "ref"));
+  const to = "/admin/estados";
+  if (!ref || ref.store !== storeOf(scope)) back(to, { err: ["Coleção de outra loja da INK."] });
+  const grid = text(fd, "display") === "grid";
+  const anchor = text(fd, "anchor") === "estado-subcategorias" ? "estado-subcategorias" : "estado-categorias";
+  const outcome = await applyAndSave(scope, { type: "set-state-row-display", ...ref!, grid }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(to, { err: outcome.errors });
+  back(`${to}#${anchor}`, { ok: grid ? "Essa linha passa a aparecer em grade, a partir de 1 produto (vale depois que você publicar)." : "Essa linha volta a ser carrossel, que precisa de 3 produtos (vale depois que você publicar)." });
 }
 
 /** "Página do estado": shows or hides a section that is not built from collections ("Destaques", "Escolha o estilo", "Regiões e cidades"). */

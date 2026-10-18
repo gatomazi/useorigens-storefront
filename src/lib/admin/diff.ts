@@ -72,7 +72,8 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   return changes;
 }
 
-/** The state page's hierarchy changed: its categories (the owner's list, in order, or back to the menu bar) or its subcategories (taken out, brought in). Pure. */
+/** The state page's hierarchy changed: its categories (the owner's list, in order, or back to the menu bar), its subcategories (taken out, brought in, a
+ * hand-picked list) or how a row shows (grid or carousel). Pure. */
 function stateRowsChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer): Change[] {
   const name = (r: CollectionRef) => nameOf(r) ?? `#${r.collectionId}`;
   const out: Change[] = [];
@@ -93,7 +94,17 @@ function stateRowsChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: Collecti
     [newIn(was.added, now.added), "sai das subcategorias (interna)"],
   ];
   for (const [refs, what] of lines) for (const r of refs) out.push({ kind: "edited", sectionId: "state-subcategories", text: `Página do estado: “${name(r)}” ${what}` });
-  if (published.collections?.stateRows && !draft.collections?.stateRows) out.push({ kind: "edited", sectionId: "state-rows", text: "Página do estado: a lista antiga de carrosséis dá lugar às subcategorias automáticas" });
+  if (published.collections?.stateRows && !draft.collections?.stateRows && !draft.collections?.stateSubcategoryList) out.push({ kind: "edited", sectionId: "state-rows", text: "Página do estado: a lista antiga de carrosséis dá lugar às subcategorias automáticas" });
+  const wasList = published.collections?.stateSubcategoryList;
+  const nowList = draft.collections?.stateSubcategoryList;
+  if (json(wasList) !== json(nowList)) {
+    const text = nowList ? `escolhidas por você: ${nowList.length === 0 ? "nenhuma" : nowList.map(name).join(", ")}` : "voltam ao automático";
+    out.push({ kind: "edited", sectionId: "state-subcategories", text: `Página do estado · subcategorias ${text}` });
+  }
+  const wasGrids = published.collections?.stateGrids ?? [];
+  const nowGrids = draft.collections?.stateGrids ?? [];
+  for (const r of newIn(nowGrids, wasGrids)) out.push({ kind: "edited", sectionId: "state-grids", text: `Página do estado: “${name(r)}” passa a aparecer em grade` });
+  for (const r of newIn(wasGrids, nowGrids)) out.push({ kind: "edited", sectionId: "state-grids", text: `Página do estado: “${name(r)}” volta a ser carrossel` });
   return out;
 }
 

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { StateOutline } from "@/components/brand/StateOutline";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
+import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { StateCityBrowser, type BrowserCity, type BrowserGroup } from "@/components/city/StateCityBrowser";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { StatePodium } from "@/components/podio/StatePodium";
@@ -234,19 +235,27 @@ export default async function StatePage({ params }: { params: Promise<{ region: 
         </section>
       )}
 
-      {stateRows.map((row) => (
-        <section key={row.collection.id} id={`colecao-${row.collection.slug}`} className="wrap pb-10 lg:pb-14" aria-labelledby={`state-collection-${row.collection.id}`}>
-          <ProductCarousel
-            items={row.items}
-            labelledBy={`state-collection-${row.collection.id}`}
-            title={row.level === "state" ? `Mais ${stateOfUf(uf)}` : `${row.collection.name.replace(/\s+/g, " ").trim()} · ${uf}`}
-            viewAllHref={rowHref(row)}
-            endLabel={rowEndLabel(row)}
-            sourceSection={SOURCES.stateCollection}
-            buy={buy}
-          />
-        </section>
-      ))}
+      {stateRows.map((row) => {
+        const rowTitle = row.level === "state" ? `Mais ${stateOfUf(uf)}` : `${row.collection.name.replace(/\s+/g, " ").trim()} · ${uf}`;
+        return (
+          <section key={row.collection.id} id={`colecao-${row.collection.slug}`} className="wrap pb-10 lg:pb-14" aria-labelledby={`state-collection-${row.collection.id}`}>
+            {/* A row the region shows as a grid (every card at once, from one product); otherwise the carousel (state-hierarchy.ts). */}
+            {row.display === "grid" ? (
+              <ProductGrid items={row.items} labelledBy={`state-collection-${row.collection.id}`} title={rowTitle} viewAllHref={rowHref(row)} sourceSection={SOURCES.stateCollection} buy={buy} eager={false} />
+            ) : (
+              <ProductCarousel
+                items={row.items}
+                labelledBy={`state-collection-${row.collection.id}`}
+                title={rowTitle}
+                viewAllHref={rowHref(row)}
+                endLabel={rowEndLabel(row)}
+                sourceSection={SOURCES.stateCollection}
+                buy={buy}
+              />
+            )}
+          </section>
+        );
+      })}
 
       {styles.length > 0 && (
         <section id="estilos" className="wrap pb-10 lg:pb-14" aria-labelledby="styles-title">

@@ -480,6 +480,16 @@ export type ScopeDoc = {
      */
     stateSubcategories?: StateSubcategories;
     /**
+     * The SUBCATEGORIES chosen BY HAND: exactly these, in this order (public or internal), and a collection new on INK never enters on its own.
+     * Present = it alone decides (`stateSubcategories` and `stateRows` are then ignored, and dropped by the edit that writes it); absent = automatic.
+     */
+    stateSubcategoryList?: CollectionRef[];
+    /**
+     * The state-page rows shown as a GRID (every card at once) instead of a carousel: categories, subcategories or a state's own collection. A grid
+     * row shows from one product of the state; a carousel needs `STATE_ROW_MIN_ITEMS`. Absent = every row is a carousel.
+     */
+    stateGrids?: CollectionRef[];
+    /**
      * LEGACY (round 1 of the state page, before the hierarchy): the exact list of collections that became rows. Still read while present (its categories
      * count as categories, the rest as the only subcategories); the next subcategory edit replaces it with `stateSubcategories`. Never written by new code.
      */
@@ -489,6 +499,8 @@ export type ScopeDoc = {
 
 /** At most this many collections chosen for the state page (per list). */
 export const MAX_STATE_ROWS = 20;
+/** Grid rows: the categories and subcategories (two lists) plus the states' own collections. */
+export const MAX_STATE_GRIDS = 2 * MAX_STATE_ROWS + 30;
 export type StateSubcategories = { hidden: CollectionRef[]; added: CollectionRef[] };
 
 /** `variants` (uploads only): the pre-sized WebP widths the storefront uses as a `srcset`, so an uploaded image never goes through the image optimizer. */
@@ -1033,6 +1045,8 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
     const hidden = new Set(sub.hidden.filter(isRecord).map((r) => `${r.store}:${r.collectionId}`));
     sub.added.forEach((r, i) => { if (isRecord(r) && hidden.has(`${r.store}:${r.collectionId}`)) c.fail(`${path}.stateSubcategories.added[${i}]`, "already in hidden"); });
   }
+  if (v.stateSubcategoryList !== undefined) checkRefList(c, `${path}.stateSubcategoryList`, v.stateSubcategoryList, MAX_STATE_ROWS);
+  if (v.stateGrids !== undefined) checkRefList(c, `${path}.stateGrids`, v.stateGrids, MAX_STATE_GRIDS);
   if (v.stateRows !== undefined) checkRefList(c, `${path}.stateRows`, v.stateRows, MAX_STATE_ROWS);
   if (v.arrangements !== undefined) {
     checkRefList(c, `${path}.arrangements`, v.arrangements, MAX_ARRANGEMENTS);
@@ -1160,6 +1174,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
           ["enabled", input.collections.enabled], ["navbar", input.collections.navbar], ["navbarGroups.top", groups.top], ["navbarGroups.more", groups.more],
           ["menu.top", menu.top], ["menu.hidden", menu.hidden], ["menu.added", menu.added], ["arrangements", input.collections.arrangements],
           ["stateCategories", input.collections.stateCategories], ["stateRows", input.collections.stateRows],
+          ["stateSubcategoryList", input.collections.stateSubcategoryList], ["stateGrids", input.collections.stateGrids],
           ["stateSubcategories.hidden", isRecord(input.collections.stateSubcategories) ? input.collections.stateSubcategories.hidden : undefined],
           ["stateSubcategories.added", isRecord(input.collections.stateSubcategories) ? input.collections.stateSubcategories.added : undefined],
         ];
