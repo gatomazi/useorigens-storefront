@@ -1,18 +1,21 @@
 import Link from "next/link";
-import { syncCatalogAction, syncCollectionsAction } from "@/app/admin/actions";
+import { syncCatalogAction, syncCollectionsAction, syncLojaUnicaAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
+import { SyncProgress } from "@/components/admin/SyncProgress";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { inspectPublishing } from "@/lib/admin/ops";
 import { platform } from "@/lib/admin/platform";
 import { currentScope, scopeName, storeOf } from "@/lib/admin/scope";
 import { loadWorkspace } from "@/lib/admin/workspace";
-import { libraryEntries, MIN_USABLE_PRODUCTS } from "@/lib/catalog/collection-source";
-import { searchCoverage } from "@/lib/catalog/collections";
-import { getCollections } from "@/lib/catalog/collections-file";
-import { snapshotStatus } from "@/lib/catalog/snapshot-file";
+import { libraryEntries, MIN_USABLE_PRODUCTS, type LibraryEntry } from "@/lib/catalog/collection-source";
+import { searchCoverage, type StoreCollections } from "@/lib/catalog/collections";
+import { collectionsPath, getCollections } from "@/lib/catalog/collections-file";
+import { commercePlan, singleStoreDataDir } from "@/lib/catalog/commerce-mode";
+import { snapshotPath, snapshotStatus } from "@/lib/catalog/snapshot-file";
 import { currentSyncJob } from "@/lib/catalog/sync-job";
+import { currentLojaUnicaJob, lojaUnicaJobPercent } from "@/lib/catalog/unificado/sync-loja-unica-job";
 import { numberPt } from "@/lib/format";
-import type { CommerceStoreKey } from "@/lib/geo/regions";
+import { SINGLE_STORE_KEY, type CommerceStoreKey } from "@/lib/geo/regions";
 import { INK_STORES, tokenFor } from "@/lib/ink/config";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { siteConfigHomeEnabled } from "@/lib/site-config/flag";
@@ -29,9 +32,25 @@ const ago = (iso: string | null | undefined): string => {
   return `há ${Math.round(min / 1440)} dias`;
 };
 
+/** One store's collections as the panel reads them: how many, how many usable, search coverage, when they were synced. */
+function CollectionsSummary({ synced, all, staleReason }: { synced: StoreCollections; all: LibraryEntry[]; staleReason?: string | null }) {
+  const coverage = searchCoverage(synced.collections);
+  const internal = all.filter((e) => e.visibility === "internal");
+  return (
+    <ul className="mt-3 space-y-1">
+      <li>{synced.collections.length} coleções sincronizadas ({all.filter((e) => e.visibility === "public" && e.selectable).length} públicas utilizáveis)</li>
+      <li>{internal.length} internas · <strong>{internal.filter((e) => e.enabled).length} habilitadas</strong> · {internal.filter((e) => e.selectable).length} utilizáveis agora</li>
+      <li>Busca do site por nome de coleção: <strong>{coverage.complete} coleção(ões) públicas completas</strong>{coverage.partial.length > 0 && <span className="a-badge warn ml-2" title={coverage.partial.join(", ")}>{coverage.partial.length} parcial(is): sincronize as coleções</span>}</li>
+      <li className="a-muted">Catálogo de referência: {new Date(synced.catalogSyncedAt).toLocaleDateString("pt-BR")}. Contagens = produtos publicados desta loja, não o total bruto da INK.</li>
+      <li>Última sincronização: <strong>{new Date(synced.syncedAt).toLocaleString("pt-BR")}</strong> ({daysSince(synced.syncedAt) === 0 ? "hoje" : `há ${daysSince(synced.syncedAt)} dia(s)`}){staleReason && <span className="a-badge warn ml-2">{staleReason}</span>}</li>
+    </ul>
+  );
+}
+
 /**
- * "Sincronização": the data the panel and the storefront read from INK (each store's catalog and collections, read-only) and the technical state of
- * publishing on this machine. Owner-only buttons; everyone may read it. Moved here from Coleções and Visão geral, which now only point to it.
+ * "Sincronização": the data the panel and the storefront read from INK (catalog and collections, read-only) and the technical state of publishing
+ * on this machine. Owner-only buttons; everyone may read it. In single-store mode the site serves the single store's own files (loja-unica/), so
+ * that store comes first, with its own catalog button and progress bar; the regional files stay below, folded, since nothing serves them then.
  */
 export default async function SyncScreen({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
   const actor = await requireAdmin();
@@ -40,12 +59,14 @@ export default async function SyncScreen({ searchParams }: { searchParams: Promi
   const store = storeOf(scope) as CommerceStoreKey;
   const owner = actor.role === "owner";
   const prod = platform().mode === "prod";
+  const lojaUnica = commercePlan().effective === "single-store";
   const ws = await loadWorkspace(scope);
-  const file = getCollections();
+  // The regional files (what `catalog:sync` / `collections:sync` keep); in multi-store mode they are also what the site serves.
+  const regionalPath = collectionsPath();
+  const file = getCollections(regionalPath);
   const synced = file.stores[store];
-  const all = libraryEntries(store, enabledInternalIds(ws.doc, store));
+  const all = libraryEntries(store, enabledInternalIds(ws.doc, store), regionalPath);
   const legacy = all.some((e) => e.needsResync);
-  const coverage = searchCoverage(synced?.collections ?? []);
   const catalog = snapshotStatus();
   const catalogInfo = catalog.stores.find((c) => c.storeKey === store);
   const job = currentSyncJob();
@@ -57,40 +78,23 @@ export default async function SyncScreen({ searchParams }: { searchParams: Promi
   const pending = await inspectPublishing();
   const reading = readPublished();
   const sandboxLive = process.env.SITE_CONFIG_DIR ? publishedFilePath() : null;
-  const counts = {
-    public: all.filter((e) => e.visibility === "public" && e.selectable).length,
-    internal: all.filter((e) => e.visibility === "internal" && e.selectable).length,
-    internalEnabled: all.filter((e) => e.visibility === "internal" && e.enabled).length,
-    internalTotal: all.filter((e) => e.visibility === "internal").length,
-  };
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="a-h1">Sincronização</h1>
-        <p className="a-muted mt-2 max-w-3xl">O que o painel e a loja leem da INK: o catálogo de produtos e as coleções de cada loja. Sincronizar é sempre <strong>só leitura</strong> na INK; se falhar, os dados anteriores continuam valendo. Embaixo, o estado técnico da publicação.</p>
-      </div>
-      <Flash ok={sp.ok} err={sp.err} />
+  const collectionsButton = (requests: string) =>
+    owner && (
+      <form action={syncCollectionsAction} className="mt-4">
+        <button type="submit" className="a-btn ghost sm">Sincronizar coleções agora</button>
+        <p className="a-muted mt-2 text-[0.8125rem]">Somente leitura na INK ({requests}). Se a INK falhar, os dados atuais são mantidos.{lastRun ? ` Última execução: ${lastRun.status === "succeeded" ? "ok" : lastRun.status === "running" ? "em andamento" : "falhou"} · ${new Date(lastRun.startedAt).toLocaleString("pt-BR")}.` : ""}</p>
+      </form>
+    );
 
+  const regional = (
+    <>
       <section id="sincronizar-loja" className="a-card scroll-mt-4 grid gap-6 p-5 lg:grid-cols-2" aria-label={`Loja INK de ${scopeName(scope)}`} data-testid="sync-store">
         <div className="text-[0.9375rem]">
           <p className="a-h2">Coleções da loja {STORE_NAME[store]}</p>
-          {synced ? (
-            <ul className="mt-3 space-y-1">
-              <li>{synced.collections.length} coleções sincronizadas ({counts.public} públicas utilizáveis)</li>
-              <li>{counts.internalTotal} internas · <strong>{counts.internalEnabled} habilitadas</strong> · {counts.internal} utilizáveis agora</li>
-              <li>Busca do site por nome de coleção: <strong>{coverage.complete} coleção(ões) públicas completas</strong>{coverage.partial.length > 0 && <span className="a-badge warn ml-2" title={coverage.partial.join(", ")}>{coverage.partial.length} parcial(is): sincronize as coleções</span>}</li>
-              <li className="a-muted">Catálogo de referência: {new Date(synced.catalogSyncedAt).toLocaleDateString("pt-BR")}. Contagens = produtos publicados desta loja, não o total bruto da INK.</li>
-              <li>Última sincronização: <strong>{new Date(synced.syncedAt).toLocaleString("pt-BR")}</strong> ({daysSince(synced.syncedAt) === 0 ? "hoje" : `há ${daysSince(synced.syncedAt)} dia(s)`}){staleReason && <span className="a-badge warn ml-2">{staleReason}</span>}</li>
-            </ul>
-          ) : <p className="a-flash err mt-3">Ainda não há coleções sincronizadas para esta loja. Sincronize primeiro o catálogo (ao lado); as coleções são atualizadas ao final.</p>}
+          {synced ? <CollectionsSummary synced={synced} all={all} staleReason={staleReason} /> : <p className="a-flash err mt-3">Ainda não há coleções sincronizadas para esta loja. Sincronize primeiro o catálogo (ao lado); as coleções são atualizadas ao final.</p>}
           {legacy && <p className="a-flash err mt-3">Este arquivo é de uma versão antiga e não guarda os produtos das coleções internas. Sincronize de novo.</p>}
-          {owner && (
-            <form action={syncCollectionsAction} className="mt-4">
-              <button type="submit" className="a-btn ghost sm">Sincronizar coleções agora</button>
-              <p className="a-muted mt-2 text-[0.8125rem]">Somente leitura na INK (cerca de 4 requisições). Se a INK falhar, os dados atuais são mantidos.{lastRun ? ` Última execução: ${lastRun.status === "succeeded" ? "ok" : lastRun.status === "running" ? "em andamento" : "falhou"} · ${new Date(lastRun.startedAt).toLocaleString("pt-BR")}.` : ""}</p>
-            </form>
-          )}
+          {lojaUnica ? <p className="a-muted mt-4 text-[0.8125rem]">O botão “Sincronizar coleções agora”, acima, atualiza também estas.</p> : collectionsButton("cerca de 4 requisições")}
         </div>
         <div className="text-[0.9375rem]" aria-label={`Catálogo de ${STORE_NAME[store]}`}>
           <p className="a-h2">Catálogo da loja {STORE_NAME[store]}</p>
@@ -141,7 +145,7 @@ export default async function SyncScreen({ searchParams }: { searchParams: Promi
           ) : (
             <ul className="mt-3 space-y-1 text-[0.9375rem]">
               {(Object.keys(file.stores) as CommerceStoreKey[]).map((key) => {
-                const rows = libraryEntries(key, key === store ? enabledInternalIds(ws.doc, key) : new Set());
+                const rows = libraryEntries(key, key === store ? enabledInternalIds(ws.doc, key) : new Set(), regionalPath);
                 const internal = rows.filter((e) => e.visibility === "internal");
                 return (
                   <li key={key} className="flex justify-between gap-3"><span className="a-muted">{STORE_NAME[key] ?? key}</span><span className="text-right font-bold">{rows.filter((e) => e.visibility === "public" && e.selectable).length} públicas utilizáveis · {internal.filter((e) => e.eligible).length} internas elegíveis ({internal.filter((e) => e.enabled).length} habilitadas) · {rows.length} no total</span></li>
@@ -152,6 +156,74 @@ export default async function SyncScreen({ searchParams }: { searchParams: Promi
           <p className="a-muted mt-3 text-[0.8125rem]">Elegível = pelo menos {MIN_USABLE_PRODUCTS} produtos publicados no catálogo local da mesma loja. O total bruto da INK inclui produtos ocultos. Internas precisam ser habilitadas em <Link href="/admin/colecoes" className="a-link">Coleções</Link>.</p>
         </div>
       </section>
+    </>
+  );
+
+  // The single store, as the site serves it in single-store mode: its own catalog file and the served collections file.
+  const lu = lojaUnica
+    ? {
+        catalog: snapshotStatus(snapshotPath(singleStoreDataDir())).stores.find((s) => s.storeKey === SINGLE_STORE_KEY),
+        synced: getCollections().stores[SINGLE_STORE_KEY],
+        all: libraryEntries(SINGLE_STORE_KEY, enabledInternalIds(ws.doc, SINGLE_STORE_KEY)),
+        job: currentLojaUnicaJob(),
+        hasToken: Boolean(tokenFor(SINGLE_STORE_KEY)),
+        tokenEnv: INK_STORES[SINGLE_STORE_KEY]?.tokenEnv ?? "INK_TOKEN_*",
+      }
+    : null;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="a-h1">Sincronização</h1>
+        <p className="a-muted mt-2 max-w-3xl">
+          {lojaUnica ? (
+            <>O site está em <strong>loja única</strong>: catálogo e coleções vêm todos da loja INK Use Origens. Sincronizar é sempre <strong>só leitura</strong> na INK; se falhar, os dados anteriores continuam valendo. Embaixo, o estado técnico da publicação.</>
+          ) : (
+            <>O que o painel e a loja leem da INK: o catálogo de produtos e as coleções de cada loja. Sincronizar é sempre <strong>só leitura</strong> na INK; se falhar, os dados anteriores continuam valendo. Embaixo, o estado técnico da publicação.</>
+          )}
+        </p>
+      </div>
+      <Flash ok={sp.ok} err={sp.err} />
+
+      {lu ? (
+        <>
+          <section id="sincronizar-loja-unica" className="a-card scroll-mt-4 grid gap-6 p-5 lg:grid-cols-2" aria-label="Loja única Use Origens" data-testid="sync-loja-unica">
+            <div className="text-[0.9375rem]" aria-label="Catálogo da loja única">
+              <p className="a-h2">Catálogo da loja única</p>
+              {lu.catalog && lu.catalog.productCount > 0 ? (
+                <p className="mt-3">{numberPt.format(lu.catalog.productCount)} produtos · sincronizado em <strong>{new Date(lu.catalog.syncedAt).toLocaleString("pt-BR")}</strong> ({ago(lu.catalog.syncedAt)})</p>
+              ) : (
+                <p className="a-flash err mt-3">A loja única ainda não tem catálogo sincronizado neste ambiente.</p>
+              )}
+              <p className="a-muted mt-2 text-[0.8125rem]">Atualiza sozinho todo dia às 03:30 (Brasília), junto com as peças.</p>
+              {!lu.hasToken && <p className="a-flash err mt-2">A variável <code>{lu.tokenEnv}</code> não está configurada neste ambiente.</p>}
+              {lu.job.status === "running" && <SyncProgress percent={lojaUnicaJobPercent(lu.job)} label={lu.job.totalPages ? `Lendo produtos: página ${lu.job.page} de ${lu.job.totalPages}` : "Começando a leitura dos produtos"} />}
+              {lu.job.status === "succeeded" && (
+                <p className="a-flash ok mt-3 text-[0.875rem]">
+                  Concluída {ago(lu.job.finishedAt)}: {numberPt.format(lu.job.result.productCount)} produtos ({numberPt.format(lu.job.result.bindingCount)} estampas de cidade, {numberPt.format(lu.job.result.merchCount)} outros){lu.job.result.changed ? "" : ", sem mudança no catálogo"} · {lu.job.result.collections === null ? "coleções mantidas (leitura recusada)" : `${lu.job.result.collections} coleções`}.
+                </p>
+              )}
+              {lu.job.status === "failed" && <p className="a-flash err mt-3 text-[0.875rem]">A última sincronização da loja única falhou: {lu.job.error}. Os dados anteriores foram mantidos.</p>}
+              {owner ? (
+                <form action={syncLojaUnicaAction} className="mt-4">
+                  <button type="submit" className="a-btn ghost sm" disabled={lu.job.status === "running" || !lu.hasToken}>Sincronizar catálogo da loja única</button>
+                  <p className="a-muted mt-2 text-[0.8125rem]">Só leitura na INK. Lê os produtos visíveis e as coleções; leva alguns minutos e roda em segundo plano. Nunca roda junto com o sync das 03:30.</p>
+                </form>
+              ) : <p className="a-muted mt-4 text-[0.8125rem]">Só o owner sincroniza.</p>}
+            </div>
+            <div className="text-[0.9375rem]">
+              <p className="a-h2">Coleções da loja única</p>
+              {lu.synced ? <CollectionsSummary synced={lu.synced} all={lu.all} /> : <p className="a-flash err mt-3">Ainda não há coleções da loja única. Sincronize o catálogo da loja única (ao lado); as coleções vêm junto.</p>}
+              {collectionsButton("poucas requisições; atualiza também as lojas regionais")}
+            </div>
+          </section>
+
+          <details className="a-card p-5" data-testid="sync-regional">
+            <summary className="cursor-pointer font-bold">Lojas regionais (em loja única o site não usa estes dados)</summary>
+            <div className="mt-4 space-y-6">{regional}</div>
+          </details>
+        </>
+      ) : regional}
 
       <section className="a-card p-5" aria-label="Publicação">
         <p className="a-h2">{prod ? "Publicação" : "Sandbox de publicação"}</p>

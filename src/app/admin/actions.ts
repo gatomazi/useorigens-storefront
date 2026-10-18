@@ -16,6 +16,7 @@ import { syncCollections } from "@/lib/catalog/collections-sync";
 import { commercePlan } from "@/lib/catalog/commerce-mode";
 import { LOJA_UNICA } from "@/lib/catalog/unificado/loja-unica";
 import { syncColecoesLojaUnica } from "@/lib/catalog/unificado/sync-loja-unica";
+import { beginLojaUnicaJob, LojaUnicaJobRunningError, runLojaUnicaJob } from "@/lib/catalog/unificado/sync-loja-unica-job";
 import { beginSyncJob, SyncAlreadyRunningError } from "@/lib/catalog/sync-job";
 import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
 import { INK_STORES, tokenFor } from "@/lib/ink/config";
@@ -893,6 +894,34 @@ export async function syncCollectionsAction() {
  * store takes a few minutes), so it runs in the background exactly like the authenticated route: the person is answered at once and the
  * Sincronização screen shows the job. One sync at a time (the same in-process lock as the route); never touches the last-good data on failure.
  */
+/**
+ * Refreshes the SINGLE STORE's catalog and collections (the files the site serves in single-store mode), the same sync the 03:30 cron runs minus
+ * the piece crawl. Owner only; read-only against INK; runs in the background and reports its page progress to /admin/sincronizacao.
+ */
+export async function syncLojaUnicaAction() {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  if (commercePlan().effective !== "single-store") back("/admin/sincronizacao", { err: ["A loja única não está ativa neste ambiente."] });
+  if (!tokenFor(LOJA_UNICA)) back("/admin/sincronizacao", { err: [`A variável ${INK_STORES[LOJA_UNICA]?.tokenEnv ?? "INK_TOKEN_*"} não está configurada neste ambiente.`] });
+  let running: ReturnType<typeof beginLojaUnicaJob>;
+  try {
+    running = beginLojaUnicaJob();
+  } catch (error) {
+    if (error instanceof LojaUnicaJobRunningError) back("/admin/sincronizacao", { err: ["Já há uma sincronização da loja única em andamento."] });
+    throw error;
+  }
+  after(() =>
+    runLojaUnicaJob(running, {
+      onChanged: () => {
+        revalidatePath("/[region]", "layout");
+        for (const region of REGION_SLUGS) revalidatePath(`/api/cidades/${region}`);
+      },
+    }),
+  );
+  await platform().audit.record({ actor: actor.id, action: "catalog.sync", meta: { lojaUnica: true } }).catch(() => undefined);
+  revalidatePath("/admin", "layout");
+  back("/admin/sincronizacao", { ok: "Sincronização da loja única iniciada. A barra mostra o andamento; as coleções são atualizadas ao final." });
+}
+
 export async function syncCatalogAction(fd: FormData) {
   const actor = await requireAdmin({ mutation: true, owner: true });
   const scope = await scopeOf(fd, actor);
