@@ -1,4 +1,5 @@
 import "server-only";
+import { isProductSales, type ProductSales } from "./product-sales";
 import { mkdir, readdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
@@ -97,6 +98,16 @@ function readCached<T>(filePath: string, guard: (v: unknown) => v is T): T | nul
 export function readLatestSnapshot(region: RegionSlug, baseDir?: string): PodioSnapshot | null {
   const snapshot = readCached(path.join(podioDir(region, baseDir), "latest.json"), isSnapshot);
   return snapshot && snapshot.region === region ? snapshot : null;
+}
+
+/** The units sold per product (product-sales.ts), written by the same run right after the snapshot. Its own file: the pages that sort read only it. */
+export async function writeProductSales(sales: ProductSales, baseDir?: string): Promise<void> {
+  await atomicWrite(path.join(podioDir(sales.region, baseDir), "product-sales.json"), sales);
+}
+
+/** Synchronous, mtime-cached, like the snapshot. Never touches INK. */
+export function readProductSales(region: RegionSlug, baseDir?: string): ProductSales | null {
+  return readCached(path.join(podioDir(region, baseDir), "product-sales.json"), isProductSales);
 }
 
 export function readRunState(region: RegionSlug, baseDir?: string): PodioRunState | null {

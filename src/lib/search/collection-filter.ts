@@ -57,12 +57,14 @@ import { DESIGN_FAMILIES } from "../catalog/families";
  * `product_type`), the state, the city and the design family. A card that lacks the attribute (a merch product has no city or family;
  * a product of an unknown piece type) simply never matches that filter and never counts in its facet: nothing is guessed.
  */
-export type FilterableProduct = FilterableCard & { garmentTypeId?: number; city?: string; family?: string; rawPrice?: number | null };
+export type FilterableProduct = FilterableCard & { id?: string; garmentTypeId?: number; city?: string; family?: string; rawPrice?: number | null };
 
 export type CollectionFilters = { garment?: number; state?: string; city?: string; family?: string };
-export const COLLECTION_SORTS = ["collection", "price-asc", "price-desc"] as const;
+export const COLLECTION_SORTS = ["collection", "best-selling", "price-asc", "price-desc"] as const;
 export type CollectionSort = (typeof COLLECTION_SORTS)[number];
-export const COLLECTION_SORT_LABEL: Record<CollectionSort, string> = { collection: "Ordem da coleção", "price-asc": "Menor preço", "price-desc": "Maior preço" };
+export const COLLECTION_SORT_LABEL: Record<CollectionSort, string> = { collection: "Ordem da coleção", "best-selling": "Mais vendidas", "price-asc": "Menor preço", "price-desc": "Maior preço" };
+/** Units sold per product id over the last 30 days (podio/product-sales.ts), or null when there is no fresh count: "Mais vendidas" is then not offered. */
+export type SalesUnits = Readonly<Record<string, number>> | null;
 
 export type FacetOption = { value: string; label: string; count: number };
 export type CollectionFacets = { garment: FacetOption[]; state: FacetOption[]; city: FacetOption[]; family: FacetOption[] };
@@ -91,9 +93,20 @@ export function applyCollectionFilters<T extends FilterableProduct>(cards: reado
 
 export const activeFilterCount = (filters: CollectionFilters): number => FILTER_KEYS.filter((key) => filters[key] !== undefined && filters[key] !== "").length;
 
-/** A price sort keeps the collection's order among equal prices; a card with no price goes last. */
-export function sortCollection<T extends FilterableProduct>(cards: readonly T[], sort: CollectionSort): T[] {
+/**
+ * A price sort keeps the collection's order among equal prices; a card with no price goes last. "Mais vendidas": most units sold first; equal units,
+ * and every product with no sale in the window, keep the collection's order (after the ones that sold). Without a fresh count it is the collection's order.
+ */
+export function sortCollection<T extends FilterableProduct>(cards: readonly T[], sort: CollectionSort, sales: SalesUnits = null): T[] {
   if (sort === "collection") return [...cards];
+  if (sort === "best-selling") {
+    if (!sales) return [...cards];
+    const sold = (card: T) => (card.id ? sales[card.id] ?? 0 : 0);
+    return [...cards]
+      .map((card, index) => ({ card, index, units: sold(card) }))
+      .sort((a, b) => b.units - a.units || a.index - b.index)
+      .map((entry) => entry.card);
+  }
   const sign = sort === "price-asc" ? 1 : -1;
   return [...cards]
     .map((card, index) => ({ card, index }))
@@ -202,11 +215,11 @@ export const isCollectionQueryActive = (query: CollectionQuery): boolean => coll
  * The cards a query selects, in the order asked: the text search (every term starts a word), then the filters, then the sort. The cards of a
  * query with no text and no filter are the whole collection (sorted, when a sort is asked).
  */
-export function runCollectionQuery<T extends FilterableProduct>(cards: readonly T[], query: CollectionQuery): { items: T[]; facets: CollectionFacets } {
+export function runCollectionQuery<T extends FilterableProduct>(cards: readonly T[], query: CollectionQuery, sales: SalesUnits = null): { items: T[]; facets: CollectionFacets } {
   const terms = collectionQueryTerms(query.q);
   const searched = terms.length > 0 ? cards.filter((card) => matchesCollectionQuery(card, terms)) : [...cards];
   const facets = collectionFacets(searched, query.filters);
-  const items = sortCollection(applyCollectionFilters(searched, query.filters), query.sort);
+  const items = sortCollection(applyCollectionFilters(searched, query.filters), query.sort, sales);
   return { items, facets };
 }
 

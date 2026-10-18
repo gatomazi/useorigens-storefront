@@ -51,6 +51,7 @@ export function CollectionBrowser({
   aside,
   footer,
   facets: initialFacets,
+  bestSelling = false,
 }: {
   region: string;
   /** The page's own address (`/colecoes/<slug>`), the one the API resolves exactly like the page. */
@@ -61,6 +62,8 @@ export function CollectionBrowser({
   footer: ReactNode;
   /** The facets of the whole collection, as the server counted them (what the filters offer before anything is chosen). */
   facets: CollectionFacets;
+  /** "Mais vendidas" is offered: the server has a fresh count of the last 30 days' sales (never shown, it only orders). */
+  bestSelling?: boolean;
 }) {
   const id = useId();
   const [q, setQ] = useState("");
@@ -159,7 +162,7 @@ export function CollectionBrowser({
     <label className="flex min-w-0 flex-col gap-1">
       <span className={labelled ? `t-caption ${dark ? "text-white/70" : ""}` : "sr-only"}>Ordenar</span>
       <select value={sort} onChange={(event) => setSort(event.target.value as CollectionSort)} data-testid={labelled ? "collection-sort" : "collection-sort-mobile"} className={`${compact ? "h-11" : "min-h-12"} w-full border-2 border-ink bg-white px-3 pr-8 text-[0.9375rem] font-semibold text-ink`}>
-        {COLLECTION_SORTS.map((option) => (
+        {COLLECTION_SORTS.filter((option) => bestSelling || option !== "best-selling").map((option) => (
           <option key={option} value={option}>
             {COLLECTION_SORT_LABEL[option]}
           </option>
