@@ -30,7 +30,7 @@ describe("a state's collections on its page", () => {
     filePath = path.join(dir, "collections-snapshot.json");
     await writeFile(filePath, JSON.stringify({ version: 2, stores: { "use-sul": { commerceStoreKey: "use-sul", syncedAt: "t", catalogSyncedAt: "c", totalCount: 5, collections: [
       rec(30, "Santa Catarina", 30, ["1", "2", "3", "4", "6", "7", "8"], { isAvailable: false }),
-      rec(31, "Paraná", 31, ["5"], { isAvailable: false }),
+      rec(31, "Paraná", 31, ["5", "9"], { isAvailable: false }),
       rec(10, "Fala Daqui", 5, ["9", "3", "4", "6"]),
       rec(11, "Da Nossa Terra", 2, ["1", "2", "5", "7"]),
       rec(12, "Novidades", 40, ["9", "1"]),
@@ -54,7 +54,7 @@ describe("a state's collections on its page", () => {
   test("given the panel's matrix, then every state says whether it has its own collection and each category or subcategory what its carousel shows there after the hierarchy", () => {
     const { states, counts } = stateRowMatrix("sul", undefined, () => products(), filePath);
     expect(states).toEqual([
-      { uf: "PR", name: "Paraná", parent: { id: 31, name: "Paraná", products: 1 } },
+      { uf: "PR", name: "Paraná", parent: { id: 31, name: "Paraná", products: 2 } },
       { uf: "SC", name: "Santa Catarina", parent: { id: 30, name: "Santa Catarina", products: 6 } }, // "8" is not in the catalog
       { uf: "RS", name: "Rio Grande do Sul", parent: null },
     ]);
@@ -154,6 +154,22 @@ describe("a state's collections on its page", () => {
       // "Da Nossa Terra" keeps "2", "7": a carousel of two is not drawn, and the state's row (also two) neither
       ["category", "Fala Daqui", "Fala Daqui", "carousel", "3,4,6"],
     ]);
+  });
+
+  test("given merch in no state's collection, then every state of the region shows it in its categories and subcategories, never in the state's own row", async () => {
+    const file = JSON.parse(await readFile(filePath, "utf8"));
+    file.stores["use-sul"].collections.push(rec(15, "Dizeres", 7, ["20", "21", "24", "22"]));
+    await writeFile(filePath, JSON.stringify(file));
+    // "20".."22" are Sul merch in no state's collection ("Bah | Dizeres"); "23" too, but in no collection of the lists; "24" is Norte's
+    const withPhrases = (): StoreProducts => ({
+      ...products(),
+      merch: new Map([...products().merch, ...["20", "21", "22", "23"].map((id) => [id, merch(id)] as const), ["24", { ...merch("24"), regionSlug: "norte" as const }]]),
+    });
+    const doc = { collections: { enabled: [], stateCategories: [ref(11), ref(10)], stateSubcategoryList: [ref(15)] } } as unknown as ScopeDoc;
+    const rows = (uf: string) => stateCollectionRows("sul", uf, doc, withPhrases, filePath).map((r) => [r.level, r.collection.name, r.items.map((i) => i.id).join(",")]);
+    expect(rows("SC")).toEqual([["category", "Da Nossa Terra", "1,2,7"], ["category", "Fala Daqui", "3,4,6"], ["subcategory", "Dizeres", "20,21,22"]]);
+    // In PR too: the same three phrases (PR has only "5" and "9" of its own, no row for them)
+    expect(rows("PR")).toEqual([["subcategory", "Dizeres", "20,21,22"]]);
   });
 
   test("given a list saved before the hierarchy (the flat rows), then its categories count as categories and its other collections as subcategories", () => {

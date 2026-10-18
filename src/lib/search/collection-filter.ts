@@ -77,7 +77,8 @@ const matchesFilter = (card: FilterableProduct, key: FacetKey, value: string | n
     case "garment":
       return card.garmentTypeId === Number(value);
     case "state":
-      return card.state === value;
+      // A product of no state ("Bah | Dizeres", in no state's collection) is every state's: the state pages show it in all of them, so does the filter.
+      return card.state === value || !card.state;
     case "city":
       return card.city === value;
     case "family":
@@ -152,7 +153,9 @@ function facetOf<T extends FilterableProduct>(cards: readonly T[], key: FacetKey
     entry.count += 1;
     counts.set(value, entry);
   }
-  const options = [...counts].map(([value, { label, count, order }]) => ({ value, label, count, order }));
+  // Products of no state are in every state's filter (matchesFilter), so each state's count includes them.
+  const everyState = key === "state" ? cards.filter((card) => !card.state).length : 0;
+  const options = [...counts].map(([value, { label, count, order }]) => ({ value, label, count: count + everyState, order }));
   // Pieces and families in their own commercial order; states and cities by name. A selected value stays listed even when nothing else matches it.
   options.sort((a, b) => a.order - b.order || a.label.localeCompare(b.label, "pt-BR"));
   if (selected !== undefined && selected !== "" && !options.some((o) => o.value === String(selected))) options.push({ value: String(selected), label: String(selected), count: 0, order: 0 });

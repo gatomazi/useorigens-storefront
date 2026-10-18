@@ -138,9 +138,10 @@ describe("filters, facets and sort of a collection page (Catalog UX V1)", () => 
       { value: "1", label: "Camiseta clássica", count: 3 },
       { value: "178", label: "Oversized", count: 1 },
     ]);
+    // The two "Essência" cards are of no state: every state's filter keeps them (as the state pages show them in every state), so both counts include them.
     expect(facets.state).toEqual([
-      { value: "PR", label: "Paraná", count: 1 },
-      { value: "SC", label: "Santa Catarina", count: 2 },
+      { value: "PR", label: "Paraná", count: 3 },
+      { value: "SC", label: "Santa Catarina", count: 4 },
     ]);
     expect(facets.family.map((f) => [f.label, f.count])).toEqual([
       ["Ponto de Origem", 2],
