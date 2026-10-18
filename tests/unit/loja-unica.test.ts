@@ -7,7 +7,7 @@ import { lerEstadoMigracao } from "@/lib/catalog/unificado/estado-migracao";
 import type { ProdutoBruto } from "@/lib/catalog/unificado/produto-bruto";
 import { classificarDesenhosSul, classificarRegioesSul, COLECAO_SUL, COLECAO_ZZ_CO, COLECAO_ZZ_NO } from "@/lib/catalog/unificado/reconciliar";
 import { montarColecoes, montarLojaUnica } from "@/lib/catalog/unificado/loja-unica";
-import { syncLojaUnica, IDENTITY_FILE } from "@/lib/catalog/unificado/sync-loja-unica";
+import { syncColecoesLojaUnica, syncLojaUnica, IDENTITY_FILE } from "@/lib/catalog/unificado/sync-loja-unica";
 import { categoryLookup, collectionsForRegion } from "@/lib/catalog/collection-source";
 import type { CollectionRecord } from "@/lib/catalog/collections";
 import type { StoreProducts } from "@/lib/catalog/repository";
@@ -227,5 +227,24 @@ describe("syncLojaUnica — o sync real da loja única", () => {
     const before = readFileSync(file, "utf8");
     expect(await syncLojaUnica({ deps: { ...deps, fetchProducts: async () => ({ products: many.slice(0, 2).map(visivel) }) } })).toMatchObject({ ok: false });
     expect(readFileSync(file, "utf8")).toBe(before);
+  });
+  test("given no single-store catalog yet, then the collections-only sync refuses and writes nothing", async () => {
+    expect(await syncColecoesLojaUnica({ deps })).toMatchObject({ ok: false });
+    expect(existsSync(path.join(dir, SINGLE_STORE_DIR, "collections-snapshot.json"))).toBe(false);
+  });
+  test("given a collection that got products on INK after the daily sync, then the collections-only sync writes it under loja-unica/ only", async () => {
+    mkdirSync(path.join(dir, SINGLE_STORE_DIR), { recursive: true });
+    writeFileSync(path.join(dir, SINGLE_STORE_DIR, IDENTITY_FILE), ESTADO);
+    expect(await syncLojaUnica({ deps })).toMatchObject({ ok: true, collections: 1 });
+    const pagina = { page: 1, total_pages: 1, total_count: 2, collections: [
+      { id: 1, name: "Da Nossa Terra", slug: "da-nossa-terra", position: 1, is_available: true, product_ids: [Number(curitiba.id)] },
+      { id: 2, name: "Fala de Onde", slug: "fala-de-onde", position: 2, is_available: true, product_ids: [Number(curitiba.id)] },
+    ] };
+    const r = await syncColecoesLojaUnica({ deps: { fetchCollections: async () => ({ membros: [], paginas: [pagina] }) } });
+    expect(r).toMatchObject({ ok: true, changed: true, collections: 2, requests: 1 });
+    const written = JSON.parse(readFileSync(path.join(dir, SINGLE_STORE_DIR, "collections-snapshot.json"), "utf8"));
+    expect(written.stores["use-sul"].collections.find((c: CollectionRecord) => c.name === "Fala de Onde")).toMatchObject({ matchedCount: 1 });
+    expect(existsSync(path.join(dir, "collections-snapshot.json"))).toBe(false);
+    expect(await syncColecoesLojaUnica({ deps: { fetchCollections: async () => ({ membros: [], paginas: [pagina] }) } })).toMatchObject({ ok: true, changed: false });
   });
 });
