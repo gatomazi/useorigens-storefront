@@ -117,6 +117,8 @@ export type DraftOp =
   | { type: "set-cards"; cards: CardsConfig | null }
   /** GLOBAL only: the last card of every product carousel ("Ver todas as {n} peças dessa coleção"), or `null` to take it out again. */
   | { type: "set-carousel-end"; carouselEnd: CarouselEndConfig | null }
+  /** GLOBAL only: the "Estampas" group of the search on (true, the default: no setting kept) or off. */
+  | { type: "set-search-designs"; on: boolean }
   | { type: "set-mundo"; modo: MundoModo | null }
   /** REGION only: switches "O Pódio" on or off (home teaser, state pages and the daily calculation); on removes the setting (the default). */
   | { type: "set-podio"; enabled: boolean }
@@ -276,6 +278,14 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     if (doc.scope !== "global") return fail("the cards' setting belongs to the global scope");
     const next: ScopeDoc = { ...doc, cards: op.cards ?? undefined };
     if (!op.cards) delete next.cards;
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-search-designs") {
+    if (doc.scope !== "global") return fail("the search setting belongs to the global scope");
+    const next: ScopeDoc = { ...doc };
+    if (op.on) delete next.search;
+    else next.search = { designs: false };
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }
