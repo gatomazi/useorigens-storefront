@@ -1,4 +1,5 @@
 import { isSameFill, SectionBackdrop } from "@/components/banners/SectionBackdrop";
+import { productSalesUnits } from "@/lib/podio/server";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { ProductCarousel } from "@/components/catalog/ProductCarousel";
 import { CollectionBrowser } from "@/components/catalog/CollectionBrowser";
@@ -395,7 +396,7 @@ function CarouselSection({
     // A collection with more than a screenful of products gets its own search and filters, over every page of it; so does a smaller one with products
     // of more than one state (a state page's "Ver todos" opens it filtered to that state).
     searchSlug && facets && (pages.total > SEARCH_FROM || facets.state.length > 1) ? (
-      <CollectionBrowser region={region} slug={searchSlug} grid={{ ...pagedGrid, compact }} items={items} aside={pagedAside} footer={pagedFooter} facets={facets} />
+      <CollectionBrowser region={region} slug={searchSlug} grid={{ ...pagedGrid, compact }} items={items} aside={pagedAside} footer={pagedFooter} facets={facets} bestSelling={productSalesUnits(region) !== null} />
     ) : (
       <ProductGrid {...pagedGrid} compact={compact} items={items} aside={pagedAside} footer={pagedFooter} />
     )

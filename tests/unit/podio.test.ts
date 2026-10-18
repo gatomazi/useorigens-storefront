@@ -12,7 +12,9 @@ import { computePodioSnapshot } from "@/lib/podio/compute";
 import { eligibleLines, netUnits, parseInkOrder } from "@/lib/podio/orders";
 import { freshnessOf, MAX_AGE_MS, projectLeaders, projectPodium, type PodioCatalogView } from "@/lib/podio/public";
 import { movementOf, orderEntities } from "@/lib/podio/rank";
-import { readDatedSnapshot, readLatestSnapshot, readRunState } from "@/lib/podio/snapshot";
+import { readDatedSnapshot, readLatestSnapshot, readProductSales, readRunState } from "@/lib/podio/snapshot";
+import { freshUnits, lineStore, tallyProductSales } from "@/lib/podio/product-sales";
+import { sortCollection } from "@/lib/search/collection-filter";
 import { syncRegionPodio } from "@/lib/podio/sync";
 import type { PodioOrder, PodioSnapshot } from "@/lib/podio/types";
 import { saoPauloMidnight, windowFor } from "@/lib/podio/window";
@@ -336,5 +338,39 @@ describe("pódio — public projection (state page and home)", () => {
     expect(projectLeaders(null, null, "sul", ["SC"], view, NOW)).toEqual([]);
     const fresh = new Date(Date.parse(snap.computedAt) + 60_000);
     expect(projectPodium(snap, null, "sul", "SC", view, fresh)!.pending).toBe(false);
+  });
+});
+
+describe("units sold per product (the collection pages' \"Mais vendidas\")", () => {
+  it("the daily run writes the units per product of the same eligible lines: refunds, unpaid orders and exchanges stay out, merch counts too", async () => {
+    const baseDir = tempDir();
+    const sold = orders(
+      rawOrder([{ productId: "101", name: "x", quantity: 2 }, { productId: "103", name: "x" }, { productId: "999", name: "Caneca" }], { createdAt: "2026-09-10T10:00:00-03:00", id: 1 }),
+      rawOrder([{ productId: "101", name: "x" }], { createdAt: "2026-09-12T10:00:00-03:00", id: 2 }),
+      rawOrder([{ productId: "103", name: "x", quantity: 5 }], { createdAt: "2026-09-12T10:00:00-03:00", id: 3, status: "Cancelado" }),
+      rawOrder([{ productId: "103", name: "x", quantity: 5 }], { createdAt: "2026-09-12T10:00:00-03:00", id: 4, exchange: true }),
+    );
+    await syncRegionPodio("sul", { baseDir, now: () => NOW, bindings: sulBindings, fetchOrders: async () => ({ orders: sold, requests: 1 }) });
+    const sales = readProductSales("sul", baseDir)!;
+    expect(sales.units).toEqual({ "101": 3, "103": 1, "999": 1 });
+    expect(freshUnits(sales, "sul", NOW)).toEqual(sales.units);
+    expect(freshUnits(sales, "sul", new Date(NOW.getTime() + 73 * 3600_000))).toBeNull();
+    expect(freshUnits(sales, "norte", NOW)).toBeNull();
+  });
+
+  it("a sale in the old regional store counts under its confirmed id in the single store; one with no confirmed counterpart is left out", () => {
+    const stores: CommerceStoreKey[] = ["use-sul", "use-norte"];
+    const line = (key: string, productId: string, units: number) => ({ key, productId, product: { id: productId, name: "x", tags: [] }, units });
+    const lines = [line("use-norte:use-sul:1:a", "500", 2), line("use-norte:use-norte:9:a", "70", 1), line("use-norte:use-norte:9:b", "71", 4)];
+    expect(lines.map((l) => lineStore(l, stores))).toEqual(["use-sul", "use-norte", "use-norte"]);
+    const map: Record<string, string> = { "70": "500" };
+    expect(tallyProductSales(lines, (l) => lineStore(l, stores), (store, id) => (store === "use-sul" ? id : map[id] ?? null))).toEqual({ "500": 3 });
+    expect(lineStore({ key: "use-sul:1:a" }, ["use-sul"])).toBe("use-sul");
+  });
+
+  it("\"Mais vendidas\" puts the most units first; equal units and unsold products keep the collection's order; no count = the collection's order", () => {
+    const cards = ["a", "b", "c", "d"].map((id) => ({ id, name: id }));
+    expect(sortCollection(cards, "best-selling", { c: 5, b: 5, d: 9 }).map((c) => c.id)).toEqual(["d", "b", "c", "a"]);
+    expect(sortCollection(cards, "best-selling", null).map((c) => c.id)).toEqual(["a", "b", "c", "d"]);
   });
 });

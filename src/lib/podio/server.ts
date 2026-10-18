@@ -5,7 +5,8 @@ import type { RegionSlug } from "../geo/regions";
 import type { ScopeDoc } from "../site-config/schema";
 import { podioEnabled } from "./enabled";
 import { freshnessOf, projectLeaders, projectPodium, type PodioCatalogView, type PodiumLeader, type PublicPodium } from "./public";
-import { readLatestSnapshot, readRunState } from "./snapshot";
+import { readLatestSnapshot, readProductSales, readRunState } from "./snapshot";
+import { freshUnits } from "./product-sales";
 
 function catalogView(): PodioCatalogView {
   const catalog = getCatalog();
@@ -48,4 +49,12 @@ export function getPodiumLeaders(region: RegionSlug, ufs: readonly string[], doc
   if (!podioEnabled(region, doc)) return [];
   logIfHidden(region);
   return projectLeaders(readLatestSnapshot(region), readRunState(region), region, ufs, catalogView(), new Date());
+}
+
+/**
+ * Units sold per product of the region's store over the pódio's window, for the collection pages' "Mais vendidas" sort; null when there is no fresh
+ * count (the pódio never ran, is switched off and its last file aged out, or the run is older than 72 h): the sort is then not offered.
+ */
+export function productSalesUnits(region: RegionSlug): Readonly<Record<string, number>> | null {
+  return freshUnits(readProductSales(region), region, new Date());
 }

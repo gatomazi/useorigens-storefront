@@ -7,7 +7,10 @@ import { tokenFor } from "../ink/config";
 import { fetchStorePaidOrders } from "../ink/orders-client";
 import { computePodioSnapshot } from "./compute";
 import { podioEnabled } from "./enabled";
-import { publishSnapshot, readDatedSnapshot, readRunState, writeRunState } from "./snapshot";
+import { publishSnapshot, readDatedSnapshot, readRunState, writeProductSales, writeRunState } from "./snapshot";
+import { eligibleLines } from "./orders";
+import { lineStore, tallyProductSales } from "./product-sales";
+import { canonicalRef } from "../catalog/references";
 import type { PodioOrder } from "./types";
 import { addDays, windowFor } from "./window";
 
@@ -104,6 +107,17 @@ export async function syncRegionPodio(region: RegionSlug, deps: PodioSyncDeps = 
     await publishSnapshot(snapshot, deps.baseDir);
   } catch (err) {
     return fail(`publish failed: ${err instanceof Error ? err.message : String(err)}`);
+  }
+  // Units per product for the "Mais vendidas" sort: the same eligible lines, keyed by the id each product has in the store the region sells from.
+  // A failure here never undoes the pódio: the sort keeps the last file (and drops out once it is stale).
+  try {
+    const stores = podioStoresFor(region);
+    const servedStore = stores[0];
+    const { lines } = eligibleLines(REGIONS[region].storeKey, fetched.orders, window);
+    const units = tallyProductSales(lines, (line) => lineStore(line, stores), (store, id) => (store === servedStore ? id : canonicalRef({ store, id })?.id ?? null));
+    await writeProductSales({ version: 1, region, storeKey: servedStore, referenceDate: window.referenceDate, window: snapshot.window, computedAt: now.toISOString(), units }, deps.baseDir);
+  } catch (err) {
+    console.warn(`[podio] ${region}: product sales not written (${err instanceof Error ? err.message : String(err)})`);
   }
   await writeRunState(region, { version: 1, lastAttempt: { at: now.toISOString(), ok: true, referenceDate: window.referenceDate }, lastSuccess: { at: now.toISOString(), referenceDate: window.referenceDate } }, deps.baseDir);
   return {
