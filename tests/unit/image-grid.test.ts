@@ -120,3 +120,26 @@ describe("image grid in the editor", () => {
     expect(linkProblems(structuredClone(seed.docs.sul), [{ ...s, active: false }])).toEqual([]);
   });
 });
+
+describe("a veil behind the text of a tile over a picture", () => {
+  const route = { kind: "route" as const, path: "/sul" };
+  test("given banner and classic tiles, when validated, then a soft or strong veil passes; on a product tile or an unknown value it is refused", () => {
+    const sul = buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null }).docs.sul.home!.sections;
+    const grid = (tiles: GridTile[]) => ({ ...sul[0], id: "g", anchor: "g", headingId: "g-t", template: "image-grid" as const, title: "Grade", grid: { columns: 4 as const, aspect: "portrait" as const, labels: "overlay" as const }, tiles });
+    const ok = (veil: unknown, format?: "banner" | "product") => validateSection(grid([{ label: "A", dest: route, ...(format ? { format } : {}), veil } as never, { label: "B", dest: route }])).ok;
+    expect(ok("soft", "banner")).toBe(true);
+    expect(ok("strong")).toBe(true);
+    expect(ok("soft", "product")).toBe(false);
+    expect(ok("heavy", "banner")).toBe(false);
+  });
+
+  test("given the editor's fields, when parsed, then the veil is kept on a banner or classic tile and dropped on a product tile", () => {
+    const { tiles } = parseGridTiles(form({
+      tile_count: "3",
+      tile_0_label: "A", tile_0_image: "01JA", tile_0_kind: "route", tile_0_route: "/sul", tile_0_format: "banner", tile_0_veil: "strong",
+      tile_1_label: "B", tile_1_image: "01JA", tile_1_kind: "route", tile_1_route: "/sul", tile_1_veil: "soft",
+      tile_2_label: "C", tile_2_kind: "ink-collection", tile_2_collection: "use-sul:152188", tile_2_format: "product", tile_2_veil: "soft",
+    }));
+    expect(tiles.map((t) => t.veil)).toEqual(["strong", "soft", undefined]);
+  });
+});

@@ -10,10 +10,10 @@ type DestKind = "collection-page" | "ink-collection" | "page" | "route" | "ancho
 type Row = {
   key: number; label: string; caption: string; image: string; kind: DestKind; collection: string; page: string; route: string; url: string; anchor: string; customizer: string;
   /** "" = the classic tile. */
-  format: "" | TileFormat; color: string; tone: "" | "light" | "dark"; cta: string; imageMobile: string; alt: string; fmx: number; fmy: number; fdx: number; fdy: number;
+  format: "" | TileFormat; color: string; tone: "" | "light" | "dark"; veil: "" | "soft" | "strong"; cta: string; imageMobile: string; alt: string; fmx: number; fmy: number; fdx: number; fdy: number;
 };
 
-const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "", customizer: "", format: "", color: "", tone: "", cta: "", imageMobile: "", alt: "", fmx: 50, fmy: 50, fdx: 50, fdy: 50 });
+const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "", customizer: "", format: "", color: "", tone: "", veil: "", cta: "", imageMobile: "", alt: "", fmx: 50, fmy: 50, fdx: 50, fdy: 50 });
 
 /** The card colours offered first (the theme's own, then a few warm grounds that sit well with the region's palette); any #rrggbb is accepted too. */
 const COLOR_CHOICES = [
@@ -42,6 +42,7 @@ function toRow(t: GridTile, key: number, scope: string): Row {
     format: t.format ?? "",
     color: t.color ?? "",
     tone: t.tone ?? "",
+    veil: t.veil ?? "",
     cta: t.cta ?? "",
     imageMobile: t.imageMobile?.assetId ?? "",
     alt: t.image && !t.image.decorative ? t.image.alt : "",
@@ -200,6 +201,17 @@ export function GridTilesEditor({
                       </select>
                       <p className="a-muted mt-1 text-[0.8125rem]">{sizeHintText(GRID_TILE[aspect])}</p>
                     </div>
+                    {r.format !== "product" && r.image && (
+                      <div>
+                        <label className="a-label" htmlFor={id("veil")}>Véu atrás do texto</label>
+                        <select id={id("veil")} name={id("veil")} className="a-select" value={r.veil} onChange={(e) => patch(r.key, { veil: e.target.value as Row["veil"] })} data-testid={`tile-veil-${i + 1}`}>
+                          <option value="">Sem véu</option>
+                          <option value="soft">Véu leve</option>
+                          <option value="strong">Véu forte</option>
+                        </select>
+                        <p className="a-muted mt-1 text-[0.8125rem]">Um retângulo translúcido do tamanho do texto, por trás do nome, da legenda e da chamada: escuro sob texto branco, claro sob texto escuro. Use quando a foto atrapalhar a leitura.{r.format === "" ? " No bloco clássico, vale com “Nome do bloco: sobre a imagem”." : ""}</p>
+                      </div>
+                    )}
                     {r.format === "banner" && (
                       <>
                         <div className="grid gap-3 md:grid-cols-2">

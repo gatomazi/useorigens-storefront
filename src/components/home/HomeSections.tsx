@@ -465,6 +465,7 @@ function gridTiles(s: Section, media: PublishedBundle["media"], links: Collectio
       external: t.dest.kind === "external" || t.dest.kind === "ink-collection",
       image: null,
       ...(t.cta || styled ? { cta: t.cta ?? DEFAULT_TILE_CTA } : {}),
+      ...(t.veil ? { veil: t.veil } : {}),
     };
     if (t.format === "banner") {
       const mobile = pictureOf(t.imageMobile) ?? picture;

@@ -190,8 +190,15 @@ export type GridTile = {
   tone?: "light" | "dark";
   /** The explicit call at the foot of the tile ("Ver coleção"). Absent: none on a classic tile, "Ver coleção" on the other two. */
   cta?: string;
+  /**
+   * Text over a picture only ("banner", or a classic tile with its name over the picture): a translucent block the size of the text behind it, dark under
+   * white text and light under dark text, so it reads over a busy photo. "soft" / "strong"; absent = none (the gradient at the foot alone, as before).
+   */
+  veil?: TileVeil;
 };
 export const TILE_FORMATS = ["product", "banner"] as const;
+export const TILE_VEILS = ["soft", "strong"] as const;
+export type TileVeil = (typeof TILE_VEILS)[number];
 export type TileFormat = (typeof TILE_FORMATS)[number];
 export const DEFAULT_TILE_CTA = "Ver coleção";
 export const MAX_TILE_CTA = 24;
@@ -753,6 +760,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
         else checkColor(c, `${at}.color`, t.color);
       }
       if (t.tone !== undefined && (!styled || (t.tone !== "light" && t.tone !== "dark"))) c.fail(`${at}.tone`, "product or banner tiles only: light | dark");
+      if (t.veil !== undefined && (t.format === "product" || !(TILE_VEILS as readonly unknown[]).includes(t.veil))) c.fail(`${at}.veil`, `banner or classic tiles only: ${TILE_VEILS.join(" | ")}`);
       if (t.cta !== undefined && (!isStr(t.cta, MAX_TILE_CTA) || t.cta.trim() !== t.cta)) c.fail(`${at}.cta`, `1..${MAX_TILE_CTA} chars, no leading or trailing spaces`);
       // A product tile shows a shirt OF its destination: only a collection has one.
       if (t.format === "product" && isRecord(t.dest) && t.dest.kind !== "collection-page" && t.dest.kind !== "ink-collection") c.fail(`${at}.dest`, "a product tile leads to a collection (its shirt comes from it)");
