@@ -245,7 +245,7 @@ O proxy não passa pelas rotas `/api`, então elas não têm a trava de catálog
 |---|---|
 | Catálogo das 3 lojas + peças | Cron **`garments-sync-cron`** todo dia às **03:30** (Brasília), ~176 GETs |
 | Pódio | Cron **`podio-sync-cron`** às **04:00** (Brasília) |
-| Coleções | **Manual:** botão "Sincronizar coleções agora" ou CLI. O cron diário **não** atualiza coleções |
+| Coleções | **Manual:** botão "Sincronizar coleções agora" ou CLI. O cron diário **não** atualiza as coleções regionais. Em loja única, o botão também regrava `loja-unica/collections-snapshot.json`, o arquivo que o site serve (o CLI `collections:sync` não); o cron diário o regrava junto com o catálogo da loja única |
 | Uma Penca | `umapenca:sync` ou rota admin; o painel diz "a cada 6 horas", mas o cron **(não confirmado)** |
 | Recomendações | `recommendations:build`, **manual**, sem agendamento |
 

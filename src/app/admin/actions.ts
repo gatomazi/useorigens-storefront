@@ -13,6 +13,9 @@ import { publishDeps } from "@/lib/admin/ops";
 import { globalParts } from "@/lib/admin/pending";
 import { allow } from "@/lib/admin/auth/rate-limit";
 import { syncCollections } from "@/lib/catalog/collections-sync";
+import { commercePlan } from "@/lib/catalog/commerce-mode";
+import { LOJA_UNICA } from "@/lib/catalog/unificado/loja-unica";
+import { syncColecoesLojaUnica } from "@/lib/catalog/unificado/sync-loja-unica";
 import { beginSyncJob, SyncAlreadyRunningError } from "@/lib/catalog/sync-job";
 import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
 import { INK_STORES, tokenFor } from "@/lib/ink/config";
@@ -866,6 +869,11 @@ export async function syncCollectionsAction() {
   let outcomes: Awaited<ReturnType<typeof syncCollections>>;
   try {
     outcomes = await syncCollections();
+    // In single-store mode the site serves the single store's own collections file (loja-unica/), which the regional sync above never writes.
+    if (commercePlan().effective === "single-store") {
+      const r = await syncColecoesLojaUnica();
+      outcomes.push(r.ok ? { storeKey: LOJA_UNICA, ...r } : { storeKey: LOJA_UNICA, ok: false, error: `loja única: ${r.error}` });
+    }
   } catch (error) {
     await syncs.finish(run.id, { ok: false, error: error instanceof Error ? error.message : "erro" }).catch(() => undefined);
     back("/admin/sincronizacao", { err: ["Falha ao sincronizar. Os dados anteriores foram mantidos."] });

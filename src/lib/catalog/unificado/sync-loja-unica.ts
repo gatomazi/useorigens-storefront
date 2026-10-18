@@ -6,7 +6,7 @@ import { fetchStoreProducts, type FetchProgress } from "../../ink/client";
 import { requireAtLeastOneInkToken } from "../../config/env";
 import { tokenFor } from "../../ink/config";
 import type { InkProductNormalized } from "../types";
-import { shouldPromoteCollections } from "../collections";
+import { sameCollections, shouldPromoteCollections, type StoreCollections } from "../collections";
 import { readCollectionsFile, collectionsPath, writeCollectionsFile } from "../collections-file";
 import { singleStoreDataDir } from "../commerce-mode";
 import { readSnapshot, snapshotPath } from "../snapshot-file";
@@ -107,14 +107,8 @@ export async function syncLojaUnica(opts: { dataDir?: string; onProgress?: Fetch
     await promoteSnapshot(montado.catalogo, file);
 
     // Collections of the single store, matched against the catalog just promoted (same parser as `collections:sync`).
-    let collections: number | null = null;
-    const colFile = collectionsPath(dir);
-    const candidate = montarColecoes(LOJA_UNICA, colecoes.paginas, next, syncedAt);
-    const current = readCollectionsFile(colFile).snapshot;
-    if (shouldPromoteCollections(current.stores[LOJA_UNICA], candidate).promote) {
-      await writeCollectionsFile({ version: 2, stores: { [LOJA_UNICA]: candidate } }, colFile);
-      collections = candidate.collections.length;
-    }
+    const promoted = await promoverColecoes(dir, montarColecoes(LOJA_UNICA, colecoes.paginas, next, syncedAt));
+    const collections = promoted.ok ? promoted.collections : null;
     return {
       ok: true,
       changed,
@@ -126,6 +120,40 @@ export async function syncLojaUnica(opts: { dataDir?: string; onProgress?: Fetch
       collections,
       requests,
     };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/** Writes the single store's collections file unless the candidate is a suspicious read (`shouldPromoteCollections`); identical content is not rewritten. */
+async function promoverColecoes(dir: string, candidate: StoreCollections): Promise<{ ok: true; changed: boolean; collections: number; available: number } | { ok: false; error: string }> {
+  const colFile = collectionsPath(dir);
+  const current = readCollectionsFile(colFile).snapshot.stores[LOJA_UNICA];
+  const verdict = shouldPromoteCollections(current, candidate);
+  if (!verdict.promote) return { ok: false, error: verdict.reason };
+  const changed = !sameCollections(current, candidate);
+  if (changed) await writeCollectionsFile({ version: 2, stores: { [LOJA_UNICA]: candidate } }, colFile);
+  return { ok: true, changed, collections: candidate.collections.length, available: candidate.collections.filter((c) => c.isAvailable).length };
+}
+
+/**
+ * Only the single store's COLLECTIONS (the "Sincronizar coleções" button in single-store mode): `GET /v1/stores/collections` matched against the
+ * single-store catalog already on disk, written under <snapshot dir>/loja-unica/. The regional `collections:sync` never touches this file, and the
+ * full `syncLojaUnica` (products too) only runs with the daily cron, so without this a collection edited on INK reached the served site a day later.
+ */
+export async function syncColecoesLojaUnica(opts: { dataDir?: string; deps?: Pick<LojaUnicaSyncDeps, "fetchCollections" | "now"> } = {}): Promise<
+  { ok: true; changed: boolean; collections: number; available: number; requests: number } | { ok: false; error: string }
+> {
+  const dir = opts.dataDir ?? singleStoreDataDir();
+  const deps = opts.deps ?? {};
+  if (!deps.fetchCollections && !tokenFor(LOJA_UNICA)) return { ok: false, error: `sem credencial para ${LOJA_UNICA}` };
+  const index = (await readSnapshot(snapshotPath(dir))).stores[LOJA_UNICA];
+  if (!index) return { ok: false, error: "a loja única ainda não tem catálogo sincronizado — nada a casar; nada foi gravado" };
+  try {
+    const { paginas } = await (deps.fetchCollections ?? (() => lerColecoes(LOJA_UNICA, () => false)))();
+    const syncedAt = (deps.now ?? (() => new Date()))().toISOString();
+    const promoted = await promoverColecoes(dir, montarColecoes(LOJA_UNICA, paginas, index, syncedAt));
+    return promoted.ok ? { ...promoted, requests: paginas.length } : promoted;
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
