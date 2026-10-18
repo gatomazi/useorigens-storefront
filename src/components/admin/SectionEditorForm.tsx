@@ -4,9 +4,10 @@ import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
 import { CollectionOrder, type OrderMember } from "@/components/admin/CollectionOrder";
 import { GridTilesEditor } from "@/components/admin/GridTilesEditor";
+import { HeroColorsEditor } from "@/components/admin/HeroColorsEditor";
 import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
 import type { FeaturedCandidate } from "@/lib/hero-featured";
-import { readability } from "@/lib/admin/contrast";
+import { heroTextColors, readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
 import { PRODUCT_CARD_IMAGE, sectionImageSizes, sizeHintText, STATE_COVER } from "@/lib/admin/image-sizes";
 import { DEFAULT_BUY_LABEL, HERO_CARDS, MAX_BUY_LABEL, MAX_FEATURED, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
@@ -34,7 +35,7 @@ const PRESETS = [
 const VARIANT_CHOICES: Partial<Record<Section["template"], readonly (readonly [string, string, string])[]>> = {
   hero: [
     ["", "Três produtos", "O título, a busca e até três produtos em cards pequenos ao lado."],
-    ["feature", "Um produto em destaque", "O título (a última linha na cor de destaque), a busca e, na outra metade, um único produto grande (o primeiro dos escolhidos abaixo) com nome, preço e “Ver produto →”. A cor de fundo pinta a metade do produto; uma imagem entra no lugar do produto, como banner (com a barra do produto embaixo, se houver um). No celular, essa metade vem depois da busca."],
+    ["feature", "Um produto em destaque", "O título (a última linha na cor de destaque), a busca e, na outra metade, um produto grande por vez com nome, preço e “Ver produto →”. Até 8 produtos, cada um com banner próprio, sempre o primeiro, sorteados a cada visita ou passando ao lado (em Produtos em destaque, abaixo). A cor de fundo pinta a metade do produto. No celular, essa metade vem depois da busca."],
   ],
   states: [
     ["", "Cartões com capa", "Um cartão por estado, com a capa, as regiões e a linha do estado."],
@@ -176,7 +177,7 @@ export function SectionEditorForm({
     focal: { mobile: focM, desktop: focD },
     overlay: overlayKind === "preset" ? { preset: preset as "none" } : { color: ovColor as `#${string}`, opacity: ovOpacity },
   };
-  const issues = hasVisual && !(section.template === "campaign" && !hasImage && fillKind === "none") ? readability(liveAppearance, tone, hasImage) : [];
+  const issues = hasVisual && !(section.template === "campaign" && !hasImage && fillKind === "none") ? readability(liveAppearance, tone, hasImage, heroTextColors(section)) : [];
 
   const cur = section.source;
   return (
@@ -266,6 +267,8 @@ export function SectionEditorForm({
           customizers={customizers}
         />
       )}
+
+      {section.template === "hero" && <HeroColorsEditor colors={section.heroColors} feature={section.variant === "feature"} sectionGround={fillKind === "solid" && choice === "custom" ? solid : undefined} />}
 
       {section.template === "hero" && featured && (
         <HeroFeaturedProducts

@@ -127,6 +127,14 @@ export const HERO_CARDS = 3;
  */
 export const FEATURED_ROTATIONS = ["random", "slide"] as const;
 export type FeaturedRotation = (typeof FEATURED_ROTATIONS)[number];
+/**
+ * The colours of the "feature" opening's reading half (the side with the headline): its ground, the headline, the headline's last line (its coloured beat),
+ * the rule above it, the supporting text and caption, the "explore by state" link, and the search field's frame and arrow button. Each one absent =
+ * the theme's own, as before.
+ */
+export const HERO_COLOR_KEYS = ["background", "title", "highlight", "rule", "text", "link", "field"] as const;
+export type HeroColorKey = (typeof HERO_COLOR_KEYS)[number];
+export type HeroColors = Partial<Record<HeroColorKey, Color>>;
 
 /**
  * `display` (product sections only): "carousel" = one row that scrolls sideways (the default, also when absent); "grid" = every card laid out on the page,
@@ -236,6 +244,8 @@ export type Section = {
   featured?: FeaturedProductRef[];
   /** Hero "feature" only: how it goes through `featured` (`FEATURED_ROTATIONS`); absent = always the first. */
   featuredRotation?: FeaturedRotation;
+  /** Hero "feature" only: the colours of the reading half (`HERO_COLOR_KEYS`); absent (or a key absent) = the theme's own. */
+  heroColors?: HeroColors;
   /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. `dest` sends the link to a page instead of this section. */
   nav?: { label: string; dest?: Destination };
   /**
@@ -684,6 +694,13 @@ function checkSection(c: Collector, path: string, v: unknown): void {
         if (seen.has(key)) c.fail(`${path}.featured[${i}]`, "the same product twice");
         seen.add(key);
       });
+    }
+  }
+  if (v.heroColors !== undefined) {
+    if (v.template !== "hero" || !isRecord(v.heroColors)) c.fail(`${path}.heroColors`, "hero only: { background?, title?, highlight?, rule?, text?, link?, field? }");
+    else for (const [key, color] of Object.entries(v.heroColors)) {
+      if (!(HERO_COLOR_KEYS as readonly string[]).includes(key)) c.fail(`${path}.heroColors.${key}`, "unknown colour");
+      else checkColor(c, `${path}.heroColors.${key}`, color);
     }
   }
   if (v.featuredRotation !== undefined && (v.template !== "hero" || !(FEATURED_ROTATIONS as readonly unknown[]).includes(v.featuredRotation))) c.fail(`${path}.featuredRotation`, `hero only: ${FEATURED_ROTATIONS.join(" | ")}`);

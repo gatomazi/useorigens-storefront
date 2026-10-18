@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Fragment, type ReactNode } from "react";
+import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { RegionalPhotoSection } from "@/components/banners/RegionalPhotoSection";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { PriceText } from "@/components/catalog/PriceText";
@@ -12,7 +12,9 @@ import { DEFAULT_BUY_LABEL, type CardBuy } from "@/lib/site-config/cards-schema"
 import { CardButton, CardCall, CardFab } from "@/components/catalog/CardButton";
 import { CARD_PRICE } from "@/components/catalog/ProductCard";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
-import type { FeaturedRotation } from "@/lib/site-config/schema";
+import type { Color, FeaturedRotation, HeroColorKey, HeroColors } from "@/lib/site-config/schema";
+import { cssColor } from "@/components/banners/SectionBackdrop";
+import { HEX_COLOR, relativeLuminance } from "@/lib/site-config/color";
 import { HeroSlides } from "./HeroSlides";
 
 const HERO_COPY = { title: "O seu lugar,\ndo seu jeito.", body: "Encontre sua cidade e vista o lugar que faz parte de você." };
@@ -46,6 +48,7 @@ export function RegionHero({
   panelImage,
   slides,
   rotation,
+  colors,
 }: {
   region: RegionSlug;
   cityCount: number;
@@ -69,6 +72,8 @@ export function RegionHero({
   slides?: { product: HeroFamilyCard; image: BannerAsset | null }[];
   /** "feature" only: how it goes through `slides` (CMS `featuredRotation`); absent = always the first. */
   rotation?: FeaturedRotation;
+  /** "feature" only: the colours of the reading half (CMS `heroColors`); absent = the theme's own. */
+  colors?: HeroColors;
 }) {
   const r = REGIONS[region];
   const background = backdrop === undefined ? usableBannerAsset("hero", config) : null;
@@ -77,7 +82,9 @@ export function RegionHero({
       Ou explore por estado.
     </a>
   ) : null;
-  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} slides={slides ?? trio.slice(0, 1).map((product) => ({ product, image: null }))} rotation={rotation} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} panelImage={panelImage ?? null} />;
+  const { tone, ink, captionClass, captionStyle, field } = heroTone(colors);
+  const classicLines = copy.title.split("\n");
+  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} slides={slides ?? trio.slice(0, 1).map((product) => ({ product, image: null }))} rotation={rotation} colors={colors} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} panelImage={panelImage ?? null} />;
   return (
     <section aria-labelledby="hero-title" className="relative isolate">
       {backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />}
@@ -87,21 +94,22 @@ export function RegionHero({
               product enters the first screen. Desktop keeps the original composition: text on the left, the three cards on the right. */}
           <div className={`contents lg:block ${trio.length > 0 ? "lg:col-span-6" : "lg:col-span-8"}`}>
             <div className="order-1">
-              <span aria-hidden="true" className="mb-3 block h-[3px] w-12 bg-region-accent lg:mb-4" />
-              <h1 id="hero-title" className="t-display">
-                {copy.title.split("\n").map((line, i) => (
+              <span aria-hidden="true" className="mb-3 block h-[3px] w-12 bg-region-accent lg:mb-4" style={tone("rule") ? { background: tone("rule") } : undefined} />
+              <h1 id="hero-title" className="t-display" style={ink("title")}>
+                {classicLines.map((line, i) => (
                   <Fragment key={i}>
                     {i > 0 && <br />}
-                    {line}
+                    {/* This composition has no coloured last line of its own: only when the owner gives the highlight a colour. */}
+                    {tone("highlight") && classicLines.length > 1 && i === classicLines.length - 1 ? <span style={ink("highlight")}>{line}</span> : line}
                   </Fragment>
                 ))}
               </h1>
-              <p className="t-body mt-4 hidden max-w-md text-ink lg:mt-5 lg:block">{copy.body}</p>
+              <p className="t-body mt-4 hidden max-w-md text-ink lg:mt-5 lg:block" style={ink("text")}>{copy.body}</p>
             </div>
             <div className="order-2 max-w-xl lg:mt-6">
-              <SearchDialog region={region} variant="hero" />
+              <SearchDialog region={region} variant="hero" tone={field} />
             </div>
-            <p className="t-caption regional-caption order-4 lg:order-3 lg:mt-3">
+            <p className={`t-caption regional-caption order-4 lg:order-3 lg:mt-3 ${captionClass}`} style={captionStyle}>
               <span className="lg:hidden">{copy.body} </span>
               {numberPt.format(cityCount)} cidades do {r.name} em camiseta.{statesLink && " "}
               {statesLink}
@@ -165,12 +173,13 @@ const ALIGN_END = "lg:pr-[max(var(--gutter),calc(100%-var(--content-max)/2+var(-
  * the reading area alone.
  */
 function FeatureHero({
-  region, cityCount, slides, rotation, copy, backdrop, buy, statesLink, panelColor, panelImage,
+  region, cityCount, slides, rotation, colors, copy, backdrop, buy, statesLink, panelColor, panelImage,
 }: {
   region: RegionSlug;
   cityCount: number;
   slides: { product: HeroFamilyCard; image: BannerAsset | null }[];
   rotation?: FeaturedRotation;
+  colors?: HeroColors;
   copy: { title: string; body: string };
   backdrop: ReactNode;
   buy?: CardBuy;
@@ -182,6 +191,7 @@ function FeatureHero({
   const call = buy?.label ?? DEFAULT_BUY_LABEL;
   const lines = copy.title.split("\n");
   const product = slides[0]?.product;
+  const { tone, ink, captionClass, captionStyle, field } = heroTone(colors);
   // One product (or none, or "always the first"): one half, as before. Several, drawn or sliding: one half per product, its own banner or the section's.
   const several = rotation !== undefined && slides.length > 1;
   const panel = several ? (
@@ -197,23 +207,23 @@ function FeatureHero({
       {backdrop}
       {/* Columns that never grow with their content (minmax(0, 1fr)): the row of sliding products is wider than the screen by design. */}
       <div className={`grid grid-cols-1 ${product || panelImage ? "lg:grid-cols-2" : ""}`}>
-        <div className={`flex items-center px-[var(--gutter)] pb-10 pt-8 lg:py-20 lg:pr-14 ${product ? ALIGN_START : "wrap"}`}>
+        <div className={`flex items-center px-[var(--gutter)] pb-10 pt-8 lg:py-20 lg:pr-14 ${product ? ALIGN_START : "wrap"}`} style={tone("background") ? { background: tone("background") } : undefined}>
           <div className="w-full max-w-[40rem]">
-            <span aria-hidden="true" className="mb-4 block h-[3px] w-12 bg-region-accent lg:mb-5" />
-            <h1 id="hero-title" className="t-display">
+            <span aria-hidden="true" className="mb-4 block h-[3px] w-12 bg-region-accent lg:mb-5" style={tone("rule") ? { background: tone("rule") } : undefined} />
+            <h1 id="hero-title" className="t-display" style={ink("title")}>
               {lines.map((line, i) => (
                 <Fragment key={i}>
                   {i > 0 && <br />}
                   {/* The last line in the accent: one coloured beat in the headline, never the whole of it. */}
-                  {lines.length > 1 && i === lines.length - 1 ? <span className="text-[var(--region-accent-ink,var(--region-primary))]">{line}</span> : line}
+                  {lines.length > 1 && i === lines.length - 1 ? <span className="text-[var(--region-accent-ink,var(--region-primary))]" style={ink("highlight")}>{line}</span> : line}
                 </Fragment>
               ))}
             </h1>
-            {copy.body && <p className="t-body mt-4 max-w-md text-ink-soft lg:mt-6">{copy.body}</p>}
+            {copy.body && <p className="t-body mt-4 max-w-md text-ink-soft lg:mt-6" style={ink("text")}>{copy.body}</p>}
             <div className="mt-6 max-w-xl lg:mt-8">
-              <SearchDialog region={region} variant="hero" arrow />
+              <SearchDialog region={region} variant="hero" arrow tone={field} />
             </div>
-            <p className="t-caption regional-caption mt-3">
+            <p className={`t-caption regional-caption mt-3 ${captionClass}`} style={captionStyle}>
               {numberPt.format(cityCount)} cidades do {r.name} em camiseta.{statesLink && " "}
               {statesLink}
             </p>
@@ -224,6 +234,30 @@ function FeatureHero({
       </div>
     </section>
   );
+}
+
+/**
+ * The owner's colours of the opening's text side (CMS `heroColors`), each only where it was set (the theme's own everywhere else): style per element,
+ * the caption's link (it follows the text unless it has a colour of its own) and the search field's frame and arrow.
+ */
+function heroTone(colors: HeroColors | undefined) {
+  const tone = (key: HeroColorKey) => (colors?.[key] ? cssColor(colors[key]!) : undefined);
+  const ink = (key: HeroColorKey): CSSProperties | undefined => (tone(key) ? { color: tone(key) } : undefined);
+  const link = tone("link") ?? tone("text");
+  return {
+    tone,
+    ink,
+    captionClass: link ? "[&_a]:text-[color:var(--hero-link)] [&_a]:decoration-[color:var(--hero-link)]" : "",
+    captionStyle: { ...ink("text"), ...(link ? { "--hero-link": link } : {}) } as CSSProperties,
+    field: colors?.field ? { frame: cssColor(colors.field), arrow: inkOn(colors.field) } : undefined,
+  };
+}
+
+/** A legible mark on a colour of the owner's (the search field's arrow on its button): ink on a light colour, white on a dark one. */
+function inkOn(color: Color): string {
+  if (color === "token:ground") return "var(--ink)";
+  if (!HEX_COLOR.test(color)) return "#ffffff"; // the region's primary and the campaign black are dark
+  return relativeLuminance(color) > 0.35 ? "#000000" : "#ffffff";
 }
 
 /**
@@ -251,14 +285,22 @@ function FeaturePanel({ product, image, color, call, priority }: { product: Hero
       )}
       {product && (
         <span
-          className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-2 ${
+          className={`flex flex-wrap ${image ? "items-center" : "items-end"} justify-between gap-x-6 gap-y-2 ${
             image ? "border-t px-[var(--gutter)]" : "min-w-0 flex-1 py-4 pl-4 pr-[var(--gutter)] lg:flex-none lg:border-t lg:pl-14"
           } border-[rgb(var(--region-primary-rgb)/0.18)] py-4 lg:bg-[rgb(var(--region-primary-rgb)/0.07)] ${image ? "bg-[rgb(var(--region-primary-rgb)/0.07)]" : ""} ${ALIGN_END} lg:pl-14 lg:py-5`}
         >
-          <span className="min-w-0">
-            <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
-            <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
-              {product.cityName} · {product.uf}
+          <span className="flex min-w-0 items-center gap-3 lg:gap-4">
+            {/* Under a banner (a photo of the shirt worn, a landscape) the product itself is not in sight: its mockup, small, beside its name. */}
+            {image && (
+              <span className="block w-12 shrink-0 overflow-hidden rounded-md lg:w-14">
+                <ProductPhoto src={product.imageUrl} alt="" sizes="3.5rem" priority={false} className="photo-contain" />
+              </span>
+            )}
+            <span className="min-w-0">
+              <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
+              <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
+                {product.cityName} · {product.uf}
+              </span>
             </span>
           </span>
           <span className="flex items-baseline gap-4">

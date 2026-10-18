@@ -20,9 +20,12 @@ export function SearchDialog({
   label = "Busque a sua cidade",
   arrow = false,
   labelled = true,
+  tone,
 }: {
   region: RegionSlug;
   variant?: "header" | "hero" | "field" | "cta" | "link" | "nav";
+  /** `hero` / `field`: the owner's colour for the field's frame and its arrow button, and the mark on that button (CMS `heroColors.field`). */
+  tone?: { frame: string; arrow: string };
   /** GA4 `source` for select_city when a result is chosen; defaults to the trigger's own (hero or dialog). */
   source?: string;
   /** The words of the `link` and `nav` triggers. */
@@ -51,12 +54,13 @@ export function SearchDialog({
           onClick={open}
           aria-haspopup="dialog"
           className="group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper sm:min-h-[4.5rem] sm:px-5"
+          style={tone ? { borderColor: tone.frame } : undefined}
         >
           <SearchIcon className="h-6 w-6 shrink-0" />
           <span className="flex-1 text-[1.0625rem] font-medium text-ink-mute sm:text-[1.1875rem]">{variant === "hero" ? copy.hero : copy.field}</span>
           {arrow ? (
             // Drawn inside the one button (it opens the same sheet): a mark of the action, not a second control.
-            <span aria-hidden="true" className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center bg-ink text-white transition-colors group-hover:bg-region-primary sm:-mr-3 sm:h-12 sm:w-12">
+            <span aria-hidden="true" className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center bg-ink text-white transition-colors group-hover:bg-region-primary sm:-mr-3 sm:h-12 sm:w-12" style={tone ? { background: tone.frame, color: tone.arrow } : undefined}>
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
