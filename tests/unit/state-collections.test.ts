@@ -2,7 +2,7 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { stateCategoryCollections, stateCollectionRows, stateRowMatrix, stateRowsReach, stateSubcategoryChoice, stateSubcategoryCollections } from "@/lib/catalog/collection-source";
+import { stateCategoryCollections, stateCollectionRows, stateRowMatrix, stateRowsReach, stateSubcategoriesInUse, stateSubcategoryChoice, stateSubcategoryCollections } from "@/lib/catalog/collection-source";
 import { applyOp } from "@/lib/admin/draft-ops";
 import { diffDocs } from "@/lib/admin/diff";
 import { validateScopeDoc } from "@/lib/site-config/schema";
@@ -110,7 +110,7 @@ describe("a state's collections on its page", () => {
 
   test("given the region's own categories and an internal subcategory brought in, then it takes its products out of its category, and what is left goes up", () => {
     const doc = { collections: { enabled: [], stateCategories: [ref(11), ref(10)], stateSubcategories: { hidden: [ref(12)], added: [ref(13)] } } } as unknown as ScopeDoc;
-    expect(stateSubcategoryCollections("sul", doc, filePath)).toEqual({ legacy: false, records: [expect.objectContaining({ name: "Carnaval" })], hidden: [expect.objectContaining({ name: "Novidades" })] });
+    expect(stateSubcategoryCollections("sul", doc, filePath)).toEqual({ manual: false, legacy: false, records: [expect.objectContaining({ name: "Carnaval" })], hidden: [expect.objectContaining({ name: "Novidades" })] });
     expect(tree(doc)).toEqual([
       ["subcategory", "Carnaval", "Da Nossa Terra", "1,2,3"], // internal, but chosen by the region
       // Da Nossa Terra keeps only "7" and Fala Daqui "4", "6": below the minimum, so both go up to the state's row
@@ -127,6 +127,33 @@ describe("a state's collections on its page", () => {
     expect(tree(doc)).toEqual([["category", "Da Nossa Terra", "Da Nossa Terra", "1,2,7"], ["subcategory", "Fala de Onde", "Fala Daqui", "3,4,6"]]);
     const out = { collections: { enabled: [], stateCategories: [ref(11), ref(10)], stateSubcategories: { hidden: [ref(14)], added: [] } } } as unknown as ScopeDoc;
     expect(tree(out)).toEqual([["category", "Da Nossa Terra", "Da Nossa Terra", "1,2,7"], ["category", "Fala Daqui", "Fala Daqui", "3,4,6"]]);
+  });
+
+  test("given subcategories chosen by hand, then only those show, in the list's order, and a new public collection does not enter on its own", async () => {
+    const file = JSON.parse(await readFile(filePath, "utf8"));
+    file.stores["use-sul"].collections.push(rec(14, "Fala de Onde", 6, ["3", "4", "6"]));
+    await writeFile(filePath, JSON.stringify(file));
+    const doc = { collections: { enabled: [], stateCategories: [ref(11), ref(10)], stateSubcategoryList: [ref(13)], stateSubcategories: { hidden: [], added: [ref(14)] } } } as unknown as ScopeDoc;
+    expect(stateSubcategoryCollections("sul", doc, filePath)).toEqual({ manual: true, legacy: false, records: [expect.objectContaining({ name: "Carnaval" })], hidden: [] });
+    // "Fala de Onde" is public and new: not in the list, so its products stay in "Fala Daqui" (the automatic choice is ignored while a list exists)
+    expect(tree(doc)).toEqual([["subcategory", "Carnaval", "Da Nossa Terra", "1,2,3"], ["state", "Santa Catarina", null, "4,6,7"]]);
+    expect(stateSubcategoriesInUse("sul", doc, () => products(), filePath).map((c) => c.name)).toEqual(["Carnaval"]);
+  });
+
+  test("given automatic subcategories, then the ones in use are only those that show in some state (where a switch to manual starts)", () => {
+    const doc = { collections: { enabled: [], stateCategories: [ref(11), ref(10)] } } as unknown as ScopeDoc;
+    expect(stateSubcategoryCollections("sul", doc, filePath).records.map((c) => c.name)).toEqual(["Novidades"]);
+    expect(stateSubcategoriesInUse("sul", doc, () => products(), filePath)).toEqual([]); // "Novidades" has one product of SC: it shows nowhere
+  });
+
+  test("given a row shown as a grid, then it shows from one product, while a carousel still needs three", () => {
+    const doc = { collections: { enabled: [], stateCategories: [ref(11), ref(10)], stateGrids: [ref(12)] } } as unknown as ScopeDoc;
+    const rows = stateCollectionRows("sul", "SC", doc, () => products(), filePath);
+    expect(rows.map((r) => [r.level, r.collection.name, r.category?.name ?? null, r.display, r.items.map((i) => i.id).join(",")])).toEqual([
+      ["subcategory", "Novidades", "Da Nossa Terra", "grid", "1"], // one product of the state, shown because it is a grid
+      // "Da Nossa Terra" keeps "2", "7": a carousel of two is not drawn, and the state's row (also two) neither
+      ["category", "Fala Daqui", "Fala Daqui", "carousel", "3,4,6"],
+    ]);
   });
 
   test("given a list saved before the hierarchy (the flat rows), then its categories count as categories and its other collections as subcategories", () => {
@@ -178,6 +205,38 @@ describe("the state page's rows in the panel", () => {
     expect(doc.collections?.stateRows).toBeUndefined();
     expect(doc.collections?.stateSubcategories).toEqual({ hidden: [{ store: "use-sul", collectionId: 12 }], added: [{ store: "use-sul", collectionId: 13 }] });
     expect(ok(applyOp(legacy, { type: "reset-state-subcategories" }, ctx)).collections).toEqual({ enabled: [] });
+  });
+
+  test("given the switch to a hand-picked list, then it starts with what is in use, drops the automatic choice, and is then edited and reordered by hand", () => {
+    const r = (collectionId: number) => ({ store: "use-sul" as const, collectionId });
+    const auto = { ...sul(), collections: { enabled: [], stateSubcategories: { hidden: [r(12)], added: [r(13)] } } };
+    let doc = ok(applyOp(auto, { type: "start-manual-subcategories", base: [r(13), r(14)] }, ctx));
+    expect(doc.collections?.stateSubcategoryList).toEqual([r(13), r(14)]);
+    expect(doc.collections?.stateSubcategories).toBeUndefined();
+    expect(diffDocs(auto, doc, (x) => `#${x.collectionId}`).map((c) => c.text)).toContain("Página do estado · subcategorias escolhidas por você: #13, #14");
+    doc = ok(applyOp(doc, { type: "set-manual-subcategory", ...r(12), on: true, base: [] }, ctx)); // the list exists: `base` is not used any more
+    doc = ok(applyOp(doc, { type: "move-manual-subcategory", ...r(12), direction: "up", base: [] }, ctx));
+    expect(doc.collections?.stateSubcategoryList?.map((x) => x.collectionId)).toEqual([13, 12, 14]);
+    expect(applyOp(doc, { type: "move-manual-subcategory", ...r(13), direction: "up", base: [] }, ctx).ok).toBe(false);
+    doc = ok(applyOp(doc, { type: "set-manual-subcategory", ...r(13), on: false, base: [] }, ctx));
+    doc = ok(applyOp(doc, { type: "set-manual-subcategory", ...r(12), on: false, base: [] }, ctx));
+    doc = ok(applyOp(doc, { type: "set-manual-subcategory", ...r(14), on: false, base: [] }, ctx));
+    expect(doc.collections?.stateSubcategoryList).toEqual([]); // empty list = no subcategory at all, still by hand (not back to automatic)
+    // Editing a single one with no list yet starts from `base` (what is in use), never from nothing
+    expect(ok(applyOp(sul(), { type: "set-manual-subcategory", ...r(14), on: true, base: [r(13)] }, ctx)).collections?.stateSubcategoryList).toEqual([r(13), r(14)]);
+    expect(ok(applyOp(doc, { type: "reset-state-subcategories" }, ctx)).collections?.stateSubcategoryList).toBeUndefined();
+  });
+
+  test("given a row switched to a grid and back, then only grid rows are kept, and the publish list says it", () => {
+    const r = (collectionId: number) => ({ store: "use-sul" as const, collectionId });
+    let doc = ok(applyOp(sul(), { type: "set-state-row-display", ...r(12), grid: true }, ctx));
+    doc = ok(applyOp(doc, { type: "set-state-row-display", ...r(12), grid: true }, ctx)); // twice: still once
+    expect(doc.collections?.stateGrids).toEqual([r(12)]);
+    expect(diffDocs(sul(), doc, (x) => `#${x.collectionId}`).map((c) => c.text)).toContain("Página do estado: “#12” passa a aparecer em grade");
+    const back = ok(applyOp(doc, { type: "set-state-row-display", ...r(12), grid: false }, ctx));
+    expect(back.collections?.stateGrids).toBeUndefined();
+    expect(diffDocs(doc, back, (x) => `#${x.collectionId}`).map((c) => c.text)).toContain("Página do estado: “#12” volta a ser carrossel");
+    expect(applyOp(sul(), { type: "set-state-row-display", store: "use-norte", collectionId: 12, grid: true }, ctx).ok).toBe(false);
   });
 
   test("given another region's store, when added, then the document refuses it", () => {

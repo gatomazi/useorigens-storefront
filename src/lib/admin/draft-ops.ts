@@ -87,8 +87,18 @@ export type DraftOp =
    * caller (from a legacy `stateRows` list, if the document still has one, which this edit then replaces).
    */
   | ({ type: "set-state-subcategory"; on: boolean; isPublic: boolean; base: StateSubcategories } & CollectionRef)
-  /** Back to automatic: every public collection that is neither a state's nor a category. */
+  /** Back to automatic: every public collection that is neither a state's nor a category (a hand-picked list is dropped too). */
   | { type: "reset-state-subcategories" }
+  /**
+   * The state page's SUBCATEGORIES chosen by hand (`collections.stateSubcategoryList`). `start-…` writes the list as `base` (what shows today, computed
+   * by the caller), so switching to manual changes nothing on the site; `set-…`/`move-…` put one in or take it out, or move it one step, starting from
+   * `base` while there is no list yet. Writing the list drops the automatic choice (`stateSubcategories`) and the legacy `stateRows`.
+   */
+  | { type: "start-manual-subcategories"; base: CollectionRef[] }
+  | ({ type: "set-manual-subcategory"; on: boolean; base: CollectionRef[] } & CollectionRef)
+  | ({ type: "move-manual-subcategory"; direction: "up" | "down"; base: CollectionRef[] } & CollectionRef)
+  /** One state-page row shown as a grid (`grid`) or back to a carousel (`collections.stateGrids`). */
+  | ({ type: "set-state-row-display"; grid: boolean } & CollectionRef)
   /** REGION only: shows or hides one state-page section that is not built from collections ("Destaques", "Escolha o estilo", "Regiões e cidades"). */
   | { type: "set-state-page-section"; section: StatePageSection; shown: boolean }
   /** Creates the home of a region that has none yet, from sections the caller built out of REAL sources (see admin/region-seed.ts). */
@@ -183,6 +193,8 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-collection-menu-position" || op.type === "move-collection-menu" || op.type === "adopt-collection-menu") return editMenu(doc, op);
   if (op.type === "set-state-category" || op.type === "move-state-category" || op.type === "reset-state-categories") return editStateCategories(doc, op);
   if (op.type === "set-state-subcategory" || op.type === "reset-state-subcategories") return editStateSubcategories(doc, op);
+  if (op.type === "start-manual-subcategories" || op.type === "set-manual-subcategory" || op.type === "move-manual-subcategory") return editManualSubcategories(doc, op);
+  if (op.type === "set-state-row-display") return editStateRowDisplay(doc, op);
   if (op.type === "set-home-theme" || op.type === "create-home-theme") {
     if (doc.scope === "global" || !doc.home) return fail("only a region's home has a theme");
     const created = op.theme === "editorial" && !hasHomeTheme(doc, "editorial") ? newEditorialTheme(doc.scope as RegionSlug, doc.home.sections, op.collections ?? {}, ctx.newId) : undefined;
@@ -539,8 +551,9 @@ function editStateCategories(doc: ScopeDoc, op: StateCategoriesOp): OpResult {
 type StateSubcategoriesOp = Extract<DraftOp, { type: "set-state-subcategory" | "reset-state-subcategories" }>;
 function editStateSubcategories(doc: ScopeDoc, op: StateSubcategoriesOp): OpResult {
   if (doc.scope === "global") return fail("global has no state pages");
-  const { stateRows: _legacy, stateSubcategories: current, ...rest } = doc.collections ?? { enabled: [] };
+  const { stateRows: _legacy, stateSubcategories: current, stateSubcategoryList: _manual, ...rest } = doc.collections ?? { enabled: [] };
   void _legacy;
+  void _manual;
   const collections: NonNullable<ScopeDoc["collections"]> = { ...rest, enabled: rest.enabled ?? [] };
   if (op.type === "set-state-subcategory") {
     const same = (r: CollectionRef) => r.store === op.store && r.collectionId === op.collectionId;
@@ -553,6 +566,44 @@ function editStateSubcategories(doc: ScopeDoc, op: StateSubcategoriesOp): OpResu
     if (hidden.length > 0 || added.length > 0) collections.stateSubcategories = { hidden, added };
   }
   const edited: ScopeDoc = { ...doc, collections };
+  const check = validateScopeDoc(edited);
+  return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
+}
+
+/** Edits the hand-picked subcategories. The list is the whole choice, so the automatic one and the legacy list go away with the first write. */
+type ManualSubcategoriesOp = Extract<DraftOp, { type: "start-manual-subcategories" | "set-manual-subcategory" | "move-manual-subcategory" }>;
+function editManualSubcategories(doc: ScopeDoc, op: ManualSubcategoriesOp): OpResult {
+  if (doc.scope === "global") return fail("global has no state pages");
+  const { stateRows: _legacy, stateSubcategories: _auto, stateSubcategoryList: current, ...rest } = doc.collections ?? { enabled: [] };
+  void _legacy;
+  void _auto;
+  const copy = (refs: readonly CollectionRef[]) => refs.map((r) => ({ store: r.store, collectionId: r.collectionId }));
+  let list = copy(current ?? op.base);
+  if (op.type !== "start-manual-subcategories") {
+    const same = (r: CollectionRef) => r.store === op.store && r.collectionId === op.collectionId;
+    if (op.type === "set-manual-subcategory") list = op.on ? (list.some(same) ? list : [...list, { store: op.store, collectionId: op.collectionId }]) : list.filter((r) => !same(r));
+    else {
+      const i = list.findIndex(same);
+      const j = op.direction === "up" ? i - 1 : i + 1;
+      if (i < 0 || j < 0 || j >= list.length) return fail("this collection cannot move that way");
+      [list[i], list[j]] = [list[j], list[i]];
+    }
+  }
+  const edited: ScopeDoc = { ...doc, collections: { ...rest, enabled: rest.enabled ?? [], stateSubcategoryList: list } };
+  const check = validateScopeDoc(edited);
+  return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
+}
+
+/** Shows one state-page row as a grid or back as a carousel. An empty list is removed (every row a carousel). */
+function editStateRowDisplay(doc: ScopeDoc, op: Extract<DraftOp, { type: "set-state-row-display" }>): OpResult {
+  if (doc.scope === "global") return fail("global has no state pages");
+  const collections = doc.collections ?? { enabled: [] };
+  const same = (r: CollectionRef) => r.store === op.store && r.collectionId === op.collectionId;
+  const now = (collections.stateGrids ?? []).filter((r) => !same(r)).map((r) => ({ store: r.store, collectionId: r.collectionId }));
+  const next = op.grid ? [...now, { store: op.store, collectionId: op.collectionId }] : now;
+  const edited: ScopeDoc = { ...doc, collections: { ...collections } };
+  if (next.length > 0) edited.collections!.stateGrids = next;
+  else delete edited.collections!.stateGrids;
   const check = validateScopeDoc(edited);
   return check.ok ? { ok: true, doc: edited } : { ok: false, errors: check.errors };
 }

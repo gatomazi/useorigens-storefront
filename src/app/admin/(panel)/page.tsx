@@ -48,12 +48,13 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
   const syncedCollections = getCollections().stores[store];
   const catalogPresent = (snapshotStatus().stores.find((c) => c.storeKey === store)?.productCount ?? 0) > 0;
   const stale = collectionsStaleReason(store);
-  // What the owner CHOSE for the state pages and shows in no state: the categories of an own list, the subcategories brought in by hand (or a legacy list).
+  // What the owner CHOSE for the state pages and shows in no state: the categories of an own list, the subcategories brought in by hand (or a legacy or
+  // hand-picked list).
   // Automatic ones that show nowhere are not a problem (a public collection with no product of any state).
   const categories = stateCategoryCollections(scope, ws.doc);
   const subcategories = stateSubcategoryCollections(scope, ws.doc);
   const addedByHand = new Set((ws.doc.collections?.stateSubcategories?.added ?? []).map((r) => r.collectionId));
-  const chosen = [...(categories.own ? categories.records : []), ...subcategories.records.filter((c) => subcategories.legacy || addedByHand.has(c.id))];
+  const chosen = [...(categories.own ? categories.records : []), ...subcategories.records.filter((c) => subcategories.manual || subcategories.legacy || addedByHand.has(c.id))];
   const catalog = getCatalog();
   const reach = stateRowsReach(scope, ws.doc, (s) => catalog.productsOfStore(s));
   const rowsNowhere = chosen.filter((c) => (reach.get(c.id) ?? 0) === 0);

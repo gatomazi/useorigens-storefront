@@ -257,10 +257,19 @@ export function collectionPageLookup(
  * One row of a state page (state-hierarchy.ts): a category ("Fala Daqui"), a subcategory ("Fala de Onde") or the state's own collection ("Pará"), cut
  * down to the state's products that no deeper row took.
  */
-export type StateCollectionRow = StateHierarchyRow<CollectionRecord, CarouselItem>;
+export type StateCollectionRow = StateHierarchyRow<CollectionRecord, CarouselItem> & { display: StateRowDisplay };
+export type StateRowDisplay = "carousel" | "grid";
 
-/** A row with fewer products than this is not shown (a carousel of one or two cards looks broken); its products go up one level. */
+/** A carousel row with fewer products than this is not shown (a carousel of one or two cards looks broken); its products go up one level. */
 export const STATE_ROW_MIN_ITEMS = 3;
+/** A GRID row (`collections.stateGrids`) shows from this many: the owner chose to show it, and a grid of one or two cards still reads as a list. */
+export const STATE_GRID_MIN_ITEMS = 1;
+
+/** How the region's state pages show this collection's row: a grid when it is in `collections.stateGrids`, otherwise a carousel. */
+export function stateRowDisplay(region: RegionSlug, doc: ScopeDoc | undefined, collectionId: number): StateRowDisplay {
+  const store = storeForRegion(region);
+  return (doc?.collections?.stateGrids ?? []).some((r) => r.store === store && r.collectionId === collectionId) ? "grid" : "carousel";
+}
 
 const stateNameKeys = new Set(Object.values(STATE_NAMES).map(normalizeText));
 const byMenuOrder = (a: CollectionRecord, b: CollectionRecord) => a.position - b.position || a.id - b.id;
@@ -285,23 +294,26 @@ export function stateCategoryCollections(region: RegionSlug, doc: ScopeDoc | und
 }
 
 /**
- * The SUBCATEGORIES of the region's state pages, in INK's menu order. AUTOMATIC: every PUBLIC collection of the store that is neither a state's nor a
- * category (so a new one shows up on its own), minus the ones the region took out (`hidden`, returned apart for the panel), plus the internal ones it
- * brought in (`collections.stateSubcategories`). `legacy` = a document still carries the exact list of the first state page (`collections.stateRows`):
- * then that list, in its order, is the subcategories (its categories count as categories).
+ * The SUBCATEGORIES of the region's state pages. `manual` = the region chose them by hand (`collections.stateSubcategoryList`): exactly those, in that
+ * order, public or internal, and nothing enters on its own. Otherwise AUTOMATIC, in INK's menu order: every PUBLIC collection of the store that is
+ * neither a state's nor a category, minus the ones the region took out (`hidden`, returned apart for the panel), plus the internal ones it brought in
+ * (`collections.stateSubcategories`). `legacy` = a document still carries the exact list of the first state page (`collections.stateRows`): then that
+ * list, in its order, is the subcategories (its categories count as categories).
  */
-export function stateSubcategoryCollections(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): { legacy: boolean; records: CollectionRecord[]; hidden: CollectionRecord[] } {
+export function stateSubcategoryCollections(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): { manual: boolean; legacy: boolean; records: CollectionRecord[]; hidden: CollectionRecord[] } {
   const store = storeForRegion(region);
   const records = getStoreCollections(store, filePath)?.collections ?? [];
   const categories = new Set(stateCategoryCollections(region, doc, filePath).records.map((c) => c.id));
   const notCategory = (c: CollectionRecord) => !categories.has(c.id);
+  const manual = doc?.collections?.stateSubcategoryList;
+  if (manual) return { manual: true, legacy: false, records: recordsOf(store, records, manual).filter(notCategory), hidden: [] };
   const legacy = doc?.collections?.stateRows;
-  if (legacy) return { legacy: true, records: recordsOf(store, records, legacy).filter(notCategory), hidden: [] };
+  if (legacy) return { manual: false, legacy: true, records: recordsOf(store, records, legacy).filter(notCategory), hidden: [] };
   const ids = (refs: readonly CollectionRef[] | undefined) => new Set((refs ?? []).filter((r) => r.store === store).map((r) => r.collectionId));
   const hidden = ids(doc?.collections?.stateSubcategories?.hidden);
   const added = ids(doc?.collections?.stateSubcategories?.added);
   const all = records.filter((c) => usableLevel(c) && notCategory(c) && (c.isAvailable || added.has(c.id))).sort(byMenuOrder);
-  return { legacy: false, records: all.filter((c) => !(c.isAvailable && hidden.has(c.id))), hidden: all.filter((c) => c.isAvailable && hidden.has(c.id)) };
+  return { manual: false, legacy: false, records: all.filter((c) => !(c.isAvailable && hidden.has(c.id))), hidden: all.filter((c) => c.isAvailable && hidden.has(c.id)) };
 }
 
 /**
@@ -342,21 +354,23 @@ function stateRowItems(region: RegionSlug, c: CollectionRecord, ids: readonly st
 /**
  * The state page's rows. INK has no parent/child between collections, so the hierarchy is ours (state-hierarchy.ts): the state's own collection ("Pará",
  * usually internal) > the region's categories > its subcategories, each product in the deepest row that shows it, and a last row with what is left of
- * the state. Each row in its collection's arrangement for the region, only products of the catalog and of this region, at least `STATE_ROW_MIN_ITEMS`.
+ * the state. Each row in its collection's arrangement for the region, only products of the catalog and of this region, at least `STATE_ROW_MIN_ITEMS`
+ * (`STATE_GRID_MIN_ITEMS` for a row the region shows as a grid).
  * No parent, no rows.
  */
 export function stateCollectionRows(region: RegionSlug, uf: string, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): StateCollectionRow[] {
   const parent = stateParentCollection(region, uf, filePath);
   if (!parent) return [];
   const products = productsOf(storeForRegion(region));
+  const display = (c: CollectionRecord) => stateRowDisplay(region, doc, c.id);
   return stateHierarchyRows({
     state: parent,
     categories: stateCategoryCollections(region, doc, filePath).records,
     subcategories: stateSubcategoryCollections(region, doc, filePath).records,
     members: (c) => completeMembers(c) ?? c.memberIds,
     items: (c, ids) => stateRowItems(region, c, ids, doc, products),
-    min: STATE_ROW_MIN_ITEMS,
-  });
+    min: (c) => (display(c) === "grid" ? STATE_GRID_MIN_ITEMS : STATE_ROW_MIN_ITEMS),
+  }).map((row) => ({ ...row, display: display(row.collection) }));
 }
 
 /** One state of the region as the panel explains it: its own collection ("Paraná", with how many of its products the store can show) or none. */
@@ -387,6 +401,20 @@ export function stateRowsReach(region: RegionSlug, doc: ScopeDoc | undefined, pr
     for (const row of stateCollectionRows(region, uf, doc, productsOf, filePath)) if (row.level !== "state") reach.set(row.collection.id, (reach.get(row.collection.id) ?? 0) + 1);
   }
   return reach;
+}
+
+/**
+ * The subcategories as a hand-picked list would start (`start-manual-subcategories`) and as the panel lists them: the region's own list when it has
+ * one; otherwise those that show in at least one state today, plus the ones brought in by hand (a choice that stopped showing stays visible), or all
+ * of a legacy list. So switching to manual keeps exactly what the site shows.
+ */
+export function stateSubcategoriesInUse(region: RegionSlug, doc: ScopeDoc | undefined, productsOf: (store: CommerceStoreKey) => StoreProducts, filePath?: string): CollectionRecord[] {
+  const subs = stateSubcategoryCollections(region, doc, filePath);
+  if (subs.manual || subs.legacy) return subs.records;
+  const store = storeForRegion(region);
+  const byHand = new Set((doc?.collections?.stateSubcategories?.added ?? []).filter((r) => r.store === store).map((r) => r.collectionId));
+  const reach = stateRowsReach(region, doc, productsOf, filePath);
+  return subs.records.filter((c) => byHand.has(c.id) || (reach.get(c.id) ?? 0) > 0);
 }
 
 /** The slug of a PUBLIC collection only. An internal collection has no verified public page on INK, so it never gets a link there. */

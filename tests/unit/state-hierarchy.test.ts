@@ -89,4 +89,20 @@ describe("the state page's hierarchy: state > category > subcategory", () => {
     expect(run(col(2, "Paraná", ["1", "2", "3"]), [terra], [])).toEqual([["category", "Da Nossa Terra", "Da Nossa Terra", "1,2,3"]]);
     expect(run(col(3, "Rio Grande do Sul", []), [terra], [])).toEqual([]);
   });
+
+  test("given a minimum per collection (a grid row), then that row shows below the carousel minimum and the others keep it", () => {
+    const rows = stateHierarchyRows({
+      state: sc,
+      categories: [terra, fala, jeito],
+      subcategories: [],
+      members: (c) => c.ids,
+      items: (c, ids) => ids.filter((id) => !id.startsWith("x")).map((id) => ({ id })),
+      min: (c) => (c.id === jeito.id ? 1 : 3),
+    }).map((r) => [r.level, r.collection.name, r.items.map((i) => i.id).join(",")]);
+    expect(rows).toEqual([
+      ["category", "Da Nossa Terra", "1,2,3,4,5,6,7"],
+      ["category", "Fala Daqui", "8,9,10"],
+      ["category", "Do Nosso Jeito", "11"], // one product, shown: its minimum is 1
+    ]); // "12" and "13" are left for the state's row: two, below its minimum of 3
+  });
 });
