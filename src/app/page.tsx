@@ -63,6 +63,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
             );
           })}
         </div>
+        <div className="wrap py-8 text-center">
+          <Link href={`/regioes${search ? `?${search}` : ""}`} className="link-line inline-flex min-h-11 items-center font-semibold">Explorar todas as regiões juntas</Link>
+        </div>
       </main>
 
       <footer className={`wrap ${styles.footer}`}>

@@ -116,6 +116,9 @@ export type MerchProduct = {
   simulated?: true;
 };
 
+/** A published, sellable product whose geography/design could not be resolved. Only the all-regions catalog may show it. */
+export type UnscopedProduct = Omit<MerchProduct, "regionSlug">;
+
 export type ExclusionReason =
   | "ambiguous-city"
   | "city-not-found"
@@ -167,6 +170,8 @@ export type StoreIndex = {
   bindings: UnrankedBinding[];
   merch: MerchProduct[];
   excluded: ExcludedProduct[];
+  /** Original product cards preserved for region-neutral browsing, without inventing a regional or city binding. */
+  unscopedProducts?: UnscopedProduct[];
 };
 
 /**

@@ -103,7 +103,7 @@ export async function syncLojaUnica(opts: { dataDir?: string; onProgress?: Fetch
     const previous = await readSnapshot(file);
     const decision = shouldPromoteStore(previous.stores[LOJA_UNICA], next);
     if (!decision.promote) return { ok: false, error: decision.reason };
-    const changed = JSON.stringify(previous.stores[LOJA_UNICA]?.bindings ?? null) !== JSON.stringify(next.bindings) || JSON.stringify(previous.stores[LOJA_UNICA]?.merch ?? null) !== JSON.stringify(next.merch);
+    const changed = JSON.stringify(previous.stores[LOJA_UNICA]?.bindings ?? null) !== JSON.stringify(next.bindings) || JSON.stringify(previous.stores[LOJA_UNICA]?.merch ?? null) !== JSON.stringify(next.merch) || JSON.stringify(previous.stores[LOJA_UNICA]?.unscopedProducts ?? []) !== JSON.stringify(next.unscopedProducts ?? []);
     await promoteSnapshot(montado.catalogo, file);
 
     // Collections of the single store, matched against the catalog just promoted (same parser as `collections:sync`).

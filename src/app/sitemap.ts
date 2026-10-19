@@ -22,7 +22,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = catalog.syncedAt ? new Date(catalog.syncedAt) : undefined;
   const entry = (path: string): MetadataRoute.Sitemap[number] => ({ url: `${SITE_URL.replace(/\/$/, "")}${path}`, ...(lastModified ? { lastModified } : {}) });
 
-  const entries: MetadataRoute.Sitemap = [{ url: `${SITE_URL.replace(/\/$/, "")}/` }];
+  const entries: MetadataRoute.Sitemap = [{ url: `${SITE_URL.replace(/\/$/, "")}/` }, entry("/regioes")];
   const cmsBundle = siteConfigHomeEnabled() ? homeBundle() : null;
 
   for (const region of launchedRegions()) {

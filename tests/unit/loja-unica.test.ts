@@ -92,10 +92,18 @@ describe("montarLojaUnica — produção", () => {
   test("then a product without a trusted region is listed, never made Sul because it is in the Sul store", () => {
     expect(situacao(semRegiao)).toBe("regiao-pendente");
     expect(loja.merch.map((m) => m.inkProductId)).not.toContain(semRegiao.id);
+    expect(loja.unscopedProducts?.find((m) => m.inkProductId === semRegiao.id)).toMatchObject({ name: semRegiao.name, storeProductUrl: semRegiao.url });
+    expect(loja.unscopedProducts?.find((m) => m.inkProductId === semRegiao.id)).not.toHaveProperty("regionSlug");
   });
   test("then a city found only through a cluster sibling is excluded, like the production indexer does", () => {
     expect(situacao(herdado)).toBe("excluido-indexador");
     expect(loja.bindings.map((b) => b.inkProductId)).not.toContain(herdado.id);
+    expect(loja.unscopedProducts?.map((p) => p.inkProductId)).toContain(herdado.id);
+  });
+  test("the general catalog also excludes hidden products and products without a usable image", () => {
+    const candidates = [produto("Sem região oculta", { ...oculto }), produto("Sem região sem imagem", { image: null })];
+    const catalog = montarLojaUnica(classificar(candidates), { modo: "producao", syncedAt: "t", fonte: FONTE }).catalogo.stores["use-sul"]!;
+    expect(catalog.unscopedProducts ?? []).toEqual([]);
   });
 });
 

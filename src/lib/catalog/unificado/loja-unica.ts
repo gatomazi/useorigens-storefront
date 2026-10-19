@@ -69,6 +69,16 @@ export function montarLojaUnica(sul: ReadonlyMap<string, ProdutoSul>, opts: { mo
   const loja: StoreIndex = { commerceStoreKey: LOJA_UNICA, syncedAt, productCount: 0, bindings: [], merch: [], excluded: [] };
   const situacoes: LinhaSituacao[] = [];
   const noCatalogo = new Set<string>();
+  // Keep the original name and purchase URL for global collection pages. Regional pages still exclude these products.
+  const preserveUnscoped = (p: ProdutoBruto) => {
+    if (!publicado(p) || !servivel(p)) return;
+    (loja.unscopedProducts ??= []).push({
+      inkProductId: p.id, commerceStoreKey: LOJA_UNICA, name: p.name.replace(/\s+/g, " ").trim(), slug: p.slug,
+      storeProductUrl: p.url!, imageUrl: p.image!, ...precoDaInk(p), totalSalesCount: p.sales, syncedAt,
+      ...(p.clusterId ? { productClusterId: p.clusterId } : {}),
+      ...(p.typeId !== null ? { garmentTypeId: p.typeId } : {}),
+    });
+  };
 
   for (const regiao of Object.keys(REGIONS) as RegionSlug[]) {
     for (const s of sul.values()) {
@@ -91,12 +101,14 @@ export function montarLojaUnica(sul: ReadonlyMap<string, ProdutoSul>, opts: { mo
       // produção exclui esses produtos (ex.: "Votouro | Origem Localidade RS" com a tag "Camiseta Regional com Identidade"). Mantém a mesma
       // decisão aqui, para a região servir exatamente o que serve hoje.
       if (c.tipo === "desenho" && c.viaCluster) {
+        preserveUnscoped(p);
         loja.excluded.push({ inkProductId: p.id, commerceStoreKey: LOJA_UNICA, name: p.name, reason: "city-not-found", detail: `cidade só pelo cluster ${c.viaCluster}` });
         loja.productCount++;
         situacoes.push(linha("excluido-indexador", `cidade só pelo cluster ${c.viaCluster} (o indexador de produção não aceita)`));
         continue;
       }
       if (c.tipo === "excluido") {
+        preserveUnscoped(p);
         loja.excluded.push({ inkProductId: p.id, commerceStoreKey: LOJA_UNICA, name: p.name, reason: (c.motivoExclusao?.split(" ")[0] ?? "city-not-found") as never, detail: c.motivoExclusao?.split(" ").slice(1).join(" ") || undefined });
         loja.productCount++;
         situacoes.push(linha("excluido-indexador", c.motivoExclusao));
@@ -129,6 +141,10 @@ export function montarLojaUnica(sul: ReadonlyMap<string, ProdutoSul>, opts: { mo
   // Sem região confiável: listados, nunca atribuídos ao Sul por estarem na loja Sul.
   for (const s of sul.values()) {
     if (s.regiao === "desconhecida" || s.regiao === "conflito") {
+      if (publicado(s.produto) && servivel(s.produto)) {
+        preserveUnscoped(s.produto);
+        loja.productCount++;
+      }
       situacoes.push({ id: s.produto.id, nome: s.produto.name, tipo: s.produto.typeId, regiao: s.regiao, situacao: "regiao-pendente", classe: null, detalhe: s.diagnostico });
     }
   }
