@@ -63,6 +63,7 @@ export const ADMIN_SEARCH_INDEX: readonly AdminSearchEntry[] = [
   { title: "Aparência", where: "Configuração", href: "/admin/aparencia", keywords: ["visual", "estilo"] },
   { title: "Cores do tema", where: "Aparência", href: "/admin/aparencia", anchor: "theme-{region}", keywords: ["cores", "cor", "paleta", "cores da regiao", "cor do header", "cor do menu", "cor de destaque", "fundo da pagina"] },
   { title: "Cores da marca (paleta global)", where: "Aparência · todas as regiões", href: "/admin/aparencia", anchor: "theme-global", keywords: ["global", "use origens", "herdar", "marca"] },
+  { title: "Cores das páginas sem região", where: "Aparência · catálogo geral", href: "/admin/aparencia", anchor: "theme-neutral", keywords: ["cores sem regiao", "paginas sem regiao", "paleta neutra", "catalogo geral", "regioes", "cores da entrada"] },
   { title: "Botão nos cards de produto", where: "Aparência · todas as regiões", href: "/admin/aparencia", anchor: "botao-cards", keywords: ["botao", "card", "cards", "ver produto", "carrinho no card", "comprar"] },
   { title: "Meu Pequeno Mundo", where: "Aparência · todas as regiões", href: "/admin/aparencia", anchor: "meu-pequeno-mundo", keywords: ["mundo", "pequeno mundo", "experiencia"] },
   { title: "Tema da INK", where: "Configuração", href: "/admin/tema-ink", keywords: ["ink", "loja ink", "pagina de produto da ink", "compra"] },

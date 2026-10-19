@@ -112,9 +112,9 @@ export function parseCollectionsPage(raw: unknown, match: IdMatcher): Parsed<{ c
 }
 
 /** Builds the matcher for one store from its catalog index: only that store's own products can ever match. */
-export function matcherForStore(index: { bindings: readonly { inkProductId: string }[]; merch: readonly { inkProductId: string }[] }): IdMatcher {
+export function matcherForStore(index: { bindings: readonly { inkProductId: string }[]; merch: readonly { inkProductId: string }[]; unscopedProducts?: readonly { inkProductId: string }[] }): IdMatcher {
   const cityDesigns = new Set(index.bindings.map((b) => b.inkProductId));
-  const merch = new Set(index.merch.map((m) => m.inkProductId));
+  const merch = new Set([...index.merch, ...(index.unscopedProducts ?? [])].map((m) => m.inkProductId));
   return (ids) => {
     const members: string[] = [];
     const all: string[] = [];

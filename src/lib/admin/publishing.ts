@@ -7,6 +7,7 @@ import { resolveTracking, type TrackingOrigin } from "../site-config/resolve";
 import { mediaRefsOfDoc, validateBundle, type Customizer, type Destination, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "../site-config/schema";
 import { REGION_SLUGS } from "../geo/regions";
 import { themeProblems } from "../site-config/navigation";
+import { neutralThemeProblems } from "../site-config/neutral-theme";
 import { pageAsHomeDoc } from "../site-config/pages";
 import { buildSeedBundle } from "../site-config/seed";
 import { readJson, withLock, writeJsonAtomic } from "./local-store";
@@ -148,9 +149,11 @@ export function linkProblems(composed: ScopeDoc, sections: Section[]): string[] 
 /** A palette whose text is practically unreadable (under 3:1) never ships; under AA it only warns in the editor. For the global scope, every region that inherits it is checked. */
 export function themeBlockers(bundle: PublishedBundle, scope: Scope): string[] {
   const doc = bundle.docs[scope];
-  if (!doc?.theme) return [];
   const inheriting = REGION_SLUGS.filter((r) => bundle.docs[r]?.theme?.mode === "inherit");
-  return themeProblems(scope, doc, bundle.docs.global, inheriting).blocking.map((m) => `Aparência: ${m}`);
+  return [
+    ...(doc?.theme ? themeProblems(scope, doc, bundle.docs.global, inheriting).blocking.map((m) => `Aparência: ${m}`) : []),
+    ...(scope === "global" ? neutralThemeProblems(doc?.neutralTheme).blocking.map((m) => `Páginas sem região: ${m}`) : []),
+  ];
 }
 
 /** Publish pre-flight: strict bundle validation, every INK collection section still resolves, readable text, live links. (Tracking is confirmed separately.) */

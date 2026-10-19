@@ -1,0 +1,58 @@
+.wordmark {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  font-family: var(--font-display-stack);
+  font-size: clamp(1.5rem, 4vw, 1.75rem);
+  font-weight: 800;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.intro {
+  padding-block: clamp(3rem, 7vw, 6rem) 3rem;
+}
+
+.intro h1,
+.collectionIntro h1 {
+  max-width: 18ch;
+  font-family: var(--font-display-stack);
+  font-size: clamp(3rem, 7vw, 6rem);
+  font-weight: 800;
+  line-height: 0.98;
+  text-transform: uppercase;
+  text-wrap: balance;
+}
+
+.intro p,
+.collectionIntro p {
+  max-width: 40rem;
+  margin-top: 1.25rem;
+  color: var(--ink-soft);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.intro > a { margin-top: 1.5rem; }
+.collections { padding-block: 1rem 3rem; scroll-margin-top: 7rem; }
+.collections h2 { font-size: 1.25rem; font-weight: 800; }
+.collectionList { display: grid; gap: 0 2rem; margin-top: 1rem; }
+.collectionList li { min-width: 0; border-bottom: 1px solid var(--line); }
+.collectionList a { display: grid; min-height: 4rem; grid-template-columns: 1fr auto 1.25rem; align-items: center; gap: 0.75rem; padding-block: 0.75rem; font-weight: 700; }
+.collectionList a:hover > span:first-child { text-decoration: underline; text-underline-offset: 0.2em; }
+.count { color: var(--ink-soft); font-size: 0.8125rem; font-weight: 400; white-space: nowrap; }
+.productSection { padding-block: 2rem 3rem; }
+.footer { margin-top: 2rem; padding-block: 2.5rem; border-top: 1px solid var(--line); }
+.footer nav a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+.dropdown { --ink: #000000; position: absolute; top: 100%; left: 50%; z-index: 50; display: grid; width: 36rem; max-height: 70dvh; grid-template-columns: 1fr 1fr; overflow-y: auto; border: 2px solid var(--ink); padding: 0.5rem; background: white; color: var(--ink); transform: translateX(-50%); }
+.dropdown a { display: flex; min-height: 2.75rem; align-items: center; padding: 0.5rem 0.75rem; font-size: 0.9375rem; font-weight: 600; }
+.dropdown a:hover { background: var(--ink); color: white; }
+.collectionIntro { padding-block: 2rem 2.5rem; }
+.collectionIntro nav { margin-bottom: 2rem; color: var(--ink-soft); font-size: 0.875rem; }
+.collectionIntro nav a { text-decoration: underline; text-underline-offset: 0.2em; }
+.collectionIntro h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); }
+.collectionGrid { padding-bottom: 3rem; }
+
+@media (min-width: 48rem) { .collectionList { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 75rem) { .collectionList { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

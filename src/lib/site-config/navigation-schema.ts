@@ -127,3 +127,9 @@ export function validateTheme(input: unknown, scope: Scope, path = "theme"): Val
   return errors.length === 0 ? { ok: true, value: input as ThemeConfig } : { ok: false, errors };
 }
 
+/** An independent palette of pages outside any region, stored only in the global document. */
+export function validateNeutralTheme(input: unknown, scope: Scope, path = "neutralTheme"): ValidationResult<ThemeConfig> {
+  if (scope !== "global") return { ok: false, errors: [`${path}: belongs to the global document`] };
+  return validateTheme(input, "global", path);
+}
+

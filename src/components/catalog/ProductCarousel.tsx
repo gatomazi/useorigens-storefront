@@ -8,6 +8,8 @@ import { CustomizerCardLink, ProductCardLink, ProductSectionHeading, SOLID_CARDS
 
 export type CarouselItem = {
   id: string;
+  /** React identity across stores; the real INK product id stays in `id` for tracking. */
+  key?: string;
   name: string;
   /** Large short label above the name (an area code, for instance). */
   eyebrow?: string;
@@ -158,7 +160,7 @@ export function ProductCarousel({
             </li>
           )}
           {items.map((item, i) => (
-            <li key={item.id} className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
+            <li key={item.key ?? item.id} className="min-w-0 shrink-0 grow-0 basis-[62%] pl-3 sm:basis-[34%] sm:pl-4 md:basis-[27%] lg:basis-[22%] lg:pl-6 xl:basis-[19%]">
               <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={eager && i < 2} sourceSection={sourceSection} buy={buy} tags={tags} />
             </li>
           ))}

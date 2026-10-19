@@ -16,7 +16,7 @@ import { DESIGN_FAMILIES } from "./families";
 import { localityOfBinding } from "./locality-binding";
 import { stateHierarchyRows, type StateHierarchyRow } from "./state-hierarchy";
 import type { StoreProducts } from "./repository";
-import type { MerchProduct, UnrankedBinding } from "./types";
+import type { UnscopedProduct, UnrankedBinding } from "./types";
 import { umaPencaLookup } from "../umapenca/carousel";
 import { CITY_DESIGN_GARMENT_TYPE_ID } from "../search/collection-filter";
 
@@ -60,7 +60,7 @@ export function libraryEntries(store: CommerceStoreKey, enabledInternal: Readonl
 export const selectableEntries = (store: CommerceStoreKey, enabledInternal: ReadonlySet<number>, filePath?: string): LibraryEntry[] =>
   libraryEntries(store, enabledInternal, filePath).filter((e) => e.selectable);
 
-function merchItem(product: MerchProduct): CarouselItem | null {
+function merchItem(product: UnscopedProduct): CarouselItem | null {
   const href = purchaseUrl(product);
   if (!href) return null;
   const state = merchStates(product.commerceStoreKey).get(product.inkProductId);
@@ -113,7 +113,9 @@ function storeItem(products: StoreProducts, id: string): CarouselItem | null {
   const merch = products.merch.get(id);
   if (merch) return merchItem(merch);
   const design = products.cityDesigns.get(id);
-  return design ? cityDesignItem(design) : null;
+  if (design) return cityDesignItem(design);
+  const unscoped = products.unscoped?.get(id);
+  return unscoped ? merchItem(unscoped) : null;
 }
 
 /** The region a catalog product is about (a city design's locality, a merch item's own region), or null when unknown. */

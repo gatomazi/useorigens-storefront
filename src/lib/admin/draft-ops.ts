@@ -109,6 +109,7 @@ export type DraftOp =
   | { type: "set-navigation"; navigation: NavigationConfig | null }
   /** Replaces the palette of a region (`inherit` / `override`) or of the global scope; `null` = no theme (the region keeps its current look). */
   | { type: "set-theme"; theme: ThemeConfig | null }
+  | { type: "set-neutral-theme"; theme: ThemeConfig | null }
   /** Replaces the coupons and promotions of a region (an empty list is valid: no button). Strictly validated. */
   | { type: "set-promotions"; promotions: PromotionsConfig }
   /** Replaces the top strip of a region (messages and production time; no message and no time removes the setting). Strictly validated. */
@@ -251,8 +252,9 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }
-  if (op.type === "set-navigation" || op.type === "set-theme") {
-    const key = op.type === "set-navigation" ? "navigation" : "theme";
+  if (op.type === "set-navigation" || op.type === "set-theme" || op.type === "set-neutral-theme") {
+    if (op.type === "set-neutral-theme" && doc.scope !== "global") return fail("the neutral palette belongs to the global document");
+    const key = op.type === "set-navigation" ? "navigation" : op.type === "set-neutral-theme" ? "neutralTheme" : "theme";
     const value = op.type === "set-navigation" ? op.navigation : op.theme;
     const { [key]: _dropped, ...rest } = doc;
     void _dropped;

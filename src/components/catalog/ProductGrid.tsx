@@ -89,7 +89,7 @@ export function ProductGrid({
           </li>
         )}
         {items.map((item, i) => (
-          <li key={item.id}>
+          <li key={item.key ?? item.id}>
             <ProductCardLink item={item} poster={poster} dark={cardDark} sizes={CARD_SIZES} priority={eager && i < 2} sourceSection={sourceSection} buy={buy} tags={tags} />
           </li>
         ))}

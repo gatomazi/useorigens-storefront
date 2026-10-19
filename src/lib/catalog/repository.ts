@@ -11,7 +11,7 @@ import { CLASSIC_GARMENT_TYPE_ID, GARMENT_TYPES, garmentTypeById } from "./garme
 import { emptyGarmentIndex, expandTuple, garmentIndexMtimeMs, garmentIndexPath, readGarmentIndexSync, type ExpandedPiece, type GarmentIndex } from "./garment-index-file";
 import { compareIds, rankBindings } from "./ranking";
 import { EMPTY_SNAPSHOT, readSnapshotSync, snapshotMtimeMs, snapshotPath } from "./snapshot-file";
-import type { CityDesignBinding, MerchProduct, UnrankedBinding } from "./types";
+import type { CityDesignBinding, MerchProduct, UnrankedBinding, UnscopedProduct } from "./types";
 
 export type CityFamilyEntry = {
   family: DesignFamily;
@@ -54,7 +54,7 @@ export type Catalog = {
   productsOfStore(store: CommerceStoreKey): StoreProducts;
 };
 
-export type StoreProducts = { merch: ReadonlyMap<string, MerchProduct>; cityDesigns: ReadonlyMap<string, UnrankedBinding> };
+export type StoreProducts = { merch: ReadonlyMap<string, MerchProduct>; cityDesigns: ReadonlyMap<string, UnrankedBinding>; unscoped?: ReadonlyMap<string, UnscopedProduct> };
 
 /**
  * `regional` (default): a region's own INK store wins, matching how commerce runs today.
@@ -262,6 +262,7 @@ function build(file: string, plan: CommercePlan): { catalog: Catalog; mtimeMs: n
       const index = snapshot.stores[store];
       const built: StoreProducts = {
         merch: new Map((index?.merch ?? []).map((m) => [m.inkProductId, m])),
+        unscoped: new Map((index?.unscopedProducts ?? []).map((p) => [p.inkProductId, p])),
         // `withLocality`: an older snapshot carries a DF administrative region only as `localityLabel`; the id is derived here, once.
         cityDesigns: new Map((index?.bindings ?? []).map((b) => [b.inkProductId, withLocality(b)])),
       };

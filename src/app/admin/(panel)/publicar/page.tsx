@@ -184,7 +184,7 @@ export default async function PublishPage({ searchParams }: { searchParams: Prom
 
       <section id="global" className="a-card scroll-mt-4 p-5" aria-labelledby="global-titulo" data-testid="publish-global">
         <h2 id="global-titulo" className="a-h2">Configuração global · todas as regiões</h2>
-        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Um documento só, publicado inteiro: a paleta da Use Origens, o botão nos cards e o Meu Pequeno Mundo (editados em <Link href="/admin/aparencia" className="a-link">Aparência</Link>) e o tracking global (em <Link href="/admin/tracking" className="a-link">Tracking</Link>). As regiões que herdam mudam juntas, sem republicar.</p>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Um documento só, publicado inteiro: a paleta da Use Origens, as cores das páginas sem região, o botão nos cards e o Meu Pequeno Mundo (editados em <Link href="/admin/aparencia" className="a-link">Aparência</Link>) e o tracking global (em <Link href="/admin/tracking" className="a-link">Tracking</Link>). As regiões que herdam a paleta da Use Origens mudam juntas, sem republicar. A paleta das páginas sem região vale apenas para a entrada da loja e o catálogo geral.</p>
         {!global.dirty ? <p className="mt-3"><span className="a-badge ok">Igual ao publicado</span></p> : (
           <>
             <p className="mt-3 text-[0.9375rem]"><strong>Com alterações:</strong> {gParts.join(", ") || "configuração"}.</p>

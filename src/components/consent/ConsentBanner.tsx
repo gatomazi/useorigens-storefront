@@ -14,7 +14,7 @@ import type { RegionSlug } from "@/lib/geo/regions";
  * storefront uses (today Meta + Google Analytics, possibly others later), so the detail lives in the privacy policy, not here.
  * Both buttons share the same size and weight so neither choice is visually pushed.
  */
-export function ConsentBanner({ region }: { region: RegionSlug }) {
+export function ConsentBanner({ region, privacyHref }: { region: RegionSlug; privacyHref?: never } | { region?: never; privacyHref: string }) {
   const { record, accept, reject } = useConsent();
   if (record !== null) return null;
 
@@ -29,7 +29,7 @@ export function ConsentBanner({ region }: { region: RegionSlug }) {
       <div className="wrap flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
         <p className="text-[0.75rem] leading-snug text-white/90 sm:max-w-2xl sm:text-[0.875rem]">
           Usamos cookies para melhorar sua experiência.{" "}
-          <Link href={`/${region}/privacidade`} className="link-line font-semibold text-white">
+          <Link href={privacyHref ?? `/${region}/privacidade`} className="link-line font-semibold text-white">
             Política de Privacidade
           </Link>
           .
