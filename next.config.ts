@@ -9,6 +9,8 @@ const nextConfig: NextConfig = {
     ];
   },
   experimental: {
+    // Print layouts embed fonts and logos alongside a full-size PNG. The authenticated route separately caps the upload at 56 MB.
+    proxyClientMaxBodySize: "57mb",
     // Server Actions are capped at 1 MB by default, which rejected every CMS image upload ("Body exceeded 1 MB limit"). Uploads are validated
     // at 8 MB (src/lib/admin/media/process.ts); the extra room is the multipart overhead. Only the admin has Server Actions.
     serverActions: { bodySizeLimit: "9mb" },

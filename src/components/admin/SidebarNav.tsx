@@ -38,6 +38,7 @@ export function SidebarNav({ pendingRequests = 0, owner = false, regionName = "S
       items: [
         { href: "/admin/colecoes", label: "Coleções" },
         { href: "/admin/personalizacao", label: "Personalização", active: (p) => (p === "/admin/personalizacao" || p.startsWith("/admin/personalizacao/")) && !p.startsWith(SOLICITACOES) },
+        { href: "/admin/estampas", label: "Estúdio de estampas" },
       ],
     },
     {

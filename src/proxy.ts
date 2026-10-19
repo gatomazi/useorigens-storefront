@@ -43,6 +43,14 @@ export function proxy(request: NextRequest) {
   // Everything that is not /admin/** is the storefront and is not touched by this block. The Host header only decides which of these
   // cases applies; it is never treated as identity — every admin page, Server Action and route handler authenticates and authorises itself.
   const { pathname } = request.nextUrl;
+  // The password-protected editor has its own identity and must work without a catalog or an admin session.
+  // Its page and every data/file endpoint authenticate independently; this only excludes it from the storefront gate.
+  if (pathname === "/estampas" || pathname.startsWith("/estampas/")) {
+    const response = NextResponse.next();
+    response.headers.set("X-Robots-Tag", "noindex, nofollow");
+    response.headers.set("Cache-Control", "private, no-store");
+    return response;
+  }
   const decision = decideRoute({ host: request.headers.get("host") ?? request.nextUrl.host, pathname, adminHost: adminHostOf(), devAdmin: devAdminEnabled() });
   if (decision.action === "not-found") return new Response(null, { status: 404 });
   if (decision.action === "redirect") {
