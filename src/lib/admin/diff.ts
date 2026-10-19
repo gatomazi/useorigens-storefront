@@ -298,7 +298,6 @@ const modeText = (doc: ScopeDoc): string => (doc.theme ? (doc.theme.mode === "in
 
 /** What changed in the palette: the mode, and each colour that was set, changed or cleared. Pure. */
 function themeChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
-  if (json(published.theme) === json(draft.theme)) return [];
   const who = draft.scope === "global" ? "Aparência global (Use Origens)" : "Aparência";
   const out: Change[] = [];
   if (draft.scope !== "global" && published.theme?.mode !== draft.theme?.mode) out.push({ kind: "theme", sectionId: "theme:mode", text: `${who}: ${modeText(published)} → ${modeText(draft)}` });
@@ -306,6 +305,9 @@ function themeChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
     const was = published.theme?.colors[key];
     const now = draft.theme?.colors[key];
     if (was !== now) out.push({ kind: "theme", sectionId: `theme:${key}`, text: `${who}, ${THEME_COLOR_LABEL[key].toLowerCase()}: ${was ?? "padrão"} → ${now ?? "padrão"}` });
+    const neutralWas = published.neutralTheme?.colors[key];
+    const neutralNow = draft.neutralTheme?.colors[key];
+    if (neutralWas !== neutralNow) out.push({ kind: "theme", sectionId: `neutral-theme:${key}`, text: `Páginas sem região, ${THEME_COLOR_LABEL[key].toLowerCase()}: ${neutralWas ?? "padrão"} → ${neutralNow ?? "padrão"}` });
   }
   return out;
 }

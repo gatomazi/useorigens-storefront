@@ -6,6 +6,8 @@
 
 .header {
   padding-block: 1.25rem;
+  background: var(--nav-header-bg, transparent);
+  color: var(--nav-header-text, inherit);
 }
 
 .wordmark {

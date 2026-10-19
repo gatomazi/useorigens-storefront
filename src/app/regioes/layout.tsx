@@ -14,6 +14,8 @@ import { allRegionsCatalog } from "@/lib/catalog/all-regions";
 import { commercePlan } from "@/lib/catalog/commerce-mode";
 import { ConsentProvider } from "@/lib/consent/ConsentProvider";
 import { publishedTracking } from "@/lib/site-config/tracking";
+import { regionlessStyle } from "@/lib/site-config/chrome";
+import neutralStyles from "@/components/layout/RegionlessSurface.module.css";
 import styles from "./regioes.module.css";
 
 // This static route reads the runtime Volume. Never bake an empty catalog into the build.
@@ -29,6 +31,7 @@ export default function AllRegionsLayout({ children }: { children: React.ReactNo
       <CampaignCarry />
       {/* Only the physical cart belongs to Sul; no geographic browsing context is set. */}
       {singleStore && <CartRefCapture region="sul" />}
+      <div className={neutralStyles.surface} style={regionlessStyle()} data-regionless>
       <HeaderShell>
         <div className="wrap site-header-row flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-1">
@@ -64,6 +67,7 @@ export default function AllRegionsLayout({ children }: { children: React.ReactNo
           </nav>
         </div>
       </footer>
+      </div>
       <Suspense fallback={null}>
         <MetaPixel pixelId={tracking.metaPixelId} />
         <GoogleAnalytics measurementId={tracking.ga4MeasurementId} />

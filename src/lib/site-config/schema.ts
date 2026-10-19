@@ -11,7 +11,7 @@ import { CARD_BUY_STYLES, DEFAULT_BUY_LABEL, MAX_BUY_LABEL, validateCards, type 
 import { validateMundo, type MundoConfig } from "./mundo-schema";
 import { validateCarouselEnd, type CarouselEndConfig } from "./carousel-end-schema";
 import { validateSearch, type SearchConfig } from "./search-schema";
-import { validateNavigation, validateTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
+import { validateNavigation, validateTheme, validateNeutralTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validateInkTheme, type InkThemeConfig } from "./ink-theme-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
 import { validateTopBar, type TopBarConfig } from "./top-bar-schema";
@@ -392,6 +392,8 @@ export type ScopeDoc = {
    * On `global`: the "Use Origens" palette regions may inherit (always `override`). Published with its scope.
    */
   theme?: ThemeConfig;
+  /** GLOBAL only: independent palette for `/` and `/regioes`, never inherited by regions. */
+  neutralTheme?: ThemeConfig;
   /**
    * The THEME of the region's home, like a theme of a shop platform: "original" (the look the store has had, absent) or "editorial" (the approved editorial
    * direction: a deep-green, cream and terracotta palette as the base of `theme`, a green strip and footer). `home.sections` are ALWAYS the sections of
@@ -1131,6 +1133,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.theme !== undefined) {
     const r = validateTheme(input.theme, sc, "doc.theme");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.neutralTheme !== undefined) {
+    const r = validateNeutralTheme(input.neutralTheme, sc, "doc.neutralTheme");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.promotions !== undefined) {

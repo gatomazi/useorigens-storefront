@@ -45,7 +45,7 @@
 .productSection { padding-block: 2rem 3rem; }
 .footer { margin-top: 2rem; padding-block: 2.5rem; border-top: 1px solid var(--line); }
 .footer nav a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
-.dropdown { position: absolute; top: 100%; left: 50%; z-index: 50; display: grid; width: 36rem; max-height: 70dvh; grid-template-columns: 1fr 1fr; overflow-y: auto; border: 2px solid var(--ink); padding: 0.5rem; background: white; color: var(--ink); transform: translateX(-50%); }
+.dropdown { --ink: #000000; position: absolute; top: 100%; left: 50%; z-index: 50; display: grid; width: 36rem; max-height: 70dvh; grid-template-columns: 1fr 1fr; overflow-y: auto; border: 2px solid var(--ink); padding: 0.5rem; background: white; color: var(--ink); transform: translateX(-50%); }
 .dropdown a { display: flex; min-height: 2.75rem; align-items: center; padding: 0.5rem 0.75rem; font-size: 0.9375rem; font-weight: 600; }
 .dropdown a:hover { background: var(--ink); color: white; }
 .collectionIntro { padding-block: 2rem 2.5rem; }

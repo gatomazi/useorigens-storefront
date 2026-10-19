@@ -51,6 +51,7 @@ import { applyAndSave, discardDraft, EDIT_THEME_COOKIE, loadEditorWorkspace, loa
 import type { DraftOp } from "@/lib/admin/draft-ops";
 import { parseNavigationForm, parseThemeForm, readableNavigationError } from "@/lib/admin/navigation-form";
 import { themeProblems } from "@/lib/site-config/navigation";
+import { neutralThemeProblems } from "@/lib/site-config/neutral-theme";
 import { HEADER_ACTIONS, type HeaderAction, type HeaderActionStyle } from "@/lib/site-config/navigation-schema";
 import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-form";
 import type { InkThemeConfig } from "@/lib/site-config/ink-theme-schema";
@@ -721,19 +722,22 @@ export async function saveThemeAction(fd: FormData) {
   const target = text(fd, "scope");
   const scope: Scope | null = target === "global" ? "global" : isRegionScope(target) ? target : null;
   if (!scope) back("/admin/aparencia", { err: ["Paleta inválida."] });
+  const neutral = text(fd, "palette") === "neutral";
+  if (neutral && scope !== "global") back("/admin/aparencia", { err: ["As cores das páginas sem região pertencem à configuração global."] });
   if (scope === "global" ? actor.role !== "owner" : !canEdit(actor, scope)) {
     await audit(actor, "access.denied", scope, "theme");
     back("/admin/aparencia", { err: [scope === "global" ? "Só o owner altera a paleta da Use Origens." : "Você não tem permissão para essa região."] });
   }
   const parsed = parseThemeForm(fd, scope);
   if (!parsed.ok) back("/admin/aparencia", { err: parsed.errors });
-  const outcome = await applyAndSave(scope, { type: "set-theme", theme: parsed.value }, revNumber(fd), actor);
+  const op = { type: neutral ? "set-neutral-theme" as const : "set-theme" as const, theme: parsed.value };
+  const outcome = await applyAndSave(scope, op, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back("/admin/aparencia", { err: outcome.errors });
-  await audit(actor, "draft.save", scope, "set-theme");
+  await audit(actor, "draft.save", scope, op.type);
   const saved = (await loadEditorWorkspace(scope)).doc; // the palette of the home theme being edited
-  const problems = saved.theme ? themeProblems(scope, saved, (await loadWorkspace("global")).doc) : { blocking: [], warnings: [] };
-  const what = scope === "global" ? "da Use Origens" : `de ${scopeName(scope)}`;
+  const problems = neutral ? neutralThemeProblems(saved.neutralTheme) : saved.theme ? themeProblems(scope, saved, (await loadWorkspace("global")).doc) : { blocking: [], warnings: [] };
+  const what = neutral ? "das páginas sem região" : scope === "global" ? "da Use Origens" : `de ${scopeName(scope)}`;
   if (problems.blocking.length > 0) back("/admin/aparencia", { err: [`Rascunho ${what} salvo, mas NÃO poderá ser publicado assim:`, ...problems.blocking] });
   if (problems.warnings.length > 0) back("/admin/aparencia", { ok: `Rascunho ${what} salvo. Atenção ao contraste: ${problems.warnings.join(" · ")}` });
   back("/admin/aparencia", { ok: `Rascunho da aparência ${what} salvo. Nada muda na loja até você publicar.` });

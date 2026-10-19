@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { REGIONS, REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { normalizeHex } from "@/lib/admin/navigation-form";
 import { ChromePreview } from "./ChromePreview";
+import { resolveNeutralTheme } from "@/lib/site-config/neutral-theme";
 import {
   assembleNavigation,
   contrastMessage,
@@ -39,7 +40,7 @@ const LEVEL_TEXT = { ok: "OK", warning: "Abaixo do AA", blocking: "Bloqueia a pu
  * the contrast of every text/background pair and the two previews are computed from what is typed, with the same rules the publisher enforces. A colour
  * left empty is "not set" and keeps the region's current one.
  */
-export function ThemeEditor({ scope, region, theme, globalTheme, navigation, navData, readOnly, action, rev, title, note }: {
+export function ThemeEditor({ scope, region, theme, globalTheme, navigation, navData, readOnly, action, rev, title, note, palette = "regional" }: {
   scope: "global" | RegionSlug;
   region: RegionSlug;
   theme: ThemeConfig | undefined;
@@ -51,8 +52,11 @@ export function ThemeEditor({ scope, region, theme, globalTheme, navigation, nav
   rev: string;
   title: string;
   note: string;
+  palette?: "regional" | "neutral";
 }) {
-  const isGlobal = scope === "global";
+  const neutral = palette === "neutral";
+  const editorId = neutral ? "neutral" : scope;
+  const isGlobal = scope === "global" && !neutral;
   const [mode, setMode] = useState<Mode>(isGlobal ? "override" : (theme?.mode ?? "none"));
   const [colors, setColors] = useState<Record<ThemeColorKey, string>>(() => Object.fromEntries(THEME_COLOR_KEYS.map((k) => [k, theme?.mode === "override" ? (theme.colors[k] ?? "") : ""])) as Record<ThemeColorKey, string>);
   const [previewRegion, setPreviewRegion] = useState<RegionSlug>(region);
@@ -71,16 +75,23 @@ export function ThemeEditor({ scope, region, theme, globalTheme, navigation, nav
   const shownRegion = isGlobal ? previewRegion : region;
   // Global palette preview: what a region that INHERITS it would look like.
   const resolved = useMemo(
-    () => (isGlobal ? resolveTheme(shownRegion, { theme: { mode: "inherit", colors: {} } }, { theme: current }) : resolveTheme(shownRegion, { theme: current }, { theme: globalTheme })),
-    [isGlobal, shownRegion, current, globalTheme],
+    () => neutral ? resolveNeutralTheme(current) : (isGlobal ? resolveTheme(shownRegion, { theme: { mode: "inherit", colors: {} } }, { theme: current }) : resolveTheme(shownRegion, { theme: current }, { theme: globalTheme })),
+    [neutral, isGlobal, shownRegion, current, globalTheme],
   );
   const contrast = useMemo(() => themeContrast(resolved.effective), [resolved]);
-  const preview = useMemo(() => assembleNavigation(shownRegion, isGlobal ? undefined : navigation, navData[shownRegion]), [isGlobal, shownRegion, navigation, navData]);
+  const preview = useMemo(() => neutral ? {
+    blocks: [{ kind: "primary" as const, label: "Explorar", items: [{ label: "Todas as regiões", href: "/regioes" }, { label: "Coleções", href: "/regioes#colecoes" }, { label: "Escolher uma região", href: "/" }] }],
+    primary: [{ label: "Todas as regiões", href: "/regioes" }, { label: "Coleções", href: "/regioes#colecoes" }], collections: [], categories: [], categoriesLabel: "Coleções", states: [], regions: [],
+  } : assembleNavigation(shownRegion, isGlobal ? undefined : navigation, navData[shownRegion]), [neutral, isGlobal, shownRegion, navigation, navData]);
   const editable = !readOnly && mode === "override";
   const flagged = contrast.filter((c) => c.level !== "ok");
 
   const modes: { value: Mode; label: string; hint: string }[] = isGlobal
     ? []
+    : neutral ? [
+        { value: "none", label: "Visual padrão", hint: "Usa as cores originais das páginas sem região." },
+        { value: "override", label: "Paleta própria", hint: "Cores para a entrada da loja e o catálogo de todas as regiões." },
+      ]
     : [
         { value: "none", label: "Visual atual", hint: "Sem configuração: a região mantém exatamente as cores de hoje." },
         { value: "inherit", label: "Herdar da Use Origens", hint: "Usa a paleta global. Se o global mudar, esta região muda junto, sem deploy." },
@@ -88,21 +99,22 @@ export function ThemeEditor({ scope, region, theme, globalTheme, navigation, nav
       ];
 
   return (
-    <section className="a-card p-5" aria-labelledby={`theme-${scope}`} data-testid={`theme-${scope}`}>
-      <h2 id={`theme-${scope}`} className="a-h2">{title}</h2>
+    <section className="a-card p-5" aria-labelledby={`theme-${editorId}`} data-testid={`theme-${editorId}`}>
+      <h2 id={`theme-${editorId}`} className="a-h2">{title}</h2>
       <p className="a-muted mt-1 max-w-3xl text-[0.9375rem]">{note}</p>
       <form action={action} className="mt-5 space-y-6">
         <input type="hidden" name="scope" value={scope} />
+        <input type="hidden" name="palette" value={palette} />
         <input type="hidden" name="rev" value={rev} />
         <input type="hidden" name="mode" value={mode} />
 
         {!isGlobal && (
           <fieldset disabled={readOnly}>
-            <legend className="a-label">Como esta região usa as cores</legend>
+            <legend className="a-label">{neutral ? "Cores das páginas sem região" : "Como esta região usa as cores"}</legend>
             <div className="grid gap-2 sm:grid-cols-3">
               {modes.map((m) => (
                 <label key={m.value} className={`flex cursor-pointer items-start gap-2 border p-3 ${mode === m.value ? "border-black bg-black/5" : "border-black/25"}`}>
-                  <input type="radio" name={`mode-choice-${scope}`} value={m.value} checked={mode === m.value} onChange={() => setMode(m.value)} className="mt-1" data-testid={`mode-${m.value}`} />
+                  <input type="radio" name={`mode-choice-${editorId}`} value={m.value} checked={mode === m.value} onChange={() => setMode(m.value)} className="mt-1" data-testid={`mode-${m.value}`} />
                   <span><span className="block font-extrabold">{m.label}</span><span className="a-muted block text-[0.8125rem]">{m.hint}</span></span>
                 </label>
               ))}
@@ -115,29 +127,29 @@ export function ThemeEditor({ scope, region, theme, globalTheme, navigation, nav
             const shown = resolved.effective[key];
             return (
               <div key={key}>
-                <label className="a-label" htmlFor={`${scope}-${key}`}>{THEME_COLOR_LABEL[key]}</label>
+                <label className="a-label" htmlFor={`${editorId}-${key}`}>{THEME_COLOR_LABEL[key]}</label>
                 <div className="flex items-center gap-2">
                   <input aria-label={`${THEME_COLOR_LABEL[key]}: seletor de cor`} type="color" value={shown} disabled={!editable} onChange={(e) => setColors((c) => ({ ...c, [key]: e.target.value }))} className="h-10 w-12 shrink-0 cursor-pointer border border-black/38 bg-white p-0.5 disabled:cursor-not-allowed" />
-                  <input id={`${scope}-${key}`} name={`color_${key}`} className="a-input font-mono" placeholder={resolved.origin[key] === "default" ? `${shown} (atual)` : shown} value={mode === "override" ? colors[key] : ""} disabled={!editable} onChange={(e) => setColors((c) => ({ ...c, [key]: e.target.value }))} spellCheck={false} autoComplete="off" maxLength={7} data-testid={`color-${key}`} />
+                  <input id={`${editorId}-${key}`} name={`color_${key}`} className="a-input font-mono" placeholder={resolved.origin[key] === "default" ? `${shown} (atual)` : shown} value={mode === "override" ? colors[key] : ""} disabled={!editable} onChange={(e) => setColors((c) => ({ ...c, [key]: e.target.value }))} spellCheck={false} autoComplete="off" maxLength={7} data-testid={`color-${key}`} />
                 </div>
-                <p className="a-muted mt-1 text-[0.75rem]">{HINT[key]}{mode !== "none" && resolved.origin[key] === "global" ? " Vem do global." : ""}</p>
+                <p className="a-muted mt-1 text-[0.75rem]">{neutral && key === "brandPrimary" ? "Identifica as páginas sem região: header, chips e filtros." : HINT[key]}{mode !== "none" && resolved.origin[key] === "global" ? " Vem do global." : ""}</p>
               </div>
             );
           })}
         </div>
 
-        <div data-testid={`contrast-${scope}`}>
+        <div data-testid={`contrast-${editorId}`}>
           <h3 className="a-label">Contraste (WCAG)</h3>
           <ul className="space-y-1.5 text-[0.875rem]">
             {contrast.map((c) => (
-              <li key={c.id} className="flex flex-wrap items-center gap-2" data-testid={`contrast-${scope}-${c.id}`} data-level={c.level}>
+              <li key={c.id} className="flex flex-wrap items-center gap-2" data-testid={`contrast-${editorId}-${c.id}`} data-level={c.level}>
                 <span className={`a-badge ${c.level === "ok" ? "ok" : c.level === "warning" ? "warn" : "bad"}`}>{LEVEL_TEXT[c.level]}</span>
                 <span>{c.label}: <strong>{c.ratio.toFixed(1)}:1</strong></span>
               </li>
             ))}
           </ul>
           {flagged.length > 0 && (
-            <p className={`a-flash mt-3 ${flagged.some((c) => c.level === "blocking") ? "err" : ""}`} role="status" data-testid={`contrast-warning-${scope}`}>
+            <p className={`a-flash mt-3 ${flagged.some((c) => c.level === "blocking") ? "err" : ""}`} role="status" data-testid={`contrast-warning-${editorId}`}>
               {flagged.map((c) => contrastMessage(c)).join(" ")}
             </p>
           )}
@@ -153,9 +165,9 @@ export function ThemeEditor({ scope, region, theme, globalTheme, navigation, nav
           </div>
         )}
 
-        <ChromePreview region={shownRegion} navigation={preview} colors={resolved.effective} />
+        <ChromePreview region={neutral ? undefined : shownRegion} navigation={preview} colors={resolved.effective} />
 
-        {readOnly ? <p className="a-muted">Somente leitura para o seu perfil.</p> : <button type="submit" className="a-btn" data-testid={`save-theme-${scope}`}>Salvar rascunho {isGlobal ? "da paleta global" : `de ${REGIONS[region].name}`}</button>}
+        {readOnly ? <p className="a-muted">Somente leitura para o seu perfil.</p> : <button type="submit" className="a-btn" data-testid={`save-theme-${editorId}`}>Salvar rascunho {neutral ? "das páginas sem região" : isGlobal ? "da paleta global" : `de ${REGIONS[region].name}`}</button>}
       </form>
     </section>
   );

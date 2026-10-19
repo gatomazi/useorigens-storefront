@@ -13,6 +13,8 @@ describe("panel search: the words people use lead to the right page and block", 
     ["incentivo", "/admin/tema-ink#ink-incentivo"],
     ["cores", "/admin/aparencia#theme-sul"],
     ["paleta", "/admin/aparencia#theme-sul"],
+    ["cores sem região", "/admin/aparencia#theme-neutral"],
+    ["páginas sem região", "/admin/aparencia#theme-neutral"],
     ["tema da home", "/admin/home#tema-da-home"],
     ["editorial", "/admin/home#tema-da-home"],
     ["faixa", "/admin/faixa"],
@@ -89,8 +91,8 @@ describe("panel search index: every entry points at something that exists", () =
     ];
     const code = [...new Set(sources)].map((f) => readFileSync(f, "utf8")).join("\n");
     for (const e of ADMIN_SEARCH_INDEX.filter((x) => x.anchor)) {
-      // The colour editors (`theme-{region}`, `theme-global`) are drawn as id={`theme-${scope}`}; everything else is a literal id.
-      const id = e.anchor!.startsWith("theme-") ? "theme-${scope}" : e.anchor!;
+      // The colour editors share an id template: regional scope, global, or neutral. Other anchors are literal ids.
+      const id = e.anchor!.startsWith("theme-") ? "theme-${editorId}" : e.anchor!;
       expect(code.includes(`id="${id}"`) || code.includes("id={`" + id + "`}"), `${e.title}: #${e.anchor}`).toBe(true);
     }
   });

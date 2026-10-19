@@ -1,0 +1,31 @@
+.surface {
+  min-height: 100dvh;
+  background: var(--ground);
+  color: var(--ink);
+}
+
+/* Fixed white controls keep their own text colour even when the page's text is light. */
+.surface :global(.bg-white),
+.surface :global(.btn-light) {
+  --ink: #000000;
+  --ink-soft: #33332f;
+  --ink-mute: #56564f;
+  --line: rgb(0 0 0 / 0.22);
+  --neutral-on-ink: #ffffff;
+  color: #000000;
+}
+
+.surface :global(.btn:not(.btn-ghost):not(.btn-light):not([aria-disabled="true"])),
+.surface :global(.bg-ink),
+.surface :global(.hover\:bg-ink:hover) {
+  color: var(--neutral-on-ink, #ffffff);
+}
+
+.surface :global(.bg-region-primary),
+.surface :global(.btn-ghost:hover) {
+  color: var(--neutral-on-primary, #ffffff);
+}
+
+.surface :global(.btn:not(.btn-ghost):not(.btn-light):hover) {
+  color: var(--ink);
+}

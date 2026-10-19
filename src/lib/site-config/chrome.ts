@@ -9,6 +9,8 @@ import { siteConfigHomeEnabled } from "./flag";
 import { readPublished } from "./published";
 import { homeThemeCssVars, resolveNavigation, resolveTheme, themeCssVars, type ResolvedNavigation, type ResolvedTheme } from "./navigation";
 import { homeThemeOf, type HomeThemeName, type ScopeDoc } from "./schema";
+import { neutralThemeCssVars } from "./neutral-theme";
+import type { CSSProperties } from "react";
 
 /**
  * What the storefront header, the mobile menu and the region wrapper need, resolved on the SERVER from the PUBLISHED configuration (the local
@@ -57,4 +59,11 @@ export function regionChrome(region: RegionSlug): RegionChrome {
 export function regionPalette(region: RegionSlug): ResolvedTheme["effective"] {
   const { doc, global } = publishedDocs(region);
   return resolveTheme(region, doc, global).effective;
+}
+
+/** Published-only colours of pages outside any region. The regional global palette is deliberately not consulted. */
+export function regionlessStyle(): CSSProperties {
+  if (!siteConfigHomeEnabled()) return {};
+  const state = readPublished();
+  return state.source === "published" ? neutralThemeCssVars(state.bundle.docs.global.neutralTheme) as CSSProperties : {};
 }

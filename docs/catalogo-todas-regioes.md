@@ -20,6 +20,12 @@ Depois de implantar esta versão, executar uma sincronização completa da loja 
 
 O link “Explorar todas as regiões juntas” da raiz mantém os parâmetros de campanha da entrada. Links de coleção, menu e paginação permanecem em `/regioes`. O carrinho continua sendo o da loja física na modalidade loja única; ele não define um filtro de navegação.
 
+## Cores das páginas sem região
+
+Em **Aparência → Páginas sem região**, o owner pode configurar uma paleta exclusiva para `/`, `/regioes` e suas coleções: cor principal, destaque, fundo e texto do header, menu mobile e página. Ela fica em `docs.global.neutralTheme`, separada da paleta global que as regiões podem herdar. Os cards de escolha de região na raiz conservam suas identidades regionais.
+
+O formulário salva um rascunho com prévia e verificação de contraste. A escolha “Visual padrão” remove a configuração. A publicação ocorre em **Publicar → Configuração global**, com as alterações identificadas na revisão. Texto praticamente ilegível bloqueia a publicação. As páginas leem apenas o arquivo publicado, com cache por mtime, e as cores chegam à próxima visita sem rebuild. Snapshots antigos sem `neutralTheme` conservam o visual padrão.
+
 ## Verificação
 
 Os testes em `tests/unit/all-regions.test.ts` cobrem a união das regiões, produtos sem classificação, associação além dos primeiros 48 membros, busca, paginação, coleções internas/incompletas e identidade entre lojas. `tests/unit/loja-unica.test.ts` cobre a preservação somente de produtos publicados e vendáveis.

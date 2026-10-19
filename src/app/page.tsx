@@ -6,6 +6,8 @@ import { launchedRegions } from "@/lib/regions/launched";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { LEGACY_STORE_URLS } from "@/lib/site";
 import { regionThemeStyle } from "@/lib/theme/region-theme";
+import { regionlessStyle } from "@/lib/site-config/chrome";
+import neutralStyles from "@/components/layout/RegionlessSurface.module.css";
 import styles from "./page.module.css";
 
 const description = "Camisetas com o nome, o mapa e as coordenadas da sua cidade. Escolha sua região: Sul, Norte ou Centro-Oeste.";
@@ -25,9 +27,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
   const launched = launchedRegions();
 
   return (
-    <div className={styles.page}>
-      <header className={`wrap ${styles.header}`}>
-        <Link href="/" translate="no" className={styles.wordmark} aria-label="Use Origens, página inicial">Use Origens</Link>
+    <div className={`${styles.page} ${neutralStyles.surface}`} style={regionlessStyle()} data-regionless>
+      <header className={styles.header}>
+        <div className="wrap"><Link href="/" translate="no" className={styles.wordmark} aria-label="Use Origens, página inicial">Use Origens</Link></div>
       </header>
 
       <main id="conteudo" className={styles.main}>
@@ -45,7 +47,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<Rec
             const logo = slug === "centro-oeste" ? "centro" : slug;
 
             return (
-              <section key={slug} aria-labelledby={`region-${slug}`} style={regionThemeStyle(slug)}>
+              <section key={slug} aria-labelledby={`region-${slug}`} style={{ ...regionThemeStyle(slug), ["--ink" as string]: "#000000" }}>
                 <a href={href} className={styles.region} aria-label={`Explorar ${region.name}`}>
                   <Image src={`/brand/logo-${logo}.png`} alt="" width={166} height={192} className={styles.logo} unoptimized />
                   <div className={styles.regionCopy}>

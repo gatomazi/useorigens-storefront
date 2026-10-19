@@ -12,7 +12,7 @@ export function GlobalPendingNote({ global, owner }: { global: Workspace; owner:
   return (
     <div className="a-flash flex flex-wrap items-center justify-between gap-3" data-testid="global-pending">
       <p className="max-w-3xl">
-        <strong>A configuração global tem alterações não publicadas</strong>{parts.length ? `: ${parts.join(", ")}` : ""}. Ela vale para todas as regiões e é publicada inteira, em Publicar{owner ? "" : " (só o owner publica)"}.
+        <strong>A configuração global tem alterações não publicadas</strong>{parts.length ? `: ${parts.join(", ")}` : ""}. Ela reúne as configurações compartilhadas e as cores das páginas sem região, e é publicada inteira, em Publicar{owner ? "" : " (só o owner publica)"}.
       </p>
       <Link href="/admin/publicar#global" className="a-btn sm">{owner ? "Revisar e publicar" : "Ver em Publicar"}</Link>
     </div>

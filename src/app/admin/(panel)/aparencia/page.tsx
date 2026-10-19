@@ -87,6 +87,22 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
         note="Os padrões da marca. Só o owner altera e publica (em Publicar → Configuração global). Ao publicar, todas as regiões que herdam esta paleta mudam juntas, sem deploy; as que mantêm paleta própria ou o visual atual não mudam."
       />
 
+      <ThemeEditor
+        key={`neutral-${global.record?.rev ?? "null"}`}
+        scope="global"
+        palette="neutral"
+        region={scope}
+        theme={global.doc.neutralTheme}
+        globalTheme={undefined}
+        navigation={undefined}
+        navData={navByRegion}
+        readOnly={!owner}
+        action={saveThemeAction}
+        rev={String(global.record?.rev ?? "null")}
+        title="Páginas sem região"
+        note="Cores próprias para a entrada da loja (/) e o catálogo de todas as regiões (/regioes e suas coleções). Esta paleta é independente das cores regionais. Salve o rascunho aqui e publique em Publicar → Configuração global."
+      />
+
       <section id="botao-cards" className="a-card scroll-mt-4 p-5" aria-labelledby="cards-title" data-testid="cards-setting">
         <h2 id="cards-title" className="a-h2">Botão nos cards de produto · todas as regiões</h2>
         <p className="a-muted mt-1 max-w-3xl text-[0.9375rem]">Ligado, todo card de produto da loja ganha um botão com este texto, embaixo do card ou como um carrinho na imagem: seções de produtos, páginas de coleção, estilos da cidade, resultados da busca e artigos da Uma Penca. O botão abre a mesma página do produto que o card já abre. Uma seção que tem o próprio texto de botão continua com ele. Desligado, cada seção decide, como antes.</p>
