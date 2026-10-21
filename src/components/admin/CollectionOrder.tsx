@@ -2,6 +2,7 @@
 
 import { Fragment, useMemo, useState } from "react";
 import { arrangeMembers } from "@/lib/site-config/sources";
+import { PRODUCT_SORT_LABEL, type ProductSort } from "@/lib/catalog/product-sort";
 import { DragSortStatus, GripIcon, useDragSort } from "./useDragSort";
 
 /** One product of the collection as the panel lists it (from the catalog snapshot: never typed in). */
@@ -26,6 +27,7 @@ export function CollectionOrder({
   initial,
   visible,
   total,
+  automaticSort = "collection",
 }: {
   /** "store:collectionId" the list was drawn for. */
   collectionRef: string;
@@ -36,6 +38,7 @@ export function CollectionOrder({
   visible: number | null;
   /** How many products the collection has in the catalog, when the list shows only its first ones. */
   total?: number;
+  automaticSort?: ProductSort;
 }) {
   const byId = useMemo(() => new Map(members.map((m) => [m.id, m])), [members]);
   const memberIds = useMemo(() => members.map((m) => m.id), [members]);
@@ -69,7 +72,7 @@ export function CollectionOrder({
       <input type="hidden" name="source_arrangement_for" value={collectionRef} />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="a-label !mb-0">Ordem dos produtos</p>
-        <span className={`a-badge${manual ? " ok" : ""}`} data-testid="collection-order-mode">{manual ? "Ordem manual" : "Ordem da INK"}</span>
+        <span className={`a-badge${manual ? " ok" : ""}`} data-testid="collection-order-mode">{manual ? "Ordem manual" : automaticSort === "collection" ? "Ordem da INK" : PRODUCT_SORT_LABEL[automaticSort]}</span>
       </div>
       <p className="a-muted text-[0.8125rem]">
         Arraste o produto pela alça <span className="inline-flex translate-y-0.5 text-ink"><GripIcon /></span> para mudar a posição, ou use “Topo” para levá-lo direto ao primeiro lugar. “Esconder” tira o produto da vitrine (na INK nada muda). Produto novo que a INK colocar na coleção entra no fim da lista. Salve o rascunho para ver na prévia.
@@ -78,6 +81,7 @@ export function CollectionOrder({
         A ordem e os escondidos são <strong>da coleção</strong> nesta região: todas as seções feitas com ela e a página da coleção seguem esta lista.
         {total !== undefined && total > members.length && ` A lista mostra os ${members.length} primeiros dos ${total} produtos; os demais vêm depois deles, na ordem da INK.`}
       </p>
+      {automaticSort !== "collection" && <p className="a-muted text-[0.8125rem]">Sem ordem manual, esta seção usa <strong>{PRODUCT_SORT_LABEL[automaticSort]}</strong>. A lista abaixo está na ordem da INK para montar uma ordem manual. Os produtos ocultos continuam fora da vitrine em qualquer ordenação.</p>}
       <DragSortStatus hintId={sort.hintId} announcement={sort.announcement} />
       {stale > 0 && <p className="a-flash err text-[0.875rem]">{stale} produto(s) da ordem salva não estão mais entre os produtos da coleção e saem da lista ao salvar.</p>}
       {rows.length === 0 && (total === undefined || total <= members.length) && <p className="a-flash err text-[0.875rem]">Todos os produtos estão escondidos: as seções desta coleção e a página dela não aparecem na loja.</p>}
@@ -86,12 +90,12 @@ export function CollectionOrder({
           const m = byId.get(id)!;
           return (
             <Fragment key={id}>
-              {visible !== null && i === visible && (
+              {(manual || automaticSort === "collection") && visible !== null && i === visible && (
                 <li className="border-y-2 border-dashed border-black/40 bg-neutral-100 px-3 py-1.5 text-[0.75rem] font-bold" data-testid="collection-order-cut">
                   A loja mostra só os {visible} primeiros. Os abaixo ficam de reserva.
                 </li>
               )}
-              <li {...sort.row(id)} className={`flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-black/10 bg-white py-2 pl-1 pr-3 ${visible !== null && i >= visible && sort.active !== id ? "opacity-60" : ""}`} data-testid="collection-order-row">
+              <li {...sort.row(id)} className={`flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-black/10 bg-white py-2 pl-1 pr-3 ${(manual || automaticSort === "collection") && visible !== null && i >= visible && sort.active !== id ? "opacity-60" : ""}`} data-testid="collection-order-row">
                 <button {...sort.handle(id)} className="a-grip -mr-2" aria-label={`Mover ${label(m)}`} title="Arraste para mudar a posição">
                   <GripIcon />
                 </button>
@@ -130,7 +134,7 @@ export function CollectionOrder({
           </ul>
         </div>
       )}
-      <button type="button" className="a-btn ghost sm" onClick={reset} disabled={!manual && hidden.length === 0}>Voltar à ordem da INK</button>
+      <button type="button" className="a-btn ghost sm" onClick={reset} disabled={!manual && hidden.length === 0}>{automaticSort === "collection" ? "Voltar à ordem da INK" : "Voltar à ordenação padrão"}</button>
     </div>
   );
 }

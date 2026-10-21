@@ -106,5 +106,5 @@ export const config = {
   // broke the empty-catalog guarantee (scripts/verify-bootstrap.mts caught it: the index was served as 200 instead of 503). Consequence,
   // documented in docs/admin/cms-v1-round6.md: the public read-only API (/api/cidades/*) also answers on the admin host; it serves data
   // the storefront already publishes, and every admin route is under /admin/** where the checks above apply.
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"],
+  matcher: ["/((?!api|_next/static|_next/image|brand/|favicon.ico|robots.txt|sitemap.xml).*)"],
 };

@@ -70,6 +70,9 @@ export type CityDesignBinding = {
 
   syncedAt: string;
 
+  /** INK's original creation date. Absent in older snapshots until the next catalog sync. */
+  createdAt?: string | null;
+
   /**
    * INK's own cumulative sales count for this exact product (`total_sales_count`), same field already used
    * to rank merch. Optional because a snapshot written before this field existed on bindings won't have it —
@@ -104,6 +107,8 @@ export type MerchProduct = {
   /** INK's regular price, only while a promotion is on. */
   listPrice?: number;
   totalSalesCount: number;
+  /** INK's creation date, preserved for "Novidades". Absent in older snapshots. */
+  createdAt?: string | null;
   /**
    * INK's `product_cluster_id`, when it returned one: the pieces of ONE design share it (the global search groups merchandise by it; the
    * recommender (src/lib/recommendations) uses it ONLY to never show two pieces of one design as separate suggestions, never as affinity).

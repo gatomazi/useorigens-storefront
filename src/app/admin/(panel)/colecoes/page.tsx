@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createCollectionPageAction, setCollectionEnabledAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
+import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
 import { LibrarySearch } from "@/components/admin/LibrarySearch";
 import { libraryEntries, type LibraryEntry } from "@/lib/catalog/collection-source";
 import { searchCoverage } from "@/lib/catalog/collections";
@@ -80,6 +81,7 @@ export default async function CollectionsLibrary({ searchParams }: { searchParam
       </div>
       {from && <p><Link href={from} className="a-btn ghost sm">← Voltar ao que eu estava fazendo</Link></p>}
       <Flash ok={sp.ok} err={sp.err} />
+      <RegionCopyPanel actor={actor} scope={scope} part="collection-menu" rev={ws.record?.rev ?? null} />
 
       <div className="a-card grid gap-4 p-5 md:grid-cols-2">
         <div>

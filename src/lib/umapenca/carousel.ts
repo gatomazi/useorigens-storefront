@@ -5,6 +5,7 @@ import { umaPencaHoverPhotos } from "./hover";
 import { isArticleOfRegion } from "./region";
 import { readUmaPencaSnapshot } from "./snapshot";
 import type { ArticleKind, UmaPencaSnapshot } from "./types";
+import { sortProducts, type ProductSort } from "../catalog/product-sort";
 
 /**
  * The Uma Penca articles of the chosen kinds and of `region` (region.ts) as carousel items (a home section with `source.kind === "umapenca"`), in feed order, at most
@@ -12,19 +13,18 @@ import type { ArticleKind, UmaPencaSnapshot } from "./types";
  * (the section is hidden), never an invented product. `read` is only ever overridden by tests.
  */
 export function umaPencaLookup(region: string, read: () => UmaPencaSnapshot | null = readUmaPencaSnapshot, hoverPhotos: () => Record<string, string> = umaPencaHoverPhotos): UmaPencaLookup {
-  return (kinds: readonly ArticleKind[], limit: number): SourceResult => {
+  return (kinds: readonly ArticleKind[], limit: number, sort?: ProductSort): SourceResult => {
     const snapshot = read();
     if (!snapshot) return { status: "unavailable", reason: "umapenca-not-synced" };
     const hover = hoverPhotos();
     const items = snapshot.articles
       .filter((a) => kinds.includes(a.kind) && isArticleOfRegion(a, region))
-      .slice(0, limit)
       .map((a) => {
         const current = a.salePrice ?? a.price;
         // On sale in the Uma Penca feed: its regular price struck through, and the "% OFF" like an INK promotion.
         const promo = a.salePrice !== null && a.price !== null && a.salePrice < a.price ? { price: a.salePrice, listPrice: a.price } : null;
         return { id: a.id, name: a.title, price: formatPrice(current), ...(promo ? { listPrice: formatListPrice(promo), discount: discountPercent(promo) } : {}), rawPrice: current, imageUrl: a.imageUrl, ...(hover[a.id] ? { hoverImageUrl: hover[a.id] } : {}), href: a.url, umaPenca: { kind: a.kind, region } };
       });
-    return { status: "ok", items };
+    return { status: "ok", items: sortProducts(items, sort).slice(0, limit) };
   };
 }

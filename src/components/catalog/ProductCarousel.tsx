@@ -7,6 +7,8 @@ import type { ProductTags } from "@/lib/site-config/schema";
 import { CustomizerCardLink, ProductCardLink, ProductSectionHeading, SOLID_CARDS, ViewAllCardLink } from "./ProductCard";
 
 export type CarouselItem = {
+  /** Real catalog signals used to order the full collection before limiting/paginating. */
+  createdAt?: string | null;
   id: string;
   /** React identity across stores; the real INK product id stays in `id` for tracking. */
   key?: string;

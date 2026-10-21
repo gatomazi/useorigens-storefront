@@ -32,6 +32,8 @@ import { DEFAULT_TILE_CTA, type Color, type Fill, type MediaRef, type Page, type
 import { Pagination } from "@/components/catalog/Pagination";
 import { numberPt } from "@/lib/format";
 import { collectionFacets } from "@/lib/search/collection-filter";
+import type { ProductSort } from "@/lib/catalog/product-sort";
+import { arrangementOf } from "@/lib/site-config/collections-enabled";
 import { destinationHref, resolveSource, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type SourceResult, type UmaPencaLookup } from "@/lib/site-config/sources";
 
 /** A collection page gets its mini search when it has more products than this (fewer fit on one screen anyway). */
@@ -219,8 +221,14 @@ export function HomeSections({
             );
           }
 
-          case "product-carousel":
-            return <CarouselSection key={s.id} eager={index < 2} s={s} bg={bg} priority={priorityId === s.id} editorial={editorial} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} carouselEnd={carouselEnd} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} compact={compactHero} />;
+          case "product-carousel": {
+            const source = s.source;
+            const manual = source?.kind === "ink-category" && arrangementOf(doc, source.store, source.collectionId, source)?.productIds?.length;
+            const configuredSort = manual ? "collection" : source?.sort ?? page?.defaultSort ?? "collection";
+            const defaultSort = configuredSort === "best-selling" && productSalesUnits(region) === null ? "collection" : configuredSort;
+            const effective = source ? { ...s, source: { ...source, sort: defaultSort } } : s;
+            return <CarouselSection key={s.id} eager={index < 2} s={effective} defaultSort={defaultSort} bg={bg} priority={priorityId === s.id} editorial={editorial} editorialCatalog={home.editorialCatalog} categories={categories} collectionPage={collectionPage} paging={paging} umapenca={umapenca} links={links} region={region} card={resolveCustomizerCard(s, doc, media, region)} pageTone={pageTone} cardButton={cardButton} carouselEnd={carouselEnd} searchSlug={page?.kind === "categoryLanding" && paging?.hrefOf ? page.slug : undefined} compact={compactHero} />;
+          }
 
           case "campaign": {
             const image = hasImage(bg);
@@ -302,6 +310,8 @@ function CarouselSection({
   bg,
   priority,
   editorial,
+  editorialCatalog,
+  defaultSort = "collection",
   categories,
   collectionPage,
   paging,
@@ -335,6 +345,8 @@ function CarouselSection({
   bg: ReturnType<typeof resolveBackground>;
   priority: boolean;
   editorial: Parameters<typeof resolveSource>[1];
+  editorialCatalog?: Parameters<typeof resolveSource>[4];
+  defaultSort?: ProductSort;
   categories?: CategoryLookup;
   collectionPage?: CollectionPageLookup;
   paging?: Paging;
@@ -344,7 +356,7 @@ function CarouselSection({
   if (!s.layout || !s.source || !s.analyticsSource || !s.title) return null;
   // A paged grid (a collection page) shows ONE page of every product of its collection; anything else, the section's first products.
   const paged = s.layout.display === "paged" && s.source.kind === "ink-category" ? (collectionPage ? collectionPage(s.source, paging?.page ?? 1) : ({ status: "unavailable", reason: "ink-collections-not-synced" } as const)) : null;
-  const result: SourceResult = paged ?? resolveSource(s.source, editorial, categories, umapenca);
+  const result: SourceResult = paged ?? resolveSource(s.source, editorial, categories, umapenca, editorialCatalog, productSalesUnits(region));
   // Empty or unavailable: the section is omitted, exactly as the original home does for a carousel with no items.
   if (result.status !== "ok" || result.items.length === 0) return null;
   // With a first card the section keeps its total: 1 customizer card + (total − 1) products, never one more (a paged grid has no first card).
@@ -396,7 +408,7 @@ function CarouselSection({
     // A collection with more than a screenful of products gets its own search and filters, over every page of it; so does a smaller one with products
     // of more than one state (a state page's "Ver todos" opens it filtered to that state).
     searchSlug && facets && (pages.total > SEARCH_FROM || facets.state.length > 1) ? (
-      <CollectionBrowser region={region} slug={searchSlug} grid={{ ...pagedGrid, compact }} items={items} aside={pagedAside} footer={pagedFooter} facets={facets} bestSelling={productSalesUnits(region) !== null} />
+      <CollectionBrowser key={`${searchSlug}-${defaultSort}`} defaultSort={defaultSort} region={region} slug={searchSlug} grid={{ ...pagedGrid, compact }} items={items} aside={pagedAside} footer={pagedFooter} facets={facets} bestSelling={productSalesUnits(region) !== null} />
     ) : (
       <ProductGrid {...pagedGrid} compact={compact} items={items} aside={pagedAside} footer={pagedFooter} />
     )

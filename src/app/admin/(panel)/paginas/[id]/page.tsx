@@ -22,6 +22,7 @@ import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { PAGE_KIND_LABEL, pageAsHomeDoc, pageHref } from "@/lib/site-config/pages";
 import type { Section } from "@/lib/site-config/schema";
 import { STRUCTURED_MODELS } from "@/lib/site-config/structured";
+import { PRODUCT_SORTS, PRODUCT_SORT_LABEL } from "@/lib/catalog/product-sort";
 
 const TYPE_LABEL: Record<string, string> = { "page-hero": "Topo da página", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens" };
 const typeLabel = (s: Section) => (s.template === "product-carousel" && s.layout?.display === "grid" ? "Grade de produtos" : TYPE_LABEL[s.template] ?? s.template);
@@ -97,6 +98,13 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
           </div>
           <div><label className="a-label" htmlFor="seo_og_alt">Descrição da imagem (opcional)</label><input id="seo_og_alt" name="seo_og_alt" defaultValue={page.seo.ogImage?.alt ?? ""} className="a-input" maxLength={200} /></div>
           <div className="md:col-span-2">
+            <label className="a-label" htmlFor="default_sort">Ordenação padrão dos produtos da página</label>
+            <select id="default_sort" name="default_sort" className="a-select max-w-md" defaultValue={page.defaultSort ?? "collection"} aria-describedby="default-sort-help">
+              {PRODUCT_SORTS.map((sort) => <option key={sort} value={sort}>{PRODUCT_SORT_LABEL[sort]}</option>)}
+            </select>
+            <p id="default-sort-help" className="a-muted mt-2 max-w-3xl text-[0.875rem]">A página já abre nesta ordem, antes da paginação. Vale também para as seções que usam o padrão da página. Uma seção pode ter outra ordenação; a ordem manual da coleção tem prioridade. Mais vendidas usa as vendas dos últimos 30 dias e depende de uma apuração atualizada; Novidades usa a data de cadastro disponível no catálogo.</p>
+          </div>
+          <div className="md:col-span-2">
             <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="indexable" defaultChecked={page.seo.indexable} disabled={!owner} /> Permitir que buscadores indexem esta página</label>
             <p className="a-muted mt-1 text-[0.8125rem]">Sem isto a página publicada usa <code>noindex</code>. A prévia e os rascunhos são sempre <code>noindex</code>. Só o owner liga; a página só é acessível em regiões lançadas.</p>
           </div>
@@ -168,7 +176,7 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
           <div><label className="a-label" htmlFor="climit">Cards</label><input id="climit" name="limit" type="number" min={3} max={48} defaultValue={6} className="a-input" /></div>
           <button type="submit" className="a-btn md:mt-[1.65rem]">Criar seção</button>
         </form>
-        <p className="a-muted mt-2 text-[0.8125rem]">Cada seção usa uma coleção diferente: é assim que uma categoria-pai organiza subtemas. O total de cards é o número acima (até 24 no carrossel, até 48 na grade); a ordem dos produtos é a da INK (não é “mais vendidos”) e pode ser ajustada depois, no editor da seção. Na grade, os produtos aparecem todos na página: 4 por linha no desktop e 2 no celular. O botão “Ver todos” só existe quando a coleção tem página pública verificada.</p>
+        <p className="a-muted mt-2 text-[0.8125rem]">Cada seção pode usar uma coleção diferente para organizar os subtemas. O total de cards é o número acima (até 24 no carrossel, até 48 na grade). A seção começa com a ordenação padrão da página; no editor, você pode escolher Novidades, Mais vendidas, preço ou a ordem da coleção. A ordem manual tem prioridade. Na grade, são 4 produtos por linha no desktop e 2 no celular.</p>
         <h3 className="mt-6 font-extrabold">Componentes</h3>
         <div className="mt-3 flex flex-wrap gap-3">
           {STRUCTURED_MODELS.map((m) => (

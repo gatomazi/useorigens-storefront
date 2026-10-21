@@ -1,5 +1,6 @@
 import { savePromotionsAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
+import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
 import { PromotionsEditor } from "@/components/admin/PromotionsEditor";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { currentScope, scopeName } from "@/lib/admin/scope";
@@ -36,7 +37,8 @@ export default async function PromotionsPage({ searchParams }: { searchParams: P
         <p className="mt-2 text-[0.9375rem]" data-testid="promo-published-now"><strong>Publicado e no ar agora:</strong> {liveNow === 0 ? "nenhum item (o botão não aparece)" : `${liveNow} ${liveNow === 1 ? "item" : "itens"}`}.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
-      <PromotionsEditor region={scope} items={ws.doc.promotions?.items ?? []} theme={{ primary: palette.headerBackground, onPrimary: palette.headerText }} now={now} readOnly={!canEdit(actor, scope)} action={savePromotionsAction} rev={String(ws.record?.rev ?? "null")} />
+      <RegionCopyPanel actor={actor} scope={scope} part="promotions" rev={ws.record?.rev ?? null} />
+      <PromotionsEditor key={`${scope}-${ws.record?.rev ?? "null"}`} region={scope} items={ws.doc.promotions?.items ?? []} theme={{ primary: palette.headerBackground, onPrimary: palette.headerText }} now={now} readOnly={!canEdit(actor, scope)} action={savePromotionsAction} rev={String(ws.record?.rev ?? "null")} />
     </div>
   );
 }

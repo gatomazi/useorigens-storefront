@@ -12,6 +12,8 @@ import { livePage, liveCustomizer, newCollectionLanding, pageHref } from "../sit
 import type { Customizer, Page, PageKind, PublishedBundle } from "../site-config/schema";
 import type { CollectionPageLookup, InkCategorySource } from "../site-config/sources";
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
+import type { ProductSort } from "../catalog/product-sort";
+import { productSalesUnits } from "../podio/server";
 
 /**
  * The storefront side of pages: everything is read from the PUBLISHED document (published.json through the tolerant reader, cached by mtime),
@@ -63,13 +65,22 @@ export function findCollectionLanding(regionParam: string, slug: string): { regi
 }
 
 /** The page's paged grid, if it has one, with the lookup of its collection as the region shows it (same arrangement as the page itself). */
-function pagedGrid(region: RegionSlug, bundle: PublishedBundle, page: Page): { source: InkCategorySource; lookup: CollectionPageLookup } | null {
+function pagedGrid(region: RegionSlug, bundle: PublishedBundle, page: Page, sort?: ProductSort): { source: InkCategorySource; lookup: CollectionPageLookup } | null {
   const grid = page.sections.find((s) => s.active && s.layout?.display === "paged");
   if (grid?.source?.kind !== "ink-category") return null;
   const doc = bundle.docs[region];
   const catalog = getCatalog();
-  const lookup = collectionPageLookup((store) => catalog.productsOfStore(store), (store) => enabledInternalIds(doc, store), undefined, (src) => arrangementOf(doc, src.store, src.collectionId, src), region);
-  return { source: grid.source, lookup };
+  const lookup = collectionPageLookup((store) => catalog.productsOfStore(store), (store) => enabledInternalIds(doc, store), undefined, (src) => arrangementOf(doc, src.store, src.collectionId, src), region, productSalesUnits(region));
+  return { source: { ...grid.source, sort: sort ?? grid.source.sort ?? page.defaultSort }, lookup };
+}
+
+/** The order selected on first load. A collection's manual order has precedence over automatic page/section defaults. */
+export function pagedGridDefaultSort(region: RegionSlug, bundle: PublishedBundle, page: Page): ProductSort {
+  const grid = page.sections.find((s) => s.active && s.layout?.display === "paged");
+  if (grid?.source?.kind !== "ink-category") return "collection";
+  const source = grid.source;
+  const sort = arrangementOf(bundle.docs[region], source.store, source.collectionId, source)?.productIds?.length ? "collection" : source.sort ?? page.defaultSort ?? "collection";
+  return sort === "best-selling" && productSalesUnits(region) === null ? "collection" : sort;
 }
 
 /** How many pages the page's paged grid has (0: it has none, or its collection shows nothing): a page number past it is a 404. */
@@ -80,8 +91,8 @@ export function pagedGridPageCount(region: RegionSlug, bundle: PublishedBundle, 
 }
 
 /** EVERY card of the page's paged grid, in the page's order (what its mini search looks through); empty when it has none. */
-export function pagedGridItems(region: RegionSlug, bundle: PublishedBundle, page: Page): CarouselItem[] {
-  const grid = pagedGrid(region, bundle, page);
+export function pagedGridItems(region: RegionSlug, bundle: PublishedBundle, page: Page, sort?: ProductSort): CarouselItem[] {
+  const grid = pagedGrid(region, bundle, page, sort);
   const result = grid?.lookup({ ...grid.source, limit: Number.MAX_SAFE_INTEGER }, 1);
   return result?.status === "ok" ? result.items : [];
 }

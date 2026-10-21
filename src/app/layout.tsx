@@ -32,7 +32,15 @@ export const metadata: Metadata = {
   description: "Camisetas com o nome, o mapa e as coordenadas da sua cidade.",
   openGraph: { siteName: "Use Origens", locale: "pt_BR", type: "website" },
   // Outside a region (root, 404): the generic icon. Each region layout replaces this with its own store logo (see [region]/layout.tsx).
-  icons: { icon: "/favicon.ico" },
+  icons: {
+    icon: [
+      { url: "/favicon.ico?v=origens", sizes: "16x16 32x32 48x48", type: "image/x-icon" },
+      { url: "/brand/icon-origens-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/brand/logo-origens.png", sizes: "192x192", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico?v=origens",
+    apple: [{ url: "/brand/apple-touch-origens.png", sizes: "180x180", type: "image/png" }],
+  },
 };
 
 export const viewport: Viewport = { themeColor: "#e5e5e5", width: "device-width", initialScale: 1 };

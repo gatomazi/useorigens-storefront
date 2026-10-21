@@ -1,6 +1,7 @@
 import { ALIASES } from "../geo/aliases";
 import { STATE_NAMES } from "../geo/regions";
 import { normalizeText } from "../geo/text";
+import { PRODUCT_SORTS, PRODUCT_SORT_LABEL, isProductSort, sortProducts, type ProductSort, type ProductSortData, type ProductSalesUnits } from "../catalog/product-sort";
 
 /**
  * The mini search of a collection page ("Buscar nesta coleção"): which of the collection's cards match what the visitor typed. Pure, no I/O.
@@ -57,14 +58,14 @@ import { DESIGN_FAMILIES } from "../catalog/families";
  * `product_type`), the state, the city and the design family. A card that lacks the attribute (a merch product has no city or family;
  * a product of an unknown piece type) simply never matches that filter and never counts in its facet: nothing is guessed.
  */
-export type FilterableProduct = FilterableCard & { id?: string; garmentTypeId?: number; city?: string; family?: string; rawPrice?: number | null };
+export type FilterableProduct = FilterableCard & ProductSortData & { id?: string; garmentTypeId?: number; city?: string; family?: string };
 
 export type CollectionFilters = { garment?: number; state?: string; city?: string; family?: string };
-export const COLLECTION_SORTS = ["collection", "best-selling", "price-asc", "price-desc"] as const;
-export type CollectionSort = (typeof COLLECTION_SORTS)[number];
-export const COLLECTION_SORT_LABEL: Record<CollectionSort, string> = { collection: "Ordem da coleção", "best-selling": "Mais vendidas", "price-asc": "Menor preço", "price-desc": "Maior preço" };
-/** Units sold per product id over the last 30 days (podio/product-sales.ts), or null when there is no fresh count: "Mais vendidas" is then not offered. */
-export type SalesUnits = Readonly<Record<string, number>> | null;
+export const COLLECTION_SORTS = PRODUCT_SORTS;
+export type CollectionSort = ProductSort;
+export const COLLECTION_SORT_LABEL = PRODUCT_SORT_LABEL;
+/** Fresh net units over the last 30 days, or null when unavailable. */
+export type SalesUnits = ProductSalesUnits;
 
 export type FacetOption = { value: string; label: string; count: number };
 export type CollectionFacets = { garment: FacetOption[]; state: FacetOption[]; city: FacetOption[]; family: FacetOption[] };
@@ -94,32 +95,9 @@ export function applyCollectionFilters<T extends FilterableProduct>(cards: reado
 
 export const activeFilterCount = (filters: CollectionFilters): number => FILTER_KEYS.filter((key) => filters[key] !== undefined && filters[key] !== "").length;
 
-/**
- * A price sort keeps the collection's order among equal prices; a card with no price goes last. "Mais vendidas": most units sold first; equal units,
- * and every product with no sale in the window, keep the collection's order (after the ones that sold). Without a fresh count it is the collection's order.
- */
+/** A price sort keeps the collection's order among equal prices; a card with no price goes last. */
 export function sortCollection<T extends FilterableProduct>(cards: readonly T[], sort: CollectionSort, sales: SalesUnits = null): T[] {
-  if (sort === "collection") return [...cards];
-  if (sort === "best-selling") {
-    if (!sales) return [...cards];
-    const sold = (card: T) => (card.id ? sales[card.id] ?? 0 : 0);
-    return [...cards]
-      .map((card, index) => ({ card, index, units: sold(card) }))
-      .sort((a, b) => b.units - a.units || a.index - b.index)
-      .map((entry) => entry.card);
-  }
-  const sign = sort === "price-asc" ? 1 : -1;
-  return [...cards]
-    .map((card, index) => ({ card, index }))
-    .sort((a, b) => {
-      const pa = a.card.rawPrice ?? null;
-      const pb = b.card.rawPrice ?? null;
-      if (pa === null && pb === null) return a.index - b.index;
-      if (pa === null) return 1;
-      if (pb === null) return -1;
-      return (pa - pb) * sign || a.index - b.index;
-    })
-    .map((entry) => entry.card);
+  return sortProducts(cards, sort, sales);
 }
 
 function facetOf<T extends FilterableProduct>(cards: readonly T[], key: FacetKey, selected: string | number | undefined): FacetOption[] {
@@ -185,7 +163,7 @@ const UF = /^[A-Z]{2}$/;
 const SLUG = /^[a-z][a-z0-9-]{0,40}$/;
 
 /** The query string of the collection API (`?q=&peca=&uf=&cidade=&estilo=&ordem=`), validated: anything malformed is simply ignored. */
-export function parseCollectionQuery(params: URLSearchParams): CollectionQuery {
+export function parseCollectionQuery(params: URLSearchParams, defaultSort: CollectionSort = "collection"): CollectionQuery {
   const q = (params.get("q") ?? "").slice(0, MAX_COLLECTION_QUERY);
   const garmentRaw = params.get("peca") ?? "";
   const garment = /^\d{1,5}$/.test(garmentRaw) && garmentTypeById(Number(garmentRaw)) ? Number(garmentRaw) : undefined;
@@ -195,24 +173,24 @@ export function parseCollectionQuery(params: URLSearchParams): CollectionQuery {
   const familyRaw = params.get("estilo") ?? "";
   const family = SLUG.test(familyRaw) && DESIGN_FAMILIES.some((f) => f.id === familyRaw) ? familyRaw : undefined;
   const sortRaw = params.get("ordem") ?? "";
-  const sort = (COLLECTION_SORTS as readonly string[]).includes(sortRaw) ? (sortRaw as CollectionSort) : "collection";
+  const sort = isProductSort(sortRaw) ? sortRaw : defaultSort;
   return { q, filters: { garment, state, city, family }, sort };
 }
 
 /** The query string the client sends for a query (the inverse of `parseCollectionQuery`); empty when nothing is asked. */
-export function collectionQueryString({ q, filters, sort }: CollectionQuery): string {
+export function collectionQueryString({ q, filters, sort }: CollectionQuery, defaultSort: CollectionSort = "collection"): string {
   const params = new URLSearchParams();
   if (q.trim()) params.set("q", q.trim());
   if (filters.garment !== undefined) params.set("peca", String(filters.garment));
   if (filters.state) params.set("uf", filters.state);
   if (filters.city) params.set("cidade", filters.city);
   if (filters.family) params.set("estilo", filters.family);
-  if (sort !== "collection") params.set("ordem", sort);
+  if (sort !== defaultSort) params.set("ordem", sort);
   return params.toString();
 }
 
 /** Whether the query asks for anything at all (otherwise the page as the server drew it is the answer). */
-export const isCollectionQueryActive = (query: CollectionQuery): boolean => collectionQueryTerms(query.q).length > 0 || activeFilterCount(query.filters) > 0 || query.sort !== "collection";
+export const isCollectionQueryActive = (query: CollectionQuery, defaultSort: CollectionSort = "collection"): boolean => collectionQueryTerms(query.q).length > 0 || activeFilterCount(query.filters) > 0 || query.sort !== defaultSort;
 
 /**
  * The cards a query selects, in the order asked: the text search (every term starts a word), then the filters, then the sort. The cards of a

@@ -8,6 +8,7 @@ import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
 import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
 import { SINGLETON_TEMPLATES, STRUCTURED_MODELS } from "@/lib/site-config/structured";
 import { Flash } from "@/components/admin/Flash";
+import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { collectionProblems, sectionReadability, sourceStatus } from "@/lib/admin/validate-draft";
@@ -81,6 +82,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       <Flash ok={sp.ok} err={sp.err} />
       {/* Only the sections of the theme being edited: each theme has its own (add, edit and order them here, for that theme alone). */}
       <HomeThemeCard region={scope} doc={ws.doc} editing={ws.editingTheme} active={ws.activeTheme} live={ws.liveTheme} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} to="/admin/home" />
+      <RegionCopyPanel actor={actor} scope={scope} part="home" rev={rev} />
       {problems.length > 0 && (
         <div className="a-flash err">
           <p className="font-extrabold">Estas seções não aparecerão na loja até serem corrigidas:</p>
@@ -91,7 +93,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       {!ws.doc.home && (
         <section className="a-card p-5" aria-labelledby="criar-home">
           <h2 id="criar-home" className="a-h2">Esta região ainda não tem home</h2>
-          <p className="a-muted mt-2 max-w-2xl">A home inicial é montada só com o que existe de verdade na loja da INK de {scopeName(scope)}: um topo, o seletor de estados (se houver páginas de estado reais) e até 3 carrosséis das coleções <strong>públicas</strong> com produtos suficientes no catálogo. Nada é copiado do Sul. Tudo pode ser editado, reordenado, ocultado ou removido depois.</p>
+          <p className="a-muted mt-2 max-w-2xl">Crie uma home inicial com um topo, o seletor de estados e até 3 carrosséis das coleções <strong>públicas</strong> com produtos suficientes na loja da INK de {scopeName(scope)}. Você também pode usar <strong>Copiar de outra região</strong>, acima, para começar com uma estrutura pronta. Depois, edite as seções no rascunho.</p>
           <form action={initRegionHomeAction} className="mt-4">
             <input type="hidden" name="rev" value={rev ?? "null"} />
             <input type="hidden" name="scope" value={scope} />
@@ -181,7 +183,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           </form>
         )}
         <p className="a-muted mt-3 text-[0.8125rem]">Precisa de uma coleção interna? <Link className="a-link" href="/admin/colecoes?from=/admin/home">Habilite-a na Biblioteca</Link>.</p>
-        <p className="a-muted mt-3 text-[0.8125rem]">Carrossel: uma fileira que a pessoa arrasta (até 24 cards). Grade: todos os produtos na página, 4 por linha no desktop e 2 no celular (até 48). Dá para trocar depois, no editor da seção. A contagem é a de produtos que existem no catálogo local (não o total bruto da INK). A seção começa na ordem devolvida pela INK (não é “mais vendidos” nem “mais recentes”); depois de criada, você muda a ordem e esconde produtos no editor dela. A seção nova entra só no rascunho, antes da campanha.</p>
+        <p className="a-muted mt-3 text-[0.8125rem]">Carrossel: uma fileira que a pessoa arrasta (até 24 cards). Grade: 4 produtos por linha no desktop e 2 no celular (até 48). No editor da seção, escolha a ordenação padrão: Novidades, Mais vendidas, preço ou ordem da coleção. Você também pode ordenar manualmente e esconder produtos; a ordem manual tem prioridade. A seção nova entra só no rascunho, antes da campanha.</p>
 
         <h3 className="mt-8 font-extrabold">Produtos: canecas e ecobags da Uma Penca</h3>
         <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os produtos vêm do feed da loja da Uma Penca (sincronizado a cada 6 horas), sem coleção da INK. Cada região recebe os produtos cujo nome diz um lugar dela (“Caneca Lá de Guarapuava” só no Sul); nome repetido em outra região precisa da UF no fim (“Caneca Lá de Palmas | TO”). O botão “Ver todos” já leva para <code>/{scope}/outros-artigos</code>. Para pôr o seu modelo “Crie a sua” como primeiro card, edite a seção depois de criada e marque “Destacar um produto personalizável”.</p>

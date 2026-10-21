@@ -52,6 +52,7 @@ export function CollectionBrowser({
   footer,
   facets: initialFacets,
   bestSelling = false,
+  defaultSort = "collection",
 }: {
   region: string;
   /** The page's own address (`/colecoes/<slug>`), the one the API resolves exactly like the page. */
@@ -64,17 +65,19 @@ export function CollectionBrowser({
   facets: CollectionFacets;
   /** "Mais vendidas" is offered: the server has a fresh count of the last 30 days' sales (never shown, it only orders). */
   bestSelling?: boolean;
+  /** The order the server already applied, before pagination. */
+  defaultSort?: CollectionSort;
 }) {
   const id = useId();
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState<CollectionFilters>({});
-  const [sort, setSort] = useState<CollectionSort>("collection");
+  const [sort, setSort] = useState<CollectionSort>(defaultSort);
   const [answer, setAnswer] = useState<Answer | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const filterButton = useRef<HTMLButtonElement>(null);
   const query: CollectionQuery = { q, filters, sort };
-  const active = isCollectionQueryActive(query);
-  const key = collectionQueryString(query);
+  const active = isCollectionQueryActive(query, defaultSort);
+  const key = collectionQueryString(query, defaultSort);
   const searching = collectionQueryTerms(q.trim()).length > 0;
 
   // A link from a state page ("Ver todos" of "Da Nossa Terra · SC") opens the collection already filtered to that state (`?uf=SC`), when the collection
@@ -109,7 +112,7 @@ export function CollectionBrowser({
   const results = current && !("failed" in current) ? current : null;
   const latest = answer && !("failed" in answer) ? answer : null;
   // The facets of the newest answer (they narrow as filters are chosen); the collection's own before any.
-  const facets = latest?.facets ?? initialFacets;
+  const facets = active ? latest?.facets ?? initialFacets : initialFacets;
   const shownFacets = usefulFacets(facets).filter((facetKey) => facetKey !== "city" || facets.city.length > 0);
   const count = activeFilterCount(filters);
   const dark = grid.tone === "dark";
