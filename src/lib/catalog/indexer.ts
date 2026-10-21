@@ -54,6 +54,7 @@ export function buildStoreIndex(
           price: product.price,
           ...(product.listPrice !== undefined ? { listPrice: product.listPrice } : {}),
           totalSalesCount: product.totalSalesCount,
+          ...(product.createdAt ? { createdAt: product.createdAt } : {}),
           ...(product.clusterId ? { productClusterId: product.clusterId } : {}),
           ...(typeof product.garmentTypeId === "number" ? { garmentTypeId: product.garmentTypeId } : {}),
           syncedAt,
@@ -103,6 +104,7 @@ export function buildStoreIndex(
       ...(product.listPrice !== undefined ? { listPrice: product.listPrice } : {}),
       syncedAt,
       totalSalesCount: product.totalSalesCount,
+      ...(product.createdAt ? { createdAt: product.createdAt } : {}),
     });
   }
 

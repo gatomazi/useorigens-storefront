@@ -23,6 +23,7 @@ import { withStatePageSection, type StatePageSection } from "../site-config/stat
 import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, type Appearance, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 import { HOME_THEME_LABEL, hasHomeTheme, newEditorialTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
 import type { RegionSlug } from "../geo/regions";
+import type { ProductSort } from "../catalog/product-sort";
 
 export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "featuredRotation" | "heroColors" | "nav" | "customizerCard" | "tiles" | "grid" | "variant">;
 
@@ -134,7 +135,7 @@ export type DraftOp =
    * Title, slug, SEO and ground of a page (the slug of an already-published page is refused by the caller: its URL must not change).
    * `backdrop: null` takes the page back to the region's ground.
    */
-  | { type: "update-page"; id: string; patch: { title?: string; slug?: string; seo?: PageSeo; backdrop?: PageBackdrop | null } }
+  | { type: "update-page"; id: string; patch: { title?: string; slug?: string; seo?: PageSeo; backdrop?: PageBackdrop | null; defaultSort?: ProductSort | null } }
   | { type: "duplicate-page"; id: string }
   | { type: "set-page-archived"; id: string; archived: boolean }
   | { type: "remove-page"; id: string }
@@ -652,6 +653,8 @@ function pageOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-page" | "upd
   const page = pages[index];
   if (op.type === "update-page") {
     const merged: Page = { ...page, ...(op.patch.title !== undefined ? { title: op.patch.title.trim() } : {}), ...(op.patch.slug !== undefined ? { slug: op.patch.slug.trim() } : {}), ...(op.patch.seo !== undefined ? { seo: op.patch.seo } : {}), ...(op.patch.backdrop ? { backdrop: op.patch.backdrop } : {}) };
+    if (op.patch.defaultSort) merged.defaultSort = op.patch.defaultSort;
+    else if (op.patch.defaultSort === null) delete merged.defaultSort;
     if (op.patch.backdrop === null) delete merged.backdrop;
     if (op.patch.slug !== undefined && merged.slug !== page.slug && pages.some((p, i) => i !== index && p.kind === merged.kind && p.slug === merged.slug)) return fail(`this region already has a page with the address "${merged.slug}"`);
     pages[index] = merged;

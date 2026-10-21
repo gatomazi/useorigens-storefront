@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { archivePageAction, createPageAction, duplicatePageAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
+import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { listHistory } from "@/lib/admin/ops";
 import { PAGE_STATE_LABEL, pageRows, type PageState } from "@/lib/admin/pages-view";
@@ -32,6 +33,7 @@ export default async function PagesScreen({ searchParams }: { searchParams: Prom
         <p className="a-muted mt-2 max-w-3xl">Hotpages (editoriais, como “Dia dos Pais”) e categorias-pai (páginas temáticas que organizam subcoleções). As duas usam as mesmas seções da home. Cada página é publicada sozinha: publicar uma página nunca mexe na home nem em outra página, e criar uma página não a torna pública.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
+      <RegionCopyPanel actor={actor} scope={scope} part="page" rev={rev} />
 
       <section className="a-card p-5" aria-labelledby="nova-pagina">
         <h2 id="nova-pagina" className="a-h2">Nova página</h2>

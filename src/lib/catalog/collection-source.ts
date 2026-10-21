@@ -17,8 +17,10 @@ import { localityOfBinding } from "./locality-binding";
 import { stateHierarchyRows, type StateHierarchyRow } from "./state-hierarchy";
 import type { StoreProducts } from "./repository";
 import type { UnscopedProduct, UnrankedBinding } from "./types";
+import { productSortData, sortProducts, type ProductSalesUnits } from "./product-sort";
 import { umaPencaLookup } from "../umapenca/carousel";
 import { CITY_DESIGN_GARMENT_TYPE_ID } from "../search/collection-filter";
+import { productSalesUnits } from "../podio/server";
 
 export { MIN_USABLE_PRODUCTS };
 
@@ -65,6 +67,7 @@ function merchItem(product: UnscopedProduct): CarouselItem | null {
   if (!href) return null;
   const state = merchStates(product.commerceStoreKey).get(product.inkProductId);
   return {
+    ...productSortData(product),
     id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href,
     ...(product.garmentTypeId !== undefined ? { garmentTypeId: product.garmentTypeId } : {}),
     ...(state ? { state } : {}),
@@ -103,6 +106,7 @@ function cityDesignItem(design: UnrankedBinding): CarouselItem | null {
   const family = DESIGN_FAMILIES.find((f) => f.id === design.designFamily);
   if (!href || !city || !family) return null;
   return {
+    ...productSortData(design),
     id: design.inkProductId, name: family.name, context: `${city.name} · ${city.uf}`, price: formatPrice(design.price), listPrice: formatListPrice(design), discount: discountPercent(design), rawPrice: design.price, state: city.uf, imageUrl: design.imageUrl, href,
     city: city.name, family: family.id, garmentTypeId: CITY_DESIGN_GARMENT_TYPE_ID,
   };
@@ -199,13 +203,19 @@ export function categoryLookup(
   filePath?: string,
   arrange: (source: InkCategorySource) => CategoryArrangement | undefined = arrangementIn(undefined),
   region?: RegionSlug,
+  sales: ProductSalesUnits = null,
 ): CategoryLookup {
   return (source) => {
-    // A region's document may keep refs to its own store and to the single store; only the one that sells there now resolves.
+    // Only resolve the store currently serving this region.
     if (region && source.store !== storeForRegion(region)) return { status: "unavailable", reason: "collection-not-found" };
-    const found = resolveCollection(source.store, source.collectionId, enabled(source.store), arrange(source), filePath);
+    const arrangement = arrange(source);
+    const found = resolveCollection(source.store, source.collectionId, enabled(source.store), arrangement, filePath);
     if (found.status !== "ok") return found;
     const products = productsOf(source.store);
+    if (source.sort && source.sort !== "collection" && !arrangement?.productIds?.length) {
+      const all = found.ids.map((id) => regionItem(products, id, region)).filter((item): item is CarouselItem => item !== null);
+      return all.length ? { status: "ok", items: sortProducts(all, source.sort, sales).slice(0, source.limit) } : { status: "unavailable", reason: "collection-has-no-products" };
+    }
     const items: CarouselItem[] = [];
     for (const id of found.ids) {
       const item = regionItem(products, id, region);
@@ -240,14 +250,17 @@ export function collectionPageLookup(
   filePath?: string,
   arrange: (source: InkCategorySource) => CategoryArrangement | undefined = arrangementIn(undefined),
   region?: RegionSlug,
+  sales: ProductSalesUnits = null,
 ): CollectionPageLookup {
   return (source, page) => {
-    // A region's document may keep refs to its own store and to the single store; only the one that sells there now resolves.
+    // Only resolve the store currently serving this region.
     if (region && source.store !== storeForRegion(region)) return { status: "unavailable", reason: "collection-not-found" };
-    const found = resolveCollection(source.store, source.collectionId, enabled(source.store), arrange(source), filePath);
+    const arrangement = arrange(source);
+    const found = resolveCollection(source.store, source.collectionId, enabled(source.store), arrangement, filePath);
     if (found.status !== "ok") return found;
     const products = productsOf(source.store);
-    const all = found.ids.map((id) => regionItem(products, id, region)).filter((item): item is CarouselItem => item !== null);
+    const candidates = found.ids.map((id) => regionItem(products, id, region)).filter((item): item is CarouselItem => item !== null);
+    const all = arrangement?.productIds?.length ? candidates : sortProducts(candidates, source.sort, sales);
     if (all.length === 0) return { status: "unavailable", reason: "collection-has-no-products" };
     const perPage = Math.max(1, source.limit);
     const pageCount = Math.ceil(all.length / perPage);
@@ -476,6 +489,8 @@ const regionOfDoc = (doc: ScopeDoc | undefined): RegionSlug | undefined => (doc 
 /** What `HomeSections` needs to render collection-backed (and Uma Penca) sections for a document (the published one, or a draft in the preview). */
 export function categoryProps(productsOf: (store: CommerceStoreKey) => StoreProducts, doc: ScopeDoc | undefined) {
   const enabled = (store: CommerceStoreKey) => enabledInternalIds(doc, store);
+  const region = regionOfDoc(doc);
+  const sales = region ? productSalesUnits(region) : null;
   const links: CollectionLinks = {
     // A button to the INK page of a collection of a store that does not sell in the region now (an old or a re-pointed ref): no link.
     inkSlug: (store, collectionId) => (regionOfDoc(doc) && storeForRegion(regionOfDoc(doc)!) !== store ? null : publicCollectionSlug(store, collectionId)),
@@ -486,8 +501,8 @@ export function categoryProps(productsOf: (store: CommerceStoreKey) => StoreProd
     },
   };
   return {
-    categories: categoryLookup(productsOf, enabled, undefined, arrangementIn(doc), regionOfDoc(doc)),
-    collectionPage: collectionPageLookup(productsOf, enabled, undefined, arrangementIn(doc), regionOfDoc(doc)),
+    categories: categoryLookup(productsOf, enabled, undefined, arrangementIn(doc), region, sales),
+    collectionPage: collectionPageLookup(productsOf, enabled, undefined, arrangementIn(doc), region, sales),
     links,
     umapenca: umaPencaLookup(doc?.scope ?? ""),
   };

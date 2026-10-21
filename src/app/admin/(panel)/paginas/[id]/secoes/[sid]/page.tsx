@@ -58,6 +58,7 @@ export default async function PageSectionEditor({ params, searchParams }: { para
             collectionMembers={collectionOrderMembers(section, ws.doc)}
             collectionArrangement={collectionOrderArrangement(section, ws.doc)}
             pageKind={page.kind}
+            pageDefaultSort={page.defaultSort}
           />
         </section>
         <section className="a-card p-5 2xl:sticky 2xl:top-4 2xl:self-start" aria-label="Pré-visualização">

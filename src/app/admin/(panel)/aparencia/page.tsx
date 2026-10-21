@@ -1,6 +1,7 @@
 import { saveCardsAction, saveCarouselEndAction, saveSearchAction, saveMundoAction, saveThemeAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { GlobalPendingNote } from "@/components/admin/GlobalPendingNote";
+import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
 import { ThemeEditor } from "@/components/admin/ThemeEditor";
 import { HomeThemeCard } from "@/components/admin/HomeThemeCard";
 import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
@@ -56,6 +57,7 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
       <GlobalPendingNote global={global} owner={owner} />
 
       <HomeThemeCard region={scope} doc={ws.doc} editing={ws.editingTheme} active={ws.activeTheme} live={ws.liveTheme} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} to="/admin/aparencia" />
+      <RegionCopyPanel actor={actor} scope={scope} part="theme" rev={ws.record?.rev ?? null} />
 
       <ThemeEditor
         key={`region-${scope}-${ws.editingTheme}-${ws.record?.rev ?? "null"}`}

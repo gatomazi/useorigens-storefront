@@ -13,6 +13,7 @@ import { PRODUCT_CARD_IMAGE, sectionImageSizes, sizeHintText, STATE_COVER } from
 import { DEFAULT_BUY_LABEL, HERO_CARDS, MAX_BUY_LABEL, MAX_FEATURED, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
 import { customizerCardFieldDefaults } from "@/lib/admin/section-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
+import { PRODUCT_SORTS, PRODUCT_SORT_LABEL, type ProductSort } from "@/lib/catalog/product-sort";
 
 export type MediaOption = { assetId: string; label: string; src: string; width: number; height: number; kind: "banner" | "upload" };
 
@@ -99,7 +100,7 @@ function AnchorPicker({ anchors, current }: { anchors: { anchor: string; label: 
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement,
+  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pageDefaultSort, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement,
 }: {
   /** Collection carousels: the saved collection's products in INK's order, for the order list (absent when it does not resolve). */
   collectionMembers?: OrderMember[];
@@ -107,6 +108,7 @@ export function SectionEditorForm({
   collectionArrangement?: { productIds?: string[]; hiddenIds?: string[] };
   /** The kind of page the section is on (absent: the home). A parent-category landing may hold the paged grid of a collection. */
   pageKind?: "hotpage" | "categoryLanding";
+  pageDefaultSort?: ProductSort;
   /** Set when the section belongs to a PAGE (hotpage / landing) instead of the home: the id of the page. */
   page?: string;
   /** Pages of this region a button may lead to: value `hotpage/slug`, with a status the editor should know. */
@@ -150,6 +152,7 @@ export function SectionEditorForm({
   const [ovColor, setOvColor] = useState<string>("color" in a.overlay ? a.overlay.color : "#000000");
   const [ovOpacity, setOvOpacity] = useState("color" in a.overlay ? a.overlay.opacity : 0.45);
   const [sourceKind, setSourceKind] = useState<"editorial-module" | "ink-category" | "umapenca">(section.source?.kind === "ink-category" || section.source?.kind === "umapenca" ? section.source.kind : "editorial-module");
+  const [automaticSort, setAutomaticSort] = useState<ProductSort | "">(section.source?.sort ?? "");
   const currentRef = section.source?.kind === "ink-category" ? `${section.source.store}:${section.source.collectionId}` : undefined;
   const [srcEntry, setSrcEntry] = useState<ComboEntry | null>(collections.find((e) => e.value === currentRef) ?? null);
   const publicEntries = collections.filter((e) => e.visibility === "public" && e.selectable);
@@ -386,6 +389,15 @@ export function SectionEditorForm({
         <>
           <fieldset className="space-y-4">
             <legend className="a-h2 mb-3">Produtos</legend>
+            <div className="max-w-xl">
+              <label className="a-label" htmlFor="source_sort">Ordenação padrão desta seção</label>
+              <select id="source_sort" name="source_sort" className="a-select" value={automaticSort} onChange={(e) => setAutomaticSort(e.target.value as ProductSort | "")} aria-describedby="source-sort-help">
+                <option value="">{page ? `Usar padrão da página (${PRODUCT_SORT_LABEL[pageDefaultSort ?? "collection"]})` : "Usar ordem original da fonte"}</option>
+                {PRODUCT_SORTS.map((sort) => <option key={sort} value={sort}>{PRODUCT_SORT_LABEL[sort]}</option>)}
+              </select>
+              <p id="source-sort-help" className="a-muted mt-2 text-[0.875rem]">Aplicada antes do limite de cards. A ordem manual da coleção tem prioridade. Novidades usa a data de cadastro; Mais vendidas usa as vendas dos últimos 30 dias. Sem uma apuração atualizada, a ordem da fonte é mantida.</p>
+              {sourceKind === "umapenca" && <p className="a-muted mt-2 text-[0.875rem]">O feed da Uma Penca não informa datas de cadastro nem vendas. Nessa fonte, Novidades e Mais vendidas mantêm a ordem do feed.</p>}
+            </div>
             <div role="radiogroup" aria-label="Fonte" className="flex flex-wrap gap-4">
               <label className="flex items-center gap-2 font-bold"><input type="radio" name="source_kind" value="editorial-module" checked={sourceKind === "editorial-module"} onChange={() => setSourceKind("editorial-module")} /> Curadoria editorial atual</label>
               <label className="flex items-center gap-2 font-bold"><input type="radio" name="source_kind" value="ink-category" checked={sourceKind === "ink-category"} onChange={() => setSourceKind("ink-category")} disabled={collections.length === 0} /> Coleção da INK</label>
@@ -427,6 +439,7 @@ export function SectionEditorForm({
             {sourceKind === "ink-category" && cur?.kind === "ink-category" && collectionMembers && collectionMembers.length > 0 && (srcEntry?.value ?? currentRef) === currentRef && (
               <CollectionOrder
                 collectionRef={currentRef!}
+                automaticSort={automaticSort || pageDefaultSort || "collection"}
                 members={collectionMembers}
                 initial={{ order: collectionArrangement?.productIds?.length ? "manual" : "category", productIds: collectionArrangement?.productIds, hiddenIds: collectionArrangement?.hiddenIds }}
                 // Same clamp as the save (3..24, or up to 48 in a grid); the customizer card takes the first place. A paged grid shows them all.
@@ -434,8 +447,8 @@ export function SectionEditorForm({
                 total={srcEntry?.value === currentRef ? srcEntry?.matchedCount : undefined}
               />
             )}
-            {sourceKind === "ink-category" && srcEntry && srcEntry.value !== currentRef && <p className="a-muted text-[0.8125rem]">Salve o rascunho para ordenar ou esconder os produtos desta coleção (ela começa na ordem da INK).</p>}
-            {sourceKind === "ink-category" && section.id.startsWith("seed-") && <p className="a-flash err text-[0.875rem]">Atenção: isto substitui a curadoria original desta seção por uma coleção da INK (na ordem da INK, que você ajusta aqui depois de salvar). Só vale depois de publicado.</p>}
+            {sourceKind === "ink-category" && srcEntry && srcEntry.value !== currentRef && <p className="a-muted text-[0.8125rem]">Salve o rascunho para ordenar manualmente ou esconder os produtos desta coleção. A ordenação padrão acima já vale na prévia depois de salvar.</p>}
+            {sourceKind === "ink-category" && section.id.startsWith("seed-") && <p className="a-flash err text-[0.875rem]">Atenção: isto substitui a curadoria original desta seção por uma coleção da INK, com a ordenação padrão escolhida acima. Só vale na loja depois de publicar.</p>}
           </fieldset>
 
           {display === "paged" ? (

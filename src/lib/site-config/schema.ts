@@ -18,6 +18,7 @@ import { validateTopBar, type TopBarConfig } from "./top-bar-schema";
 import { validateStatePage, type StatePageConfig } from "./state-page-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
 import { REGIONS, regionMayUseStore, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { isProductSort, type ProductSort } from "../catalog/product-sort";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS, type ArticleKind } from "../umapenca/types";
 
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
@@ -89,7 +90,7 @@ export type Destination =
   | { kind: "customizer"; customizerId: string }
   | { kind: "external"; url: string };
 
-export type Source =
+export type Source = (
   | { kind: "editorial-module"; key: EditorialModuleKey }
   | {
       kind: "ink-category";
@@ -112,7 +113,8 @@ export type Source =
     }
   | { kind: "manual"; productIds: string[]; limit: number }
   /** Canecas/ecobags from the synced Uma Penca feed (src/lib/umapenca), in feed order. No INK collection is involved. */
-  | { kind: "umapenca"; articleKinds: ArticleKind[]; limit: number };
+  | { kind: "umapenca"; articleKinds: ArticleKind[]; limit: number }
+) & { /** Automatic order of this section, unless its collection has a manual product order. Absent = the page default, or collection order. */ sort?: ProductSort };
 
 /**
  * A product of the hero, by stable reference. `image` ("feature" opening only): the banner drawn in the product's half while this product is the one
@@ -323,6 +325,8 @@ export type Page = {
   slug: string;
   title: string;
   seo: PageSeo;
+  /** Initial order of the page's products; a section may override it, and a manual collection order always takes priority. */
+  defaultSort?: ProductSort;
   /** Absent = the region's own ground (the page looks like the rest of the store). */
   backdrop?: PageBackdrop;
   sections: Section[];
@@ -641,6 +645,7 @@ const isInkIdList = (v: unknown): boolean =>
 
 function checkSource(c: Collector, path: string, v: unknown, max: number): void {
   if (!isRecord(v)) return c.fail(path, "must be an object");
+  if (v.sort !== undefined && !isProductSort(v.sort)) c.fail(`${path}.sort`, "collection | newest | best-selling | price-asc | price-desc");
   const badLimit = (n: unknown) => typeof n !== "number" || !Number.isInteger(n) || n < MIN_SECTION_PRODUCTS || n > max;
   if (v.kind === "editorial-module") {
     if (!(EDITORIAL_MODULE_KEYS as readonly unknown[]).includes(v.key)) c.fail(`${path}.key`, "unknown editorial module");
@@ -829,6 +834,7 @@ function checkPageBackdrop(c: Collector, path: string, v: unknown): void {
 
 function checkPage(c: Collector, path: string, v: unknown): void {
   if (!isRecord(v)) return c.fail(path, "must be an object");
+  if (v.defaultSort !== undefined && !isProductSort(v.defaultSort)) c.fail(`${path}.defaultSort`, "collection | newest | best-selling | price-asc | price-desc");
   if (typeof v.id !== "string" || !ID.test(v.id)) c.fail(`${path}.id`, "invalid id");
   if (!(PAGE_KINDS as readonly unknown[]).includes(v.kind)) c.fail(`${path}.kind`, "must be hotpage | categoryLanding");
   checkSlug(c, `${path}.slug`, v.slug);

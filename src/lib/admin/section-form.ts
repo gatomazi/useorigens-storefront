@@ -9,6 +9,7 @@ import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { postedBuyStyle } from "../site-config/cards-schema";
 import { ARTICLE_KINDS } from "../umapenca/types";
+import { isProductSort } from "../catalog/product-sort";
 
 type Fields = { get(name: string): FormDataEntryValue | null };
 
@@ -237,7 +238,14 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     const display: ProductDisplay | undefined = f.get("layout_display") === null ? section.layout?.display : posted === "grid" || posted === "paged" ? posted : undefined;
     patch.cta = parseCta(f);
     const max = maxSectionProducts(display);
-    const source = parseSource(f, section.source, max);
+    let source = parseSource(f, section.source, max);
+    if (source) {
+      const rawSort = f.get("source_sort");
+      const sort = rawSort === null ? section.source?.sort : isProductSort(str(f, "source_sort")) ? str(f, "source_sort") : undefined;
+      const { sort: _oldSort, ...rest } = source;
+      void _oldSort;
+      source = sort && isProductSort(sort) ? { ...rest, sort } : rest;
+    }
     // A grid turned back into a carousel: a source kept as it was (its collection did not resolve in the form) still fits the smaller ceiling.
     patch.source = source && "limit" in source && source.limit > max ? { ...source, limit: max } : source;
     const variant = str(f, "layout_variant") === "poster" ? "poster" : "standard";

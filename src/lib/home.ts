@@ -1,6 +1,8 @@
 import "server-only";
 import { purchaseUrl } from "./catalog/commerce";
 import { getCatalog } from "./catalog/repository";
+import { productSortData } from "./catalog/product-sort";
+import type { EditorialItems } from "./site-config/sources";
 import { resolveCity, resolveCityProduct, type ResolvedCity } from "./catalog/resolver";
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import { dddProducts } from "./editorial/ddd";
@@ -39,6 +41,8 @@ export type StateCard = {
 };
 
 export type RegionHome = {
+  /** Full eligible editorial pools for automatic ordering; the legacy shelves below keep their current sizes. */
+  editorialCatalog?: EditorialItems;
   cityCount: number;
   syncedAt: string | null;
   /** City used for the family showcase (real INK photos). */
@@ -86,7 +90,7 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const ddd: CarouselItem[] = allDdd.flatMap((d) => {
     const href = purchaseUrl(d.product);
     return href
-      ? [{ id: d.product.inkProductId, name: d.regionName, eyebrow: d.code, context: STATE_NAMES[d.uf], price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), discount: discountPercent(d.product), rawPrice: d.product.price, state: d.uf, imageUrl: d.product.imageUrl, href }]
+      ? [{ ...productSortData(d.product), id: d.product.inkProductId, name: d.regionName, eyebrow: d.code, context: STATE_NAMES[d.uf], price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), discount: discountPercent(d.product), rawPrice: d.product.price, state: d.uf, imageUrl: d.product.imageUrl, href }]
       : [];
   });
 
@@ -96,21 +100,22 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   const falaAll: Fala[] = [];
   for (const d of dizeresWithContext(merch)) {
     const href = purchaseUrl(d.product);
-    if (href) falaAll.push({ id: d.product.inkProductId, uf: d.uf, state: d.uf, name: d.text, context: d.context, price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), discount: discountPercent(d.product), rawPrice: d.product.price, imageUrl: d.product.imageUrl, href });
+    if (href) falaAll.push({ ...productSortData(d.product), id: d.product.inkProductId, uf: d.uf, state: d.uf, name: d.text, context: d.context, price: formatPrice(d.product.price), listPrice: formatListPrice(d.product), discount: discountPercent(d.product), rawPrice: d.product.price, imageUrl: d.product.imageUrl, href });
   }
   for (const s of lore.byState) {
     const href = purchaseUrl(s.product);
-    if (href) falaAll.push({ id: s.product.inkProductId, uf: s.uf, state: s.uf, name: s.text, context: STATE_NAMES[s.uf], price: formatPrice(s.product.price), listPrice: formatListPrice(s.product), discount: discountPercent(s.product), rawPrice: s.product.price, imageUrl: s.product.imageUrl, href });
+    if (href) falaAll.push({ ...productSortData(s.product), id: s.product.inkProductId, uf: s.uf, state: s.uf, name: s.text, context: STATE_NAMES[s.uf], price: formatPrice(s.product.price), listPrice: formatListPrice(s.product), discount: discountPercent(s.product), rawPrice: s.product.price, imageUrl: s.product.imageUrl, href });
   }
   for (const [cityId, items] of lore.byCity) {
     for (const item of items) {
       if (item.kind !== "expressao") continue;
       const href = purchaseUrl(item.product);
-      if (href) falaAll.push({ id: item.product.inkProductId, uf: item.city.uf, state: item.city.uf, name: item.text, context: `${item.city.name} · ${item.city.uf}`, price: formatPrice(item.product.price), listPrice: formatListPrice(item.product), discount: discountPercent(item.product), rawPrice: item.product.price, imageUrl: item.product.imageUrl, href });
+      if (href) falaAll.push({ ...productSortData(item.product), id: item.product.inkProductId, uf: item.city.uf, state: item.city.uf, name: item.text, context: `${item.city.name} · ${item.city.uf}`, price: formatPrice(item.product.price), listPrice: formatListPrice(item.product), discount: discountPercent(item.product), rawPrice: item.product.price, imageUrl: item.product.imageUrl, href });
     }
     void cityId;
   }
-  const fala: CarouselItem[] = interleaveByState(falaAll, STATE_ORDER).slice(0, 12).map(({ uf: _uf, ...rest }) => (void _uf, rest));
+  const allFala: CarouselItem[] = interleaveByState(falaAll, STATE_ORDER).map(({ uf: _uf, ...rest }) => (void _uf, rest));
+  const fala = allFala.slice(0, 12);
 
   const states: StateCard[] = ufs
     .map((uf) => {
@@ -148,7 +153,7 @@ export function getRegionHome(region: RegionSlug): RegionHome {
 
   const recreations: CarouselItem[] = recreationProducts(merch).flatMap(({ product, theme }) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), context: theme, price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ ...productSortData(product), id: product.inkProductId, name: product.name.replace(/\s+/g, " ").trim(), context: theme, price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
   // terraProducts already balances across the three states (see its own doc comment), but which UF a given
@@ -156,13 +161,14 @@ export function getRegionHome(region: RegionSlug): RegionHome {
   // label text.
   const terra: CarouselItem[] = terraProducts(merch, ufs).flatMap(({ product, label }) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: label, price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ ...productSortData(product), id: product.inkProductId, name: label, price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
 
-  const feitoParaVoce: CarouselItem[] = lendaProducts(merch).flatMap((product) => {
+  const allLenda: CarouselItem[] = lendaProducts(merch, Number.MAX_SAFE_INTEGER).flatMap((product) => {
     const href = purchaseUrl(product);
-    return href ? [{ id: product.inkProductId, name: product.name.replace(/\s+/g, " ").replace(/\s*\|\s*Lenda$/i, "").trim(), context: "Lenda", price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
+    return href ? [{ ...productSortData(product), id: product.inkProductId, name: product.name.replace(/\s+/g, " ").replace(/\s*\|\s*Lenda$/i, "").trim(), context: "Lenda", price: formatPrice(product.price), listPrice: formatListPrice(product), discount: discountPercent(product), rawPrice: product.price, imageUrl: product.imageUrl, href }] : [];
   });
+  const feitoParaVoce = allLenda.slice(0, 6);
 
-  return { cityCount: covered.size, syncedAt: catalog.syncedAt, showcase, heroFamilies, ddd, fala, states, terra, recreations, feitoParaVoce, campaignCrops };
+  return { cityCount: covered.size, syncedAt: catalog.syncedAt, showcase, heroFamilies, ddd, fala, states, terra, recreations, feitoParaVoce, campaignCrops, editorialCatalog: { terra, recreations, lenda: allLenda, dizeres: allFala, ddd } };
 }

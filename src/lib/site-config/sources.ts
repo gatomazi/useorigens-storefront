@@ -3,6 +3,7 @@ import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import type { ArticleKind } from "../umapenca/types";
 import { SUL_INK, SUL_INK_ORIGIN } from "../ink/sul-domain";
 import { CUSTOMIZER_SEGMENT, PAGE_SEGMENT, type Destination, type EditorialModuleKey, type Source } from "./schema";
+import { sortProducts, type ProductSort, type ProductSalesUnits } from "../catalog/product-sort";
 
 /**
  * Section data sources (docs/admin/cms-v1-round2.md §3, docs/admin/cms-v1-round3.md §3). A source either yields items or says,
@@ -51,19 +52,22 @@ export type CollectionPageResult = { status: "ok"; items: CarouselItem[]; total:
 export type CollectionPageLookup = (source: InkCategorySource, page: number) => CollectionPageResult;
 
 /** The Uma Penca articles of these kinds, at most `limit`, as carousel items. Supplied by the server from the synced snapshot. */
-export type UmaPencaLookup = (kinds: readonly ArticleKind[], limit: number) => SourceResult;
+export type UmaPencaLookup = (kinds: readonly ArticleKind[], limit: number, sort?: ProductSort) => SourceResult;
 
-export function resolveSource(source: Source, editorial: EditorialItems, categories?: CategoryLookup, umapenca?: UmaPencaLookup): SourceResult {
+export function resolveSource(source: Source, editorial: EditorialItems, categories?: CategoryLookup, umapenca?: UmaPencaLookup, editorialCatalog?: EditorialItems, sales: ProductSalesUnits = null): SourceResult {
   switch (source.kind) {
-    case "editorial-module":
-      return { status: "ok", items: editorial[source.key] };
+    case "editorial-module": {
+      const base = editorial[source.key];
+      const candidates = source.sort && source.sort !== "collection" ? editorialCatalog?.[source.key] ?? base : base;
+      return { status: "ok", items: sortProducts(candidates, source.sort, sales).slice(0, base.length) };
+    }
     case "ink-category":
       // Only a real, synced, available collection resolves. Categories are never inferred from product names or tags.
       return categories ? categories(source) : { status: "unavailable", reason: "ink-collections-not-synced" };
     case "manual":
       return { status: "unavailable", reason: "manual-source-not-implemented" };
     case "umapenca":
-      return umapenca ? umapenca(source.articleKinds, source.limit) : { status: "unavailable", reason: "umapenca-not-synced" };
+      return umapenca ? umapenca(source.articleKinds, source.limit, source.sort) : { status: "unavailable", reason: "umapenca-not-synced" };
   }
 }
 

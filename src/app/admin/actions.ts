@@ -57,6 +57,7 @@ import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-for
 import type { InkThemeConfig } from "@/lib/site-config/ink-theme-schema";
 import { readableTopBarError, topBarFromForm } from "@/lib/admin/top-bar-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
+import { isProductSort } from "@/lib/catalog/product-sort";
 
 /**
  * Every server action of the CMS. Each one authenticates and authorises on its own (`requireAdmin`: development guard or Railway session,
@@ -1140,7 +1141,9 @@ export async function updatePageAction(fd: FormData) {
     ...(text(fd, "seo_description") ? { description: text(fd, "seo_description") } : {}),
     ...(og ? { ogImage: { assetId: og, alt: text(fd, "seo_og_alt"), decorative: text(fd, "seo_og_alt") === "" } } : {}),
   };
-  return runRaw(fd, { type: "update-page", id, patch: { title: text(fd, "title"), slug, seo } }, "Rascunho da página salvo.", here);
+  const defaultSort = text(fd, "default_sort");
+  if (fd.has("default_sort") && defaultSort !== "" && !isProductSort(defaultSort)) back(here, { err: ["Escolha uma ordenação padrão válida para a página."] });
+  return runRaw(fd, { type: "update-page", id, patch: { title: text(fd, "title"), slug, seo, ...(fd.has("default_sort") ? { defaultSort: isProductSort(defaultSort) && defaultSort !== "collection" ? defaultSort : null } : {}) } }, "Rascunho da página salvo.", here);
 }
 
 /** The page's own ground ("Fundo da página": colour, text tone, optional pattern), or back to the region's ground when switched off. */
