@@ -47,7 +47,10 @@ export function parseInkTsv(text: string): { header: string[]; rows: Record<stri
   return { header, rows };
 }
 
-/** One TSV line. Google's TSV takes no quoting: tabs and line breaks inside a value become spaces. */
+/**
+ * One TSV line. Google's TSV takes no quoting: tabs and line breaks inside a value become spaces, and a leading double quote (which
+ * Google would read as the start of a quoted field) is dropped.
+ */
 export function tsvLine(values: readonly string[]): string {
-  return values.map((v) => v.replace(/[\t\r\n]+/g, " ").replace(/ {2,}/g, " ").trim()).join("\t");
+  return values.map((v) => v.replace(/[\t\r\n]+/g, " ").replace(/ {2,}/g, " ").trim().replace(/^"+/, "")).join("\t");
 }

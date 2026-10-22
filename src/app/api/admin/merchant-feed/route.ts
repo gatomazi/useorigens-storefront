@@ -1,6 +1,7 @@
 // Google Merchant feed, by hand: POST judges the covers not judged yet and regenerates the feed (src/lib/merchant/generate.ts), the same
 // step the daily job runs after the single store's catalog. The first run judges every cover (~17 mil images from INK's CDN, minutes), so
-// POST starts it in the background and answers 202; GET reports the last generation and whether one is running.
+// POST starts it in the background and answers 202; GET reports the last generation and whether one is running. Right after the first
+// deploy the daily sync has not written the source yet: the POST then reads it from INK itself (~180 GETs, under the daily job's lock).
 //
 // Bearer ADMIN_SYNC_TOKEN (unset => 503, never open).
 import { adminSyncToken } from "@/lib/config/env";
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
   const denied = guard(request);
   if (denied) return denied;
   const already = merchantFeedRunning();
-  void refreshMerchantFeed().then((r) => console.log(JSON.stringify({ scope: "merchant-feed", event: "manual-refresh", ...r })));
+  void refreshMerchantFeed({ readSourceIfMissing: true }).then((r) => console.log(JSON.stringify({ scope: "merchant-feed", event: "manual-refresh", ...r })));
   return Response.json({ started: !already, running: true }, { status: 202 });
 }
 

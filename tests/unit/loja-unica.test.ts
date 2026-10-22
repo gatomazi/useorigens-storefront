@@ -225,6 +225,18 @@ describe("syncLojaUnica — o sync real da loja única", () => {
     expect(createHash("sha256").update(readFileSync(root)).digest("hex")).toBe(before);
     expect(existsSync(path.join(dir, "collections-snapshot.json"))).toBe(false);
   });
+  test("given the identity, then the same pages also leave the Google Merchant source (cover, type, variants) next to the catalog", async () => {
+    mkdirSync(path.join(dir, SINGLE_STORE_DIR), { recursive: true });
+    writeFileSync(path.join(dir, SINGLE_STORE_DIR, IDENTITY_FILE), ESTADO);
+    const raw = { id: Number(curitiba.id), name: curitiba.name, main_image_url: "https://img.example/capa.jpg", product_type: { id: 1, name: "Camiseta" }, product_variants: [{ color: "Preta", hex_color: "000000", model: "Masculino", size: "M", is_available: true }] };
+    const fetchProducts = async (_p?: unknown, _m?: unknown, onRaw?: (raw: unknown) => void) => {
+      onRaw?.(raw);
+      return { products: [curitiba, herdado].map(visivel), requests: 1 };
+    };
+    expect(await syncLojaUnica({ deps: { ...deps, fetchProducts } })).toMatchObject({ ok: true });
+    const source = JSON.parse(readFileSync(path.join(dir, SINGLE_STORE_DIR, "merchant-source.json"), "utf8"));
+    expect(source.products).toEqual([expect.objectContaining({ id: curitiba.id, cover: "https://img.example/capa.jpg", typeName: "Camiseta", colors: [{ name: "Preta", hex: "000000", models: ["Masculino"], sizes: ["M"] }] })]);
+  });
   test("given a later read that collapses, then the previous single-store catalog is kept (last-known-good)", async () => {
     mkdirSync(path.join(dir, SINGLE_STORE_DIR), { recursive: true });
     writeFileSync(path.join(dir, SINGLE_STORE_DIR, IDENTITY_FILE), ESTADO);

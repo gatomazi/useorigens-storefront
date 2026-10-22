@@ -200,3 +200,44 @@ describe("buildMerchantFeed", () => {
     for (const label of ["custom_label_0", "custom_label_1", "custom_label_2", "custom_label_3", "custom_label_4"]) expect(records[0][label]).not.toContain(",");
   });
 });
+
+describe("tsvLine and Google's quoting", () => {
+  test("a value starting with a double quote loses it (Google would open a quoted field)", () => {
+    expect(tsvLine(['"Minha cidade" é assim', "x"])).toBe('Minha cidade" é assim\tx');
+  });
+});
+
+describe("generateMerchantFeed refuses instead of publishing INK's export again", () => {
+  const tsv = `${INK_HEADER.join("\t")}\n${INK_HEADER.map((h) => inkRow()[h]).join("\t")}\n`;
+  const fetchImpl = (async () => new Response(tsv)) as unknown as typeof fetch;
+  test("no source yet (first deploy, before the single store's sync): nothing is written", async () => {
+    const { mkdtempSync, existsSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const path = (await import("node:path")).default;
+    const { generateMerchantFeed } = await import("@/lib/merchant/generate");
+    const dir = mkdtempSync(path.join(tmpdir(), "merchant-gen-"));
+    const env = process.env;
+    process.env = { ...env, INK_GOOGLE_FEED_URL: "https://ink.example/feed" };
+    try {
+      expect(await generateMerchantFeed({ dir, fetchImpl })).toMatchObject({ ok: false, error: expect.stringContaining("merchant-source.json") });
+      expect(existsSync(path.join(dir, "google-merchant.tsv"))).toBe(false);
+    } finally {
+      process.env = env;
+    }
+  });
+  test("a source whose covers were never judged: refused, too few rows with the cover", async () => {
+    const { mkdtempSync, writeFileSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+    const path = (await import("node:path")).default;
+    const { generateMerchantFeed } = await import("@/lib/merchant/generate");
+    const dir = mkdtempSync(path.join(tmpdir(), "merchant-gen-"));
+    writeFileSync(path.join(dir, "merchant-source.json"), JSON.stringify({ version: 1, syncedAt: "t", products: [tee()] }));
+    const env = process.env;
+    process.env = { ...env, INK_GOOGLE_FEED_URL: "https://ink.example/feed" };
+    try {
+      expect(await generateMerchantFeed({ dir, fetchImpl })).toMatchObject({ ok: false, error: expect.stringContaining("com a capa") });
+    } finally {
+      process.env = env;
+    }
+  });
+});

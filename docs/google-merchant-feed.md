@@ -12,6 +12,8 @@ O Merchant Center lia o export da INK (`export_csv.google_tsv_store_feed_<id>`).
 
 O nosso feed parte do mesmo export da INK, lido na hora da geração. Ficam iguais ao export: os ids, os links, os preços, as promoções e a disponibilidade. Assim, o histórico do Google Ads continua e o preço nunca fica atrás da INK.
 
+O clique no anúncio vai direto para a página do produto na loja: `link` = `https://loja.useorigens.com.br/useorigens/product/<slug>`, como no export. Só o arquivo do feed é servido pelo site (`www.useorigens.com.br`), porque é de lá que o Merchant Center o busca.
+
 Em cada linha, troca-se o seguinte:
 
 | Campo | Antes (INK) | Agora |
@@ -51,11 +53,12 @@ Um produto que o export tem e o nosso sync ainda não viu passa com o visual da 
 
 ## Endereços
 
-- **Feed:** `GET https://useorigens.com.br/api/feeds/google-merchant`.
+- **Feed:** `GET https://www.useorigens.com.br/api/feeds/google-merchant`.
   - Com `MERCHANT_FEED_TOKEN`, acrescentar `?token=…`.
   - Responde 503 antes da primeira geração. Nunca serve um feed vazio, que o Merchant Center leria como "todos os produtos removidos".
 - **Manual:**
   - `POST /api/admin/merchant-feed` (Bearer `ADMIN_SYNC_TOKEN`) julga as capas que faltam e regenera o feed, em segundo plano.
+  - Logo depois do primeiro deploy, o sync diário ainda não gravou a fonte. Nesse caso, o POST lê os produtos da INK ele mesmo: só GET, ~180 páginas, sob a trava do job diário, para não dividir a cota com ele.
   - `GET` na mesma rota devolve o último relatório.
 - **Local:** `npm run merchant:feed -- --ler --dir=<pasta com catalog-snapshot.json da loja única>`.
 
