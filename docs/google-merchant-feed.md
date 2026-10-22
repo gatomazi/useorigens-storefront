@@ -56,6 +56,7 @@ Um produto que o export tem e o nosso sync ainda não viu passa com o visual da 
 - **Feed:** `GET https://www.useorigens.com.br/api/feeds/google-merchant`.
   - Com `MERCHANT_FEED_TOKEN`, acrescentar `?token=…`.
   - Responde 503 antes da primeira geração. Nunca serve um feed vazio, que o Merchant Center leria como "todos os produtos removidos".
+  - A geração é recusada sem a fonte ou com menos de 50% das linhas com a capa. Assim, um feed que seria só o export da INK de novo nunca parece pronto.
 - **Manual:**
   - `POST /api/admin/merchant-feed` (Bearer `ADMIN_SYNC_TOKEN`) julga as capas que faltam e regenera o feed, em segundo plano.
   - Logo depois do primeiro deploy, o sync diário ainda não gravou a fonte. Nesse caso, o POST lê os produtos da INK ele mesmo: só GET, ~180 páginas, sob a trava do job diário, para não dividir a cota com ele.
