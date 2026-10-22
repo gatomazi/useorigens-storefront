@@ -21,6 +21,7 @@
     "umapenca:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-umapenca.mts",
     "umapenca:fotos": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-umapenca-fotos.mts",
     "podio:sync": "node --env-file=.env.local --conditions=react-server --import tsx scripts/sync-podio.mts",
+    "merchant:feed": "node --env-file=.env.local --conditions=react-server --import tsx scripts/merchant-feed.mts",
     "verify:bootstrap": "tsx scripts/verify-bootstrap.mts",
     "verify:prerender": "tsx scripts/verify-prerender.mts",
     "verify:garment-revalidation": "tsx scripts/verify-garment-revalidation.mts",
