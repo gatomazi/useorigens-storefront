@@ -10,6 +10,7 @@ import { syncCatalog, type SyncResult } from "./sync-service";
 import { runGarmentSync } from "./garment-sync-service";
 import { SINGLE_STORE_KEY, singleStoreDataDir } from "./commerce-mode";
 import { IDENTITY_FILE, syncLojaUnica, type LojaUnicaSyncResult } from "./unificado/sync-loja-unica";
+import { inkFeedUrl, refreshMerchantFeed, type MerchantRefresh } from "../merchant/generate";
 
 /**
  * Regional stores the daily job no longer reads: Use Norte and Use Centro-Oeste had their INK plans switched off after the single store went live
@@ -25,7 +26,12 @@ const LOJA_UNICA_GARMENT_REQUESTS = 300;
 /** The single store is kept in sync once it has been prepared on this Volume (its migrated-products identity is there), in both modes. */
 export const lojaUnicaPreparada = (): boolean => existsSync(path.join(singleStoreDataDir(), IDENTITY_FILE));
 
-export type LojaUnicaDailyStep = { catalog: LojaUnicaSyncResult; garments: { ok: boolean; error?: string; truncated?: boolean; newGarmentBindings?: number } | null };
+export type LojaUnicaDailyStep = {
+  catalog: LojaUnicaSyncResult;
+  garments: { ok: boolean; error?: string; truncated?: boolean; newGarmentBindings?: number } | null;
+  /** Google Merchant feed (covers of new products, then the feed). Reported only: it never makes the run unclean. */
+  merchant?: MerchantRefresh;
+};
 
 export type DailyGarmentSyncResult =
   | { status: "skipped-locked"; startedAt: string; finishedAt: string }
@@ -63,13 +69,17 @@ export type DailyGarmentSyncOptions = {
 async function syncLojaUnicaDaily(): Promise<LojaUnicaDailyStep> {
   const catalog = await syncLojaUnica();
   if (!catalog.ok) return { catalog, garments: null };
+  let garments: LojaUnicaDailyStep["garments"];
   try {
     const run = await runGarmentSync({ storeKeys: [SINGLE_STORE_KEY], maxRequestsPerStore: LOJA_UNICA_GARMENT_REQUESTS, dataDir: singleStoreDataDir() });
     const o = run.outcomes[0];
-    return { catalog, garments: !o ? { ok: false, error: "no outcome" } : o.ok ? { ok: true, truncated: o.truncated, newGarmentBindings: o.newGarmentBindings } : { ok: false, error: o.error } };
+    garments = !o ? { ok: false, error: "no outcome" } : o.ok ? { ok: true, truncated: o.truncated, newGarmentBindings: o.newGarmentBindings } : { ok: false, error: o.error };
   } catch (err) {
-    return { catalog, garments: { ok: false, error: err instanceof Error ? err.message : String(err) } };
+    garments = { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
+  // Skipped (and silent) until INK_GOOGLE_FEED_URL is configured.
+  const merchant = inkFeedUrl() ? await refreshMerchantFeed() : undefined;
+  return { catalog, garments, ...(merchant ? { merchant } : {}) };
 }
 
 /** One JSON line per event: Railway's log stream is the only history of these runs (nothing is persisted per run). */
@@ -124,7 +134,7 @@ export async function runDailyGarmentSync(options: DailyGarmentSyncOptions): Pro
     const lojaUnica = lojaUnicaStep ? await lojaUnicaStep() : undefined;
     if (lojaUnica) {
       if (lojaUnica.catalog.ok && lojaUnica.catalog.changed) options.onCatalogChanged();
-      log("loja-unica", { catalog: lojaUnica.catalog, garments: lojaUnica.garments });
+      log("loja-unica", { catalog: lojaUnica.catalog, garments: lojaUnica.garments, ...(lojaUnica.merchant ? { merchant: lojaUnica.merchant } : {}) });
     }
 
     const garmentRequests = garments.stores.reduce((sum, s) => sum + (s.ok ? s.metrics.requests : 0), 0);

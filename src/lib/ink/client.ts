@@ -48,12 +48,14 @@ export type FetchProgress = (info: { storeKey: CommerceStoreKey; page: number; t
 
 /**
  * Fetches every visible, published product of one store. Throws on any non-recoverable failure, including
- * hitting `maxRequests` (a truncated catalog is never returned as if it were complete).
+ * hitting `maxRequests` (a truncated catalog is never returned as if it were complete). `onRaw` sees every product exactly as INK sent
+ * it, before normalization (the Google Merchant feed keeps fields the catalog drops, src/lib/merchant/source.ts).
  */
 export async function fetchStoreProducts(
   storeKey: CommerceStoreKey,
   onProgress?: FetchProgress,
   maxRequests?: number,
+  onRaw?: (raw: unknown) => void,
 ): Promise<{ products: InkProductNormalized[]; rejected: number; requests: number }> {
   const budget: RequestBudget = { max: maxRequests, used: 0 };
   const token = tokenFor(storeKey);
@@ -72,6 +74,7 @@ export async function fetchStoreProducts(
     totalPages = body.total_pages;
 
     for (const raw of body.products) {
+      onRaw?.(raw);
       const product = normalizeInkProduct(raw, storeKey);
       if (product) products.push(product);
       else rejected++;

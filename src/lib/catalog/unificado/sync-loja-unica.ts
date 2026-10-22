@@ -9,6 +9,8 @@ import type { InkProductNormalized } from "../types";
 import { sameCollections, shouldPromoteCollections, type StoreCollections } from "../collections";
 import { readCollectionsFile, collectionsPath, writeCollectionsFile } from "../collections-file";
 import { singleStoreDataDir } from "../commerce-mode";
+import { writeMerchantSource } from "../../merchant/files";
+import { reduceMerchantSource, type MerchantSourceProduct } from "../../merchant/source";
 import { readSnapshot, snapshotPath } from "../snapshot-file";
 import { promoteSnapshot, shouldPromoteStore } from "../sync-service";
 import { lerEstadoMigracao } from "./estado-migracao";
@@ -33,7 +35,7 @@ export type LojaUnicaSyncResult =
   | { ok: false; error: string };
 
 export type LojaUnicaSyncDeps = {
-  fetchProducts?: (onProgress?: FetchProgress, max?: number) => Promise<{ products: InkProductNormalized[]; requests?: number }>;
+  fetchProducts?: (onProgress?: FetchProgress, max?: number, onRaw?: (raw: unknown) => void) => Promise<{ products: InkProductNormalized[]; requests?: number }>;
   fetchCollections?: () => Promise<{ membros: { id: number; productIds: string[] }[]; paginas: unknown[] }>;
   now?: () => Date;
 };
@@ -82,9 +84,16 @@ export async function syncLojaUnica(opts: { dataDir?: string; onProgress?: Fetch
   const now = (deps.now ?? (() => new Date()))();
   const syncedAt = now.toISOString();
 
+  // The same pages also feed the Google Merchant feed's source (cover, type, variants): kept only when the catalog is promoted.
+  const merchantSource: MerchantSourceProduct[] = [];
+  const onRaw = (raw: unknown) => {
+    const product = reduceMerchantSource(raw);
+    if (product) merchantSource.push(product);
+  };
+
   try {
     const [{ products, requests }, colecoes] = await Promise.all([
-      (deps.fetchProducts ?? ((p, m) => fetchStoreProducts(LOJA_UNICA, p, m)))(opts.onProgress, opts.maxRequests),
+      (deps.fetchProducts ?? ((p, m, r) => fetchStoreProducts(LOJA_UNICA, p, m, r)))(opts.onProgress, opts.maxRequests, onRaw),
       (deps.fetchCollections ?? (() => lerColecoes(LOJA_UNICA, (nome) => /^(ZZ|SUL)\b/i.test(nome))))(),
     ]);
     const membros = (id: number) => {
@@ -105,6 +114,8 @@ export async function syncLojaUnica(opts: { dataDir?: string; onProgress?: Fetch
     if (!decision.promote) return { ok: false, error: decision.reason };
     const changed = JSON.stringify(previous.stores[LOJA_UNICA]?.bindings ?? null) !== JSON.stringify(next.bindings) || JSON.stringify(previous.stores[LOJA_UNICA]?.merch ?? null) !== JSON.stringify(next.merch) || JSON.stringify(previous.stores[LOJA_UNICA]?.unscopedProducts ?? []) !== JSON.stringify(next.unscopedProducts ?? []);
     await promoteSnapshot(montado.catalogo, file);
+    // Never fails the catalog sync: the feed keeps its previous source and says so in its own report.
+    if (merchantSource.length > 0) await writeMerchantSource(dir, { version: 1, syncedAt, products: merchantSource }).catch((err) => console.error(JSON.stringify({ scope: "merchant-feed", event: "source-write-failed", error: String(err) })));
 
     // Collections of the single store, matched against the catalog just promoted (same parser as `collections:sync`).
     const promoted = await promoverColecoes(dir, montarColecoes(LOJA_UNICA, colecoes.paginas, next, syncedAt));
