@@ -9,6 +9,9 @@ import type { MerchantColor } from "./source";
  */
 export type CoverColorVerdict = { color: string; share: number; runnerUp: number; confident: boolean };
 
+/** Part of every cached verdict's key (src/lib/merchant/generate.ts): bump it when the rule changes and every cover is judged again. */
+export const COVER_CLASSIFIER_VERSION = 2;
+
 /** INK's colors without a `hex_color` in a product (older variants). Same values INK sends elsewhere. */
 const KNOWN_HEX: Readonly<Record<string, string>> = {
   preta: "000000",
@@ -72,6 +75,9 @@ export function classifyCoverPixels(rgb: Uint8Array, width: number, height: numb
     }
   }
   const bg = border.map((values) => values.sort((a, b) => a - b)[values.length >> 1]);
+  // INK's mockups sit on a flat light-grey/white backdrop. A coloured border means a photo or an art background (a flag, the garment
+  // itself filling the frame): then "background" may be the garment, and the verdict is never confident.
+  const neutralBackdrop = Math.max(...bg) - Math.min(...bg) <= 16 && Math.min(...bg) >= 170;
 
   // Foreground pixels grouped in coarse RGB bins. The garment is a large flat area, so it fills a few big bins; a print, a shadow or a
   // baby's skin (Body covers) spreads over many small ones. Only the biggest bins, up to half of the foreground, vote.
@@ -108,5 +114,5 @@ export function classifyCoverPixels(rgb: Uint8Array, width: number, height: numb
   const ranked = [...votes.entries()].sort((a, b) => b[1] - a[1]);
   const share = ranked[0][1] / counted;
   const runnerUp = ranked[1] ? ranked[1][1] / counted : 0;
-  return { color: ranked[0][0], share, runnerUp, confident: share >= MIN_SHARE && share >= runnerUp * MIN_LEAD && !sameHex(ranked[0][0]) };
+  return { color: ranked[0][0], share, runnerUp, confident: neutralBackdrop && share >= MIN_SHARE && share >= runnerUp * MIN_LEAD && !sameHex(ranked[0][0]) };
 }

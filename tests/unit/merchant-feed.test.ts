@@ -39,6 +39,11 @@ describe("classifyCoverPixels", () => {
     const colors = [{ name: "Areia", hex: "ded1bd" }, { name: "Off White", hex: "ffffff" }];
     expect(classifyCoverPixels(cover([244, 240, 233]), 32, 32, colors)).toMatchObject({ color: "Off White", confident: true });
   });
+  test("a cover whose border is not the neutral mockup backdrop (garment filling the frame, an art background) is never confident", () => {
+    const filled = cover([34, 67, 53]).map((v, i) => (i % 3 === 0 ? 34 : i % 3 === 1 ? 67 : 53));
+    filled.set([250, 250, 250, 250, 250, 250], (16 * 32 + 16) * 3);
+    expect(classifyCoverPixels(filled, 32, 32, TEE_COLORS)?.confident ?? false).toBe(false);
+  });
   test("two colors with the same hex are never a confident answer", () => {
     const colors = [{ name: "Branca", hex: "ffffff" }, { name: "Off White", hex: "ffffff" }, { name: "Preta", hex: "000000" }];
     expect(classifyCoverPixels(cover([244, 244, 244]), 32, 32, colors)?.confident).toBe(false);

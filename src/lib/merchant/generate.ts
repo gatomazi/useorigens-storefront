@@ -7,7 +7,7 @@ import { readSnapshot, snapshotPath } from "../catalog/snapshot-file";
 import { LOJA_UNICA } from "../catalog/unificado/loja-unica";
 import { localityById } from "../geo/localities";
 import { REGIONS, STATE_NAMES } from "../geo/regions";
-import { candidateHex, classifyCoverPixels, type CoverColorVerdict } from "./cover-color";
+import { candidateHex, classifyCoverPixels, COVER_CLASSIFIER_VERSION, type CoverColorVerdict } from "./cover-color";
 import { buildMerchantFeed, type DesignInfo } from "./feed";
 import { FEED_FILE, FEED_REPORT_FILE, readCoverColors, readFeedReport, readMerchantSource, writeAtomic, writeCoverColors, type FeedReport } from "./files";
 import type { MerchantSourceProduct } from "./source";
@@ -27,6 +27,7 @@ function log(event: string, fields: Record<string, unknown>): void {
 }
 
 const candidatesKey = (product: MerchantSourceProduct) =>
+  `v${COVER_CLASSIFIER_VERSION}|` +
   product.colors
     .map((c) => `${c.name}:${candidateHex(c) ?? "-"}`)
     .sort()
