@@ -2,7 +2,7 @@
  * The ONE decision about whether the admin exists in this process, and how. Pure (no I/O), so it is unit-tested and importable from the
  * proxy. Three outcomes:
  *   - "dev":  development server + ADMIN_DEV_MODE=true (loopback-only, per request; see dev-guard.ts). The local sandbox under data/admin-dev.
- *   - "prod": NODE_ENV=production AND the complete set of variables below. Login with Railway (OIDC) + PostgreSQL + (optionally) a Railway Storage Bucket + the Volume.
+ *   - "prod": NODE_ENV=production AND the complete set of variables below. Login with Railway (OIDC), with e-mail + password as the fallback, + PostgreSQL + (optionally) a Railway Storage Bucket + the Volume.
  *   - "off":  everything else. `/admin/**` is a plain 404 and no admin code touches a database, R2 or the disk. `missing` says why.
  * ADMIN_DEV_MODE never enables anything in a production process: it is ignored (and reported), whatever else is set.
  */
@@ -18,6 +18,11 @@ export type AdminConfig =
       oauthClientSecret: string;
       /** Optional: the owner's immutable Railway account id (`sub`). Lets the first owner be bound without trusting an e-mail claim. */
       ownerSub: string | null;
+      /**
+       * Optional: the owner's fallback password (scrypt hash, `npm run admin:password-hash`), for when Login with Railway fails before a
+       * password was set in the panel. Never required: a missing or malformed value only leaves the env route closed (it never turns the admin off).
+       */
+      ownerPasswordHash: string | null;
       sessionSecret: string;
       databaseUrl: string;
       oidcIssuer: string;
@@ -29,6 +34,7 @@ const REQUIRED = ["ADMIN_HOST", "ADMIN_OWNER_EMAIL", "RAILWAY_OAUTH_CLIENT_ID", 
 const HOST_RE = /^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:\d{2,5})?$/;
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 export const RAILWAY_ISSUER = "https://backboard.railway.com";
+const PASSWORD_HASH_RE = /^scrypt:[0-9a-f]{32}:[0-9a-f]{128}$/;
 const isLoopbackName = (host: string) => ["localhost", "127.0.0.1"].includes(host.split(":")[0]);
 
 /** Railway in production. A loopback issuer is accepted only for the automated tests' fake provider. */
@@ -68,6 +74,7 @@ export function adminConfig(env: Env = process.env): AdminConfig {
     oauthClientId: env.RAILWAY_OAUTH_CLIENT_ID!.trim(),
     oauthClientSecret: env.RAILWAY_OAUTH_CLIENT_SECRET!.trim(),
     ownerSub: env.ADMIN_OWNER_RAILWAY_SUB?.trim() || null,
+    ownerPasswordHash: PASSWORD_HASH_RE.test(env.ADMIN_OWNER_PASSWORD_HASH?.trim() ?? "") ? env.ADMIN_OWNER_PASSWORD_HASH!.trim() : null,
     sessionSecret,
     databaseUrl: env.DATABASE_URL!.trim(),
     oidcIssuer,

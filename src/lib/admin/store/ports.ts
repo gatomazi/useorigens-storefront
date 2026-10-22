@@ -66,6 +66,15 @@ export interface UserRepository {
   /** Binds the identity provider account (`sub`) on first login. Returns false when this user is already bound to a DIFFERENT account. */
   bindProviderSub(id: string, sub: string): Promise<boolean>;
   touchLogin(id: string): Promise<void>;
+  /**
+   * The fallback-login password (scrypt hash), kept OUT of `UserRow` and of every other query: before migration 0008 the column does not
+   * exist, and the Railway login must keep working. Null when none is set or the column is missing.
+   */
+  getPasswordHash(id: string): Promise<string | null>;
+  /** Sets (or, with null, clears) the password. False when the column does not exist yet (migration 0008 pending) or the user is gone. */
+  setPasswordHash(id: string, hash: string | null): Promise<boolean>;
+  /** Ids of the people who have a password, or null while migration 0008 is pending. */
+  withPassword(): Promise<string[] | null>;
 }
 
 export type SessionInfo = { user: UserRow; createdAt: number; lastSeenAt: number; expiresAt: number };

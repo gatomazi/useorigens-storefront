@@ -42,6 +42,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
             <>
               <p className="font-bold text-white">{actor.email}</p>
               <p className="mt-1">{actor.role === "owner" ? "Owner" : "Editor"}</p>
+              <Link href="/admin/senha" className="mt-1 inline-block underline">Senha de reserva</Link>
               <form action={logoutAction} className="mt-2"><button type="submit" className="a-btn ghost sm !text-white">Sair</button></form>
             </>
           ) : (
@@ -69,6 +70,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
               Publicar
               {pending && pending.count > 0 ? <span className="a-badge warn" data-testid="publish-pending-count">{pending.count}<span className="sr-only"> {pending.count === 1 ? "item esperando publicação" : "itens esperando publicação"}</span></span> : null}
             </Link>
+            {prod && <span className="lg:hidden"><Link href="/admin/senha" className="a-btn ghost sm">Senha</Link></span>}
             {prod && <form action={logoutAction} className="lg:hidden"><button type="submit" className="a-btn ghost sm">Sair</button></form>}
           </div>
         </header>

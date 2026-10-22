@@ -26,6 +26,7 @@ Nomes apenas. Segredos entram direto no painel do Railway, **nunca** no chat, no
 | `ADMIN_SESSION_SECRET` | sim | **≥ 32 caracteres** aleatórios (`openssl rand -base64 48`) |
 | `DATABASE_URL` | sim | referência ao serviço `Postgres` (URL privada, `*.railway.internal`) |
 | `ADMIN_OWNER_RAILWAY_SUB` | não | id imutável da conta do owner; só se o e-mail não vier verificado (seção 6) |
+| `ADMIN_OWNER_PASSWORD_HASH` | não | hash scrypt da senha de reserva do owner (seção 6a); nunca a senha em si |
 | `BUCKET_ENDPOINT`, `BUCKET_NAME`, `BUCKET_ACCESS_KEY_ID`, `BUCKET_SECRET_ACCESS_KEY`, `BUCKET_REGION` | para enviar imagens | referências às variáveis do bucket |
 | `BUCKET_ADDRESSING` | não | `path` só se o bucket for antigo |
 | `SITE_CONFIG_HOME` | **`off`** | vira `on` só no passo 9 do rollout |
@@ -95,6 +96,17 @@ Se `railway ssh` não estiver disponível na sua conta, alternativa: habilitar t
 - Provedor de identidade apenas; escopos `openid email profile`. Endpoints por discovery (`https://backboard.railway.com/oauth/.well-known/openid-configuration`, com os URLs documentados como reserva). ID token **ES256**; verificamos assinatura, `iss`, `aud`, `exp`, `iat`, `nonce`; PKCE S256; cliente autenticado por HTTP Basic.
 - Quem pode entrar é decidido pela **tabela de pessoas no PostgreSQL**, nunca pelo Railway. A conta é vinculada ao usuário pelo `sub` (imutável) no primeiro login; outra conta com o mesmo e-mail é recusada. Só aceitamos e-mail que o Railway declare verificado (ou o owner por `ADMIN_OWNER_RAILWAY_SUB`).
 - O CMS não guarda tokens do Railway (só `sub`, e-mail e nome). A sessão do painel é própria: 12 h absolutas / 2 h de inatividade, token só como hash no banco.
+
+## 6a. Login de reserva (e-mail + senha), para quando o Railway falhar
+
+O caminho normal continua sendo **Entrar com Railway**. A tela de login tem, abaixo do botão, **"O Railway não está funcionando? Entrar com e-mail e senha"**. Essa entrada não fala com o Railway (nem discovery, nem JWKS), então funciona com o OAuth fora do ar ou mal configurado.
+
+- **Quem pode entrar é o mesmo:** a tabela de pessoas. E-mail fora da lista, pessoa desativada ou sem senha é recusada, sempre com a mesma mensagem ("E-mail ou senha incorretos"). Editor continua só com as suas regiões.
+- **Cada pessoa define a própria senha** em **Senha de reserva** (link no rodapé da barra lateral; no celular, botão "Senha" no topo), depois de entrar com o Railway pelo menos uma vez. Trocar uma senha existente pede a atual; salvar encerra as outras sessões da pessoa. Mínimo de 10 caracteres.
+- **O owner** vê em **Pessoas** quem tem senha e pode **remover** a de alguém (isso também encerra as sessões dessa pessoa). Ninguém vê nem define a senha de outra pessoa.
+- **Owner sem senha e Railway fora do ar:** defina `ADMIN_OWNER_PASSWORD_HASH` no serviço (só o hash, gerado localmente com `printf '%s' "$senha" | npm run -s admin:password-hash`; a senha nunca vai para argumento, log ou Git). Ela vale só para o `ADMIN_OWNER_EMAIL`. Valor ausente ou malformado só deixa essa via fechada; o painel continua no ar.
+- **Segurança:** senha guardada só como hash scrypt (`admin_user.password_hash`); comparação em tempo constante e um scrypt mesmo para e-mail desconhecido; limite de 10 tentativas por IP a cada 10 min e 5 por e-mail a cada 15 min; o POST só é aceito com `Origin` do próprio painel; mesmo cookie de sessão (12 h / 2 h de inatividade). Na auditoria aparece `login` com `method: password`, e trocas de senha como `user.update` com `password: set|cleared`.
+- **Migração `0008_admin_password`** (aditiva: duas colunas anuláveis em `admin_user`). Enquanto não for aplicada, o login pelo Railway segue funcionando normalmente; a página **Senha de reserva** avisa que falta a migração e só a via do `ADMIN_OWNER_PASSWORD_HASH` funciona. Para aplicar (**só com sua autorização**): `railway ssh --service useorigens-storefront -- node db/db-cli.mjs status` (deve listar `0008_admin_password` pendente) e depois `node db/db-cli.mjs migrate`.
 
 ## 7. Imagens
 
