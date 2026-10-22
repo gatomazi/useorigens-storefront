@@ -114,12 +114,12 @@ test("given the configured owner, when signing in, then the session cookie is ha
 
   await open(page, "/admin/usuarios");
   await page.getByLabel("E-mail do editor").fill("editor-norte@e2e.test");
-  await page.getByLabel("Sul").uncheck();
-  await page.getByLabel("Norte", { exact: true }).check();
+  await page.getByRole("checkbox", { name: "Sul" }).uncheck();
+  await page.getByRole("checkbox", { name: "Norte", exact: true }).check();
   await page.getByRole("button", { name: "Cadastrar ou atualizar" }).click();
   await expect(page.getByText("Editor cadastrado.")).toBeVisible();
   await page.getByLabel("E-mail do editor").fill("editor-sul@e2e.test");
-  await page.getByLabel("Sul").check();
+  await page.getByRole("checkbox", { name: "Sul" }).check();
   await page.getByRole("button", { name: "Cadastrar ou atualizar" }).click();
   await expect(page.getByText("Editor cadastrado.")).toBeVisible();
   await expect(page.getByRole("cell", { name: "editor-norte@e2e.test" })).toBeVisible();
@@ -139,6 +139,63 @@ test("given a provider whose ID token carries no e-mail, when the userinfo endpo
   await expect(page).toHaveURL(`${ADMIN}/admin`);
   await expect(page.getByRole("heading", { name: "Visão geral" })).toBeVisible();
   await context.close();
+});
+
+async function passwordLogin(page: Page, email: string, password: string) {
+  await page.goto(`${ADMIN}/admin/login`);
+  await page.getByText("Entrar com e-mail e senha").click();
+  await page.getByLabel("E-mail").fill(email);
+  await page.getByLabel("Senha", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "Entrar com senha" }).click();
+  await page.waitForURL(/\/admin(\/login\?.*)?$/);
+}
+
+test("given Railway is unavailable, when a person who set a fallback password enters with it, then the panel opens with the same permissions; a wrong one, a cross-site post or a cleared password open nothing", async ({ browser, request }) => {
+  // Signed in with Railway, the editor sets their own fallback password.
+  const { context, page } = await newSession(browser, "editor-sul@e2e.test");
+  await open(page, "/admin/senha");
+  await expect(page.getByText("Sem senha: só entra com o Railway", { exact: true })).toBeVisible();
+  await page.getByLabel("Nova senha", { exact: true }).fill("reserva-do-editor-sul");
+  await page.getByLabel("Repita a nova senha").fill("reserva-do-editor-sul");
+  await page.getByRole("button", { name: "Salvar senha" }).click();
+  await expect(page.getByText("Senha de reserva salva.")).toBeVisible();
+  await expect(page.getByText("Senha definida", { exact: true })).toBeVisible();
+  await context.close();
+
+  // The provider now refuses everyone (an unknown identity); the password route never asks it anything.
+  await identity("ninguem@e2e.test");
+  const fresh = await browser.newContext();
+  const p = await fresh.newPage();
+  await passwordLogin(p, "editor-sul@e2e.test", "senha-errada-qualquer");
+  await expect(p).toHaveURL(/\/admin\/login\?erro=senha/);
+  await expect(p.locator(".a-flash.err")).toContainText("E-mail ou senha incorretos");
+  await passwordLogin(p, "Editor-Sul@e2e.test", "reserva-do-editor-sul");
+  await expect(p).toHaveURL(`${ADMIN}/admin`);
+  const cookie = (await fresh.cookies()).find((c) => c.name === "__Secure-uo_admin");
+  expect(cookie).toMatchObject({ httpOnly: true, secure: true, sameSite: "Lax", path: "/admin" });
+  await open(p, "/admin/usuarios"); // still an editor: people stay owner-only
+  await expect(p).toHaveURL(/\/admin\?err=/);
+
+  // A post from another site never reaches the check (no session is created, no attempt is spent).
+  const forged = await request.post(`${ADMIN}/admin/auth/password`, { form: { email: "editor-sul@e2e.test", password: "reserva-do-editor-sul" }, headers: { Origin: "https://evil.example" }, maxRedirects: 0 });
+  expect(forged.status()).toBe(404);
+
+  // The owner (via ADMIN_OWNER_PASSWORD_HASH, without Railway) sees who has a password and clears the editor's: the editor's session ends too.
+  const owner = await browser.newContext();
+  const o = await owner.newPage();
+  await passwordLogin(o, "owner@e2e.test", "senha-do-dono-e2e");
+  await expect(o).toHaveURL(`${ADMIN}/admin`);
+  await open(o, "/admin/usuarios");
+  const row = rows(o).filter({ hasText: "editor-sul@e2e.test" });
+  await expect(row.getByText("Definida", { exact: true })).toBeVisible();
+  await row.getByRole("button", { name: "Remover senha", exact: true }).click();
+  await expect(o.getByText("Senha de reserva de editor-sul@e2e.test removida.")).toBeVisible();
+  await owner.close();
+  await p.goto(`${ADMIN}/admin`);
+  await expect(p).toHaveURL(/\/admin\/login/);
+  await passwordLogin(p, "editor-sul@e2e.test", "reserva-do-editor-sul");
+  await expect(p).toHaveURL(/\/admin\/login\?erro=senha/);
+  await fresh.close();
 });
 
 test("given an editor of another region, when editing the Sul home or managing people, then the server refuses; an editor of Sul may edit but not manage people or sync", async ({ browser }) => {

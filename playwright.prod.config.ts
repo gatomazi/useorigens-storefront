@@ -40,6 +40,7 @@ export default defineConfig({
         NODE_ENV: "production",
         ADMIN_HOST: `127.0.0.1:${APP}`,
         ADMIN_OWNER_EMAIL: "owner@e2e.test",
+        ADMIN_OWNER_PASSWORD_HASH: "scrypt:3e171d2cc7a56c1409b0485fbf5550b2:1cc32f995d19c5c16e052dc0702cf451c253ca7cb5d1c2d7ea026224656669fd473f772f3177d48cbadcca44039977f4f82a742dff30dea689d3abd988846f22", // scrypt of "senha-do-dono-e2e" (fallback login, tests only)
         RAILWAY_OAUTH_CLIENT_ID: "e2e-client",
         RAILWAY_OAUTH_CLIENT_SECRET: "e2e-secret",
         ADMIN_SESSION_SECRET: "e2e-session-secret-e2e-session-secret-0123456789",

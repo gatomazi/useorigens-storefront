@@ -54,6 +54,13 @@ describe("admin mode decision", () => {
     expect(adminConfig({ ...FULL, ADMIN_OWNER_RAILWAY_SUB: " abc-123 " })).toMatchObject({ mode: "prod", ownerSub: "abc-123" });
   });
 
+  test("given ADMIN_OWNER_PASSWORD_HASH, when it is a scrypt hash it is carried; when absent or malformed the admin still runs, without the env route", () => {
+    const hash = `scrypt:${"a".repeat(32)}:${"b".repeat(128)}`;
+    expect(adminConfig({ ...FULL, ADMIN_OWNER_PASSWORD_HASH: ` ${hash} ` })).toMatchObject({ mode: "prod", ownerPasswordHash: hash });
+    expect(adminConfig(FULL)).toMatchObject({ mode: "prod", ownerPasswordHash: null });
+    expect(adminConfig({ ...FULL, ADMIN_OWNER_PASSWORD_HASH: "minha-senha" })).toMatchObject({ mode: "prod", ownerPasswordHash: null });
+  });
+
   test("given a loopback admin host (automated tests), when decided, then the origin is http; a real host is always https", () => {
     expect(adminConfig({ ...FULL, ADMIN_HOST: "127.0.0.1:3400" })).toMatchObject({ adminOrigin: "http://127.0.0.1:3400" });
     expect(adminConfig(FULL)).toMatchObject({ adminOrigin: "https://www.useorigens.com.br" });

@@ -31,6 +31,8 @@ if (config.mode === "prod") {
     else warn(`ADMIN_HOST (${config.adminHost}) is not the storefront host (${canonical}); the panel will answer only on ADMIN_HOST, and the OAuth callback must use it`);
   } catch { /* NEXT_PUBLIC_SITE_URL is validated elsewhere */ }
   if (!config.ownerSub) warn("ADMIN_OWNER_RAILWAY_SUB is not set: the owner is bound by a VERIFIED e-mail equal to ADMIN_OWNER_EMAIL (if Railway does not report the e-mail as verified, sign in once, copy the account id shown on the refusal screen, and set this variable)");
+  if (env.ADMIN_OWNER_PASSWORD_HASH?.trim() && !config.ownerPasswordHash) warn("ADMIN_OWNER_PASSWORD_HASH is set but is not a scrypt hash (npm run admin:password-hash): the owner's environment fallback password is OFF");
+  else if (!config.ownerPasswordHash) warn("ADMIN_OWNER_PASSWORD_HASH is not set: if Login with Railway fails, only people who set a fallback password in the panel can enter");
   if (!config.adminOrigin.startsWith("https://")) warn("the admin origin is not https");
 } else {
   bad(`the production admin would be OFF (404). Missing or invalid: ${config.mode === "off" ? config.missing.join(", ") : "unknown"}`);

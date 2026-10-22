@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -95,6 +95,10 @@ await rejects("deleting from the audit log", `delete from audit_log`);
 
 await accepts("provider_sub binds an account to a user (0002)", `update admin_user set provider_sub='1234567890' where email='owner@example.com'`);
 await rejects("the same provider account on two users", `update admin_user set provider_sub='1234567890' where email='ed@example.com'`);
+await accepts("a scrypt password hash with its date (0008)", `update admin_user set password_hash=$1, password_set_at=now() where email='ed@example.com'`, [`scrypt:${"a".repeat(32)}:${"b".repeat(128)}`]);
+await rejects("a password stored in clear (0008)", `update admin_user set password_hash='minha-senha-123', password_set_at=now() where email='ed@example.com'`);
+await rejects("a password hash without its date (0008)", `update admin_user set password_set_at=null where email='ed@example.com'`);
+await accepts("clearing a password clears its date (0008)", `update admin_user set password_hash=null, password_set_at=null where email='ed@example.com'`);
 await accepts("a sync run starts", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await rejects("a second collections sync at the same time (partial unique index)", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await accepts("a catalog sync may run in parallel with a collections sync", `insert into sync_run (kind, requested_by) values ('catalog','owner')`);

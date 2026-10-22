@@ -31,6 +31,7 @@
     "audit:df": "tsx scripts/audit-df-localities.mts",
     "typecheck": "tsc --noEmit",
     "db:status": "node --env-file-if-exists=.env.local db/db-cli.mjs status",
+    "admin:password-hash": "node --import tsx scripts/admin-password-hash.mts",
     "db:migrate": "node --env-file-if-exists=.env.local db/db-cli.mjs migrate",
     "db:validate": "node db/db-cli.mjs validate",
     "test:admin:prod": "playwright test -c playwright.prod.config.ts",

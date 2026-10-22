@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { cookies, headers } from "next/headers";
-import { requireAdmin, SESSION_COOKIE, SESSION_COOKIE_PATH } from "@/lib/admin/auth/guard";
+import { requireAdmin, SESSION_COOKIE, SESSION_COOKIE_PATH, SESSION_TTL_MS } from "@/lib/admin/auth/guard";
+import { hashAdminPassword, passwordProblem, verifyAdminPassword } from "@/lib/admin/auth/password";
 import { deleteUpload, saveUpload } from "@/lib/admin/media";
 import { describeUploadFailure } from "@/lib/admin/media/upload-errors";
 import { platform } from "@/lib/admin/platform";
@@ -1047,7 +1048,7 @@ export async function saveUserAction(fd: FormData) {
   if (scopes.length === 0) back("/admin/usuarios", { err: ["Escolha ao menos uma região."] });
   const created = await users.create({ email, name: null, role: "editor", scopes });
   await platform().audit.record({ actor: actor.id, action: "user.create", target: created.id, meta: { scopes } }).catch(() => undefined);
-  back("/admin/usuarios", { ok: "Editor cadastrado. Ele já pode entrar com a conta Railway desse e-mail." });
+  back("/admin/usuarios", { ok: "Editor cadastrado. Ele já pode entrar com a conta Railway desse e-mail; depois, pode definir uma senha de reserva no painel." });
 }
 
 export async function deactivateUserAction(fd: FormData) {
@@ -1060,6 +1061,54 @@ export async function deactivateUserAction(fd: FormData) {
   await sessions.destroyAllFor(target.id);
   await platform().audit.record({ actor: actor.id, action: "user.deactivate", target: target.id }).catch(() => undefined);
   back("/admin/usuarios", { ok: "Acesso removido." });
+}
+
+// ── Fallback password ────────────────────────────────────────────────────────────────────────────────────────
+
+const PASSWORD_PAGE = "/admin/senha";
+const NOT_MIGRATED = "A senha de reserva ainda não está disponível: falta aplicar a migração 0008 no banco (veja o runbook).";
+/** Passwords are taken as typed: never trimmed. */
+const secret = (fd: FormData, name: string) => (typeof fd.get(name) === "string" ? (fd.get(name) as string) : "");
+
+/** Anyone signed in sets or removes their OWN fallback password. Changing an existing one asks for it first; every other session is ended. */
+export async function setOwnPasswordAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true });
+  const { users, sessions } = platform();
+  if (!users || !sessions) back(PASSWORD_PAGE, { err: ["A senha de reserva só existe em produção."] });
+  if (!allow(`password-change:${actor.id}`, 10, 15 * 60_000)) back(PASSWORD_PAGE, { err: ["Muitas tentativas seguidas. Aguarde alguns minutos."] });
+  const current = await users.getPasswordHash(actor.id);
+  if (current && !(await verifyAdminPassword(secret(fd, "current"), current))) back(PASSWORD_PAGE, { err: ["A senha atual não confere."] });
+
+  const clearing = text(fd, "intent") === "clear";
+  let hash: string | null = null;
+  if (!clearing) {
+    const password = secret(fd, "password");
+    const problem = passwordProblem(password);
+    if (problem) back(PASSWORD_PAGE, { err: [problem] });
+    if (password !== secret(fd, "confirm")) back(PASSWORD_PAGE, { err: ["A confirmação não é igual à senha."] });
+    hash = await hashAdminPassword(password);
+  }
+  if (!(await users.setPasswordHash(actor.id, hash))) back(PASSWORD_PAGE, { err: [NOT_MIGRATED] });
+  // A new (or no) password ends every other session of this person; this browser gets a fresh one.
+  await sessions.destroyAllFor(actor.id);
+  const token = await sessions.create(actor.id, SESSION_TTL_MS);
+  (await cookies()).set(SESSION_COOKIE, token, { httpOnly: true, secure: true, sameSite: "lax", path: SESSION_COOKIE_PATH, maxAge: Math.floor(SESSION_TTL_MS / 1000) });
+  await platform().audit.record({ actor: actor.id, action: "user.update", target: actor.id, meta: { password: clearing ? "cleared" : "set" } }).catch(() => undefined);
+  back(PASSWORD_PAGE, { ok: clearing ? "Senha de reserva removida. Agora você só entra com o Railway." : "Senha de reserva salva. Suas outras sessões foram encerradas." });
+}
+
+/** Owner-only: removes someone's fallback password (never shows or sets it) and ends their sessions. */
+export async function clearUserPasswordAction(fd: FormData) {
+  const actor = await requireAdmin({ mutation: true, owner: true });
+  const { users, sessions } = platform();
+  if (!users || !sessions) back("/admin/usuarios", { err: ["Gerenciar pessoas só existe em produção."] });
+  const target = await users.findById(text(fd, "id"));
+  if (!target) back("/admin/usuarios", { err: ["Pessoa não encontrada."] });
+  if (target.id === actor.id) back(PASSWORD_PAGE, { err: ["Para remover a sua própria senha, use esta página."] });
+  if (!(await users.setPasswordHash(target.id, null))) back("/admin/usuarios", { err: [NOT_MIGRATED] });
+  await sessions.destroyAllFor(target.id);
+  await platform().audit.record({ actor: actor.id, action: "user.update", target: target.id, meta: { password: "cleared" } }).catch(() => undefined);
+  back("/admin/usuarios", { ok: `Senha de reserva de ${target.email} removida.` });
 }
 
 export async function logoutAction() {

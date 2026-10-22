@@ -1,7 +1,8 @@
-import { deactivateUserAction, saveUserAction } from "@/app/admin/actions";
+import { clearUserPasswordAction, deactivateUserAction, saveUserAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { platform } from "@/lib/admin/platform";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 const SCOPE_LABEL = { sul: "Sul", norte: "Norte", "centro-oeste": "Centro-Oeste" } as const;
@@ -9,16 +10,17 @@ const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("pt-BR"
 
 /** Owner-only: who may sign in, and for which regions. There is no public sign-up; this list is the allowlist. */
 export default async function PeoplePage({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
-  await requireAdmin({ owner: true });
+  const actor = await requireAdmin({ owner: true });
   const { users, audit } = platform();
   if (!users) notFound();
   const sp = await searchParams;
-  const [people, recent] = await Promise.all([users.list(), audit.recent(60)]);
+  const [people, recent, withPassword] = await Promise.all([users.list(), audit.recent(60), users.withPassword()]);
+  const hasPassword = new Set(withPassword ?? []);
   return (
     <div className="space-y-6">
       <div>
         <h1 className="a-h1">Pessoas</h1>
-        <p className="a-muted mt-2 max-w-2xl">Só quem está nesta lista consegue entrar (com uma conta Railway cujo e-mail verificado seja esse; entrar não dá acesso ao projeto Railway). Editores só veem e publicam as regiões marcadas. O owner é definido pelo ambiente e tem acesso a tudo.</p>
+        <p className="a-muted mt-2 max-w-2xl">Só quem está nesta lista consegue entrar (com uma conta Railway cujo e-mail verificado seja esse; entrar não dá acesso ao projeto Railway). Se o Railway falhar, entra com e-mail e a senha de reserva que a própria pessoa definiu no painel. Editores só veem e publicam as regiões marcadas. O owner é definido pelo ambiente e tem acesso a tudo.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
 
@@ -38,13 +40,22 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
       <section className="a-card overflow-x-auto" aria-label="Pessoas com acesso">
         <table className="a-table a-stack">
           <caption className="sr-only">Pessoas com acesso ao painel</caption>
-          <thead><tr><th scope="col">E-mail</th><th scope="col">Papel</th><th scope="col">Regiões</th><th scope="col">Último acesso</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
+          <thead><tr><th scope="col">E-mail</th><th scope="col">Papel</th><th scope="col">Regiões</th><th scope="col">Senha de reserva</th><th scope="col">Último acesso</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
           <tbody>
             {people.map((u) => (
               <tr key={u.id}>
                 <td data-label="E-mail" className="font-bold">{u.email}{!u.active && <span className="a-badge bad ml-2">Sem acesso</span>}</td>
                 <td data-label="Papel">{u.role === "owner" ? "Owner" : "Editor"}</td>
                 <td data-label="Regiões">{u.role === "owner" ? "Todas" : u.scopes.map((s) => (SCOPE_LABEL as Record<string, string>)[s] ?? s).join(", ")}</td>
+                <td data-label="Senha de reserva">
+                  {withPassword === null ? <span className="a-muted">—</span> : hasPassword.has(u.id) ? (
+                    <span className="flex flex-wrap items-center gap-2"><span className="a-badge ok">Definida</span>
+                      {u.id === actor.id
+                        ? <Link href="/admin/senha" className="a-link text-[0.875rem]">Gerenciar a sua</Link>
+                        : <form action={clearUserPasswordAction}><input type="hidden" name="id" value={u.id} /><button type="submit" className="a-btn sm ghost">Remover senha</button></form>}
+                    </span>
+                  ) : <span className="a-muted">Não definida</span>}
+                </td>
                 <td data-label="Último acesso" className="a-muted">{when(u.lastLoginAt)}</td>
                 <td className="text-right">
                   {u.role !== "owner" && u.active && (

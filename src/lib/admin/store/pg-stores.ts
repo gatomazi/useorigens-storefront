@@ -197,6 +197,31 @@ export function pgUserRepository(db: Db): UserRepository {
     async touchLogin(id) {
       await db.query(`update admin_user set last_login_at = now() where id = $1`, [id]);
     },
+    // The password column (migration 0008) is read only here, never in USER_COLUMNS: an undefined column (42703) means "not migrated yet".
+    async getPasswordHash(id) {
+      try {
+        return (await db.query<{ password_hash: string | null }>(`select password_hash from admin_user where id = $1`, [id])).rows[0]?.password_hash ?? null;
+      } catch (error) {
+        if (sqlState(error) === "42703") return null;
+        throw error;
+      }
+    },
+    async setPasswordHash(id, hash) {
+      try {
+        return (await db.query(`update admin_user set password_hash = $2, password_set_at = case when $2::text is null then null else now() end where id = $1`, [id, hash])).rowCount > 0;
+      } catch (error) {
+        if (sqlState(error) === "42703") return false;
+        throw error;
+      }
+    },
+    async withPassword() {
+      try {
+        return (await db.query<{ id: string }>(`select id from admin_user where password_hash is not null`)).rows.map((r) => r.id);
+      } catch (error) {
+        if (sqlState(error) === "42703") return null;
+        throw error;
+      }
+    },
   };
 }
 

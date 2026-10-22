@@ -60,7 +60,7 @@ As três regiões respondem 200 e estão no sitemap. Na verificação de produç
 | `/sul/personalizar/<slug>` | Pedido de camiseta personalizada (modelos do CMS) | [código] |
 | `/sul/outros-artigos` | Canecas e ecobags da Uma Penca | [código]; dá 404 sem o feed configurado |
 | `/robots.txt`, `/sitemap.xml` | SEO | 200 |
-| `/admin` | CMS, com login pelo Railway | [código] |
+| `/admin` | CMS, com login pelo Railway (e e-mail + senha de reserva) | [código] |
 
 ### 3.2 O que o visitante vê no site
 
@@ -266,6 +266,7 @@ O proxy não passa pelas rotas `/api`, então elas não têm a trava de catálog
 
 **Acesso**
 - Login com a conta do Railway (OIDC com PKCE), permitido só a quem está cadastrado na tabela `admin_user`.
+- Login de reserva com e-mail e senha (scrypt), para quando o Railway falhar: cada pessoa define a sua em **Senha de reserva**; o owner também pode entrar com `ADMIN_OWNER_PASSWORD_HASH`. Exige a migração `0008_admin_password` (runbook, seção 6a).
 - Sessão de até 12 h, que expira após 2 h parada.
 - Papéis **owner** e **editor**. O editor só edita as regiões que recebeu.
 - Só o owner pode: sincronizar, mexer no tracking e na paleta globais, lançar ou recolher região, apagar uma release e ligar a indexação de uma página.

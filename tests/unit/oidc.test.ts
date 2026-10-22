@@ -164,6 +164,9 @@ describe("who may sign in with Railway", () => {
     async update(id, patch) { const u = rows.get(id); if (!u) return null; Object.assign(u, patch); return u; },
     async bindProviderSub(id, sub) { const u = rows.get(id)!; if (u.providerSub && u.providerSub !== sub) return false; u.providerSub = sub; return true; },
     async touchLogin() {},
+    async getPasswordHash() { return null; },
+    async setPasswordHash() { return false; },
+    async withPassword() { return null; },
   };
   const claims = (email: string | null, over: Record<string, unknown> = {}) => ({ sub: "sub-1", email, emailVerified: email !== null, name: null, ...over });
   const OWNER = { email: "Dono@Example.com", sub: null };

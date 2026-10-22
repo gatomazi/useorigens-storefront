@@ -14,6 +14,7 @@ import { pgAuditLog, pgDraftRepository, pgReleaseStore, pgSessionRepository, pgS
 import { buildSeedBundle } from "@/lib/site-config/seed";
 import type { ScopeDoc } from "@/lib/site-config/schema";
 import { applyOp } from "@/lib/admin/draft-ops";
+import { hashAdminPassword } from "@/lib/admin/auth/password";
 
 /**
  * The repository SQL against a real PostgreSQL engine (PGlite): schema constraints, triggers, partial unique indexes and jsonb behave
@@ -42,16 +43,16 @@ async function seedUser(email: string, role: "owner" | "editor" = "editor", scop
 describe("migrations", () => {
   test("given a fresh database, when migrated, then every migration is applied once and a second run applies nothing", async () => {
     const fresh = await createPgliteDb();
-    expect(await migrate(fresh, migrations)).toEqual(["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes"]);
+    expect(await migrate(fresh, migrations)).toEqual(["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password"]);
     expect(await migrate(fresh, migrations)).toEqual([]);
-    expect(await migrationStatus(fresh, migrations)).toEqual({ applied: ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes"], pending: [], unknown: [] });
+    expect(await migrationStatus(fresh, migrations)).toEqual({ applied: ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password"], pending: [], unknown: [] });
     await fresh.close();
   });
 
   test("given a database that is behind, when its status is read, then the pending versions are reported and nothing is applied", async () => {
     const half = await createPgliteDb();
     await migrate(half, migrations.slice(0, 1));
-    expect((await migrationStatus(half, migrations)).pending).toEqual(["0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes"]);
+    expect((await migrationStatus(half, migrations)).pending).toEqual(["0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password"]);
     await half.close();
   });
 
@@ -296,6 +297,40 @@ describe("people, sessions and audit", () => {
     await users.update(u.id, { active: true });
     await sessions.destroyAllFor(u.id);
     expect(await sessions.lookup(token, 60_000)).toBeNull();
+  });
+
+  test("given the fallback password (0008), when set and cleared, then only the hash is kept, it never rides along in UserRow, and sessions still work", async () => {
+    const users = pgUserRepository(db);
+    const sessions = pgSessionRepository(db);
+    const u = await users.create({ email: `pw-${ulid().toLowerCase()}@example.com`, name: null, role: "editor", scopes: ["sul"] });
+    const hash = await hashAdminPassword("uma-senha-de-reserva");
+    expect(await users.getPasswordHash(u.id)).toBeNull();
+    expect(await users.setPasswordHash(u.id, hash)).toBe(true);
+    expect(await users.getPasswordHash(u.id)).toBe(hash);
+    expect(await users.withPassword()).toContain(u.id);
+    expect(JSON.stringify(await users.findById(u.id))).not.toContain("scrypt");
+    const token = await sessions.create(u.id, 60_000);
+    expect(JSON.stringify(await sessions.lookup(token, 60_000))).not.toContain("scrypt");
+    await expect(users.setPasswordHash(u.id, "senha-em-texto-puro")).rejects.toThrow(); // the column only takes a scrypt hash
+    expect(await users.setPasswordHash(u.id, null)).toBe(true);
+    expect(await users.getPasswordHash(u.id)).toBeNull();
+    expect(await users.withPassword()).not.toContain(u.id);
+    expect(await users.setPasswordHash("01J00000000000000000000099", hash)).toBe(false); // no such person
+  });
+
+  test("given a database still without migration 0008, when the password is read or written, then it is simply unavailable and the Railway login path is untouched", async () => {
+    const before = await createPgliteDb();
+    await migrate(before, migrations.filter((m) => m.version !== "0008_admin_password"));
+    const users = pgUserRepository(before);
+    const sessions = pgSessionRepository(before);
+    const u = await users.create({ email: "antes@example.com", name: null, role: "owner", scopes: [] });
+    expect(await users.getPasswordHash(u.id)).toBeNull();
+    expect(await users.setPasswordHash(u.id, await hashAdminPassword("uma-senha-de-reserva"))).toBe(false);
+    expect(await users.withPassword()).toBeNull();
+    expect(await users.bindProviderSub(u.id, "sub-antes")).toBe(true);
+    expect((await users.findByProviderSub("sub-antes"))?.id).toBe(u.id);
+    expect((await sessions.lookup(await sessions.create(u.id, 60_000), 60_000))?.user.id).toBe(u.id);
+    await before.close();
   });
 
   test("given an expired session, when purged, then it is deleted", async () => {
