@@ -143,6 +143,31 @@ export function montarLojaUnica(sul: ReadonlyMap<string, ProdutoSul>, opts: { mo
 
   // Sem região confiável: listados, nunca atribuídos ao Sul por estarem na loja Sul.
   for (const s of sul.values()) {
+    if (s.regiao === "conflito" && s.regioesColecao && publicado(s.produto) && servivel(s.produto)) {
+      // Produto não geográfico nas coleções regionais de mais de uma região (classificarRegioesSul): um item de merch que serve a todas elas.
+      const p = s.produto;
+      const [primeira] = s.regioesColecao;
+      loja.merch.push({
+        inkProductId: p.id,
+        commerceStoreKey: LOJA_UNICA,
+        regionSlug: primeira,
+        regions: s.regioesColecao,
+        name: p.name.replace(/\s+/g, " ").trim(),
+        slug: p.slug,
+        storeProductUrl: p.url!,
+        imageUrl: p.image!,
+        ...precoDaInk(p),
+        totalSalesCount: p.sales,
+        ...(p.createdAt ? { createdAt: p.createdAt } : {}),
+        ...(p.clusterId ? { productClusterId: p.clusterId } : {}),
+        ...(p.typeId !== null ? { garmentTypeId: p.typeId } : {}),
+        syncedAt,
+      });
+      loja.productCount++;
+      noCatalogo.add(p.id);
+      situacoes.push({ id: p.id, nome: p.name, tipo: p.typeId, regiao: primeira, situacao: "publicado", classe: "merch", detalhe: s.diagnostico });
+      continue;
+    }
     if (s.regiao === "desconhecida" || s.regiao === "conflito") {
       if (publicado(s.produto) && servivel(s.produto)) {
         preserveUnscoped(s.produto);
