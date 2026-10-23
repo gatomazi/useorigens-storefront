@@ -22,6 +22,6 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
 /** A parent-category landing of the CMS or, when there is none at this address, the page of the region's collection with that slug (page 1). */
 export default async function Page({ params }: { params: Promise<{ region: string; slug: string }> }) {
   const { region, slug } = await params;
-  const { region: r, bundle, page, automatic } = resolveCollectionLanding(region, slug);
-  return <PublicPage region={r} bundle={bundle} page={page} compactHero={automatic} />;
+  const { region: r, bundle, page, compact } = resolveCollectionLanding(region, slug);
+  return <PublicPage region={r} bundle={bundle} page={page} compactHero={compact} />;
 }

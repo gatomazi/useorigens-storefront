@@ -8,7 +8,8 @@ import { storeForRegion } from "../catalog/commerce-mode";
 import type { CollectionRecord } from "../catalog/collections";
 import { getCatalog } from "../catalog/repository";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
-import { livePage, liveCustomizer, newCollectionLanding, pageHref } from "../site-config/pages";
+import { livePage, liveCustomizer, newCollectionLanding, pageHref, plainCollectionLanding } from "../site-config/pages";
+import { hasImage, resolveBackground } from "../site-config/resolve";
 import type { Customizer, Page, PageKind, PublishedBundle } from "../site-config/schema";
 import type { CollectionPageLookup, InkCategorySource } from "../site-config/sources";
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
@@ -47,21 +48,25 @@ export function collectionLanding(collection: CollectionRecord, store: CommerceS
  * What `/<region>/colecoes/<slug>` shows: the published parent-category landing with that address or, when there is none, the page of the region's
  * collection with that slug (a collection the region can use right now). Anything else is a 404.
  */
-export function resolveCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page; automatic: boolean } {
+export function resolveCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page; automatic: boolean; compact: boolean } {
   const found = findCollectionLanding(regionParam, slug);
   if (!found) notFound();
   return found;
 }
 
-/** The same resolution without the 404: null when the address has no page (for the API of the page's mini search). `automatic` = the page was generated from the collection (no landing of the owner's at that address). */
-export function findCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page; automatic: boolean } | null {
+/**
+ * The same resolution without the 404: null when the address has no page (for the API of the page's mini search). `automatic` = the page was generated
+ * from the collection (no landing of the owner's at that address). `compact` = the short header: the automatic page, and an owner's landing whose hero
+ * is still just the title (`plainCollectionLanding`).
+ */
+export function findCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page; automatic: boolean; compact: boolean } | null {
   const found = publishedFor(regionParam);
   if (!found) return null;
   const doc = found.bundle.docs[found.region];
   const page = livePage(doc, "categoryLanding", slug);
-  if (page) return { ...found, page, automatic: false };
+  if (page) return { ...found, page, automatic: false, compact: plainCollectionLanding(page, (a) => hasImage(resolveBackground(a, found.bundle.media))) };
   const collection = collectionForPage(found.region, doc, slug);
-  return collection ? { ...found, page: collectionLanding(collection, storeForRegion(found.region)), automatic: true } : null;
+  return collection ? { ...found, page: collectionLanding(collection, storeForRegion(found.region)), automatic: true, compact: true } : null;
 }
 
 /** The page's paged grid, if it has one, with the lookup of its collection as the region shows it (same arrangement as the page itself). */

@@ -10,7 +10,7 @@ import type { StoreProducts } from "@/lib/catalog/repository";
 import type { MerchProduct } from "@/lib/catalog/types";
 import { arrangementOf, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
 import { withMenu } from "@/lib/site-config/collection-menu";
-import { newCollectionLanding } from "@/lib/site-config/pages";
+import { newCollectionLanding, plainCollectionLanding } from "@/lib/site-config/pages";
 import { validatePage, validateScopeDoc, type Page, type ScopeDoc, type Section } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 import { destinationHref, type InkCategorySource } from "@/lib/site-config/sources";
@@ -223,5 +223,28 @@ describe("paging through every product of a collection", () => {
     expect(collectionPageSlug(doc, "use-sul", 12, filePath)).toBeNull();
     expect(collectionPageSlug(enabled, "use-sul", 12, filePath)).toBe("sul-rs");
     expect(collectionPageSlug(doc, "use-norte", 10, filePath)).toBeNull();
+  });
+});
+
+describe("the short header of a collection page", () => {
+  const landing = (): Page => newCollectionLanding({ id: "p", heroId: "h", gridId: "g", title: "Kids", slug: "kids", ref: { store: "use-sul", collectionId: 7 } });
+  const noPicture = () => false;
+  const hero = (page: Page, over: Partial<Section>): Page => ({ ...page, sections: page.sections.map((s) => (s.template === "page-hero" ? { ...s, ...over } : s)) });
+
+  test("an owner's landing still opening with just the title (\"Personalizar página\", published as is) gets it, like the automatic page", () => {
+    expect(plainCollectionLanding(landing(), noPicture)).toBe(true);
+    expect(plainCollectionLanding(hero(landing(), { subtitle: "   " }), noPicture)).toBe(true);
+  });
+
+  test("a hero the owner dressed keeps its full size: a subtitle, a button or a published picture", () => {
+    expect(plainCollectionLanding(hero(landing(), { subtitle: "Para os pequenos" }), noPicture)).toBe(false);
+    expect(plainCollectionLanding(hero(landing(), { cta: { label: "Ver", dest: { kind: "external", url: "https://example.com" } } }), noPicture)).toBe(false);
+    expect(plainCollectionLanding(landing(), () => true)).toBe(false);
+  });
+
+  test("a landing without the paged grid of a collection keeps its hero", () => {
+    const page = landing();
+    expect(plainCollectionLanding({ ...page, sections: page.sections.filter((s) => s.template === "page-hero") }, noPicture)).toBe(false);
+    expect(plainCollectionLanding({ ...page, sections: page.sections.map((s) => (s.layout?.display === "paged" ? { ...s, active: false } : s)) }, noPicture)).toBe(false);
   });
 });
