@@ -21,6 +21,7 @@ import { HeaderDropdown } from "./HeaderDropdown";
 import { HeaderShell } from "./HeaderShell";
 import { MobileMenu } from "./MobileMenu";
 import { PriorityLinks } from "./PriorityLinks";
+import { highlightProps } from "./menu-highlight";
 import { CartMirrorMenu } from "../cart-mirror/CartMirrorMenu";
 import { cartRegionFor, checkoutStoreFor, storeForRegion } from "@/lib/catalog/commerce-mode";
 import { AccountMenu, accountLinks } from "./AccountMenu";
@@ -152,7 +153,7 @@ export function Header({ region, headerActions }: { region: RegionSlug; headerAc
             <PriorityLinks className="flex h-11 min-w-0 flex-wrap items-center gap-x-6 overflow-hidden xl:gap-x-8">
               {items.map((item) => (
                 <li key={item.href} className="flex h-11 items-center data-[overflow]:invisible">
-                  <Link href={item.href} className="link-line whitespace-nowrap py-1 text-[0.9375rem] font-semibold">
+                  <Link href={item.href} className={`link-line whitespace-nowrap py-1 text-[0.9375rem] font-semibold ${item.highlight ? "menu-highlight" : ""}`} {...highlightProps(item.highlight)}>
                     {item.label}
                   </Link>
                 </li>

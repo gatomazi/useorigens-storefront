@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { MobileMenuPanel } from "@/components/layout/MobileMenu";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
+import { highlightProps } from "@/components/layout/menu-highlight";
 import type { NavBlockData, ResolvedNavigation, ThemeColors } from "@/lib/site-config/navigation";
 
 /**
@@ -26,7 +27,7 @@ export function ChromePreview({ region, navigation, colors }: { region?: RegionS
               {region && <span>Sua cidade</span>}
               {navigation.states.length > 0 && <span>Estados ▾</span>}
               {navigation.categories.length > 0 && <span>{navigation.categoriesLabel} ▾</span>}
-              {[...navigation.primary, ...navigation.collections].map((l) => <span key={l.href}>{l.label}</span>)}
+              {[...navigation.primary, ...navigation.collections].map((l) => <span key={l.href} className={l.highlight ? "menu-highlight menu-highlight-static py-1" : undefined} {...highlightProps(l.highlight)}>{l.label}</span>)}
             </span>
             <span className="flex items-center gap-3 text-[0.8125rem] font-semibold">
               {region && navigation.regions.length > 0 && <span>{REGIONS[region].name} ▾</span>}

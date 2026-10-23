@@ -20,7 +20,7 @@ import type { CarouselEndConfig } from "../site-config/carousel-end-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
 import type { InkThemeConfig } from "../site-config/ink-theme-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, type Appearance, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, MENU_HIGHLIGHT_KEYS, type Appearance, type CollectionHighlight, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
 import { HOME_THEME_LABEL, hasHomeTheme, newEditorialTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
 import type { RegionSlug } from "../geo/regions";
 import type { ProductSort } from "../catalog/product-sort";
@@ -74,6 +74,8 @@ export type DraftOp =
   | { type: "in-home-theme"; theme: HomeThemeName; op: DraftOp }
   /** The short descriptions of the menu's collections, all at once (the panel's form). An empty list removes them. */
   | { type: "set-collection-descriptions"; descriptions: CollectionNote[] }
+  /** The highlighted collections of the bar (button, text and line colours), all at once (the panel's form). An empty list removes them. */
+  | { type: "set-collection-highlights"; highlights: CollectionHighlight[] }
   /**
    * The state page's CATEGORIES (`collections.stateCategories`): puts a collection in (`on`) or takes it out, or moves it one step. `base` is what the
    * list is now (the menu bar while the region has no list of its own, computed by the caller), so the first edit starts from it instead of from nothing.
@@ -231,6 +233,16 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     const collections = { ...(doc.collections ?? { enabled: [] }) };
     if (op.descriptions.length > 0) collections.descriptions = op.descriptions.map((d) => ({ store: d.store, collectionId: d.collectionId, text: d.text }));
     else delete collections.descriptions;
+    const next: ScopeDoc = { ...doc, collections };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-collection-highlights") {
+    if (doc.scope === "global") return fail("global has no collections");
+    const collections = { ...(doc.collections ?? { enabled: [] }) };
+    const highlights = op.highlights.map((h) => ({ store: h.store, collectionId: h.collectionId, ...Object.fromEntries(MENU_HIGHLIGHT_KEYS.flatMap((k) => (h[k] ? [[k, h[k].toLowerCase()]] : []))) }));
+    if (highlights.length > 0) collections.highlights = highlights;
+    else delete collections.highlights;
     const next: ScopeDoc = { ...doc, collections };
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };

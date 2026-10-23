@@ -1,7 +1,7 @@
 import "server-only";
 import { effectiveMenu, menuPositionOf } from "../site-config/collection-menu";
 import { collectionPagePath, collectionUrl } from "../site-config/sources";
-import type { CollectionRef, ScopeDoc } from "../site-config/schema";
+import type { CollectionRef, MenuHighlightColors, ScopeDoc } from "../site-config/schema";
 import type { RegionSlug } from "../geo/regions";
 import type { CollectionRecord } from "./collections";
 import { getStoreCollections } from "./collections-file";
@@ -62,17 +62,23 @@ export function offMenuEntries(region: RegionSlug, doc: ScopeDoc | undefined, fi
     .filter((e) => e.pagePath !== null || e.inkUrl !== null);
 }
 
-/** `detail`: the collection's short description (CMS `collections.descriptions`), under its name in the open menus. */
-export type SiteMenuLink = { label: string; href: string; detail?: string };
+/**
+ * `detail`: the collection's short description (CMS `collections.descriptions`), under its name in the open menus. `highlight`: its colours when the owner
+ * highlighted it (`collections.highlights`), only while it is on the bar.
+ */
+export type SiteMenuLink = { label: string; href: string; detail?: string; highlight?: MenuHighlightColors };
 
 /** What the storefront header shows: the bar, and "Categorias" = the bar first, then the rest. Only collections with a page of ours. */
 export function siteCollectionMenu(region: RegionSlug, doc: ScopeDoc | undefined, filePath?: string): { top: SiteMenuLink[]; categories: SiteMenuLink[] } {
   const { top, more } = collectionMenuEntries(region, doc, filePath);
   const notes = new Map((doc?.collections?.descriptions ?? []).map((d) => [`${d.store}:${d.collectionId}`, d.text]));
+  const highlights = new Map((doc?.collections?.highlights ?? []).map(({ store, collectionId, ...colours }) => [`${store}:${collectionId}`, colours]));
   const link = (e: MenuEntry): SiteMenuLink[] => {
     if (!e.pagePath) return [];
-    const detail = notes.get(`${e.ref.store}:${e.ref.collectionId}`);
-    return [{ label: e.record.name, href: e.pagePath, ...(detail ? { detail } : {}) }];
+    const k = `${e.ref.store}:${e.ref.collectionId}`;
+    const detail = notes.get(k);
+    const highlight = e.position === "top" ? highlights.get(k) : undefined;
+    return [{ label: e.record.name, href: e.pagePath, ...(detail ? { detail } : {}), ...(highlight ? { highlight } : {}) }];
   };
   const bar = top.flatMap(link);
   return { top: bar, categories: [...bar, ...more.flatMap(link)] };

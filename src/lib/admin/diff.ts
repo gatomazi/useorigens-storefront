@@ -6,7 +6,7 @@ import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkIncentiveText, inkThemeOf, INK_
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
-import { HOME_THEMES, homeThemeOf, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
+import { HOME_THEMES, homeThemeOf, type CollectionHighlight, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
 import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
@@ -170,6 +170,17 @@ function menuChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNam
     if (a === b) continue;
     const ref = (now.get(k) ?? was.get(k))!;
     out.push({ kind: "navbar-moved", sectionId: `navbar:note:${k}`, text: b ? `${named(ref)}: descrição no menu “${b}”` : `${named(ref)}: sem descrição no menu` });
+  }
+  // The highlighted collections of the bar (their colours).
+  const colours = (doc: ScopeDoc) => new Map((doc.collections?.highlights ?? []).map((h) => [key(h), h]));
+  const wasHl = colours(published);
+  const nowHl = colours(draft);
+  const describe = (h: CollectionHighlight) => [h.background && `botão ${h.background}`, h.text && `texto ${h.text}`, h.underline && `linha ${h.underline}`].filter(Boolean).join(", ");
+  for (const k of new Set([...wasHl.keys(), ...nowHl.keys()])) {
+    const a = wasHl.get(k);
+    const b = nowHl.get(k);
+    if (a && b && describe(a) === describe(b)) continue;
+    out.push({ kind: "navbar-moved", sectionId: `navbar:highlight:${k}`, text: b ? `${named(b)}: destaque no menu (${describe(b)})` : `${named(a!)}: sem destaque no menu` });
   }
   return out;
 }

@@ -304,6 +304,13 @@ export type CollectionMenu = { top: CollectionRef[]; hidden: CollectionRef[]; ad
 /** One short line that says what a collection is ("Camisetas com o estado inteiro"), shown under its name in the storefront's open menus. */
 export type CollectionNote = CollectionRef & { text: string };
 export const MAX_COLLECTION_NOTE = 80;
+/**
+ * A collection of the bar drawn as a highlight ("Natal" for the season): its own button colour, text colour and colour of the line drawn under it on
+ * hover, each #rrggbb and optional (an unset one keeps the header's). At least one is set. In the phone menu the same colours mark its entry.
+ */
+export type MenuHighlightColors = { background?: string; text?: string; underline?: string };
+export type CollectionHighlight = CollectionRef & MenuHighlightColors;
+export const MENU_HIGHLIGHT_KEYS = ["background", "text", "underline"] as const;
 
 /**
  * A page of a region outside the home: an editorial hotpage or a parent-category landing. Made of the SAME sections as the home (rendered by the
@@ -470,6 +477,8 @@ export type ScopeDoc = {
     menu?: CollectionMenu;
     /** A short description per collection (at most one each), under its name in the header's "Coleções" and in the phone menu. Absent = names only. */
     descriptions?: CollectionNote[];
+    /** Collections of the bar drawn as a highlight (at most one entry each); see `CollectionHighlight`. Absent = none. Site only: the INK navbar ignores it. */
+    highlights?: CollectionHighlight[];
     /**
      * Order and hidden products per collection (at most one entry per collection). Before this existed each section kept its own (`Source.productIds` /
      * `hiddenIds`): those are read only while the collection has no entry here (`arrangementOf`), so an entry with neither list means "INK's order"
@@ -1045,6 +1054,17 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
     checkRefList(c, `${path}.descriptions`, v.descriptions, MAX_NAVBAR_GROUP * 4);
     if (Array.isArray(v.descriptions)) v.descriptions.forEach((d, i) => {
       if (isRecord(d) && (!isStr(d.text, MAX_COLLECTION_NOTE) || d.text.trim() !== d.text || /[\u0000-\u001f\u007f]/.test(d.text))) c.fail(`${path}.descriptions[${i}].text`, `1..${MAX_COLLECTION_NOTE} chars, one line`);
+    });
+  }
+  if (v.highlights !== undefined) {
+    checkRefList(c, `${path}.highlights`, v.highlights, MAX_NAVBAR_GROUP * 4);
+    if (Array.isArray(v.highlights)) v.highlights.forEach((h, i) => {
+      if (!isRecord(h)) return;
+      const extra = Object.keys(h).filter((k) => k !== "store" && k !== "collectionId" && !(MENU_HIGHLIGHT_KEYS as readonly string[]).includes(k));
+      if (extra.length > 0) c.fail(`${path}.highlights[${i}]`, `unknown field ${extra.join(", ")}`);
+      const set = MENU_HIGHLIGHT_KEYS.filter((k) => h[k] !== undefined);
+      if (set.length === 0) c.fail(`${path}.highlights[${i}]`, "needs at least one colour");
+      for (const k of set) if (typeof h[k] !== "string" || !HEX.test(h[k] as string)) c.fail(`${path}.highlights[${i}].${k}`, "must be #rrggbb");
     });
   }
   if (v.stateCategories !== undefined) checkRefList(c, `${path}.stateCategories`, v.stateCategories, MAX_STATE_ROWS);

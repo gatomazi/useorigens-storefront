@@ -31,7 +31,7 @@ import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
 import { MUNDO_MODOS, type MundoModo } from "@/lib/site-config/mundo-schema";
-import { DEFAULT_BUY_LABEL, HOME_THEMES, isUmaPencaSource, MAX_BUY_LABEL, MAX_COLLECTION_NOTE, maxSectionProducts, MIN_SECTION_PRODUCTS, type CollectionNote, type HomeThemeName, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, HOME_THEMES, isUmaPencaSource, MAX_BUY_LABEL, MAX_COLLECTION_NOTE, maxSectionProducts, MENU_HIGHLIGHT_KEYS, MIN_SECTION_PRODUCTS, type CollectionHighlight, type CollectionNote, type HomeThemeName, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { CARD_BUY_STYLE_NAME, postedBuyStyle } from "@/lib/site-config/cards-schema";
 import { DEFAULT_CAROUSEL_END_LABEL, MAX_CAROUSEL_END_LABEL } from "@/lib/site-config/carousel-end-schema";
 import { hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
@@ -537,6 +537,30 @@ export async function saveCollectionNotesAction(fd: FormData) {
   if (!outcome.ok) back(MENU_SCREEN, { err: outcome.errors });
   await audit(actor, "draft.save", scope, "set-collection-descriptions");
   back(`${MENU_SCREEN}#descricoes-colecoes`, { ok: `Rascunho salvo: ${descriptions.length === 0 ? "nenhuma coleção com descrição" : descriptions.length === 1 ? "1 coleção com descrição" : `${descriptions.length} coleções com descrição`} no menu. Publique para valer na loja.` });
+}
+
+/**
+ * Menu › Destaque: the highlighted collections of the bar. Per collection (`hl_<store>:<id>_<key>`), each colour counts only with its box ticked
+ * (`..._on`): a colour input always has a value. Saved in the region's draft and published with it.
+ */
+export async function saveCollectionHighlightsAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const byRef = new Map<string, CollectionHighlight>();
+  for (const name of new Set(fd.keys())) {
+    const m = /^hl_(.+)_(background|text|underline)_on$/.exec(name);
+    const ref = m ? parseCollectionRef(m[1]) : null;
+    const value = m ? text(fd, `hl_${m[1]}_${m[2]}`).toLowerCase() : "";
+    if (!m || !ref || !/^#[0-9a-f]{6}$/.test(value)) continue;
+    const entry = byRef.get(m[1]) ?? { ...ref };
+    entry[m[2] as (typeof MENU_HIGHLIGHT_KEYS)[number]] = value;
+    byRef.set(m[1], entry);
+  }
+  const highlights = [...byRef.values()];
+  const outcome = await applyAndSave(scope, { type: "set-collection-highlights", highlights }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(MENU_SCREEN, { err: outcome.errors });
+  await audit(actor, "draft.save", scope, "set-collection-highlights");
+  back(`${MENU_SCREEN}#destaque-colecoes`, { ok: `Rascunho salvo: ${highlights.length === 0 ? "nenhuma coleção em destaque" : highlights.length === 1 ? "1 coleção em destaque" : `${highlights.length} coleções em destaque`} no menu. Publique para valer na loja.` });
 }
 
 export async function adoptCollectionMenuAction(fd: FormData) {

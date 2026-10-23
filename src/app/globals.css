@@ -300,6 +300,30 @@ a:hover .link-line,
 a:focus-visible .link-line {
   background-size: 100% 1px;
 }
+/*
+ * A highlighted collection of the menu (CMS Menu › Destaque): its own text colour, a button colour (with room around the word) and the colour of the line
+ * under it — on hover on the desktop bar (`.link-line`), always in the phone menu, where there is no hover. Unset variables keep the header's look.
+ */
+.menu-highlight {
+  color: var(--hl-text, inherit);
+}
+.menu-highlight[data-hl-bg] {
+  background-color: var(--hl-bg);
+  padding-inline: 0.75rem;
+}
+.menu-highlight.link-line {
+  background-image: linear-gradient(var(--hl-line, currentColor), var(--hl-line, currentColor));
+}
+.menu-highlight.link-line[data-hl-line] {
+  background-size: 0% 2px;
+}
+.menu-highlight.link-line[data-hl-line]:hover,
+.menu-highlight.link-line[data-hl-line]:focus-visible {
+  background-size: 100% 2px;
+}
+.menu-highlight-static[data-hl-line] {
+  box-shadow: inset 0 -3px 0 var(--hl-line);
+}
 .link-static {
   text-decoration: underline;
   text-decoration-thickness: 1px;

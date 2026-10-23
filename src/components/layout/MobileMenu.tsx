@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { trackSelectState } from "@/lib/analytics/track";
 import { SOURCES } from "@/lib/analytics/sources";
 import type { NavBlockData, NavItemData } from "@/lib/site-config/navigation";
+import { highlightProps } from "./menu-highlight";
 
 /**
  * The hierarchy of the menu, drawn from resolved blocks (`resolveNavigation`): "Comprar", the region's states, the other regions. One
@@ -52,15 +53,17 @@ export function MobileMenuPanel({ blocks, interactive = true, onNavigate }: { bl
                 ) : (
                   item.label
                 );
-                const rowClass = `flex min-h-11 items-center py-1 ${rich ? "gap-3 py-1.5" : ""} ${itemClass}`;
+                // A highlighted collection (CMS): its button and text colours, and its line always drawn (no hover on a phone).
+                const rowClass = `flex min-h-11 items-center py-1 ${rich ? "gap-3 py-1.5" : ""} ${itemClass} ${item.highlight ? "menu-highlight menu-highlight-static" : ""}`;
+                const highlight = highlightProps(item.highlight);
                 return (
                   <li key={item.href} className={`min-w-0 ${block.kind === "categories" && item.detail ? "col-span-2" : ""}`}>
                     {interactive ? (
-                      <Link href={item.href} onClick={() => onNavigate?.(item)} className={rowClass}>
+                      <Link href={item.href} onClick={() => onNavigate?.(item)} className={rowClass} {...highlight}>
                         {content}
                       </Link>
                     ) : (
-                      <span className={rowClass}>{content}</span>
+                      <span className={rowClass} {...highlight}>{content}</span>
                     )}
                   </li>
                 );

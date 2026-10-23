@@ -249,6 +249,17 @@ describe("what the storefront and the Worker read", () => {
       expect(navbar.top).toEqual([]);
     });
 
+    test("given a highlighted collection on the bar, when read, then the site carries its colours (bar and Categorias) and the Worker's payload is unchanged", async () => {
+      const menu = { top: [ref(4), ref(1)], hidden: [], added: [] };
+      const plain = await setup({ menu }, seven);
+      const { site, navbar } = await setup({ menu, highlights: [{ ...ref(1), background: "#b3261e", text: "#ffffff" }, { ...ref(5), underline: "#ffd400" }] }, seven);
+      expect(site.top).toEqual([{ label: "Feito Para Você", href: "/sul/colecoes/feito-para-voce" }, { label: "Novidades", href: "/sul/colecoes/novidades", highlight: { background: "#b3261e", text: "#ffffff" } }]);
+      expect(site.categories.find((c) => c.label === "Novidades")?.highlight).toEqual({ background: "#b3261e", text: "#ffffff" });
+      // "Fala Daqui" is not on the bar: its highlight stays in the document but is not drawn.
+      expect(site.categories.find((c) => c.label === "Fala Daqui")).not.toHaveProperty("highlight");
+      expect(navbar).toEqual(plain.navbar);
+    });
+
     test("given a renamed Categorias block, when the Worker reads the menu, then it gets that name", async () => {
       const { navbar } = await setup({ menu: empty }, seven, { navigation: { categoriesBlock: { label: "Coleções", visible: true, order: 15 } } });
       expect(navbar.moreLabel).toBe("Coleções");
