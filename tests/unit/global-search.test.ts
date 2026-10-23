@@ -7,7 +7,7 @@ import { localitiesOfRegion } from "@/lib/geo/localities";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { placeSearchCopy } from "@/lib/search/copy";
 import { prepareGlobalDocs, searchGlobal, type GlobalDoc } from "@/lib/search/global";
-import { buildGlobalDocs, clusterPieces } from "@/lib/search/global-index";
+import { buildGlobalDocs, cityCollectionIds, clusterPieces } from "@/lib/search/global-index";
 import { validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 import { applyOp } from "@/lib/admin/draft-ops";
@@ -102,11 +102,11 @@ describe("global search: places", () => {
   });
 });
 
-describe("global search: the store's \"Estampas na busca\" switch", () => {
-  test("off, the designs group is left out of the answer, in this region and the others; places stay and the total counts what is shown", () => {
+describe("global search: the store's \"Estampas de cidade na busca\" switch", () => {
+  test("off, the city designs are left out of the answer, in this region and the others; places stay and the total counts what is shown", () => {
     const idx = index();
     const on = searchGlobal(idx, "sul", "bagé");
-    const off = searchGlobal(idx, "sul", "bagé", ["designs"]);
+    const off = searchGlobal(idx, "sul", "bagé", true);
     expect(off.groups.map((g) => g.group)).toEqual(["places"]);
     expect(titles(off, "places")).toEqual(titles(on, "places"));
     expect(off.total).toBe(on.groups.find((g) => g.group === "places")!.total);
@@ -122,7 +122,7 @@ describe("global search: the store's \"Estampas na busca\" switch", () => {
     const on = off.ok ? applyOp(off.doc, { type: "set-search-designs", on: true }, { newId: () => "x" }) : null;
     expect(on?.ok && on.doc).toEqual(global);
     expect(applyOp(structuredClone(seed.docs.sul), { type: "set-search-designs", on: false }, { newId: () => "x" }).ok).toBe(false);
-    expect(off.ok && diffDocs(global, off.doc).map((c) => c.text)).toEqual(["Estampas na busca: mostradas → escondidas"]);
+    expect(off.ok && diffDocs(global, off.doc).map((c) => c.text)).toEqual(["Estampas de cidade na busca: mostradas → escondidas"]);
     expect(off.ok && searchShowsDesigns({ ...seed, docs: { ...seed.docs, global: off.doc } })).toBe(false);
     expect(searchShowsDesigns(seed)).toBe(true);
     expect(validateSearch({ designs: true }, "global").ok).toBe(false);
@@ -257,6 +257,22 @@ describe("global search: merchandise designs", () => {
       expect.objectContaining({ kind: "design", title: "Mate Bom Demais", pieces: 2, minPrice: 89, external: true, inkProductId: "2", href: "https://www.usesul.com.br/usesul/product/m-2" }),
     ]);
     expect(searchGlobal(idx(), "sul", "menina").groups[0].items[0].title).toBe("Mate Bom Demais");
+  });
+
+  test("with the city designs switched off, the other designs stay (with their thumbnail); one with a piece in \"Seu Lugar\" goes", () => {
+    const cityCollection = cityCollectionIds([{ ...collection(1, "Seu Lugar", true), matchedCount: 1, allMemberIds: ["3"] } as CollectionRecord, { ...collection(2, "Natal", true), matchedCount: 1, allMemberIds: ["4"] } as CollectionRecord]);
+    expect([...cityCollection]).toEqual(["3"]);
+    const docs = buildGlobalDocs({ region: "sul", catalog: { ...sulCatalog, merch: () => products } as unknown as Catalog, garmentIndex, collections: [], umaPencaArticles: 0, cityCollection });
+    const off = new Map([["sul" as RegionSlug, prepareGlobalDocs(docs)]]);
+    expect(searchGlobal(off, "sul", "essência", true).groups.flatMap((g) => g.items)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ kind: "design", title: "Paranaense | Essência", image: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/m4.jpg" })]),
+    );
+    expect(titles(searchGlobal(off, "sul", "mate bom demais", true))).toEqual([]); // its "Menina" piece is in Seu Lugar
+    expect(titles(searchGlobal(off, "sul", "mate bom demais"))).toEqual(["Mate Bom Demais"]);
+    expect(titles(searchGlobal(off, "sul", "bagé", true), "designs")).toEqual([]);
+    expect(searchGlobal(off, "sul", "essência", true).groups[0].items.every((i) => !("cityCollection" in i))).toBe(true);
+    // Not synced, or only a truncated slice: no merchandise design is taken for a city one.
+    expect(cityCollectionIds([{ ...collection(1, "Seu Lugar", true), memberIds: ["3"] } as CollectionRecord]).size).toBe(0);
   });
 
   test("without a cluster each product is its own result (never grouped by name); 'essência' and 'made in' are found in the region itself", () => {

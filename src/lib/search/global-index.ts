@@ -3,7 +3,7 @@ import { statSync } from "node:fs";
 import { purchaseUrl } from "../catalog/commerce";
 import { categoryLookup, collectionPageSlug, collectionsForRegion } from "../catalog/collection-source";
 import { storeForRegion } from "../catalog/commerce-mode";
-import { MIN_USABLE_PRODUCTS, type CollectionRecord } from "../catalog/collections";
+import { completeMembers, MIN_USABLE_PRODUCTS, type CollectionRecord } from "../catalog/collections";
 import { getStoreCollections } from "../catalog/collections-file";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
 import { expandTuple, garmentIndexMtimeMs, type GarmentIndex } from "../catalog/garment-index-file";
@@ -50,7 +50,21 @@ export type GlobalIndexInputs = {
   /** Resolves a home carousel's source the way the home does, so a carousel that renders nothing is never a result. */
   carouselItems?: (source: CarouselSource) => number;
   umaPencaArticles: number;
+  /** Ids of the products in the cities' collection ("Seu Lugar", `cityCollectionIds`): a merchandise design with a piece there is a city design. */
+  cityCollection?: ReadonlySet<string>;
 };
+
+/** Slug of the INK collection of the city designs ("Seu Lugar"). */
+export const CITY_COLLECTION_SLUG = "seu-lugar";
+
+/**
+ * Every product id of the store's cities' collection, from its COMPLETE membership; empty when it was not synced (or only as a truncated slice):
+ * then no merchandise design is taken for a city design — the place × family designs are city designs by construction either way.
+ */
+export function cityCollectionIds(collections: readonly CollectionRecord[]): Set<string> {
+  const record = collections.find((c) => c.slug === CITY_COLLECTION_SLUG);
+  return new Set(record ? (completeMembers(record) ?? []) : []);
+}
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -110,7 +124,7 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
         subtitle: [plural(types.size, "peça disponível", "peças disponíveis"), minPrice !== undefined ? `a partir de ${formatPrice(minPrice)}` : null].filter(Boolean).join(" · "),
         // The storefront's own page of this design (its versions, then the purchase); the pieces are chosen on the place's page tabs.
         href: `${href}/${family.id}`, image: primary.imageUrl, pieces: types.size, ...(minPrice !== undefined ? { minPrice } : {}),
-        tag: "Estampa", city: place.name, uf: place.uf, ...(ra ? { administrativeRegion: true } : {}),
+        tag: "Estampa", city: place.name, uf: place.uf, ...(ra ? { administrativeRegion: true } : {}), cityCollection: true,
         rank: family.sortOrder, sales: primary.totalSalesCount ?? 0,
         names: [`${place.name} ${family.name}`, `${family.name} ${place.name}`],
         strong: [family.name, place.name, ...place.aliases],
@@ -119,7 +133,7 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
     }
   }
 
-  docs.push(...merchDocs(region, catalog.merch(region)));
+  docs.push(...merchDocs(region, catalog.merch(region), input.cityCollection));
 
   const doc = input.doc;
   if (doc && doc.scope === region) {
@@ -195,7 +209,7 @@ function dedupeEditorial(docs: GlobalDoc[]): GlobalDoc[] {
  * pieces of one design share it — and one per product when INK gave no cluster (never grouped by name). Title: the shortest name of the group
  * (the base piece); every piece's name stays searchable. Merchandise has no storefront page, so the result opens the verified INK product page.
  */
-export function merchDocs(region: RegionSlug, products: readonly MerchProduct[]): GlobalDoc[] {
+export function merchDocs(region: RegionSlug, products: readonly MerchProduct[], cityCollection: ReadonlySet<string> = new Set()): GlobalDoc[] {
   const groups = new Map<string, MerchProduct[]>();
   for (const p of products) {
     if (!purchaseUrl(p)) continue;
@@ -212,7 +226,8 @@ export function merchDocs(region: RegionSlug, products: readonly MerchProduct[])
       key: `merch:${key}`, kind: "design", region, title: rep.name,
       subtitle: members.length > 1 ? [plural(members.length, "peça disponível", "peças disponíveis"), price ? `a partir de ${price}` : null].filter(Boolean).join(" · ") : price ?? "Na loja",
       href: purchaseUrl(rep)!, external: true, inkProductId: rep.inkProductId, image: rep.imageUrl, pieces: members.length, ...(minPrice !== undefined ? { minPrice } : {}),
-      tag: "Estampa", rank: 9, sales: members.reduce((n, m) => n + m.totalSalesCount, 0),
+      tag: "Estampa", ...(members.some((m) => cityCollection.has(m.inkProductId)) ? { cityCollection: true as const } : {}),
+      rank: 9, sales: members.reduce((n, m) => n + m.totalSalesCount, 0),
       names: [rep.name], strong: members.map((m) => m.name), weak: [],
     });
   }
@@ -268,7 +283,10 @@ export function globalSearchIndex(): Built {
       const result: SourceResult = resolveSource(source, editorial, categories, umaPencaLookup(region));
       return result.status === "ok" ? result.items.length : 0;
     };
-    const docs = buildGlobalDocs({ region, catalog, garmentIndex, doc, media: bundle?.media, collections: store ? collectionsForRegion(region, (s) => catalog.productsOfStore(s)) : [], collectionStore, carouselItems, umaPencaArticles: umaPenca.filter((a) => isArticleOfRegion(a, region)).length });
+    const docs = buildGlobalDocs({
+      region, catalog, garmentIndex, doc, media: bundle?.media, collections: store ? collectionsForRegion(region, (s) => catalog.productsOfStore(s)) : [], collectionStore, carouselItems,
+      umaPencaArticles: umaPenca.filter((a) => isArticleOfRegion(a, region)).length, cityCollection: cityCollectionIds(store?.collections ?? []),
+    });
     for (const d of docs) {
       byKind[d.kind] = (byKind[d.kind] ?? 0) + 1;
       approxBytes += JSON.stringify(d).length;

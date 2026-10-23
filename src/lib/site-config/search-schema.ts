@@ -5,8 +5,9 @@
 import type { PublishedBundle, Scope, ValidationResult } from "./schema";
 
 /**
- * GLOBAL only ("Use Origens", every region): `designs: false` takes the "Estampas" group out of the search (the city × style results and the
- * merchandise designs), in every region and in the "other regions" results too; places and editorial pages stay. Absent = every group, as before.
+ * GLOBAL only ("Use Origens", every region): `designs: false` takes the designs of the cities' collection ("Seu Lugar": the city × style results,
+ * and a merchandise design with a piece in it) out of the search, in every region and in the "other regions" results too; the other designs, places
+ * and editorial pages stay. Absent = every design, as before.
  */
 export type SearchConfig = { designs: false };
 
@@ -20,5 +21,5 @@ export function validateSearch(input: unknown, scope: Scope, path = "search"): V
   return errors.length === 0 ? { ok: true, value: input as SearchConfig } : { ok: false, errors };
 }
 
-/** Whether the search shows the "Estampas" group, from a published bundle (absent setting = shown). */
+/** Whether the search shows the cities' collection designs, from a published bundle (absent setting = shown). */
 export const searchShowsDesigns = (bundle: PublishedBundle | null | undefined): boolean => bundle?.docs.global?.search?.designs !== false;
