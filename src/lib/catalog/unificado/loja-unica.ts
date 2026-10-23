@@ -75,6 +75,7 @@ export function montarLojaUnica(sul: ReadonlyMap<string, ProdutoSul>, opts: { mo
     (loja.unscopedProducts ??= []).push({
       inkProductId: p.id, commerceStoreKey: LOJA_UNICA, name: p.name.replace(/\s+/g, " ").trim(), slug: p.slug,
       storeProductUrl: p.url!, imageUrl: p.image!, ...precoDaInk(p), totalSalesCount: p.sales, syncedAt,
+      ...(p.createdAt ? { createdAt: p.createdAt } : {}),
       ...(p.clusterId ? { productClusterId: p.clusterId } : {}),
       ...(p.typeId !== null ? { garmentTypeId: p.typeId } : {}),
     });
@@ -129,6 +130,8 @@ export function montarLojaUnica(sul: ReadonlyMap<string, ProdutoSul>, opts: { mo
           imageUrl: p.image!,
           ...precoDaInk(p),
           totalSalesCount: p.sales,
+          // A data de cadastro da INK é o que ordena "Novidades": sem ela, a ordenação devolve a ordem da coleção.
+          ...(p.createdAt ? { createdAt: p.createdAt } : {}),
           ...(p.clusterId ? { productClusterId: p.clusterId } : {}),
           ...(p.typeId !== null ? { garmentTypeId: p.typeId } : {}),
           syncedAt,

@@ -100,6 +100,15 @@ describe("montarLojaUnica — produção", () => {
     expect(loja.bindings.map((b) => b.inkProductId)).not.toContain(herdado.id);
     expect(loja.unscopedProducts?.map((p) => p.inkProductId)).toContain(herdado.id);
   });
+  test("then merch and unscoped products keep INK's creation date, which the \"Novidades\" ordering reads", () => {
+    const escritas = produto("Paraná | Escritas", { createdAt: "2026-02-02T20:14:24-03:00" });
+    const estado = lerEstadoMigracao(ESTADO);
+    const sul = classificarRegioesSul([escritas, semRegiao], { ...colecoes, sul: new Set([escritas.id]) }, estado);
+    classificarDesenhosSul(sul, estado);
+    const catalog = montarLojaUnica(sul, { modo: "producao", syncedAt: "t", fonte: FONTE }).catalogo.stores["use-sul"]!;
+    expect(catalog.merch.find((m) => m.inkProductId === escritas.id)?.createdAt).toBe("2026-02-02T20:14:24-03:00");
+    expect(catalog.unscopedProducts?.find((m) => m.inkProductId === semRegiao.id)?.createdAt).toBe("2026-10-04T00:00:00Z");
+  });
   test("the general catalog also excludes hidden products and products without a usable image", () => {
     const candidates = [produto("Sem região oculta", { ...oculto }), produto("Sem região sem imagem", { image: null })];
     const catalog = montarLojaUnica(classificar(candidates), { modo: "producao", syncedAt: "t", fonte: FONTE }).catalogo.stores["use-sul"]!;
