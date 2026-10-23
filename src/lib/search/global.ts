@@ -34,6 +34,11 @@ export type GlobalDoc = {
   minPrice?: number;
   /** Merchandise design only: the INK product the result opens (GoToInk on click, like every other INK product link of the storefront). */
   inkProductId?: string;
+  /**
+   * A design of the cities' collection ("Seu Lugar"): every place × family design, and a merchandise design with a piece in that collection. The
+   * store can leave these out (Aparência → "Estampas de cidade na busca"): a city's own page lists them, the search keeps the other designs.
+   */
+  cityCollection?: true;
   /** Small type tag shown on the row ("Região Administrativa", "Coleção", "Hotpage"…). */
   tag: string;
   /** Analytics context: the place (SelectCity), the UF, an administrative region. Never anything personal. */
@@ -129,7 +134,7 @@ export function rankGlobal(prepared: readonly PreparedGlobalDoc[], query: string
 }
 
 /** What the browser receives: the document without its matching fields (and never a sales count). */
-export type GlobalResult = Omit<GlobalDoc, "names" | "strong" | "weak" | "rank" | "sales">;
+export type GlobalResult = Omit<GlobalDoc, "names" | "strong" | "weak" | "rank" | "sales" | "cityCollection">;
 export type GlobalSearchResponse = {
   query: string;
   region: RegionSlug;
@@ -143,8 +148,8 @@ export const GROUP_LIMITS: Record<GlobalGroup, number> = { places: 6, designs: 6
 export const OTHERS_LIMIT = 6;
 const OTHERS_MIN_CLASS = 4;
 
-const toResult = ({ names: _n, strong: _s, weak: _w, rank: _r, sales: _sa, ...rest }: GlobalDoc): GlobalResult => {
-  void _n; void _s; void _w; void _r; void _sa;
+const toResult = ({ names: _n, strong: _s, weak: _w, rank: _r, sales: _sa, cityCollection: _c, ...rest }: GlobalDoc): GlobalResult => {
+  void _n; void _s; void _w; void _r; void _sa; void _c;
   return rest;
 };
 
@@ -154,15 +159,15 @@ const toResult = ({ names: _n, strong: _s, weak: _w, rank: _r, sales: _sa, ...re
  * are simply never searched.
  */
 /**
- * `hidden`: groups the store switched off (Aparência → "Estampas na busca"): their documents never rank, in this region or the others, so the first
- * result (what Enter opens) and the counts are of what is shown.
+ * `hideCityDesigns`: the store switched the cities' collection designs off (Aparência → "Estampas de cidade na busca"): those documents never rank,
+ * in this region or the others, so the first result (what Enter opens) and the counts are of what is shown. The other designs stay.
  */
-export function searchGlobal(byRegion: ReadonlyMap<RegionSlug, readonly PreparedGlobalDoc[]>, region: RegionSlug, rawQuery: string, hidden: readonly GlobalGroup[] = []): GlobalSearchResponse {
+export function searchGlobal(byRegion: ReadonlyMap<RegionSlug, readonly PreparedGlobalDoc[]>, region: RegionSlug, rawQuery: string, hideCityDesigns = false): GlobalSearchResponse {
   const query = rawQuery.replace(/\s+/g, " ").trim().slice(0, MAX_GLOBAL_QUERY);
   const empty: GlobalSearchResponse = { query, region, groups: [], others: [], total: 0 };
   if (normalizeText(query).length === 0) return empty;
 
-  const shown = (docs: readonly PreparedGlobalDoc[]) => (hidden.length === 0 ? docs : docs.filter((d) => !hidden.includes(GROUP_OF[d.doc.kind])));
+  const shown = (docs: readonly PreparedGlobalDoc[]) => (hideCityDesigns ? docs.filter((d) => !d.doc.cityCollection) : docs);
   const own = rankGlobal(shown(byRegion.get(region) ?? []), query);
   const groups: GlobalSearchResponse["groups"] = [];
   for (const group of ["places", "designs", "editorial"] as const) {

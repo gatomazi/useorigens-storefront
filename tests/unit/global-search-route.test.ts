@@ -13,11 +13,11 @@ afterEach(() => vi.clearAllMocks());
 
 describe("global search HTTP freshness", () => {
   test("the same query follows each published setting and cannot be reused by a browser or CDN", async () => {
-    const doc = (kind: GlobalDoc["kind"], title: string): GlobalDoc => ({
-      key: kind, kind, title, region: "sul", subtitle: "", href: "/sul/sc/imbituba", tag: kind, rank: 0,
-      names: [title], strong: [], weak: [],
+    const doc = (kind: GlobalDoc["kind"], title: string, extra: Partial<GlobalDoc> = {}): GlobalDoc => ({
+      key: title, kind, title, region: "sul", subtitle: "", href: "/sul/sc/imbituba", tag: kind, rank: 0,
+      names: [title], strong: [], weak: [], ...extra,
     });
-    const byRegion = new Map([["sul" as const, prepareGlobalDocs([doc("locality", "Imbituba"), doc("design", "Imbituba · Ponto de Origem")])]]);
+    const byRegion = new Map([["sul" as const, prepareGlobalDocs([doc("locality", "Imbituba"), doc("design", "Imbituba · Ponto de Origem", { cityCollection: true }), doc("design", "Imbituba Surf Club")])]]);
     vi.mocked(globalSearchIndex).mockReturnValue({ byRegion } as ReturnType<typeof globalSearchIndex>);
     vi.mocked(siteConfigHomeEnabled).mockReturnValue(true);
     const bundle = buildSeedBundle();
@@ -30,8 +30,12 @@ describe("global search HTTP freshness", () => {
       expect(response.status).toBe(200);
       expect(response.headers.get("Cache-Control")).toBe("no-store");
       const body = await response.json();
-      expect(body.groups.map((g: { group: string }) => g.group)).toEqual(designs ? ["places", "designs"] : ["places"]);
-      expect(body.total).toBe(designs ? 2 : 1);
+      // Off, only the city design goes: the other design stays.
+      expect(body.groups.map((g: { group: string; items: { title: string }[] }) => [g.group, g.items.map((i) => i.title)])).toEqual([
+        ["places", ["Imbituba"]],
+        ["designs", designs ? ["Imbituba Surf Club", "Imbituba · Ponto de Origem"] : ["Imbituba Surf Club"]],
+      ]);
+      expect(body.total).toBe(designs ? 3 : 2);
     }
   });
 });

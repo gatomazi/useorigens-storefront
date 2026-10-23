@@ -146,7 +146,7 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
 
       <section id="busca" className="a-card scroll-mt-4 p-5" aria-labelledby="search-title" data-testid="search-setting">
         <h2 id="search-title" className="a-h2">Busca · todas as regiões</h2>
-        <p className="a-muted mt-1 max-w-3xl text-[0.9375rem]">O que a busca da loja mostra ao digitar. Desligando “Estampas”, saem os resultados de cidade × estilo (“Tijucas · Ponto de Origem”) e as estampas de merch: a busca fica com cidades, estados e páginas (coleções e temas), e quem procura a cidade cai na página dela, onde escolhe a estampa. Vale também para os resultados de outras regiões.</p>
+        <p className="a-muted mt-1 max-w-3xl text-[0.9375rem]">O que a busca da loja mostra ao digitar. Desligando, saem as estampas da coleção das cidades (Seu Lugar): os resultados de cidade × estilo (“Tijucas · Ponto de Origem”) e as estampas com peça nessa coleção. Quem procura a cidade cai na página dela, onde escolhe a estampa. As demais estampas continuam na busca, com a miniatura, junto com cidades, estados e páginas (coleções e temas). Vale também para os resultados de outras regiões.</p>
         {(() => {
           const draft = global.doc.search?.designs !== false;
           const live = global.baseDoc.search?.designs !== false;
@@ -155,9 +155,9 @@ export default async function AppearancePage({ searchParams }: { searchParams: P
               <input type="hidden" name="rev" value={String(global.record?.rev ?? "null")} />
               <label className="flex min-h-10 items-center gap-2 text-[0.9375rem] font-semibold">
                 <input type="checkbox" name="search_designs" defaultChecked={draft} disabled={!owner} data-testid="search-designs" />
-                Mostrar o grupo “Estampas” nos resultados da busca
+                Mostrar as estampas de cidade (coleção Seu Lugar) nos resultados da busca
               </label>
-              <p className="text-[0.875rem]" data-testid="search-live"><strong>Na loja agora:</strong> estampas {live ? "aparecem" : "não aparecem"} na busca.{draft !== live && " O rascunho tem outra escolha: publique a configuração global em Publicar."}</p>
+              <p className="text-[0.875rem]" data-testid="search-live"><strong>Na loja agora:</strong> estampas de cidade {live ? "aparecem" : "não aparecem"} na busca; as demais estampas sempre aparecem.{draft !== live && " O rascunho tem outra escolha: publique a configuração global em Publicar."}</p>
               {owner ? <button type="submit" className="a-btn" data-testid="save-search">Salvar rascunho da busca</button> : <p className="a-muted">Só o owner altera.</p>}
             </form>
           );

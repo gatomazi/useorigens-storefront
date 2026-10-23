@@ -21,9 +21,9 @@ export async function GET(request: Request) {
 
   const started = performance.now();
   const index = globalSearchIndex();
-  // "Estampas na busca" (Aparência, global): switched off, the designs group is left out of the answer, not just hidden on screen.
-  const hidden = siteConfigHomeEnabled() && !searchShowsDesigns(homeBundle()) ? (["designs"] as const) : [];
-  const result = searchGlobal(index.byRegion, region, q, hidden);
+  // "Estampas de cidade na busca" (Aparência, global): switched off, the cities' collection designs are left out of the answer, not just hidden on screen.
+  const hideCityDesigns = siteConfigHomeEnabled() && !searchShowsDesigns(homeBundle());
+  const result = searchGlobal(index.byRegion, region, q, hideCityDesigns);
   const ms = (performance.now() - started).toFixed(1);
   return Response.json(result, {
     headers: {
