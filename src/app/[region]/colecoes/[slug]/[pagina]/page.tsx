@@ -31,8 +31,8 @@ export default async function Page({ params }: Params) {
   const { region, slug, pagina } = await params;
   const n = pageNumber(pagina);
   if (!n) notFound();
-  const { region: r, bundle, page, automatic } = resolveCollectionLanding(region, slug);
+  const { region: r, bundle, page, compact } = resolveCollectionLanding(region, slug);
   if (n === 1) permanentRedirect(landingPageHref(r, page, 1));
   if (n > pagedGridPageCount(r, bundle, page)) notFound();
-  return <PublicPage region={r} bundle={bundle} page={page} pageNumber={n} compactHero={automatic} />;
+  return <PublicPage region={r} bundle={bundle} page={page} pageNumber={n} compactHero={compact} />;
 }

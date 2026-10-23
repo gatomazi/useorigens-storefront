@@ -8,7 +8,8 @@ import type { Page, PublishedBundle } from "@/lib/site-config/schema";
 
 /**
  * A published page drawn with the home's own components (sections come from the page instead of the home). `pageNumber`: the page of its paged
- * grid. `compactHero`: the automatic collection page keeps its header short so the products come first (an owner's landing keeps its own hero).
+ * grid. `compactHero`: a collection page that opens with just its title (the automatic one, or an owner's landing left that way) keeps its header short
+ * so the products come first; a hero the owner dressed keeps its own size.
  */
 export function PublicPage({ region, bundle, page, pageNumber = 1, compactHero = false }: { region: RegionSlug; bundle: PublishedBundle; page: Page; pageNumber?: number; compactHero?: boolean }) {
   const catalog = getCatalog();

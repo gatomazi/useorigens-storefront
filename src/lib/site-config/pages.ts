@@ -82,3 +82,15 @@ export function newCollectionLanding(input: { id: string; heroId: string; gridId
   const page = newPage({ id: input.id, kind: "categoryLanding", title: input.title, slug: input.slug, heroId: input.heroId });
   return { ...page, sections: [...page.sections, newCollectionGrid(input.gridId, input.ref)] };
 }
+
+/**
+ * Whether a published collection landing still opens like the automatic one ("Personalizar página" and published without dressing the hero): a hero
+ * with only the title — no subtitle, no button, no published picture (`hasPicture`) — and the paged grid of a collection. It then gets the same short
+ * header, so the products come first; a hero the owner dressed keeps its full size.
+ */
+export function plainCollectionLanding(page: Page, hasPicture: (appearance: Appearance) => boolean): boolean {
+  const active = page.sections.filter((s) => s.active);
+  const hero = active.find((s) => s.template === "page-hero");
+  if (!hero || hero.subtitle?.trim() || hero.cta || hasPicture(hero.appearance)) return false;
+  return active.some((s) => s.layout?.display === "paged" && s.source?.kind === "ink-category");
+}
