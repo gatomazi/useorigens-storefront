@@ -13,7 +13,7 @@ import { eligibleLines, netUnits, parseInkOrder } from "@/lib/podio/orders";
 import { freshnessOf, MAX_AGE_MS, projectLeaders, projectPodium, type PodioCatalogView } from "@/lib/podio/public";
 import { movementOf, orderEntities } from "@/lib/podio/rank";
 import { readDatedSnapshot, readLatestSnapshot, readProductSales, readRunState } from "@/lib/podio/snapshot";
-import { freshUnits, lineStore, tallyProductSales } from "@/lib/podio/product-sales";
+import { cumulativeUnits, freshUnits, lineStore, tallyProductSales } from "@/lib/podio/product-sales";
 import { sortCollection } from "@/lib/search/collection-filter";
 import { syncRegionPodio } from "@/lib/podio/sync";
 import type { PodioOrder, PodioSnapshot } from "@/lib/podio/types";
@@ -356,6 +356,16 @@ describe("units sold per product (the collection pages' \"Mais vendidas\")", () 
     expect(freshUnits(sales, "sul", NOW)).toEqual(sales.units);
     expect(freshUnits(sales, "sul", new Date(NOW.getTime() + 73 * 3600_000))).toBeNull();
     expect(freshUnits(sales, "norte", NOW)).toBeNull();
+  });
+
+  it("with no fresh count (pódio switched off), the fallback is INK's cumulative sales of the catalog: merch, unscoped and city designs; no count, no entry", () => {
+    const store = {
+      merch: new Map([["1", { totalSalesCount: 40 }], ["2", { totalSalesCount: Number.NaN }]]),
+      unscoped: new Map([["3", { totalSalesCount: 7 }]]),
+      cityDesigns: new Map([["4", { totalSalesCount: 0 }], ["5", {}]]),
+    } as unknown as Parameters<typeof cumulativeUnits>[0][number];
+    expect(cumulativeUnits([store])).toEqual({ "1": 40, "3": 7, "4": 0 });
+    expect(cumulativeUnits([{ merch: new Map(), cityDesigns: new Map() }])).toBeNull();
   });
 
   it("a sale in the old regional store counts under its confirmed id in the single store; one with no confirmed counterpart is left out", () => {

@@ -102,7 +102,7 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
             <select id="default_sort" name="default_sort" className="a-select max-w-md" defaultValue={page.defaultSort ?? "collection"} aria-describedby="default-sort-help">
               {PRODUCT_SORTS.map((sort) => <option key={sort} value={sort}>{PRODUCT_SORT_LABEL[sort]}</option>)}
             </select>
-            <p id="default-sort-help" className="a-muted mt-2 max-w-3xl text-[0.875rem]">A página já abre nesta ordem, antes da paginação. Vale também para as seções que usam o padrão da página. Uma seção pode ter outra ordenação; a ordem manual da coleção tem prioridade. Mais vendidas usa as vendas dos últimos 30 dias e depende de uma apuração atualizada; Novidades usa a data de cadastro disponível no catálogo.</p>
+            <p id="default-sort-help" className="a-muted mt-2 max-w-3xl text-[0.875rem]">A página já abre nesta ordem, antes da paginação. Vale também para as seções que usam o padrão da página. Uma seção pode ter outra ordenação; a ordem manual da coleção tem prioridade. Mais vendidas usa as vendas dos últimos 30 dias quando O Pódio está ligado e apurado; senão, o total acumulado de vendas da INK; Novidades usa a data de cadastro disponível no catálogo.</p>
           </div>
           <div className="md:col-span-2">
             <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="indexable" defaultChecked={page.seo.indexable} disabled={!owner} /> Permitir que buscadores indexem esta página</label>

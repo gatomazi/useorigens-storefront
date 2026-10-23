@@ -70,6 +70,9 @@ function storeOrderFor(region: RegionSlug, plan: CommercePlan): CommerceStoreKey
   return [own, ...others];
 }
 
+/** The stores a region's cards come from right now, in priority order (the single store, in single-store mode). */
+export const storesServing = (region: RegionSlug): CommerceStoreKey[] => storeOrderFor(region, commercePlan());
+
 let cache: { key: string; mtimeMs: number; catalog: Catalog } | null = null;
 
 /**

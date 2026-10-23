@@ -1,4 +1,5 @@
 import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
+import type { StoreProducts } from "../catalog/repository";
 import type { EligibleLine } from "./orders";
 
 /**
@@ -55,4 +56,25 @@ export function freshUnits(sales: ProductSales | null, region: RegionSlug, now: 
   if (!sales || sales.region !== region) return null;
   const age = now.getTime() - Date.parse(sales.computedAt);
   return Number.isFinite(age) && age <= PRODUCT_SALES_MAX_AGE_MS ? sales.units : null;
+}
+
+/**
+ * Fallback for "Mais vendidas" when there is no fresh 30-day count (the pódio of the region is switched off, or its run is stale): INK's own
+ * cumulative `total_sales_count` of every product the region sells from, as the catalog sync stored it. No extra call to INK. A product without a
+ * count is absent (the sort reads it as zero); null when no product carries one, so the sort is not offered on nothing.
+ */
+export function cumulativeUnits(stores: readonly StoreProducts[]): Record<string, number> | null {
+  const units: Record<string, number> = {};
+  let counted = false;
+  for (const store of stores) {
+    for (const products of [store.merch, store.unscoped, store.cityDesigns]) {
+      for (const [id, product] of products ?? []) {
+        const count = product.totalSalesCount;
+        if (typeof count !== "number" || !Number.isFinite(count) || count < 0) continue;
+        units[id] = count;
+        counted = true;
+      }
+    }
+  }
+  return counted ? units : null;
 }

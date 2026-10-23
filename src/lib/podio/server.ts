@@ -1,12 +1,12 @@
 import "server-only";
-import { getCatalog } from "../catalog/repository";
+import { getCatalog, storesServing, type StoreProducts } from "../catalog/repository";
 import { localityById } from "../geo/localities";
 import type { RegionSlug } from "../geo/regions";
 import type { ScopeDoc } from "../site-config/schema";
 import { podioEnabled } from "./enabled";
 import { freshnessOf, projectLeaders, projectPodium, type PodioCatalogView, type PodiumLeader, type PublicPodium } from "./public";
 import { readLatestSnapshot, readProductSales, readRunState } from "./snapshot";
-import { freshUnits } from "./product-sales";
+import { cumulativeUnits, freshUnits } from "./product-sales";
 
 function catalogView(): PodioCatalogView {
   const catalog = getCatalog();
@@ -51,10 +51,23 @@ export function getPodiumLeaders(region: RegionSlug, ufs: readonly string[], doc
   return projectLeaders(readLatestSnapshot(region), readRunState(region), region, ufs, catalogView(), new Date());
 }
 
+const cumulativeCache = new WeakMap<StoreProducts, Record<string, number> | null>();
+function cumulativeOf(store: StoreProducts): Record<string, number> | null {
+  if (!cumulativeCache.has(store)) cumulativeCache.set(store, cumulativeUnits([store]));
+  return cumulativeCache.get(store)!;
+}
+
 /**
- * Units sold per product of the region's store over the pódio's window, for the collection pages' "Mais vendidas" sort; null when there is no fresh
- * count (the pódio never ran, is switched off and its last file aged out, or the run is older than 72 h): the sort is then not offered.
+ * Units sold per product, for the collection pages' "Mais vendidas" sort. The pódio's fresh 30-day count when there is one; otherwise (the pódio
+ * never ran, is switched off and its last file aged out, or the run is older than 72 h) INK's cumulative sales of the catalog, so the sort does not
+ * depend on the pódio being on. Null only when neither exists: the sort is then not offered.
  */
 export function productSalesUnits(region: RegionSlug): Readonly<Record<string, number>> | null {
-  return freshUnits(readProductSales(region), region, new Date());
+  const fresh = freshUnits(readProductSales(region), region, new Date());
+  if (fresh) return fresh;
+  const catalog = getCatalog();
+  const perStore = storesServing(region).map((store) => cumulativeOf(catalog.productsOfStore(store))).filter((u): u is Record<string, number> => u !== null);
+  // Lower-priority stores first, so the store the region sells from wins for an id present in two.
+  if (perStore.length <= 1) return perStore[0] ?? null;
+  return Object.assign({}, ...perStore.reverse());
 }
