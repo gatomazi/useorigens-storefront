@@ -12,7 +12,7 @@ import { REGION_THEME } from "../theme/region-theme";
 import { contrastRatio, rgbTriplet } from "./color";
 import { headerLinks } from "./nav";
 import { NAV_DESTINATIONS, THEME_COLOR_KEYS, type NavBlockConfig, type NavDestination, type NavigationConfig, type ThemeColorKey, type ThemeColors } from "./navigation-schema";
-import type { Scope, ScopeDoc } from "./schema";
+import type { CollectionHighlight, MenuHighlightColors, Scope, ScopeDoc } from "./schema";
 
 export * from "./navigation-schema";
 
@@ -135,6 +135,40 @@ export function themeContrast(colors: ThemeColors): ContrastPair[] {
   ];
 }
 
+/**
+ * The readability of one highlighted collection of the bar, where it really shows (`resolveTheme`): the desktop header and the phone menu. Its text over
+ * its button (each falling back to that surface's own colour), at the worse of the two, blocks a publish under 3:1 and warns under AA; the line under it
+ * is a marker (under 3:1 over the button, a warning). Nothing to check when it sets neither text nor button colour (only the line).
+ */
+export function highlightContrast(colors: MenuHighlightColors, theme: Pick<ThemeColors, "headerBackground" | "headerText" | "mobileMenuBackground" | "mobileMenuText">): { level: "blocking" | "warning"; message: string }[] {
+  const surfaces = [
+    { background: colors.background ?? theme.headerBackground, text: colors.text ?? theme.headerText },
+    { background: colors.background ?? theme.mobileMenuBackground, text: colors.text ?? theme.mobileMenuText },
+  ];
+  const out: { level: "blocking" | "warning"; message: string }[] = [];
+  if (colors.background || colors.text) {
+    const ratio = Math.min(...surfaces.map((s) => contrastRatio(s.text, s.background)));
+    if (ratio < CONTRAST_BLOCKING) out.push({ level: "blocking", message: `texto sobre o botão com contraste ${ratio.toFixed(1)}:1, quase ilegível (mínimo aceito para publicar: ${CONTRAST_BLOCKING}:1)` });
+    else if (ratio < CONTRAST_AA) out.push({ level: "warning", message: `texto sobre o botão com contraste ${ratio.toFixed(1)}:1, abaixo do AA (${CONTRAST_AA}:1)` });
+  }
+  if (colors.underline) {
+    const ratio = Math.min(...surfaces.map((s) => contrastRatio(colors.underline!, s.background)));
+    if (ratio < CONTRAST_BLOCKING) out.push({ level: "warning", message: `linha embaixo com contraste ${ratio.toFixed(1)}:1 sobre o botão (recomendado: ${CONTRAST_BLOCKING}:1)` });
+  }
+  return out;
+}
+
+/** Contrast problems of a region's highlighted collections, by name (`nameOf`, e.g. from the synced collections; the id otherwise). */
+export function highlightProblems(region: RegionSlug, doc: ScopeDoc | undefined, global: Pick<ScopeDoc, "theme"> | undefined, nameOf: (h: CollectionHighlight) => string = (h) => `coleção #${h.collectionId}`): { blocking: string[]; warnings: string[] } {
+  const header = resolveTheme(region, doc, global).effective;
+  const blocking: string[] = [];
+  const warnings: string[] = [];
+  for (const h of doc?.collections?.highlights ?? []) {
+    for (const issue of highlightContrast(h, header)) (issue.level === "blocking" ? blocking : warnings).push(`Destaque de "${nameOf(h)}" no menu: ${issue.message}.`);
+  }
+  return { blocking, warnings };
+}
+
 export const contrastMessage = (p: ContrastPair): string =>
   p.level === "blocking"
     ? `${p.label}: contraste ${p.ratio.toFixed(1)}:1, quase ilegível (mínimo aceito para publicar: ${CONTRAST_BLOCKING}:1).`
@@ -172,6 +206,8 @@ export type NavItemData = {
   badge?: string;
   /** One short line under the label in the open menus: a state's number of places, a collection's description. */
   detail?: string;
+  /** A highlighted collection of the bar: its button, text and line colours (`collections.highlights`). */
+  highlight?: MenuHighlightColors;
   /** Present only on state entries, so `select_state` can still fire (plain data: the menu is rendered from a Server Component). */
   trackState?: { state: string; region: string };
 };

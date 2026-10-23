@@ -6,7 +6,7 @@ import { publish, reconcile, type FileState, type PublishOutcome, type PublishPo
 import { resolveTracking, type TrackingOrigin } from "../site-config/resolve";
 import { mediaRefsOfDoc, validateBundle, type Customizer, type Destination, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "../site-config/schema";
 import { REGION_SLUGS } from "../geo/regions";
-import { themeProblems } from "../site-config/navigation";
+import { highlightProblems, themeProblems } from "../site-config/navigation";
 import { neutralThemeProblems } from "../site-config/neutral-theme";
 import { pageAsHomeDoc } from "../site-config/pages";
 import { buildSeedBundle } from "../site-config/seed";
@@ -153,6 +153,7 @@ export function themeBlockers(bundle: PublishedBundle, scope: Scope): string[] {
   return [
     ...(doc?.theme ? themeProblems(scope, doc, bundle.docs.global, inheriting).blocking.map((m) => `Aparência: ${m}`) : []),
     ...(scope === "global" ? neutralThemeProblems(doc?.neutralTheme).blocking.map((m) => `Páginas sem região: ${m}`) : []),
+    ...(scope !== "global" ? highlightProblems(scope, doc, bundle.docs.global).blocking : []),
   ];
 }
 
