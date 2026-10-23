@@ -16,7 +16,7 @@ import { DESIGN_FAMILIES } from "./families";
 import { localityOfBinding } from "./locality-binding";
 import { stateHierarchyRows, type StateHierarchyRow } from "./state-hierarchy";
 import type { StoreProducts } from "./repository";
-import type { UnscopedProduct, UnrankedBinding } from "./types";
+import { merchRegions, type UnscopedProduct, type UnrankedBinding } from "./types";
 import { productSortData, sortProducts, type ProductSalesUnits } from "./product-sort";
 import { umaPencaLookup } from "../umapenca/carousel";
 import { CITY_DESIGN_GARMENT_TYPE_ID } from "../search/collection-filter";
@@ -122,18 +122,21 @@ function storeItem(products: StoreProducts, id: string): CarouselItem | null {
   return unscoped ? merchItem(unscoped) : null;
 }
 
-/** The region a catalog product is about (a city design's locality, a merch item's own region), or null when unknown. */
-export function regionOfStoreProduct(products: StoreProducts, id: string): RegionSlug | null {
+/**
+ * Whether a catalog product is about `region`: a city design's locality, a merch item's region — or ANY of its regions, for a single-store item
+ * in the regional collections of several (`MerchProduct.regions`). False when unknown (an unscoped product).
+ */
+export function servesRegion(products: StoreProducts, id: string, region: RegionSlug): boolean {
   const merch = products.merch.get(id);
-  if (merch) return merch.regionSlug;
+  if (merch) return merchRegions(merch).includes(region);
   const design = products.cityDesigns.get(id);
-  return design ? (localityOfBinding(design)?.regionSlug ?? null) : null;
+  return design ? localityOfBinding(design)?.regionSlug === region : false;
 }
 
 /** A store product's card, or null when it is not in the catalog or (with `region`) is about another region: a no-op for a regional store; in
  * single-store mode one store holds the three regions. */
 const regionItem = (products: StoreProducts, id: string, region: RegionSlug | undefined): CarouselItem | null =>
-  region && regionOfStoreProduct(products, id) !== region ? null : storeItem(products, id);
+  region && !servesRegion(products, id, region) ? null : storeItem(products, id);
 
 /**
  * The collections a region may show (search results, collection pages): those of the region's store under the effective commerce mode. In
@@ -155,7 +158,7 @@ export function collectionsForRegion(region: RegionSlug, productsOf: (store: Com
 
 /** How many of a collection's products are about `region` (a thematic collection of the single store mixes the three regions). */
 function regionMemberCount(c: CollectionRecord, products: StoreProducts, region: RegionSlug): number {
-  return (completeMembers(c) ?? c.memberIds).filter((id) => regionOfStoreProduct(products, id) === region).length;
+  return (completeMembers(c) ?? c.memberIds).filter((id) => servesRegion(products, id, region)).length;
 }
 
 /** A collection is the region's when it has at least MIN_USABLE_PRODUCTS products of the region; it then shows only those (`regionItem`). */

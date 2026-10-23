@@ -125,6 +125,12 @@ export type ProdutoSul = {
   /** Evidências usadas, em ordem de confiança: estado do migrador, coleção regional (SUL / ZZ - CO / ZZ - NO), UF do nome (só diagnóstico). */
   evidencias: string[];
   diagnostico?: string;
+  /**
+   * Só num "conflito" de produto NÃO geográfico (sem cidade nem UF no nome) que está em mais de uma coleção regional (SUL / ZZ - CO / ZZ - NO) e
+   * em nada mais: as regiões dessas coleções, na ordem de REGIONS. A coleção é a palavra do dono de que o produto serve a cada uma (ex.: "A estrela
+   * de natal sou Eu" nas três); a loja única o mostra em todas elas. Um desenho de cidade em duas coleções continua conflito de verdade.
+   */
+  regioesColecao?: RegionSlug[];
   /** Item do migrador dono deste id (vínculo vigente). */
   chaveMigracao?: string;
   tipoNoEstado?: number;
@@ -179,9 +185,14 @@ export function classificarRegioesSul(produtos: readonly ProdutoBruto[], colecoe
 
     let regiao: RegiaoSombra;
     let diagnostico: string | undefined;
+    let regioesColecao: RegionSlug[] | undefined;
     if (candidatas.size > 1) {
       regiao = "conflito";
       diagnostico = `evidências apontam regiões diferentes: ${[...candidatas].join(" × ")}`;
+      if (parsed.kind === "other" && evid.every((e) => e.startsWith("colecao:"))) {
+        regioesColecao = (Object.keys(REGIONS) as RegionSlug[]).filter((r) => candidatas.has(r));
+        diagnostico = `produto não geográfico nas coleções regionais de ${regioesColecao.join(" + ")}: serve a todas elas`;
+      }
     } else if (candidatas.size === 1) {
       regiao = [...candidatas][0];
       if (regiaoNome && regiaoNome !== regiao) {
@@ -196,7 +207,7 @@ export function classificarRegioesSul(produtos: readonly ProdutoBruto[], colecoe
           ? "produto não geográfico sem coleção regional"
           : "sem estado do migrador, sem coleção regional e sem UF no nome";
     }
-    out.set(p.id, { produto: p, regiao, evidencias: evid, ...(diagnostico ? { diagnostico } : {}), ...(dono ? { chaveMigracao: dono.chave, tipoNoEstado: dono.tipo } : {}) });
+    out.set(p.id, { produto: p, regiao, evidencias: evid, ...(diagnostico ? { diagnostico } : {}), ...(regioesColecao ? { regioesColecao } : {}), ...(dono ? { chaveMigracao: dono.chave, tipoNoEstado: dono.tipo } : {}) });
   }
   return out;
 }

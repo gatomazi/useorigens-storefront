@@ -15,6 +15,7 @@ import { SINGLE_STORE_DIR } from "@/lib/catalog/commerce-mode";
 import { getCatalog } from "@/lib/catalog/repository";
 import { writeCollectionsFile, collectionsPath } from "@/lib/catalog/collections-file";
 import type { InkProductNormalized, MerchProduct } from "@/lib/catalog/types";
+import { buildSearchDocs } from "@/lib/catalog/search-docs";
 
 let seq = 7000;
 function produto(name: string, extra: Partial<ProdutoBruto> = {}): ProdutoBruto {
@@ -135,15 +136,16 @@ describe("montarLojaUnica — simulação", () => {
   });
 });
 
+const paginas = (ids: Record<string, string[]>) => [
+  {
+    page: 1,
+    total_pages: 1,
+    total_count: Object.keys(ids).length,
+    collections: Object.entries(ids).map(([name, productIds], i) => ({ id: 500 + i, name, slug: name.toLowerCase().replace(/\s+/g, "-"), position: i, is_available: true, product_ids: productIds.map(Number) })),
+  },
+];
+
 describe("coleções da loja única", () => {
-  const paginas = (ids: Record<string, string[]>) => [
-    {
-      page: 1,
-      total_pages: 1,
-      total_count: Object.keys(ids).length,
-      collections: Object.entries(ids).map(([name, productIds], i) => ({ id: 500 + i, name, slug: name.toLowerCase().replace(/\s+/g, "-"), position: i, is_available: true, product_ids: productIds.map(Number) })),
-    },
-  ];
   test("given the INK pages, then they are matched against the single-store catalog by the production parser", () => {
     const loja = montarLojaUnica(classificar(), { modo: "simulacao", syncedAt: "t", fonte: FONTE }).catalogo.stores["use-sul"]!;
     const c = montarColecoes("use-sul", paginas({ Mista: [curitiba.id, belem.id, "123"] }), loja, "t");
@@ -186,6 +188,82 @@ describe("coleções da loja única", () => {
       // A Norte document still pointing at the old regional store: the single store sells Norte now, so that section has nothing to show.
       const lookup = categoryLookup((s) => c.productsOfStore(s), () => new Set(), undefined, undefined, "norte");
       expect(lookup({ kind: "ink-category", store: "use-norte", collectionId: 141902, order: "category", limit: 6 })).toEqual({ status: "unavailable", reason: "collection-not-found" });
+    });
+  });
+});
+
+describe("produto não geográfico nas coleções regionais de várias regiões", () => {
+  // "A estrela de natal sou Eu" está em SUL, ZZ - CO e ZZ - NO: serve às três. Um desenho de cidade em duas coleções é conflito de verdade.
+  const natal = [produto("A estrela de natal sou Eu"), produto("Feliz Natal | Família"), produto("Papai Noel de Bombacha")];
+  const sulENorte = produto("Bah | Dizeres");
+  const soSul = produto("Paraná | Escritas");
+  const cidadeEmDuas = produto("Joinville | Origem SC");
+  const ids = (ps: ProdutoBruto[]) => ps.map((p) => p.id);
+  const regionais = {
+    sul: new Set([...ids(natal), sulENorte.id, soSul.id, cidadeEmDuas.id]),
+    co: new Set([...ids(natal), cidadeEmDuas.id]),
+    no: new Set([...ids(natal), sulENorte.id]),
+  };
+  const montar = () => {
+    const estado = lerEstadoMigracao(ESTADO);
+    const sul = classificarRegioesSul([...natal, sulENorte, soSul, cidadeEmDuas], regionais, estado);
+    classificarDesenhosSul(sul, estado);
+    return { sul, r: montarLojaUnica(sul, { modo: "producao", syncedAt: "t", fonte: FONTE }) };
+  };
+
+  test("then it becomes ONE merch item that serves every region of its collections, the first one as regionSlug", () => {
+    const { sul, r } = montar();
+    const loja = r.catalogo.stores["use-sul"]!;
+    expect(sul.get(natal[0].id)).toMatchObject({ regiao: "conflito", regioesColecao: ["sul", "norte", "centro-oeste"] });
+    expect(loja.merch.filter((m) => m.inkProductId === natal[0].id)).toEqual([expect.objectContaining({ regionSlug: "sul", regions: ["sul", "norte", "centro-oeste"], name: "A estrela de natal sou Eu" })]);
+    expect(loja.merch.find((m) => m.inkProductId === sulENorte.id)).toMatchObject({ regionSlug: "sul", regions: ["sul", "norte"] });
+    expect(r.situacoes.find((l) => l.id === natal[0].id)).toMatchObject({ situacao: "publicado", classe: "merch" });
+    expect(loja.unscopedProducts?.map((p) => p.inkProductId) ?? []).not.toContain(natal[0].id);
+  });
+
+  test("then a product of one regional collection is unchanged, and a city design in two stays a conflict (unscoped)", () => {
+    const { sul, r } = montar();
+    const loja = r.catalogo.stores["use-sul"]!;
+    expect(loja.merch.find((m) => m.inkProductId === soSul.id)).not.toHaveProperty("regions");
+    expect(sul.get(cidadeEmDuas.id)?.regioesColecao).toBeUndefined();
+    expect(loja.merch.map((m) => m.inkProductId)).not.toContain(cidadeEmDuas.id);
+    expect(loja.bindings.map((b) => b.inkProductId)).not.toContain(cidadeEmDuas.id);
+    expect(loja.unscopedProducts?.map((p) => p.inkProductId)).toContain(cidadeEmDuas.id);
+    expect(r.situacoes.find((l) => l.id === cidadeEmDuas.id)?.situacao).toBe("regiao-pendente");
+  });
+
+  describe("on the storefront (single-store)", () => {
+    let dir = "";
+    const saved: Record<string, string | undefined> = {};
+    beforeEach(() => {
+      for (const k of ["CATALOG_SNAPSHOT_DIR", "COMMERCE_MODE", "COMMERCE_SIMULATION"]) saved[k] = process.env[k];
+      dir = mkdtempSync(path.join(tmpdir(), "loja-unica-varias-"));
+      Object.assign(process.env, { CATALOG_SNAPSHOT_DIR: dir, COMMERCE_MODE: "single-store", COMMERCE_SIMULATION: "on" });
+    });
+    afterEach(() => {
+      for (const [k, v] of Object.entries(saved)) if (v === undefined) delete process.env[k];
+      else process.env[k] = v;
+    });
+
+    test("then each region lists it (merch, search) and shows it in a collection's filter", async () => {
+      const { r } = montar();
+      const d = path.join(dir, SINGLE_STORE_DIR);
+      mkdirSync(d, { recursive: true });
+      writeFileSync(path.join(d, "catalog-snapshot.json"), JSON.stringify(r.catalogo));
+      const loja = r.catalogo.stores["use-sul"]!;
+      const c = montarColecoes("use-sul", paginas({ Natal: ids(natal) }), loja, "t");
+      await writeCollectionsFile({ version: 2, stores: { "use-sul": c } }, collectionsPath(d));
+      const catalog = getCatalog();
+      for (const region of ["sul", "norte", "centro-oeste"] as const) {
+        expect(catalog.merch(region).map((m) => m.inkProductId)).toEqual(expect.arrayContaining(ids(natal)));
+        expect(collectionsForRegion(region, (s) => catalog.productsOfStore(s)).map((x) => [x.name, x.matchedCount])).toEqual([["Natal", 3]]);
+        const lookup = categoryLookup((s) => catalog.productsOfStore(s), () => new Set(), undefined, undefined, region);
+        const result = lookup({ kind: "ink-category", store: "use-sul", collectionId: c.collections[0].id, order: "category", limit: 6 });
+        expect(result.status === "ok" ? result.items.map((i) => i.id).sort() : result).toEqual([...ids(natal)].sort());
+        expect(buildSearchDocs(catalog, region, c.collections).map((p) => p.doc.id)).toEqual(expect.arrayContaining(ids(natal)));
+      }
+      expect(catalog.merch("centro-oeste").map((m) => m.inkProductId)).not.toContain(sulENorte.id);
+      expect(catalog.merch("norte").map((m) => m.inkProductId)).toContain(sulENorte.id);
     });
   });
 });

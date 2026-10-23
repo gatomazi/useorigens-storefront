@@ -116,7 +116,8 @@ async function designLookup(dir: string): Promise<(id: string) => DesignInfo | u
     });
   }
   for (const m of index?.merch ?? []) {
-    if (!byId.has(m.inkProductId)) byId.set(m.inkProductId, { regionName: REGIONS[m.regionSlug]?.name ?? null, uf: null, stateName: null });
+    // An item of several regions (single store, `regions`) names none of them, as before it entered the merch list.
+    if (!byId.has(m.inkProductId)) byId.set(m.inkProductId, { regionName: m.regions && m.regions.length > 1 ? null : (REGIONS[m.regionSlug]?.name ?? null), uf: null, stateName: null });
   }
   return (id) => byId.get(id);
 }

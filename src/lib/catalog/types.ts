@@ -98,6 +98,11 @@ export type MerchProduct = {
   inkProductId: string;
   commerceStoreKey: CommerceStoreKey;
   regionSlug: RegionSlug;
+  /**
+   * Loja única: TODAS as regiões a que o produto serve, quando é mais de uma (está nas coleções regionais de cada uma, ex.: um produto de Natal
+   * em SUL, ZZ - CO e ZZ - NO); `regionSlug` é a primeira. Ausente = só `regionSlug`. Use `merchRegions`.
+   */
+  regions?: RegionSlug[];
   name: string;
   slug: string;
   storeProductUrl: string;
@@ -122,7 +127,10 @@ export type MerchProduct = {
 };
 
 /** A published, sellable product whose geography/design could not be resolved. Only the all-regions catalog may show it. */
-export type UnscopedProduct = Omit<MerchProduct, "regionSlug">;
+export type UnscopedProduct = Omit<MerchProduct, "regionSlug" | "regions">;
+
+/** Every region a merch product serves (`regions`, else its one `regionSlug`). */
+export const merchRegions = (m: Pick<MerchProduct, "regionSlug" | "regions">): readonly RegionSlug[] => m.regions ?? [m.regionSlug];
 
 export type ExclusionReason =
   | "ambiguous-city"

@@ -11,7 +11,7 @@ import { CLASSIC_GARMENT_TYPE_ID, GARMENT_TYPES, garmentTypeById } from "./garme
 import { emptyGarmentIndex, expandTuple, garmentIndexMtimeMs, garmentIndexPath, readGarmentIndexSync, type ExpandedPiece, type GarmentIndex } from "./garment-index-file";
 import { compareIds, rankBindings } from "./ranking";
 import { EMPTY_SNAPSHOT, readSnapshotSync, snapshotMtimeMs, snapshotPath } from "./snapshot-file";
-import type { CityDesignBinding, MerchProduct, UnrankedBinding, UnscopedProduct } from "./types";
+import { merchRegions, type CityDesignBinding, type MerchProduct, type UnrankedBinding, type UnscopedProduct } from "./types";
 
 export type CityFamilyEntry = {
   family: DesignFamily;
@@ -121,10 +121,13 @@ function build(file: string, plan: CommercePlan): { catalog: Catalog; mtimeMs: n
       list.push(binding);
       byRegion.set(region, list);
     }
+    // A single-store item that serves several regions (`regions`) is listed in each of them.
     for (const item of store.merch) {
-      const list = merchByRegion.get(item.regionSlug) ?? [];
-      list.push(item);
-      merchByRegion.set(item.regionSlug, list);
+      for (const region of merchRegions(item)) {
+        const list = merchByRegion.get(region) ?? [];
+        list.push(item);
+        merchByRegion.set(region, list);
+      }
     }
   }
 

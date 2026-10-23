@@ -2,7 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { getCollections } from "../catalog/collections-file";
 import { completeMembers } from "../catalog/collections";
-import { regionOfStoreProduct } from "../catalog/collection-source";
+import { servesRegion } from "../catalog/collection-source";
 import { getCatalog } from "../catalog/repository";
 import { commercePlan, storeForRegion } from "../catalog/commerce-mode";
 import type { RegionSlug } from "../geo/regions";
@@ -21,7 +21,7 @@ export function copyCollections(region?: RegionSlug): CopyCollection[] {
   return Object.entries(getCollections().stores).flatMap(([store, snapshot]) => (snapshot?.collections ?? []).map((collection) => {
     const { id, name, slug, isAvailable, needsResync } = collection;
     const matchedCount = store === target && products && region
-      ? (completeMembers(collection) ?? collection.memberIds).filter((id) => regionOfStoreProduct(products, id) === region).length
+      ? (completeMembers(collection) ?? collection.memberIds).filter((id) => servesRegion(products, id, region)).length
       : collection.matchedCount;
     return { store: store as CopyCollection["store"], id, name, slug, isAvailable, matchedCount, ...(needsResync ? { needsResync } : {}) };
   }));
