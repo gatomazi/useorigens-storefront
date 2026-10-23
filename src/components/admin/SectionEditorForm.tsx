@@ -395,7 +395,7 @@ export function SectionEditorForm({
                 <option value="">{page ? `Usar padrão da página (${PRODUCT_SORT_LABEL[pageDefaultSort ?? "collection"]})` : "Usar ordem original da fonte"}</option>
                 {PRODUCT_SORTS.map((sort) => <option key={sort} value={sort}>{PRODUCT_SORT_LABEL[sort]}</option>)}
               </select>
-              <p id="source-sort-help" className="a-muted mt-2 text-[0.875rem]">Aplicada antes do limite de cards. A ordem manual da coleção tem prioridade. Novidades usa a data de cadastro; Mais vendidas usa as vendas dos últimos 30 dias. Sem uma apuração atualizada, a ordem da fonte é mantida.</p>
+              <p id="source-sort-help" className="a-muted mt-2 text-[0.875rem]">Aplicada antes do limite de cards. A ordem manual da coleção tem prioridade. Novidades usa a data de cadastro; Mais vendidas usa as vendas dos últimos 30 dias quando O Pódio está ligado e apurado; senão, o total acumulado de vendas da INK.</p>
               {sourceKind === "umapenca" && <p className="a-muted mt-2 text-[0.875rem]">O feed da Uma Penca não informa datas de cadastro nem vendas. Nessa fonte, Novidades e Mais vendidas mantêm a ordem do feed.</p>}
             </div>
             <div role="radiogroup" aria-label="Fonte" className="flex flex-wrap gap-4">
