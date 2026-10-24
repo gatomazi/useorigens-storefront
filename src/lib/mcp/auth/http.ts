@@ -5,7 +5,7 @@
 export const MCP_CORS_HEADERS: Readonly<Record<string, string>> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Authorization, Content-Type, Mcp-Protocol-Version, Mcp-Session-Id, Last-Event-ID",
+  "Access-Control-Allow-Headers": "Authorization, X-Origens-Key, Content-Type, Mcp-Protocol-Version, Mcp-Session-Id, Last-Event-ID",
   "Access-Control-Expose-Headers": "WWW-Authenticate, Mcp-Session-Id, Mcp-Protocol-Version",
   "Access-Control-Max-Age": "600",
 };
