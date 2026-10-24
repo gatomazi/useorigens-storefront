@@ -101,3 +101,44 @@ describe("authenticateMcpRequest", () => {
     expect(stranger.status).toBe(400); // the exchange itself is refused: not an owner
   });
 });
+
+describe("owner API key (X-Origens-Key)", () => {
+  test("given the key whose hash is configured, then the owner with read and write, without any OAuth token", async () => {
+    const { apiKeyHash, newApiKey } = await import("@/lib/mcp/auth/api-key");
+    const key = newApiKey();
+    vi.stubEnv("MCP_API_KEY_SHA256", apiKeyHash(key));
+    const { authenticateMcpRequest } = await import("@/lib/mcp/auth/resource");
+    const ok = await authenticateMcpRequest(req("/api/mcp", { method: "POST", headers: { "x-origens-key": key } }));
+    expect(ok).toMatchObject({ ok: true, grant: { subject: "dev-local", email: "dev@localhost", clientId: "chave-api", scopes: ["origens.read", "origens.write"], resource: `${ORIGIN}/api/mcp` } });
+  });
+
+  test("given a wrong key, or a key while none is configured, then 401 invalid_token, even with a valid OAuth token alongside", async () => {
+    const { apiKeyHash, newApiKey } = await import("@/lib/mcp/auth/api-key");
+    const { authenticateMcpRequest } = await import("@/lib/mcp/auth/resource");
+    const { access_token } = (await (await connect()).json()) as { access_token: string };
+    const off = (await authenticateMcpRequest(req("/api/mcp", { method: "POST", headers: { "x-origens-key": newApiKey(), authorization: `Bearer ${access_token}` } }))) as { ok: false; response: Response };
+    expect(off.response.status).toBe(401);
+    expect(await off.response.json()).toMatchObject({ error: "invalid_token", error_description: "API key access is not enabled" });
+    vi.stubEnv("MCP_API_KEY_SHA256", apiKeyHash(newApiKey()));
+    const wrong = (await authenticateMcpRequest(req("/api/mcp", { method: "POST", headers: { "x-origens-key": newApiKey() } }))) as { ok: false; response: Response };
+    expect(wrong.response.status).toBe(401);
+    expect(await wrong.response.json()).toMatchObject({ error: "invalid_token", error_description: "the API key is invalid" });
+  });
+
+  test("given a malformed hash in the environment, then no key is accepted", async () => {
+    const { checkApiKey, newApiKey } = await import("@/lib/mcp/auth/api-key");
+    const key = newApiKey();
+    expect(checkApiKey(key, "")).toBe("off");
+    expect(checkApiKey(key, "abc")).toBe("off");
+    expect(checkApiKey(key, "z".repeat(64))).toBe("off");
+  });
+
+  test("given a host that is not the admin's, then 404 before the key is looked at", async () => {
+    const { apiKeyHash, newApiKey } = await import("@/lib/mcp/auth/api-key");
+    const key = newApiKey();
+    vi.stubEnv("MCP_API_KEY_SHA256", apiKeyHash(key));
+    const { authenticateMcpRequest } = await import("@/lib/mcp/auth/resource");
+    const r = (await authenticateMcpRequest(req("/api/mcp", { method: "POST", host: "evil.example", headers: { "x-origens-key": key } }))) as { ok: false; response: Response };
+    expect(r.response.status).toBe(404);
+  });
+});

@@ -22,6 +22,24 @@ Data desta versão: 15/10/2026 (categorias, cupons e promoções acrescentados n
 
 **Desconectar:** remova o conector no Claude. Para revogar no servidor, use `POST /api/mcp/oauth/revoke` com o token. Desativar ou rebaixar a conta dona no painel derruba todas as conexões na hora, porque toda requisição confere se o dono continua ativo.
 
+### Pela chave de API (sem OAuth)
+
+Alternativa ao fluxo acima, criada em 24/10/2026 quando o OAuth do conector parou de conectar no claude.ai. É uma chave única, só do dono, e ela **lê e altera** — as alterações continuam com prévia e código de confirmação (seção 9).
+
+1. **Gerar a chave:** `npm run -s mcp:api-key`. A chave vai direto para a área de transferência e nunca aparece na tela. O script mostra só o hash.
+2. **Railway:** no serviço `useorigens-storefront`, criar `MCP_API_KEY_SHA256` com o hash mostrado. O deploy reinicia o serviço.
+3. **Claude:** em Adicionar conector personalizado, colocar a URL `https://www.useorigens.com.br/api/mcp`.
+   - Em **Autenticação**, escolher **Sem login**.
+   - Em **Cabeçalhos de requisição**, adicionar `X-Origens-Key` com a chave colada.
+
+**Regras:**
+- O servidor guarda só o SHA-256. Sem a variável, ou com um valor inválido nela, nenhuma chave é aceita.
+- Chave errada dá 401 e não cai para o OAuth.
+- A chave age como a conta de `ADMIN_OWNER_EMAIL` enquanto ela for dona e estiver ativa.
+- Nas alterações e nos logs, o cliente aparece como `chave-api`.
+
+**Revogar:** trocar ou apagar `MCP_API_KEY_SHA256` no Railway. A chave antiga para de valer no próximo deploy. Para trocar, gere outra com o mesmo comando.
+
 ## 2. Ferramentas
 
 | Ferramenta | O que responde | Fonte |
