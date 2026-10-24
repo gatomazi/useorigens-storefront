@@ -6,7 +6,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
  * (MCP_API_KEY_SHA256), so neither the environment nor a log ever holds the key. Unset = no key is accepted; rotating the variable
  * revokes the old key at once.
  */
-export const API_KEY_HEADER = "x-origens-key";
+export const API_KEY_HEADER = "x-api-secret";
 export const API_KEY_ENV = "MCP_API_KEY_SHA256";
 /** Shows up as the client of every change made with the key (audit trail and change records). */
 export const API_KEY_CLIENT_ID = "chave-api";

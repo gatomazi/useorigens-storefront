@@ -10,5 +10,5 @@ if (!copied) {
   console.error("pbcopy indisponível: a chave não foi copiada e nada foi gerado. Rode no macOS.");
   process.exit(1);
 }
-console.log("Chave copiada para a área de transferência. Cole no Claude, no cabeçalho X-Origens-Key do conector.");
+console.log("Chave copiada para a área de transferência. Cole no Claude, no cabeçalho X-Api-Secret do conector.");
 console.log(`No Railway (serviço useorigens-storefront): MCP_API_KEY_SHA256=${apiKeyHash(key)}`);

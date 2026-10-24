@@ -30,7 +30,7 @@ Alternativa ao fluxo acima, criada em 24/10/2026 quando o OAuth do conector paro
 2. **Railway:** no serviço `useorigens-storefront`, criar `MCP_API_KEY_SHA256` com o hash mostrado. O deploy reinicia o serviço.
 3. **Claude:** em Adicionar conector personalizado, colocar a URL `https://www.useorigens.com.br/api/mcp`.
    - Em **Autenticação**, escolher **Sem login**.
-   - Em **Cabeçalhos de requisição**, adicionar `X-Origens-Key` com a chave colada.
+   - Em **Cabeçalhos de requisição**, adicionar `X-Api-Secret` com a chave colada. O claude.ai não aceita qualquer nome de cabeçalho; `X-Api-Secret` é um dos permitidos.
 
 **Regras:**
 - O servidor guarda só o SHA-256. Sem a variável, ou com um valor inválido nela, nenhuma chave é aceita.
