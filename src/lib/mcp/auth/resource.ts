@@ -102,7 +102,7 @@ async function authenticateApiKey(key: string, where: { origin: string; resource
 }
 
 /**
- * Reads the owner's API key (`X-Origens-Key`, api-key.ts) or `Authorization: Bearer`, and validates it (hash, expiry, revocation,
+ * Reads the owner's API key (`X-Api-Secret`, api-key.ts) or `Authorization: Bearer`, and validates it (hash, expiry, revocation,
  * resource, scope, subject still an active owner).
  */
 export async function authenticateMcpRequest(request: Request): Promise<{ ok: true; grant: McpGrant } | { ok: false; response: Response }> {
