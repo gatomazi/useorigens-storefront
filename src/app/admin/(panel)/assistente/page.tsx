@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { importInkFaqAction, previewAssistantAction, saveAssistantAction } from "@/app/admin/actions";
 import { AssistantEditor } from "@/components/admin/AssistantEditor";
 import { Flash } from "@/components/admin/Flash";
@@ -8,7 +9,7 @@ import { loadWorkspace } from "@/lib/admin/workspace";
 import { assistantEnabled } from "@/lib/assistant/flag";
 import { readPublished } from "@/lib/site-config/published";
 
-export default async function AssistantPage({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
+export default async function AssistantPage({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string; pergunta?: string }> }) {
   const actor = await requireAdmin();
   const scope = await currentScope(actor);
   const sp = await searchParams;
@@ -30,9 +31,12 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
           <strong>Publicado agora:</strong>{" "}
           {!ceiling ? "desligado no servidor (ASSISTANT=off), nada aparece." : published?.enabled ? `ligado, com ${liveAnswers} ${liveAnswers === 1 ? "resposta" : "respostas"}.` : "desligado (a INK mostra o “Ajuda?” e o WhatsApp dela)."}
         </p>
+        <p className="mt-2 text-[0.9375rem]">
+          <Link className="a-link" href="/admin/assistente/perguntas">Ver o que as pessoas perguntam</Link> e o que ficou sem resposta.
+        </p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
-      <AssistantEditor region={scope} config={ws.doc.assistant} readOnly={!canEdit(actor, scope)} rev={String(ws.record?.rev ?? "null")} action={saveAssistantAction} importAction={importInkFaqAction} previewAction={previewAssistantAction} />
+      <AssistantEditor region={scope} config={ws.doc.assistant} readOnly={!canEdit(actor, scope)} rev={String(ws.record?.rev ?? "null")} action={saveAssistantAction} importAction={importInkFaqAction} previewAction={previewAssistantAction} prefill={sp.pergunta} />
     </div>
   );
 }

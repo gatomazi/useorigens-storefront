@@ -1,12 +1,16 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { MAX_ASSISTANT_MESSAGE } from "@/lib/assistant/engine";
 import { assistantEnabled } from "@/lib/assistant/flag";
+import { questionRow } from "@/lib/assistant/questions";
+import { recordQuestion } from "@/lib/assistant/questions-server";
 import { assistantBoot, assistantReply, publishedAssistant } from "@/lib/assistant/sources";
 import { isRegionSlug, type RegionSlug } from "@/lib/geo/regions";
 import { allow, clientKey } from "@/lib/rate-limit";
 import { isRegionLaunched } from "@/lib/regions/launched";
+import { liveAnswers } from "@/lib/site-config/assistant-schema";
 
-// One answer per message: never prerendered. Reads only local files (published config, search index, catalog snapshots); no INK, no database.
+// One answer per message: never prerendered. Answers from local files only (published config, search index, catalog snapshots); no INK. After the
+// answer is sent, the question is kept (masked, without the visitor) for the panel's "Perguntas do assistente".
 export const dynamic = "force-dynamic";
 
 const MAX_BODY = 2048;
@@ -31,8 +35,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ reg
 }
 
 /**
- * `POST /api/assistente/<region>` `{ "message": "tem de Floripa?" }` — the answer (`AssistantReply`, `v: 1`, see lib/assistant/engine.ts). The text the
- * person typed is never stored, logged or cached (`no-store`), and a CPF or card number is refused without being echoed. Limited per visitor.
+ * `POST /api/assistente/<region>` `{ "message": "tem de Floripa?" }` — the answer (`AssistantReply`, `v: 1`, see lib/assistant/engine.ts). Never cached
+ * (`no-store`); a CPF or card number is refused without being echoed. Limited per visitor. After the answer, the question is kept for 90 days without
+ * the visitor (no IP, no hash), with e-mails and long numbers masked, and a refused message only as its kind (lib/assistant/questions.ts).
  */
 export async function POST(request: Request, { params }: { params: Promise<{ region: string }> }) {
   const region = liveRegion((await params).region);
@@ -56,5 +61,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ reg
   }
   if (typeof message !== "string" || message.length > MAX_ASSISTANT_MESSAGE) return NextResponse.json({ v: 1, error: "invalid message" }, { status: 400, headers: NO_STORE });
   const reply = assistantReply(region, config, message);
+  if (reply) {
+    // The Worker is the only caller that sends a visitor key: the question came from an INK page.
+    const row = questionRow({ region, surface: visitor && VISITOR.test(visitor) ? "ink" : "site", message, reply, answers: liveAnswers(config), at: Date.now() });
+    after(() => recordQuestion(row));
+  }
   return reply ? NextResponse.json(reply, { headers: NO_STORE }) : NextResponse.json({ v: 1, error: "off" }, { status: 404, headers: NO_STORE });
 }

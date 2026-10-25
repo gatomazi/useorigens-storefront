@@ -115,6 +115,16 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
         </section>
 
         <section>
+          <h2 className="t-h3">Assistente “Ajuda”</h2>
+          <p className="t-body mt-2 text-ink-soft">
+            Quando você escreve no assistente, guardamos a pergunta e o tipo de resposta por até 90 dias, só para melhorar as respostas. Não guardamos
+            quem perguntou: nem IP, nem cookie, nem identificação do visitante. E-mails e números longos (telefone, CEP, número de pedido) são
+            apagados do texto antes de guardar, e mensagens com CPF, cartão ou senha não são guardadas. Para tratar do seu pedido, use Meus pedidos
+            ou o WhatsApp, sem escrever dados pessoais no chat.
+          </p>
+        </section>
+
+        <section>
           <h2 className="t-h3">Compra e dados na loja</h2>
           <p className="t-body mt-2 text-ink-soft">
             Você escolhe a cidade e o estilo aqui e conclui a compra na loja Use {r.name}, onde ficam tamanho, cor,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { AssistantWidget } from "@/components/assistant/AssistantWidget";
 import type { AssistantRow } from "@/lib/admin/assistant-form";
 import { greetingReply, whatsappUrl, type AssistantReply } from "@/lib/assistant/engine";
@@ -31,13 +31,27 @@ type Props = {
   action: (fd: FormData) => Promise<void>;
   importAction: (fd: FormData) => Promise<{ ok: boolean; message: string; rows: AssistantRow[] }>;
   previewAction: (scope: string, rows: string, whatsapp: string, greeting: string, message: string) => Promise<AssistantReply | null>;
+  /** A question from "Perguntas do assistente" ("Criar resposta"): it opens as a new answer at the end of the list, waiting for its text. */
+  prefill?: string;
 };
 
-export function AssistantEditor({ region, config, readOnly, rev, action, importAction, previewAction }: Props) {
+export function AssistantEditor({ region, config, readOnly, rev, action, importAction, previewAction, prefill }: Props) {
   const [enabled, setEnabled] = useState(config?.enabled ?? false);
   const [whatsapp, setWhatsapp] = useState(phoneText(config?.whatsapp));
   const [greeting, setGreeting] = useState(config?.greeting ?? "");
-  const [rows, setRows] = useState<AssistantRow[]>(() => (config?.answers ?? []).slice().sort((a, b) => a.order - b.order).map(toRow));
+  const asked = readOnly ? "" : (prefill ?? "").replace(/\s+/g, " ").trim().slice(0, ASSISTANT_QUESTION_MAX);
+  const [rows, setRows] = useState<AssistantRow[]>(() => {
+    const saved = (config?.answers ?? []).slice().sort((a, b) => a.order - b.order).map(toRow);
+    return asked && saved.length < MAX_ASSISTANT_ANSWERS && !saved.some((r) => sameQuestion(r.question, asked)) ? [...saved, { ...blank(), question: asked }] : saved;
+  });
+  // The new answer's text gets the focus (and the scroll) once; later rows never steal it.
+  const [focusRow] = useState(() => (asked ? rows.findIndex((r) => sameQuestion(r.question, asked) && r.answer === "") : -1));
+  // After the router's own scroll to the top of the new page (hence the frame).
+  useEffect(() => {
+    if (focusRow < 0) return;
+    const frame = requestAnimationFrame(() => document.getElementById(`as${focusRow}_a`)?.scrollIntoView({ block: "center" }));
+    return () => cancelAnimationFrame(frame);
+  }, [focusRow]);
   const [importing, startImport] = useTransition();
   const [importNote, setImportNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [previewKey, setPreviewKey] = useState(0);
@@ -116,6 +130,7 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
             </button>
           )}
         </div>
+        {focusRow >= 0 && <p className="a-flash ok" role="status" data-testid="assistant-prefill-note">A pergunta “{asked}” entrou como a resposta {focusRow + 1}. Escreva a resposta, confira as outras palavras e salve o rascunho.</p>}
         {importNote && <p className={`a-flash ${importNote.ok ? "ok" : "err"}`} role="status" data-testid="assistant-import-note">{importNote.text}</p>}
 
         {rows.length === 0 && (
@@ -152,7 +167,7 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
             </div>
             <div>
               <label className="a-label" htmlFor={`as${i}_a`}>Resposta</label>
-              <textarea id={`as${i}_a`} className="a-input min-h-28" value={r.answer} maxLength={ASSISTANT_ANSWER_MAX} disabled={readOnly} onChange={(e) => set(i, { answer: e.target.value })} data-testid={`assistant-answer-${i}`} />
+              <textarea id={`as${i}_a`} className="a-input min-h-28" autoFocus={i === focusRow} value={r.answer} maxLength={ASSISTANT_ANSWER_MAX} disabled={readOnly} onChange={(e) => set(i, { answer: e.target.value })} data-testid={`assistant-answer-${i}`} />
               <p className="a-muted mt-1 text-[0.8125rem]">{r.answer.length}/{ASSISTANT_ANSWER_MAX}. Aparece exatamente assim, com as quebras de linha.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_16rem]">

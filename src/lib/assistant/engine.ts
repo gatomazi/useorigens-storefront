@@ -184,13 +184,13 @@ export function replyTo(rawMessage: string, answers: readonly AssistantAnswer[],
   if (message === "" || GREETING.test(message)) return greetingReply(greeting, answers);
   const leading = LEADING_GREETING.exec(message);
   if (leading) return replyTo(message.slice(leading[0].length), answers, sources, greeting);
+  // Never echoed and never forwarded: not even into the WhatsApp text. Before small talk: "tchau, minha senha é…" is refused, not a goodbye.
+  if (SENSITIVE.test(message)) return { v: 1, kind: "refuse", text: SECURITY_TEXT, links: [orderLinks[1]] };
   // Small talk: short and kind, never a search ("valeu" is not a design).
   const more = greetingReply(greeting, answers).suggestions;
   if (THANKS.test(message) && message.split(" ").length <= 4) return { v: 1, kind: "chat", text: "Por nada! Se precisar de mais alguma coisa, é só chamar.", suggestions: more };
   if (BYE.test(message)) return { v: 1, kind: "chat", text: "Até mais! Quando quiser, estou por aqui." };
   if (OK.test(message)) return { v: 1, kind: "chat", text: "Que bom! Posso ajudar com mais alguma coisa?", suggestions: more };
-  // Never echoed and never forwarded: not even into the WhatsApp text.
-  if (SENSITIVE.test(message)) return { v: 1, kind: "refuse", text: SECURITY_TEXT, links: [orderLinks[1]] };
 
   const ranked = rankAnswers(message, answers);
   const best = ranked[0];

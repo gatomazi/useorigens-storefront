@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -99,6 +99,11 @@ await accepts("a scrypt password hash with its date (0008)", `update admin_user 
 await rejects("a password stored in clear (0008)", `update admin_user set password_hash='minha-senha-123', password_set_at=now() where email='ed@example.com'`);
 await rejects("a password hash without its date (0008)", `update admin_user set password_set_at=null where email='ed@example.com'`);
 await accepts("clearing a password clears its date (0008)", `update admin_user set password_hash=null, password_set_at=null where email='ed@example.com'`);
+await accepts("an assistant question without the visitor (0009)", `insert into assistant_question (region, surface, question, question_key, kind, answer_id, result_count) values ('sul','ink','tem de Floripa?','floripa','designs',null,3)`);
+await rejects("a refused message keeps no text (0009)", `insert into assistant_question (region, surface, question, question_key, kind) values ('sul','site','meu cpf é 123','','refuse')`);
+await accepts("a refused message as its kind only (0009)", `insert into assistant_question (region, surface, question, question_key, kind) values ('sul','site',null,'','refuse')`);
+await rejects("an assistant question from an unknown surface (0009)", `insert into assistant_question (region, surface, question, question_key, kind) values ('sul','app','oi','oi','greeting')`);
+await rejects("an assistant question of an unknown kind (0009)", `insert into assistant_question (region, surface, question, question_key, kind) values ('sul','site','oi','oi','ai')`);
 await accepts("a sync run starts", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await rejects("a second collections sync at the same time (partial unique index)", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await accepts("a catalog sync may run in parallel with a collections sync", `insert into sync_run (kind, requested_by) values ('catalog','owner')`);
