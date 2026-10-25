@@ -49,13 +49,38 @@ pergunta. Nada é salvo sem revisão. A INK recusa a leitura feita do servidor (
 computador comum passa). Nesse caso o painel traz a cópia conferida em 24/10/2026 (`src/lib/assistant/ink-faq-copy.ts`) e diz de quando
 ela é. Se o FAQ da INK mudar, atualize a cópia e as páginas salvas em `tests/fixtures/ink-faq` (o teste exige que as duas sejam iguais). A coluna **Testar** responde com o rascunho da tela e o catálogo real.
 
+## Perguntas do assistente
+
+**Atendimento › Perguntas do assistente** (`/admin/assistente/perguntas`), por região, nos últimos 7, 30 ou 90 dias:
+- **Sem resposta:** "não encontrei", "não tenho essa resposta", pedido de mais detalhe e WhatsApp. Perguntas iguais escritas de jeitos
+  diferentes ficam juntas, pela chave das palavras buscadas (sem acento, "tem", "estampa", "camiseta"). **Criar resposta** abre o
+  Assistente com a pergunta numa resposta nova no fim da lista; falta escrever a resposta e salvar o rascunho.
+- **Mais perguntadas:** tudo, menos saudação e "obrigado", com a resposta que recebeu.
+- **Respostas da loja:** quantas vezes cada resposta publicada foi usada, e as que nunca foram.
+
+O que fica guardado (tabela `assistant_question`, migração `0009_assistant_questions`):
+- a pergunta, com e-mails e sequências de 6 dígitos ou mais (telefone, CEP, pedido, documento) trocados por `[e-mail]` e `[número]`;
+- a região, se veio do site ou da INK (o Worker manda `x-origens-visitor`, o site não), o tipo da resposta, a resposta da base que foi
+  usada e quantos cartões saíram;
+- **nada do visitante:** nem IP, nem o hash do Worker, nem cookie. Mensagem com CPF, cartão ou senha fica só como "recusada", sem texto.
+
+A gravação acontece depois da resposta sair (`after()` do Next) e nunca derruba a resposta. Antes da migração ser aplicada, o assistente
+responde normal, a gravação é pulada (um aviso no log por hora) e a tela avisa que falta a migração. Linhas com mais de 90 dias são
+apagadas pela própria aplicação, no máximo uma vez por hora. Não entram: o seguimento resolvido no navegador ("tem mais?", "sim"), o que o
+navegador recusou antes de enviar, e as perguntas da coluna **Testar** do painel. No `cms:dev`, ficam na memória e somem ao reiniciar.
+
+A política de privacidade (`/<região>/privacidade`, seção "Assistente “Ajuda”") diz o mesmo.
+
+Aplicar a migração no Railway: `railway ssh --service useorigens-storefront -- npm run db:migrate` (`npm run db:status` antes, para ver
+o que está pendente).
+
 ## Contrato
 
 - `GET /api/assistente/<região>` devolve `{ v: 1, region, enabled, opening?, whatsapp? }`. O `whatsapp` é o link wa.me do atalho. Cache curto (60 s na CDN).
 - `POST /api/assistente/<região>` recebe `{ message }` e devolve `AssistantReply` (`src/lib/assistant/engine.ts`). Tem `no-store` e
   limite por visitante (20 por minuto, 300 por dia) e no total (1.200 por minuto). O Worker manda `x-origens-visitor` (hash, nunca o IP).
-- O texto digitado não é guardado nem registrado, e não vai para o GA4. Os eventos `origens_assistant_*` levam só o tipo da resposta e o
-  que foi seguido.
+- Depois de responder, o servidor guarda a pergunta para o painel (ver **Perguntas do assistente**). O texto nunca vai para o GA4: os
+  eventos `origens_assistant_*` levam só o tipo da resposta e o que foi seguido.
 
 ## Desligar
 
