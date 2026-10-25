@@ -45,7 +45,9 @@ do oria-worker): tudo o que ele responde vem da loja.
 - até 40 respostas, cada uma com pergunta, resposta, outras palavras e botão.
 
 **Trazer perguntas da INK** lê uma vez as páginas públicas `/faq` e `/exchanges_and_returns` e sugere as palavras e o botão de cada
-pergunta. Nada é salvo sem revisão. A coluna **Testar** responde com o rascunho da tela e o catálogo real.
+pergunta. Nada é salvo sem revisão. A INK recusa a leitura feita do servidor (403 do Railway, proteção contra robôs: de um
+computador comum passa). Nesse caso o painel traz a cópia conferida em 24/10/2026 (`src/lib/assistant/ink-faq-copy.ts`) e diz de quando
+ela é. Se o FAQ da INK mudar, atualize a cópia e as páginas salvas em `tests/fixtures/ink-faq` (o teste exige que as duas sejam iguais). A coluna **Testar** responde com o rascunho da tela e o catálogo real.
 
 ## Contrato
 

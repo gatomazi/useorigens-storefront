@@ -9,6 +9,7 @@ import { followUp, isSensitive, rankAnswers, replyTo, searchAttempts, searchTerm
 import { closestPlace, editDistance } from "@/lib/assistant/sources";
 import type { PreparedGlobalDoc } from "@/lib/search/global";
 import { mergeInkFaq, parseInkFaq, suggestedFor } from "@/lib/assistant/ink-faq";
+import { INK_FAQ_COPY } from "@/lib/assistant/ink-faq-copy";
 import { liveAnswers, validateAssistant, type AssistantAnswer, type AssistantConfig } from "@/lib/site-config/assistant-schema";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
@@ -235,6 +236,12 @@ describe("assistente: as perguntas que a loja já publicou na INK", () => {
     expect(faq[0].answer).toContain("com exceção da cinza -mescla");
     expect(merged.every((e) => validateAssistant({ enabled: true, answers: [{ id: "x", enabled: true, order: 1, question: e.question, answer: e.answer }] }, "sul").ok)).toBe(true);
     expect(parseInkFaq("<html><body>sem faq</body></html>", "faq")).toEqual([]);
+  });
+
+  test("the saved copy (offered when INK refuses the server) is exactly what the saved INK pages say, and every entry is a valid answer", () => {
+    const live = mergeInkFaq(parseInkFaq(fixture("faq.html"), "faq"), parseInkFaq(fixture("exchanges_and_returns.html"), "trocas"));
+    expect(INK_FAQ_COPY).toEqual(live);
+    expect(INK_FAQ_COPY.every((e) => validateAssistant({ enabled: true, answers: [{ id: "x", enabled: true, order: 1, question: e.question, answer: e.answer }] }, "sul").ok)).toBe(true);
   });
 
   test("suggests the words people use and the right button for the usual questions", () => {
