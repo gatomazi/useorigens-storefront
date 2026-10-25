@@ -57,6 +57,10 @@ import { HEADER_ACTIONS, type HeaderAction, type HeaderActionStyle } from "@/lib
 import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-form";
 import type { InkThemeConfig } from "@/lib/site-config/ink-theme-schema";
 import { readableTopBarError, topBarFromForm } from "@/lib/admin/top-bar-form";
+import { assistantFromForm, readableAssistantError, type AssistantRow } from "@/lib/admin/assistant-form";
+import { mergeInkFaq, parseInkFaq, suggestedFor } from "@/lib/assistant/ink-faq";
+import { assistantReply, inkStoreBase } from "@/lib/assistant/sources";
+import type { AssistantReply } from "@/lib/assistant/engine";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 import { isProductSort } from "@/lib/catalog/product-sort";
 
@@ -922,6 +926,72 @@ export async function saveTopBarAction(fd: FormData) {
   if (!outcome.ok) back(here, { err: outcome.errors.map((e) => readableTopBarError(e, scope)) });
   await audit(actor, "draft.save", scope, "set-top-bar");
   back(here, { ok: `Rascunho da faixa do topo de ${scopeName(scope)} salvo. Nada muda na loja nem na INK até você publicar.` });
+}
+
+export async function saveAssistantAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const here = "/admin/assistente";
+  let rows: unknown;
+  try {
+    rows = JSON.parse(text(fd, "answers") || "[]");
+  } catch {
+    back(here, { err: ["Não foi possível ler a lista. Recarregue a página e tente de novo."] });
+  }
+  const parsed = assistantFromForm(rows, { enabled: text(fd, "enabled") === "on", whatsapp: text(fd, "whatsapp"), greeting: text(fd, "greeting") }, scope);
+  if (!parsed.ok) back(here, { err: parsed.errors });
+  const outcome = await applyAndSave(scope, { type: "set-assistant", assistant: parsed.value }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(here, { err: outcome.errors.map(readableAssistantError) });
+  await audit(actor, "draft.save", scope, "set-assistant");
+  back(here, { ok: `Rascunho do assistente de ${scopeName(scope)} salvo. Nada muda na loja nem na INK até você publicar.` });
+}
+
+/**
+ * "Trazer da INK": the questions the store already published on its INK pages (Perguntas frequentes, Trocas e devoluções), read once, server-side,
+ * from the public pages, with suggested keywords. Nothing is saved: the editor adds them as new rows for the owner to review.
+ */
+export async function importInkFaqAction(fd: FormData): Promise<{ ok: boolean; message: string; rows: AssistantRow[] }> {
+  const { actor, scope } = await editScope(fd);
+  if (!allow(`ink-faq:${actor.id}`, 10, 10 * 60_000)) return { ok: false, message: "Muitas leituras seguidas. Aguarde alguns minutos.", rows: [] };
+  const base = inkStoreBase(scope);
+  if (!base) return { ok: false, message: "Esta região não tem loja na INK.", rows: [] };
+  const read = async (path: string) => {
+    const response = await fetch(`${base}${path}`, { headers: { accept: "text/html", "user-agent": "UseOrigensPainel/1.0" }, redirect: "follow", cache: "no-store", signal: AbortSignal.timeout(8000) });
+    if (!response.ok) throw new Error(`${path} ${response.status}`);
+    return (await response.text()).slice(0, 600_000);
+  };
+  try {
+    const [faq, trocas] = await Promise.all([read("/faq"), read("/exchanges_and_returns")]);
+    const entries = mergeInkFaq(parseInkFaq(faq, "faq"), parseInkFaq(trocas, "trocas"));
+    const rows = entries.map((e) => {
+      const hint = suggestedFor(e.question);
+      return { id: "", enabled: true, question: e.question, answer: e.answer, keywords: hint.keywords, action: hint.action ?? "" };
+    });
+    return { ok: rows.length > 0, message: rows.length > 0 ? `${rows.length} perguntas da INK. Revise e salve o rascunho.` : "Não encontrei perguntas nas páginas da INK.", rows };
+  } catch (error) {
+    console.error("[admin] ink faq import failed:", error instanceof Error ? error.message.slice(0, 200) : "unknown");
+    return { ok: false, message: "Não consegui ler as páginas da INK agora. Tente de novo em instantes.", rows: [] };
+  }
+}
+
+/** The panel's "Testar": the answer the chat would give with the draft on screen (not saved). Half-filled rows are left out, never an error. */
+export async function previewAssistantAction(scopeRaw: string, rowsRaw: string, whatsapp: string, greeting: string, message: string): Promise<AssistantReply | null> {
+  const actor = await requireAdmin();
+  const fd = new FormData();
+  fd.set("scope", scopeRaw);
+  const scope = await scopeOf(fd, actor);
+  if (!isRegionScope(scope)) return null;
+  let rows: unknown[] = [];
+  try {
+    const parsedRows = JSON.parse(rowsRaw) as unknown;
+    if (Array.isArray(parsedRows)) rows = parsedRows.filter((r) => r && typeof r === "object" && String((r as AssistantRow).question ?? "").trim() && String((r as AssistantRow).answer ?? "").trim());
+  } catch {
+    rows = [];
+  }
+  const full = assistantFromForm(rows, { enabled: true, whatsapp, greeting }, scope);
+  const fallback = assistantFromForm(rows, { enabled: true, whatsapp: "", greeting: "" }, scope);
+  const config = full.ok ? full.value : fallback.ok ? fallback.value : { enabled: true, answers: [] };
+  return assistantReply(scope, config, message.slice(0, 300));
 }
 
 /**

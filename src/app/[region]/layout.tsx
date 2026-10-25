@@ -7,6 +7,7 @@ import { MetaPixel } from "@/components/analytics/MetaPixel";
 import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { PromoFab } from "@/components/promotions/PromoFab";
+import { AssistantFab } from "@/components/assistant/AssistantFab";
 import { ConsentProvider } from "@/lib/consent/ConsentProvider";
 import { AnnouncementBar, Footer, Header } from "@/components/layout/SiteChrome";
 import { getCatalog } from "@/lib/catalog/repository";
@@ -78,6 +79,8 @@ export default async function RegionLayout({ children, params }: { children: Rea
       <ConsentBanner region={region} />
       {/* Coupons and promotions of THIS region (CMS, published only); renders nothing when there are none or anything fails. */}
       <PromoFab key={region} region={region} />
+      {/* The help chat of THIS region ("Ajuda", CMS, published only): renders nothing when it is off or anything fails. */}
+      <AssistantFab key={`assistant-${region}`} region={region} />
     </ConsentProvider>
   );
 }

@@ -19,6 +19,7 @@ import { validatePodio } from "./podio-schema";
 import { validateStatePage } from "./state-page-schema";
 import { validatePromotions } from "./promotions-schema";
 import { validateTopBar } from "./top-bar-schema";
+import { validateAssistant } from "./assistant-schema";
 import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
 export type SanitizeResult = { bundle: PublishedBundle | null; diagnostics: string[] };
@@ -173,7 +174,8 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // And the "Tema da INK": an invalid one means every INK surface stays native (never a guessed look).
   // And the state-page switches: an invalid one means every section shows, as before they existed.
   // And the top strip: an invalid one means the storefront's default strip and the INK's own on its pages.
-  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "inkTheme"] as const) {
+  // And the assistant: an invalid one means no chat, and the INK keeps its own "Ajuda?" and WhatsApp.
+  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "assistant", "inkTheme"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
@@ -186,6 +188,7 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
       : key === "mundo" ? validateMundo(candidate[key], scope, `${scope}.mundo`)
       : key === "statePage" ? validateStatePage(candidate[key], scope, `${scope}.statePage`)
       : key === "topBar" ? validateTopBar(candidate[key], scope, `${scope}.topBar`)
+      : key === "assistant" ? validateAssistant(candidate[key], scope, `${scope}.assistant`)
       : key === "inkTheme" ? validateInkTheme(candidate[key], scope, `${scope}.inkTheme`)
       : validatePromotions(candidate[key], scope, `${scope}.promotions`);
     if (!r.ok) {

@@ -15,6 +15,7 @@ import { validateNavigation, validateTheme, validateNeutralTheme, type Navigatio
 import { validateInkTheme, type InkThemeConfig } from "./ink-theme-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
 import { validateTopBar, type TopBarConfig } from "./top-bar-schema";
+import { validateAssistant, type AssistantConfig } from "./assistant-schema";
 import { validateStatePage, type StatePageConfig } from "./state-page-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
 import { REGIONS, regionMayUseStore, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
@@ -437,6 +438,11 @@ export type ScopeDoc = {
    * INK production time. Absent or no live message = the storefront's default strip and the INK's own. Published with the region.
    */
   topBar?: TopBarConfig;
+  /**
+   * REGION only: "Assistente", the help chat of the storefront and of the INK pages (`assistant-schema.ts`): the store's answers, the opening line and the
+   * WhatsApp of the hand-off. Absent or off = no chat (the INK keeps its own "Ajuda?" and WhatsApp). Published with the region.
+   */
+  assistant?: AssistantConfig;
   /** REGION only: the state-page sections switched off ("Destaques", "Escolha o estilo", "Regiões e cidades", `state-page-schema.ts`). Absent = all on. */
   statePage?: StatePageConfig;
   /** REGION only: "Tema da INK" (`ink-theme-schema.ts`): how the INK product page, cart and checkout look, by preset. Absent = all off. Published with the region. */
@@ -1191,6 +1197,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.topBar !== undefined) {
     const r = validateTopBar(input.topBar, sc, "doc.topBar");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.assistant !== undefined) {
+    const r = validateAssistant(input.assistant, sc, "doc.assistant");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.statePage !== undefined) {
