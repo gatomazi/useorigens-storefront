@@ -80,7 +80,10 @@ export default async function RegionLayout({ children, params }: { children: Rea
       {/* Coupons and promotions of THIS region (CMS, published only); renders nothing when there are none or anything fails. */}
       <PromoFab key={region} region={region} />
       {/* The help chat of THIS region ("Ajuda", CMS, published only): renders nothing when it is off or anything fails. */}
-      <AssistantFab key={`assistant-${region}`} region={region} />
+      {/* Outside the region wrapper (fixed, like the coupons): it gets the region's colours here, so its button wears the header's colour. */}
+      <div className="contents" style={{ ...regionThemeStyle(region), ...cssVars }}>
+        <AssistantFab key={`assistant-${region}`} region={region} />
+      </div>
     </ConsentProvider>
   );
 }

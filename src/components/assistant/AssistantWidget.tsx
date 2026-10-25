@@ -318,14 +318,14 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
     if (entry.from === "me") {
       return (
         <li key={i} className="flex justify-end">
-          <p className="max-w-[85%] whitespace-pre-line rounded-2xl rounded-br-sm bg-ink px-3.5 py-2 text-[0.9375rem] leading-snug text-white">{entry.text}</p>
+          <p className="max-w-[85%] whitespace-pre-line rounded-[3px] bg-[var(--region-primary,#111)] px-3.5 py-2 text-[0.9375rem] leading-snug text-white [overflow-wrap:anywhere]">{entry.text}</p>
         </li>
       );
     }
     const { reply } = entry;
     return (
       <li key={i} className="flex flex-col items-start gap-2" data-assistant-reply={reply.kind}>
-        <p className="max-w-[92%] whitespace-pre-line rounded-2xl rounded-bl-sm border border-black/15 bg-white px-3.5 py-2 text-[0.9375rem] leading-snug text-ink">{reply.text}</p>
+        <p className="max-w-[92%] whitespace-pre-line rounded-[3px] border border-black/15 bg-white px-3.5 py-2.5 text-[0.9375rem] leading-[1.45] text-ink [overflow-wrap:anywhere]">{reply.text}</p>
         {reply.items && reply.items.length > 0 && (
           <ul className="grid w-full grid-cols-2 gap-2" data-assistant="items">
             {reply.items.map((item, j) => (
@@ -333,16 +333,16 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
                 <a
                   href={item.productId ? item.href : pathOf(item.href)}
                   onClick={() => itemClick(item, j + 1)}
-                  className="group flex h-full flex-col overflow-hidden rounded-lg border border-black/15 bg-white text-left transition-colors hover:border-black/40"
+                  className="group flex h-full flex-col overflow-hidden border border-black/15 bg-white text-left transition-colors duration-200 hover:border-[var(--region-primary,#111)]"
                 >
                   <span className="relative block aspect-square bg-[var(--ground,#e5e5e5)]">
                     {/* eslint-disable-next-line @next/next/no-img-element -- INK's own CDN picture, small, inside a chat bubble */}
                     <img src={item.image} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-contain" />
                   </span>
                   <span className="flex flex-1 flex-col gap-0.5 p-2">
-                    <span className="line-clamp-2 text-[0.8125rem] font-semibold leading-tight">{item.title}</span>
+                    <span className="line-clamp-2 text-[0.8125rem] font-semibold leading-tight group-hover:underline group-hover:underline-offset-2">{item.title}</span>
                     {item.context && <span className="text-[0.75rem] text-ink-mute">{item.context}</span>}
-                    {item.price !== undefined && <span className="mt-auto pt-1 text-[0.8125rem] font-bold">{formatPrice(item.price)}</span>}
+                    {item.price !== undefined && <span className="mt-auto pt-1 text-[0.8125rem] font-bold tabular-nums">{formatPrice(item.price)}</span>}
                   </span>
                 </a>
               </li>
@@ -357,7 +357,7 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
                 href={linkHref(link)}
                 {...(external(link) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                 onClick={() => track("origens_assistant_link_click", { link_kind: link.kind })}
-                className={`inline-flex min-h-10 items-center gap-1.5 rounded-full border-2 px-3.5 text-[0.875rem] font-semibold transition-colors ${link.kind === "whatsapp" ? "border-[#1f7a43] bg-[#1f7a43] text-white hover:bg-[#17633a]" : "border-ink bg-white text-ink hover:bg-ink hover:text-white"}`}
+                className={`inline-flex min-h-11 items-center gap-1.5 border-2 px-4 text-[0.9375rem] font-semibold transition-colors duration-200 ${link.kind === "whatsapp" ? "border-[#1f7a43] bg-[#1f7a43] text-white hover:border-[#17633a] hover:bg-[#17633a]" : "border-ink bg-white text-ink hover:border-[var(--region-primary,#111)] hover:bg-paper"}`}
                 data-assistant-link={link.kind}
               >
                 {link.label}
@@ -369,7 +369,7 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
         {i === lastBot && reply.suggestions && reply.suggestions.length > 0 && (
           <div className="flex flex-wrap gap-1.5" data-assistant="suggestions">
             {reply.suggestions.map((s) => (
-              <button key={s} type="button" disabled={pending} onClick={() => void send(s, "chip")} className="min-h-9 rounded-full border border-black/25 bg-[var(--paper,#f2f2f0)] px-3 text-left text-[0.8125rem] font-medium leading-tight text-ink transition-colors hover:border-ink disabled:opacity-50">
+              <button key={s} type="button" disabled={pending} onClick={() => void send(s, "chip")} className="min-h-10 border border-black/30 bg-white px-3 py-1.5 text-left text-[0.8125rem] font-medium leading-tight text-ink transition-colors duration-200 hover:border-ink hover:bg-paper disabled:opacity-50">
                 {s}
               </button>
             ))}
@@ -401,10 +401,10 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
           <div className="flex items-center justify-between gap-2 border-b-2 border-ink py-1 pl-4 pr-1">
             <div className="min-w-0">
               <h2 id={headingId} className="font-display text-[1.375rem] font-extrabold uppercase leading-none tracking-[0.01em]">Ajuda</h2>
-              <p className="mt-0.5 text-[0.75rem] text-ink-mute">Estampas, pedidos, trocas e dúvidas</p>
+              <p className="mt-0.5 text-[0.75rem] text-ink-mute">Estampas, pedidos e trocas</p>
             </div>
             {whatsapp && (
-              <a href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={() => track("origens_assistant_link_click", { link_kind: "whatsapp_shortcut" })} className="ml-auto inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-[#1f7a43] px-3 text-[0.8125rem] font-bold text-white hover:bg-[#17633a]" data-testid="assistant-whatsapp-shortcut">
+              <a href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={() => track("origens_assistant_link_click", { link_kind: "whatsapp_shortcut" })} className="ml-auto inline-flex min-h-9 shrink-0 items-center gap-1.5 border-2 border-[#1f7a43] bg-white px-2.5 text-[0.75rem] font-bold uppercase tracking-[0.06em] text-[#1f7a43] transition-colors duration-200 hover:bg-[#1f7a43] hover:text-white" data-testid="assistant-whatsapp-shortcut">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z" /></svg>
                 WhatsApp
               </a>
@@ -418,15 +418,15 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
               {shown.map(bubble)}
               {pending && (
                 <li className="flex" data-testid="assistant-typing">
-                  <span className="inline-flex items-center gap-1 rounded-2xl rounded-bl-sm border border-black/15 bg-white px-3.5 py-3" role="status" aria-label="Digitando">
-                    {[0, 150, 300].map((d) => <span key={d} className="h-1.5 w-1.5 rounded-full bg-ink-mute motion-safe:animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+                  <span className="inline-flex items-center gap-1 rounded-[3px] border border-black/15 bg-white px-3.5 py-3" role="status" aria-label="Digitando">
+                    {[0, 150, 300].map((d) => <span key={d} className="h-1.5 w-1.5 rounded-full bg-ink-mute motion-safe:animate-pulse" style={{ animationDelay: `${d}ms` }} />)}
                     <span className="ml-1.5 text-[0.8125rem] text-ink-mute">digitando</span>
                   </span>
                 </li>
               )}
             </ol>
           </div>
-          <form onSubmit={onSubmit} className="flex items-center gap-2 border-t border-black/15 bg-white p-2">
+          <form onSubmit={onSubmit} className="flex items-stretch gap-0 border-t-2 border-ink bg-white p-2.5">
             <label htmlFor={`${panelId}-q`} className="sr-only">Sua pergunta</label>
             <input
               ref={inputRef}
@@ -437,14 +437,14 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
               enterKeyHint="send"
               autoComplete="off"
               placeholder="Escreva sua pergunta ou cidade"
-              className="min-h-11 min-w-0 flex-1 rounded-full border border-black/25 bg-[var(--paper,#f2f2f0)] px-4 text-[1rem] outline-offset-2"
+              className="min-h-11 min-w-0 flex-1 border-2 border-r-0 border-ink bg-white px-3.5 text-[1rem] text-ink placeholder:text-ink-mute focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-[var(--region-primary,#111)]"
               data-testid="assistant-input"
             />
-            <button type="submit" disabled={pending || draft.trim() === ""} className="inline-flex h-11 shrink-0 items-center justify-center rounded-full bg-ink px-4 text-[0.9375rem] font-bold text-white disabled:opacity-40" data-testid="assistant-send">
+            <button type="submit" disabled={pending || draft.trim() === ""} className="inline-flex min-h-11 shrink-0 items-center justify-center border-2 border-ink bg-ink px-4 text-[0.8125rem] font-bold uppercase tracking-[0.06em] text-white transition-colors duration-200 hover:bg-white hover:text-ink disabled:border-black/25 disabled:bg-black/25" data-testid="assistant-send">
               Enviar
             </button>
           </form>
-          <p className="bg-white px-3 pb-2 text-[0.6875rem] leading-snug text-ink-mute">Não envie CPF, cartão ou senha. Pedidos e trocas ficam em Meus pedidos, na loja.</p>
+          <p className="bg-white px-3 pb-2.5 text-[0.75rem] leading-snug text-ink-mute">Não envie CPF, cartão ou senha. Pedidos e trocas ficam em Meus pedidos, na loja.</p>
         </div>
       )}
       <button
@@ -458,7 +458,7 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
         data-testid="assistant-fab"
         className={[
           position,
-          "z-30 inline-flex h-12 items-center gap-2 rounded-full bg-ink pl-4 pr-5 text-[0.9375rem] font-bold text-white shadow-[0_6px_18px_rgb(0_0_0/0.24)] outline-offset-4 transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0",
+          "z-30 inline-flex h-12 items-center gap-2 rounded-xl bg-[var(--region-primary,#111)] pl-3.5 pr-4 text-[0.8125rem] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_6px_18px_rgb(0_0_0/0.24)] outline-offset-4 transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0 sm:h-14 sm:pl-4 sm:pr-5",
           live ? "bottom-[calc(max(1rem,env(safe-area-inset-bottom))+var(--assistant-bottom))] right-[max(1rem,env(safe-area-inset-right))]" : "bottom-4 right-4",
         ].join(" ")}
       >
