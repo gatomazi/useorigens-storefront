@@ -15,7 +15,7 @@ const FETCH_TIMEOUT_MS = 4000;
 const IDLE_FALLBACK_MS = 1500;
 
 export function AssistantFab({ region }: { region: string }) {
-  const [opening, setOpening] = useState<AssistantReply | null>(null);
+  const [boot, setBoot] = useState<{ opening: AssistantReply; whatsapp?: string } | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -25,8 +25,9 @@ export function AssistantFab({ region }: { region: string }) {
       try {
         const response = await fetch(`/api/assistente/${region}`, { headers: { accept: "application/json" }, credentials: "omit", signal: controller.signal });
         if (!response.ok) return;
-        const boot = (await response.json()) as { v?: number; region?: string; enabled?: boolean; opening?: AssistantReply };
-        if (boot.v === 1 && boot.region === region && boot.enabled === true && boot.opening?.v === 1 && typeof boot.opening.text === "string") setOpening(boot.opening);
+        const data = (await response.json()) as { v?: number; region?: string; enabled?: boolean; opening?: AssistantReply; whatsapp?: unknown };
+        const whatsapp = typeof data.whatsapp === "string" && data.whatsapp.startsWith("https://wa.me/") ? data.whatsapp : undefined;
+        if (data.v === 1 && data.region === region && data.enabled === true && data.opening?.v === 1 && typeof data.opening.text === "string") setBoot({ opening: data.opening, whatsapp });
       } catch {
         // The assistant is complementary: any failure simply shows no button.
       } finally {
@@ -44,6 +45,6 @@ export function AssistantFab({ region }: { region: string }) {
     };
   }, [region]);
 
-  if (!opening) return null;
-  return <AssistantWidget region={region} opening={opening} />;
+  if (!boot) return null;
+  return <AssistantWidget region={region} opening={boot.opening} whatsapp={boot.whatsapp} />;
 }

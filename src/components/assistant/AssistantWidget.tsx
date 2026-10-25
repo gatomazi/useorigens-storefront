@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { SOURCES } from "@/lib/analytics/sources";
 import { trackAssistant, trackGoToInk, type AssistantEvent, type AssistantParams } from "@/lib/analytics/track";
-import { isSensitive, MAX_ASSISTANT_MESSAGE, type AssistantItem, type AssistantLink, type AssistantReply } from "@/lib/assistant/engine";
+import { followUp, isSensitive, MAX_ASSISTANT_MESSAGE, typingDelay, type AssistantItem, type AssistantLink, type AssistantReply } from "@/lib/assistant/engine";
 import { formatPrice } from "@/lib/format";
 
 /**
@@ -23,6 +23,8 @@ export type AssistantWidgetProps = {
   mode?: "live" | "preview";
   /** Preview only: answers with the draft (a server action) instead of the published configuration. */
   ask?: (message: string) => Promise<AssistantReply | null>;
+  /** The store's WhatsApp (wa.me link): a shortcut always at hand in the header. Absent = no shortcut. */
+  whatsapp?: string;
 };
 
 type Entry = { from: "me"; text: string } | { from: "bot"; reply: AssistantReply };
@@ -91,7 +93,15 @@ const pathOf = (url: string): string => {
   }
 };
 const linkHref = (link: AssistantLink): string => (link.kind === "page" || link.kind === "search" ? pathOf(link.href) : link.href);
-const external = (link: AssistantLink): boolean => link.kind === "whatsapp" || link.kind === "orders" || link.kind === "tracking";
+const external = (link: AssistantLink): boolean => link.kind === "whatsapp" || link.kind === "orders" || link.kind === "tracking" || link.kind === "collection";
+const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+const clock = () => Date.now();
+/** "digitando…" for a moment before every answer, as a person would: never instant, never slow (engine.ts `typingDelay`), counting the wait already spent. */
+const typingPause = (started: number, reply: Pick<AssistantReply, "text">) => wait(Math.max(0, typingDelay(reply) - (clock() - started)));
+const lastReply = (entries: readonly Entry[]): AssistantReply | null => {
+  for (let i = entries.length - 1; i >= 0; i--) { const e = entries[i]; if (e.from === "bot") return e.reply; }
+  return null;
+};
 
 function ChatIcon() {
   return (
@@ -103,7 +113,7 @@ function ChatIcon() {
   );
 }
 
-export function AssistantWidget({ region, opening, mode = "live", ask }: AssistantWidgetProps) {
+export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp }: AssistantWidgetProps) {
   const live = mode === "live";
   const [open, setOpen] = useState(!live);
   // The conversation of this visit: the live chat never renders on the server (AssistantFab loads it with ssr: false), so it can read storage here.
@@ -153,14 +163,28 @@ export function AssistantWidget({ region, opening, mode = "live", ask }: Assista
     if (!message || pending) return;
     setDraft("");
     track("origens_assistant_message", { message_source: source });
+    const started = clock();
+    const typed = (reply: Pick<AssistantReply, "text">) => typingPause(started, reply);
     if (isSensitive(message)) {
       // Never sent, never kept: the bubble shows a mask instead of the text.
-      setEntries((list) => [...list, { from: "me", text: "••••" }, { from: "bot", reply: LOCAL_REFUSE }]);
+      setEntries((list) => [...list, { from: "me", text: "••••" }]);
+      setPending(true);
+      await typed(LOCAL_REFUSE);
+      setPending(false);
+      setEntries((list) => [...list, { from: "bot", reply: LOCAL_REFUSE }]);
       track("origens_assistant_reply", { reply_kind: "refuse" });
       return;
     }
+    const local = followUp(message, lastReply(entries) ?? opening);
     setEntries((list) => [...list, { from: "me", text: message }]);
     setPending(true);
+    if (local) {
+      await typed(local);
+      setPending(false);
+      setEntries((list) => [...list, { from: "bot", reply: local }]);
+      track("origens_assistant_reply", { reply_kind: local.kind });
+      return;
+    }
     let reply: AssistantReply | null = null;
     let failure = ERROR_TEXT;
     try {
@@ -180,6 +204,7 @@ export function AssistantWidget({ region, opening, mode = "live", ask }: Assista
     } catch {
       reply = null;
     }
+    await typed(reply ?? { text: failure });
     setPending(false);
     if (reply) {
       setEntries((list) => [...list, { from: "bot", reply: reply as AssistantReply }]);
@@ -373,11 +398,17 @@ export function AssistantWidget({ region, opening, mode = "live", ask }: Assista
               : "absolute bottom-[4.5rem] left-3 right-3 top-3 border-2 border-ink",
           ].join(" ")}
         >
-          <div className="flex items-center justify-between gap-3 border-b-2 border-ink py-1 pl-4 pr-1">
-            <div>
+          <div className="flex items-center justify-between gap-2 border-b-2 border-ink py-1 pl-4 pr-1">
+            <div className="min-w-0">
               <h2 id={headingId} className="font-display text-[1.375rem] font-extrabold uppercase leading-none tracking-[0.01em]">Ajuda</h2>
               <p className="mt-0.5 text-[0.75rem] text-ink-mute">Estampas, pedidos, trocas e dúvidas</p>
             </div>
+            {whatsapp && (
+              <a href={whatsapp} target="_blank" rel="noopener noreferrer" onClick={() => track("origens_assistant_link_click", { link_kind: "whatsapp_shortcut" })} className="ml-auto inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-[#1f7a43] px-3 text-[0.8125rem] font-bold text-white hover:bg-[#17633a]" data-testid="assistant-whatsapp-shortcut">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s.9 2.5 1 2.7c.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z" /></svg>
+                WhatsApp
+              </a>
+            )}
             <button type="button" data-assistant-close onClick={() => close("button")} aria-label="Fechar a ajuda" className="flex h-11 w-11 shrink-0 items-center justify-center text-ink hover:bg-black/5" data-testid="assistant-close">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
             </button>
@@ -386,8 +417,11 @@ export function AssistantWidget({ region, opening, mode = "live", ask }: Assista
             <ol className="flex flex-col gap-3" data-testid="assistant-messages">
               {shown.map(bubble)}
               {pending && (
-                <li className="flex" aria-label="Respondendo">
-                  <span className="rounded-2xl rounded-bl-sm border border-black/15 bg-white px-3.5 py-2 text-[0.9375rem] text-ink-mute">…</span>
+                <li className="flex" data-testid="assistant-typing">
+                  <span className="inline-flex items-center gap-1 rounded-2xl rounded-bl-sm border border-black/15 bg-white px-3.5 py-3" role="status" aria-label="Digitando">
+                    {[0, 150, 300].map((d) => <span key={d} className="h-1.5 w-1.5 rounded-full bg-ink-mute motion-safe:animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
+                    <span className="ml-1.5 text-[0.8125rem] text-ink-mute">digitando</span>
+                  </span>
                 </li>
               )}
             </ol>

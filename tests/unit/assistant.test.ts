@@ -5,7 +5,9 @@ import { assistantFromForm, readableAssistantError, whatsappDigits, type Assista
 import { applyOp } from "@/lib/admin/draft-ops";
 import { diffDocs } from "@/lib/admin/diff";
 import { assistantEnabled } from "@/lib/assistant/flag";
-import { isSensitive, rankAnswers, replyTo, searchAttempts, searchTerms, whatsappUrl, type AssistantSources, type DesignFind } from "@/lib/assistant/engine";
+import { followUp, isSensitive, rankAnswers, replyTo, searchAttempts, searchTerms, typingDelay, whatsappUrl, type AssistantReply, type AssistantSources, type DesignFind } from "@/lib/assistant/engine";
+import { closestPlace, editDistance } from "@/lib/assistant/sources";
+import type { PreparedGlobalDoc } from "@/lib/search/global";
 import { mergeInkFaq, parseInkFaq, suggestedFor } from "@/lib/assistant/ink-faq";
 import { liveAnswers, validateAssistant, type AssistantAnswer, type AssistantConfig } from "@/lib/site-config/assistant-schema";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
@@ -106,6 +108,60 @@ describe("assistente: o motor de respostas (sem IA)", () => {
     expect(r.items).toBeUndefined();
     expect(ask("tem estampa da minha cidade?").kind).toBe("ask");
     expect(ask("vocês fazem atacado para empresas?")).toMatchObject({ kind: "fallback", links: [{ kind: "whatsapp" }] });
+  });
+});
+
+describe("assistente: a mini inteligência (sem IA)", () => {
+  test("small talk is answered kindly and never searched; a greeting before the question is taken off", () => {
+    expect(ask("valeu!")).toMatchObject({ kind: "chat", text: "Por nada! Se precisar de mais alguma coisa, é só chamar." });
+    expect(ask("muito obrigada")).toMatchObject({ kind: "chat" });
+    expect(ask("tchau")).toMatchObject({ kind: "chat", text: "Até mais! Quando quiser, estou por aqui." });
+    expect(ask("beleza")).toMatchObject({ kind: "chat" });
+    expect(ask("oi, tem de Floripa?")).toMatchObject({ kind: "designs", text: floripa.title });
+    expect(ask("boa tarde! qual o tecido?")).toMatchObject({ kind: "answer", text: tecido.answer });
+  });
+
+  test("a word said twice is a name (quero-quero, the bird), not 'I want'", () => {
+    expect(searchTerms("quero quero")).toEqual(["quero", "quero"]);
+    expect(searchTerms("tem estampa de quero-quero?")).toEqual(["quero", "quero"]);
+    expect(searchTerms("quero uma camiseta")).toEqual([]);
+  });
+
+  test("price and size without the store's answer: where it is, never a number made up", () => {
+    expect(ask("quanto custa?")).toMatchObject({ kind: "ask", text: expect.stringMatching(/^O preço aparece em cada estampa/) });
+    expect(ask("quanto custa a de floripa?")).toMatchObject({ kind: "designs", text: "Estampas de Florianópolis, com o preço de cada uma:" });
+    expect(ask("qual tamanho eu peço?")).toMatchObject({ kind: "answer", text: expect.stringMatching(/Guia de medidas/), links: [{ kind: "whatsapp" }] });
+  });
+
+  test("follow-ups are answered from the previous answer: 'tem mais?' = all of them; 'sim' after an offer = the WhatsApp", () => {
+    const designs: AssistantReply = { v: 1, kind: "designs", text: "Encontrei:", links: [{ kind: "search", label: "Ver as 13 estampas", href: "https://www.useorigens.com.br/sul/busca?q=mae" }] };
+    expect(followUp("tem mais?", designs)).toEqual({ v: 1, kind: "designs", text: "Todas estão nesta página:", links: designs.links });
+    expect(followUp("mostra mais", designs)?.links?.[0].kind).toBe("search");
+    const offer = ask("tem estampa de unicórnio?");
+    expect(followUp("sim", offer)).toMatchObject({ kind: "handoff", links: [{ kind: "whatsapp" }] });
+    expect(followUp("sim", designs)).toBeNull();
+    expect(followUp("tem de Tijucas?", designs)).toBeNull();
+    expect(followUp("mais", null)).toBeNull();
+  });
+
+  test("typing delay: never instant, never slow, a bit longer for longer answers", () => {
+    expect(typingDelay({ text: "Oi" })).toBe(700);
+    expect(typingDelay({ text: "x".repeat(80) })).toBe(1170);
+    expect(typingDelay({ text: "x".repeat(900) })).toBe(1800);
+  });
+
+  test("a place typed wrong: the one close name ('curitiva' → Curitiba), never a guess between two", () => {
+    expect(editDistance("curitiva", "curitiba", 2)).toBe(1);
+    expect(editDistance("florianopoles", "florianopolis", 2)).toBe(1);
+    expect(editDistance("joivnille", "joinville", 2)).toBe(1);
+    expect(editDistance("abc", "xyzw", 1)).toBe(2);
+    const place = (title: string, ...names: string[]) => ({ doc: { title, kind: "locality" }, names, strong: [], weak: [] }) as unknown as PreparedGlobalDoc;
+    const places = [place("Curitiba", "curitiba"), place("Curitibanos", "curitibanos"), place("Tijucas", "tijucas"), place("Tijucas do Sul", "tijucas do sul")];
+    expect(closestPlace(places, "curitiva")).toEqual({ name: "curitiba", title: "Curitiba" });
+    expect(closestPlace(places, "tijuca")).toEqual({ name: "tijucas", title: "Tijucas" });
+    expect(closestPlace(places, "curitiba")).toBeNull();
+    expect(closestPlace(places, "abc")).toBeNull();
+    expect(closestPlace([place("Ita", "itaa"), place("Itb", "itab")], "itac")).toBeNull();
   });
 });
 

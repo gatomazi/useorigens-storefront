@@ -19,6 +19,23 @@ do oria-worker): tudo o que ele responde vem da loja.
    o assistente também as esconde.
 7. **Nada encontrado**: diz o que não achou, com as palavras da pessoa, e oferece o WhatsApp.
 
+## A "mini inteligência" (regras, sem IA)
+
+- **Conversa:** "obrigado", "tchau" e "beleza" recebem uma resposta curta e nunca viram busca. Um "oi, tem de Floripa?" já busca direto.
+- **Erro de digitação em lugar:** "curitiva" vira "Você quis dizer Curitiba?". Só com um único nome próximo (1 letra até 6 letras, 2
+  letras a partir de 7), nunca no chute entre dois.
+- **Começo do nome de um lugar:** "joinvile" leva a Joinville quando só um lugar começa assim.
+- **Palavra repetida:** "quero quero" é um nome (o pássaro), não "eu quero".
+- **Categorias da INK:** além do menu, todas as categorias públicas da região com peças ("Dia dos Pais", quando pública). As ocultas
+  na INK ficam de fora, pelas mesmas regras do menu.
+- **Preço e tamanho sem resposta cadastrada:** diz onde a informação está (no preço de cada peça, no Guia de medidas). Nunca inventa
+  número.
+- **Seguimento, resolvido no navegador sem ir ao servidor:** "tem mais?" depois de estampas abre o link com todas. "Sim" depois de oferecer
+  o WhatsApp abre o WhatsApp.
+- **"Digitando…":** aparece antes de cada resposta, de 0,7 s a 1,8 s conforme o tamanho do texto, descontado o tempo que o servidor já
+  levou.
+- **WhatsApp a um toque:** fica no cabeçalho do chat sempre que a loja tem número (`whatsapp` no GET).
+
 ## Painel
 
 **Atendimento › Assistente**, por região, publicado com ela:
@@ -32,7 +49,7 @@ pergunta. Nada é salvo sem revisão. A coluna **Testar** responde com o rascunh
 
 ## Contrato
 
-- `GET /api/assistente/<região>` devolve `{ v: 1, region, enabled, opening?, whatsapp? }`. Cache curto (60 s na CDN).
+- `GET /api/assistente/<região>` devolve `{ v: 1, region, enabled, opening?, whatsapp? }`. O `whatsapp` é o link wa.me do atalho. Cache curto (60 s na CDN).
 - `POST /api/assistente/<região>` recebe `{ message }` e devolve `AssistantReply` (`src/lib/assistant/engine.ts`). Tem `no-store` e
   limite por visitante (20 por minuto, 300 por dia) e no total (1.200 por minuto). O Worker manda `x-origens-visitor` (hash, nunca o IP).
 - O texto digitado não é guardado nem registrado, e não vai para o GA4. Os eventos `origens_assistant_*` levam só o tipo da resposta e o

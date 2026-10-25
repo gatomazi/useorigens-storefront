@@ -3,7 +3,8 @@
 import { useState, useTransition } from "react";
 import { AssistantWidget } from "@/components/assistant/AssistantWidget";
 import type { AssistantRow } from "@/lib/admin/assistant-form";
-import { greetingReply, type AssistantReply } from "@/lib/assistant/engine";
+import { greetingReply, whatsappUrl, type AssistantReply } from "@/lib/assistant/engine";
+import { whatsappDigits } from "@/lib/admin/assistant-form";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { ASSISTANT_ANSWER_MAX, ASSISTANT_GREETING_MAX, ASSISTANT_KEYWORDS_MAX, ASSISTANT_QUESTION_MAX, DEFAULT_ASSISTANT_GREETING, MAX_ASSISTANT_ANSWERS, type AssistantAnswer, type AssistantConfig } from "@/lib/site-config/assistant-schema";
 
@@ -185,7 +186,7 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
         </div>
         <p className="a-muted mt-1 text-[0.9375rem]">Pergunte como um cliente. Responde com o rascunho desta tela, mesmo sem salvar, e com o catálogo de verdade. Experimente “tem de Floripa?”, “cadê meu pedido?” ou “quero trocar o tamanho”.</p>
         <div className="relative mt-4 h-[36rem] overflow-hidden rounded border border-black/15 bg-[#e5e5e5]" data-testid="assistant-preview-frame">
-          <AssistantWidget key={previewKey} region={region} opening={opening} mode="preview" ask={ask} />
+          <AssistantWidget key={previewKey} region={region} opening={opening} mode="preview" ask={ask} whatsapp={/^55\d{10,11}$/.test(whatsappDigits(whatsapp)) ? whatsappUrl(whatsappDigits(whatsapp), "") : undefined} />
         </div>
       </section>
     </div>

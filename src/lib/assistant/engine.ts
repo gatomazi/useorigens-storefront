@@ -16,9 +16,10 @@ export const ASSISTANT_ITEMS = 4;
 
 /** A product or design card: a real photo, the INK price when the source has one, and its page (INK product or storefront page). */
 export type AssistantItem = { title: string; context?: string; image: string; price?: number; href: string; /** The INK product, when the card opens one (GoToInk). */ productId?: string };
-export type AssistantLinkKind = "page" | "orders" | "tracking" | "whatsapp" | "search";
+/** `page` = a page of the storefront; `collection` = a category page on INK (a category the storefront has no page for). */
+export type AssistantLinkKind = "page" | "collection" | "orders" | "tracking" | "whatsapp" | "search";
 export type AssistantLink = { kind: AssistantLinkKind; label: string; href: string };
-export type AssistantReplyKind = "greeting" | "answer" | "designs" | "order" | "handoff" | "refuse" | "ask" | "not-found" | "fallback";
+export type AssistantReplyKind = "greeting" | "answer" | "designs" | "order" | "handoff" | "refuse" | "ask" | "not-found" | "fallback" | "chat";
 
 /** `v: 1`, the contract of `/api/assistente/<region>` (the Worker re-validates every field before the INK page sees it). */
 export type AssistantReply = {
@@ -33,7 +34,7 @@ export type AssistantReply = {
 
 /** What the catalog found for a place, a collection or free words. `title` is the line above the cards. */
 /** `match`: what was found (a place or a collection is a definite answer; loose designs may be bettered by another attempt). */
-export type DesignFind = { match: "place" | "collection" | "designs" | "page"; title: string; items: AssistantItem[]; links: AssistantLink[] };
+export type DesignFind = { match: "place" | "collection" | "designs" | "category" | "page"; title: string; items: AssistantItem[]; links: AssistantLink[] };
 
 export type AssistantSources = {
   /** Designs for the words of a message (already stripped of "tem", "camiseta de"…), or null when nothing in the catalog matches. */
@@ -53,7 +54,7 @@ const STOP = new Set(
 );
 /** Words of asking for something: they leave the terms sent to the catalog ("tem estampa de Floripa?" → "floripa"). */
 const SEARCH_FILLERS = new Set(
-  "presente presentes vende vendem venda procuro procurando procura quero queria gostaria busco buscando buscar achar acho encontrar existe existem estampa estampas estampada estampado desenho desenhos tema temas modelo modelos peca pecas roupa roupas alguma algum algo loja site colecao colecoes linha cidade estado opcao opcoes".split(" "),
+  "quanto custa custam preco precos valor valores barato barata presente presentes vende vendem venda procuro procurando procura quero queria gostaria busco buscando buscar achar acho encontrar existe existem estampa estampas estampada estampado desenho desenhos tema temas modelo modelos peca pecas roupa roupas alguma algum algo loja site colecao colecoes linha cidade estado opcao opcoes".split(" "),
 );
 /** Garment types: never the theme ("camiseta de pai" → "pai"). Kept out of the terms: the catalog lists designs, not garments. */
 const GARMENTS = new Set("camiseta camisetas camisa camisas blusa blusas moletom moletons body bodies cropped regata regatas oversized babylook infantil feminina feminino masculina masculino unissex caneca canecas bone bones".split(" "));
@@ -73,6 +74,13 @@ const EXCHANGE_INTENT = /(troca|trocar|devolu|devolver|reembolso|estorno|veio er
 const HUMAN_INTENT = /(falar com (algu[eé]m|uma pessoa|atendente|humano|voc[eê]s)|atendente|atendimento humano|whats|zap|telefone|ligar pra|contato)/i;
 const PRODUCT_INTENT = /\b(procur|quero|queria|gostaria|busc|tem\b|t[eê]m\b|vende|camis|moletom|body|cropped|caneca|presente|estamp|desenho|tema|cole[cç]|modelo|pe[cç]a|roupa|infantil|feminin|masculin|oversized|cidade)/i;
 const GREETING = /^(oi+|ol[aá]|opa|e a[ií]|bom dia|boa tarde|boa noite|hey|hello|eae|eai|tudo bem\??)[\s!.,?]*$/i;
+/** A greeting before the question ("oi, tem de Floripa?"): taken off, the question is answered right away. */
+const LEADING_GREETING = /^(oi+|ol[aá]|opa|e a[ií]|bom dia|boa tarde|boa noite|eae|eai)( tudo (bem|bom))?[\s!.,?]+(?=\S)/i;
+const THANKS = /^(muito )?(obrigad[oa]|brigad[oa]|valeu|vlw|agrade[cç]o|obg)\b/i;
+const BYE = /^(tchau|at[eé] (mais|logo|breve)|falou|flw|bye)\b/i;
+const OK = /^(ok|okay|beleza|blz|show|top|legal|massa|perfeito|entendi|certo|bacana|maravilha|[oó]timo|boa)[\s!.]*$/i;
+const PRICE_INTENT = /(quanto (custa|é|e|sai|fica)|pre[cç]o|valor|t[aá] quanto|barat)/i;
+const SIZE_INTENT = /(tamanho|medida|tabela de medidas|veste|serve em mim|forma (grande|pequeno))/i;
 
 /** A CPF, a card number, a CVV or a password: refused before the text leaves the browser (the server refuses it again). */
 export const isSensitive = (message: string): boolean => SENSITIVE.test(message);
@@ -110,13 +118,14 @@ export function rankAnswers(message: string, answers: readonly AssistantAnswer[]
     .sort((a, b) => b.score - a.score || a.answer.order - b.answer.order);
 }
 
-/** The words of a design search: the message without stopwords, "asking" words and garment types ("tem camiseta de Floripa?" → ["floripa"]). */
+/**
+ * The words of a design search: the message without stopwords, "asking" words and garment types ("tem camiseta de Floripa?" → ["floripa"]). A word
+ * said twice in a row is a name, never an "asking" word ("quero-quero", the bird).
+ */
 export function searchTerms(message: string): string[] {
-  return fold(message)
-    .replace(/[^a-z0-9\s]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length > 1 && !STOP.has(w) && !SEARCH_FILLERS.has(w) && !GARMENTS.has(w))
-    .slice(0, 5);
+  const words = fold(message).replace(/[^a-z0-9\s]/g, " ").split(/\s+/).filter(Boolean);
+  const doubled = (i: number) => words[i] === words[i - 1] || words[i] === words[i + 1];
+  return words.filter((w, i) => w.length > 1 && (doubled(i) || (!STOP.has(w) && !SEARCH_FILLERS.has(w) && !GARMENTS.has(w)))).slice(0, 5);
 }
 
 /** The searches to try, in order: the words as typed, then each word's synonyms, then single words (longest first). */
@@ -145,6 +154,8 @@ const SECURITY_TEXT = "Por segurança, não mande CPF, dados de cartão nem senh
 const ORDER_TEXT = "O status e o rastreio do seu pedido ficam em Meus pedidos: entre com o e-mail usado na compra. Se algo estiver errado, fale com a gente pelo WhatsApp.";
 const EXCHANGE_TEXT = "Trocas e devoluções são pedidas em Meus pedidos: entre com o e-mail da compra, escolha o pedido e a peça.";
 const HANDOFF_TEXT = "Claro! Fale com a nossa equipe pelo WhatsApp, a sua pergunta já vai escrita.";
+const PRICE_TEXT = "O preço aparece em cada estampa e pode mudar com o modelo da peça. Me diga a cidade ou o tema que eu mostro as opções com o valor.";
+const SIZE_TEXT = "Na página de cada peça tem o Guia de medidas, com a tabela do modelo escolhido. Se ficar em dúvida entre dois tamanhos, a nossa equipe ajuda pelo WhatsApp.";
 const ASK_TEXT = "Escreva o nome da cidade ou do tema que você procura, por exemplo: Florianópolis, Tijucas, chimarrão ou mãe.";
 const NO_WHATSAPP_TEXT = "Por aqui eu ajudo a achar estampas e respondo dúvidas de pedido, troca, frete e tamanhos.";
 
@@ -171,6 +182,13 @@ export function replyTo(rawMessage: string, answers: readonly AssistantAnswer[],
   const related = (ranked: readonly RankedAnswer[], skip?: AssistantAnswer) => ranked.filter((r) => r.answer !== skip).slice(0, 2).map((r) => r.answer.question);
 
   if (message === "" || GREETING.test(message)) return greetingReply(greeting, answers);
+  const leading = LEADING_GREETING.exec(message);
+  if (leading) return replyTo(message.slice(leading[0].length), answers, sources, greeting);
+  // Small talk: short and kind, never a search ("valeu" is not a design).
+  const more = greetingReply(greeting, answers).suggestions;
+  if (THANKS.test(message) && message.split(" ").length <= 4) return { v: 1, kind: "chat", text: "Por nada! Se precisar de mais alguma coisa, é só chamar.", suggestions: more };
+  if (BYE.test(message)) return { v: 1, kind: "chat", text: "Até mais! Quando quiser, estou por aqui." };
+  if (OK.test(message)) return { v: 1, kind: "chat", text: "Que bom! Posso ajudar com mais alguma coisa?", suggestions: more };
   // Never echoed and never forwarded: not even into the WhatsApp text.
   if (SENSITIVE.test(message)) return { v: 1, kind: "refuse", text: SECURITY_TEXT, links: [orderLinks[1]] };
 
@@ -190,15 +208,20 @@ export function replyTo(rawMessage: string, answers: readonly AssistantAnswer[],
     return sources.whatsapp ? { v: 1, kind: "handoff", text: HANDOFF_TEXT, links: whatsapp(message) } : { v: 1, kind: "fallback", text: NO_WHATSAPP_TEXT, suggestions: greetingReply(greeting, answers).suggestions };
   }
   if (strong) return { v: 1, kind: "answer", text: best.answer.answer, links: actionLink(best.answer.action), suggestions: related(ranked, best.answer) };
+  // Size without the store's own answer: where the measurements are (every product page has them), and the team for a doubt.
+  if (SIZE_INTENT.test(message)) return { v: 1, kind: "answer", text: SIZE_TEXT, links: whatsapp(message) };
 
   const terms = searchTerms(message);
-  const asked = PRODUCT_INTENT.test(message);
+  const price = PRICE_INTENT.test(message);
+  const asked = PRODUCT_INTENT.test(message) || price;
   if (terms.length > 0) {
     const found = sources.findDesigns(terms);
-    if (found && (found.items.length > 0 || found.links.length > 0)) return { v: 1, kind: "designs", text: found.title, items: found.items.slice(0, ASSISTANT_ITEMS), links: found.links };
+    if (found && (found.items.length > 0 || found.links.length > 0)) return { v: 1, kind: "designs", text: price && found.items.some((i) => i.price) ? `${found.title.replace(/:$/, "")}, com o preço de cada uma:` : found.title, items: found.items.slice(0, ASSISTANT_ITEMS), links: found.links };
   }
-  if (best) return { v: 1, kind: "answer", text: best.answer.answer, links: actionLink(best.answer.action), suggestions: related(ranked, best.answer) };
+  // Price without the store's own answer: what the pages already show, never a made-up number.
+  if (price && terms.length === 0 && !best) return { v: 1, kind: "ask", text: PRICE_TEXT };
   if (asked && terms.length === 0) return { v: 1, kind: "ask", text: ASK_TEXT };
+  if (best) return { v: 1, kind: "answer", text: best.answer.answer, links: actionLink(best.answer.action), suggestions: related(ranked, best.answer) };
   if (asked) {
     // The words as the person wrote them (with accents), only those that were searched.
     const said = message.split(/\s+/).map((w) => w.replace(/[^\p{L}\p{N}-]/gu, "")).filter((w) => w && terms.includes(fold(w)));
@@ -213,3 +236,24 @@ export function replyTo(rawMessage: string, answers: readonly AssistantAnswer[],
     suggestions: greetingReply(greeting, answers).suggestions,
   };
 }
+
+const MORE = /^(e )?(tem )?(mais|outras?|outros?|mostra mais|ver mais|quero ver mais|mais op[cç][oõ]es|ver todas?|todas?)[\s!?.]*$/i;
+const YES = /^(sim|s|pode|pode ser|quero|claro|isso|ok|bora|vamos)[\s!.]*$/i;
+
+/**
+ * A follow-up the chat answers by itself, from the previous answer, without asking the server: "tem mais?" after designs = the link to all of them;
+ * "sim" after an offer of the WhatsApp = the WhatsApp. Null = not a follow-up (the message goes to the server). Pure: the storefront's chat uses it, and
+ * the INK loader repeats the same two rules.
+ */
+export function followUp(message: string, previous: AssistantReply | null): AssistantReply | null {
+  if (!previous) return null;
+  const text = message.replace(/\s+/g, " ").trim();
+  const all = previous.links?.find((l) => l.kind === "search" || l.kind === "page" || l.kind === "collection");
+  if (MORE.test(text) && previous.kind === "designs" && all) return { v: 1, kind: "designs", text: "Todas estão nesta página:", links: [all] };
+  const whatsapp = previous.links?.find((l) => l.kind === "whatsapp");
+  if (YES.test(text) && whatsapp && (previous.kind === "not-found" || previous.kind === "fallback" || previous.kind === "handoff" || previous.kind === "answer")) return { v: 1, kind: "handoff", text: "Combinado! Toque abaixo para falar com a nossa equipe.", links: [whatsapp] };
+  return null;
+}
+
+/** How long "digitando…" stays before an answer: a little longer for longer texts, never slow (0,7 s to 1,8 s). */
+export const typingDelay = (reply: Pick<AssistantReply, "text">): number => Math.min(1800, Math.max(700, 450 + reply.text.length * 9));
