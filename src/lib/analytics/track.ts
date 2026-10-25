@@ -377,6 +377,28 @@ export function trackMundo(evento: string, campos: MundoCampos = {}): void {
   whenAnalyticsReady(() => sendGtag("event", evento, params));
 }
 
+export type AssistantEvent = "origens_assistant_open" | "origens_assistant_close" | "origens_assistant_message" | "origens_assistant_reply" | "origens_assistant_item_click" | "origens_assistant_link_click" | "origens_assistant_error";
+export type AssistantParams = {
+  /** How the message was sent: typed, or a suggestion chip. */
+  message_source?: "typed" | "chip";
+  /** The kind of answer (engine.ts `AssistantReplyKind`): "answer", "designs", "order", "handoff"… */
+  reply_kind?: string;
+  /** The kind of a link followed: "page", "orders", "tracking", "whatsapp", "search". */
+  link_kind?: string;
+  result_count?: number;
+  position?: number;
+  target_product_id?: string;
+};
+/**
+ * The help chat (`src/components/assistant/AssistantWidget.tsx`), GA4 only — the same names the Worker sends from the INK pages, told apart by `surface`.
+ * NEVER the text typed (it may carry a name, a phone, an order): only what kind of answer it got and what was followed.
+ */
+export function trackAssistant(event: AssistantEvent, params: AssistantParams & { region: string }): void {
+  if (!gtagReady()) return;
+  const { region, ...rest } = params;
+  sendGtag("event", event, { ...rest, region, surface: "storefront", feature_version: "assistant_v1", ...(event === "origens_assistant_item_click" || event === "origens_assistant_link_click" ? { transport_type: "beacon" } : {}) });
+}
+
 export type GuideEvent = "origens_guide_view" | "origens_guide_open" | "origens_guide_dismiss" | "origens_guide_city_select" | "origens_guide_results" | "origens_guide_product_click" | "origens_guide_error";
 export type GuideParams = {
   guide_path?: "city" | "prints" | "city_context" | "reopen";

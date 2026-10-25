@@ -6,12 +6,13 @@ import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkIncentiveText, inkThemeOf, INK_
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
+import type { AssistantAnswer } from "../site-config/assistant-schema";
 import { HOME_THEMES, homeThemeOf, type CollectionHighlight, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
 import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "podio" | "ink-theme"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "assistant" | "podio" | "ink-theme"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
@@ -68,7 +69,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft));
   return changes;
 }
 
@@ -245,6 +246,37 @@ function mundoChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   if (was === now) return [];
   const text = (m: typeof was) => (m ? MUNDO_TEXTO[m] : "segue o servidor");
   return [{ kind: "theme", sectionId: "mundo", text: `Meu Pequeno Mundo: ${text(was)} → ${text(now)}` }];
+}
+
+/** "Assistente": the switch, the WhatsApp, the opening line and the answers added, removed, switched, edited or reordered. Pure. */
+function assistantChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const was = published.assistant;
+  const now = draft.assistant;
+  if (!was && !now) return [];
+  const out: Change[] = [];
+  const push = (sectionId: string, text: string) => out.push({ kind: "assistant", sectionId: `assistant:${sectionId}`, text: `Assistente: ${text}` });
+  if ((was?.enabled ?? false) !== (now?.enabled ?? false)) push("enabled", now?.enabled ? "ligado (o botão “Ajuda?” e o WhatsApp da INK dão lugar a ele)" : "desligado (a INK volta a mostrar o “Ajuda?” e o WhatsApp dela)");
+  if (was?.whatsapp !== now?.whatsapp) push("whatsapp", `WhatsApp ${was?.whatsapp ?? "nenhum"} → ${now?.whatsapp ?? "nenhum"}`);
+  if (was?.greeting !== now?.greeting) push("greeting", "mensagem de abertura editada");
+  const before = was?.answers ?? [];
+  const after = now?.answers ?? [];
+  const name = (a: AssistantAnswer) => `resposta "${a.question}"`;
+  const old = new Map(before.map((a) => [a.id, a]));
+  for (const a of after) {
+    const prev = old.get(a.id);
+    if (!prev) push(a.id, `${name(a)} adicionada${a.enabled ? "" : " (desativada)"}`);
+    else {
+      if (prev.enabled !== a.enabled) push(a.id, `${name(a)} ${a.enabled ? "ativada" : "desativada"}`);
+      const { enabled: _a, order: _b, ...restOld } = prev;
+      const { enabled: _c, order: _d, ...restNew } = a;
+      if (json(restOld) !== json(restNew)) push(a.id, `${name(a)} editada`);
+    }
+  }
+  const ids = new Set(after.map((a) => a.id));
+  for (const a of before) if (!ids.has(a.id)) push(a.id, `${name(a)} removida`);
+  const order = (list: AssistantAnswer[]) => list.filter((a) => ids.has(a.id) && old.has(a.id)).sort((x, y) => x.order - y.order).map((a) => a.id).join(",");
+  if (order(before) !== order(after)) push("order", "nova ordem das respostas");
+  return out;
 }
 
 const barName = (m: TopBarMessage) => `mensagem "${m.text}"`;

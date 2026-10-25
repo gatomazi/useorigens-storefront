@@ -1,0 +1,194 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { AssistantWidget } from "@/components/assistant/AssistantWidget";
+import type { AssistantRow } from "@/lib/admin/assistant-form";
+import { greetingReply, whatsappUrl, type AssistantReply } from "@/lib/assistant/engine";
+import { whatsappDigits } from "@/lib/admin/assistant-form";
+import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
+import { ASSISTANT_ANSWER_MAX, ASSISTANT_GREETING_MAX, ASSISTANT_KEYWORDS_MAX, ASSISTANT_QUESTION_MAX, DEFAULT_ASSISTANT_GREETING, MAX_ASSISTANT_ANSWERS, type AssistantAnswer, type AssistantConfig } from "@/lib/site-config/assistant-schema";
+
+const ACTIONS: { value: string; label: string }[] = [
+  { value: "", label: "Nenhum (só o texto)" },
+  { value: "orders", label: "Abrir Meus pedidos (trocas, devoluções)" },
+  { value: "tracking", label: "Status do pedido (rastreio)" },
+];
+
+const toRow = (a: AssistantAnswer): AssistantRow => ({ id: a.id, enabled: a.enabled, question: a.question, answer: a.answer, keywords: a.keywords ?? "", action: a.action ?? "" });
+const blank = (): AssistantRow => ({ id: "", enabled: true, question: "", answer: "", keywords: "", action: "" });
+const sameQuestion = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
+/** "5548988082581" → "(48) 98808-2581", for the field; anything else as it is. */
+const phoneText = (digits: string | undefined) => {
+  const m = digits ? /^55(\d{2})(\d{4,5})(\d{4})$/.exec(digits) : null;
+  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : (digits ?? "");
+};
+
+type Props = {
+  region: RegionSlug;
+  config: AssistantConfig | undefined;
+  readOnly: boolean;
+  rev: string;
+  action: (fd: FormData) => Promise<void>;
+  importAction: (fd: FormData) => Promise<{ ok: boolean; message: string; rows: AssistantRow[] }>;
+  previewAction: (scope: string, rows: string, whatsapp: string, greeting: string, message: string) => Promise<AssistantReply | null>;
+};
+
+export function AssistantEditor({ region, config, readOnly, rev, action, importAction, previewAction }: Props) {
+  const [enabled, setEnabled] = useState(config?.enabled ?? false);
+  const [whatsapp, setWhatsapp] = useState(phoneText(config?.whatsapp));
+  const [greeting, setGreeting] = useState(config?.greeting ?? "");
+  const [rows, setRows] = useState<AssistantRow[]>(() => (config?.answers ?? []).slice().sort((a, b) => a.order - b.order).map(toRow));
+  const [importing, startImport] = useTransition();
+  const [importNote, setImportNote] = useState<{ ok: boolean; text: string } | null>(null);
+  const [previewKey, setPreviewKey] = useState(0);
+
+  const set = (i: number, patch: Partial<AssistantRow>) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const move = (i: number, d: -1 | 1) => setRows((rs) => {
+    const j = i + d;
+    if (j < 0 || j >= rs.length) return rs;
+    const next = [...rs];
+    [next[i], next[j]] = [next[j], next[i]];
+    return next;
+  });
+  const remove = (i: number) => setRows((rs) => rs.filter((_, j) => j !== i));
+  const add = () => setRows((rs) => (rs.length >= MAX_ASSISTANT_ANSWERS ? rs : [...rs, blank()]));
+
+  const bringFromInk = () => startImport(async () => {
+    const fd = new FormData();
+    fd.set("scope", region);
+    const result = await importAction(fd);
+    if (!result.ok) return setImportNote({ ok: false, text: result.message });
+    const fresh = result.rows.filter((r) => !rows.some((x) => sameQuestion(x.question, r.question))).slice(0, MAX_ASSISTANT_ANSWERS - rows.length);
+    const added = fresh.length;
+    setRows((rs) => [...rs, ...fresh.filter((r) => !rs.some((x) => sameQuestion(x.question, r.question)))].slice(0, MAX_ASSISTANT_ANSWERS));
+    setImportNote({ ok: true, text: added > 0 ? `${result.message} ${added === 1 ? "1 nova entrou" : `${added} novas entraram`} no fim da lista.` : "Todas as perguntas da INK já estão na lista." });
+  });
+
+  const liveRows = rows.filter((r) => r.enabled && r.question.trim() && r.answer.trim());
+  const opening = greetingReply(greeting.trim() || DEFAULT_ASSISTANT_GREETING, liveRows.map((r, i) => ({ id: r.id || `nova-${i}`, enabled: true, question: r.question.trim(), answer: r.answer.trim(), order: i + 1 })));
+  const ask = (message: string) => previewAction(region, JSON.stringify(rows), whatsapp, greeting, message);
+
+  return (
+    <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_26rem] xl:items-start">
+      <form action={action} className="space-y-5" aria-label={`Assistente de ${REGIONS[region].name}`}>
+        <input type="hidden" name="scope" value={region} />
+        <input type="hidden" name="rev" value={rev} />
+        <input type="hidden" name="answers" value={JSON.stringify(rows)} />
+
+        <fieldset className="a-card space-y-4 p-5">
+          <legend className="a-label">No ar</legend>
+          <label className="flex min-h-10 items-start gap-2 text-[0.9375rem]">
+            <input type="checkbox" name="enabled" className="mt-1" checked={enabled} disabled={readOnly} onChange={(e) => setEnabled(e.target.checked)} data-testid="assistant-enabled" />
+            <span>
+              <strong>Assistente ligado</strong>
+              <span className="a-muted block text-[0.8125rem]">
+                Mostra o botão “Ajuda” no canto inferior direito do site e das páginas da INK. Nas páginas da INK ele fica no lugar do botão “Ajuda?” e do link de
+                WhatsApp da própria INK, que somem enquanto o assistente estiver no ar. Desligado: tudo volta a ser como a INK desenha.
+              </span>
+            </span>
+          </label>
+          <div>
+            <label className="a-label" htmlFor="as_whatsapp">WhatsApp do atendimento</label>
+            <input id="as_whatsapp" name="whatsapp" type="tel" inputMode="tel" className="a-input w-56" value={whatsapp} placeholder="(48) 98808-2581" disabled={readOnly} onChange={(e) => setWhatsapp(e.target.value)} data-testid="assistant-whatsapp" />
+            <p className="a-muted mt-1 text-[0.8125rem]">Quando o assistente não sabe a resposta, ou a pessoa pede para falar com alguém, ele abre este WhatsApp com a pergunta já escrita. É o número que a INK mostra hoje no “Fale pelo Whatsapp”. Vazio: sem esse botão.</p>
+          </div>
+          <div>
+            <label className="a-label" htmlFor="as_greeting">Mensagem de abertura (opcional)</label>
+            <input id="as_greeting" name="greeting" className="a-input" value={greeting} maxLength={ASSISTANT_GREETING_MAX} placeholder={DEFAULT_ASSISTANT_GREETING} disabled={readOnly} onChange={(e) => setGreeting(e.target.value)} data-testid="assistant-greeting" />
+            <p className="a-muted mt-1 text-[0.8125rem]">{greeting.length}/{ASSISTANT_GREETING_MAX}. Vazia: usa o texto padrão (acima, em cinza). As três primeiras respostas da lista aparecem como sugestões logo abaixo.</p>
+          </div>
+        </fieldset>
+
+        <div className="a-card space-y-2 p-5">
+          <p className="font-semibold">O que o assistente faz sem precisar cadastrar</p>
+          <ul className="a-muted list-disc space-y-1 pl-5 text-[0.9375rem]">
+            <li>Acha estampas pela cidade (com apelidos, como Floripa e BC), pelo estado, pela coleção ou por palavras do nome (“chimarrão”, “mãe”), com foto e preço reais.</li>
+            <li>Pedido, rastreio, troca e devolução: leva para as páginas de pedidos da INK. Nunca consulta pedido nem pede CPF; se a pessoa mandar CPF ou cartão, ele recusa.</li>
+            <li>Não inventa nada: o que não estiver nas respostas abaixo nem no catálogo vai para o WhatsApp.</li>
+          </ul>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="a-h2">Respostas da loja <span className="a-muted text-[1rem] font-normal">· {rows.length}/{MAX_ASSISTANT_ANSWERS}</span></h2>
+          {!readOnly && (
+            <button type="button" className="a-btn ghost" onClick={bringFromInk} disabled={importing || rows.length >= MAX_ASSISTANT_ANSWERS} data-testid="assistant-import">
+              {importing ? "Lendo a INK…" : "Trazer perguntas da INK"}
+            </button>
+          )}
+        </div>
+        {importNote && <p className={`a-flash ${importNote.ok ? "ok" : "err"}`} role="status" data-testid="assistant-import-note">{importNote.text}</p>}
+
+        {rows.length === 0 && (
+          <div className="a-card p-5" data-testid="assistant-empty">
+            <p className="font-semibold">Nenhuma resposta cadastrada.</p>
+            <p className="a-muted mt-1 text-[0.9375rem]">“Trazer perguntas da INK” copia as Perguntas frequentes e Trocas e devoluções que a loja já publicou na INK, para você revisar. Sem respostas, o assistente ainda acha estampas e leva aos pedidos.</p>
+          </div>
+        )}
+
+        {rows.map((r, i) => (
+          <fieldset key={i} className="a-card space-y-3 p-5" data-testid={`assistant-row-${i}`}>
+            <legend className="sr-only">Resposta {i + 1}</legend>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[1rem] font-extrabold">{i + 1}. Resposta</span>
+                {i < 3 && r.enabled && <span className="a-badge ok">Sugestão na abertura</span>}
+                {!r.enabled && <span className="a-badge">Desativada</span>}
+              </div>
+              {!readOnly && (
+                <div className="flex flex-wrap gap-1.5">
+                  <button type="button" className="a-btn ghost sm" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Subir a resposta ${i + 1}`}>↑</button>
+                  <button type="button" className="a-btn ghost sm" onClick={() => move(i, 1)} disabled={i === rows.length - 1} aria-label={`Descer a resposta ${i + 1}`}>↓</button>
+                  <button type="button" className="a-btn danger sm" onClick={() => remove(i)} data-testid={`assistant-remove-${i}`}>Remover</button>
+                </div>
+              )}
+            </div>
+            <label className="flex min-h-10 items-center gap-2 text-[0.9375rem] font-semibold">
+              <input type="checkbox" checked={r.enabled} disabled={readOnly} onChange={(e) => set(i, { enabled: e.target.checked })} data-testid={`assistant-row-enabled-${i}`} />
+              Habilitada
+            </label>
+            <div>
+              <label className="a-label" htmlFor={`as${i}_q`}>Pergunta</label>
+              <input id={`as${i}_q`} className="a-input" value={r.question} maxLength={ASSISTANT_QUESTION_MAX} placeholder="Qual é o prazo de entrega?" disabled={readOnly} onChange={(e) => set(i, { question: e.target.value })} data-testid={`assistant-question-${i}`} />
+            </div>
+            <div>
+              <label className="a-label" htmlFor={`as${i}_a`}>Resposta</label>
+              <textarea id={`as${i}_a`} className="a-input min-h-28" value={r.answer} maxLength={ASSISTANT_ANSWER_MAX} disabled={readOnly} onChange={(e) => set(i, { answer: e.target.value })} data-testid={`assistant-answer-${i}`} />
+              <p className="a-muted mt-1 text-[0.8125rem]">{r.answer.length}/{ASSISTANT_ANSWER_MAX}. Aparece exatamente assim, com as quebras de linha.</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_16rem]">
+              <div>
+                <label className="a-label" htmlFor={`as${i}_k`}>Outras palavras (opcional)</label>
+                <input id={`as${i}_k`} className="a-input" value={r.keywords} maxLength={ASSISTANT_KEYWORDS_MAX} placeholder="prazo, demora, quando chega" disabled={readOnly} onChange={(e) => set(i, { keywords: e.target.value })} data-testid={`assistant-keywords-${i}`} />
+                <p className="a-muted mt-1 text-[0.8125rem]">Como as pessoas perguntam isso, separado por vírgula. Pesam mais que as palavras da pergunta.</p>
+              </div>
+              <div>
+                <label className="a-label" htmlFor={`as${i}_act`}>Botão abaixo da resposta</label>
+                <select id={`as${i}_act`} className="a-input" value={r.action} disabled={readOnly} onChange={(e) => set(i, { action: e.target.value })} data-testid={`assistant-action-${i}`}>
+                  {ACTIONS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
+                </select>
+              </div>
+            </div>
+          </fieldset>
+        ))}
+
+        {readOnly ? <p className="a-muted">Somente leitura para o seu perfil.</p> : (
+          <div className="flex flex-wrap items-center gap-3">
+            <button type="button" className="a-btn ghost" onClick={add} disabled={rows.length >= MAX_ASSISTANT_ANSWERS} data-testid="assistant-add">+ Resposta</button>
+            <button type="submit" className="a-btn" data-testid="save-assistant">Salvar rascunho</button>
+          </div>
+        )}
+      </form>
+
+      <section className="a-card p-5 xl:sticky xl:top-6" aria-labelledby="assistant-preview">
+        <div className="flex items-center justify-between gap-2">
+          <h2 id="assistant-preview" className="a-h2">Testar</h2>
+          <button type="button" className="a-btn ghost sm" onClick={() => setPreviewKey((k) => k + 1)}>Recomeçar</button>
+        </div>
+        <p className="a-muted mt-1 text-[0.9375rem]">Pergunte como um cliente. Responde com o rascunho desta tela, mesmo sem salvar, e com o catálogo de verdade. Experimente “tem de Floripa?”, “cadê meu pedido?” ou “quero trocar o tamanho”.</p>
+        <div className="relative mt-4 h-[36rem] overflow-hidden rounded border border-black/15 bg-[#e5e5e5]" data-testid="assistant-preview-frame">
+          <AssistantWidget key={previewKey} region={region} opening={opening} mode="preview" ask={ask} whatsapp={/^55\d{10,11}$/.test(whatsappDigits(whatsapp)) ? whatsappUrl(whatsappDigits(whatsapp), "") : undefined} />
+        </div>
+      </section>
+    </div>
+  );
+}

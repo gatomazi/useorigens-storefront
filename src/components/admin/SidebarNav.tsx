@@ -43,7 +43,10 @@ export function SidebarNav({ pendingRequests = 0, owner = false, regionName = "S
     },
     {
       title: "Atendimento",
-      items: [{ href: SOLICITACOES, label: "Solicitações", badge: { count: pendingRequests, testId: "pending-requests", title: "Solicitações de personalização esperando a equipe", srLabel: "solicitações pendentes" } }],
+      items: [
+        { href: SOLICITACOES, label: "Solicitações", badge: { count: pendingRequests, testId: "pending-requests", title: "Solicitações de personalização esperando a equipe", srLabel: "solicitações pendentes" } },
+        { href: "/admin/assistente", label: "Assistente" },
+      ],
     },
     {
       title: "Marketing",

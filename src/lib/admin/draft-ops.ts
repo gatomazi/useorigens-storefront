@@ -15,6 +15,7 @@ import { newCollectionLanding, newPage, uniqueSlug } from "../site-config/pages"
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import type { PromotionsConfig } from "../site-config/promotions-schema";
 import type { TopBarConfig } from "../site-config/top-bar-schema";
+import type { AssistantConfig } from "../site-config/assistant-schema";
 import type { CardsConfig } from "../site-config/cards-schema";
 import type { CarouselEndConfig } from "../site-config/carousel-end-schema";
 import type { MundoModo } from "../site-config/mundo-schema";
@@ -117,6 +118,8 @@ export type DraftOp =
   | { type: "set-promotions"; promotions: PromotionsConfig }
   /** Replaces the top strip of a region (messages and production time; no message and no time removes the setting). Strictly validated. */
   | { type: "set-top-bar"; topBar: TopBarConfig }
+  /** Replaces the assistant of a region (switch, WhatsApp, opening line and answers). Strictly validated. */
+  | { type: "set-assistant"; assistant: AssistantConfig }
   /** GLOBAL only: a buy button on every product card of the store (`cards.buyLabel`), or `null` to leave it to each section again. */
   | { type: "set-cards"; cards: CardsConfig | null }
   /** GLOBAL only: the last card of every product carousel ("Ver todas as {n} peças dessa coleção"), or `null` to take it out again. */
@@ -286,6 +289,12 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     const empty = op.topBar.messages.length === 0 && op.topBar.productionDays === undefined && op.topBar.style === undefined && op.topBar.colors === undefined;
     const next: ScopeDoc = { ...doc, topBar: op.topBar };
     if (empty) delete next.topBar;
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-assistant") {
+    if (doc.scope === "global") return fail("the assistant belongs to a region");
+    const next: ScopeDoc = { ...doc, assistant: op.assistant };
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }
