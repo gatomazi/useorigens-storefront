@@ -59,6 +59,7 @@ import type { InkThemeConfig } from "@/lib/site-config/ink-theme-schema";
 import { readableTopBarError, topBarFromForm } from "@/lib/admin/top-bar-form";
 import { assistantFromForm, readableAssistantError, type AssistantRow } from "@/lib/admin/assistant-form";
 import { mergeInkFaq, parseInkFaq, suggestedFor } from "@/lib/assistant/ink-faq";
+import { INK_FAQ_COPY, INK_FAQ_COPY_DATE } from "@/lib/assistant/ink-faq-copy";
 import { assistantReply, inkStoreBase } from "@/lib/assistant/sources";
 import type { AssistantReply } from "@/lib/assistant/engine";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
@@ -960,17 +961,21 @@ export async function importInkFaqAction(fd: FormData): Promise<{ ok: boolean; m
     if (!response.ok) throw new Error(`${path} ${response.status}`);
     return (await response.text()).slice(0, 600_000);
   };
-  try {
-    const [faq, trocas] = await Promise.all([read("/faq"), read("/exchanges_and_returns")]);
-    const entries = mergeInkFaq(parseInkFaq(faq, "faq"), parseInkFaq(trocas, "trocas"));
-    const rows = entries.map((e) => {
+  const toRows = (entries: readonly { question: string; answer: string }[]): AssistantRow[] =>
+    entries.map((e) => {
       const hint = suggestedFor(e.question);
       return { id: "", enabled: true, question: e.question, answer: e.answer, keywords: hint.keywords, action: hint.action ?? "" };
     });
-    return { ok: rows.length > 0, message: rows.length > 0 ? `${rows.length} perguntas da INK. Revise e salve o rascunho.` : "Não encontrei perguntas nas páginas da INK.", rows };
+  try {
+    const [faq, trocas] = await Promise.all([read("/faq"), read("/exchanges_and_returns")]);
+    const rows = toRows(mergeInkFaq(parseInkFaq(faq, "faq"), parseInkFaq(trocas, "trocas")));
+    if (rows.length > 0) return { ok: true, message: `${rows.length} perguntas da INK. Revise e salve o rascunho.`, rows };
+    throw new Error("no questions");
   } catch (error) {
-    console.error("[admin] ink faq import failed:", error instanceof Error ? error.message.slice(0, 200) : "unknown");
-    return { ok: false, message: "Não consegui ler as páginas da INK agora. Tente de novo em instantes.", rows: [] };
+    // INK refuses reads from a datacenter (403, its bot protection): the copy checked on INK_FAQ_COPY_DATE, said so, for the owner to review.
+    console.error("[admin] ink faq import failed, offering the saved copy:", error instanceof Error ? error.message.slice(0, 200) : "unknown");
+    const rows = toRows(INK_FAQ_COPY);
+    return { ok: true, message: `A INK não deixou o servidor ler as páginas agora, então trouxe a cópia das perguntas da INK conferida em ${INK_FAQ_COPY_DATE} (${rows.length}). Confira se algo mudou na INK desde então e salve o rascunho.`, rows };
   }
 }
 
