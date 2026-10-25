@@ -1,6 +1,6 @@
 import type { RegionSlug } from "../geo/regions";
 import type { AssistantAnswer } from "../site-config/assistant-schema";
-import { fold, MAX_ASSISTANT_MESSAGE, normalize, searchTerms, type AssistantReply, type AssistantReplyKind } from "./engine";
+import { fold, isSensitive, MAX_ASSISTANT_MESSAGE, normalize, searchTerms, type AssistantReply, type AssistantReplyKind } from "./engine";
 
 /**
  * What people ask the assistant (db/migrations/0009_assistant_questions), so the store can see what it could not answer and write that answer.
@@ -22,11 +22,18 @@ export type AssistantQuestion = {
 
 /** One line of the grouped table: the same question (by key), answered the same way, on one surface. */
 export type QuestionGroup = { key: string; kind: AssistantReplyKind; answerId: string | null; surface: AssistantSurface; count: number; lastAt: number; sample: string | null };
+/** Every question counted by where it was asked and how it was answered: the panel's totals (a few dozen lines at most, never capped). */
+export type QuestionTotal = { surface: AssistantSurface; kind: AssistantReplyKind; answerId: string | null; count: number };
+
+/** Small talk and refused messages are counted in the totals, never listed. */
+export const UNLISTED: readonly AssistantReplyKind[] = ["greeting", "chat", "refuse"];
 
 export interface QuestionStore {
   record(row: AssistantQuestion): Promise<void>;
-  /** Every question of the region since `since`, grouped (at most `limit` groups, the most asked first). */
+  /** The questions of the region since `since` that the panel lists (not UNLISTED), grouped: at most `limit` groups, the most asked first. */
   groups(region: RegionSlug, since: number, limit: number): Promise<QuestionGroup[]>;
+  /** Every question of the region since `since`, counted by surface, kind and answer. */
+  totals(region: RegionSlug, since: number): Promise<QuestionTotal[]>;
   /** Deletes what is older than `before`. */
   purgeBefore(before: number): Promise<number>;
 }
@@ -62,7 +69,8 @@ export function questionKey(masked: string): string {
 /** The row for one answered message. The base answer it used is found by its text (the reply contract carries no id, on purpose). */
 export function questionRow(input: { region: RegionSlug; surface: AssistantSurface; message: string; reply: AssistantReply; answers: readonly AssistantAnswer[]; at: number }): AssistantQuestion {
   const { reply } = input;
-  const refused = reply.kind === "refuse";
+  // A CPF, card or password is never kept, even when the reply was small talk ("tchau, minha senha é…" is answered as a goodbye).
+  const refused = reply.kind === "refuse" || isSensitive(input.message);
   const masked = refused ? "" : maskQuestion(input.message);
   const used = reply.kind === "answer" || reply.kind === "order" ? input.answers.find((a) => a.answer === reply.text) : undefined;
   return {
@@ -79,8 +87,6 @@ export function questionRow(input: { region: RegionSlug; surface: AssistantSurfa
 
 /** Answers that left the person without what they asked for: what the store should write next. */
 export const UNANSWERED: readonly AssistantReplyKind[] = ["not-found", "fallback", "ask", "handoff"];
-/** Small talk: counted, never listed. */
-const SMALL_TALK: readonly AssistantReplyKind[] = ["greeting", "chat"];
 
 export type ReportLine = { key: string; sample: string; count: number; lastAt: number; kinds: AssistantReplyKind[]; answerIds: string[] };
 export type QuestionReport = {
@@ -107,12 +113,12 @@ const line = (groups: readonly QuestionGroup[]): ReportLine => {
   };
 };
 
-/** The panel's view of the grouped rows: totals, what was left unanswered, the most asked and the use of each answer. */
-export function questionReport(groups: readonly QuestionGroup[], answers: readonly AssistantAnswer[], limit = 50): QuestionReport {
+/** The panel's view: the totals (exact, from `totals`), what was left unanswered, the most asked (from `groups`) and the use of each answer. */
+export function questionReport(totals: readonly QuestionTotal[], groups: readonly QuestionGroup[], answers: readonly AssistantAnswer[], limit = 50): QuestionReport {
   const bySurface: Record<AssistantSurface, number> = { site: 0, ink: 0 };
   const byKind: Partial<Record<AssistantReplyKind, number>> = {};
   const used = new Map<string, number>();
-  for (const g of groups) {
+  for (const g of totals) {
     bySurface[g.surface] += g.count;
     byKind[g.kind] = (byKind[g.kind] ?? 0) + g.count;
     if (g.answerId) used.set(g.answerId, (used.get(g.answerId) ?? 0) + g.count);
@@ -127,7 +133,7 @@ export function questionReport(groups: readonly QuestionGroup[], answers: readon
     bySurface,
     byKind,
     unanswered: lines((g) => UNANSWERED.includes(g.kind)),
-    top: lines((g) => !SMALL_TALK.includes(g.kind) && g.kind !== "refuse"),
+    top: lines((g) => !UNLISTED.includes(g.kind)),
     answers: answers.map((a) => ({ id: a.id, question: a.question, count: used.get(a.id) ?? 0 })).sort((a, b) => b.count - a.count),
   };
 }
@@ -142,7 +148,7 @@ export function memoryQuestionStore(): QuestionStore {
     async groups(region, since, limit) {
       const byGroup = new Map<string, QuestionGroup>();
       for (const r of rows) {
-        if (r.region !== region || r.at < since) continue;
+        if (r.region !== region || r.at < since || UNLISTED.includes(r.kind)) continue;
         const id = [r.questionKey, r.kind, r.answerId ?? "", r.surface].join("\u0000");
         const g = byGroup.get(id);
         if (!g) byGroup.set(id, { key: r.questionKey, kind: r.kind, answerId: r.answerId, surface: r.surface, count: 1, lastAt: r.at, sample: r.question });
@@ -152,6 +158,17 @@ export function memoryQuestionStore(): QuestionStore {
         }
       }
       return [...byGroup.values()].sort((a, b) => b.count - a.count || b.lastAt - a.lastAt).slice(0, limit);
+    },
+    async totals(region, since) {
+      const byTotal = new Map<string, QuestionTotal>();
+      for (const r of rows) {
+        if (r.region !== region || r.at < since) continue;
+        const id = [r.surface, r.kind, r.answerId ?? ""].join("\u0000");
+        const t = byTotal.get(id);
+        if (t) t.count++;
+        else byTotal.set(id, { surface: r.surface, kind: r.kind, answerId: r.answerId, count: 1 });
+      }
+      return [...byTotal.values()];
     },
     async purgeBefore(before) {
       const n = rows.length;

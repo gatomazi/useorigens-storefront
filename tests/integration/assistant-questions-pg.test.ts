@@ -26,8 +26,12 @@ describe("pg question store", () => {
     await store.record(questionRow({ region: "sul", surface: "site", message: "meu cpf é 123.456.789-00", reply: { v: 1, kind: "refuse", text: "…" }, answers: [], at: T0 }));
     const groups = await store.groups("sul", T0 - 1, 100);
     expect(groups.find((g) => g.kind === "not-found")).toMatchObject({ count: 2, sample: "Tem de Gaspar?", surface: "ink", lastAt: T0 + 1000 });
-    expect(groups.find((g) => g.kind === "refuse")).toMatchObject({ count: 1, sample: null, key: "" });
-    expect(questionReport(groups, []).unanswered).toHaveLength(1);
+    expect(groups.some((g) => g.kind === "refuse")).toBe(false);
+    const totals = await store.totals("sul", T0 - 1);
+    expect(totals).toEqual(expect.arrayContaining([{ surface: "site", kind: "refuse", answerId: null, count: 1 }, { surface: "ink", kind: "not-found", answerId: null, count: 2 }]));
+    const report = questionReport(totals, groups, []);
+    expect(report.unanswered).toHaveLength(1);
+    expect(report.total).toBe(3);
     const stored = await db.query<{ question: string | null }>(`select question from assistant_question where kind = 'refuse'`);
     expect(stored.rows).toEqual([{ question: null }]);
   });

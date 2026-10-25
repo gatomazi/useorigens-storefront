@@ -3,7 +3,7 @@ import { requireAdmin } from "@/lib/admin/auth/guard";
 import { currentScope, scopeName } from "@/lib/admin/scope";
 import { canEdit } from "@/lib/admin/store/ports";
 import type { AssistantReplyKind } from "@/lib/assistant/engine";
-import { QUESTION_GROUPS_LIMIT, QUESTION_RETENTION_DAYS, questionReport, type QuestionGroup, type ReportLine } from "@/lib/assistant/questions";
+import { QUESTION_GROUPS_LIMIT, QUESTION_RETENTION_DAYS, questionReport, type QuestionGroup, type QuestionTotal, type ReportLine } from "@/lib/assistant/questions";
 import { questionStoreOrNull } from "@/lib/assistant/questions-server";
 import { ASSISTANT_QUESTION_MAX, liveAnswers } from "@/lib/site-config/assistant-schema";
 import { readPublished } from "@/lib/site-config/published";
@@ -46,15 +46,19 @@ export default async function AssistantQuestionsPage({ searchParams }: { searchP
 
   const store = questionStoreOrNull();
   let groups: QuestionGroup[] = [];
+  let totals: QuestionTotal[] = [];
   let unavailable: "no-store" | "no-table" | null = store ? null : "no-store";
   if (store) {
+    const now = requestTime();
+    // Retention also when no question arrives (the assistant switched off): what is older than 90 days goes when the page opens.
+    await store.purgeBefore(now - QUESTION_RETENTION_DAYS * DAY).catch(() => 0);
     try {
-      groups = await store.groups(scope, requestTime() - days * DAY, QUESTION_GROUPS_LIMIT);
+      [groups, totals] = await Promise.all([store.groups(scope, now - days * DAY, QUESTION_GROUPS_LIMIT), store.totals(scope, now - days * DAY)]);
     } catch {
       unavailable = "no-table";
     }
   }
-  const report = questionReport(groups, answers);
+  const report = questionReport(totals, groups, answers);
   const unanswered = report.unanswered.reduce((n, l) => n + l.count, 0);
   const answerName = new Map(answers.map((a) => [a.id, a.question]));
   const create = (l: ReportLine) => `/admin/assistente?pergunta=${encodeURIComponent(l.sample.slice(0, ASSISTANT_QUESTION_MAX))}`;
