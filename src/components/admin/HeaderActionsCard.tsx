@@ -16,7 +16,7 @@ export function HeaderActionsCard({ scope, navigation, rev, readOnly }: { scope:
   return (
     <section className="a-card scroll-mt-4 p-5" id="icones-do-topo" aria-labelledby="icones-do-topo-titulo" data-testid="header-actions">
       <h2 id="icones-do-topo-titulo" className="a-h2">Ícones do topo</h2>
-      <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os botões à direita do topo do site. “Só o ícone” deixa a barra mais leve (o nome continua para leitores de tela e aparece ao passar o mouse); “Ícone e texto” mostra a palavra ao lado, a partir de tablets. No celular são sempre só ícones.</p>
+      <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Os botões à direita do topo do site. “Só o ícone” deixa a barra mais leve (o nome continua para leitores de tela e aparece ao passar o mouse); “Ícone e texto” mostra a palavra ao lado, a partir de tablets. No celular, a busca é o campo no meio do topo (o texto se digita sozinho: lugar, tema, coleção…) e Meus Lugares fica no menu.</p>
       <form action={saveHeaderActionsAction} className="mt-4 space-y-3">
         <input type="hidden" name="scope" value={scope} />
         <input type="hidden" name="rev" value={rev ?? "null"} />

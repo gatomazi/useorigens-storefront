@@ -423,23 +423,34 @@ test.describe("Cart mirror consumer: evidence and layout by viewport", () => {
       const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(await overflow()).toBeLessThanOrEqual(0);
       const boxes = await page.evaluate(() => {
-        const rect = (el: Element | null) => (el ? el.getBoundingClientRect().toJSON() : null);
+        // Only what is on screen: phones and larger screens draw the search and the logo in different places.
+        const shown = (els: Element[]) => els.find((e) => e.getClientRects().length > 0) ?? null;
+        const rect = (el: Element | null) => (el && el.getClientRects().length > 0 ? el.getBoundingClientRect().toJSON() : null);
         const header = document.querySelector("header")!;
         return {
           trigger: rect(document.querySelector('[data-testid="cart-mirror-trigger"]')),
-          search: rect([...header.querySelectorAll("button")].find((b) => /^\s*Buscar/.test(b.textContent ?? ""))!),
-          menu: rect([...header.querySelectorAll("button")].find((b) => /menu/i.test((b.getAttribute("aria-label") ?? "") + b.textContent)) ?? null),
-          logo: rect(header.querySelector("a")),
+          search: rect(shown([...header.querySelectorAll("button")].filter((b) => /^\s*Buscar/.test(b.textContent ?? "")))),
+          bar: rect(header.querySelector('[data-testid="header-search-bar"]')),
+          logo: rect(shown([...header.querySelectorAll('a[aria-label$="página inicial"]')])),
           vw: window.innerWidth,
         };
       });
-      const t = boxes.trigger!, s = boxes.search!;
+      const t = boxes.trigger!;
       expect(t.left).toBeGreaterThanOrEqual(0);
-      expect(s.right).toBeLessThanOrEqual(boxes.vw);
-      expect(t.right).toBeLessThanOrEqual(s.left + 1); // no overlap with the search button
       expect(t.width).toBeGreaterThanOrEqual(44);
       expect(t.height).toBeGreaterThanOrEqual(44);
-      if (boxes.logo) expect(boxes.logo.right).toBeLessThanOrEqual(t.left + 1); // and none with the logo
+      if (vp.width < 640) {
+        // Phones: menu · search field · cart · the brand's tag. The cart sits between the field and the tag, touching neither.
+        const b = boxes.bar!, l = boxes.logo!;
+        expect(b.right).toBeLessThanOrEqual(t.left + 1);
+        expect(t.right).toBeLessThanOrEqual(l.left + 1);
+        expect(l.right).toBeLessThanOrEqual(boxes.vw);
+      } else {
+        const s = boxes.search!;
+        expect(s.right).toBeLessThanOrEqual(boxes.vw);
+        expect(t.right).toBeLessThanOrEqual(s.left + 1); // no overlap with the search button
+        if (boxes.logo) expect(boxes.logo.right).toBeLessThanOrEqual(t.left + 1); // and none with the logo
+      }
 
       if (EVIDENCE) await page.screenshot({ path: `docs/evidence/cart-mirror/header-${vp.name}.jpg`, type: "jpeg", quality: 80 });
 

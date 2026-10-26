@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import { getFavorites, subscribeFavorites } from "@/lib/favorites/store";
 import { trackSelectState } from "@/lib/analytics/track";
 import { SOURCES } from "@/lib/analytics/sources";
 import type { NavBlockData, NavItemData } from "@/lib/site-config/navigation";
@@ -87,12 +88,14 @@ const CLOSE_ICON = (
  * Escape closes it. On top of that: the first focus lands on the menu itself (predictable, no stray ring on the close control), focus returns to the
  * button that opened it, the page behind does not scroll, and the close row stays put while the list scrolls (safe areas respected).
  */
-export function MobileMenu({ blocks, search, account = [] }: {
+export function MobileMenu({ blocks, search, account = [], favorites }: {
   blocks: NavBlockData[];
   /** "Sua cidade": the city search, first thing in the menu (the store's own search sheet). */
   search?: ReactNode;
   /** "Sua conta": the store's account links (AccountMenu), last in the menu; on phones the header has no room for a fourth icon. */
   account?: { label: string; href: string }[];
+  /** "Meus Lugares" (its page): right under the search. On phones it is not in the header (the search field takes the middle). */
+  favorites?: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -100,6 +103,7 @@ export function MobileMenu({ blocks, search, account = [] }: {
   const searchHeading = useId();
   const accountHeading = `${searchHeading}-conta`;
   const pathname = usePathname();
+  const saved = useSyncExternalStore(subscribeFavorites, () => getFavorites().length, () => 0);
 
   // Any navigation closes the menu, also one that did not come from its own links (a city chosen in the search opened from it, back/forward).
   useEffect(() => {
@@ -171,6 +175,20 @@ export function MobileMenu({ blocks, search, account = [] }: {
                 </h2>
                 {search}
               </div>
+            )}
+            {favorites && (
+              <Link href={favorites} onClick={() => dialog.current?.close()} className="mb-7 flex min-h-12 items-center gap-3 border-b border-current/25 pb-6 text-[1.25rem] font-semibold leading-snug" data-testid="menu-favorites">
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 20.5s-7.5-4.6-10-9.3C.6 7.8 2.4 4.5 5.7 4c2-.3 3.9.6 5 2.2C11.8 4.6 13.7 3.7 15.7 4c3.3.5 5.1 3.8 3.7 7.2-2.5 4.7-10 9.3-10 9.3Z" />
+                </svg>
+                Meus Lugares
+                {saved > 0 && (
+                  <span className="ml-auto inline-flex h-7 min-w-7 items-center justify-center border-2 border-current px-1.5 text-[0.875rem] font-bold leading-none">
+                    {saved}
+                    <span className="sr-only"> {saved === 1 ? "estampa salva" : "estampas salvas"}</span>
+                  </span>
+                )}
+              </Link>
             )}
             <MobileMenuPanel
               blocks={blocks}

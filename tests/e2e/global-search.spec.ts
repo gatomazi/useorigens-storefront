@@ -6,7 +6,8 @@ import type { GlobalSearchResponse } from "@/lib/search/global";
 // results, navigation, Esc, fallback and small-screen layout. The default e2e server is Sul-only, with the CMS off.
 
 async function openSearch(page: Page) {
-  await page.getByRole("button", { name: "Buscar", exact: true }).click();
+  // The header's search: the icon from 640px, the field in the middle of the header on phones (only the one on screen has a role).
+  await page.locator("header").getByRole("button", { name: /^(Buscar|Busque por lugar, tema ou coleção)$/ }).click();
   const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("combobox")).toBeFocused(); // initial focus in the field

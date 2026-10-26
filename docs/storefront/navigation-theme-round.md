@@ -8,6 +8,20 @@ Branch `feature/navigation-theme` (a partir da `main` local `cdea08e`). Nada pub
 - Mesma fonte de dados no mobile e no desktop (dropdown de estados e seletor de região). `MobileMenuPanel` é o mesmo componente no drawer e na prévia do CMS.
 - Estados e regiões nunca são cadastrados: estados = UFs da região com produtos (sem catálogo, todos); regiões = lançadas, exceto a atual.
 
+## Topo no celular (abaixo de 640px), desde 26/10/2026
+
+- **Ordem:** ☰ · campo de busca no meio · a etiqueta da marca à direita. A loja é baseada em busca, então a busca deixou de ser um ícone. O
+  nome "Use Origens" não cabe ao lado do campo e fica no topo a partir de 640px.
+- **O campo** (`SearchDialog` variante `bar`) abre a mesma folha de busca, com o campo real em foco.
+  - O texto "se digita": "Busque por" e uma palavra digitada letra a letra, que fica um tempo e é apagada. As palavras, em ordem: lugar,
+    tema, coleção, cidade, estado.
+  - O ritmo fica em `src/lib/search/typing-hint.ts` (puro, com testes); o componente é `TypingHint.tsx`.
+  - Pausa com a aba escondida. Com movimento reduzido, mostra "Busque por lugar, tema ou coleção" parado, sem cursor.
+  - O nome acessível é sempre esse texto parado.
+  - Medição: `source: header_search_bar`.
+- **Meus Lugares** sai do topo no celular e vai para o menu ☰, logo abaixo da busca, com o número de estampas salvas.
+- **De 640px para cima, nada muda:** ☰ ou barra, logo com o nome e os ícones à direita.
+
 ## Schema
 ```ts
 navigation: { primaryBlock?, statesBlock?, regionsBlock?: {label, visible, order}; primaryLinks?: {id, destination: "styles"|"speech"|"states", label, visible, order}[] }

@@ -146,7 +146,8 @@ test.describe("/sul critical flows", () => {
   test("given the mobile header search, when opened, then it fills the screen and results are keyboard reachable", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/sul/rs/torres");
-    await page.getByRole("button", { name: "Buscar", exact: true }).click();
+    // Phones: the search is the field in the middle of the header.
+    await page.getByTestId("header-search-bar").click();
     const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
     await expect(dialog).toBeVisible();
     const box = await dialog.boundingBox();
