@@ -520,12 +520,13 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp,
         className={[
           "assistant-fab",
           position,
-          "z-30 inline-flex h-12 items-center gap-2 rounded-xl bg-[var(--region-primary,#111)] pl-3.5 pr-4 text-[0.8125rem] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_6px_18px_rgb(0_0_0/0.24)] outline-offset-4 transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0 sm:h-14 sm:pl-4 sm:pr-5",
+          // Phones: the icon alone (a 48px square), so the button never competes with the store; the word stays for screen readers.
+          "z-30 inline-flex h-12 w-12 items-center justify-center gap-2 rounded-xl bg-[var(--region-primary,#111)] text-[0.8125rem] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_6px_18px_rgb(0_0_0/0.24)] outline-offset-4 transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0 sm:h-14 sm:w-auto sm:justify-start sm:pl-4 sm:pr-5",
           live ? "bottom-[calc(max(1rem,env(safe-area-inset-bottom))+var(--assistant-bottom))] right-[max(1rem,env(safe-area-inset-right))]" : "bottom-4 right-4",
         ].join(" ")}
       >
         <ChatIcon />
-        {open ? "Fechar" : label}
+        <span className="sr-only sm:not-sr-only">{open ? "Fechar" : label}</span>
       </button>
     </div>
   );

@@ -8,7 +8,8 @@ do oria-worker): tudo o que ele responde vem da loja.
 ## Botão, temas fixos e brilho
 
 - **Texto do botão:** "Pergunte aqui" por padrão, porque o chat também acha estampas, não só resolve problema. É também o título do chat.
-  Até 18 caracteres: em maiúsculas e espaçado, um texto maior cobriria a página no celular.
+  Até 18 caracteres. **No celular (abaixo de 640px), o botão é só o ícone** (um quadrado de 48px, como o de cupons), para não disputar a
+  atenção com a loja. O texto continua no botão para leitores de tela.
 - **Temas fixos:** até 4 botões sempre acima do campo, a conversa inteira (padrão: Achar estampa · Rastrear pedido · Trocar pedido ·
   Frete e prazo). Tocar num tema é o mesmo que enviar o texto dele: o motor responde como a qualquer pergunta. Com a base da INK, "Achar
   estampa" pede a cidade ou o tema, "Rastrear pedido" e "Trocar pedido" dão a resposta da loja com as páginas de pedidos e "Frete e prazo"
