@@ -6,7 +6,7 @@ import type { AssistantRow } from "@/lib/admin/assistant-form";
 import { greetingReply, whatsappUrl, type AssistantReply } from "@/lib/assistant/engine";
 import { whatsappDigits } from "@/lib/admin/assistant-form";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
-import { ASSISTANT_ANSWER_MAX, ASSISTANT_GREETING_MAX, ASSISTANT_KEYWORDS_MAX, ASSISTANT_QUESTION_MAX, DEFAULT_ASSISTANT_GREETING, MAX_ASSISTANT_ANSWERS, type AssistantAnswer, type AssistantConfig } from "@/lib/site-config/assistant-schema";
+import { ASSISTANT_ANSWER_MAX, ASSISTANT_GREETING_MAX, ASSISTANT_KEYWORDS_MAX, ASSISTANT_LABEL_MAX, ASSISTANT_QUESTION_MAX, ASSISTANT_TOPIC_MAX, assistantTopics, DEFAULT_ASSISTANT_GREETING, DEFAULT_ASSISTANT_LABEL, DEFAULT_ASSISTANT_TOPICS, MAX_ASSISTANT_ANSWERS, MAX_ASSISTANT_TOPICS, type AssistantAnswer, type AssistantConfig } from "@/lib/site-config/assistant-schema";
 
 const ACTIONS: { value: string; label: string }[] = [
   { value: "", label: "Nenhum (só o texto)" },
@@ -39,6 +39,9 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
   const [enabled, setEnabled] = useState(config?.enabled ?? false);
   const [whatsapp, setWhatsapp] = useState(phoneText(config?.whatsapp));
   const [greeting, setGreeting] = useState(config?.greeting ?? "");
+  const [label, setLabel] = useState(config?.label ?? "");
+  // Always the four fields, filled with what the chat shows today (the default ones until the owner saves others); all empty = no topics.
+  const [topics, setTopics] = useState<string[]>(() => Array.from({ length: MAX_ASSISTANT_TOPICS }, (_, i) => assistantTopics(config)[i] ?? ""));
   const asked = readOnly ? "" : (prefill ?? "").replace(/\s+/g, " ").trim().slice(0, ASSISTANT_QUESTION_MAX);
   const [rows, setRows] = useState<AssistantRow[]>(() => {
     const saved = (config?.answers ?? []).slice().sort((a, b) => a.order - b.order).map(toRow);
@@ -79,7 +82,9 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
   });
 
   const liveRows = rows.filter((r) => r.enabled && r.question.trim() && r.answer.trim());
+  const liveTopics = [...new Set(topics.map((t) => t.replace(/\s+/g, " ").trim()).filter(Boolean))];
   const opening = greetingReply(greeting.trim() || DEFAULT_ASSISTANT_GREETING, liveRows.map((r, i) => ({ id: r.id || `nova-${i}`, enabled: true, question: r.question.trim(), answer: r.answer.trim(), order: i + 1 })));
+  const defaultTopics = topics.join("|") === DEFAULT_ASSISTANT_TOPICS.join("|");
   const ask = (message: string) => previewAction(region, JSON.stringify(rows), whatsapp, greeting, message);
 
   return (
@@ -88,6 +93,7 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
         <input type="hidden" name="scope" value={region} />
         <input type="hidden" name="rev" value={rev} />
         <input type="hidden" name="answers" value={JSON.stringify(rows)} />
+        <input type="hidden" name="topics" value={JSON.stringify(topics)} />
 
         <fieldset className="a-card space-y-4 p-5">
           <legend className="a-label">No ar</legend>
@@ -96,7 +102,7 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
             <span>
               <strong>Assistente ligado</strong>
               <span className="a-muted block text-[0.8125rem]">
-                Mostra o botão “Ajuda” no canto inferior direito do site e das páginas da INK. Nas páginas da INK ele fica no lugar do botão “Ajuda?” e do link de
+                Mostra o botão “{label.trim() || DEFAULT_ASSISTANT_LABEL}” no canto inferior direito do site e das páginas da INK. Nas páginas da INK ele fica no lugar do botão “Ajuda?” e do link de
                 WhatsApp da própria INK, que somem enquanto o assistente estiver no ar. Desligado: tudo volta a ser como a INK desenha.
               </span>
             </span>
@@ -109,8 +115,43 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
           <div>
             <label className="a-label" htmlFor="as_greeting">Mensagem de abertura (opcional)</label>
             <input id="as_greeting" name="greeting" className="a-input" value={greeting} maxLength={ASSISTANT_GREETING_MAX} placeholder={DEFAULT_ASSISTANT_GREETING} disabled={readOnly} onChange={(e) => setGreeting(e.target.value)} data-testid="assistant-greeting" />
-            <p className="a-muted mt-1 text-[0.8125rem]">{greeting.length}/{ASSISTANT_GREETING_MAX}. Vazia: usa o texto padrão (acima, em cinza). As três primeiras respostas da lista aparecem como sugestões logo abaixo.</p>
+            <p className="a-muted mt-1 text-[0.8125rem]">
+              {greeting.length}/{ASSISTANT_GREETING_MAX}. Vazia: usa o texto padrão (acima, em cinza).{" "}
+              {liveTopics.length > 0 ? "Com temas fixos, a abertura fica sem sugestões: os temas já ficam logo abaixo da conversa." : "Sem temas fixos, as três primeiras respostas da lista aparecem como sugestões logo abaixo."}
+            </p>
           </div>
+          <div>
+            <label className="a-label" htmlFor="as_label">Texto do botão (opcional)</label>
+            <input id="as_label" name="label" className="a-input w-64" value={label} maxLength={ASSISTANT_LABEL_MAX} placeholder={DEFAULT_ASSISTANT_LABEL} disabled={readOnly} onChange={(e) => setLabel(e.target.value)} data-testid="assistant-label" />
+            <p className="a-muted mt-1 text-[0.8125rem]">{label.length}/{ASSISTANT_LABEL_MAX}. Também é o título do chat. Vazio: “{DEFAULT_ASSISTANT_LABEL}”. Curto, porque no celular o botão fica por cima da página.</p>
+          </div>
+          <fieldset>
+            <legend className="a-label">Temas fixos</legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {topics.map((topic, i) => (
+                <input
+                  key={i}
+                  className="a-input"
+                  value={topic}
+                  maxLength={ASSISTANT_TOPIC_MAX}
+                  aria-label={`Tema fixo ${i + 1}`}
+                  placeholder={`Tema ${i + 1}`}
+                  disabled={readOnly}
+                  onChange={(e) => setTopics((ts) => ts.map((t, j) => (j === i ? e.target.value : t)))}
+                  data-testid={`assistant-topic-${i}`}
+                />
+              ))}
+            </div>
+            <p className="a-muted mt-1 text-[0.8125rem]">
+              Botões que ficam sempre acima do campo de digitar. Tocar num tema é o mesmo que enviar o texto dele como pergunta: teste ao lado o que cada um
+              responde. Deixe os {MAX_ASSISTANT_TOPICS} vazios para não mostrar temas.{" "}
+              {!readOnly && !defaultTopics && (
+                <button type="button" className="underline underline-offset-2" onClick={() => setTopics([...DEFAULT_ASSISTANT_TOPICS])} data-testid="assistant-topics-default">
+                  Voltar aos temas padrão
+                </button>
+              )}
+            </p>
+          </fieldset>
         </fieldset>
 
         <div className="a-card space-y-2 p-5">
@@ -146,7 +187,7 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[1rem] font-extrabold">{i + 1}. Resposta</span>
-                {i < 3 && r.enabled && <span className="a-badge ok">Sugestão na abertura</span>}
+                {i < 3 && r.enabled && liveTopics.length === 0 && <span className="a-badge ok">Sugestão na abertura</span>}
                 {!r.enabled && <span className="a-badge">Desativada</span>}
               </div>
               {!readOnly && (
@@ -201,7 +242,7 @@ export function AssistantEditor({ region, config, readOnly, rev, action, importA
         </div>
         <p className="a-muted mt-1 text-[0.9375rem]">Pergunte como um cliente. Responde com o rascunho desta tela, mesmo sem salvar, e com o catálogo de verdade. Experimente “tem de Floripa?”, “cadê meu pedido?” ou “quero trocar o tamanho”.</p>
         <div className="relative mt-4 h-[36rem] overflow-hidden rounded border border-black/15 bg-[#e5e5e5]" data-testid="assistant-preview-frame">
-          <AssistantWidget key={previewKey} region={region} opening={opening} mode="preview" ask={ask} whatsapp={/^55\d{10,11}$/.test(whatsappDigits(whatsapp)) ? whatsappUrl(whatsappDigits(whatsapp), "") : undefined} />
+          <AssistantWidget key={previewKey} region={region} opening={opening} mode="preview" ask={ask} whatsapp={/^55\d{10,11}$/.test(whatsappDigits(whatsapp)) ? whatsappUrl(whatsappDigits(whatsapp), "") : undefined} label={label.trim() || DEFAULT_ASSISTANT_LABEL} topics={liveTopics} />
         </div>
       </section>
     </div>

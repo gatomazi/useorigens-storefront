@@ -32,15 +32,26 @@ export type AssistantConfig = {
   whatsapp?: string;
   /** The opening line. Absent = DEFAULT_ASSISTANT_GREETING. */
   greeting?: string;
+  /** The button's text, which is also the chat's title. Absent = DEFAULT_ASSISTANT_LABEL. */
+  label?: string;
+  /** Shortcuts always shown above the field ("Rastrear pedido"), each one sent as a message when tapped. Absent = DEFAULT_ASSISTANT_TOPICS; [] = none. */
+  topics?: string[];
   answers: AssistantAnswer[];
 };
 
 export const DEFAULT_ASSISTANT_GREETING = "Oi! Posso ajudar a achar a estampa da sua cidade ou tirar dúvidas sobre pedido, troca, frete e tamanhos.";
+/** Not "Ajuda": the chat also finds designs, not only problems (owner's choice, 26/10/2026). */
+export const DEFAULT_ASSISTANT_LABEL = "Pergunte aqui";
+export const DEFAULT_ASSISTANT_TOPICS: readonly string[] = ["Achar estampa", "Rastrear pedido", "Trocar pedido", "Frete e prazo"];
 export const MAX_ASSISTANT_ANSWERS = 40;
 export const ASSISTANT_QUESTION_MAX = 140;
 export const ASSISTANT_ANSWER_MAX = 900;
 export const ASSISTANT_KEYWORDS_MAX = 200;
 export const ASSISTANT_GREETING_MAX = 200;
+/** Uppercase and spaced on the button: a longer text would cover the page on a phone. */
+export const ASSISTANT_LABEL_MAX = 18;
+export const ASSISTANT_TOPIC_MAX = 28;
+export const MAX_ASSISTANT_TOPICS = 4;
 export const MAX_ASSISTANT_ORDER = 999;
 /** Brazilian mobile or landline with the country code: 55 + DDD + 8 or 9 digits. */
 export const ASSISTANT_WHATSAPP = /^55[1-9][0-9][0-9]{8,9}$/;
@@ -74,10 +85,23 @@ export function validateAssistant(input: unknown, scope: Scope, path = "assistan
   if (scope === "global") return { ok: false, errors: [`${path}: belongs to a region`] };
   if (!isRecord(input)) return { ok: false, errors: [`${path}: must be { enabled, answers: [...] }`] };
   const errors: string[] = [];
-  for (const key of Object.keys(input)) if (!["enabled", "whatsapp", "greeting", "answers"].includes(key)) errors.push(`${path}.${key}: unknown field`);
+  for (const key of Object.keys(input)) if (!["enabled", "whatsapp", "greeting", "label", "topics", "answers"].includes(key)) errors.push(`${path}.${key}: unknown field`);
   if (typeof input.enabled !== "boolean") errors.push(`${path}.enabled: must be boolean`);
   if (input.whatsapp !== undefined && (typeof input.whatsapp !== "string" || !ASSISTANT_WHATSAPP.test(input.whatsapp))) errors.push(`${path}.whatsapp: digits with the country code, like 5548988082581`);
   if (input.greeting !== undefined && !oneLine(input.greeting, ASSISTANT_GREETING_MAX)) errors.push(`${path}.greeting: a text of 1 to ${ASSISTANT_GREETING_MAX} characters, one line`);
+  if (input.label !== undefined && !oneLine(input.label, ASSISTANT_LABEL_MAX)) errors.push(`${path}.label: a text of 1 to ${ASSISTANT_LABEL_MAX} characters, one line`);
+  if (input.topics !== undefined) {
+    const topics = input.topics;
+    if (!Array.isArray(topics) || topics.length > MAX_ASSISTANT_TOPICS) errors.push(`${path}.topics: a list of at most ${MAX_ASSISTANT_TOPICS} texts`);
+    else {
+      const seen = new Set<string>();
+      topics.forEach((topic, i) => {
+        if (!oneLine(topic, ASSISTANT_TOPIC_MAX)) return void errors.push(`${path}.topics[${i}]: a text of 1 to ${ASSISTANT_TOPIC_MAX} characters, one line`);
+        if (seen.has(topic.toLowerCase())) errors.push(`${path}.topics[${i}]: duplicate`);
+        seen.add(topic.toLowerCase());
+      });
+    }
+  }
   if (!Array.isArray(input.answers) || input.answers.length > MAX_ASSISTANT_ANSWERS) return { ok: false, errors: [...errors, `${path}.answers: a list of at most ${MAX_ASSISTANT_ANSWERS} answers`] };
   const ids = new Set<string>();
   input.answers.forEach((answer, i) => {
@@ -92,3 +116,7 @@ export function validateAssistant(input: unknown, scope: Scope, path = "assistan
 
 /** The answers the chat uses, in the owner's order. */
 export const liveAnswers = (config: AssistantConfig | undefined): AssistantAnswer[] => (config?.answers ?? []).filter((a) => a.enabled).sort((a, b) => a.order - b.order);
+/** The button's text (and the chat's title). */
+export const assistantLabel = (config: AssistantConfig | undefined): string => config?.label ?? DEFAULT_ASSISTANT_LABEL;
+/** The shortcuts above the field: the owner's (possibly none), or the default ones when never set. */
+export const assistantTopics = (config: AssistantConfig | undefined): string[] => [...(config?.topics ?? DEFAULT_ASSISTANT_TOPICS)];

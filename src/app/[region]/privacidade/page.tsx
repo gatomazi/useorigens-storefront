@@ -115,7 +115,7 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
         </section>
 
         <section>
-          <h2 className="t-h3">Assistente “Ajuda”</h2>
+          <h2 className="t-h3">Assistente virtual</h2>
           <p className="t-body mt-2 text-ink-soft">
             Quando você escreve no assistente, guardamos a pergunta e o tipo de resposta por até 90 dias, só para melhorar as respostas. Não guardamos
             quem perguntou: nem IP, nem cookie, nem identificação do visitante. E-mails e números longos (telefone, CEP, número de pedido) são

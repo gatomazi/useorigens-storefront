@@ -1,8 +1,27 @@
-# Assistente ("Ajuda")
+# Assistente ("Pergunte aqui")
 
-O botão **Ajuda** no canto inferior direito do site e, pelo Worker, das páginas da INK. Nas páginas da INK ele fica no lugar do botão
+O botão **Pergunte aqui** (texto editável no painel; até 26/10/2026 era "Ajuda") no canto inferior direito do site e, pelo Worker, das
+páginas da INK. Nas páginas da INK ele fica no lugar do botão
 "Ajuda?" e do link "Fale pelo Whatsapp" da própria INK, que somem enquanto o assistente estiver no ar. **Não usa IA** (mesma decisão do M10
 do oria-worker): tudo o que ele responde vem da loja.
+
+## Botão, temas fixos e brilho
+
+- **Texto do botão:** "Pergunte aqui" por padrão, porque o chat também acha estampas, não só resolve problema. É também o título do chat.
+  Até 18 caracteres: em maiúsculas e espaçado, um texto maior cobriria a página no celular.
+- **Temas fixos:** até 4 botões sempre acima do campo, a conversa inteira (padrão: Achar estampa · Rastrear pedido · Trocar pedido ·
+  Frete e prazo). Tocar num tema é o mesmo que enviar o texto dele: o motor responde como a qualquer pergunta. Com a base da INK, "Achar
+  estampa" pede a cidade ou o tema, "Rastrear pedido" e "Trocar pedido" dão a resposta da loja com as páginas de pedidos e "Frete e prazo"
+  dá a resposta do frete (teste em `tests/unit/assistant.test.ts`). No celular, uma linha que rola para o lado, com o fim esmaecido
+  enquanto houver mais. No computador, uma grade de duas colunas.
+- **Abertura:** com temas fixos, o chat esconde as sugestões da abertura, porque elas repetiriam os temas ("Frete e prazo" e "Como é
+  calculado o frete?"). Sem temas, aparecem as três primeiras respostas da lista. Quem esconde é o chat (o site e o loader da INK): o GET
+  continua mandando as sugestões, então um Worker anterior a esta versão, ou um rollback dele, segue com a abertura de antes.
+- **Brilho:** halo na cor de destaque da região (`--region-accent`; no Sul, o areia) em volta do botão até a pessoa abrir o chat uma vez
+  na visita (`sessionStorage` `origens:assistant:seen`). São três respirações lentas quando ele aparece e depois um halo parado. Só a
+  opacidade de um pseudo-elemento se move. Com movimento reduzido, fica só o halo parado. Aberto o chat, o brilho não volta na visita.
+- **Medição:** um tema tocado vai como `message_source: "topic"` em `origens_assistant_message`. A pergunta entra em **Perguntas do
+  assistente** como qualquer outra.
 
 ## O que ele responde, nesta ordem
 
@@ -42,6 +61,9 @@ do oria-worker): tudo o que ele responde vem da loja.
 - liga e desliga;
 - WhatsApp do atendimento;
 - mensagem de abertura;
+- texto do botão (vazio = "Pergunte aqui");
+- temas fixos: quatro campos já preenchidos com o padrão. Os quatro vazios = sem temas. Um painel aberto antes desta versão salva sem o
+  campo, e aí ficam os temas padrão, nunca "nenhum";
 - até 40 respostas, cada uma com pergunta, resposta, outras palavras e botão.
 
 **Trazer perguntas da INK** lê uma vez as páginas públicas `/faq` e `/exchanges_and_returns` e sugere as palavras e o botão de cada
@@ -69,14 +91,17 @@ responde normal, a gravação é pulada (um aviso no log por hora) e a tela avis
 apagadas pela própria aplicação, no máximo uma vez por hora. Não entram: o seguimento resolvido no navegador ("tem mais?", "sim"), o que o
 navegador recusou antes de enviar, e as perguntas da coluna **Testar** do painel. No `cms:dev`, ficam na memória e somem ao reiniciar.
 
-A política de privacidade (`/<região>/privacidade`, seção "Assistente “Ajuda”") diz o mesmo.
+A política de privacidade (`/<região>/privacidade`, seção "Assistente virtual") diz o mesmo.
 
 Aplicar a migração no Railway: `railway ssh --service useorigens-storefront -- npm run db:migrate` (`npm run db:status` antes, para ver
 o que está pendente).
 
 ## Contrato
 
-- `GET /api/assistente/<região>` devolve `{ v: 1, region, enabled, opening?, whatsapp? }`. O `whatsapp` é o link wa.me do atalho. Cache curto (60 s na CDN).
+- `GET /api/assistente/<região>` devolve `{ v: 1, region, enabled, opening?, whatsapp?, label?, topics? }`. O `whatsapp` é o link wa.me
+  do atalho, `label` é o texto do botão e `topics` são os temas fixos (`[]` = nenhum). Cache curto (60 s na CDN). `label` e `topics`
+  entraram no v1 como opcionais: um Worker que não os conhece descarta os dois e segue com "Ajuda", sem temas e com as sugestões da
+  abertura, como hoje. Por isso o site pode subir antes do Worker, e um rollback do Worker não quebra nada.
 - `POST /api/assistente/<região>` recebe `{ message }` e devolve `AssistantReply` (`src/lib/assistant/engine.ts`). Tem `no-store` e
   limite por visitante (20 por minuto, 300 por dia) e no total (1.200 por minuto). O Worker manda `x-origens-visitor` (hash, nunca o IP).
 - Depois de responder, o servidor guarda a pergunta para o painel (ver **Perguntas do assistente**). O texto nunca vai para o GA4: os

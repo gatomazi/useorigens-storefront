@@ -5,11 +5,13 @@ import { SOURCES } from "@/lib/analytics/sources";
 import { trackAssistant, trackGoToInk, type AssistantEvent, type AssistantParams } from "@/lib/analytics/track";
 import { followUp, isSensitive, MAX_ASSISTANT_MESSAGE, typingDelay, type AssistantItem, type AssistantLink, type AssistantReply } from "@/lib/assistant/engine";
 import { formatPrice } from "@/lib/format";
+import { DEFAULT_ASSISTANT_LABEL } from "@/lib/site-config/assistant-schema";
 
 /**
- * The help chat ("Ajuda"): bottom RIGHT, where the INK pages had their "Ajuda?" button and WhatsApp (the coupon button stays bottom left). Phones get a
- * bottom sheet (modal, focus kept inside, page scroll locked); larger screens a card next to the button. Every answer comes from the storefront
- * (`/api/assistente/<region>`): the store's own words, real designs, INK's order pages, the store's WhatsApp. No AI, nothing invented.
+ * The help chat ("Pergunte aqui", the panel's text): bottom RIGHT, where the INK pages had their "Ajuda?" button and WhatsApp (the coupon button stays
+ * bottom left). Phones get a bottom sheet (modal, focus kept inside, page scroll locked); larger screens a card next to the button. Every answer comes
+ * from the storefront (`/api/assistente/<region>`): the store's own words, real designs, INK's order pages, the store's WhatsApp. No AI, nothing invented.
+ * The store's fixed topics stay above the field the whole conversation; the button glows softly until the visitor opens it once in the visit.
  *
  * Privacy: a CPF, card number or password is refused HERE, before it is sent (the server refuses it again). Analytics never get the text typed. The
  * conversation of this visit is kept in this tab only (sessionStorage), so following a suggested design and coming back does not lose it.
@@ -25,11 +27,17 @@ export type AssistantWidgetProps = {
   ask?: (message: string) => Promise<AssistantReply | null>;
   /** The store's WhatsApp (wa.me link): a shortcut always at hand in the header. Absent = no shortcut. */
   whatsapp?: string;
+  /** The button's text and the chat's title. */
+  label?: string;
+  /** Shortcuts always above the field, each one sent as a message. Empty = no row. */
+  topics?: readonly string[];
 };
 
 type Entry = { from: "me"; text: string } | { from: "bot"; reply: AssistantReply };
 
 const STORE_KEY = "origens:assistant:v1";
+/** sessionStorage: set when the visitor opens the chat; the button stops glowing for the rest of the visit (the coupon button's QUIET_KEY rule). */
+const SEEN_KEY = "origens:assistant:seen";
 const MAX_KEPT = 30;
 const FETCH_TIMEOUT_MS = 6000;
 const LOCAL_REFUSE: AssistantReply = { v: 1, kind: "refuse", text: "Por segurança, não mande CPF, dados de cartão nem senha por aqui. Para ver ou mudar um pedido, entre em Meus pedidos com o e-mail da compra." };
@@ -42,6 +50,22 @@ function readKept(region: string): Entry[] {
     return raw?.region === region && Array.isArray(raw.entries) ? raw.entries.slice(-MAX_KEPT) : [];
   } catch {
     return [];
+  }
+}
+/** "pulse": a few slow breaths, then "rest" (a still halo); "off" once the chat was opened in this visit. Never on the server or in the panel. */
+type Glow = "pulse" | "rest" | "off";
+function readGlow(): Glow {
+  try {
+    return window.sessionStorage.getItem(SEEN_KEY) ? "off" : "pulse";
+  } catch {
+    return "pulse";
+  }
+}
+function markSeen(): void {
+  try {
+    window.sessionStorage.setItem(SEEN_KEY, "1");
+  } catch {
+    // Storage blocked: the glow is off for this page view only.
   }
 }
 function writeKept(region: string, entries: Entry[]): void {
@@ -113,9 +137,10 @@ function ChatIcon() {
   );
 }
 
-export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp }: AssistantWidgetProps) {
+export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp, label = DEFAULT_ASSISTANT_LABEL, topics = [] }: AssistantWidgetProps) {
   const live = mode === "live";
   const [open, setOpen] = useState(!live);
+  const [glow, setGlow] = useState<Glow>(() => (live && typeof window !== "undefined" ? readGlow() : "off"));
   // The conversation of this visit: the live chat never renders on the server (AssistantFab loads it with ssr: false), so it can read storage here.
   const [entries, setEntries] = useState<Entry[]>(() => (live && typeof window !== "undefined" ? readKept(region) : []));
   const [draft, setDraft] = useState("");
@@ -127,6 +152,8 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
+  const topicsRef = useRef<HTMLDivElement>(null);
+  const [topicsMore, setTopicsMore] = useState(false);
   const openRef = useRef(open);
   const headingId = useId();
   const panelId = useId();
@@ -155,10 +182,14 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
     if (open) return close("button");
     openRef.current = true;
     setOpen(true);
+    if (live) {
+      markSeen();
+      setGlow("off");
+    }
     track("origens_assistant_open");
   };
 
-  const send = async (raw: string, source: "typed" | "chip") => {
+  const send = async (raw: string, source: "typed" | "chip" | "topic") => {
     const message = raw.replace(/\s+/g, " ").trim().slice(0, MAX_ASSISTANT_MESSAGE);
     if (!message || pending) return;
     setDraft("");
@@ -312,6 +343,17 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
     openRef.current = open;
   }, [open]);
 
+  // Phones: the topics are one row that scrolls sideways; while there is more of it to the right, its end fades out.
+  useEffect(() => {
+    const row = topicsRef.current;
+    if (!open || !row) return;
+    const measure = () => setTopicsMore(row.scrollWidth - row.clientWidth - row.scrollLeft > 4);
+    measure();
+    row.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => { row.removeEventListener("scroll", measure); window.removeEventListener("resize", measure); };
+  }, [open, topics]);
+
   const shown: Entry[] = [{ from: "bot", reply: opening }, ...entries];
   const lastBot = shown.map((e) => e.from).lastIndexOf("bot");
   const bubble = (entry: Entry, i: number) => {
@@ -366,7 +408,8 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
             ))}
           </div>
         )}
-        {i === lastBot && reply.suggestions && reply.suggestions.length > 0 && (
+        {/* The opening's chips would repeat the fixed topics ("Frete e prazo" and "Como é calculado o frete?"): with the row, they stay hidden. */}
+        {i === lastBot && !(i === 0 && topics.length > 0) && reply.suggestions && reply.suggestions.length > 0 && (
           <div className="flex flex-wrap gap-1.5" data-assistant="suggestions">
             {reply.suggestions.map((s) => (
               <button key={s} type="button" disabled={pending} onClick={() => void send(s, "chip")} className="min-h-10 border border-black/30 bg-white px-3 py-1.5 text-left text-[0.8125rem] font-medium leading-tight text-ink transition-colors duration-200 hover:border-ink hover:bg-paper disabled:opacity-50">
@@ -400,7 +443,7 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
         >
           <div className="flex items-center justify-between gap-2 border-b-2 border-ink py-1 pl-4 pr-1">
             <div className="min-w-0">
-              <h2 id={headingId} className="font-display text-[1.375rem] font-extrabold uppercase leading-none tracking-[0.01em]">Ajuda</h2>
+              <h2 id={headingId} className="font-display text-[1.375rem] font-extrabold uppercase leading-none tracking-[0.01em]">{label}</h2>
               <p className="mt-0.5 text-[0.75rem] text-ink-mute">Estampas, pedidos e trocas</p>
             </div>
             {whatsapp && (
@@ -409,7 +452,7 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
                 WhatsApp
               </a>
             )}
-            <button type="button" data-assistant-close onClick={() => close("button")} aria-label="Fechar a ajuda" className="flex h-11 w-11 shrink-0 items-center justify-center text-ink hover:bg-black/5" data-testid="assistant-close">
+            <button type="button" data-assistant-close onClick={() => close("button")} aria-label="Fechar o assistente" className="flex h-11 w-11 shrink-0 items-center justify-center text-ink hover:bg-black/5" data-testid="assistant-close">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
             </button>
           </div>
@@ -426,6 +469,22 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
               )}
             </ol>
           </div>
+          {topics.length > 0 && (
+            <div
+              ref={topicsRef}
+              role="group"
+              aria-label="Temas"
+              data-more={topicsMore ? "" : undefined}
+              className="assistant-topics flex gap-1.5 overflow-x-auto overscroll-x-contain border-t border-black/15 px-2.5 py-2 [scrollbar-width:none] sm:grid sm:grid-cols-2 sm:overflow-visible [&::-webkit-scrollbar]:hidden"
+              data-testid="assistant-topics"
+            >
+              {topics.map((topic) => (
+                <button key={topic} type="button" disabled={pending} onClick={() => void send(topic, "topic")} className="min-h-10 shrink-0 whitespace-nowrap rounded-[3px] border border-black/30 bg-white px-3 text-[0.8125rem] font-semibold leading-tight text-ink transition-colors duration-200 hover:border-ink hover:bg-paper disabled:opacity-50" data-assistant-topic>
+                  {topic}
+                </button>
+              ))}
+            </div>
+          )}
           <form onSubmit={onSubmit} className="flex items-stretch gap-0 border-t-2 border-ink bg-white p-2.5">
             <label htmlFor={`${panelId}-q`} className="sr-only">Sua pergunta</label>
             <input
@@ -456,14 +515,17 @@ export function AssistantWidget({ region, opening, mode = "live", ask, whatsapp 
         aria-controls={open ? panelId : undefined}
         aria-haspopup="dialog"
         data-testid="assistant-fab"
+        data-glow={glow === "off" || open ? undefined : glow}
+        onAnimationEnd={() => setGlow((g) => (g === "pulse" ? "rest" : g))}
         className={[
+          "assistant-fab",
           position,
           "z-30 inline-flex h-12 items-center gap-2 rounded-xl bg-[var(--region-primary,#111)] pl-3.5 pr-4 text-[0.8125rem] font-extrabold uppercase tracking-[0.08em] text-white shadow-[0_6px_18px_rgb(0_0_0/0.24)] outline-offset-4 transition-transform duration-200 hover:-translate-y-0.5 active:translate-y-0 sm:h-14 sm:pl-4 sm:pr-5",
           live ? "bottom-[calc(max(1rem,env(safe-area-inset-bottom))+var(--assistant-bottom))] right-[max(1rem,env(safe-area-inset-right))]" : "bottom-4 right-4",
         ].join(" ")}
       >
         <ChatIcon />
-        {open ? "Fechar" : "Ajuda"}
+        {open ? "Fechar" : label}
       </button>
     </div>
   );
