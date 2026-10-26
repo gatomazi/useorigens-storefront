@@ -217,6 +217,22 @@ describe("confirmed changes through MCP", () => {
     for (const t of write.tools) expect(t.annotations?.destructiveHint).toBe(t.name === "origens_confirm_change");
   });
 
+  test("instructions and capabilities describe the connection as it is: a write grant is never told it is read-only", async () => {
+    const readClient = await connect(deps().all, READ_GRANT);
+    expect(readClient.getInstructions()).toContain("somente leitura");
+    const readCaps = out(await readClient.callTool({ name: "origens_capabilities", arguments: {} }));
+    expect(readCaps.data.access).toMatch(/^Somente leitura/);
+    expect(readCaps.data.write_tools).toMatchObject({ enabled: false });
+
+    const writeClient = await connect(deps().all);
+    expect(writeClient.getInstructions()).not.toContain("somente leitura");
+    expect(writeClient.getInstructions()).toContain("origens_confirm_change");
+    const writeCaps = out(await writeClient.callTool({ name: "origens_capabilities", arguments: {} }));
+    expect(writeCaps.data.access).toMatch(/^Leitura e alteração/);
+    expect(writeCaps.data.access).toContain("use-sul");
+    expect(writeCaps.data.write_tools).toMatchObject({ enabled: true, stores_with_write_credential: ["use-sul"] });
+  });
+
   test("preview changes nothing; confirm sends exactly the plan, once, with tags and categories recomputed from INK's state of now", async () => {
     const { all, write, tags } = deps();
     const client = await connect(all);

@@ -117,7 +117,7 @@ export async function getExchangeTool(deps: AllDeps, input: { store: CommerceSto
 
 // ── Confirmed changes ────────────────────────────────────────────────────────────────────────────────────────────
 
-const READ_ONLY = 'Esta conexão é somente leitura. Para alterar, reconecte o conector e marque "Também permitir alterações na INK".';
+const READ_ONLY = 'Esta conexão é somente leitura. Para alterar, conecte com a chave de API do dono (cabeçalho X-Api-Secret) ou reconecte pelo login marcando "Também permitir alterações na INK".';
 
 function requireWrite(deps: AllDeps, grant: McpGrant, store: CommerceStoreKey): void {
   if (!grant.scopes.includes(WRITE_SCOPE)) throw new McpToolError("MISSING_SCOPE", READ_ONLY);

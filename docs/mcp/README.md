@@ -287,7 +287,8 @@ O código está em `src/lib/mcp/changes.ts` (regras), `write-tools.ts` (ferramen
 
 ### Requisitos
 
-- **Escopo:** a conexão precisa do `origens.write` (caixa na tela de consentimento). Sem ele, as ferramentas de escrita não aparecem.
+- **Escopo:** a conexão precisa do `origens.write`: a chave de API sempre tem, e pelo OAuth é a caixa na tela de consentimento. Sem ele, as ferramentas de escrita não aparecem.
+- **O que o Claude lê:** as instruções do servidor e o `origens_capabilities` seguem a conexão. Com escrita, `access` diz "Leitura e alteração" e lista as lojas com credencial de escrita (`write_tools.stores_with_write_credential`). Antes de 25/10/2026, os dois diziam "somente leitura" mesmo com escrita, e o Claude no claude.ai respondia que não podia alterar.
 - **Credencial:** cada loja precisa da sua credencial de escrita, `INK_WRITE_TOKEN_SUL`, `INK_WRITE_TOKEN_NORTE` e `INK_WRITE_TOKEN_CENTRO`.
   - Ela é **separada** do token de leitura dos syncs, que continua só de leitura.
   - Escopos na INK: `store.products.read/write`, `store.categories.read/write`, `store.orders.read/write` e `store.exchanges.read/write`.
