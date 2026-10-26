@@ -3,8 +3,9 @@ import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { DESIGN_FAMILIES, type DesignFamilyId } from "../catalog/families";
-import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
+import { SINGLE_STORE_KEY, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { platform } from "../admin/platform";
+import { commercePlan } from "../catalog/commerce-mode";
 import { tokenFor, writeTokenFor } from "../ink/config";
 import { WRITE_SCOPE } from "./auth/oauth";
 import type { McpGrant } from "./auth/resource";
@@ -32,7 +33,17 @@ import * as writeTools from "./write-tools";
  * stored plan, and there is no generic URL/SQL/header tool. Each call is logged as one JSON line (tool, duration, records, outcome, call id) — never inputs that could
  * carry personal data, never tokens.
  */
-const STORE = z.enum(MCP_STORES as [CommerceStoreKey, ...CommerceStoreKey[]]).describe("Loja comercial INK: use-sul (Sul), use-norte (Norte), use-centro (Centro-Oeste).");
+/** The store parameters offer only the stores this server serves: the single store alone once the storefront runs as one store. */
+function storeSchemas(stores: readonly CommerceStoreKey[], singleStore: boolean) {
+  const STORE = z
+    .enum(stores as [CommerceStoreKey, ...CommerceStoreKey[]])
+    .describe(singleStore ? `Loja INK: ${stores[0]} = Use Origens, a loja única que vende Sul, Norte e Centro-Oeste.` : "Loja comercial INK: use-sul (Sul), use-norte (Norte), use-centro (Centro-Oeste).");
+  const STORES = z.array(STORE).min(1).max(stores.length).optional().describe("Lojas a consultar; omitido = todas com credencial.");
+  return { STORE, STORES };
+}
+
+/** What this server serves: in the storefront's single-store mode (catalog/commerce-mode.ts), only the Use Origens store. */
+export const servedStores = (singleStore: boolean): CommerceStoreKey[] => (singleStore ? [SINGLE_STORE_KEY] : MCP_STORES);
 const REGION = z.enum(["sul", "norte", "centro-oeste"] as [RegionSlug, ...RegionSlug[]]);
 const FAMILY = z.enum(DESIGN_FAMILIES.map((f) => f.id) as [DesignFamilyId, ...DesignFamilyId[]]).describe(`Família da estampa: ${DESIGN_FAMILIES.map((f) => `${f.id} (${f.name})`).join(", ")}.`);
 const UF = z.string().regex(/^[A-Za-z]{2}$/).describe("UF de duas letras (ex.: SC).");
@@ -63,7 +74,6 @@ const DESIGN_FILTERS = {
   category: CATEGORY.optional(),
   promotion_code: z.string().regex(/^[A-Za-z0-9_-]{2,40}$/).optional().describe("Só pedidos com este código de cupom (promotion_code da INK, sem diferenciar maiúsculas)."),
 };
-const STORES = z.array(STORE).min(1).max(3).optional().describe("Lojas a consultar; omitido = todas com credencial.");
 
 const META = z.object({
   source: z.enum(["ink_api", "use_origens_index", "ink_api+use_origens_index", "use_origens_panel", "ink_api+use_origens_panel"]),
@@ -90,9 +100,11 @@ function changeStore(): ChangeStore {
 }
 
 export function realDeps(): writeTools.AllDeps {
+  const singleStore = commercePlan().effective === "single-store";
   return {
     now: () => new Date(),
-    stores: MCP_STORES,
+    stores: servedStores(singleStore),
+    singleStore,
     hasCredential: (s) => tokenFor(s) !== null,
     catalog: () => loadCatalog(),
     categories: () => loadCategories(),
@@ -149,15 +161,19 @@ function run<A, D extends tools.ToolDeps>(name: string, grant: McpGrant, deps: D
 }
 
 export function createUseOrigensMcpServer(grant: McpGrant, deps: writeTools.AllDeps = realDeps(), log: Log = defaultLog): McpServer {
+  const { STORE, STORES } = storeSchemas(deps.stores, Boolean(deps.singleStore));
   const canWrite = grant.scopes.includes(WRITE_SCOPE);
   const write: tools.WriteAccess = { allowed: canWrite, stores: canWrite ? deps.stores.filter((s) => deps.write.hasWriteCredential(s)) : [] };
   const server = new McpServer(
     { name: "use-origens", title: "Use Origens", version: "1.0.0" },
     {
       instructions:
+        (deps.singleStore
+          ? `Dados da loja Use Origens na Reserva INK (store ${deps.stores[0]}): a loja única, que vende as estampas de Sul, Norte e Centro-Oeste. As antigas lojas Norte e Centro-Oeste não fazem parte deste conector. `
+          : "Dados das lojas Use Origens na Reserva INK (Sul, Norte, Centro-Oeste). ") +
         (canWrite
-          ? "Dados das lojas Use Origens na Reserva INK (Sul, Norte, Centro-Oeste): leitura e, nesta conexão, alteração de produtos, itens de pedido e trocas pelas ferramentas origens_preview_* + origens_confirm_change. "
-          : "Dados das lojas Use Origens na Reserva INK (Sul, Norte, Centro-Oeste), somente leitura. ") +
+          ? "Leitura e, nesta conexão, alteração de produtos, itens de pedido e trocas pelas ferramentas origens_preview_* + origens_confirm_change. "
+          : "Somente leitura. ") +
         "Comece por origens_capabilities se não souber o que existe. " +
         "Ao responder sobre vendas, informe sempre período, critério de data (pedidos criados no período com pagamento aprovado), fonte, cobertura e atualização (meta). " +
         "Cidade/UF/região da ESTAMPA e cidade/UF de ENTREGA são coisas diferentes: em 'cidades que mais venderam' use design_city e diga o critério. " +
@@ -275,7 +291,7 @@ export function createUseOrigensMcpServer(grant: McpGrant, deps: writeTools.AllD
       description:
         "Cupons e promoções publicados no painel da Use Origens (por região), com código, texto, janela e status de agora (live, scheduled, ended, disabled). " +
         "Com período (last_days ou datas), também o uso de cada código nos pedidos pagos: pedidos, unidades, total, desconto, ticket médio com e sem cupom, descontos sem código e cupons do painel que ninguém usou. Até 186 dias.",
-      inputSchema: { region: REGION.optional().describe("Região do painel; também restringe o uso à loja dela."), ...PERIOD, stores: STORES },
+      inputSchema: { region: REGION.optional().describe(deps.singleStore ? "Região do painel: só os cupons publicados nela (os pedidos são todos da loja única)." : "Região do painel; também restringe o uso à loja dela."), ...PERIOD, stores: STORES },
       outputSchema: OUTPUT,
       annotations: { ...READ_ONLY, openWorldHint: true },
     },
