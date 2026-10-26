@@ -127,12 +127,12 @@ const lastReply = (entries: readonly Entry[]): AssistantReply | null => {
   return null;
 };
 
+/** A square speech bubble with three dots (a conversation, square like the brand's shapes); the same drawing as the INK loader's. */
 function ChatIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12Z" />
-      <path d="M9.2 9.6a2.8 2.8 0 0 1 5.4 1c0 1.8-2.6 2.2-2.6 3.6" />
-      <path d="M12 17h.01" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path strokeWidth="2.8" d="M8 10h.01M12 10h.01M16 10h.01" />
     </svg>
   );
 }

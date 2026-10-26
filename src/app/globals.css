@@ -593,9 +593,9 @@ dialog::backdrop {
   inset: 0;
   border-radius: inherit;
   box-shadow:
-    0 0 0 3px var(--region-accent),
-    0 0 26px 8px var(--region-accent);
-  opacity: 0.55;
+    0 0 0 2px var(--region-accent),
+    0 0 18px 3px var(--region-accent);
+  opacity: 0.4;
   pointer-events: none;
 }
 .assistant-fab[data-glow="pulse"]::before {
@@ -604,10 +604,10 @@ dialog::backdrop {
 @keyframes assistant-glow {
   0%,
   100% {
-    opacity: 0.55;
+    opacity: 0.4;
   }
   50% {
-    opacity: 1;
+    opacity: 0.75;
   }
 }
 @media (prefers-reduced-motion: reduce) {
