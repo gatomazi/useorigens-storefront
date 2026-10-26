@@ -1,4 +1,4 @@
-import { REGIONS, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import { promotionStatus, type PromotionItem, type PromotionStatus } from "../site-config/promotions";
 import { money } from "./money";
 import { netUnits, type McpOrder } from "./orders-model";
@@ -74,7 +74,7 @@ const aggOut = (a: Agg) => ({
 type ConfiguredRef = { region: RegionSlug; id: string; title: string; status: PromotionStatus };
 
 /** Usage of every code on the paid orders of the period, with the configured coupon it matches (if any) and the configured coupons nobody used. */
-export function promotionUsage(orders: readonly McpOrder[], period: Pick<Period, "start" | "endExclusive">, config: ConfiguredPromotions, stores: readonly CommerceStoreKey[], now: number) {
+export function promotionUsage(orders: readonly McpOrder[], period: Pick<Period, "start" | "endExclusive">, config: ConfiguredPromotions, regions: readonly RegionSlug[], now: number) {
   const { orders: kept, excluded } = eligibleOrders(orders, period);
   const configured = new Map<string, ConfiguredRef[]>();
   for (const r of config.regions) {
@@ -113,7 +113,7 @@ export function promotionUsage(orders: readonly McpOrder[], period: Pick<Period,
       share_of_orders: kept.length ? Math.round((a.orders / kept.length) * 1000) / 1000 : 0,
       configured_in_panel: configured.get(code) ?? null,
     }));
-  const queriedRegions = new Set(Object.values(REGIONS).filter((r) => stores.includes(r.storeKey)).map((r) => r.slug));
+  const queriedRegions = new Set(regions);
   const unused = [...configured.entries()].filter(([code]) => !byCode.has(code)).flatMap(([code, refs]) => refs.filter((r) => queriedRegions.has(r.region)).map((r) => ({ code, ...r })));
   const withCode = kept.length - withoutCode.orders;
   return {

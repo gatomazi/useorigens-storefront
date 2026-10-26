@@ -2,6 +2,8 @@
 
 Conector privado para o dono da loja consultar produtos, categorias, cupons, vendas, pedidos e trocas das lojas Use Origens pelo Claude. É **somente leitura** por padrão. Se o dono marcar na conexão, também altera produtos e trocas na INK, sempre com prévia e código de confirmação (seção 9). O servidor roda no mesmo serviço do site, em `https://www.useorigens.com.br/api/mcp`.
 
+**Loja única (desde 16/10/2026):** com o site em `COMMERCE_MODE=single-store`, o conector segue o mesmo modo. Só a loja Use Origens (chave `use-sul`, que vende Sul, Norte e Centro-Oeste) aparece nos parâmetros. Catálogo e categorias vêm do conjunto `loja-unica/` do Volume, o mesmo que o site serve. As antigas lojas Norte e Centro-Oeste ficam de fora, inclusive o histórico de pedidos delas.
+
 Data desta versão: 15/10/2026 (categorias, cupons e promoções acrescentados no mesmo dia, PR seguinte ao #76).
 
 ## 1. Como conectar no Claude

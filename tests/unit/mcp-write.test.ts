@@ -232,13 +232,13 @@ describe("confirmed changes through MCP", () => {
 
   test("instructions and capabilities describe the connection as it is: a write grant is never told it is read-only", async () => {
     const readClient = await connect(deps().all, READ_GRANT);
-    expect(readClient.getInstructions()).toContain("somente leitura");
+    expect(readClient.getInstructions()).toMatch(/somente leitura/i);
     const readCaps = out(await readClient.callTool({ name: "origens_capabilities", arguments: {} }));
     expect(readCaps.data.access).toMatch(/^Somente leitura/);
     expect(readCaps.data.write_tools).toMatchObject({ enabled: false });
 
     const writeClient = await connect(deps().all);
-    expect(writeClient.getInstructions()).not.toContain("somente leitura");
+    expect(writeClient.getInstructions()).not.toMatch(/somente leitura/i);
     expect(writeClient.getInstructions()).toContain("origens_confirm_change");
     const writeCaps = out(await writeClient.callTool({ name: "origens_capabilities", arguments: {} }));
     expect(writeCaps.data.access).toMatch(/^Leitura e alteração/);

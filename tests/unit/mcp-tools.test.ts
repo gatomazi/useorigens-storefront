@@ -18,7 +18,7 @@ import { parseMcpOrder, type McpOrder } from "@/lib/mcp/orders-model";
 import { inPeriod, resolvePeriod } from "@/lib/mcp/period";
 import type { ConfiguredPromotions } from "@/lib/mcp/promotions";
 import { salesRanking, salesSummary } from "@/lib/mcp/sales";
-import { createUseOrigensMcpServer } from "@/lib/mcp/server";
+import { createUseOrigensMcpServer, servedStores } from "@/lib/mcp/server";
 import * as tools from "@/lib/mcp/tools";
 import type { AllDeps } from "@/lib/mcp/write-tools";
 import { product } from "./fixtures";
@@ -410,6 +410,30 @@ describe("categories", () => {
     expect(errorCode(await client.callTool({ name: "origens_sales_ranking", arguments: { ...PERIOD, dimension: "category" } }))).toBe("CATALOG_UNAVAILABLE");
     expect((await client.callTool({ name: "origens_sales_summary", arguments: PERIOD })).isError).toBeFalsy();
     expect(structured(await client.callTool({ name: "origens_capabilities", arguments: {} })).data.categories).toBeNull();
+  });
+});
+
+describe("single store (the storefront's COMMERCE_MODE=single-store)", () => {
+  const single = () => fakeDeps({ stores: servedStores(true), singleStore: true });
+
+  test("only the Use Origens store is offered and described; the old Norte and Centro-Oeste stores are gone", async () => {
+    expect(servedStores(true)).toEqual(["use-sul"]);
+    const client = await connect(single());
+    expect(client.getInstructions()).toContain("loja Use Origens");
+    const { tools: listed } = await client.listTools();
+    const product = listed.find((t) => t.name === "origens_get_product")!;
+    expect((product.inputSchema.properties as Record<string, { enum?: string[] }>).store.enum).toEqual(["use-sul"]);
+    expect(JSON.stringify(listed)).not.toMatch(/use-norte|use-centro/);
+    const caps = structured(await client.callTool({ name: "origens_capabilities", arguments: {} }));
+    expect(caps.data).toMatchObject({ commerce_mode: "single-store", stores: [{ store: "use-sul", name: "Use Origens", regions: ["sul", "norte", "centro-oeste"] }] });
+    expect((await client.callTool({ name: "origens_get_order", arguments: { store: "use-norte", order_id: "1" } })).isError).toBe(true);
+  });
+
+  test("a region reads the single store's orders and narrows only the panel's coupons", async () => {
+    const r = await tools.promotionsTool(single(), { ...PERIOD, region: "norte" });
+    expect(r.meta.filters_applied).toMatchObject({ region: "norte", stores: ["use-sul"] });
+    expect(r.meta.coverage.status).toBe("complete");
+    expect((r.data.usage as { configured_coupons_without_orders: unknown[] }).configured_coupons_without_orders).toEqual([]);
   });
 });
 
