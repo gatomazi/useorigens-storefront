@@ -4,14 +4,16 @@ import { useRef, useState } from "react";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { SOURCES } from "@/lib/analytics/sources";
 import { placeSearchCopy } from "@/lib/search/copy";
+import { TYPING_STILL } from "@/lib/search/typing-hint";
 import { GlobalSearch, SearchIcon } from "./GlobalSearch";
+import { TypingHint } from "./TypingHint";
 
 /**
  * The global search (places, designs, collections) as a native modal <dialog> (focus trap and Esc come from the platform): a full-screen sheet
  * on phones, a wide sheet on larger screens. Its triggers: the header icon, the hero field, the field under a heading of its own (`field`, a
  * city page's "Busque outra cidade"), a quiet text link next to styles shown on an example (`link`, "Encontre aqui a sua cidade") and the first word of
- * the header's menu (`nav`, "Sua cidade"). A field
- * low on a page opens the sheet instead of searching inline, so the phone keyboard never covers the results.
+ * the header's menu (`nav`, "Sua cidade") and, on phones, the field in the middle of the header (`bar`, "Busque por lugar…", typing what it finds).
+ * A field low on a page opens the sheet instead of searching inline, so the phone keyboard never covers the results.
  */
 export function SearchDialog({
   region,
@@ -23,7 +25,7 @@ export function SearchDialog({
   tone,
 }: {
   region: RegionSlug;
-  variant?: "header" | "hero" | "field" | "cta" | "link" | "nav";
+  variant?: "header" | "hero" | "field" | "cta" | "link" | "nav" | "bar";
   /** `hero` / `field`: the owner's colour for the field's frame and its arrow button, and the mark on that button (CMS `heroColors.field`). */
   tone?: { frame: string; arrow: string };
   /** GA4 `source` for select_city when a result is chosen; defaults to the trigger's own (hero or dialog). */
@@ -77,6 +79,22 @@ export function SearchDialog({
         // A word in the header's menu ("Sua cidade"): it opens the search, so it is a button, drawn like the menu's links.
         <button type="button" onClick={open} aria-haspopup="dialog" className="inline-flex min-h-11 items-center whitespace-nowrap py-1 text-[0.9375rem] font-semibold" data-testid="header-city-search">
           <span className="link-line">{label}</span>
+        </button>
+      ) : variant === "bar" ? (
+        // Phones only (the store is a search): a field in the middle of the header. It opens the same sheet, whose real field takes the focus; the
+        // words it types are decoration, its name is the still text.
+        <button
+          type="button"
+          onClick={open}
+          aria-haspopup="dialog"
+          aria-label={TYPING_STILL}
+          className="flex h-10 min-w-0 flex-1 items-center gap-1.5 border-2 border-white bg-white px-2.5 text-left text-ink min-[360px]:gap-2 min-[360px]:px-3 sm:hidden"
+          data-testid="header-search-bar"
+        >
+          <SearchIcon className="h-[18px] w-[18px] shrink-0" />
+          <span className="min-w-0 flex-1 truncate text-[0.875rem] text-ink-mute min-[360px]:text-[0.9375rem]">
+            <TypingHint />
+          </span>
         </button>
       ) : variant === "link" ? (
         <button type="button" onClick={open} aria-haspopup="dialog" className="link-static inline-flex min-h-11 items-center gap-1.5 font-semibold">

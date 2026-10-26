@@ -472,6 +472,22 @@ a:hover > .photo img,
   }
 }
 
+/* The phone header's search field (SearchDialog `bar`): the caret after the word it is typing (TypingHint.tsx). Reduced motion never shows it. */
+.typing-caret {
+  display: inline-block;
+  width: 1.5px;
+  height: 1.05em;
+  margin-left: 1px;
+  vertical-align: -0.15em;
+  background: currentColor;
+  animation: typing-caret 1s steps(1) infinite;
+}
+@keyframes typing-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
 /* Mobile menu (MobileMenu.tsx): the region's primary colour with white text unless the CMS palette sets --nav-menu-bg / --nav-menu-text. */
 .nav-menu {
   background: var(--nav-menu-bg, var(--region-primary));

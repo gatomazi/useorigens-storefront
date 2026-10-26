@@ -14,6 +14,8 @@ export const SOURCES = {
   // Search: which trigger opened the dialog (SearchDialog's own `variant` prop already distinguishes this).
   heroSearch: "hero_search",
   searchDialog: "search_dialog",
+  /** The phone header's search field (the middle of the header, "Busque por lugar…"); it opens the search sheet. */
+  headerSearchBar: "header_search_bar",
   /** The inline `<GlobalSearch>` embedded directly on a state page (not behind the `SearchDialog` modal) — a
    * third, real, distinct search entry point not in the command's own suggested list. */
   stateSearch: "state_search",

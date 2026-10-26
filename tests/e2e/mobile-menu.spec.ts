@@ -142,14 +142,66 @@ test.describe("mobile menu accessibility", () => {
 });
 
 test.describe("the rest of the header is untouched", () => {
-  test("given a phone, when the header is read, then search and Meus Lugares keep their controls next to the menu button", async ({ page }) => {
-    await page.setViewportSize({ width: 375, height: 812 });
+  for (const width of [320, 375, 430]) {
+    test(`given a ${width}px phone, when the header is read, then it is the menu, the search field in the middle and the brand's tag on the right`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 812 });
+      await page.goto("/sul");
+      const header = page.locator("header.site-header");
+      const menu = header.getByRole("button", { name: "Abrir menu" });
+      const bar = header.getByRole("button", { name: "Busque por lugar, tema ou coleção" });
+      const home = header.getByRole("link", { name: "Use Origens Sul, página inicial" });
+      for (const el of [menu, bar, home]) await expect(el).toBeVisible();
+      // Meus Lugares and the icon search are not in a phone's header (the field took the middle; Meus Lugares is in the menu).
+      await expect(header.getByRole("button", { name: "Buscar", exact: true })).toBeHidden();
+      await expect(header.getByTestId("favorites-trigger")).toBeHidden();
+      const [m, b, h] = await Promise.all([menu, bar, home].map((el) => el.boundingBox()));
+      expect(m!.x + m!.width).toBeLessThanOrEqual(b!.x + 1);
+      expect(b!.x + b!.width).toBeLessThanOrEqual(h!.x + 1);
+      expect(h!.x + h!.width).toBeLessThanOrEqual(width);
+      expect(b!.width).toBeGreaterThan(150);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+    });
+  }
+
+  test("given a phone, when the search field is read, then it types what it finds, opens the search sheet and gives the focus back", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/sul");
-    const header = page.locator("header.site-header");
-    await expect(header.getByRole("button", { name: "Abrir menu" })).toBeVisible();
-    await expect(header.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
-    await expect(header.getByRole("link", { name: /Meus Lugares/ })).toBeVisible();
-    await expect(header.getByRole("link", { name: /Use Origens Sul, página inicial/ })).toBeVisible();
+    const bar = page.getByTestId("header-search-bar");
+    const hint = bar.locator("[data-typing-hint]");
+    await expect(hint).toHaveText("Busque por lugar");
+    await expect(hint).toHaveText(/^Busque por (t|te|tem|tema)$/, { timeout: 6000 });
+    await bar.click();
+    const dialog = page.getByRole("dialog", { name: "Buscar na Use Origens" });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("combobox").or(dialog.getByRole("searchbox")).or(dialog.locator("input")).first()).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await expect(bar).toBeFocused();
+  });
+
+  test("given a phone with reduced motion, when the search field is read, then it says every kind of search at once, without typing", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/sul");
+    const bar = page.getByTestId("header-search-bar");
+    await expect(bar).toContainText("Busque por lugar, tema ou coleção");
+    await expect(bar.locator(".typing-caret")).toHaveCount(0);
+  });
+
+  test("given a phone, when the menu opens, then Meus Lugares is right under the search, with the number saved", async ({ page }) => {
+    await page.addInitScript(() => {
+      const item = (n: number) => ({ inkProductId: String(n), commerceStoreKey: "sul", title: "Ponto de Origem", context: "Florianópolis · SC", imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/x.webp", price: 109.9, addedAt: n });
+      localStorage.setItem("origens:favorites:v1", JSON.stringify({ v: 1, items: [item(1), item(2)] }));
+    });
+    const dialog = await openMenu(page, 390);
+    const favorites = dialog.getByTestId("menu-favorites");
+    await expect(favorites).toHaveAttribute("href", "/sul/meus-lugares");
+    await expect(favorites).toContainText("Meus Lugares");
+    await expect(favorites).toContainText("2");
+    await expect(dialog.locator('[data-block="search"] + [data-testid="menu-favorites"]')).toHaveCount(1);
+    await favorites.click();
+    await expect(page).toHaveURL(/\/sul\/meus-lugares$/);
+    await expect(dialog).toBeHidden();
   });
 
   for (const width of [1280, 1440]) {

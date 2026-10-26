@@ -79,16 +79,28 @@ export function Header({ region, headerActions }: { region: RegionSlug; headerAc
   const described = categories.some((c) => c.detail);
   const columns = described ? (categories.length > 4 ? 2 : 1) : categories.length > 16 ? 3 : categories.length > 8 ? 2 : 1;
 
+  const home = `Use Origens ${REGIONS[region].name}, página inicial`;
+  const logo = `/brand/logo-${region === "centro-oeste" ? "centro" : region}.png`;
+
   return (
     <HeaderShell>
-      <div className="wrap site-header-row flex items-center justify-between gap-3">
+      {/* Phones (below 640px): the menu, the search as a field in the middle (the store is a search) and the brand's tag on the right; Meus Lugares
+          goes into the menu. From 640px, as before: the menu or the bar, the logo with its name on the left and the icons on the right. */}
+      <div className="wrap site-header-row flex items-center justify-between gap-2 sm:gap-3">
         <div className="flex items-center gap-1">
-          <MobileMenu blocks={navigation.blocks} search={<SearchDialog region={region} variant="field" source={SOURCES.searchDialog} />} account={accountLinks(storeForRegion(region))} />
-          <Link href={regionPath(region)} className="flex min-h-11 items-center gap-2.5" aria-label={`Use Origens ${REGIONS[region].name}, página inicial`}>
-            <Image src={`/brand/logo-${region === "centro-oeste" ? "centro" : region}.png`} alt="" width={40} height={40} className="h-9 w-9" priority unoptimized />
+          <MobileMenu
+            blocks={navigation.blocks}
+            search={<SearchDialog region={region} variant="field" source={SOURCES.searchDialog} />}
+            account={accountLinks(storeForRegion(region))}
+            favorites={`/${region}/meus-lugares`}
+          />
+          <Link href={regionPath(region)} className="hidden min-h-11 items-center gap-2.5 sm:flex" aria-label={home}>
+            <Image src={logo} alt="" width={40} height={40} className="h-9 w-9" priority unoptimized />
             <span translate="no" className="font-display text-[1.6rem] font-black uppercase leading-none tracking-[0.02em]">Use Origens</span>
           </Link>
         </div>
+
+        <SearchDialog region={region} variant="bar" source={SOURCES.headerSearchBar} />
 
         <nav aria-label="Principal" className="hidden min-w-0 flex-1 items-center justify-center gap-6 px-4 lg:flex xl:gap-8 xl:px-8">
           {/* The first path: the visitor's own city, through the same search as the icon on the right (a button: it opens the search, it goes nowhere). */}
@@ -183,10 +195,18 @@ export function Header({ region, headerActions }: { region: RegionSlug; headerAc
               </ul>
             </HeaderDropdown>
           )}
-          <FavoritesMenu region={region} labelled={actions.favorites === "label"} />
+          {/* On phones, Meus Lugares is in the menu and the search is the field in the middle. */}
+          <div className="hidden sm:contents">
+            <FavoritesMenu region={region} labelled={actions.favorites === "label"} />
+          </div>
           <AccountMenu store={storeForRegion(region)} labelled={actions.account === "label"} />
           <CartMirrorMenu region={cartRegionFor(region)} navRegion={region} />
-          <SearchDialog region={region} labelled={actions.search === "label"} />
+          <div className="hidden sm:contents">
+            <SearchDialog region={region} labelled={actions.search === "label"} />
+          </div>
+          <Link href={regionPath(region)} className="flex min-h-11 min-w-11 shrink-0 items-center justify-end sm:hidden" aria-label={home} data-testid="header-logo-mark">
+            <Image src={logo} alt="" width={40} height={40} className="h-9 w-9" priority unoptimized />
+          </Link>
         </div>
       </div>
     </HeaderShell>
