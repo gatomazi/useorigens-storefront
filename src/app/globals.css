@@ -583,3 +583,41 @@ dialog::backdrop {
     animation: none !important;
   }
 }
+
+/* Assistant button ("Pergunte aqui"): until the visitor opens it once in the visit, a soft glow in the region's accent — three slow breaths when it
+   appears, then a still halo (AssistantWidget sets data-glow). The shadow of a pseudo-element, so only its opacity moves: the button's own transform
+   is its hover, and an outer shadow is never painted over the button itself. Reduced motion: the still halo only. */
+.assistant-fab[data-glow]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow:
+    0 0 0 2px var(--region-accent),
+    0 0 18px 3px var(--region-accent);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.assistant-fab[data-glow="pulse"]::before {
+  animation: assistant-glow 2.4s ease-in-out 0.8s 3;
+}
+@keyframes assistant-glow {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .assistant-fab[data-glow]::before {
+    animation: none !important;
+  }
+}
+/* Its topics on a phone: one row that scrolls sideways, whose end fades out while there is more to the right. */
+@media (max-width: 639px) {
+  .assistant-topics[data-more] {
+    mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
+  }
+}

@@ -6,7 +6,7 @@ import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkIncentiveText, inkThemeOf, INK_
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
-import type { AssistantAnswer } from "../site-config/assistant-schema";
+import { assistantLabel, assistantTopics, type AssistantAnswer } from "../site-config/assistant-schema";
 import { HOME_THEMES, homeThemeOf, type CollectionHighlight, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
 import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
@@ -258,6 +258,9 @@ function assistantChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   if ((was?.enabled ?? false) !== (now?.enabled ?? false)) push("enabled", now?.enabled ? "ligado (o botão “Ajuda?” e o WhatsApp da INK dão lugar a ele)" : "desligado (a INK volta a mostrar o “Ajuda?” e o WhatsApp dela)");
   if (was?.whatsapp !== now?.whatsapp) push("whatsapp", `WhatsApp ${was?.whatsapp ?? "nenhum"} → ${now?.whatsapp ?? "nenhum"}`);
   if (was?.greeting !== now?.greeting) push("greeting", "mensagem de abertura editada");
+  // Compared as the chat shows them: a first save that writes the default texts changes nothing on the page, so it lists nothing.
+  if (now && assistantLabel(was) !== assistantLabel(now)) push("label", `texto do botão “${assistantLabel(was)}” → “${assistantLabel(now)}”`);
+  if (now && json(assistantTopics(was)) !== json(assistantTopics(now))) push("topics", assistantTopics(now).length > 0 ? `temas fixos: ${assistantTopics(now).join(" · ")}` : "sem temas fixos");
   const before = was?.answers ?? [];
   const after = now?.answers ?? [];
   const name = (a: AssistantAnswer) => `resposta "${a.question}"`;

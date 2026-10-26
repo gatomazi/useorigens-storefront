@@ -379,8 +379,8 @@ export function trackMundo(evento: string, campos: MundoCampos = {}): void {
 
 export type AssistantEvent = "origens_assistant_open" | "origens_assistant_close" | "origens_assistant_message" | "origens_assistant_reply" | "origens_assistant_item_click" | "origens_assistant_link_click" | "origens_assistant_error";
 export type AssistantParams = {
-  /** How the message was sent: typed, or a suggestion chip. */
-  message_source?: "typed" | "chip";
+  /** How the message was sent: typed, a suggestion chip, or one of the fixed topics above the field. */
+  message_source?: "typed" | "chip" | "topic";
   /** The kind of answer (engine.ts `AssistantReplyKind`): "answer", "designs", "order", "handoff"… */
   reply_kind?: string;
   /** The kind of a link followed: "page", "orders", "tracking", "whatsapp", "search". */

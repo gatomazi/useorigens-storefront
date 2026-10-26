@@ -24,7 +24,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
       <div>
         <h1 className="a-h1">Assistente <span className="a-muted">· {scopeName(scope)}</span></h1>
         <p className="a-muted mt-2 max-w-3xl">
-          O botão “Ajuda” no canto da loja e das páginas da INK desta região: acha estampas, responde dúvidas com as palavras da loja, leva aos pedidos e
+          O assistente no canto da loja e das páginas da INK desta região (o botão “Pergunte aqui”, ou o texto escolhido abaixo): acha estampas, responde dúvidas com as palavras da loja, leva aos pedidos e
           passa para o WhatsApp o que não souber. Não usa IA. Salvar guarda um <strong>rascunho</strong>: a loja e a INK só mudam depois de publicar em <em>Publicar</em>.
         </p>
         <p className="mt-2 text-[0.9375rem]" data-testid="assistant-published-now">

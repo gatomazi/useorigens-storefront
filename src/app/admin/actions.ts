@@ -933,12 +933,15 @@ export async function saveAssistantAction(fd: FormData) {
   const { actor, scope } = await editScope(fd);
   const here = "/admin/assistente";
   let rows: unknown;
+  let topics: unknown;
   try {
     rows = JSON.parse(text(fd, "answers") || "[]");
+    // A form without the field (a tab opened before this version) keeps the default shortcuts, never "none".
+    topics = typeof fd.get("topics") === "string" ? JSON.parse(text(fd, "topics") || "[]") : undefined;
   } catch {
     back(here, { err: ["Não foi possível ler a lista. Recarregue a página e tente de novo."] });
   }
-  const parsed = assistantFromForm(rows, { enabled: text(fd, "enabled") === "on", whatsapp: text(fd, "whatsapp"), greeting: text(fd, "greeting") }, scope);
+  const parsed = assistantFromForm(rows, { enabled: text(fd, "enabled") === "on", whatsapp: text(fd, "whatsapp"), greeting: text(fd, "greeting"), label: text(fd, "label"), topics }, scope);
   if (!parsed.ok) back(here, { err: parsed.errors });
   const outcome = await applyAndSave(scope, { type: "set-assistant", assistant: parsed.value }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");

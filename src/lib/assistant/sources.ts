@@ -9,7 +9,7 @@ import { STORE_PRODUCT_URL_BASE } from "../ink/config";
 import { rankGlobal, type GlobalDoc, type PreparedGlobalDoc } from "../search/global";
 import { globalSearchIndex } from "../search/global-index";
 import { SITE_URL } from "../site";
-import { DEFAULT_ASSISTANT_GREETING, liveAnswers, type AssistantConfig } from "../site-config/assistant-schema";
+import { assistantLabel, assistantTopics, DEFAULT_ASSISTANT_GREETING, liveAnswers, type AssistantConfig } from "../site-config/assistant-schema";
 import { homeBundle, siteConfigHomeEnabled } from "../site-config/flag";
 import { readPublished } from "../site-config/published";
 import { searchShowsDesigns } from "../site-config/search-schema";
@@ -209,8 +209,19 @@ export function assistantReply(region: RegionSlug, config: AssistantConfig | und
 
 /** What a chat needs to open (`v: 1`): whether it exists, its opening message and whether there is a WhatsApp. */
 /** `whatsapp`: the shortcut always at hand in the chat's header (the store's number, a greeting already written). Absent = no number. */
-export type AssistantBoot = { v: 1; region: RegionSlug; enabled: boolean; opening?: AssistantReply; whatsapp?: string };
+/** `label`: the button's text and the chat's title. `topics`: the shortcuts always above the field ([] = none). Both are new in v1, optional for
+ * the reader: a Worker that does not know them keeps "Ajuda", no shortcuts and the opening's chips. The opening keeps its chips here; a chat that
+ * shows the topics hides them itself (they would repeat the topics), so an older reader never loses them. */
+export type AssistantBoot = { v: 1; region: RegionSlug; enabled: boolean; opening?: AssistantReply; whatsapp?: string; label?: string; topics?: string[] };
 export function assistantBoot(region: RegionSlug, config: AssistantConfig | undefined = publishedAssistant(region)): AssistantBoot {
   if (!config?.enabled || !inkStoreBase(region)) return { v: 1, region, enabled: false };
-  return { v: 1, region, enabled: true, opening: greetingReply(config.greeting ?? DEFAULT_ASSISTANT_GREETING, liveAnswers(config)), ...(config.whatsapp ? { whatsapp: whatsappUrl(config.whatsapp, "") } : {}) };
+  return {
+    v: 1,
+    region,
+    enabled: true,
+    opening: greetingReply(config.greeting ?? DEFAULT_ASSISTANT_GREETING, liveAnswers(config)),
+    ...(config.whatsapp ? { whatsapp: whatsappUrl(config.whatsapp, "") } : {}),
+    label: assistantLabel(config),
+    topics: assistantTopics(config),
+  };
 }

@@ -69,7 +69,7 @@ export const SOURCES = {
   /** The guided help on a design page ("Procurando sua cidade ou outra estampa?"): a product of a searched city, or of a chosen collection. */
   pdpGuideCity: "pdp_guia_cidade",
   pdpGuideCollection: "pdp_guia_colecao",
-  /** The help chat ("Ajuda", src/components/assistant): a design it suggested. */
+  /** The help chat ("Pergunte aqui", src/components/assistant): a design it suggested. */
   assistant: "assistente",
   /** "Comprar minha lista" on `/meus-lugares`: the click that opens the first product of a buy session. */
   meusLugares: "meus_lugares",

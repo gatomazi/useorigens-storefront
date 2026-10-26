@@ -6,11 +6,11 @@ import { applyOp } from "@/lib/admin/draft-ops";
 import { diffDocs } from "@/lib/admin/diff";
 import { assistantEnabled } from "@/lib/assistant/flag";
 import { followUp, isSensitive, rankAnswers, replyTo, searchAttempts, searchTerms, typingDelay, whatsappUrl, type AssistantReply, type AssistantSources, type DesignFind } from "@/lib/assistant/engine";
-import { closestPlace, editDistance } from "@/lib/assistant/sources";
+import { assistantBoot, closestPlace, editDistance } from "@/lib/assistant/sources";
 import type { PreparedGlobalDoc } from "@/lib/search/global";
 import { mergeInkFaq, parseInkFaq, suggestedFor } from "@/lib/assistant/ink-faq";
 import { INK_FAQ_COPY } from "@/lib/assistant/ink-faq-copy";
-import { liveAnswers, validateAssistant, type AssistantAnswer, type AssistantConfig } from "@/lib/site-config/assistant-schema";
+import { assistantLabel, assistantTopics, DEFAULT_ASSISTANT_TOPICS, liveAnswers, validateAssistant, type AssistantAnswer, type AssistantConfig } from "@/lib/site-config/assistant-schema";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
@@ -109,6 +109,29 @@ describe("assistente: o motor de respostas (sem IA)", () => {
     expect(r.items).toBeUndefined();
     expect(ask("tem estampa da minha cidade?").kind).toBe("ask");
     expect(ask("vocês fazem atacado para empresas?")).toMatchObject({ kind: "fallback", links: [{ kind: "whatsapp" }] });
+  });
+});
+
+describe("assistente: os temas fixos, tocados com a base real da loja", () => {
+  // The store's base as "Trazer perguntas da INK" brings it (the saved copy, with the suggested words and buttons).
+  const base: AssistantAnswer[] = INK_FAQ_COPY.map((e, i) => {
+    const hint = suggestedFor(e.question);
+    return { id: `a${i}`, enabled: true, order: i + 1, question: e.question, answer: e.answer, ...(hint.keywords ? { keywords: hint.keywords } : {}), ...(hint.action ? { action: hint.action } : {}) };
+  });
+  const tap = (topic: string, list: readonly AssistantAnswer[] = base) => replyTo(topic, list, sources(), "Oi!");
+  const said = (question: string) => base.find((a) => a.question === question)?.answer;
+
+  test("each default topic gets a real answer: a city or theme asked for, the tracking and exchange answers with INK's pages, the shipping answer", () => {
+    expect(tap("Achar estampa")).toMatchObject({ kind: "ask", text: expect.stringMatching(/^Escreva o nome da cidade ou do tema/) });
+    expect(tap("Rastrear pedido")).toMatchObject({ kind: "order", text: said("Como eu acompanho minha entrega?"), links: [{ kind: "tracking" }, { kind: "orders" }, { kind: "whatsapp" }] });
+    expect(tap("Trocar pedido")).toMatchObject({ kind: "order", text: said("Como é o processo de troca?"), links: [{ kind: "orders", label: "Pedir troca ou devolução" }, { kind: "whatsapp" }] });
+    expect(tap("Frete e prazo")).toMatchObject({ kind: "answer", text: said("Como é calculado o frete?"), suggestions: ["Qual o tempo de envio e entrega do meu pedido?"] });
+  });
+
+  test("with no answers in the panel, they still lead somewhere: INK's order pages, or the WhatsApp; never a made-up deadline", () => {
+    expect(tap("Rastrear pedido", [])).toMatchObject({ kind: "order", links: [{ kind: "tracking" }, { kind: "orders" }, { kind: "whatsapp" }] });
+    expect(tap("Trocar pedido", [])).toMatchObject({ kind: "order", links: [{ kind: "orders" }, { kind: "whatsapp" }] });
+    expect(tap("Frete e prazo", [])).toMatchObject({ kind: "fallback", links: [{ kind: "whatsapp" }] });
   });
 });
 
@@ -214,6 +237,49 @@ describe("assistente: configuração, formulário e publicação", () => {
     expect(read.bundle?.docs.sul.assistant).toBeUndefined();
     expect(read.bundle?.docs.sul.home).toBeDefined();
     expect(read.diagnostics.some((d) => /assistant is invalid/.test(d))).toBe(true);
+  });
+
+  test("the button's text and the fixed topics: strict, read from the form as typed, and listed on the publish screen only when the chat changes", () => {
+    const topics = ["Achar estampa", "Rastrear pedido", "Trocar pedido", "Frete e prazo"];
+    expect(validateAssistant({ ...config, label: "Pergunte aqui", topics }, "sul").ok).toBe(true);
+    expect(validateAssistant({ ...config, topics: [] }, "sul").ok).toBe(true);
+    for (const bad of [{ label: "x".repeat(19) }, { label: "" }, { label: "<b>oi</b>" }, { topics: [...topics, "Tamanhos"] }, { topics: ["Frete", "frete"] }, { topics: ["x".repeat(29)] }, { topics: "Frete" }]) {
+      expect(validateAssistant({ ...config, ...bad }, "sul").ok, JSON.stringify(bad)).toBe(false);
+    }
+    expect([assistantLabel(config), assistantTopics(config)]).toEqual(["Pergunte aqui", [...DEFAULT_ASSISTANT_TOPICS]]);
+    expect(assistantTopics({ ...config, topics: [] })).toEqual([]);
+
+    const fields = { enabled: true, whatsapp: "", greeting: "" };
+    const read = assistantFromForm([], { ...fields, label: "  Fale  com a gente ", topics: [" Achar   estampa ", "", "Frete e prazo", ""] }, "sul");
+    expect(read.ok && [read.value.label, read.value.topics]).toEqual(["Fale com a gente", ["Achar estampa", "Frete e prazo"]]);
+    const none = assistantFromForm([], { ...fields, label: "", topics: ["", "", "", ""] }, "sul");
+    expect(none.ok && [none.value.label, none.value.topics]).toEqual([undefined, []]);
+    const untouched = assistantFromForm([], fields, "sul");
+    expect(untouched.ok && "topics" in untouched.value).toBe(false);
+    const errors = (f: object) => { const r = assistantFromForm([], { ...fields, ...f }, "sul"); return r.ok ? [] : r.errors; };
+    expect(errors({ label: "Pergunte qualquer coisa" })).toEqual(["O texto do botão tem de 1 a 18 caracteres, em uma linha (ou fica vazio)."]);
+    expect(errors({ topics: ["Frete", "frete"] })).toEqual(["Tema fixo 2: repete outro tema."]);
+    expect(errors({ topics: ["", "Frete", "", "frete"] })).toEqual(["Tema fixo 4: repete outro tema."]);
+    expect(errors({ topics: ["a", "b", "c", "d", "e"] })).toEqual(["No máximo 4 temas fixos."]);
+    expect(errors({ topics: "a" })).toEqual(["Lista de temas inválida. Recarregue a página e tente de novo."]);
+
+    const sul = { ...structuredClone(seed().docs.sul), assistant: config };
+    const texts = (assistant: AssistantConfig) => diffDocs(sul, { ...sul, assistant }).map((c) => c.text);
+    expect(texts({ ...config, label: "Pergunte aqui", topics: [...DEFAULT_ASSISTANT_TOPICS] })).toEqual([]);
+    expect(texts({ ...config, label: "Fale com a gente", topics: ["Achar estampa", "Rastrear pedido"] })).toEqual([
+      "Assistente: texto do botão “Pergunte aqui” → “Fale com a gente”",
+      "Assistente: temas fixos: Achar estampa · Rastrear pedido",
+    ]);
+    expect(texts({ ...config, topics: [] })).toEqual(["Assistente: sem temas fixos"]);
+  });
+
+  test("the chat opens with the panel's text and topics, and the opening keeps its chips (a chat with topics hides them; an older Worker shows them)", () => {
+    const chips = ["Tem estampa da minha cidade?", tecido.question, prazo.question, troca.question];
+    const boot = assistantBoot("sul", config);
+    expect(boot).toMatchObject({ v: 1, region: "sul", enabled: true, label: "Pergunte aqui", topics: [...DEFAULT_ASSISTANT_TOPICS] });
+    expect(boot.opening?.suggestions).toEqual(chips);
+    expect(assistantBoot("sul", { ...config, label: "Fale com a gente", topics: [] })).toMatchObject({ label: "Fale com a gente", topics: [], opening: { suggestions: chips } });
+    expect(assistantBoot("sul", { ...config, enabled: false })).toEqual({ v: 1, region: "sul", enabled: false });
   });
 
   test("ASSISTANT=off is the deploy ceiling", () => {

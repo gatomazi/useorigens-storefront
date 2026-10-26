@@ -68,7 +68,7 @@ export default async function AssistantQuestionsPage({ searchParams }: { searchP
       <div>
         <h1 className="a-h1">Perguntas do assistente <span className="a-muted">· {scopeName(scope)}</span></h1>
         <p className="a-muted mt-2 max-w-3xl">
-          O que as pessoas digitaram no “Ajuda” do site e das páginas da INK, e o que o assistente respondeu. Comece pelas perguntas sem resposta: cada uma vira uma resposta
+          O que as pessoas digitaram no assistente do site e das páginas da INK, e o que o assistente respondeu. Comece pelas perguntas sem resposta: cada uma vira uma resposta
           nova em <Link className="a-link" href="/admin/assistente">Assistente</Link>, ou outras palavras numa resposta que já existe. Não guardamos quem perguntou (nem IP, nem
           visitante); e-mails e números longos (telefone, CEP, pedido) chegam mascarados, e mensagens com CPF ou cartão ficam só como “recusada”. Fica guardado por {QUESTION_RETENTION_DAYS} dias.
         </p>
