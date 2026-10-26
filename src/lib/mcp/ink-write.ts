@@ -8,7 +8,8 @@ import { parseExchange, type McpExchange } from "./exchanges-model";
 /**
  * The MCP's write path to INK and the reads a change needs (docs/mcp/README.md §9). Every write goes through `inkCall` with the store's
  * WRITE credential and an Idempotency-Key derived from the confirmed change, so a retry can never apply it twice. Only fixed routes:
- *   PATCH /v1/stores/products/{id}   — name, description, price, visible_in_store, tags, collections (the product's whole set);
+ *   PATCH /v1/stores/products/{id}   — name, description, price, promotional_price (null ends the sale), visible_in_store, tags, collections
+ *                                      (the product's whole set);
  *   PATCH /v1/stores/orders/{id}     — swap items before the factory (same price), `items_editable`;
  *   POST  /v1/stores/exchanges       — open an exchange, `exchangeable`.
  * Category membership is changed on the PRODUCT (its `collections`), never with PATCH /collections/{id}: that one replaces the whole list
@@ -48,7 +49,7 @@ export async function storeCategoriesLive(store: CommerceStoreKey, productIds: r
   return out;
 }
 
-export type ProductPatchBody = { name?: string; description?: string; price?: string; visible_in_store?: boolean; tags?: string[]; collections?: number[] };
+export type ProductPatchBody = { name?: string; description?: string; price?: string; promotional_price?: string | null; visible_in_store?: boolean; tags?: string[]; collections?: number[] };
 export type PatchedProduct = { id: string; name: string | null; price: string | null; visibleInStore: boolean | null; approvalStatus: string | null };
 
 export async function patchProduct(store: CommerceStoreKey, productId: string, body: ProductPatchBody, idempotencyKey: string, budget: Budget): Promise<PatchedProduct> {

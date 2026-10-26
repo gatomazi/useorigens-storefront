@@ -170,7 +170,7 @@ const accessText = (w: WriteAccess): string =>
     ? "Somente leitura. Nenhuma ferramenta altera a INK ou a Use Origens."
     : w.stores.length === 0
       ? "Leitura. Esta conexão tem permissão de alteração, mas nenhuma loja tem credencial de escrita da INK neste servidor: as prévias de alteração respondem MISSING_CREDENTIAL."
-      : `Leitura e alteração. Esta conexão pode alterar produtos (preço, publicar/ocultar, nome, descrição, tags e categorias), itens de pedido antes da fábrica e abrir trocas nas lojas ${w.stores.join(", ")}: sempre prévia → aprovação explícita do dono → origens_confirm_change.`;
+      : `Leitura e alteração. Esta conexão pode alterar produtos (preço, preço promocional, publicar/ocultar, nome, descrição, tags e categorias), itens de pedido antes da fábrica e abrir trocas nas lojas ${w.stores.join(", ")}: sempre prévia → aprovação explícita do dono → origens_confirm_change.`;
 
 export async function capabilities(deps: ToolDeps, write: WriteAccess = { allowed: false, stores: [] }): Promise<ToolResult> {
   const now = deps.now();

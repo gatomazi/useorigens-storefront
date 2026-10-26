@@ -63,7 +63,7 @@ Com escrita autorizada (seção 9), aparecem mais cinco:
 
 | Ferramenta | O que faz |
 | --- | --- |
-| `origens_preview_product_changes` | **Prévia** de até 25 produtos: preço, publicar/ocultar, nome (um produto), descrição, tags e categorias (incluir/remover) |
+| `origens_preview_product_changes` | **Prévia** de até 25 produtos: preço, preço promocional (definir ou encerrar), publicar/ocultar, nome (um produto), descrição, tags e categorias (incluir/remover) |
 | `origens_preview_order_item_edit` | **Prévia** da troca de tamanho, cor ou produto de um item antes da fábrica (`items_editable`), no próprio pedido |
 | `origens_preview_exchange` | **Prévia** de uma troca na INK (`exchangeable`) |
 | `origens_confirm_change` | **Aplica** uma prévia pelo código. É a única ferramenta com `destructiveHint: true` |
@@ -298,7 +298,8 @@ O código está em `src/lib/mcp/changes.ts` (regras), `write-tools.ts` (ferramen
 ### Produtos (`PATCH /v1/stores/products/{id}`)
 
 - **Campos:**
-  - preço normal (o promocional vem das promoções da INK);
+  - preço normal (não mexe no promocional);
+  - preço promocional do próprio produto (`promotional_price`): um valor menor que o preço normal, ou `null` para encerrar a promoção. É o campo do produto na INK (PATCH), não as promoções/cupons da INK. A INK também recusa abaixo do preço mínimo do tipo de produto;
   - `visible_in_store` (ocultar mantém o produto vendável por link);
   - nome (um produto por vez) e descrição;
   - tags (incluir/remover) e categorias (incluir/remover).
@@ -306,7 +307,7 @@ O código está em `src/lib/mcp/changes.ts` (regras), `write-tools.ts` (ferramen
   - até 25 produtos por prévia;
   - a INK só altera produtos sob demanda;
   - arte e variantes ficaram de fora.
-- **Avisos da prévia:** preço que muda mais de 30%, produto com preço promocional ativo, publicar um produto que a curadoria ainda não aprovou.
+- **Avisos da prévia:** preço que muda mais de 30%, produto com preço promocional ativo quando só o preço normal muda, publicar um produto que a curadoria ainda não aprovou.
 - **Tags e categorias são listas inteiras na INK.** Por isso:
   - o plano guarda só o pedido ("incluir Natal", "tirar de Território");
   - na confirmação, o MCP relê a INK e aplica esse pedido sobre o estado daquele momento;

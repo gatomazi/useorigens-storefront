@@ -360,12 +360,18 @@ export function createUseOrigensMcpServer(grant: McpGrant, deps: writeTools.AllD
       {
         title: "Prévia: alterar produtos",
         description:
-          "PRÉVIA (não altera nada) de uma alteração em até 25 produtos de uma loja: preço, publicar/ocultar, nome (um produto), descrição, tags (incluir/remover) e categorias (incluir/remover). " +
+          "PRÉVIA (não altera nada) de uma alteração em até 25 produtos de uma loja: preço, preço promocional (definir ou encerrar), publicar/ocultar, nome (um produto), descrição, tags (incluir/remover) e categorias (incluir/remover). " +
           "Lê a INK agora e devolve o antes → depois e um confirmation_code de 10 minutos. Para aplicar: mostre ao dono e, com o OK dele, origens_confirm_change.",
         inputSchema: {
           store: STORE,
           product_ids: z.array(PRODUCT_ID).min(1).max(25),
-          price: z.string().regex(/^\d{1,5}\.\d{2}$/).optional().describe('Novo preço normal, ex.: "109.90" (o preço promocional vem das promoções da INK).'),
+          price: z.string().regex(/^\d{1,5}\.\d{2}$/).optional().describe('Novo preço normal, ex.: "109.90". Não mexe no preço promocional (veja promotional_price).'),
+          promotional_price: z
+            .string()
+            .regex(/^\d{1,5}\.\d{2}$/)
+            .nullable()
+            .optional()
+            .describe('Preço promocional do próprio produto (o cobrado; o normal aparece riscado), ex.: "89.90", menor que o preço normal. null = encerra a promoção e o produto volta ao preço normal.'),
           visible_in_store: z.boolean().optional().describe("true = publicar na loja INK; false = ocultar (continua vendável por link)."),
           name: z.string().min(1).max(200).optional(),
           description: z.string().max(5000).optional(),
