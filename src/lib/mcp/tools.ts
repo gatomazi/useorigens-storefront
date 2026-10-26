@@ -24,6 +24,11 @@ import { fold, salesRanking, salesSummary, type CategoryMatcher, type CategoryTa
 export type ToolDeps = {
   now: () => Date;
   stores: readonly CommerceStoreKey[];
+  /**
+   * The storefront's commerce mode (catalog/commerce-mode.ts). Single store: `stores` is only the store that sells every region (the
+   * Use Origens store, key use-sul), and a region no longer picks a store.
+   */
+  singleStore?: boolean;
   hasCredential: (store: CommerceStoreKey) => boolean;
   catalog: () => { index: ProductIndex; ctx: CatalogContext };
   /** INK categories (collections snapshot); throws CATALOG_UNAVAILABLE when never synced. */
@@ -57,6 +62,12 @@ export const SALES_DATE_BASIS = "order_created_at (dia de São Paulo) com pagame
 export const clean = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && !(Array.isArray(v) && v.length === 0)));
 export const iso = (d: Date) => d.toISOString();
 const oldest = (dates: readonly Date[]) => (dates.length ? iso(new Date(Math.min(...dates.map((d) => d.getTime())))) : null);
+
+/** The store a region sells in: its own regional store, or the single store. */
+export const storeOfRegion = (deps: Pick<ToolDeps, "stores" | "singleStore">, region: RegionSlug): CommerceStoreKey => (deps.singleStore ? deps.stores[0] : REGIONS[region].storeKey);
+/** The regions a store sells: its own region, or all three for the single store. */
+export const regionsOfStores = (deps: Pick<ToolDeps, "singleStore">, stores: readonly CommerceStoreKey[]): RegionSlug[] =>
+  deps.singleStore ? (Object.keys(REGIONS) as RegionSlug[]) : Object.values(REGIONS).filter((r) => stores.includes(r.storeKey)).map((r) => r.slug);
 
 // ── Shared input handling ────────────────────────────────────────────────────────────────────────────────────
 
@@ -192,7 +203,8 @@ export async function capabilities(deps: ToolDeps, write: WriteAccess = { allowe
     meta: { source: "ink_api+use_origens_index", generated_at: iso(now), data_as_of: catalog ? oldest(catalog.stores.map((s) => new Date(s.syncedAt))) : null, period: null, date_basis: null, filters_applied: {}, coverage: catalogError ? { status: "partial", reason: catalogError } : { status: "complete", reason: null }, unclassified_count: null, next_cursor: null },
     data: {
       access: accessText(write),
-      stores: deps.stores.map((s) => ({ store: s, region: Object.values(REGIONS).find((r) => r.storeKey === s)?.slug ?? null, ink_credential: deps.hasCredential(s) })),
+      commerce_mode: deps.singleStore ? "single-store" : "multi-store",
+      stores: deps.stores.map((s) => ({ store: s, ...(deps.singleStore ? { name: "Use Origens", regions: regionsOfStores(deps, [s]) } : { region: regionsOfStores(deps, [s])[0] ?? null }), ink_credential: deps.hasCredential(s) })),
       sources: {
         catalog: "Índice da Use Origens (snapshot do catálogo INK + índice de peças por cluster), atualizado pelos syncs do site; preços atuais da INK no momento do sync.",
         orders_and_sales: "API INK ao vivo a cada pergunta (sem base própria de pedidos), cache de 5 minutos por consulta.",
@@ -432,9 +444,9 @@ export async function promotionsTool(deps: ToolDeps, input: PeriodInput & { regi
     };
   }
   const period = resolvePeriod(input, now, SALES_MAX_DAYS);
-  const { stores, skipped } = pickStores(deps, input.stores ?? (input.region ? [REGIONS[input.region].storeKey] : undefined));
+  const { stores, skipped } = pickStores(deps, input.stores ?? (input.region ? [storeOfRegion(deps, input.region)] : undefined));
   const fetched = await ordersOfPeriod(deps, stores, period, { paymentStatus: "paid" });
-  const usage = promotionUsage(fetched.orders, period, config, stores, now.getTime());
+  const usage = promotionUsage(fetched.orders, period, config, input.region ? [input.region] : regionsOfStores(deps, stores), now.getTime());
   return {
     meta: { source: "ink_api+use_origens_panel", generated_at: iso(now), data_as_of: fetched.dataAsOf, period: describePeriod(period), date_basis: SALES_DATE_BASIS, filters_applied: clean({ region: input.region, stores }), coverage: ordersCoverage(skipped, fetched.unreadable), unclassified_count: null, next_cursor: null },
     data: {
