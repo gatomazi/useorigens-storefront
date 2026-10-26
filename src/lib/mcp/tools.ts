@@ -162,7 +162,17 @@ function ordersCoverage(skipped: readonly CommerceStoreKey[], unreadable: number
 
 // ── Tools ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-export async function capabilities(deps: ToolDeps): Promise<ToolResult> {
+/** What this connection may change: decided by the grant (`origens.write`) and, per store, by the write credential. */
+export type WriteAccess = { allowed: boolean; stores: CommerceStoreKey[] };
+
+const accessText = (w: WriteAccess): string =>
+  !w.allowed
+    ? "Somente leitura. Nenhuma ferramenta altera a INK ou a Use Origens."
+    : w.stores.length === 0
+      ? "Leitura. Esta conexão tem permissão de alteração, mas nenhuma loja tem credencial de escrita da INK neste servidor: as prévias de alteração respondem MISSING_CREDENTIAL."
+      : `Leitura e alteração. Esta conexão pode alterar produtos (preço, preço promocional, publicar/ocultar, nome, descrição, tags e categorias), itens de pedido antes da fábrica e abrir trocas nas lojas ${w.stores.join(", ")}: sempre prévia → aprovação explícita do dono → origens_confirm_change.`;
+
+export async function capabilities(deps: ToolDeps, write: WriteAccess = { allowed: false, stores: [] }): Promise<ToolResult> {
   const now = deps.now();
   let catalog: { stores: ProductIndex["stores"]; garmentIndexPresent: boolean } | null = null;
   let catalogError: string | null = null;
@@ -181,7 +191,7 @@ export async function capabilities(deps: ToolDeps): Promise<ToolResult> {
   return {
     meta: { source: "ink_api+use_origens_index", generated_at: iso(now), data_as_of: catalog ? oldest(catalog.stores.map((s) => new Date(s.syncedAt))) : null, period: null, date_basis: null, filters_applied: {}, coverage: catalogError ? { status: "partial", reason: catalogError } : { status: "complete", reason: null }, unclassified_count: null, next_cursor: null },
     data: {
-      access: "Somente leitura. Nenhuma ferramenta altera a INK ou a Use Origens.",
+      access: accessText(write),
       stores: deps.stores.map((s) => ({ store: s, region: Object.values(REGIONS).find((r) => r.storeKey === s)?.slug ?? null, ink_credential: deps.hasCredential(s) })),
       sources: {
         catalog: "Índice da Use Origens (snapshot do catálogo INK + índice de peças por cluster), atualizado pelos syncs do site; preços atuais da INK no momento do sync.",
@@ -211,7 +221,9 @@ export async function capabilities(deps: ToolDeps): Promise<ToolResult> {
       tools: ["origens_capabilities", "origens_search_products", "origens_get_product", "origens_list_categories", "origens_promotions", "origens_sales_summary", "origens_sales_ranking", "origens_list_orders", "origens_get_order", "origens_list_exchanges", "origens_get_exchange", "origens_catalog_status"],
       write_tools: {
         tools: ["origens_preview_product_changes", "origens_preview_order_item_edit", "origens_preview_exchange", "origens_confirm_change", "origens_change_status"],
-        available: "Só em conexões autorizadas com \"Também permitir alterações na INK\" e nas lojas com credencial de escrita.",
+        enabled: write.allowed,
+        stores_with_write_credential: write.allowed ? write.stores : undefined,
+        available: "Só em conexões com escrita (chave de API do dono, ou OAuth com \"Também permitir alterações na INK\" marcado) e nas lojas com credencial de escrita.",
         rule: "Toda alteração é prévia (nada muda) → aprovação explícita do dono → origens_confirm_change com o código. Até 25 produtos por prévia; sem excluir, sem reembolso.",
       },
     },

@@ -101,6 +101,19 @@ describe("product changes (pure)", () => {
     expect(() => buildProductPlan("use-sul", { product_ids: ["101"], categories_add: ["inexistente"] }, [PRODUCTS["101"]], CATEGORIES)).toThrow(/não existe/);
   });
 
+  test("promotional price: set below the normal price, or null to end the sale; the normal price is left alone", () => {
+    const end = buildProductPlan("use-sul", { product_ids: ["101", "102"], promotional_price: null }, [PRODUCTS["101"], PRODUCTS["102"]], null);
+    // 101 has no sale: nothing to end. 102 sells at 89.90: the sale ends and only promotional_price is sent, as null.
+    expect(end.unchanged.map((u) => u.product_id)).toEqual(["101"]);
+    expect(end.items.map((i) => [i.product_id, i.patch, i.before, i.after])).toEqual([["102", { promotional_price: null }, { promotional_price: { cents: 8990, brl: "89.90" } }, { promotional_price: null }]]);
+    const set = buildProductPlan("use-sul", { product_ids: ["101"], promotional_price: "89.90" }, [PRODUCTS["101"]], null);
+    expect(set.items[0].patch).toEqual({ promotional_price: "89.90" });
+    expect(() => buildProductPlan("use-sul", { product_ids: ["102"], promotional_price: "99.90" }, [PRODUCTS["102"]], null)).toThrow(/menor que o preço normal/);
+    expect(buildProductPlan("use-sul", { product_ids: ["102"], price: "129.90", promotional_price: "99.90" }, [PRODUCTS["102"]], null).items[0].patch).toEqual({ price: "129.90", promotional_price: "99.90" });
+    expect(() => checkProductChangeInput({ product_ids: ["101"], price: "79.90", promotional_price: "89.90" })).toThrow(/menor que price/);
+    expect(() => checkProductChangeInput({ product_ids: ["101"], promotional_price: "89,90" })).toThrow(McpToolError);
+  });
+
   test("a large price move is flagged", () => {
     expect(buildProductPlan("use-sul", { product_ids: ["101"], price: "49.90" }, [PRODUCTS["101"]], null).warnings.join(" ")).toMatch(/mais de 30%/);
   });
@@ -215,6 +228,31 @@ describe("confirmed changes through MCP", () => {
     const extra = write.tools.filter((t) => !read.tools.some((r) => r.name === t.name));
     expect(extra.map((t) => t.name).sort()).toEqual(["origens_change_status", "origens_confirm_change", "origens_preview_exchange", "origens_preview_order_item_edit", "origens_preview_product_changes"]);
     for (const t of write.tools) expect(t.annotations?.destructiveHint).toBe(t.name === "origens_confirm_change");
+  });
+
+  test("instructions and capabilities describe the connection as it is: a write grant is never told it is read-only", async () => {
+    const readClient = await connect(deps().all, READ_GRANT);
+    expect(readClient.getInstructions()).toContain("somente leitura");
+    const readCaps = out(await readClient.callTool({ name: "origens_capabilities", arguments: {} }));
+    expect(readCaps.data.access).toMatch(/^Somente leitura/);
+    expect(readCaps.data.write_tools).toMatchObject({ enabled: false });
+
+    const writeClient = await connect(deps().all);
+    expect(writeClient.getInstructions()).not.toContain("somente leitura");
+    expect(writeClient.getInstructions()).toContain("origens_confirm_change");
+    const writeCaps = out(await writeClient.callTool({ name: "origens_capabilities", arguments: {} }));
+    expect(writeCaps.data.access).toMatch(/^Leitura e alteração/);
+    expect(writeCaps.data.access).toContain("use-sul");
+    expect(writeCaps.data.write_tools).toMatchObject({ enabled: true, stores_with_write_credential: ["use-sul"] });
+  });
+
+  test("ending a sale through MCP sends promotional_price: null to INK, and nothing else", async () => {
+    const { all, write } = deps();
+    const client = await connect(all);
+    const preview = out(await client.callTool({ name: "origens_preview_product_changes", arguments: { store: "use-sul", product_ids: ["102"], promotional_price: null } }));
+    const done = out(await client.callTool({ name: "origens_confirm_change", arguments: { confirmation_code: preview.data.confirmation_code } }));
+    expect(done.data).toMatchObject({ status: "applied", applied: 1 });
+    expect(write.sent.map((s) => [s.target, s.body])).toEqual([["102", { promotional_price: null }]]);
   });
 
   test("preview changes nothing; confirm sends exactly the plan, once, with tags and categories recomputed from INK's state of now", async () => {

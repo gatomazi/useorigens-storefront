@@ -34,6 +34,8 @@ const short = (s: string | null, max = 160) => (s === null ? null : s.length > m
 export type ProductChangeInput = {
   product_ids: string[];
   price?: string;
+  /** Sale price INK charges (normal price shown struck through); null ends the sale. */
+  promotional_price?: string | null;
   visible_in_store?: boolean;
   name?: string;
   description?: string;
@@ -65,13 +67,17 @@ export function checkProductChangeInput(input: ProductChangeInput) {
   const catsRemove = [...new Set((input.categories_remove ?? []).map((c) => c.trim()).filter(Boolean))];
   if (catsAdd.length > MAX_CATEGORY_REFS || catsRemove.length > MAX_CATEGORY_REFS) throw invalid(`No máximo ${MAX_CATEGORY_REFS} categorias para incluir e ${MAX_CATEGORY_REFS} para remover por alteração.`);
   if (input.price !== undefined && (!PRICE.test(input.price) || toCents(input.price)! <= 0)) throw invalid('price: valor em reais com ponto e duas casas, maior que zero (ex.: "109.90").');
+  if (input.promotional_price !== undefined && input.promotional_price !== null && (!PRICE.test(input.promotional_price) || toCents(input.promotional_price)! <= 0)) throw invalid('promotional_price: valor em reais com ponto e duas casas, maior que zero (ex.: "89.90"), ou null para encerrar a promoção.');
+  if (input.price !== undefined && input.promotional_price) {
+    if (toCents(input.promotional_price)! >= toCents(input.price)!) throw invalid("promotional_price precisa ser menor que price.");
+  }
   if (input.name !== undefined) {
     if (ids.length !== 1) throw invalid("name: renomeie um produto por vez.");
     if (!input.name.trim() || input.name.length > 200) throw invalid("name: de 1 a 200 caracteres.");
   }
   if (input.description !== undefined && input.description.length > 5000) throw invalid("description: no máximo 5000 caracteres.");
-  const asks = input.price !== undefined || input.visible_in_store !== undefined || input.name !== undefined || input.description !== undefined || tagsAdd.length + tagsRemove.length + catsAdd.length + catsRemove.length > 0;
-  if (!asks) throw invalid("Nada a alterar: informe price, visible_in_store, name, description, tags_add/tags_remove ou categories_add/categories_remove.");
+  const asks = input.price !== undefined || input.promotional_price !== undefined || input.visible_in_store !== undefined || input.name !== undefined || input.description !== undefined || tagsAdd.length + tagsRemove.length + catsAdd.length + catsRemove.length > 0;
+  if (!asks) throw invalid("Nada a alterar: informe price, promotional_price, visible_in_store, name, description, tags_add/tags_remove ou categories_add/categories_remove.");
   return { ids, tagsAdd, tagsRemove, catsAdd, catsRemove, touchesCategories: catsAdd.length + catsRemove.length > 0 };
 }
 
@@ -128,6 +134,7 @@ export function buildProductPlan(store: CommerceStoreKey, input: ProductChangeIn
   const items: ProductPlanItem[] = [];
   const unchanged: ProductPlan["unchanged"] = [];
   const newPrice = input.price !== undefined ? toCents(input.price) : null;
+  const newPromo = input.promotional_price === undefined ? undefined : input.promotional_price === null ? null : toCents(input.promotional_price);
 
   for (const p of products) {
     const patch: ProductPatchBody = {};
@@ -138,7 +145,14 @@ export function buildProductPlan(store: CommerceStoreKey, input: ProductChangeIn
       before.price = p.priceCents === null ? null : money(p.priceCents);
       after.price = money(newPrice);
       if (p.priceCents && Math.abs(newPrice - p.priceCents) / p.priceCents > LARGE_PRICE_CHANGE) warnings.push(`${p.id}: o preço muda mais de ${LARGE_PRICE_CHANGE * 100}% (${money(p.priceCents).brl} → ${money(newPrice).brl}).`);
-      if (p.promotionalPriceCents !== null && p.priceCents !== null && p.promotionalPriceCents < p.priceCents) warnings.push(`${p.id}: tem preço promocional ativo (${money(p.promotionalPriceCents).brl}); a promoção da INK não muda com este preço.`);
+      if (newPromo === undefined && p.promotionalPriceCents !== null) warnings.push(`${p.id}: tem preço promocional ativo (${money(p.promotionalPriceCents).brl}), que continua valendo; para mudar ou encerrar, use promotional_price.`);
+    }
+    if (newPromo !== undefined && newPromo !== p.promotionalPriceCents) {
+      const normal = newPrice ?? p.priceCents;
+      if (newPromo !== null && normal !== null && newPromo >= normal) throw invalid(`${p.id}: promotional_price (${money(newPromo).brl}) precisa ser menor que o preço normal (${money(normal).brl}).`);
+      patch.promotional_price = newPromo === null ? null : input.promotional_price;
+      before.promotional_price = p.promotionalPriceCents === null ? null : money(p.promotionalPriceCents);
+      after.promotional_price = newPromo === null ? null : money(newPromo);
     }
     if (input.visible_in_store !== undefined && input.visible_in_store !== p.visibleInStore) {
       patch.visible_in_store = input.visible_in_store;
