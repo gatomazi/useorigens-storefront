@@ -592,10 +592,11 @@ dialog::backdrop {
   position: absolute;
   inset: 0;
   border-radius: inherit;
+  /* The halo a deeper tone of the accent: the plain sand vanished on the light grey of the store's pages. */
   box-shadow:
     0 0 0 2px var(--region-accent),
-    0 0 18px 3px var(--region-accent);
-  opacity: 0.4;
+    0 0 18px 3px color-mix(in srgb, var(--region-accent) 65%, #a8741f);
+  opacity: 0.5;
   pointer-events: none;
 }
 .assistant-fab[data-glow="pulse"]::before {
@@ -604,10 +605,10 @@ dialog::backdrop {
 @keyframes assistant-glow {
   0%,
   100% {
-    opacity: 0.4;
+    opacity: 0.5;
   }
   50% {
-    opacity: 0.75;
+    opacity: 0.85;
   }
 }
 @media (prefers-reduced-motion: reduce) {
