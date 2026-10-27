@@ -366,6 +366,8 @@ export type Customizer = {
   inkProductId?: string;
   cardImage?: MediaRef;
   pageMockup?: MediaRef;
+  /** Opt-in public text editor, using one immutable template saved in the internal print studio. */
+  studioTemplateId?: string;
   fields: CustomField[];
   lineGroup?: LineGroup;
   /** V1: the static mockup plus a live text summary. The mockup already carries printed text, so text is never drawn over it. */
@@ -913,6 +915,7 @@ function checkCustomizer(c: Collector, path: string, v: unknown): void {
   }
   if (v.cardImage !== undefined) checkMediaRef(c, `${path}.cardImage`, v.cardImage);
   if (v.pageMockup !== undefined) checkMediaRef(c, `${path}.pageMockup`, v.pageMockup);
+  if (v.studioTemplateId !== undefined && (typeof v.studioTemplateId !== "string" || !/^\d{13}-[a-f0-9-]{36}$/.test(v.studioTemplateId))) c.fail(`${path}.studioTemplateId`, "invalid studio template id");
   if (v.previewMode !== "mockupWithTextSummary") c.fail(`${path}.previewMode`, "must be mockupWithTextSummary");
   if (typeof v.active !== "boolean") c.fail(`${path}.active`, "must be boolean");
   else if (v.active && !v.pageMockup) c.fail(`${path}.pageMockup`, "an active model needs its page mockup");

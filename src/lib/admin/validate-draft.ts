@@ -189,6 +189,6 @@ export function customizerProblems(doc: ScopeDoc, model: Customizer): string[] {
     }
   }
   if (model.active && !model.pageMockup) out.push(`${name}: falta a imagem (mockup) da página de personalização`);
-  if (model.fields.length === 0 && !model.lineGroup) out.push(`${name}: cadastre ao menos um campo ou um grupo de linhas`);
+  if (model.fields.length === 0 && !model.lineGroup && !model.studioTemplateId) out.push(`${name}: cadastre ao menos um campo, um grupo de linhas ou uma base do estúdio`);
   return out;
 }

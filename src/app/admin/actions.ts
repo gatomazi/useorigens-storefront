@@ -1395,6 +1395,11 @@ export async function saveCustomizerAction(fd: FormData) {
   const live = ws.baseDoc.customizers?.find((m) => m.id === id);
   const { patch, errors } = parseCustomizerForm(fd, current, { store: storeOf(scope) }, { slugLocked: Boolean(live) });
   if (errors.length > 0) back(here, { err: errors });
+  if (patch.studioTemplateId) {
+    const { loadArtworkBase } = await import("@/lib/customization/artwork-server");
+    const base = await loadArtworkBase(patch.studioTemplateId).catch(() => null);
+    if (!base) back(here, { err: ["A base escolhida não está disponível ou não tem textos. Salve uma base como modelo no estúdio."] });
+  }
   if (patch.source && !isUmaPencaSource(patch.source)) {
     const problem = sourceProblem({ kind: "ink-category", ...patch.source, order: "category", limit: 6 }, ws.doc);
     if (problem) back(here, { err: [problem] });
