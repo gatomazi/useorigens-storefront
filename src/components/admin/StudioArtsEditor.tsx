@@ -59,8 +59,8 @@ export function StudioArtsEditor({ initial, templates, max, maxVersions, disable
                   {r.versions.length > 1 && <button type="button" className="a-btn sm danger" onClick={() => setArt(i, { versions: r.versions.filter((_, k) => k !== j) })} disabled={disabled}>Remover versão</button>}
                 </div>
                 <div className="mt-2 grid gap-3 md:grid-cols-2">
-                  <div><label className="a-label" htmlFor={`art-${i}-v-${j}-dark`}>Base · camiseta escura</label>{select(`art-${i}-v-${j}-dark`, v.templateId, (value) => setVersion(i, j, { templateId: value }), "Escolha a base")}</div>
-                  <div><label className="a-label" htmlFor={`art-${i}-v-${j}-light`}>Base · camiseta clara (opcional)</label>{select(`art-${i}-v-${j}-light`, v.lightTemplateId, (value) => setVersion(i, j, { lightTemplateId: value }), "Sem versão clara")}</div>
+                  <div><label className="a-label" htmlFor={`art-${i}-v-${j}-dark`}>Base · camisetas escuras e coloridas</label>{select(`art-${i}-v-${j}-dark`, v.templateId, (value) => setVersion(i, j, { templateId: value }), "Escolha a base")}</div>
+                  <div><label className="a-label" htmlFor={`art-${i}-v-${j}-light`}>Base · camisetas branca e cinza (opcional)</label>{select(`art-${i}-v-${j}-light`, v.lightTemplateId, (value) => setVersion(i, j, { lightTemplateId: value }), "Usar a mesma base")}</div>
                 </div>
               </div>
             ))}

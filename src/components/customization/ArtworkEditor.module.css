@@ -24,7 +24,8 @@
 .views button { min-height: 40px; padding: .4rem .9rem; border: 2px solid var(--color-ink, #171717); background: white; color: var(--color-ink, #171717); font: inherit; font-size: .875rem; font-weight: 700; cursor: pointer; }
 .views button[aria-pressed="true"] { background: var(--color-ink, #171717); color: white; }
 .views button:focus-visible { outline: 2px solid var(--color-region-primary, #316444); outline-offset: 3px; }
-/* Shirt view: the SVG is drawn in cm (80 × 84); the print area is 36 cm wide, from x = 22 and y = 20 (see Shirt in ArtworkPreview). */
-.stage { position: relative; width: 100%; aspect-ratio: 80 / 84; overflow: hidden; background: #e6e5e1; }
-.shirt { position: absolute; inset: 0; width: 100%; height: 100%; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .18)); }
-.printArea { position: absolute; left: 27.5%; top: 23.81%; width: 45%; height: auto; display: block; }
+/* Shirt view: a blank shirt photo (800 × 820, INK mockup framing); the art is laid over INK's print area, measured on an INK mockup
+   (318 px wide, centred, from y = 236). */
+.stage { position: relative; width: 100%; aspect-ratio: 800 / 820; overflow: hidden; background: #e5e5e5; }
+.shirt { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.printArea { position: absolute; left: 30.25%; top: 28.78%; width: 39.75%; height: auto; display: block; }

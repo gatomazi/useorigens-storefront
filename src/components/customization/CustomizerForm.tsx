@@ -6,7 +6,8 @@ import { CONTACT_CONFIRM_TEXT, CONTACT_KEYS, CONTACT_NOTICE, validateContact } f
 import type { Customizer } from "@/lib/site-config/schema";
 import type { SubmitResult } from "@/app/[region]/personalizar/actions";
 import { artworkFields, composeArtwork, fieldEdits, initialArtworkEdits, initialFieldValues, validateArtworkInput, type ArtworkEdit } from "@/lib/customization/artwork";
-import { choiceLabel, choiceOf, studioTemplateIds, type ArtPick } from "@/lib/customization/studio-arts";
+import { choiceLabel, choiceOf, offersChoice } from "@/lib/customization/studio-arts";
+import { SHIRT_COLORS, shirtColor } from "@/lib/customization/shirts";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { ArtworkEditor, ArtworkFields } from "./ArtworkEditor";
 import { ArtworkPreview, type PreviewView } from "./ArtworkPreview";
@@ -27,7 +28,6 @@ function liveSummary(model: Customizer, v: Values): SummaryLine[] {
   return out;
 }
 
-const SHIRT = { dark: "#242424", light: "#f5f3ef" };
 type ChoiceOption = { key: number; label: string; swatch?: string };
 /** Radio cards: the picked one is filled. Used for the art, its version and the shirt colour. */
 function ChoiceGroup({ legend, name, options, value, onChange, columns = "grid-cols-2 sm:grid-cols-3", help }: { legend: string; name: string; options: ChoiceOption[]; value: number; onChange: (key: number) => void; columns?: string; help?: string }) {
@@ -68,8 +68,10 @@ export function CustomizerForm({
   const uid = useId();
   const arts = useMemo(() => (firstBase && model.studioArts?.length ? model.studioArts : []), [firstBase, model.studioArts]);
   const studio = arts.length > 0;
-  const [pick, setPick] = useState<ArtPick>({ art: 0, version: 0, light: false });
-  const choice = useMemo(() => (studio ? choiceOf(arts, pick) : null), [studio, arts, pick]);
+  const [pick, setPick] = useState({ art: 0, version: 0 });
+  // The shirt colour is only for viewing; it decides which version of the art is drawn (light shirts get the "camiseta clara" base).
+  const [shirt, setShirt] = useState(SHIRT_COLORS[0].id);
+  const choice = useMemo(() => (studio ? choiceOf(arts, { ...pick, light: shirtColor(shirt).light }) : null), [studio, arts, pick, shirt]);
   const templateId = choice?.templateId;
   const [bases, setBases] = useState<Record<string, PrintProject>>(() => (firstBase && arts[0] ? { [arts[0].versions[0].templateId]: firstBase } : {}));
   const [baseError, setBaseError] = useState("");
@@ -94,14 +96,15 @@ export function CustomizerForm({
   const fieldMode = Boolean(firstBase && studio && artworkFields(firstBase).length);
   const artworkInput = fieldMode ? { fields: fieldValues } : { layers: artworkEdits };
   const artworkProject = useMemo(() => artworkBase ? composeArtwork(artworkBase, fieldMode ? fieldEdits(artworkBase, fieldValues) : artworkEdits) : null, [artworkBase, fieldMode, fieldValues, artworkEdits]);
-  const choose = (next: ArtPick) => { setPick(next); setBaseError(""); };
+  const choose = (next: { art: number; version: number }) => { setPick(next); setBaseError(""); };
+  const chooseShirt = (id: string) => { setShirt(id); setBaseError(""); };
   const [previewView, setPreviewView] = useState<PreviewView>("shirt");
   // Art, version and shirt colour. On a phone they sit right under the preview, so each tap shows its effect; on a wide screen, in the form.
   const pickers = (where: string) => choice && (
     <>
       {arts.length > 1 && <ChoiceGroup legend="Escolha a arte" name={`${uid}-${where}-arte`} options={arts.map((a, i) => ({ key: i, label: a.label }))} value={pick.art} onChange={(art) => choose({ ...pick, art, version: 0 })} />}
       {choice.art.versions.length > 1 && <ChoiceGroup legend="Versão" name={`${uid}-${where}-versao`} options={choice.art.versions.map((v, i) => ({ key: i, label: v.label ?? `Versão ${i + 1}` }))} value={pick.version} onChange={(version) => choose({ ...pick, version })} columns="grid-cols-1 sm:grid-cols-2" />}
-      {choice.version.lightTemplateId && <ChoiceGroup legend="Cor da camiseta" name={`${uid}-${where}-camiseta`} options={[{ key: 0, label: "Camiseta escura", swatch: SHIRT.dark }, { key: 1, label: "Camiseta clara", swatch: SHIRT.light }]} value={pick.light ? 1 : 0} onChange={(key) => choose({ ...pick, light: key === 1 })} columns="grid-cols-2" help="A arte muda de cor para combinar com a camiseta." />}
+      <ChoiceGroup legend="Veja em outra cor de camiseta" name={`${uid}-${where}-camiseta`} options={SHIRT_COLORS.map((c, i) => ({ key: i, label: c.label, swatch: c.swatch }))} value={SHIRT_COLORS.findIndex((c) => c.id === shirt)} onChange={(i) => chooseShirt(SHIRT_COLORS[i].id)} columns="grid-cols-3" help={choice.version.lightTemplateId ? "Só para visualizar: a cor você escolhe na compra. Nas camisetas branca e cinza a estampa vem na versão escura; nas demais, na versão clara." : "Só para visualizar: a cor você escolhe na compra."} />
     </>
   );
   const [contact, setContact] = useState<ContactValues>({ name: "", whatsapp: "", email: "", confirm: false });
@@ -115,7 +118,7 @@ export function CustomizerForm({
   const g = studio ? undefined : model.lineGroup;
   const summary = useMemo(() => {
     if (!studio || !choice) return liveSummary(model, values);
-    const picked = studioTemplateIds(model).length > 1 ? [{ label: "Arte escolhida", value: choiceLabel(choice) }] : [];
+    const picked = offersChoice(model) ? [{ label: "Arte escolhida", value: choiceLabel(choice) }] : [];
     if (!artworkBase) return picked;
     const checked = validateArtworkInput(artworkBase, choice.templateId, fieldMode ? { fields: fieldValues } : { layers: artworkEdits });
     if (checked.ok && checked.artwork.fields) return [...picked, ...checked.artwork.fields.map((f) => ({ label: f.label, value: f.value })), ...checked.artwork.layers.map((l) => ({ label: "Texto na arte", value: l.text }))];
@@ -195,8 +198,8 @@ export function CustomizerForm({
       <div className="grid gap-8 lg:grid-cols-12 lg:gap-12">
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-24">
-            {studio ? (artworkProject ? <ArtworkPreview key={templateId} project={artworkProject} onReady={setArtworkReady} view={previewView} onViewChange={setPreviewView} shirt={choice?.version.lightTemplateId ? (choice.light ? SHIRT.light : SHIRT.dark) : undefined} /> : (
-              <div className={`mt-[52px] flex w-full items-center justify-center bg-[#242424] p-6 text-center text-white ${previewView === "shirt" ? "aspect-[80/84]" : "aspect-[4270/4900]"}`} role="status" aria-live="polite">{baseError || "Carregando a arte…"}</div>
+            {studio ? (artworkProject ? <ArtworkPreview key={templateId} project={artworkProject} onReady={setArtworkReady} view={previewView} onViewChange={setPreviewView} shirt={shirt} /> : (
+              <div className={`mt-[52px] flex w-full items-center justify-center bg-[#242424] p-6 text-center text-white ${previewView === "shirt" ? "aspect-[800/820]" : "aspect-[4270/4900]"}`} role="status" aria-live="polite">{baseError || "Carregando a arte…"}</div>
             )) : <>
             {/* eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin */}
             <img

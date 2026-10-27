@@ -1,6 +1,6 @@
 import type { Customizer, StudioArt, StudioArtVersion } from "../site-config/schema";
 
-/** What the customer picked on a studio-based page: an art, one of its versions and, when the version has both, the shirt colour. */
+/** What the customer picked on a studio-based page: an art, one of its versions and whether the previewed shirt is light (it then gets the light-shirt base). */
 export type ArtPick = { art: number; version: number; light: boolean };
 export type ArtChoice = { art: StudioArt; version: StudioArtVersion; light: boolean; templateId: string };
 
@@ -26,11 +26,10 @@ export function choiceOfTemplate(model: Pick<Customizer, "studioArts">, template
   return null;
 }
 
-/** "Eu vim pela ceia · Infantil · Camiseta clara": only the choices the page actually offered. */
+/** True when the page lets the customer pick between arts or versions (the shirt colour is only for viewing and is not part of the choice). */
+export const offersChoice = (model: Pick<Customizer, "studioArts">): boolean => (model.studioArts ?? []).flatMap((a) => a.versions).length > 1;
+
+/** "Eu vim pela ceia · Infantil": the art and, when it has several, the version. The shirt colour is left out: each colour gets its matching art. */
 export function choiceLabel(choice: ArtChoice): string {
-  return [
-    choice.art.label,
-    choice.art.versions.length > 1 ? choice.version.label : undefined,
-    choice.version.lightTemplateId ? (choice.light ? "Camiseta clara" : "Camiseta escura") : undefined,
-  ].filter(Boolean).join(" · ");
+  return [choice.art.label, choice.art.versions.length > 1 ? choice.version.label : undefined].filter(Boolean).join(" · ");
 }

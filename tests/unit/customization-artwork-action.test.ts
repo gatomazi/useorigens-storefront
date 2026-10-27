@@ -59,7 +59,7 @@ describe("envio público da arte para a fila existente", () => {
     state.model = { ...single, studioArts: [{ label: "Feliz tudo", versions: [{ templateId, lightTemplateId: lightId }] }, { label: "Outra", versions: [{ label: "Adulto", templateId: "1792427199787-94f180a0-474a-4a75-9fae-1fbdd72f2aaa" }, { label: "Infantil", templateId: "1792427199788-94f180a0-474a-4a75-9fae-1fbdd72f2aab" }] }] };
     try {
       const result = await submitCustomizationAction({ region: "sul", slug: "sua-arte", idempotencyKey: "light-shirt-artwork-key", contact, artwork: { templateId: lightId, layers: initialArtworkEdits(state.base!) } });
-      expect(result).toMatchObject({ ok: true, summary: expect.arrayContaining([{ label: "Arte escolhida", value: "Feliz tudo · Camiseta clara" }, { label: "Base da arte", value: "Feliz tudo · camiseta clara" }]) });
+      expect(result).toMatchObject({ ok: true, summary: expect.arrayContaining([{ label: "Arte escolhida", value: "Feliz tudo" }, { label: "Base da arte", value: "Feliz tudo · camiseta clara" }]) });
       const kids = await submitCustomizationAction({ region: "sul", slug: "sua-arte", idempotencyKey: "kids-version-artwork-key", contact, artwork: { templateId: "1792427199788-94f180a0-474a-4a75-9fae-1fbdd72f2aab", layers: initialArtworkEdits(state.base!) } });
       expect(kids).toMatchObject({ ok: true, summary: expect.arrayContaining([{ label: "Arte escolhida", value: "Outra · Infantil" }]) });
       // Only the model's own bases are served to the page, never another saved template.

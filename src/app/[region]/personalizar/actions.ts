@@ -10,7 +10,7 @@ import { publishedFor } from "@/lib/pages/public";
 import { liveCustomizer } from "@/lib/site-config/pages";
 import { validateArtworkInput } from "@/lib/customization/artwork";
 import { loadArtworkBase } from "@/lib/customization/artwork-server";
-import { choiceLabel, choiceOfTemplate, studioTemplateIds } from "@/lib/customization/studio-arts";
+import { choiceLabel, choiceOfTemplate, offersChoice, studioTemplateIds } from "@/lib/customization/studio-arts";
 import type { PrintProject } from "@/lib/print-studio/model";
 
 export type SubmitResult =
@@ -45,7 +45,7 @@ export async function submitCustomizationAction(input: { region: string; slug: s
     if (!base) return fail("Esta base não está disponível agora. Tente novamente mais tarde.");
     const artwork = validateArtworkInput(base, choice.templateId, input.artwork);
     if (!artwork.ok) return fail("Confira os textos, fontes e cores da arte.", artwork.errors);
-    checked.values.artwork = { ...artwork.artwork, ...(studioTemplateIds(model).length > 1 ? { choice: choiceLabel(choice) } : {}) };
+    checked.values.artwork = { ...artwork.artwork, ...(offersChoice(model) ? { choice: choiceLabel(choice) } : {}) };
   } else if (input.artwork) return fail("Este modelo não permite edição da arte. Recarregue a página.");
   const token = tokenFor(secret, found.region, input.idempotencyKey);
   const replaces = typeof input.replaces === "string" && TOKEN_SHAPE.test(input.replaces) ? hashToken(input.replaces) : undefined;
