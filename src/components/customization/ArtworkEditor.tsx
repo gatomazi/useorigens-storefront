@@ -1,6 +1,6 @@
 "use client";
 
-import { artworkFonts, editableTexts, type ArtworkEdit } from "@/lib/customization/artwork";
+import { artworkFields, artworkFonts, editableTexts, type ArtworkEdit } from "@/lib/customization/artwork";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { fontFamilyId, groupFontOptions, preferredFontVariant } from "@/lib/print-studio/font-options";
 import styles from "./ArtworkEditor.module.css";
@@ -38,6 +38,29 @@ export function ArtworkEditor({ base, edits, onChange, errors, uid }: { base: Pr
               }}>{family.variants.map((variant) => <option key={variant.id} value={variant.id}>{variant.name}</option>)}</select></label>}
               <label htmlFor={`${id}-color`}>Cor da escrita<span className={styles.colorControl}><input id={`${id}-color`} type="color" value={edit.color} onChange={(e) => change(layer.id, { color: e.target.value })} /><span>{edit.color.toUpperCase()}</span></span></label>
             </div>
+          </div>
+        );
+      })}
+    </fieldset>
+  );
+}
+
+/** A base with slots: one input per answer (e.g. the family name); texts, fonts, colours and positions stay as designed. */
+export function ArtworkFields({ base, values, onChange, errors, uid }: { base: PrintProject; values: Record<string, string>; onChange: (values: Record<string, string>) => void; errors: Record<string, string>; uid: string }) {
+  return (
+    <fieldset className={styles.editor}>
+      <legend className="t-h3">Coloque o nome da sua família</legend>
+      <p className="t-small text-ink-mute">A prévia mostra a arte com o nome que você escrever. As letras seguem o estilo da estampa, com maiúsculas ajustadas automaticamente.</p>
+      {errors.artwork && <p className={styles.error} role="alert">{errors.artwork}</p>}
+      {artworkFields(base).map((field) => {
+        const id = `${uid}-artwork-${field.id}`;
+        const error = errors[`artwork.${field.id}`];
+        const value = values[field.id] ?? "";
+        return (
+          <div key={field.id} className={styles.textGroup}>
+            <label className="t-label block" htmlFor={id}>{field.label}</label>
+            <input id={id} value={value} onChange={(e) => onChange({ ...values, [field.id]: e.target.value })} maxLength={field.maxLength} autoComplete="family-name" autoCapitalize="words" spellCheck={false} placeholder={field.example} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />
+            <div className={styles.help} id={`${id}-help`}><span className={error ? styles.error : undefined} role={error ? "alert" : undefined}>{error ?? "Só o sobrenome, sem “da” ou “dos” na frente"}</span><span>{[...value].length}/{field.maxLength}</span></div>
           </div>
         );
       })}

@@ -55,14 +55,17 @@ function setTextStyle(context: CanvasRenderingContext2D, layer: TextLayer, resou
   if (!family) throw new Error("Uma fonte da composição não foi carregada.");
   context.font = `${layer.weight} ${layer.fontSize}px ${family}`;
   context.fillStyle = layer.color;
+  context.strokeStyle = layer.color;
+  context.lineJoin = "round";
   context.textBaseline = "alphabetic";
   context.textAlign = "left";
   context.letterSpacing = `${layer.letterSpacing}px`;
   context.fontKerning = "normal";
-  if (layer.maxWidth) {
+  const fit = layer.boxWidth ?? layer.maxWidth;
+  if (fit) {
     const width = Math.max(...layer.text.split("\n").map((line) => context.measureText(line).width));
-    if (width > layer.maxWidth) {
-      const ratio = layer.maxWidth / width;
+    if (width > fit) {
+      const ratio = fit / width;
       context.font = `${layer.weight} ${layer.fontSize * ratio}px ${family}`;
       context.letterSpacing = `${layer.letterSpacing * ratio}px`;
       return layer.fontSize * ratio;
@@ -71,14 +74,48 @@ function setTextStyle(context: CanvasRenderingContext2D, layer: TextLayer, resou
   return layer.fontSize;
 }
 
+/** Distance from the layer top to the first baseline. A fixed box anchors on the cap height, so accents never move a locked composition, and a shrunk line keeps its vertical centre. */
+function firstAscent(context: CanvasRenderingContext2D, layer: TextLayer, lines: string[], fontSize: number) {
+  if (layer.boxWidth) {
+    const cap = context.measureText("H").actualBoundingBoxAscent;
+    return (cap * layer.fontSize / fontSize + cap) / 2;
+  }
+  return Math.max(...lines.map((line) => context.measureText(line || " ").actualBoundingBoxAscent), fontSize * 0.72);
+}
+
 export function measureLayer(context: CanvasRenderingContext2D, layer: PrintLayer, resources: RenderResources): LayerBounds {
   if (layer.kind === "image") return { id: layer.id, x: layer.x, y: layer.y, width: layer.width, height: layer.width * layer.asset.height / layer.asset.width };
   const fontSize = setTextStyle(context, layer, resources);
   const lines = layer.text.split("\n");
   const metrics = lines.map((line) => context.measureText(line || " "));
-  const ascent = Math.max(...metrics.map((m) => m.actualBoundingBoxAscent), fontSize * 0.72);
+  const ascent = firstAscent(context, layer, lines, fontSize);
   const descent = Math.max(0, ...metrics.map((m) => m.actualBoundingBoxDescent));
-  return { id: layer.id, x: layer.x, y: layer.y, width: Math.max(40, ...metrics.map((m) => m.width)), height: Math.max(fontSize, ascent + descent + (lines.length - 1) * fontSize * layer.lineHeight) };
+  const width = layer.boxWidth ?? Math.max(40, ...metrics.map((m) => m.width));
+  // An arch drops its ends by the sagitta of the drawn arc; the box is an approximation used for selection only.
+  const sagitta = layer.arc ? layer.arc * (1 - Math.cos(Math.min(Math.PI / 2, metrics[0].width / layer.arc / 2))) : 0;
+  return { id: layer.id, x: layer.x, y: layer.y, width, height: Math.max(fontSize, ascent + descent + (lines.length - 1) * fontSize * layer.lineHeight) + sagitta };
+}
+
+function drawText(context: CanvasRenderingContext2D, text: string, x: number, y: number, stroke: number) {
+  if (stroke > 0) { context.lineWidth = stroke; context.strokeText(text, x, y); }
+  context.fillText(text, x, y);
+}
+
+/** One line along an upward arch centred on `cx`; `baseline` is the baseline at the apex. Kerning pairs are not applied between letters. */
+function paintArc(context: CanvasRenderingContext2D, line: string, cx: number, baseline: number, radius: number, stroke: number) {
+  const spacing = parseFloat(context.letterSpacing) || 0;
+  context.letterSpacing = "0px";
+  const letters = [...line].map((char) => ({ char, width: context.measureText(char).width }));
+  const total = letters.reduce((sum, l) => sum + l.width, 0) + spacing * Math.max(0, letters.length - 1);
+  let along = -total / 2;
+  for (const { char, width } of letters) {
+    context.save();
+    context.translate(cx, baseline + radius);
+    context.rotate((along + width / 2) / radius);
+    drawText(context, char, -width / 2, -radius, stroke);
+    context.restore();
+    along += width + spacing;
+  }
 }
 
 /** The exact same painter is used by the interactive preview and full-resolution PNG. */
@@ -106,11 +143,13 @@ export function paintProject(canvas: HTMLCanvasElement, project: PrintProject, r
     } else {
       const fontSize = setTextStyle(context, layer, resources);
       const lines = layer.text.split("\n");
-      const ascent = Math.max(...lines.map((line) => context.measureText(line || " ").actualBoundingBoxAscent), fontSize * 0.72);
+      const ascent = firstAscent(context, layer, lines, fontSize);
+      const stroke = (layer.stroke ?? 0) * fontSize / layer.fontSize;
+      if (layer.arc) { paintArc(context, lines.join(" "), layer.x + box.width / 2, layer.y + ascent, layer.arc, stroke); continue; }
       lines.forEach((line, index) => {
         const lineWidth = context.measureText(line).width;
         const offset = layer.align === "center" ? (box.width - lineWidth) / 2 : layer.align === "right" ? box.width - lineWidth : 0;
-        context.fillText(line, layer.x + offset, layer.y + ascent + index * fontSize * layer.lineHeight);
+        drawText(context, line, layer.x + offset, layer.y + ascent + index * fontSize * layer.lineHeight, stroke);
       });
     }
   }

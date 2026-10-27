@@ -1,4 +1,4 @@
-import { BUILTIN_FONTS, type PrintProject, type TextLayer } from "../print-studio/model";
+import { BUILTIN_FONTS, type PrintProject, type TextLayer, type TextSlot } from "../print-studio/model";
 import { pdfFontCharacterError } from "../print-studio/pdf-fonts";
 import { fontOptionWeight } from "../print-studio/font-options";
 import { normalizeValue, problemWith, type FieldError } from "./validate";
@@ -8,12 +8,66 @@ export type RequestArtwork = {
   templateId: string;
   templateName: string;
   layers: (ArtworkEdit & { name: string; fontName: string })[];
+  /** Present when the base has slots: the customer's answers, from which `layers` were built. */
+  fields?: { id: string; label: string; value: string }[];
 };
+export type ArtworkField = { id: string; label: string; maxLength: number; example: string };
+export type ArtworkInput = { layers?: unknown; fields?: unknown };
 
-export const editableTexts = (project: PrintProject): TextLayer[] => project.layers.filter((l): l is TextLayer => l.visible && l.kind === "text");
+const slotLayers = (project: PrintProject) => project.layers.filter((l): l is TextLayer & { slot: TextSlot } => l.visible && l.kind === "text" && Boolean(l.slot));
+/** One question per slot field, in layer order. A base with slots locks every other text, font and colour. */
+export function artworkFields(project: PrintProject): ArtworkField[] {
+  const out: ArtworkField[] = [];
+  for (const { slot } of slotLayers(project)) if (!out.some((f) => f.id === slot.field)) out.push({ id: slot.field, label: slot.label, maxLength: slot.maxLength, example: slot.example });
+  return out;
+}
+export const editableTexts = (project: PrintProject): TextLayer[] => slotLayers(project).length ? [] : project.layers.filter((l): l is TextLayer => l.visible && l.kind === "text");
 export const artworkFonts = (project: PrintProject) => [...BUILTIN_FONTS, ...project.fonts];
 export const initialArtworkEdits = (project: PrintProject): ArtworkEdit[] => editableTexts(project).map(({ id, text, fontId, color }) => ({ id, text, fontId, color }));
 const normalizeArtworkText = (text: string) => text.split(/\r?\n/).map(normalizeValue).join("\n").trim();
+export const initialFieldValues = (project: PrintProject): Record<string, string> => Object.fromEntries(artworkFields(project).map((f) => [f.id, f.example]));
+
+// Latin-1 letters only: every font offered for a slot is checked to cover them when the base is prepared.
+const NAME = /^[A-Za-zÀ-ÖØ-öø-ÿ]+(?:[ '’.-]+[A-Za-zÀ-ÖØ-öø-ÿ]+)*\.?$/;
+const PARTICLES = new Set(["da", "das", "de", "di", "do", "dos", "du", "e", "van", "von"]);
+function applyCase(value: string, textCase: TextSlot["textCase"]) {
+  if (textCase === "upper") return value.toLocaleUpperCase("pt-BR");
+  if (textCase === "none") return value;
+  return value.toLocaleLowerCase("pt-BR").replace(/[A-Za-zÀ-ÖØ-öø-ÿ]+/g, (word, at: number) => at > 0 && PARTICLES.has(word) ? word : word[0].toLocaleUpperCase("pt-BR") + word.slice(1));
+}
+
+/** The slot layers' texts for these answers, as edits on the base's own font and colour. */
+export function fieldEdits(base: PrintProject, values: Record<string, string>): ArtworkEdit[] {
+  return slotLayers(base).map(({ id, fontId, color, slot }) => ({ id, fontId, color, text: slot.template.replace(`{${slot.field}}`, applyCase(normalizeValue(values[slot.field] ?? ""), slot.textCase)) }));
+}
+
+export function validateArtworkFields(base: PrintProject, templateId: string, input: unknown): { ok: true; artwork: RequestArtwork } | { ok: false; errors: FieldError[] } {
+  const fields = artworkFields(base);
+  if (!input || typeof input !== "object" || Array.isArray(input)) return { ok: false, errors: [{ key: "artwork", message: "A personalização da arte é inválida." }] };
+  const raw = input as Record<string, unknown>;
+  const values: Record<string, string> = {};
+  const errors: FieldError[] = [];
+  for (const field of fields) {
+    const value = typeof raw[field.id] === "string" ? normalizeValue(raw[field.id] as string) : "";
+    const problem = problemWith(value, field.maxLength);
+    if (!value) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: escreva o ${field.label.toLowerCase()}` });
+    else if (problem) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: ${problem}` });
+    else if (!NAME.test(value)) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: use só letras, espaço, hífen ou apóstrofo` });
+    values[field.id] = value;
+  }
+  if (errors.length) return { ok: false, errors };
+  const fonts = artworkFonts(base);
+  const layers = fieldEdits(base, values).map((edit) => {
+    const layer = slotLayers(base).find((l) => l.id === edit.id)!;
+    return { ...edit, name: layer.name, fontName: fonts.find((f) => f.id === edit.fontId)?.name ?? edit.fontId };
+  });
+  return { ok: true, artwork: { templateId, templateName: base.name, layers, fields: fields.map((f) => ({ id: f.id, label: f.label, value: values[f.id] })) } };
+}
+
+/** The storefront sends `fields` for a base with slots and `layers` for a free text base; the base decides which one is accepted. */
+export function validateArtworkInput(base: PrintProject, templateId: string, input: ArtworkInput) {
+  return artworkFields(base).length ? validateArtworkFields(base, templateId, input.fields) : validateArtwork(base, templateId, input.layers);
+}
 
 /** Only the visible composition and fonts explicitly included in this base may reach a customer. */
 export function publicArtworkBase(project: PrintProject): PrintProject {
@@ -34,7 +88,7 @@ export function composeArtwork(base: PrintProject, edits: readonly ArtworkEdit[]
       if (layer.kind !== "text") return layer;
       const edit = byId.get(layer.id);
       const font = base.fonts.find((f) => f.id === edit?.fontId);
-      return { ...layer, ...(edit ? { text: normalizeArtworkText(edit.text), fontId: edit.fontId, color: edit.color.toLowerCase(), weight: font?.weight ?? edit.weight ?? layer.weight } : {}), maxWidth: Math.min(layer.maxWidth ?? base.width, Math.max(1, base.width - layer.x - Math.max(0, Math.min(layer.x, 100)))) };
+      return { ...layer, ...(edit ? { text: normalizeArtworkText(edit.text), fontId: edit.fontId, color: edit.color.toLowerCase(), weight: font?.weight ?? edit.weight ?? layer.weight } : {}), ...(layer.boxWidth ? {} : { maxWidth: Math.min(layer.maxWidth ?? base.width, Math.max(1, base.width - layer.x - Math.max(0, Math.min(layer.x, 100)))) }) };
     }),
   };
 }

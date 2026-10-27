@@ -2,7 +2,7 @@ import "server-only";
 import { parseProjectFile } from "../print-studio/model";
 import { serverPrintStore } from "../print-studio/server";
 import { PRINT_ID } from "../print-studio/server-store";
-import { composeArtwork, editableTexts, publicArtworkBase, type RequestArtwork } from "./artwork";
+import { artworkFields, composeArtwork, editableTexts, publicArtworkBase, type RequestArtwork } from "./artwork";
 
 /** A saved template is immutable. Never serve the private gallery or an arbitrary saved art to the storefront. */
 export async function loadArtworkBase(id: string) {
@@ -13,7 +13,7 @@ export async function loadArtworkBase(id: string) {
   const bytes = await store.read(id, "project.json");
   if (!bytes) return null;
   const project = publicArtworkBase(parseProjectFile(bytes.toString()));
-  return editableTexts(project).length ? project : null;
+  return editableTexts(project).length || artworkFields(project).length ? project : null;
 }
 
 export async function loadRequestArtwork(artwork: RequestArtwork | undefined) {

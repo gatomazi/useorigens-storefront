@@ -5,14 +5,14 @@ import { initialValues, lineLabelOf, normalizeValue, orderedFields, validateSubm
 import { CONTACT_CONFIRM_TEXT, CONTACT_KEYS, CONTACT_NOTICE, validateContact } from "@/lib/customization/contact";
 import type { Customizer } from "@/lib/site-config/schema";
 import type { SubmitResult } from "@/app/[region]/personalizar/actions";
-import { composeArtwork, initialArtworkEdits, validateArtwork } from "@/lib/customization/artwork";
+import { artworkFields, composeArtwork, fieldEdits, initialArtworkEdits, initialFieldValues, validateArtworkInput } from "@/lib/customization/artwork";
 import type { PrintProject } from "@/lib/print-studio/model";
-import { ArtworkEditor } from "./ArtworkEditor";
+import { ArtworkEditor, ArtworkFields } from "./ArtworkEditor";
 import { ArtworkPreview } from "./ArtworkPreview";
 
 export type PublicMockup = { src: string; width: number; height: number; variants?: { w: number; src: string }[]; alt: string };
 type ContactValues = { name: string; whatsapp: string; email: string; confirm: boolean };
-type Submit = (input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; artwork?: { templateId: string; layers: unknown }; contact?: { name: string; whatsapp: string; email: string; confirm: boolean }; replaces?: string }) => Promise<SubmitResult>;
+type Submit = (input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; artwork?: { templateId: string; layers?: unknown; fields?: unknown }; contact?: { name: string; whatsapp: string; email: string; confirm: boolean }; replaces?: string }) => Promise<SubmitResult>;
 
 const newKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID().replaceAll("-", "") : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`.padEnd(24, "0"));
 
@@ -42,8 +42,11 @@ export function CustomizerForm({
   const uid = useId();
   const [values, setValues] = useState<Values>(() => artworkBase ? { fields: {}, lines: [] } : initialValues(model));
   const [artworkEdits, setArtworkEdits] = useState(() => artworkBase ? initialArtworkEdits(artworkBase) : []);
+  const [fieldValues, setFieldValues] = useState(() => artworkBase ? initialFieldValues(artworkBase) : {});
   const [artworkReady, setArtworkReady] = useState(false);
-  const artworkProject = useMemo(() => artworkBase ? composeArtwork(artworkBase, artworkEdits) : null, [artworkBase, artworkEdits]);
+  const fieldMode = Boolean(artworkBase && artworkFields(artworkBase).length);
+  const artworkInput = fieldMode ? { fields: fieldValues } : { layers: artworkEdits };
+  const artworkProject = useMemo(() => artworkBase ? composeArtwork(artworkBase, fieldMode ? fieldEdits(artworkBase, fieldValues) : artworkEdits) : null, [artworkBase, fieldMode, fieldValues, artworkEdits]);
   const [contact, setContact] = useState<ContactValues>({ name: "", whatsapp: "", email: "", confirm: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [phase, setPhase] = useState<"idle" | "sending" | "done">("idle");
@@ -55,9 +58,10 @@ export function CustomizerForm({
   const g = artworkBase ? undefined : model.lineGroup;
   const summary = useMemo(() => {
     if (!artworkBase) return liveSummary(model, values);
-    const checked = validateArtwork(artworkBase, model.studioTemplateId!, artworkEdits);
+    const checked = validateArtworkInput(artworkBase, model.studioTemplateId!, fieldMode ? { fields: fieldValues } : { layers: artworkEdits });
+    if (checked.ok && checked.artwork.fields) return checked.artwork.fields.map((f) => ({ label: f.label, value: f.value }));
     return checked.ok ? checked.artwork.layers.flatMap((l, i) => [{ label: `${i + 1}. ${l.name}`, value: l.text }, { label: `${i + 1}. Fonte e cor`, value: `${l.fontName} · ${l.color.toUpperCase()}` }]) : [];
-  }, [model, values, artworkBase, artworkEdits]);
+  }, [model, values, artworkBase, fieldMode, fieldValues, artworkEdits]);
   const referenceUrl = done ? `/${region}/personalizar/solicitacao/${done.reference}` : null;
 
   const setField = (key: string, v: string) => setValues((cur) => ({ ...cur, fields: { ...cur.fields, [key]: v } }));
@@ -77,7 +81,7 @@ export function CustomizerForm({
     e.preventDefault();
     setBanner(null);
     if (phase === "sending") return;
-    const checked = artworkBase ? validateArtwork(artworkBase, model.studioTemplateId!, artworkEdits) : validateSubmission(model, { fields: values.fields, lines: values.lines });
+    const checked = artworkBase ? validateArtworkInput(artworkBase, model.studioTemplateId!, artworkInput) : validateSubmission(model, { fields: values.fields, lines: values.lines });
     const contactChecked = validateContact(contact);
     const problems = [...(checked.ok ? [] : checked.errors), ...(contactChecked.ok ? [] : contactChecked.errors)];
     if (problems.length > 0) {
@@ -93,7 +97,7 @@ export function CustomizerForm({
     }
     setPhase("sending");
     try {
-      const result = await submit({ region, slug: model.slug, idempotencyKey: idem.current, fields: values.fields, lines: values.lines, ...(artworkBase ? { artwork: { templateId: model.studioTemplateId!, layers: artworkEdits } } : {}), contact, replaces: previous.current });
+      const result = await submit({ region, slug: model.slug, idempotencyKey: idem.current, fields: values.fields, lines: values.lines, ...(artworkBase ? { artwork: { templateId: model.studioTemplateId!, ...artworkInput } } : {}), contact, replaces: previous.current });
       if (result.ok) {
         setDone(result);
         setPhase("done");
@@ -183,7 +187,9 @@ export function CustomizerForm({
           ) : (
             <form onSubmit={onSubmit} noValidate className="mt-8 space-y-6" aria-describedby={`${uid}-notice`}>
               <fieldset disabled={phase === "sending"} className="min-w-0 space-y-6">
-              {artworkBase && <ArtworkEditor base={artworkBase} edits={artworkEdits} onChange={setArtworkEdits} errors={errors} uid={uid} />}
+              {artworkBase && (fieldMode
+                ? <ArtworkFields base={artworkBase} values={fieldValues} onChange={setFieldValues} errors={errors} uid={uid} />
+                : <ArtworkEditor base={artworkBase} edits={artworkEdits} onChange={setArtworkEdits} errors={errors} uid={uid} />)}
               {!artworkBase && orderedFields(model).map((f) => {
                 const id = `${uid}-${f.key}`;
                 const value = values.fields[f.key] ?? "";

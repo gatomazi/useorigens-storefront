@@ -113,7 +113,8 @@ export function summaryOf(snapshot: ModelSnapshot, values: Values): SummaryLine[
   if (g) values.lines.forEach((value, i) => { if (value) out.push({ label: g.lineLabel.replace("{n}", String(i + 1)), value }); });
   if (values.artwork) {
     out.push({ label: "Base da arte", value: values.artwork.templateName });
-    values.artwork.layers.forEach((l, i) => {
+    if (values.artwork.fields) for (const f of values.artwork.fields) out.push({ label: f.label, value: f.value });
+    else values.artwork.layers.forEach((l, i) => {
       const label = `${i + 1}. ${l.name}`;
       out.push({ label, value: l.text }, { label: `${label} · fonte`, value: l.fontName }, { label: `${label} · cor`, value: l.color });
     });

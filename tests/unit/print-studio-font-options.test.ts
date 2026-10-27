@@ -8,7 +8,7 @@ describe("família Mont e seus arquivos de variação", () => {
   it("agrupa os arquivos em Mont, preservando as demais famílias e os pesos reais", async () => {
     const fonts = await availableStudioFonts();
     const families = groupFontOptions([...BUILTIN_FONTS, ...fonts, ...fonts]);
-    expect(families.map((f) => f.name)).toEqual(["Hanken Grotesk", "Big Shoulders", "Bodoni Moda", "Mont"]);
+    expect(families.map((f) => f.name)).toEqual(["Hanken Grotesk", "Big Shoulders", "Bodoni Moda", "Mont", "Graduate", "Caveat", "Caveat Brush", "Montserrat SemiBold"]);
     const mont = families.find((f) => f.id === "mont")!;
     expect(mont.variants.map((v) => [v.name, v.weight])).toEqual([["Extraleve", 200], ["Regular", 400], ["Regular itálico", 400], ["Negrito", 700], ["Pesado", 900]]);
     expect(preferredFontVariant(mont, 400).id).toBe("font-mont-pdf-regular");
