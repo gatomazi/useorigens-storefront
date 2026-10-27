@@ -7,6 +7,13 @@ const form = (entries: Record<string, string>) => ({ get: (name: string) => (nam
 const parse = (entries: Record<string, string>, store: "use-sul" | "use-norte" = "use-sul") => parseCustomizerForm(form({ name: "Pai", ...entries }), current, { store }, { slugLocked: false });
 
 describe("model editor form", () => {
+  test("links a studio base, removes the link explicitly and rejects invalid ids", () => {
+    const id = "1792427199785-94f180a0-474a-4a75-9fae-1fbdd72f2aa8";
+    expect(parse({ studio_template: id }).patch.studioTemplateId).toBe(id);
+    expect(parse({ studio_template: "" }).patch).toHaveProperty("studioTemplateId", undefined);
+    expect(parse({ studio_template: "../../private" }).errors).not.toHaveLength(0);
+    expect(parse({}).patch).not.toHaveProperty("studioTemplateId");
+  });
   test("given a line group of 4 up to 6 with defaults, when parsed, then the patch carries the ranges and the trimmed defaults", () => {
     const { patch, errors } = parse({ lg_show: "on", lg_min: "1", lg_initial: "4", lg_max: "6", lg_maxlength: "16", lg_defaults: " PAI \n\nPARANAENSE\nCHURRASQUEIRO\nLENDA" });
     expect(errors).toEqual([]);

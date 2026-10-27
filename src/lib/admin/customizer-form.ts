@@ -59,6 +59,12 @@ export function parseCustomizerForm(f: Fields, current: Customizer, region: { st
   const mockupAlt = str(f, "mockup_alt") || (mockupId ? `${customizerProductLabel(patch.source ?? current.source)} ${patch.name || current.name}` : "");
   patch.pageMockup = mockupId ? { assetId: mockupId, alt: mockupAlt, decorative: false } : undefined;
   patch.active = f.get("active") !== null;
+  // Old forms preserve the setting; the current editor posts an empty value to turn it off.
+  if (f.get("studio_template") !== null) {
+    const templateId = str(f, "studio_template");
+    if (templateId && !/^\d{13}-[a-f0-9-]{36}$/.test(templateId)) errors.push("Escolha uma base válida do estúdio.");
+    else patch.studioTemplateId = templateId || undefined;
+  }
 
   // Fields: a JSON list maintained by the editor's add/remove rows. Keys are stable once a field exists; a new row gets one from its label.
   const raw = str(f, "fields_json");

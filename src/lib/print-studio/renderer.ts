@@ -1,4 +1,5 @@
 import { BUILTIN_FONTS, type PrintLayer, type PrintProject, type TextLayer } from "./model";
+import { pdfFontCharacterError } from "./pdf-fonts";
 
 export type LayerBounds = { id: string; x: number; y: number; width: number; height: number };
 export type RenderResources = { families: Map<string, string>; images: Map<string, HTMLImageElement> };
@@ -58,20 +59,35 @@ function setTextStyle(context: CanvasRenderingContext2D, layer: TextLayer, resou
   context.textAlign = "left";
   context.letterSpacing = `${layer.letterSpacing}px`;
   context.fontKerning = "normal";
+  if (layer.maxWidth) {
+    const width = Math.max(...layer.text.split("\n").map((line) => context.measureText(line).width));
+    if (width > layer.maxWidth) {
+      const ratio = layer.maxWidth / width;
+      context.font = `${layer.weight} ${layer.fontSize * ratio}px ${family}`;
+      context.letterSpacing = `${layer.letterSpacing * ratio}px`;
+      return layer.fontSize * ratio;
+    }
+  }
+  return layer.fontSize;
 }
 
 export function measureLayer(context: CanvasRenderingContext2D, layer: PrintLayer, resources: RenderResources): LayerBounds {
   if (layer.kind === "image") return { id: layer.id, x: layer.x, y: layer.y, width: layer.width, height: layer.width * layer.asset.height / layer.asset.width };
-  setTextStyle(context, layer, resources);
+  const fontSize = setTextStyle(context, layer, resources);
   const lines = layer.text.split("\n");
   const metrics = lines.map((line) => context.measureText(line || " "));
-  const ascent = Math.max(...metrics.map((m) => m.actualBoundingBoxAscent), layer.fontSize * 0.72);
+  const ascent = Math.max(...metrics.map((m) => m.actualBoundingBoxAscent), fontSize * 0.72);
   const descent = Math.max(0, ...metrics.map((m) => m.actualBoundingBoxDescent));
-  return { id: layer.id, x: layer.x, y: layer.y, width: Math.max(40, ...metrics.map((m) => m.width)), height: Math.max(layer.fontSize, ascent + descent + (lines.length - 1) * layer.fontSize * layer.lineHeight) };
+  return { id: layer.id, x: layer.x, y: layer.y, width: Math.max(40, ...metrics.map((m) => m.width)), height: Math.max(fontSize, ascent + descent + (lines.length - 1) * fontSize * layer.lineHeight) };
 }
 
 /** The exact same painter is used by the interactive preview and full-resolution PNG. */
 export function paintProject(canvas: HTMLCanvasElement, project: PrintProject, resources: RenderResources, width: number): LayerBounds[] {
+  for (const layer of project.layers) {
+    if (layer.kind !== "text" || !layer.visible) continue;
+    const error = pdfFontCharacterError(layer.fontId, layer.text);
+    if (error) throw new Error(error);
+  }
   canvas.width = Math.round(width);
   canvas.height = Math.round(width * project.height / project.width);
   const context = canvas.getContext("2d");
@@ -88,13 +104,13 @@ export function paintProject(canvas: HTMLCanvasElement, project: PrintProject, r
       if (!img) throw new Error(`A imagem “${layer.name}” não foi carregada.`);
       context.drawImage(img, layer.x, layer.y, box.width, box.height);
     } else {
-      setTextStyle(context, layer, resources);
+      const fontSize = setTextStyle(context, layer, resources);
       const lines = layer.text.split("\n");
-      const ascent = Math.max(...lines.map((line) => context.measureText(line || " ").actualBoundingBoxAscent), layer.fontSize * 0.72);
+      const ascent = Math.max(...lines.map((line) => context.measureText(line || " ").actualBoundingBoxAscent), fontSize * 0.72);
       lines.forEach((line, index) => {
         const lineWidth = context.measureText(line).width;
         const offset = layer.align === "center" ? (box.width - lineWidth) / 2 : layer.align === "right" ? box.width - lineWidth : 0;
-        context.fillText(line, layer.x + offset, layer.y + ascent + index * layer.fontSize * layer.lineHeight);
+        context.fillText(line, layer.x + offset, layer.y + ascent + index * fontSize * layer.lineHeight);
       });
     }
   }

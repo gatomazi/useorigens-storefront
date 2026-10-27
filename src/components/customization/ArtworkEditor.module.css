@@ -1,0 +1,22 @@
+.editor { min-width: 0; display: grid; gap: 1.5rem; }
+.textGroup { padding-block: 1rem; border-bottom: 1px solid var(--color-line, #d6d6d6); }
+.textarea, .styles select, .background select { width: 100%; min-height: 44px; border: 2px solid var(--color-ink, #171717); background: white; color: var(--color-ink, #171717); padding: .6rem .75rem; font: inherit; border-radius: 0; }
+.textarea { resize: vertical; margin-top: .35rem; }
+.textarea[aria-invalid="true"] { border-color: #9b1c1c; }
+.textarea:focus-visible, .styles select:focus-visible, .background select:focus-visible, .colorControl input:focus-visible { outline: 2px solid var(--color-region-primary, #316444); outline-offset: 3px; }
+.styles { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; margin-top: 1rem; }
+.withVariants { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.styles label { min-width: 0; font-size: .875rem; font-weight: 600; }
+.styles select { margin-top: .35rem; font-size: 1rem; font-weight: 400; }
+.colorControl { display: flex; align-items: center; gap: .65rem; margin-top: .35rem; min-height: 46px; font-size: .875rem; font-weight: 400; }
+.colorControl input { width: 48px; height: 46px; padding: 3px; border: 2px solid var(--color-ink, #171717); background: white; cursor: pointer; }
+.help { display: flex; justify-content: space-between; gap: .75rem; color: var(--color-ink-mute, #565656); font-size: .8125rem; margin-top: .3rem; }
+.error { color: #9b1c1c; font-size: .875rem; font-weight: 600; }
+.preview { min-width: 0; width: 100%; margin: 0; }
+.canvasWrap { width: 100%; aspect-ratio: 4270 / 4900; overflow: hidden; }
+.canvas { display: block; width: 100%; height: 100%; }
+.caption { color: var(--color-ink-mute, #565656); font-size: .8125rem; line-height: 1.5; margin-top: .6rem; }
+.background { display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: .875rem; margin-top: 1rem; }
+.background select { width: auto; min-width: 100px; font-size: .875rem; }
+@media (max-width: 600px) { .withVariants { grid-template-columns: repeat(2, minmax(0, 1fr)); } .withVariants > label:last-child { grid-column: 1 / -1; } }
+@media (max-width: 360px) { .styles { grid-template-columns: minmax(0, 1fr); } }

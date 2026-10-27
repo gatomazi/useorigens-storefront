@@ -8,6 +8,8 @@ import { requestSecret, requestStoreOrNull } from "@/lib/customization/server";
 import { snapshotOf, summaryOf, validateSubmission, type FieldError, type SummaryLine } from "@/lib/customization/validate";
 import { publishedFor } from "@/lib/pages/public";
 import { liveCustomizer } from "@/lib/site-config/pages";
+import { validateArtwork } from "@/lib/customization/artwork";
+import { loadArtworkBase } from "@/lib/customization/artwork-server";
 
 export type SubmitResult =
   | { ok: true; reference: string; shortReference: string; summary: SummaryLine[]; channels: string[]; duplicate: boolean; expiresAt: string; modelVersion: number }
@@ -19,7 +21,7 @@ export type SubmitResult =
  * request table only: never in a log, an analytics event, a URL or an error message, and what comes back is masked (never the full contact). It asks for
  * nothing else (no address, tax id or payment data) and it does NOT send anything to INK, to the customer or to the team: someone reads the queue.
  */
-export async function submitCustomizationAction(input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; contact?: ContactInput; replaces?: string }): Promise<SubmitResult> {
+export async function submitCustomizationAction(input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; artwork?: { templateId: string; layers: unknown }; contact?: ContactInput; replaces?: string }): Promise<SubmitResult> {
   const fail = (message: string, errors: FieldError[] = []): SubmitResult => ({ ok: false, errors, message });
   const found = publishedFor(String(input.region));
   const model = found ? liveCustomizer(found.bundle.docs[found.region], String(input.slug)) : undefined;
@@ -30,10 +32,18 @@ export async function submitCustomizationAction(input: { region: string; slug: s
   const store = requestStoreOrNull();
   const secret = requestSecret();
   if (!store || !secret) return fail("O envio de solicitações não está disponível neste ambiente.");
-  const checked = validateSubmission(model, { fields: input.fields, lines: input.lines });
+  const checked = validateSubmission(model.studioTemplateId ? { ...model, fields: [], lineGroup: undefined } : model, { fields: input.fields, lines: input.lines });
   const contact = validateContact(input.contact && typeof input.contact === "object" ? input.contact : {});
   const errors = [...(checked.ok ? [] : checked.errors), ...(contact.ok ? [] : contact.errors)];
   if (!checked.ok || !contact.ok) return fail("Confira os campos destacados.", errors);
+  if (model.studioTemplateId) {
+    if (input.artwork?.templateId !== model.studioTemplateId) return fail("A base deste modelo mudou. Recarregue a página antes de enviar.");
+    const base = await loadArtworkBase(model.studioTemplateId).catch(() => null);
+    if (!base) return fail("Esta base não está disponível agora. Tente novamente mais tarde.");
+    const artwork = validateArtwork(base, model.studioTemplateId, input.artwork.layers);
+    if (!artwork.ok) return fail("Confira os textos, fontes e cores da arte.", artwork.errors);
+    checked.values.artwork = artwork.artwork;
+  } else if (input.artwork) return fail("Este modelo não permite edição da arte. Recarregue a página.");
   const token = tokenFor(secret, found.region, input.idempotencyKey);
   const replaces = typeof input.replaces === "string" && TOKEN_SHAPE.test(input.replaces) ? hashToken(input.replaces) : undefined;
   try {

@@ -10,6 +10,8 @@ import { canEdit } from "@/lib/admin/store/ports";
 import { CONTACT_NOTICE_VERSION, suggestedMessage } from "@/lib/customization/contact";
 import { nextStatuses, normalizeStatus, shortRef, STATUS_LABEL, type RequestEvent } from "@/lib/customization/requests";
 import { summaryOf } from "@/lib/customization/validate";
+import { loadRequestArtwork } from "@/lib/customization/artwork-server";
+import { ArtworkPreview } from "@/components/customization/ArtworkPreview";
 
 const when = (iso: string) => new Date(iso).toLocaleString("pt-BR");
 
@@ -43,6 +45,7 @@ export default async function RequestDetail({ params, searchParams }: { params: 
   const model = published?.docs[record.region]?.customizers?.find((m) => m.id === record.customizerId);
   const mockup = model?.pageMockup ? published?.media[model.pageMockup.assetId] : undefined;
   const contact = record.contact;
+  const artwork = await loadRequestArtwork(record.values.artwork).catch(() => null);
 
   return (
     <div className="space-y-6">
@@ -86,7 +89,7 @@ export default async function RequestDetail({ params, searchParams }: { params: 
       <section className="a-card p-5" aria-labelledby="dados">
         <h2 id="dados" className="a-h2">O que o cliente pediu</h2>
         <div className="mt-3 grid gap-5 md:grid-cols-[minmax(0,14rem)_1fr]">
-          {mockup ? (
+          {artwork ? <div><ArtworkPreview project={artwork} /><Link className="a-btn mt-3" href={`/admin/estampas?solicitacao=${record.id}`}>Abrir arte no estúdio</Link></div> : record.values.artwork ? <p className="a-muted">Não foi possível carregar a base da arte. As escolhas do cliente estão preservadas no resumo.</p> : mockup ? (
             <figure>
               {/* eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin */}
               <img src={mockup.variants?.[0]?.src ?? mockup.src} width={mockup.width} height={mockup.height} alt={`Mockup ilustrativo: ${record.customizerName}`} className="h-auto w-full bg-black/5 object-contain" data-testid="request-mockup" />
@@ -95,7 +98,7 @@ export default async function RequestDetail({ params, searchParams }: { params: 
           ) : <p className="a-muted text-[0.875rem]">O modelo não está publicado agora: sem mockup para mostrar.</p>}
           <div>
             <dl className="max-w-xl divide-y divide-black/10" data-testid="request-values">
-              {lines.map((l) => <div key={l.label} className="flex justify-between gap-4 py-2"><dt className="a-muted">{l.label}</dt><dd className="font-bold">{l.value}</dd></div>)}
+              {lines.map((l) => <div key={l.label} className="flex justify-between gap-4 py-2"><dt className="a-muted min-w-0">{l.label}</dt><dd className="min-w-0 text-right font-bold [overflow-wrap:anywhere]">{l.value}</dd></div>)}
             </dl>
             <p className="a-muted mt-3 text-[0.8125rem]">Rótulos e limites são os do modelo na versão {record.customizerVersion} (guardados com a solicitação). Enviada em {when(record.createdAt)}; guardada até {new Date(record.expiresAt).toLocaleDateString("pt-BR")} (retenção).</p>
           </div>

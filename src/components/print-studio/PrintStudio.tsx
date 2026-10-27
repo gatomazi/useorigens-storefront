@@ -8,6 +8,8 @@ import { loadDraft, readDataUrl, readImageAsset, saveDraft } from "@/lib/print-s
 import type { SavedPrint } from "@/lib/print-studio/types";
 import { alignSelection, expandSelection, groupSelection, moveSelection, snapMovement, ungroupSelection, unionBoxes, type Alignment, type Box } from "@/lib/print-studio/geometry";
 import { BRAND_LOGOS, LOGO_REGIONS, type LogoRegion, type LogoVariant } from "@/lib/print-studio/logos";
+import { pdfFontCharacterError } from "@/lib/print-studio/pdf-fonts";
+import { fontFamilyId, groupFontOptions, includeFontFamily, preferredFontVariant } from "@/lib/print-studio/font-options";
 import styles from "./PrintStudio.module.css";
 
 const formatDate = (value: string) => new Date(value).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
@@ -38,10 +40,10 @@ function NumericField({ label, value, onChange, min = -10000, max = 10000, step 
   return <label className={styles.field}>{label}<input type="number" min={min} max={max} step={step} value={Math.round(value * 100) / 100} onChange={(e) => { const n = e.target.valueAsNumber; if (Number.isFinite(n)) onChange(Math.min(max, Math.max(min, n))); }} /></label>;
 }
 
-export function PrintStudio({ owner, basePath = "/admin/estampas", draftKey = "draft", availableFonts = [] }: { owner: boolean; basePath?: string; draftKey?: string; availableFonts?: PrintFont[] }) {
+export function PrintStudio({ owner, basePath = "/admin/estampas", draftKey = "draft", availableFonts = [], initialProject }: { owner: boolean; basePath?: string; draftKey?: string; availableFonts?: PrintFont[]; initialProject?: PrintProject }) {
   const fileUrl = (id: string, file: string) => `${basePath}/arquivos/${id}/${file}`;
-  const [project, setProject] = useState<PrintProject>(() => createPreset("peleia"));
-  const [selection, setSelectedIds] = useState<string[]>(["peleia-enfase"]);
+  const [project, setProject] = useState<PrintProject>(() => initialProject ?? createPreset("peleia"));
+  const [selection, setSelectedIds] = useState<string[]>(() => [initialProject?.layers[0]?.id ?? "peleia-enfase"]);
   const selectedIds = expandSelection(project, selection);
   const selectedId = selectedIds[0] ?? "";
   const [showGuides, setShowGuides] = useState(true);
@@ -51,6 +53,7 @@ export function PrintStudio({ owner, basePath = "/admin/estampas", draftKey = "d
   const [galleryLoading, setGalleryLoading] = useState(true);
   const [galleryError, setGalleryError] = useState("");
   const [error, setError] = useState("");
+  const [fontIssue, setFontIssue] = useState<{ layerId: string; message: string } | null>(null);
   const [notice, setNotice] = useState("");
   const [ready, setReady] = useState(false);
   const [paintedProject, setPaintedProject] = useState<PrintProject | null>(null);
@@ -75,6 +78,8 @@ export function PrintStudio({ owner, basePath = "/admin/estampas", draftKey = "d
   const current = useRef(project);
   const drag = useRef<{ pointerId: number; ids: string[]; startX: number; startY: number; box: Box; other: Box[]; rect: DOMRect; before: PrintProject; moved: boolean } | null>(null);
   const selected = project.layers.find((l) => l.id === selectedId);
+  const fontFamilies = groupFontOptions([...BUILTIN_FONTS, ...project.fonts, ...availableFonts]);
+  const selectedFontFamily = selected?.kind === "text" ? fontFamilies.find((family) => family.id === fontFamilyId(selected.fontId)) : undefined;
   const rendering = paintedProject !== project;
   const libraryLogo = BRAND_LOGOS.find((logo) => logo.region === logoRegion && logo.variant === logoVariant)!;
 
@@ -144,7 +149,7 @@ export function PrintStudio({ owner, basePath = "/admin/estampas", draftKey = "d
       commit(moveSelection(current.current, ids, (change.x ?? layer.x) - layer.x, (change.y ?? layer.y) - layer.y));
     } else commit({ ...current.current, layers: current.current.layers.map((l) => l.id === id ? { ...l, ...change } as PrintLayer : l) });
   };
-  const textChange = (change: Partial<TextLayer>) => { if (selected?.kind === "text") changeLayer(selected.id, change); };
+  const textChange = (change: Partial<TextLayer>) => { setFontIssue(null); if (selected?.kind === "text") changeLayer(selected.id, change); };
   const undo = (direction: "past" | "future") => {
     const next = history.current[direction].pop();
     if (!next) return;
@@ -247,16 +252,21 @@ export function PrintStudio({ owner, basePath = "/admin/estampas", draftKey = "d
   };
 
   const chooseFont = async (fontId: string) => {
-    const supplied = availableFonts.find((font) => font.id === fontId);
+    setFontIssue(null); setError("");
+    const supplied = project.fonts.find((font) => font.id === fontId) ?? availableFonts.find((font) => font.id === fontId);
     if (!supplied) { textChange({ fontId }); return; }
     if (selected?.kind !== "text") return;
-    if (!project.fonts.some((font) => font.id === fontId) && project.fonts.length >= 20) { setError("Cada modelo pode ter até 20 fontes. Remova uma fonte que não usa para adicionar a Mont."); return; }
+    const fontError = pdfFontCharacterError(fontId, selected.text);
+    if (fontError) { setFontIssue({ layerId: selected.id, message: fontError }); return; }
+    const fonts = includeFontFamily(project.fonts, availableFonts, fontId);
+    if (fonts.length > 20) { setFontIssue({ layerId: selected.id, message: "O modelo pode ter até 20 arquivos de fonte. Remova os que não usa para incluir as variações desta família." }); return; }
     setBusy("Carregando fonte…"); setError("");
     try {
-      const next = { ...project, fonts: [...project.fonts.filter((font) => font.id !== fontId), supplied], layers: project.layers.map((layer) => layer.id === selected.id && layer.kind === "text" ? { ...layer, fontId, weight: supplied.weight ?? layer.weight } : layer) };
+      const next = { ...project, fonts, layers: project.layers.map((layer) => layer.id === selected.id && layer.kind === "text" ? { ...layer, fontId, weight: fonts.find((font) => font.id === fontId)?.weight ?? layer.weight } : layer) };
       await loadResources(next);
       commit(next);
-    } catch (e) { setError(messageOf(e)); }
+      if (fontId === "font-mont-bold-rebuilt") setNotice("Mont Bold reconstruída aplicada à frase.");
+    } catch (e) { setFontIssue({ layerId: selected.id, message: messageOf(e) }); }
     finally { setBusy(""); }
   };
 
@@ -366,7 +376,7 @@ export function PrintStudio({ owner, basePath = "/admin/estampas", draftKey = "d
                 <button type="button" onClick={() => loadComposition(createPreset("peleia"))}><span className={styles.presetPeleia}>Não tá morto<br /><b>quem peleia</b><i>+ sua logo</i></span><strong>Quem peleia</strong><span>Frase com destaque</span></button>
               </div>
               {templates.length > 0 && <label className={styles.field}>Seus modelos<select value="" onChange={(e) => { const item = templates.find((i) => i.id === e.target.value); if (item) void openSaved(item); }}><option value="">Escolher um modelo salvo…</option>{templates.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label>}
-              <p className={styles.hint}>Os modelos iniciais usam Hanken Grotesk. Você pode trocar para Mont ExtraLight ou Mont Heavy no seletor de fontes.</p>
+              <p className={styles.hint}>Os modelos iniciais usam Hanken Grotesk. O seletor também oferece Mont Regular, Bold reconstruída e Heavy.</p>
             </section>
 
             <section className={styles.controlSection}>
@@ -408,8 +418,16 @@ export function PrintStudio({ owner, basePath = "/admin/estampas", draftKey = "d
               <div className={styles.sectionHeading}><h2>Editar {selected.kind === "text" ? "texto" : "logo"}</h2><div className={styles.iconActions}><button type="button" title="Duplicar camada" aria-label="Duplicar camada" disabled={project.layers.length + selectedIds.length > MAX_LAYERS} onClick={duplicateSelection}><Icon name="copy" /></button><button type="button" title="Remover camada" aria-label="Remover camada" onClick={removeSelection}><Icon name="trash" /></button></div></div>
               {selected.kind === "text" ? <>
                 <label className={styles.field}>Sua frase<textarea rows={3} maxLength={3000} value={selected.text} onChange={(e) => textChange({ text: e.target.value })} /></label>
-                <label className={styles.field}>Fonte<select value={selected.fontId} onChange={(e) => void chooseFont(e.target.value)}>{[...BUILTIN_FONTS, ...availableFonts, ...project.fonts.filter((font) => !availableFonts.some((supplied) => supplied.id === font.id))].map((f) => <option value={f.id} key={f.id}>{f.name}</option>)}</select></label>
-                <div className={styles.fieldRow}><NumericField label="Tamanho (px)" value={selected.fontSize} min={8} max={2000} onChange={(fontSize) => textChange({ fontSize })} /><label className={styles.field}>Peso<select value={selected.weight} onChange={(e) => textChange({ weight: Number(e.target.value) })}>{[[100, "Fino"], [200, "Extraleve"], [300, "Leve"], [400, "Normal"], [500, "Médio"], [600, "Seminegrito"], [700, "Negrito"], [800, "Extranegrito"], [900, "Pesado"]].map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select></label></div>
+                <label className={styles.field}>Fonte<select value={selectedFontFamily?.id ?? selected.fontId} disabled={Boolean(busy)} aria-invalid={fontIssue?.layerId === selected.id || undefined} aria-describedby={fontIssue?.layerId === selected.id ? "studio-font-error" : undefined} onChange={(e) => {
+                  const family = fontFamilies.find((f) => f.id === e.target.value)!;
+                  const compatible = { ...family, variants: family.variants.filter((variant) => !pdfFontCharacterError(variant.id, selected.text)) };
+                  if (compatible.variants.length) void chooseFont(preferredFontVariant(compatible, selected.weight).id);
+                }}>{fontFamilies.map((family) => <option value={family.id} key={family.id} disabled={family.variants.every((variant) => !!pdfFontCharacterError(variant.id, selected.text))}>{family.name}</option>)}</select></label>
+                {fontIssue?.layerId === selected.id && <p id="studio-font-error" role="alert" className={styles.error}>{fontIssue.message}</p>}
+                {selected.fontId === "font-mont-bold-rebuilt" && <p className={styles.hint}>Versão reconstruída entre Regular e Heavy, com acentos e símbolos comuns complementados. É uma aproximação da Mont Bold original.</p>}
+                {selected.fontId === "font-mont-pdf-bold" && <button type="button" className={styles.textButton} onClick={() => void chooseFont("font-mont-bold-rebuilt")}>Usar a Bold reconstruída com letras e símbolos complementados</button>}
+                {selected.fontId.startsWith("font-mont-pdf-") && <p className={styles.hint}>{selected.fontId === "font-mont-pdf-bold" ? "Bold parcial: só aceita os caracteres presentes no PDF. Esta frase usa caracteres disponíveis." : "Recuperada do PDF: sem aspas retas e sem os ajustes originais de espaçamento."}</p>}
+                <div className={styles.fieldRow}><NumericField label="Tamanho (px)" value={selected.fontSize} min={8} max={2000} onChange={(fontSize) => textChange({ fontSize })} />{selectedFontFamily?.id === "mont" ? <label className={styles.field}>Variação<select value={selected.fontId} disabled={Boolean(busy)} aria-invalid={fontIssue?.layerId === selected.id || undefined} aria-describedby={fontIssue?.layerId === selected.id ? "studio-font-error" : undefined} onChange={(e) => void chooseFont(e.target.value)}>{selectedFontFamily.variants.map((variant) => <option key={variant.id} value={variant.id} disabled={!!pdfFontCharacterError(variant.id, selected.text)}>{variant.name}</option>)}</select></label> : <label className={styles.field}>Peso<select value={selected.weight} onChange={(e) => textChange({ weight: Number(e.target.value) })}>{[[100, "Fino"], [200, "Extraleve"], [300, "Leve"], [400, "Normal"], [500, "Médio"], [600, "Seminegrito"], [700, "Negrito"], [800, "Extranegrito"], [900, "Pesado"]].map(([value, name]) => <option key={value} value={value}>{name}</option>)}</select></label>}</div>
                 <div className={styles.colorRow}><label className={styles.colorInput}><input type="color" aria-label="Cor do texto" value={selected.color} onChange={(e) => textChange({ color: e.target.value })} /><span>Cor do texto<strong>{selected.color.toUpperCase()}</strong></span></label><div className={styles.colorSwatches}>{["#ffffff", "#790b1b", "#111111", "#e8cfa3"].map((color) => <button key={color} type="button" style={{ background: color }} aria-label={`Usar cor ${color}`} aria-pressed={selected.color === color} onClick={() => textChange({ color })} />)}</div></div>
               </> : <><p className={styles.hint}>{selected.asset.name}</p><NumericField label="Largura da logo (px)" value={selected.width} min={1} max={10000} onChange={(width) => changeLayer(selected.id, { width })} /><p className={styles.hint}>A proporção da imagem é preservada. Use PNG transparente para uma logo sem fundo.</p></>}
               <details className={styles.details}>

@@ -5,10 +5,14 @@ import { initialValues, lineLabelOf, normalizeValue, orderedFields, validateSubm
 import { CONTACT_CONFIRM_TEXT, CONTACT_KEYS, CONTACT_NOTICE, validateContact } from "@/lib/customization/contact";
 import type { Customizer } from "@/lib/site-config/schema";
 import type { SubmitResult } from "@/app/[region]/personalizar/actions";
+import { composeArtwork, initialArtworkEdits, validateArtwork } from "@/lib/customization/artwork";
+import type { PrintProject } from "@/lib/print-studio/model";
+import { ArtworkEditor } from "./ArtworkEditor";
+import { ArtworkPreview } from "./ArtworkPreview";
 
 export type PublicMockup = { src: string; width: number; height: number; variants?: { w: number; src: string }[]; alt: string };
 type ContactValues = { name: string; whatsapp: string; email: string; confirm: boolean };
-type Submit = (input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; contact?: { name: string; whatsapp: string; email: string; confirm: boolean }; replaces?: string }) => Promise<SubmitResult>;
+type Submit = (input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; artwork?: { templateId: string; layers: unknown }; contact?: { name: string; whatsapp: string; email: string; confirm: boolean }; replaces?: string }) => Promise<SubmitResult>;
 
 const newKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID().replaceAll("-", "") : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`.padEnd(24, "0"));
 
@@ -23,11 +27,12 @@ function liveSummary(model: Customizer, v: Values): SummaryLine[] {
 const inputClass = "block w-full min-h-11 border-2 border-ink bg-white px-3 py-2 text-[1rem] text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-region-primary aria-[invalid=true]:border-[#9b1c1c]";
 
 export function CustomizerForm({
-  region, model, mockup, submit, available, preview = false,
+  region, model, mockup, artworkBase, submit, available, preview = false,
 }: {
   region: string;
   model: Customizer;
   mockup: PublicMockup;
+  artworkBase?: PrintProject;
   submit: Submit;
   /** False when this environment cannot store requests (no database): the form is shown but sending is disabled and says why. */
   available: boolean;
@@ -35,7 +40,10 @@ export function CustomizerForm({
   preview?: boolean;
 }) {
   const uid = useId();
-  const [values, setValues] = useState<Values>(() => initialValues(model));
+  const [values, setValues] = useState<Values>(() => artworkBase ? { fields: {}, lines: [] } : initialValues(model));
+  const [artworkEdits, setArtworkEdits] = useState(() => artworkBase ? initialArtworkEdits(artworkBase) : []);
+  const [artworkReady, setArtworkReady] = useState(false);
+  const artworkProject = useMemo(() => artworkBase ? composeArtwork(artworkBase, artworkEdits) : null, [artworkBase, artworkEdits]);
   const [contact, setContact] = useState<ContactValues>({ name: "", whatsapp: "", email: "", confirm: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [phase, setPhase] = useState<"idle" | "sending" | "done">("idle");
@@ -44,8 +52,12 @@ export function CustomizerForm({
   const [copied, setCopied] = useState(false);
   const idem = useRef(newKey());
   const previous = useRef<string | undefined>(undefined);
-  const g = model.lineGroup;
-  const summary = useMemo(() => liveSummary(model, values), [model, values]);
+  const g = artworkBase ? undefined : model.lineGroup;
+  const summary = useMemo(() => {
+    if (!artworkBase) return liveSummary(model, values);
+    const checked = validateArtwork(artworkBase, model.studioTemplateId!, artworkEdits);
+    return checked.ok ? checked.artwork.layers.flatMap((l, i) => [{ label: `${i + 1}. ${l.name}`, value: l.text }, { label: `${i + 1}. Fonte e cor`, value: `${l.fontName} · ${l.color.toUpperCase()}` }]) : [];
+  }, [model, values, artworkBase, artworkEdits]);
   const referenceUrl = done ? `/${region}/personalizar/solicitacao/${done.reference}` : null;
 
   const setField = (key: string, v: string) => setValues((cur) => ({ ...cur, fields: { ...cur.fields, [key]: v } }));
@@ -64,7 +76,8 @@ export function CustomizerForm({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setBanner(null);
-    const checked = validateSubmission(model, { fields: values.fields, lines: values.lines });
+    if (phase === "sending") return;
+    const checked = artworkBase ? validateArtwork(artworkBase, model.studioTemplateId!, artworkEdits) : validateSubmission(model, { fields: values.fields, lines: values.lines });
     const contactChecked = validateContact(contact);
     const problems = [...(checked.ok ? [] : checked.errors), ...(contactChecked.ok ? [] : contactChecked.errors)];
     if (problems.length > 0) {
@@ -73,13 +86,14 @@ export function CustomizerForm({
       return;
     }
     setErrors({});
+    if (artworkBase && !artworkReady) { setBanner("Aguarde a prévia da arte carregar. Se aparecer um erro, confira a fonte e os textos."); return; }
     if (preview) {
       setBanner("Pré-visualização: nada foi enviado.");
       return;
     }
     setPhase("sending");
     try {
-      const result = await submit({ region, slug: model.slug, idempotencyKey: idem.current, fields: values.fields, lines: values.lines, contact, replaces: previous.current });
+      const result = await submit({ region, slug: model.slug, idempotencyKey: idem.current, fields: values.fields, lines: values.lines, ...(artworkBase ? { artwork: { templateId: model.studioTemplateId!, layers: artworkEdits } } : {}), contact, replaces: previous.current });
       if (result.ok) {
         setDone(result);
         setPhase("done");
@@ -117,6 +131,7 @@ export function CustomizerForm({
       <div className="grid gap-8 lg:grid-cols-12 lg:gap-12">
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-24">
+            {artworkProject ? <ArtworkPreview project={artworkProject} onReady={setArtworkReady} /> : <>
             {/* eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin */}
             <img
               src={mid}
@@ -128,6 +143,7 @@ export function CustomizerForm({
               className="mx-auto h-auto max-h-[70vh] w-full max-w-md bg-ground object-contain"
             />
             <p className="t-caption mt-2 text-center">Imagem ilustrativa. Confira seus dados de personalização.</p>
+            </>}
           </div>
         </div>
 
@@ -155,7 +171,7 @@ export function CustomizerForm({
                 <h2 className="t-h3">Resumo enviado</h2>
                 <dl className="mt-2 divide-y divide-line border-y border-line">
                   {done.summary.map((l) => (
-                    <div key={l.label} className="flex justify-between gap-4 py-2"><dt className="text-ink-mute">{l.label}</dt><dd className="font-bold">{l.value}</dd></div>
+                    <div key={l.label} className="flex justify-between gap-4 py-2"><dt className="min-w-0 text-ink-mute">{l.label}</dt><dd className="min-w-0 text-right font-bold [overflow-wrap:anywhere]">{l.value}</dd></div>
                   ))}
                 </dl>
               </div>
@@ -166,7 +182,9 @@ export function CustomizerForm({
             </div>
           ) : (
             <form onSubmit={onSubmit} noValidate className="mt-8 space-y-6" aria-describedby={`${uid}-notice`}>
-              {orderedFields(model).map((f) => {
+              <fieldset disabled={phase === "sending"} className="min-w-0 space-y-6">
+              {artworkBase && <ArtworkEditor base={artworkBase} edits={artworkEdits} onChange={setArtworkEdits} errors={errors} uid={uid} />}
+              {!artworkBase && orderedFields(model).map((f) => {
                 const id = `${uid}-${f.key}`;
                 const value = values.fields[f.key] ?? "";
                 return (
@@ -240,7 +258,7 @@ export function CustomizerForm({
                 <h2 id={`${uid}-sum`} className="t-h3">Resumo da sua personalização</h2>
                 {summary.length === 0 ? <p className="t-small mt-1 text-ink-mute">Preencha os campos para ver o resumo.</p> : (
                   <dl className="mt-2 divide-y divide-line" data-testid="customization-summary">
-                    {summary.map((l) => <div key={l.label} className="flex justify-between gap-4 py-1.5"><dt className="text-ink-mute">{l.label}</dt><dd className="font-bold">{l.value}</dd></div>)}
+                    {summary.map((l) => <div key={l.label} className="flex justify-between gap-4 py-1.5"><dt className="min-w-0 text-ink-mute">{l.label}</dt><dd className="min-w-0 text-right font-bold [overflow-wrap:anywhere]">{l.value}</dd></div>)}
                   </dl>
                 )}
               </section>
@@ -249,11 +267,12 @@ export function CustomizerForm({
               {!available && !preview && <p className="border-l-4 border-ink bg-white p-3" role="status">O envio de solicitações não está disponível neste ambiente.</p>}
 
               <div>
-                <button type="submit" className="btn" disabled={phase === "sending" || (!available && !preview)}>{phase === "sending" ? "Enviando…" : preview ? "Testar o envio (prévia)" : "Enviar solicitação"}</button>
+                <button type="submit" className="btn" disabled={phase === "sending" || (!available && !preview) || Boolean(artworkBase && !artworkReady)}>{phase === "sending" ? "Enviando…" : preview ? "Testar o envio (prévia)" : artworkBase ? "Salvar e enviar solicitação" : "Enviar solicitação"}</button>
                 <p id={`${uid}-notice`} className="t-small mt-3 max-w-xl text-ink-mute">
                   Enviar registra a sua solicitação de criação com a nossa equipe, com o resumo acima. <strong>Esta etapa não é uma compra e não reserva um produto.</strong> Não pedimos endereço, CPF, senha nem dados de pagamento.
                 </p>
               </div>
+              </fieldset>
             </form>
           )}
 

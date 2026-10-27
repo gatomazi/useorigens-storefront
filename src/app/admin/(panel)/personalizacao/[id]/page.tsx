@@ -21,6 +21,7 @@ import { customizerHref } from "@/lib/site-config/pages";
 import { MAX_CUSTOM_FIELDS, customizerProductLabel, isUmaPencaSource } from "@/lib/site-config/schema";
 import { ARTICLE_KIND_LABELS } from "@/lib/umapenca/types";
 import { OriginSelect } from "@/components/admin/OriginSelect";
+import { serverPrintStore } from "@/lib/print-studio/server";
 
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("pt-BR") : "—");
 
@@ -38,6 +39,9 @@ export default async function CustomizerEditor({ params, searchParams }: { param
   const store = storeOf(scope);
   const entries = toComboEntries(libraryEntries(store, enabledInternalIds(ws.doc, store)));
   const media = await listMedia();
+  const savedPrints = await serverPrintStore().list().catch(() => null);
+  const templateError = savedPrints === null;
+  const templates = (savedPrints ?? []).filter((item) => item.kind === "template");
   const blockers = await preflightDoc(ws.doc, { kind: "customizer", id });
   const history = (await listHistory()).filter((r) => r.status === "live" && r.scopesChanged.includes(`customizer:${live?.slug ?? model.slug}`));
   const source = model.source;
@@ -111,7 +115,20 @@ export default async function CustomizerEditor({ params, searchParams }: { param
                   <input id="card_alt" name="card_alt" defaultValue={model.cardImage?.alt ?? ""} className="a-input" maxLength={200} />
                 </div>
               </div>
-              <p className="a-muted text-[0.8125rem]">A imagem da camiseta enviada já tem texto impresso: a página mostra o <strong>mockup fixo + o resumo do que o cliente digitou</strong>. Nenhum texto é desenhado por cima da imagem, e o aviso “Imagem ilustrativa” fica visível. Envie novas imagens em Mídia.</p>
+              <p className="a-muted text-[0.8125rem]">No formulário de textos, a página mostra o <strong>mockup fixo e o resumo do que o cliente digitou</strong>, com o aviso “Imagem ilustrativa”. Ao vincular uma base do estúdio abaixo, o cliente passa a ver a prévia editável da arte. Envie novas imagens em Mídia.</p>
+            </fieldset>
+
+            <fieldset className="space-y-4">
+              <legend className="a-h2 mb-3">Editor de arte para o cliente</legend>
+              <label className="a-label" htmlFor="studio_template">Base do estúdio</label>
+              <select id="studio_template" name="studio_template" className="a-select" defaultValue={model.studioTemplateId ?? ""} disabled={templateError}>
+                <option value="">Usar o formulário de textos atual</option>
+                {model.studioTemplateId && !templates.some((t) => t.id === model.studioTemplateId) && <option value={model.studioTemplateId}>Base vinculada ({model.studioTemplateId})</option>}
+                {templates.map((t) => <option key={t.id} value={t.id}>{t.name} · {when(t.createdAt)}</option>)}
+              </select>
+              <p className="a-muted text-[0.875rem]">Ao vincular uma base, o cliente edita os textos visíveis, a fonte e a cor, com prévia ao vivo. A posição dos elementos e as logos seguem a base. Os campos e o grupo de linhas abaixo ficam substituídos pelos textos da arte.</p>
+              <p className="a-muted text-[0.875rem]">Prepare a composição em <Link className="a-link" href="/admin/estampas">Estúdio de estampas</Link> e use <strong>Salvar como modelo</strong>. As fontes incorporadas à base e as fontes padrão ficam disponíveis para o cliente. Salve o rascunho para testar na prévia ao lado; publique para disponibilizar na loja.</p>
+              {templateError && <p className="a-flash err">Não foi possível carregar as bases. Recarregue a página para trocar a base; o vínculo atual será preservado.</p>}
             </fieldset>
 
             <CustomFieldsEditor

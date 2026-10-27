@@ -8,6 +8,8 @@ import { allow } from "@/lib/admin/auth/rate-limit";
 import { headers } from "next/headers";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { siteConfigHomeEnabled } from "@/lib/site-config/flag";
+import { loadRequestArtwork } from "@/lib/customization/artwork-server";
+import { ArtworkPreview } from "@/components/customization/ArtworkPreview";
 
 // The reference page is private to whoever holds the reference: computed per request, never cached, never indexed, and no referrer is sent from it.
 export const dynamic = "force-dynamic";
@@ -23,13 +25,15 @@ export default async function RequestPage({ params }: { params: Promise<{ region
   if (!record || record.region !== region) notFound();
   const lines = summaryOf(record.snapshot, record.values);
   const channels = maskedChannels(record.contact ?? {}); // masked: the reference page is a link a person may forward or screenshot
+  const artwork = await loadRequestArtwork(record.values.artwork).catch(() => null);
   return (
     <div className="wrap py-10 lg:py-16">
       <h1 className="t-h1">Minha solicitação</h1>
       <p className="t-body mt-2">{record.customizerName} · referência {shortRef(record.id)}</p>
       <p className="mt-4"><span className="inline-block bg-ink px-3 py-1 text-[0.8125rem] font-bold uppercase tracking-[0.06em] text-white" data-testid="public-status">{PUBLIC_STATUS_LABEL[record.status]}</span></p>
+      {artwork && <div className="mt-6 max-w-sm"><ArtworkPreview project={artwork} /></div>}
       <dl className="mt-6 max-w-xl divide-y divide-line border-y border-line">
-        {lines.map((l) => <div key={l.label} className="flex justify-between gap-4 py-2"><dt className="text-ink-mute">{l.label}</dt><dd className="font-bold">{l.value}</dd></div>)}
+        {lines.map((l) => <div key={l.label} className="flex justify-between gap-4 py-2"><dt className="min-w-0 text-ink-mute">{l.label}</dt><dd className="min-w-0 text-right font-bold [overflow-wrap:anywhere]">{l.value}</dd></div>)}
       </dl>
       <p className="t-small mt-6 max-w-xl border-l-4 border-region-accent pl-3">
         Enviada em {new Date(record.createdAt).toLocaleDateString("pt-BR")}. Esta página mostra só a sua solicitação e o andamento da estampa. <strong>Ela não é uma compra</strong> e não reserva um produto: quando a estampa estiver pronta, nossa equipe fala com você pelo contato informado e orienta a compra.

@@ -18,6 +18,8 @@ export type TextLayer = BaseLayer & {
   letterSpacing: number;
   lineHeight: number;
   align: "left" | "center" | "right";
+  /** Optional automatic text fitting, used by customer personalization bases. */
+  maxWidth?: number;
 };
 export type ImageLayer = BaseLayer & { kind: "image"; asset: ImageAsset; width: number };
 export type PrintLayer = TextLayer | ImageLayer;
@@ -110,7 +112,7 @@ export function parseProject(input: unknown): PrintProject {
     const base = { id: string(l.id, 100), name: string(l.name, 100), x: number(l.x, -10000, 10000), y: number(l.y, -10000, 10000), visible: l.visible, ...(l.groupId === undefined ? {} : { groupId: string(l.groupId, 100) }) };
     if (l.kind === "image") return { ...base, kind: "image", asset: imageAsset(l.asset), width: number(l.width, 1, 10000) };
     if (l.kind !== "text" || !fontIds.has(String(l.fontId)) || !["left", "center", "right"].includes(String(l.align))) throw new Error("O projeto contém uma camada ou fonte desconhecida.");
-    return { ...base, kind: "text", text: string(l.text, 3000), fontId: String(l.fontId), fontSize: number(l.fontSize, 8, 2000), weight: number(l.weight, 100, 900), color: color(l.color), letterSpacing: number(l.letterSpacing, -100, 300), lineHeight: number(l.lineHeight, 0.7, 3), align: l.align as TextLayer["align"] };
+    return { ...base, kind: "text", text: string(l.text, 3000), fontId: String(l.fontId), fontSize: number(l.fontSize, 8, 2000), weight: number(l.weight, 100, 900), color: color(l.color), letterSpacing: number(l.letterSpacing, -100, 300), lineHeight: number(l.lineHeight, 0.7, 3), align: l.align as TextLayer["align"], ...(l.maxWidth === undefined ? {} : { maxWidth: number(l.maxWidth, 1, 8000) }) };
   });
   if (new Set(layers.map((l) => l.id)).size !== layers.length) throw new Error("Existem camadas duplicadas no projeto.");
   return { version: PROJECT_VERSION, name: string(p.name, 150), width: number(p.width, 300, 8000), height: number(p.height, 300, 8000), dpi: number(p.dpi, 72, 600), background: p.background === null ? null : color(p.background), layers, fonts, reference: p.reference === null ? null : imageAsset(p.reference) };
@@ -130,5 +132,5 @@ export function projectFileName(name: string): string {
 /** Scale all positions and type together when changing print dimensions. */
 export function resizeProject(project: PrintProject, width: number, height: number): PrintProject {
   const scale = Math.min(width / project.width, height / project.height);
-  return { ...project, width, height, layers: project.layers.map((l) => l.kind === "text" ? { ...l, x: l.x * scale, y: l.y * scale, fontSize: l.fontSize * scale, letterSpacing: l.letterSpacing * scale } : { ...l, x: l.x * scale, y: l.y * scale, width: l.width * scale }) };
+  return { ...project, width, height, layers: project.layers.map((l) => l.kind === "text" ? { ...l, x: l.x * scale, y: l.y * scale, fontSize: l.fontSize * scale, letterSpacing: l.letterSpacing * scale, ...(l.maxWidth === undefined ? {} : { maxWidth: l.maxWidth * scale }) } : { ...l, x: l.x * scale, y: l.y * scale, width: l.width * scale }) };
 }
