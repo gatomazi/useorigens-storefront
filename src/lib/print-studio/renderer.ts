@@ -92,8 +92,11 @@ export function measureLayer(context: CanvasRenderingContext2D, layer: PrintLaye
   const descent = Math.max(0, ...metrics.map((m) => m.actualBoundingBoxDescent));
   const width = layer.boxWidth ?? Math.max(40, ...metrics.map((m) => m.width));
   // An arch drops its ends by the sagitta of the drawn arc; the box is an approximation used for selection only.
-  const sagitta = layer.arc ? layer.arc * (1 - Math.cos(Math.min(Math.PI / 2, metrics[0].width / layer.arc / 2))) : 0;
-  return { id: layer.id, x: layer.x, y: layer.y, width, height: Math.max(fontSize, ascent + descent + (lines.length - 1) * fontSize * layer.lineHeight) + sagitta };
+  const sagitta = layer.arc ? layer.arc * (1 - Math.cos(Math.min(Math.PI / 2, Math.max(...metrics.map((m) => m.width)) / layer.arc / 2))) : 0;
+  const height = Math.max(fontSize, ascent + descent + (lines.length - 1) * fontSize * layer.lineHeight) + sagitta;
+  // An arch grows upward, so its box starts above the layer's anchor.
+  const rise = layer.arc ? (lines.length - 1) * fontSize * layer.lineHeight : 0;
+  return { id: layer.id, x: layer.x, y: layer.y - rise, width, height };
 }
 
 function drawText(context: CanvasRenderingContext2D, text: string, x: number, y: number, stroke: number) {
@@ -145,7 +148,15 @@ export function paintProject(canvas: HTMLCanvasElement, project: PrintProject, r
       const lines = layer.text.split("\n");
       const ascent = firstAscent(context, layer, lines, fontSize);
       const stroke = (layer.stroke ?? 0) * fontSize / layer.fontSize;
-      if (layer.arc) { paintArc(context, lines.join(" "), layer.x + box.width / 2, layer.y + ascent, layer.arc, stroke); continue; }
+      if (layer.arc) {
+        // Extra lines stack upward on wider concentric arcs; the last line keeps the single-line baseline.
+        const step = fontSize * layer.lineHeight;
+        lines.forEach((line, index) => {
+          const up = (lines.length - 1 - index) * step;
+          paintArc(context, line, layer.x + box.width / 2, layer.y + ascent - up, layer.arc! + up, stroke);
+        });
+        continue;
+      }
       lines.forEach((line, index) => {
         const lineWidth = context.measureText(line).width;
         const offset = layer.align === "center" ? (box.width - lineWidth) / 2 : layer.align === "right" ? box.width - lineWidth : 0;

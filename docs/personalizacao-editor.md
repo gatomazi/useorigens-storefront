@@ -20,6 +20,45 @@ Quando há uma base vinculada, os controles da arte substituem os campos de text
 
 O cliente informa nome, ao menos um canal de contato e a confirmação solicitada. **Salvar e enviar solicitação** guarda as escolhas na fila existente e mostra uma referência. O link **Ver minha solicitação** também apresenta a prévia da arte, além do resumo e do andamento. Não há galeria pública, upload de PNG pelo cliente nem geração de produto nessa etapa.
 
+## Bases com campo (só o sobrenome)
+
+Uma camada de texto pode ter um **campo** (`slot` em `model.ts`): um modelo de texto com `{campo}`, como `NATAL DOS {sobrenome}`, um rótulo, um limite de caracteres e a caixa das letras (`upper`, `title` ou `none`). Se a base tem pelo menos uma camada com campo, a loja mostra **um input por campo** (camadas com o mesmo campo compartilham a resposta) e **trava todo o resto**: textos, fontes, cores e posições. O navegador envia só `{ sobrenome: "..." }`; o servidor monta os textos a partir da base.
+
+- Aceita letras latinas (com todos os acentos do português), espaço, hífen, apóstrofo e ponto. Maiúsculas ou inicial maiúscula são aplicadas automaticamente; em `title`, "da", "dos", "de" etc. ficam minúsculos no meio do nome.
+- **Caixa fixa** (`boxWidth`): o texto alinha dentro da caixa, então um nome centralizado continua no eixo da arte, e diminui para caber quando é longo. A linha de base é ancorada na altura do "H", para acentos não deslocarem a composição; ao diminuir, o centro vertical se mantém.
+- **Arco** (`arc`, raio em px): o texto é desenhado letra a letra num arco para cima, centrado na caixa; a largura da caixa vira o maior arco antes de diminuir. Não aplica pares de kerning entre letras.
+- **Contorno** (`stroke`, px): contorno na cor do próprio texto, para encorpar uma fonte leve.
+- **"dos" automático** (`dropParticle`): onde a arte já diz "dos" ("NATAL DOS {sobrenome}", ou "ceia dos" desenhado acima), um "da/das/do/dos" no começo da resposta sai, então "dos Santos" vira "NATAL DOS SANTOS". "De", "Di" e "Du" ficam, porque fazem parte de sobrenomes como De Lucca e Di Napoli. "Dos" serve para qualquer sobrenome: é o plural da família ("os Silva", "os Oliveira").
+- **Quebra de linha** (`maxLines`): sobrenome composto vira linhas equilibradas, com as partículas presas à palavra seguinte ("Silva Pereira / dos Santos", "Costa / e Silva"). Use só onde há espaço para crescer; no arco, as linhas extras sobem em arcos concêntricos.
+- O resumo da solicitação mostra o que o cliente digitou e o **texto como sai na arte**.
+
+O estúdio preserva esses campos ao abrir e salvar, e renderiza arco e contorno, mas ainda não tem controles para editá-los: ajuste pelo `.json`.
+
+### Natal em família
+
+As seis artes de `~/Downloads/Estampas Familia Natal` (1.png a 6.png) viram bases com `scripts/natal-bases.py`:
+
+```zsh
+python3 scripts/natal-bases.py "$HOME/Downloads/Estampas Familia Natal" output/natal-bases --preview   # pillow, numpy, scipy
+```
+
+A cor do texto novo é lida do sobrenome original de cada PNG. Quando chegar a versão para **camiseta clara** (mesmo desenho, outras cores), rode o mesmo script na pasta dela com `--clara`: gera `<slug>-clara.origens.json` com " · camiseta clara" no nome. Os critérios de apagar usam posição e tamanho, não cor, e o script para com erro se não encontrar o sobrenome no lugar esperado.
+
+O script apaga o sobrenome do PNG (uma zona em volta do nome, incluindo o halo quase transparente que as artes trazem, preservando árvores, estrela, mesa etc.) e põe no lugar a camada com o campo. Medidas, fontes e cores ficam no topo do script.
+
+| Arte | Base | Texto | Fonte |
+| --- | --- | --- | --- |
+| 1 | universitário | `{SOBRENOME}` em arco, com contorno; composto quebra em 2 arcos | Graduate |
+| 2 | eu vim pela ceia | `NATAL DOS {SOBRENOME}` | Montserrat SemiBold |
+| 3 | eu vim pelo presente | `NATAL DOS {SOBRENOME}` | Montserrat SemiBold |
+| 4 | ceia dos | `{Sobrenome}` | Caveat |
+| 5 | árvore | `{SOBRENOME}` espaçado | Montserrat SemiBold |
+| 6 | pavê ou pacumê | `NATAL DOS {SOBRENOME}` | Caveat Brush |
+
+As quatro fontes (OFL) ficam em `assets/print-studio/fonts/` e também entram na biblioteca do estúdio. A Graduate é mais leve e larga que a letra universitária original; o contorno compensa parte disso. Para trocar por outra fonte, coloque o arquivo em `assets/print-studio/fonts/`, registre em `font-server.ts` e no `FONTS` do script, e gere de novo.
+
+Para publicar em produção, em cada `.origens.json`: `/admin/estampas` → **Importar modelo** → conferir → **Salvar como modelo**; depois `/admin/personalizacao` → novo modelo (coleção, mockup) → **Base do estúdio** → salvar → publicar o modelo.
+
 ## Atender no estúdio
 
 Em `/admin/personalizacao/solicitacoes/[id]`, a equipe vê a composição em canvas, o resumo e **Abrir arte no estúdio**. O link abre `/admin/estampas?solicitacao=ID`; o servidor verifica a permissão para editar a região da solicitação antes de carregar a arte.

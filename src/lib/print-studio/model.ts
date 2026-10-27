@@ -30,7 +30,11 @@ export type TextLayer = BaseLayer & {
   slot?: TextSlot;
 };
 /** `template` carries `{field}`, e.g. "NATAL DOS {sobrenome}"; layers sharing a field share one answer. */
-export type TextSlot = { field: string; label: string; template: string; textCase: "upper" | "title" | "none"; maxLength: number; example: string };
+/**
+ * `maxLines` > 1 breaks a multi-word answer into balanced lines; only for a layout with room to grow (an arch grows upward).
+ * `dropParticle` removes a leading "da/das/do/dos" from the answer where the art already says "dos" ("NATAL DOS {sobrenome}").
+ */
+export type TextSlot = { field: string; label: string; template: string; textCase: "upper" | "title" | "none"; maxLength: number; example: string; maxLines?: number; dropParticle?: boolean };
 export type ImageLayer = BaseLayer & { kind: "image"; asset: ImageAsset; width: number };
 export type PrintLayer = TextLayer | ImageLayer;
 export type PrintProject = {
@@ -101,7 +105,7 @@ function slot(value: unknown): TextSlot {
   const template = string(s.template, 200);
   if (!/^[a-z][a-z0-9-]*$/.test(field) || !template.includes(`{${field}}`)) throw new Error("O projeto contém um campo de personalização inválido.");
   if (!["upper", "title", "none"].includes(String(s.textCase))) throw new Error("O projeto contém um campo de personalização inválido.");
-  return { field, label: string(s.label, 60), template, textCase: s.textCase as TextSlot["textCase"], maxLength: number(s.maxLength, 1, 60), example: string(s.example, 60) };
+  return { field, label: string(s.label, 60), template, textCase: s.textCase as TextSlot["textCase"], maxLength: number(s.maxLength, 1, 60), example: string(s.example, 60), ...(s.maxLines === undefined ? {} : { maxLines: number(s.maxLines, 1, 3) }), ...(s.dropParticle === undefined ? {} : { dropParticle: s.dropParticle === true }) };
 }
 function imageAsset(value: unknown): ImageAsset {
   const a = object(value);

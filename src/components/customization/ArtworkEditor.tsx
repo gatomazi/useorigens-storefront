@@ -60,7 +60,7 @@ export function ArtworkFields({ base, values, onChange, errors, uid }: { base: P
           <div key={field.id} className={styles.textGroup}>
             <label className="t-label block" htmlFor={id}>{field.label}</label>
             <input id={id} value={value} onChange={(e) => onChange({ ...values, [field.id]: e.target.value })} maxLength={field.maxLength} autoComplete="family-name" autoCapitalize="words" spellCheck={false} placeholder={field.example} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />
-            <div className={styles.help} id={`${id}-help`}><span className={error ? styles.error : undefined} role={error ? "alert" : undefined}>{error ?? "Só o sobrenome, sem “da” ou “dos” na frente"}</span><span>{[...value].length}/{field.maxLength}</span></div>
+            <div className={styles.help} id={`${id}-help`}><span className={error ? styles.error : undefined} role={error ? "alert" : undefined}>{error ?? "Escreva como é: “Silva”, “dos Santos”, “Costa e Silva”"}</span><span>{[...value].length}/{field.maxLength}</span></div>
           </div>
         );
       })}

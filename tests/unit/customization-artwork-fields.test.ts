@@ -10,7 +10,7 @@ const base = (): PrintProject => ({
   fonts: [{ id: "font-montserrat-semibold", name: "Montserrat SemiBold", weight: 600, dataUrl: "data:application/octet-stream;base64,AA==" }],
   layers: [
     { ...newTextLayer("titulo"), text: "EU VIM PELA CEIA", color: "#14331e" },
-    { ...newTextLayer("sobrenome"), text: "NATAL DOS TOMAZI", fontId: "font-montserrat-semibold", weight: 600, color: "#14311d", align: "center", boxWidth: 3600, slot: slot("NATAL DOS {sobrenome}", "upper") },
+    { ...newTextLayer("sobrenome"), text: "NATAL DOS TOMAZI", fontId: "font-montserrat-semibold", weight: 600, color: "#14311d", align: "center", boxWidth: 3600, slot: { ...slot("NATAL DOS {sobrenome}", "upper"), dropParticle: true } },
     { ...newTextLayer("assinatura"), text: "Tomazi", color: "#960a0c", arc: 3836, stroke: 26, boxWidth: 3500, slot: slot("{sobrenome}", "title") },
   ],
 });
@@ -28,6 +28,28 @@ describe("base com campo de sobrenome", () => {
     expect(edits.map((e) => e.text)).toEqual(["NATAL DOS CONCEIÇÃO DOS SANTOS", "Conceição dos Santos"]);
     expect(edits[0]).toMatchObject({ fontId: "font-montserrat-semibold", color: "#14311d" });
     expect(fieldEdits(base(), { sobrenome: "D'ÁVILA-NUNES" })[1].text).toBe("D'Ávila-Nunes");
+  });
+
+  test("o \"dos\" do modelo serve para qualquer sobrenome e não repete a partícula digitada", () => {
+    const texts = (sobrenome: string) => fieldEdits(base(), { sobrenome }).map((e) => e.text);
+    expect(texts("dos Santos")).toEqual(["NATAL DOS SANTOS", "Dos Santos"]);
+    expect(texts("da Silva")).toEqual(["NATAL DOS SILVA", "Da Silva"]);
+    expect(texts("Di Napoli")).toEqual(["NATAL DOS DI NAPOLI", "Di Napoli"]);
+    expect(texts("Dorneles")).toEqual(["NATAL DOS DORNELES", "Dorneles"]);
+    expect(validateArtworkInput(base(), templateId, { fields: { sobrenome: "dos" } }).ok).toBe(true); // "Dos" sozinho pode ser sobrenome
+  });
+
+  test("quebra sobrenome composto em linhas equilibradas só onde a base permite", () => {
+    const project = base();
+    const arch = project.layers[2] as TextLayer;
+    project.layers[2] = { ...arch, slot: { ...arch.slot!, maxLines: 2 } };
+    const texts = (sobrenome: string) => fieldEdits(project, { sobrenome }).map((e) => e.text);
+    expect(texts("Albuquerque Lins")).toEqual(["NATAL DOS ALBUQUERQUE LINS", "Albuquerque\nLins"]);
+    expect(texts("dos Santos")).toEqual(["NATAL DOS SANTOS", "Dos Santos"]);
+    expect(texts("Costa e Silva")).toEqual(["NATAL DOS COSTA E SILVA", "Costa\ne Silva"]);
+    expect(texts("Silva Pereira dos Santos")).toEqual(["NATAL DOS SILVA PEREIRA DOS SANTOS", "Silva Pereira\ndos Santos"]);
+    const checked = validateArtworkInput(project, templateId, { fields: { sobrenome: "Albuquerque Lins" } });
+    expect(checked.ok && parseProject(composeArtwork(project, checked.artwork.layers)).layers[2]).toMatchObject({ text: "Albuquerque\nLins" });
   });
 
   test("monta a solicitação no servidor só com o valor do campo", () => {
@@ -56,6 +78,7 @@ describe("base com campo de sobrenome", () => {
   test("o projeto guarda caixa, arco, contorno e campo, e a mudança de tamanho os acompanha", () => {
     const parsed = parseProject(JSON.parse(JSON.stringify(base())));
     expect(parsed.layers[2]).toMatchObject({ arc: 3836, stroke: 26, boxWidth: 3500, slot: { template: "{sobrenome}", textCase: "title" } });
+    expect(parsed.layers[1]).toMatchObject({ slot: { dropParticle: true } });
     const half = resizeProject(parsed, 2135, 2450).layers[2] as TextLayer;
     expect(half).toMatchObject({ arc: 1918, stroke: 13, boxWidth: 1750 });
     for (const bad of [{ template: "NATAL DOS TOMAZI" }, { field: "Sobre Nome", template: "{Sobre Nome}" }, { textCase: "lower" }]) {

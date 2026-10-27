@@ -36,9 +36,38 @@ function applyCase(value: string, textCase: TextSlot["textCase"]) {
   return value.toLocaleLowerCase("pt-BR").replace(/[A-Za-zÀ-ÖØ-öø-ÿ]+/g, (word, at: number) => at > 0 && PARTICLES.has(word) ? word : word[0].toLocaleUpperCase("pt-BR") + word.slice(1));
 }
 
+const PARTICLE_START = /^d[ao]s?\s+/i; // da, das, do, dos: "de", "di" e "du" fazem parte de sobrenomes como De Lucca e Di Napoli
+/** Where the art already says "dos", an answer typed as "dos Santos" or "da Silva" drops its own leading particle. */
+function slotValue(slot: TextSlot, raw: string) {
+  const value = normalizeValue(raw);
+  return slot.dropParticle ? value.replace(PARTICLE_START, "") : value;
+}
+/** Words, with particles kept with the next word ("dos Santos"), split into at most `maxLines` lines of balanced length. */
+function breakLines(text: string, maxLines: number) {
+  const groups: string[] = [];
+  for (const word of text.split(" ")) {
+    const last = groups.at(-1);
+    if (last !== undefined && PARTICLES.has(last.toLocaleLowerCase("pt-BR").split(" ").at(-1)!)) groups[groups.length - 1] = `${last} ${word}`;
+    else groups.push(word);
+  }
+  if (maxLines < 2 || groups.length < 2) return text;
+  if (maxLines === 2 || groups.length === 2) {
+    let best = 1;
+    for (let i = 1; i < groups.length; i++) {
+      const width = (k: number) => Math.max(groups.slice(0, k).join(" ").length, groups.slice(k).join(" ").length);
+      if (width(i) < width(best)) best = i;
+    }
+    return `${groups.slice(0, best).join(" ")}\n${groups.slice(best).join(" ")}`;
+  }
+  return [groups.slice(0, Math.ceil(groups.length / 3)), groups.slice(Math.ceil(groups.length / 3), Math.ceil(groups.length * 2 / 3)), groups.slice(Math.ceil(groups.length * 2 / 3))].map((g) => g.join(" ")).filter(Boolean).join("\n");
+}
+
 /** The slot layers' texts for these answers, as edits on the base's own font and colour. */
 export function fieldEdits(base: PrintProject, values: Record<string, string>): ArtworkEdit[] {
-  return slotLayers(base).map(({ id, fontId, color, slot }) => ({ id, fontId, color, text: slot.template.replace(`{${slot.field}}`, applyCase(normalizeValue(values[slot.field] ?? ""), slot.textCase)) }));
+  return slotLayers(base).map(({ id, fontId, color, slot }) => {
+    const value = breakLines(applyCase(slotValue(slot, values[slot.field] ?? ""), slot.textCase), slot.maxLines ?? 1);
+    return { id, fontId, color, text: slot.template.replace(`{${slot.field}}`, value) };
+  });
 }
 
 export function validateArtworkFields(base: PrintProject, templateId: string, input: unknown): { ok: true; artwork: RequestArtwork } | { ok: false; errors: FieldError[] } {
@@ -53,6 +82,7 @@ export function validateArtworkFields(base: PrintProject, templateId: string, in
     if (!value) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: escreva o ${field.label.toLowerCase()}` });
     else if (problem) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: ${problem}` });
     else if (!NAME.test(value)) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: use só letras, espaço, hífen ou apóstrofo` });
+    else if (slotLayers(base).some(({ slot }) => slot.field === field.id && !slotValue(slot, value))) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: escreva o sobrenome depois de “${value}”` });
     values[field.id] = value;
   }
   if (errors.length) return { ok: false, errors };
