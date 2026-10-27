@@ -21,48 +21,45 @@ FONTS = {
 }
 SLOT = {"field": "sobrenome", "label": "Sobrenome da família", "maxLength": 20, "example": "Silva"}
 
-# erase: ("rect", x0, y0, x1, y1) apaga a faixa; ("letters", y0, y1, keep) apaga as letras daquela faixa, menos as que `keep` aceita.
+# erase: (x0, y0, x1, y1, apagar) — dentro da zona, limpa tudo (inclusive o halo quase transparente que as artes trazem em volta
+# das letras) menos os elementos que `apagar` recusa, preservados com uma margem.
 # baseline/cx: linha de base e centro do sobrenome original; box: largura máxima (no arco, o maior arco) antes de diminuir a letra.
 ARTS = [
     {"file": "1.png", "slug": "natal-universitario", "name": "Natal em família · universitário", "font": "font-graduate", "size": 900, "spacing": 10, "stroke": 26,
      "color": "#fdf3da", "template": "{sobrenome}", "case": "upper", "baseline": 2270, "cx": 2150, "box": 3500, "arc": 3836,
-     "erase": ("letters", 1300, 2950, lambda c: c["size"] < 150000 or c["green"])},
+     "erase": (0, 1250, 4270, 2950, lambda c: c["size"] >= 150000 and not c["green"])},
     {"file": "2.png", "slug": "natal-eu-vim-pela-ceia", "name": "Natal em família · eu vim pela ceia", "font": "font-montserrat-semibold", "size": 157, "spacing": 22.8,
      "color": "#14311d", "template": "NATAL DOS {sobrenome}", "case": "upper", "baseline": 3190, "cx": 2135, "box": 3600,
-     "erase": ("rect", 1100, 3060, 3170, 3215)},
+     "erase": (900, 3040, 3400, 3330, lambda c: c["top"] >= 3060)},
     {"file": "3.png", "slug": "natal-eu-vim-pelo-presente", "name": "Natal em família · eu vim pelo presente", "font": "font-montserrat-semibold", "size": 206, "spacing": 20.9,
      "color": "#fdf2d5", "template": "NATAL DOS {sobrenome}", "case": "upper", "baseline": 3344, "cx": 2186, "box": 3600,
-     "erase": ("rect", 910, 3170, 3460, 3380)},
-    {"file": "4.png", "slug": "natal-ceia-dos", "name": "Natal em família · ceia dos", "font": "font-caveat", "size": 600, "spacing": 70,
-     "color": "#960a0c", "template": "{sobrenome}", "case": "title", "baseline": 1138, "cx": 2060, "box": 2900,
-     "erase": ("letters", 780, 1300, lambda c: c["top"] >= 1200)},
+     "erase": (700, 3150, 3700, 3550, lambda c: c["top"] >= 3170)},
+    {"file": "4.png", "slug": "natal-ceia-dos", "name": "Natal em família · ceia dos", "font": "font-caveat", "size": 500, "spacing": 60,
+     "color": "#960a0c", "template": "{sobrenome}", "case": "title", "baseline": 1210, "cx": 2060, "box": 2900,
+     "erase": (900, 700, 3250, 1330, lambda c: 780 <= c["top"] < 1200)},
     {"file": "5.png", "slug": "natal-arvore", "name": "Natal em família · árvore", "font": "font-montserrat-semibold", "size": 376, "spacing": 50.6,
      "color": "#fdf3db", "template": "{sobrenome}", "case": "upper", "baseline": 3315, "cx": 2138, "box": 3400,
-     "erase": ("rect", 1195, 3020, 3080, 3352)},
+     "erase": (1000, 2980, 3300, 3375, lambda c: 3030 <= c["top"] < 3340)},
     {"file": "6.png", "slug": "natal-pave-ou-pacume", "name": "Natal em família · pavê ou pacumê", "font": "font-caveat-brush", "size": 200, "spacing": 2.2,
      "color": "#a7010b", "template": "NATAL DOS {sobrenome}", "case": "upper", "baseline": 2650, "cx": 2158, "box": 2700,
-     "erase": ("rect", 1390, 2496, 2930, 2680)},
+     "erase": (1150, 2490, 3150, 2850, lambda c: c["top"] >= 2500)},
 ]
 
 
 def erase(img: Image.Image, spec) -> Image.Image:
     a = np.array(img)
-    if spec[0] == "rect":
-        _, x0, y0, x1, y1 = spec
-        a[y0:y1, x0:x1, 3] = 0
-    else:
-        _, y0, y1, keep = spec
-        band = a[y0:y1]
-        lab, _ = ndimage.label(band[:, :, 3] > 20)
-        mask = np.zeros(lab.shape, bool)
-        for i, sl in enumerate(ndimage.find_objects(lab)):
-            m = lab[sl] == i + 1
-            rgb = np.median(band[sl][m][:, :3], 0)
-            comp = {"size": int(m.sum()), "top": sl[0].start + y0, "green": rgb[1] > rgb[0]}
-            if not keep(comp):
-                mask[sl] |= m
-        mask = ndimage.binary_dilation(mask, iterations=8)
-        band[:, :, 3][mask] = 0
+    x0, y0, x1, y1, remove = spec
+    zone = a[y0:y1, x0:x1]
+    lab, _ = ndimage.label(zone[:, :, 3] > 20)
+    keep = np.zeros(lab.shape, bool)
+    for i, sl in enumerate(ndimage.find_objects(lab)):
+        m = lab[sl] == i + 1
+        rgb = np.median(zone[sl][m][:, :3], 0)
+        comp = {"size": int(m.sum()), "top": sl[0].start + y0, "green": rgb[1] > rgb[0]}
+        if not remove(comp):
+            keep[sl] |= m
+    keep = ndimage.binary_dilation(keep, iterations=30)
+    zone[:, :, 3][~keep] = 0
     a[:14, :, 3] = 0  # a arte 1 veio com um risco amarelo quase transparente no topo
     return Image.fromarray(a)
 

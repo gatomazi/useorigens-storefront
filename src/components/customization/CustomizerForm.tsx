@@ -59,7 +59,7 @@ export function CustomizerForm({
   const summary = useMemo(() => {
     if (!artworkBase) return liveSummary(model, values);
     const checked = validateArtworkInput(artworkBase, model.studioTemplateId!, fieldMode ? { fields: fieldValues } : { layers: artworkEdits });
-    if (checked.ok && checked.artwork.fields) return checked.artwork.fields.map((f) => ({ label: f.label, value: f.value }));
+    if (checked.ok && checked.artwork.fields) return [...checked.artwork.fields.map((f) => ({ label: f.label, value: f.value })), ...checked.artwork.layers.map((l) => ({ label: "Texto na arte", value: l.text }))];
     return checked.ok ? checked.artwork.layers.flatMap((l, i) => [{ label: `${i + 1}. ${l.name}`, value: l.text }, { label: `${i + 1}. Fonte e cor`, value: `${l.fontName} · ${l.color.toUpperCase()}` }]) : [];
   }, [model, values, artworkBase, fieldMode, fieldValues, artworkEdits]);
   const referenceUrl = done ? `/${region}/personalizar/solicitacao/${done.reference}` : null;

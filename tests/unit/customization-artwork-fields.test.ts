@@ -41,7 +41,7 @@ describe("base com campo de sobrenome", () => {
     expect(composed.layers[1]).not.toHaveProperty("maxWidth");
     expect(parseProject(composed)).toEqual(composed);
     const snapshot = { id: "cz", slug: "natal", name: "Natal", version: 1, fields: [] };
-    expect(summaryOf(snapshot, { fields: {}, lines: [], artwork: checked.artwork })).toEqual([{ label: "Base da arte", value: "Natal em família" }, { label: "Sobrenome da família", value: "Gonçalves" }]);
+    expect(summaryOf(snapshot, { fields: {}, lines: [], artwork: checked.artwork })).toEqual([{ label: "Base da arte", value: "Natal em família" }, { label: "Sobrenome da família", value: "Gonçalves" }, { label: "Texto na arte", value: "NATAL DOS GONÇALVES" }, { label: "Texto na arte", value: "Gonçalves" }]);
   });
 
   test("recusa vazio, longo, markup, números e letras fora do latim", () => {

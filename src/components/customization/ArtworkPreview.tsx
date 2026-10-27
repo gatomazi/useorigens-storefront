@@ -11,7 +11,9 @@ export function ArtworkPreview({ project, onReady }: { project: PrintProject; on
   const [painted, setPainted] = useState<PrintProject | null>(null);
   const [background, setBackground] = useState(() => {
     const text = project.layers.find((l) => l.kind === "text" && l.visible);
-    return text?.kind === "text" && parseInt(text.color.slice(1), 16) < 0x888888 ? "#f5f3ef" : "#242424";
+    if (text?.kind !== "text") return "#242424";
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(text.color.slice(i, i + 2), 16));
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b < 140 ? "#f5f3ef" : "#242424";
   });
 
   useEffect(() => {
