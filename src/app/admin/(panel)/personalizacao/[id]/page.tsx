@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { publishTargetAction, removeCustomizerAction, restoreTargetAction, saveCustomizerAction } from "@/app/admin/actions";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
 import { CustomFieldsEditor } from "@/components/admin/CustomFieldsEditor";
+import { StudioArtsEditor } from "@/components/admin/StudioArtsEditor";
 import { Flash } from "@/components/admin/Flash";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireAdmin } from "@/lib/admin/auth/guard";
@@ -18,7 +19,7 @@ import { libraryEntries } from "@/lib/catalog/collection-source";
 import { findCollection } from "@/lib/catalog/collections-file";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { customizerHref } from "@/lib/site-config/pages";
-import { MAX_CUSTOM_FIELDS, customizerProductLabel, isUmaPencaSource } from "@/lib/site-config/schema";
+import { MAX_ART_VERSIONS, MAX_CUSTOM_FIELDS, MAX_STUDIO_ARTS, customizerProductLabel, isUmaPencaSource } from "@/lib/site-config/schema";
 import { ARTICLE_KIND_LABELS } from "@/lib/umapenca/types";
 import { OriginSelect } from "@/components/admin/OriginSelect";
 import { serverPrintStore } from "@/lib/print-studio/server";
@@ -120,15 +121,11 @@ export default async function CustomizerEditor({ params, searchParams }: { param
 
             <fieldset className="space-y-4">
               <legend className="a-h2 mb-3">Editor de arte para o cliente</legend>
-              <label className="a-label" htmlFor="studio_template">Base do estúdio</label>
-              <select id="studio_template" name="studio_template" className="a-select" defaultValue={model.studioTemplateId ?? ""} disabled={templateError}>
-                <option value="">Usar o formulário de textos atual</option>
-                {model.studioTemplateId && !templates.some((t) => t.id === model.studioTemplateId) && <option value={model.studioTemplateId}>Base vinculada ({model.studioTemplateId})</option>}
-                {templates.map((t) => <option key={t.id} value={t.id}>{t.name} · {when(t.createdAt)}</option>)}
-              </select>
-              <p className="a-muted text-[0.875rem]">Ao vincular uma base, o cliente edita os textos visíveis, a fonte e a cor, com prévia ao vivo. A posição dos elementos e as logos seguem a base. Os campos e o grupo de linhas abaixo ficam substituídos pelos textos da arte.</p>
+              <StudioArtsEditor initial={model.studioArts ?? []} templates={templates.map((t) => ({ id: t.id, name: `${t.name} · ${when(t.createdAt)}` }))} max={MAX_STUDIO_ARTS} maxVersions={MAX_ART_VERSIONS} disabled={templateError} />
+              <p className="a-muted text-[0.875rem]">Sem artes, a página usa o formulário de textos. Com mais de uma arte, o cliente escolhe qual quer personalizar; com mais de uma versão (por exemplo, Adulto e Infantil), escolhe a versão; e, quando a versão tem a base para camiseta clara, escolhe a cor da camiseta. A primeira arte aparece ao abrir a página. Todas as bases precisam pedir os mesmos campos (por exemplo, só o sobrenome). A solicitação registra a arte escolhida.</p>
+              <p className="a-muted text-[0.875rem]">Numa base sem campo, o cliente edita os textos visíveis, a fonte e a cor, com prévia ao vivo. A posição dos elementos e as logos seguem a base. Os campos e o grupo de linhas abaixo ficam substituídos pelos textos da arte.</p>
               <p className="a-muted text-[0.875rem]">Prepare a composição em <Link className="a-link" href="/admin/estampas">Estúdio de estampas</Link> e use <strong>Salvar como modelo</strong>. As fontes incorporadas à base e as fontes padrão ficam disponíveis para o cliente. Salve o rascunho para testar na prévia ao lado; publique para disponibilizar na loja.</p>
-              {templateError && <p className="a-flash err">Não foi possível carregar as bases. Recarregue a página para trocar a base; o vínculo atual será preservado.</p>}
+              {templateError && <p className="a-flash err">Não foi possível carregar as bases. Recarregue a página para trocar as artes; as atuais serão preservadas.</p>}
             </fieldset>
 
             <CustomFieldsEditor

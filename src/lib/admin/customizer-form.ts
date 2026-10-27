@@ -3,7 +3,7 @@
  * shape of the contract (the schema validates it again when the op is applied and when the model is published).
  */
 import type { CommerceStoreKey } from "../geo/regions";
-import { MAX_CUSTOM_FIELDS, customizerProductLabel, isUmaPencaSource, type CustomField, type Customizer, type LineGroup, type MediaRef } from "../site-config/schema";
+import { MAX_ART_VERSIONS, MAX_CUSTOM_FIELDS, MAX_STUDIO_ARTS, STUDIO_TEMPLATE_ID, customizerProductLabel, isUmaPencaSource, type CustomField, type Customizer, type LineGroup, type MediaRef, type StudioArt } from "../site-config/schema";
 import { ARTICLE_KINDS, type ArticleKind } from "../umapenca/types";
 
 type Fields = { get(name: string): FormDataEntryValue | null };
@@ -33,6 +33,44 @@ export function parseOrigin(raw: string): { kind: "ink" } | { kind: "umapenca"; 
   return m && (ARTICLE_KINDS as readonly string[]).includes(m[1]) ? { kind: "umapenca", articleKind: m[1] as ArticleKind } : { kind: "ink" };
 }
 
+/**
+ * The arts editor's rows (`studio_arts_json`): rows with nothing chosen are dropped; a named art needs a base, and an art with several versions
+ * needs a name for each ("Adulto", "Infantil"). With a single version its name is not shown to the customer, so it is not kept.
+ */
+export function parseStudioArts(raw: string): { arts: StudioArt[]; errors: string[] } {
+  const errors: string[] = [];
+  let rows: unknown;
+  try { rows = JSON.parse(raw || "[]"); } catch { return { arts: [], errors: ["Não foi possível ler as artes do estúdio. Recarregue a página."] }; }
+  if (!Array.isArray(rows)) return { arts: [], errors: ["Não foi possível ler as artes do estúdio. Recarregue a página."] };
+  const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const arts: StudioArt[] = [];
+  for (const row of rows) {
+    const r = (row && typeof row === "object" ? row : {}) as Record<string, unknown>;
+    const label = text(r.label);
+    const versions = (Array.isArray(r.versions) ? r.versions : []).map((v) => {
+      const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+      return { label: text(o.label), templateId: text(o.templateId), lightTemplateId: text(o.lightTemplateId) };
+    }).filter((v) => v.label || v.templateId || v.lightTemplateId);
+    if (!label && versions.length === 0) continue;
+    const name = label || `Arte ${arts.length + 1}`;
+    if (!label) errors.push(`Dê um nome à ${name}: é o que o cliente vê no seletor.`);
+    if (label.length > 40) errors.push(`O nome “${label.slice(0, 40)}…” passa de 40 caracteres.`);
+    if (versions.length === 0) errors.push(`Escolha a base da arte “${name}”.`);
+    if (versions.length > MAX_ART_VERSIONS) errors.push(`A arte “${name}” pode ter no máximo ${MAX_ART_VERSIONS} versões.`);
+    for (const v of versions) {
+      if (!v.templateId) errors.push(`Escolha a base da camiseta escura em cada versão de “${name}”; a da camiseta clara é opcional.`);
+      if ([v.templateId, v.lightTemplateId].some((id) => id && !STUDIO_TEMPLATE_ID.test(id))) errors.push(`Escolha bases válidas do estúdio para “${name}”.`);
+      if (versions.length > 1 && !v.label) errors.push(`Dê um nome a cada versão de “${name}” (por exemplo, Adulto e Infantil).`);
+      if (v.label.length > 40) errors.push(`O nome da versão “${v.label.slice(0, 40)}…” passa de 40 caracteres.`);
+    }
+    arts.push({ label: name, versions: versions.map((v) => ({ ...(versions.length > 1 ? { label: v.label } : {}), templateId: v.templateId, ...(v.lightTemplateId ? { lightTemplateId: v.lightTemplateId } : {}) })) });
+  }
+  if (arts.length > MAX_STUDIO_ARTS) errors.push(`No máximo ${MAX_STUDIO_ARTS} artes por modelo.`);
+  const ids = arts.flatMap((a) => a.versions.flatMap((v) => [v.templateId, v.lightTemplateId].filter(Boolean)));
+  if (new Set(ids).size !== ids.length) errors.push("Cada base do estúdio só pode aparecer uma vez no modelo.");
+  return { arts, errors: [...new Set(errors)] };
+}
+
 export type ParsedCustomizer = { patch: Partial<Omit<Customizer, "id" | "version">>; errors: string[] };
 
 export function parseCustomizerForm(f: Fields, current: Customizer, region: { store: CommerceStoreKey }, opts: { slugLocked: boolean }): ParsedCustomizer {
@@ -59,11 +97,11 @@ export function parseCustomizerForm(f: Fields, current: Customizer, region: { st
   const mockupAlt = str(f, "mockup_alt") || (mockupId ? `${customizerProductLabel(patch.source ?? current.source)} ${patch.name || current.name}` : "");
   patch.pageMockup = mockupId ? { assetId: mockupId, alt: mockupAlt, decorative: false } : undefined;
   patch.active = f.get("active") !== null;
-  // Old forms preserve the setting; the current editor posts an empty value to turn it off.
-  if (f.get("studio_template") !== null) {
-    const templateId = str(f, "studio_template");
-    if (templateId && !/^\d{13}-[a-f0-9-]{36}$/.test(templateId)) errors.push("Escolha uma base válida do estúdio.");
-    else patch.studioTemplateId = templateId || undefined;
+  // Absent (bases could not be listed) keeps the arts as they are; the editor posts an empty list to turn the art editor off.
+  if (f.get("studio_arts_json") !== null) {
+    const parsed = parseStudioArts(str(f, "studio_arts_json"));
+    errors.push(...parsed.errors);
+    if (parsed.errors.length === 0) patch.studioArts = parsed.arts.length ? parsed.arts : undefined;
   }
 
   // Fields: a JSON list maintained by the editor's add/remove rows. Keys are stable once a field exists; a new row gets one from its label.

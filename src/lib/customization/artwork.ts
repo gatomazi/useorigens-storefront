@@ -10,6 +10,8 @@ export type RequestArtwork = {
   layers: (ArtworkEdit & { name: string; fontName: string })[];
   /** Present when the base has slots: the customer's answers, from which `layers` were built. */
   fields?: { id: string; label: string; value: string }[];
+  /** On a page with several bases: the art, version and shirt colour picked ("Eu vim pela ceia · Infantil · Camiseta clara"). */
+  choice?: string;
 };
 export type ArtworkField = { id: string; label: string; maxLength: number; example: string };
 export type ArtworkInput = { layers?: unknown; fields?: unknown };

@@ -1,15 +1,18 @@
 "use client";
 
-import { useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { initialValues, lineLabelOf, normalizeValue, orderedFields, validateSubmission, type FieldError, type SummaryLine, type Values } from "@/lib/customization/validate";
 import { CONTACT_CONFIRM_TEXT, CONTACT_KEYS, CONTACT_NOTICE, validateContact } from "@/lib/customization/contact";
 import type { Customizer } from "@/lib/site-config/schema";
 import type { SubmitResult } from "@/app/[region]/personalizar/actions";
-import { artworkFields, composeArtwork, fieldEdits, initialArtworkEdits, initialFieldValues, validateArtworkInput } from "@/lib/customization/artwork";
+import { artworkFields, composeArtwork, fieldEdits, initialArtworkEdits, initialFieldValues, validateArtworkInput, type ArtworkEdit } from "@/lib/customization/artwork";
+import { choiceLabel, choiceOf, studioTemplateIds, type ArtPick } from "@/lib/customization/studio-arts";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { ArtworkEditor, ArtworkFields } from "./ArtworkEditor";
-import { ArtworkPreview } from "./ArtworkPreview";
+import { ArtworkPreview, type PreviewView } from "./ArtworkPreview";
 
+/** Fetches another base of the model when the customer picks it: the page ships only the first one (each carries the full-size art). */
+export type LoadBase = (input: { region: string; slug: string; templateId: string }) => Promise<PrintProject | null>;
 export type PublicMockup = { src: string; width: number; height: number; variants?: { w: number; src: string }[]; alt: string };
 type ContactValues = { name: string; whatsapp: string; email: string; confirm: boolean };
 type Submit = (input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; artwork?: { templateId: string; layers?: unknown; fields?: unknown }; contact?: { name: string; whatsapp: string; email: string; confirm: boolean }; replaces?: string }) => Promise<SubmitResult>;
@@ -24,15 +27,38 @@ function liveSummary(model: Customizer, v: Values): SummaryLine[] {
   return out;
 }
 
+const SHIRT = { dark: "#242424", light: "#f5f3ef" };
+type ChoiceOption = { key: number; label: string; swatch?: string };
+/** Radio cards: the picked one is filled. Used for the art, its version and the shirt colour. */
+function ChoiceGroup({ legend, name, options, value, onChange, columns = "grid-cols-2 sm:grid-cols-3", help }: { legend: string; name: string; options: ChoiceOption[]; value: number; onChange: (key: number) => void; columns?: string; help?: string }) {
+  return (
+    <fieldset className="min-w-0">
+      <legend className="t-label">{legend}</legend>
+      <div className={`mt-2 grid gap-2 ${columns}`}>
+        {options.map((o) => (
+          <label key={o.key} className={`flex min-h-11 cursor-pointer items-center gap-2 border-2 px-3 py-2 text-[0.9375rem] leading-tight focus-within:ring-2 focus-within:ring-region-primary ${o.key === value ? "border-ink bg-ink text-white" : "border-line bg-white text-ink hover:border-ink"}`}>
+            <input type="radio" name={name} checked={o.key === value} onChange={() => onChange(o.key)} className="sr-only" />
+            {o.swatch && <span aria-hidden="true" className="h-5 w-5 shrink-0 rounded-full border border-ink-mute" style={{ backgroundColor: o.swatch }} />}
+            <span className="font-bold">{o.label}</span>
+          </label>
+        ))}
+      </div>
+      {help && <p className="t-small mt-1 text-ink-mute">{help}</p>}
+    </fieldset>
+  );
+}
+
 const inputClass = "block w-full min-h-11 border-2 border-ink bg-white px-3 py-2 text-[1rem] text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-region-primary aria-[invalid=true]:border-[#9b1c1c]";
 
 export function CustomizerForm({
-  region, model, mockup, artworkBase, submit, available, preview = false,
+  region, model, mockup, firstBase, loadBase, submit, available, preview = false,
 }: {
   region: string;
   model: Customizer;
   mockup: PublicMockup;
-  artworkBase?: PrintProject;
+  /** The base of the model's first art (dark shirt): with it, the page is the art editor instead of the text form. */
+  firstBase?: PrintProject;
+  loadBase?: LoadBase;
   submit: Submit;
   /** False when this environment cannot store requests (no database): the form is shown but sending is disabled and says why. */
   available: boolean;
@@ -40,13 +66,44 @@ export function CustomizerForm({
   preview?: boolean;
 }) {
   const uid = useId();
-  const [values, setValues] = useState<Values>(() => artworkBase ? { fields: {}, lines: [] } : initialValues(model));
-  const [artworkEdits, setArtworkEdits] = useState(() => artworkBase ? initialArtworkEdits(artworkBase) : []);
-  const [fieldValues, setFieldValues] = useState(() => artworkBase ? initialFieldValues(artworkBase) : {});
+  const arts = useMemo(() => (firstBase && model.studioArts?.length ? model.studioArts : []), [firstBase, model.studioArts]);
+  const studio = arts.length > 0;
+  const [pick, setPick] = useState<ArtPick>({ art: 0, version: 0, light: false });
+  const choice = useMemo(() => (studio ? choiceOf(arts, pick) : null), [studio, arts, pick]);
+  const templateId = choice?.templateId;
+  const [bases, setBases] = useState<Record<string, PrintProject>>(() => (firstBase && arts[0] ? { [arts[0].versions[0].templateId]: firstBase } : {}));
+  const [baseError, setBaseError] = useState("");
+  const artworkBase = templateId ? bases[templateId] : undefined;
+  useEffect(() => {
+    if (!templateId || bases[templateId] || !loadBase) return;
+    let active = true;
+    loadBase({ region, slug: model.slug, templateId }).then((project) => {
+      if (!active) return;
+      if (project) setBases((loaded) => ({ ...loaded, [templateId]: project }));
+      else setBaseError("Esta arte não abriu agora. Escolha outra ou tente de novo em instantes.");
+    }).catch(() => { if (active) setBaseError("Não foi possível carregar esta arte. Confira a conexão e tente de novo."); });
+    return () => { active = false; };
+  }, [templateId, bases, loadBase, region, model.slug]);
+  const [values, setValues] = useState<Values>(() => studio ? { fields: {}, lines: [] } : initialValues(model));
+  // Free-form bases keep their own edits, so going back to an art finds it as it was left; every base asks the same fields.
+  const [editsByBase, setEditsByBase] = useState<Record<string, ArtworkEdit[]>>({});
+  const artworkEdits = useMemo(() => (artworkBase && templateId ? editsByBase[templateId] ?? initialArtworkEdits(artworkBase) : []), [artworkBase, templateId, editsByBase]);
+  const setArtworkEdits = (edits: ArtworkEdit[]) => { if (templateId) setEditsByBase((all) => ({ ...all, [templateId]: edits })); };
+  const [fieldValues, setFieldValues] = useState(() => firstBase && studio ? initialFieldValues(firstBase) : {});
   const [artworkReady, setArtworkReady] = useState(false);
-  const fieldMode = Boolean(artworkBase && artworkFields(artworkBase).length);
+  const fieldMode = Boolean(firstBase && studio && artworkFields(firstBase).length);
   const artworkInput = fieldMode ? { fields: fieldValues } : { layers: artworkEdits };
   const artworkProject = useMemo(() => artworkBase ? composeArtwork(artworkBase, fieldMode ? fieldEdits(artworkBase, fieldValues) : artworkEdits) : null, [artworkBase, fieldMode, fieldValues, artworkEdits]);
+  const choose = (next: ArtPick) => { setPick(next); setBaseError(""); };
+  const [previewView, setPreviewView] = useState<PreviewView>("shirt");
+  // Art, version and shirt colour. On a phone they sit right under the preview, so each tap shows its effect; on a wide screen, in the form.
+  const pickers = (where: string) => choice && (
+    <>
+      {arts.length > 1 && <ChoiceGroup legend="Escolha a arte" name={`${uid}-${where}-arte`} options={arts.map((a, i) => ({ key: i, label: a.label }))} value={pick.art} onChange={(art) => choose({ ...pick, art, version: 0 })} />}
+      {choice.art.versions.length > 1 && <ChoiceGroup legend="Versão" name={`${uid}-${where}-versao`} options={choice.art.versions.map((v, i) => ({ key: i, label: v.label ?? `Versão ${i + 1}` }))} value={pick.version} onChange={(version) => choose({ ...pick, version })} columns="grid-cols-1 sm:grid-cols-2" />}
+      {choice.version.lightTemplateId && <ChoiceGroup legend="Cor da camiseta" name={`${uid}-${where}-camiseta`} options={[{ key: 0, label: "Camiseta escura", swatch: SHIRT.dark }, { key: 1, label: "Camiseta clara", swatch: SHIRT.light }]} value={pick.light ? 1 : 0} onChange={(key) => choose({ ...pick, light: key === 1 })} columns="grid-cols-2" help="A arte muda de cor para combinar com a camiseta." />}
+    </>
+  );
   const [contact, setContact] = useState<ContactValues>({ name: "", whatsapp: "", email: "", confirm: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [phase, setPhase] = useState<"idle" | "sending" | "done">("idle");
@@ -55,13 +112,15 @@ export function CustomizerForm({
   const [copied, setCopied] = useState(false);
   const idem = useRef(newKey());
   const previous = useRef<string | undefined>(undefined);
-  const g = artworkBase ? undefined : model.lineGroup;
+  const g = studio ? undefined : model.lineGroup;
   const summary = useMemo(() => {
-    if (!artworkBase) return liveSummary(model, values);
-    const checked = validateArtworkInput(artworkBase, model.studioTemplateId!, fieldMode ? { fields: fieldValues } : { layers: artworkEdits });
-    if (checked.ok && checked.artwork.fields) return [...checked.artwork.fields.map((f) => ({ label: f.label, value: f.value })), ...checked.artwork.layers.map((l) => ({ label: "Texto na arte", value: l.text }))];
-    return checked.ok ? checked.artwork.layers.flatMap((l, i) => [{ label: `${i + 1}. ${l.name}`, value: l.text }, { label: `${i + 1}. Fonte e cor`, value: `${l.fontName} · ${l.color.toUpperCase()}` }]) : [];
-  }, [model, values, artworkBase, fieldMode, fieldValues, artworkEdits]);
+    if (!studio || !choice) return liveSummary(model, values);
+    const picked = studioTemplateIds(model).length > 1 ? [{ label: "Arte escolhida", value: choiceLabel(choice) }] : [];
+    if (!artworkBase) return picked;
+    const checked = validateArtworkInput(artworkBase, choice.templateId, fieldMode ? { fields: fieldValues } : { layers: artworkEdits });
+    if (checked.ok && checked.artwork.fields) return [...picked, ...checked.artwork.fields.map((f) => ({ label: f.label, value: f.value })), ...checked.artwork.layers.map((l) => ({ label: "Texto na arte", value: l.text }))];
+    return checked.ok ? [...picked, ...checked.artwork.layers.flatMap((l, i) => [{ label: `${i + 1}. ${l.name}`, value: l.text }, { label: `${i + 1}. Fonte e cor`, value: `${l.fontName} · ${l.color.toUpperCase()}` }])] : picked;
+  }, [model, values, studio, choice, artworkBase, fieldMode, fieldValues, artworkEdits]);
   const referenceUrl = done ? `/${region}/personalizar/solicitacao/${done.reference}` : null;
 
   const setField = (key: string, v: string) => setValues((cur) => ({ ...cur, fields: { ...cur.fields, [key]: v } }));
@@ -81,7 +140,8 @@ export function CustomizerForm({
     e.preventDefault();
     setBanner(null);
     if (phase === "sending") return;
-    const checked = artworkBase ? validateArtworkInput(artworkBase, model.studioTemplateId!, artworkInput) : validateSubmission(model, { fields: values.fields, lines: values.lines });
+    if (studio && (!artworkBase || !templateId)) { setBanner("Aguarde a arte carregar."); return; }
+    const checked = artworkBase && templateId ? validateArtworkInput(artworkBase, templateId, artworkInput) : validateSubmission(model, { fields: values.fields, lines: values.lines });
     const contactChecked = validateContact(contact);
     const problems = [...(checked.ok ? [] : checked.errors), ...(contactChecked.ok ? [] : contactChecked.errors)];
     if (problems.length > 0) {
@@ -90,14 +150,14 @@ export function CustomizerForm({
       return;
     }
     setErrors({});
-    if (artworkBase && !artworkReady) { setBanner("Aguarde a prévia da arte carregar. Se aparecer um erro, confira a fonte e os textos."); return; }
+    if (studio && !artworkReady) { setBanner("Aguarde a prévia da arte carregar. Se aparecer um erro, confira a fonte e os textos."); return; }
     if (preview) {
       setBanner("Pré-visualização: nada foi enviado.");
       return;
     }
     setPhase("sending");
     try {
-      const result = await submit({ region, slug: model.slug, idempotencyKey: idem.current, fields: values.fields, lines: values.lines, ...(artworkBase ? { artwork: { templateId: model.studioTemplateId!, ...artworkInput } } : {}), contact, replaces: previous.current });
+      const result = await submit({ region, slug: model.slug, idempotencyKey: idem.current, fields: values.fields, lines: values.lines, ...(studio && templateId ? { artwork: { templateId, ...artworkInput } } : {}), contact, replaces: previous.current });
       if (result.ok) {
         setDone(result);
         setPhase("done");
@@ -135,7 +195,9 @@ export function CustomizerForm({
       <div className="grid gap-8 lg:grid-cols-12 lg:gap-12">
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-24">
-            {artworkProject ? <ArtworkPreview project={artworkProject} onReady={setArtworkReady} /> : <>
+            {studio ? (artworkProject ? <ArtworkPreview key={templateId} project={artworkProject} onReady={setArtworkReady} view={previewView} onViewChange={setPreviewView} shirt={choice?.version.lightTemplateId ? (choice.light ? SHIRT.light : SHIRT.dark) : undefined} /> : (
+              <div className={`mt-[52px] flex w-full items-center justify-center bg-[#242424] p-6 text-center text-white ${previewView === "shirt" ? "aspect-[80/84]" : "aspect-[4270/4900]"}`} role="status" aria-live="polite">{baseError || "Carregando a arte…"}</div>
+            )) : <>
             {/* eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin */}
             <img
               src={mid}
@@ -148,6 +210,7 @@ export function CustomizerForm({
             />
             <p className="t-caption mt-2 text-center">Imagem ilustrativa. Confira seus dados de personalização.</p>
             </>}
+            {studio && phase !== "done" && <div className="mt-6 space-y-5 lg:hidden">{pickers("topo")}</div>}
           </div>
         </div>
 
@@ -187,10 +250,11 @@ export function CustomizerForm({
           ) : (
             <form onSubmit={onSubmit} noValidate className="mt-8 space-y-6" aria-describedby={`${uid}-notice`}>
               <fieldset disabled={phase === "sending"} className="min-w-0 space-y-6">
-              {artworkBase && (fieldMode
-                ? <ArtworkFields base={artworkBase} values={fieldValues} onChange={setFieldValues} errors={errors} uid={uid} />
-                : <ArtworkEditor base={artworkBase} edits={artworkEdits} onChange={setArtworkEdits} errors={errors} uid={uid} />)}
-              {!artworkBase && orderedFields(model).map((f) => {
+              <div className="hidden space-y-6 lg:block">{pickers("form")}</div>
+              {studio && (fieldMode
+                ? <ArtworkFields base={firstBase!} values={fieldValues} onChange={setFieldValues} errors={errors} uid={uid} />
+                : artworkBase && <ArtworkEditor base={artworkBase} edits={artworkEdits} onChange={setArtworkEdits} errors={errors} uid={uid} />)}
+              {!studio && orderedFields(model).map((f) => {
                 const id = `${uid}-${f.key}`;
                 const value = values.fields[f.key] ?? "";
                 return (
@@ -273,7 +337,7 @@ export function CustomizerForm({
               {!available && !preview && <p className="border-l-4 border-ink bg-white p-3" role="status">O envio de solicitações não está disponível neste ambiente.</p>}
 
               <div>
-                <button type="submit" className="btn" disabled={phase === "sending" || (!available && !preview) || Boolean(artworkBase && !artworkReady)}>{phase === "sending" ? "Enviando…" : preview ? "Testar o envio (prévia)" : artworkBase ? "Salvar e enviar solicitação" : "Enviar solicitação"}</button>
+                <button type="submit" className="btn" disabled={phase === "sending" || (!available && !preview) || (studio && (!artworkBase || !artworkReady))}>{phase === "sending" ? "Enviando…" : preview ? "Testar o envio (prévia)" : studio ? "Salvar e enviar solicitação" : "Enviar solicitação"}</button>
                 <p id={`${uid}-notice`} className="t-small mt-3 max-w-xl text-ink-mute">
                   Enviar registra a sua solicitação de criação com a nossa equipe, com o resumo acima. <strong>Esta etapa não é uma compra e não reserva um produto.</strong> Não pedimos endereço, CPF, senha nem dados de pagamento.
                 </p>

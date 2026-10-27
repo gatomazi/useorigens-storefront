@@ -5,18 +5,26 @@ Um modelo de personalização pode usar uma base do [Estúdio de estampas](estam
 ## Preparar e publicar
 
 1. Em `/admin/estampas`, prepare a composição e use **Salvar como modelo**. O salvamento cria uma base imutável com suas camadas, imagens e fontes incorporadas.
-2. Abra `/admin/personalizacao/[id]` e escolha essa base em **Base do estúdio**, na seção **Editor de arte para o cliente**.
+2. Abra `/admin/personalizacao/[id]` e, na seção **Editor de arte para o cliente**, adicione a arte com essa base (veja [Várias artes numa página](#várias-artes-numa-página)).
 3. Salve o rascunho do modelo de personalização. Use a prévia interativa para trocar textos, fontes e cores e testar o formulário. **Testar o envio (prévia)** não registra uma solicitação.
 4. Publique o modelo de personalização para disponibilizar o vínculo na loja, respeitando os requisitos de ativação já existentes.
 
-Quando há uma base vinculada, os controles da arte substituem os campos de texto e o grupo de linhas do formulário público. Sem vínculo, o formulário anterior continua em uso. Os campos de contato, a confirmação de uso do contato e o acompanhamento da solicitação continuam iguais.
+Quando há uma arte vinculada, os controles da arte substituem os campos de texto e o grupo de linhas do formulário público. Sem vínculo, o formulário anterior continua em uso. Os campos de contato, a confirmação de uso do contato e o acompanhamento da solicitação continuam iguais.
 
 ## O que o cliente pode editar
 
 - Cada camada de texto visível oferece texto, fonte e cor. São permitidos até **200 caracteres por texto**, sem ultrapassar a quantidade de linhas daquele texto na base.
 - **Fonte** oferece as fontes padrão do estúdio e as fontes incorporadas à base. **Mont** aparece uma única vez; ao escolhê-la, **Variação** mostra seus cortes incorporados àquela base, como **Extraleve**, **Regular**, **Regular itálico**, **Negrito** e **Pesado**. Cada escolha usa o arquivo real do corte. O cliente não envia novos arquivos de fonte nem acessa cortes ausentes da base.
 - Posições, logos, imagens e dimensões seguem a composição original. Textos longos diminuem proporcionalmente para caber na largura disponível.
-- A prévia acompanha as escolhas. **Fundo para visualizar** serve apenas para conferir o contraste; não muda a cor do produto nem compõe o PNG.
+- A prévia acompanha as escolhas. Ela abre **Na camiseta**: uma camiseta desenhada (tamanho M), com a área de estampa de 36 × 41 cm da INK 11 cm abaixo da gola, então a arte aparece no tamanho e no lugar reais (um logo de peito fica no peito). **Só a arte** mostra a arte ampliada. Quando a arte não tem versão clara e escura, a cor da camiseta (ou do fundo) na prévia serve só para conferir o contraste; não muda o produto nem compõe o PNG.
+
+## Várias artes numa página
+
+Um modelo pode oferecer várias artes (até 8), e o cliente escolhe qual personalizar. Cada arte tem uma ou mais **versões** (até 3, por exemplo Adulto e Infantil, com nome obrigatório quando há mais de uma) e cada versão tem a base para **camiseta escura** e, opcional, a base para **camiseta clara**. A página mostra só os seletores que fazem sentido: **Escolha a arte** com mais de uma arte, **Versão** quando a arte tem mais de uma, e **Cor da camiseta** quando a versão tem as duas bases. No celular, os seletores ficam logo abaixo da prévia.
+
+- Todas as bases do modelo precisam pedir os mesmos campos (por exemplo, só o sobrenome): o cliente escreve uma vez e troca de arte sem perder o que escreveu. O painel recusa o salvamento quando não pedem.
+- A página leva só a base da primeira arte (cada base carrega a arte em tamanho real, de 0,5 a 4 MB). As outras são buscadas quando o cliente as escolhe, e só as bases do próprio modelo publicado são servidas.
+- A solicitação registra a **Arte escolhida** (por exemplo, "Eu vim pela ceia · Infantil · Eu vim pelo presente · Camiseta clara") e o nome da base usada.
 
 O cliente informa nome, ao menos um canal de contato e a confirmação solicitada. **Salvar e enviar solicitação** guarda as escolhas na fila existente e mostra uma referência. O link **Ver minha solicitação** também apresenta a prévia da arte, além do resumo e do andamento. Não há galeria pública, upload de PNG pelo cliente nem geração de produto nessa etapa.
 
@@ -58,7 +66,7 @@ O script apaga o sobrenome do PNG (uma zona em volta do nome, incluindo o halo q
 
 As quatro fontes (OFL) ficam em `assets/print-studio/fonts/` e também entram na biblioteca do estúdio. A Graduate é mais leve e larga que a letra universitária original; o contorno compensa parte disso. Para trocar por outra fonte, coloque o arquivo em `assets/print-studio/fonts/`, registre em `font-server.ts` e no `FONTS` do script, e gere de novo.
 
-Para publicar em produção, em cada `.origens.json`: `/admin/estampas` → **Importar modelo** → conferir → **Salvar como modelo**; depois `/admin/personalizacao` → novo modelo (coleção, mockup) → **Base do estúdio** → salvar → publicar o modelo.
+Para publicar em produção: em cada um dos 12 `.origens.json`, `/admin/estampas` → **Importar modelo** → conferir → **Salvar como modelo**. Depois, em `/admin/personalizacao`, um único modelo "Natal em família" (coleção, mockup) com cinco artes: Universitário, Eu vim pela ceia (versões Adulto, com a base "eu vim pela ceia", e Infantil, com "eu vim pelo presente"), Ceia dos, Árvore e Pavê ou pacumê, cada versão com a base escura e a clara. Salvar e publicar o modelo.
 
 ## Atender no estúdio
 

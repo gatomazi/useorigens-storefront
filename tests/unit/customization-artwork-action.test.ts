@@ -10,10 +10,10 @@ const state = vi.hoisted(() => ({ model: null as Customizer | null, store: null 
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-forwarded-for": "127.0.0.1" }) }));
 vi.mock("@/lib/admin/auth/rate-limit", () => ({ allow: () => true }));
 vi.mock("@/lib/customization/server", () => ({ requestStoreOrNull: () => state.store, requestSecret: () => "unit-test-reference-secret-only" }));
-vi.mock("@/lib/customization/artwork-server", () => ({ loadArtworkBase: async (id: string) => id === state.model?.studioTemplateId ? state.base : null }));
+vi.mock("@/lib/customization/artwork-server", () => ({ loadArtworkBase: async (id: string) => id === "1792427199786-94f180a0-474a-4a75-9fae-1fbdd72f2aa9" ? { ...state.base!, name: "Feliz tudo · camiseta clara" } : id.startsWith("1792427199") ? state.base : null }));
 vi.mock("@/lib/pages/public", () => ({ publishedFor: (region: string) => region === "sul" ? { region: "sul", bundle: { docs: { sul: { customizers: [state.model] } } } } : null }));
 
-import { submitCustomizationAction } from "@/app/[region]/personalizar/actions";
+import { loadArtworkBaseAction, submitCustomizationAction } from "@/app/[region]/personalizar/actions";
 import { fileRequestStore } from "@/lib/customization/file-store";
 import { createPreset } from "@/lib/print-studio/model";
 import { initialArtworkEdits } from "@/lib/customization/artwork";
@@ -26,7 +26,7 @@ describe("envio público da arte para a fila existente", () => {
     directory = await mkdtemp(path.join(tmpdir(), "origens-artwork-action-"));
     state.store = fileRequestStore(path.join(directory, "requests.json"));
     state.base = createPreset("peleia");
-    state.model = { id: "cz-art", slug: "sua-arte", name: "Sua arte", source: { store: "use-sul", collectionId: 1 }, fields: [{ key: "antigo", label: "Campo antigo", required: true, type: "text", position: 1, maxLength: 10 }], studioTemplateId: templateId, previewMode: "mockupWithTextSummary", active: true, version: 2 };
+    state.model = { id: "cz-art", slug: "sua-arte", name: "Sua arte", source: { store: "use-sul", collectionId: 1 }, fields: [{ key: "antigo", label: "Campo antigo", required: true, type: "text", position: 1, maxLength: 10 }], studioArts: [{ label: "Sua arte", versions: [{ templateId }] }], previewMode: "mockupWithTextSummary", active: true, version: 2 };
   });
   afterAll(async () => { await rm(directory, { recursive: true, force: true }); });
 
@@ -48,9 +48,26 @@ describe("envio público da arte para a fila existente", () => {
 
   test("recusa base trocada, camadas incompletas e contato sem confirmação antes de salvar", async () => {
     const input = { region: "sul", slug: "sua-arte", idempotencyKey: "rejected-artwork-key", contact, artwork: { templateId, layers: initialArtworkEdits(state.base!) } };
-    expect(await submitCustomizationAction({ ...input, artwork: { ...input.artwork, templateId: "1792427199785-00000000-0000-0000-0000-000000000000" } })).toMatchObject({ ok: false, message: expect.stringContaining("base deste modelo mudou") });
+    expect(await submitCustomizationAction({ ...input, artwork: { ...input.artwork, templateId: "1792427199785-00000000-0000-0000-0000-000000000000" } })).toMatchObject({ ok: false, message: expect.stringContaining("arte deste modelo mudou") });
     expect(await submitCustomizationAction({ ...input, artwork: { templateId, layers: [] } })).toMatchObject({ ok: false });
     expect(await submitCustomizationAction({ ...input, contact: { ...contact, confirm: false } })).toMatchObject({ ok: false, errors: expect.arrayContaining([{ key: "contact.confirm", message: expect.any(String) }]) });
     expect((await state.store!.list({}, 20, 0)).total).toBe(1);
+  });
+  test("aceita a versão para camiseta clara do mesmo modelo e registra a base escolhida", async () => {
+    const lightId = "1792427199786-94f180a0-474a-4a75-9fae-1fbdd72f2aa9";
+    const single = state.model!;
+    state.model = { ...single, studioArts: [{ label: "Feliz tudo", versions: [{ templateId, lightTemplateId: lightId }] }, { label: "Outra", versions: [{ label: "Adulto", templateId: "1792427199787-94f180a0-474a-4a75-9fae-1fbdd72f2aaa" }, { label: "Infantil", templateId: "1792427199788-94f180a0-474a-4a75-9fae-1fbdd72f2aab" }] }] };
+    try {
+      const result = await submitCustomizationAction({ region: "sul", slug: "sua-arte", idempotencyKey: "light-shirt-artwork-key", contact, artwork: { templateId: lightId, layers: initialArtworkEdits(state.base!) } });
+      expect(result).toMatchObject({ ok: true, summary: expect.arrayContaining([{ label: "Arte escolhida", value: "Feliz tudo · Camiseta clara" }, { label: "Base da arte", value: "Feliz tudo · camiseta clara" }]) });
+      const kids = await submitCustomizationAction({ region: "sul", slug: "sua-arte", idempotencyKey: "kids-version-artwork-key", contact, artwork: { templateId: "1792427199788-94f180a0-474a-4a75-9fae-1fbdd72f2aab", layers: initialArtworkEdits(state.base!) } });
+      expect(kids).toMatchObject({ ok: true, summary: expect.arrayContaining([{ label: "Arte escolhida", value: "Outra · Infantil" }]) });
+      // Only the model's own bases are served to the page, never another saved template.
+      expect(await loadArtworkBaseAction({ region: "sul", slug: "sua-arte", templateId: lightId })).toMatchObject({ name: "Feliz tudo · camiseta clara" });
+      expect(await loadArtworkBaseAction({ region: "sul", slug: "sua-arte", templateId: "1792427199789-94f180a0-474a-4a75-9fae-1fbdd72f2aac" })).toBeNull();
+      expect(await loadArtworkBaseAction({ region: "sul", slug: "outro", templateId: lightId })).toBeNull();
+      const stored = await state.store!.list({}, 20, 0);
+      expect(stored.rows.find((r) => r.values.artwork?.templateId === lightId)).toBeDefined();
+    } finally { state.model = single; }
   });
 });

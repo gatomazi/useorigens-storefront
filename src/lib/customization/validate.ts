@@ -112,6 +112,7 @@ export function summaryOf(snapshot: ModelSnapshot, values: Values): SummaryLine[
   const g = snapshot.lineGroup;
   if (g) values.lines.forEach((value, i) => { if (value) out.push({ label: g.lineLabel.replace("{n}", String(i + 1)), value }); });
   if (values.artwork) {
+    if (values.artwork.choice) out.push({ label: "Arte escolhida", value: values.artwork.choice });
     out.push({ label: "Base da arte", value: values.artwork.templateName });
     if (values.artwork.fields) {
       for (const f of values.artwork.fields) out.push({ label: f.label, value: f.value });

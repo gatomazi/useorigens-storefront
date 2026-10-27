@@ -10,6 +10,8 @@ import { publishedFor } from "@/lib/pages/public";
 import { liveCustomizer } from "@/lib/site-config/pages";
 import { validateArtworkInput } from "@/lib/customization/artwork";
 import { loadArtworkBase } from "@/lib/customization/artwork-server";
+import { choiceLabel, choiceOfTemplate, studioTemplateIds } from "@/lib/customization/studio-arts";
+import type { PrintProject } from "@/lib/print-studio/model";
 
 export type SubmitResult =
   | { ok: true; reference: string; shortReference: string; summary: SummaryLine[]; channels: string[]; duplicate: boolean; expiresAt: string; modelVersion: number }
@@ -32,17 +34,18 @@ export async function submitCustomizationAction(input: { region: string; slug: s
   const store = requestStoreOrNull();
   const secret = requestSecret();
   if (!store || !secret) return fail("O envio de solicitações não está disponível neste ambiente.");
-  const checked = validateSubmission(model.studioTemplateId ? { ...model, fields: [], lineGroup: undefined } : model, { fields: input.fields, lines: input.lines });
+  const checked = validateSubmission(model.studioArts?.length ? { ...model, fields: [], lineGroup: undefined } : model, { fields: input.fields, lines: input.lines });
   const contact = validateContact(input.contact && typeof input.contact === "object" ? input.contact : {});
   const errors = [...(checked.ok ? [] : checked.errors), ...(contact.ok ? [] : contact.errors)];
   if (!checked.ok || !contact.ok) return fail("Confira os campos destacados.", errors);
-  if (model.studioTemplateId) {
-    if (input.artwork?.templateId !== model.studioTemplateId) return fail("A base deste modelo mudou. Recarregue a página antes de enviar.");
-    const base = await loadArtworkBase(model.studioTemplateId).catch(() => null);
+  if (model.studioArts?.length) {
+    const choice = typeof input.artwork?.templateId === "string" ? choiceOfTemplate(model, input.artwork.templateId) : null;
+    if (!input.artwork || !choice) return fail("A arte deste modelo mudou. Recarregue a página antes de enviar.");
+    const base = await loadArtworkBase(choice.templateId).catch(() => null);
     if (!base) return fail("Esta base não está disponível agora. Tente novamente mais tarde.");
-    const artwork = validateArtworkInput(base, model.studioTemplateId, input.artwork);
+    const artwork = validateArtworkInput(base, choice.templateId, input.artwork);
     if (!artwork.ok) return fail("Confira os textos, fontes e cores da arte.", artwork.errors);
-    checked.values.artwork = artwork.artwork;
+    checked.values.artwork = { ...artwork.artwork, ...(studioTemplateIds(model).length > 1 ? { choice: choiceLabel(choice) } : {}) };
   } else if (input.artwork) return fail("Este modelo não permite edição da arte. Recarregue a página.");
   const token = tokenFor(secret, found.region, input.idempotencyKey);
   const replaces = typeof input.replaces === "string" && TOKEN_SHAPE.test(input.replaces) ? hashToken(input.replaces) : undefined;
@@ -62,4 +65,17 @@ export async function submitCustomizationAction(input: { region: string; slug: s
     // The reason is deliberately not logged with the values; the store's own failure has no customer text in its message.
     return fail("Não foi possível registrar agora. Tente novamente em instantes.");
   }
+}
+
+/**
+ * One base of a live model, fetched when the customer picks another art, version or shirt colour: the page ships only the first base (each one
+ * carries the full-size art). Only the model's own bases are served, never another saved template.
+ */
+export async function loadArtworkBaseAction(input: { region: string; slug: string; templateId: string }): Promise<PrintProject | null> {
+  const found = publishedFor(String(input.region));
+  const model = found ? liveCustomizer(found.bundle.docs[found.region], String(input.slug)) : undefined;
+  if (!model || typeof input.templateId !== "string" || !studioTemplateIds(model).includes(input.templateId)) return null;
+  const forwarded = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!allow(`czbase:${forwarded}`, 60, 10 * 60_000)) return null;
+  return loadArtworkBase(input.templateId).catch(() => null);
 }
