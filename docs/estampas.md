@@ -10,7 +10,11 @@ Cada salvamento cria uma versão independente no servidor, com a imagem final, u
 
 ## Modelos e recursos
 
-Os dois modelos iniciais ficam em `src/lib/print-studio/model.ts`: **Feliz tudo** e **Quem peleia**. Usam Hanken Grotesk inicialmente. O seletor também oferece **Mont ExtraLight** e **Mont Heavy**, a partir dos dois OTFs fornecidos, guardados sem alteração em `assets/print-studio/fonts/`. Os arquivos são disponibilizados somente depois da autenticação. Ao escolher uma dessas fontes, seu arquivo e peso exatos são incorporados à composição salva.
+Os dois modelos iniciais ficam em `src/lib/print-studio/model.ts`: **Feliz tudo** e **Quem peleia**. Usam Hanken Grotesk inicialmente. Em **Fonte**, a família **Mont** aparece uma única vez; **Variação** oferece os cortes disponíveis: **Extraleve**, **Regular**, **Regular itálico**, **Negrito** e **Pesado**. Extraleve e Pesado usam os dois OTFs fornecidos, guardados sem alteração em `assets/print-studio/fonts/`. Os arquivos da biblioteca são disponibilizados somente depois da autenticação. A variação troca o arquivo de fonte real (`fontId`/OTF) e seu peso declarado. Ao escolher Mont, os cortes disponíveis da família são incorporados à composição, preservando os arquivos de fonte já salvos no projeto. Artes e recursos antigos continuam compatíveis, sem migração de schema.
+
+A prévia local também inclui **Mont Regular (PDF)**, **Mont Regular Italic (PDF)** e **Mont Bold (reconstruída)**. Regular e Italic foram recuperadas do PDF, sem aspas retas e sem as tabelas originais de kerning/recursos OpenType. A Bold original do PDF continha só 96 glifos, sem o `q` e muitos símbolos. A versão reconstruída mantém os desenhos disponíveis e complementa letras entre Regular e Heavy, com acentos e símbolos reconstruídos a partir da Regular. Tem 408 caracteres Unicode, incluindo ASCII completo, acentos de português, aspas, moedas e ordinais. É uma aproximação para a Origens, não o arquivo original completo da Mont Bold.
+
+O arquivo `scripts/rebuild-mont-bold.py` reproduz a reconstrução a partir dos OTFs fornecidos (dependências Python: `fonttools`, `freetype-py`, `pillow`). Os resultados, a prévia e a origem de cada caractere ficam em `output/fonts/mont-bold-reconstruida/`. A biblioteca usa `assets/print-studio/fonts/Mont-Bold-Reconstruida.otf`; fontes escolhidas continuam incorporadas à composição. A Bold parcial permanece preservada para referências antigas, com validação dos caracteres ausentes. Os novos acréscimos estão somente no ambiente local até nova publicação.
 
 **Logos da Origens** oferece Sul, Norte e Centro-Oeste, cada uma nas versões clara e escura. Os seis PNGs fornecidos ficam em `assets/print-studio/logos/`, preservados sem alteração. A prévia da biblioteca usa fundo contrastante; a logo clara é indicada para camisetas escuras e a escura para camisetas claras. **Adicionar logo** insere a imagem abaixo dos textos. Com uma imagem selecionada, **Trocar selecionada** preserva posição, largura e agrupamento.
 
@@ -18,7 +22,7 @@ As logos são servidas somente pelas rotas autenticadas `/estampas/logos/[id]` e
 
 Para preparar uma nova base, o owner pode ajustar o editor, enviar arquivos em **Fontes e imagem de referência** e usar **Salvar como modelo**. O modelo fica disponível no seletor para os outros usuários. Também é possível importar um `.json` editável (schema `PrintProject` em `model.ts`), conferir a prévia e salvar como modelo. A esposa não precisa lidar com esses arquivos.
 
-Um PNG de referência não é convertido automaticamente em texto: funciona como guia visual, separado das camadas e excluído da arte final. Fontes TTF/OTF/WOFF/WOFF2 e logos PNG/JPG/WebP são incorporadas à composição salva no servidor. Cada arquivo pode ter até 8 MB; uma composição pode ter até 40 camadas e 20 fontes. Para o desenho exato de uma variante em negrito, envie o arquivo correspondente, que pode ser escolhido como fonte independente.
+Um PNG de referência não é convertido automaticamente em texto: funciona como guia visual, separado das camadas e excluído da arte final. Fontes TTF/OTF/WOFF/WOFF2 e logos PNG/JPG/WebP são incorporadas à composição salva no servidor. Cada arquivo pode ter até 8 MB; uma composição pode ter até 40 camadas e 20 fontes. Para o desenho exato de uma variante em negrito, envie o arquivo correspondente. Fontes importadas continuam disponíveis como fontes independentes; os cortes Mont da biblioteca ficam agrupados em **Variação**, incluindo **Negrito (parcial)** quando presente em um projeto antigo.
 
 ## Alinhamento e agrupamento
 
@@ -70,3 +74,7 @@ npm test -- tests/unit/print-studio*.test.ts
 ```
 
 A interface herda a tipografia e os controles do painel. Seu modo é Operate: modelos e edição por camada à esquerda, prévia à direita; no celular a prévia vem antes dos controles. Ajustes de posição, fontes e referência ficam em seções expansíveis.
+
+## Personalização pelo cliente
+
+Para vincular uma base do estúdio a um modelo da loja, receber as escolhas do cliente e abrir a solicitação como uma nova arte, veja [Editor de personalização do cliente](personalizacao-editor.md).

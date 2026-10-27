@@ -1,4 +1,5 @@
 import { BUILTIN_FONTS, type PrintLayer, type PrintProject, type TextLayer } from "./model";
+import { pdfFontCharacterError } from "./pdf-fonts";
 
 export type LayerBounds = { id: string; x: number; y: number; width: number; height: number };
 export type RenderResources = { families: Map<string, string>; images: Map<string, HTMLImageElement> };
@@ -54,24 +55,83 @@ function setTextStyle(context: CanvasRenderingContext2D, layer: TextLayer, resou
   if (!family) throw new Error("Uma fonte da composição não foi carregada.");
   context.font = `${layer.weight} ${layer.fontSize}px ${family}`;
   context.fillStyle = layer.color;
+  context.strokeStyle = layer.color;
+  context.lineJoin = "round";
   context.textBaseline = "alphabetic";
   context.textAlign = "left";
   context.letterSpacing = `${layer.letterSpacing}px`;
   context.fontKerning = "normal";
+  const fit = layer.boxWidth ?? layer.maxWidth;
+  if (fit) {
+    const width = Math.max(...layer.text.split("\n").map((line) => context.measureText(line).width));
+    if (width > fit) {
+      const ratio = fit / width;
+      context.font = `${layer.weight} ${layer.fontSize * ratio}px ${family}`;
+      context.letterSpacing = `${layer.letterSpacing * ratio}px`;
+      return layer.fontSize * ratio;
+    }
+  }
+  return layer.fontSize;
+}
+
+/** Distance from the layer top to the first baseline. A fixed box anchors on the cap height, so accents never move a locked composition, and a shrunk line keeps its vertical centre. */
+function firstAscent(context: CanvasRenderingContext2D, layer: TextLayer, lines: string[], fontSize: number) {
+  if (layer.boxWidth) {
+    const cap = context.measureText("H").actualBoundingBoxAscent;
+    return (cap * layer.fontSize / fontSize + cap) / 2;
+  }
+  return Math.max(...lines.map((line) => context.measureText(line || " ").actualBoundingBoxAscent), fontSize * 0.72);
 }
 
 export function measureLayer(context: CanvasRenderingContext2D, layer: PrintLayer, resources: RenderResources): LayerBounds {
   if (layer.kind === "image") return { id: layer.id, x: layer.x, y: layer.y, width: layer.width, height: layer.width * layer.asset.height / layer.asset.width };
-  setTextStyle(context, layer, resources);
+  const fontSize = setTextStyle(context, layer, resources);
   const lines = layer.text.split("\n");
   const metrics = lines.map((line) => context.measureText(line || " "));
-  const ascent = Math.max(...metrics.map((m) => m.actualBoundingBoxAscent), layer.fontSize * 0.72);
+  const ascent = firstAscent(context, layer, lines, fontSize);
   const descent = Math.max(0, ...metrics.map((m) => m.actualBoundingBoxDescent));
-  return { id: layer.id, x: layer.x, y: layer.y, width: Math.max(40, ...metrics.map((m) => m.width)), height: Math.max(layer.fontSize, ascent + descent + (lines.length - 1) * layer.fontSize * layer.lineHeight) };
+  const width = layer.boxWidth ?? Math.max(40, ...metrics.map((m) => m.width));
+  // An arch drops its ends by the sagitta of the drawn arc; the box is an approximation used for selection only.
+  const sagitta = layer.arc ? layer.arc * (1 - Math.cos(Math.min(Math.PI / 2, Math.max(...metrics.map((m) => m.width)) / layer.arc / 2))) : 0;
+  const height = Math.max(fontSize, ascent + descent + (lines.length - 1) * fontSize * layer.lineHeight) + sagitta;
+  return { id: layer.id, x: layer.x, y: layer.y, width, height };
+}
+
+/** Height added by a text layer's lines after the first, at the size it is drawn. */
+function extraLinesHeight(context: CanvasRenderingContext2D, layer: TextLayer, resources: RenderResources) {
+  const lines = layer.text.split("\n").length;
+  return lines > 1 ? (lines - 1) * setTextStyle(context, layer, resources) * layer.lineHeight : 0;
+}
+
+function drawText(context: CanvasRenderingContext2D, text: string, x: number, y: number, stroke: number) {
+  if (stroke > 0) { context.lineWidth = stroke; context.strokeText(text, x, y); }
+  context.fillText(text, x, y);
+}
+
+/** One line along an upward arch centred on `cx`; `baseline` is the baseline at the apex. Kerning pairs are not applied between letters. */
+function paintArc(context: CanvasRenderingContext2D, line: string, cx: number, baseline: number, radius: number, stroke: number) {
+  const spacing = parseFloat(context.letterSpacing) || 0;
+  context.letterSpacing = "0px";
+  const letters = [...line].map((char) => ({ char, width: context.measureText(char).width }));
+  const total = letters.reduce((sum, l) => sum + l.width, 0) + spacing * Math.max(0, letters.length - 1);
+  let along = -total / 2;
+  for (const { char, width } of letters) {
+    context.save();
+    context.translate(cx, baseline + radius);
+    context.rotate((along + width / 2) / radius);
+    drawText(context, char, -width / 2, -radius, stroke);
+    context.restore();
+    along += width + spacing;
+  }
 }
 
 /** The exact same painter is used by the interactive preview and full-resolution PNG. */
 export function paintProject(canvas: HTMLCanvasElement, project: PrintProject, resources: RenderResources, width: number): LayerBounds[] {
+  for (const layer of project.layers) {
+    if (layer.kind !== "text" || !layer.visible) continue;
+    const error = pdfFontCharacterError(layer.fontId, layer.text);
+    if (error) throw new Error(error);
+  }
   canvas.width = Math.round(width);
   canvas.height = Math.round(width * project.height / project.width);
   const context = canvas.getContext("2d");
@@ -79,8 +139,10 @@ export function paintProject(canvas: HTMLCanvasElement, project: PrintProject, r
   context.scale(canvas.width / project.width, canvas.height / project.height);
   if (project.background) { context.fillStyle = project.background; context.fillRect(0, 0, project.width, project.height); }
   const bounds: LayerBounds[] = [];
-  for (const layer of project.layers) {
-    if (!layer.visible) continue;
+  for (const entry of project.layers) {
+    if (!entry.visible) continue;
+    const pusher = entry.kind === "image" && entry.pushedBy ? project.layers.find((l) => l.id === entry.pushedBy && l.kind === "text" && l.visible) : undefined;
+    const layer = pusher?.kind === "text" ? { ...entry, y: entry.y + extraLinesHeight(context, pusher, resources) } : entry;
     const box = measureLayer(context, layer, resources);
     bounds.push(box);
     if (layer.kind === "image") {
@@ -88,13 +150,23 @@ export function paintProject(canvas: HTMLCanvasElement, project: PrintProject, r
       if (!img) throw new Error(`A imagem “${layer.name}” não foi carregada.`);
       context.drawImage(img, layer.x, layer.y, box.width, box.height);
     } else {
-      setTextStyle(context, layer, resources);
+      const fontSize = setTextStyle(context, layer, resources);
       const lines = layer.text.split("\n");
-      const ascent = Math.max(...lines.map((line) => context.measureText(line || " ").actualBoundingBoxAscent), layer.fontSize * 0.72);
+      const ascent = firstAscent(context, layer, lines, fontSize);
+      const stroke = (layer.stroke ?? 0) * fontSize / layer.fontSize;
+      if (layer.arc) {
+        // Extra lines go below on tighter concentric arcs; the first line keeps the single-line baseline.
+        const step = fontSize * layer.lineHeight;
+        lines.forEach((line, index) => {
+          const down = index * step;
+          paintArc(context, line, layer.x + box.width / 2, layer.y + ascent + down, Math.max(100, layer.arc! - down), stroke);
+        });
+        continue;
+      }
       lines.forEach((line, index) => {
         const lineWidth = context.measureText(line).width;
         const offset = layer.align === "center" ? (box.width - lineWidth) / 2 : layer.align === "right" ? box.width - lineWidth : 0;
-        context.fillText(line, layer.x + offset, layer.y + ascent + index * layer.fontSize * layer.lineHeight);
+        drawText(context, line, layer.x + offset, layer.y + ascent + index * fontSize * layer.lineHeight, stroke);
       });
     }
   }

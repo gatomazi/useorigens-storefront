@@ -1395,6 +1395,16 @@ export async function saveCustomizerAction(fd: FormData) {
   const live = ws.baseDoc.customizers?.find((m) => m.id === id);
   const { patch, errors } = parseCustomizerForm(fd, current, { store: storeOf(scope) }, { slugLocked: Boolean(live) });
   if (errors.length > 0) back(here, { err: errors });
+  if (patch.studioArts) {
+    const { loadArtworkBase } = await import("@/lib/customization/artwork-server");
+    const { artworkFields } = await import("@/lib/customization/artwork");
+    const { studioTemplateIds } = await import("@/lib/customization/studio-arts");
+    const ids = studioTemplateIds(patch);
+    const bases = await Promise.all(ids.map((templateId) => loadArtworkBase(templateId).catch(() => null)));
+    if (bases.some((base) => !base)) back(here, { err: ["Uma das bases escolhidas não está disponível ou não tem textos. Salve as bases como modelo no estúdio."] });
+    // The customer types once and switches arts, versions and colours: every base must ask the same questions.
+    if (new Set(bases.map((base) => artworkFields(base!).map((f) => f.id).join(","))).size > 1) back(here, { err: ["Todas as bases do modelo precisam pedir os mesmos campos (por exemplo, só o sobrenome), para o cliente trocar de arte sem perder o que escreveu."] });
+  }
   if (patch.source && !isUmaPencaSource(patch.source)) {
     const problem = sourceProblem({ kind: "ink-category", ...patch.source, order: "category", limit: 6 }, ws.doc);
     if (problem) back(here, { err: [problem] });

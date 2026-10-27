@@ -366,6 +366,8 @@ export type Customizer = {
   inkProductId?: string;
   cardImage?: MediaRef;
   pageMockup?: MediaRef;
+  /** Opt-in public art editor on immutable bases saved in the internal print studio: the customer picks an art (then its version and the shirt colour, when it has them). */
+  studioArts?: StudioArt[];
   fields: CustomField[];
   lineGroup?: LineGroup;
   /** V1: the static mockup plus a live text summary. The mockup already carries printed text, so text is never drawn over it. */
@@ -373,6 +375,14 @@ export type Customizer = {
   active: boolean;
   version: number;
 };
+
+/** `templateId`: the base for dark shirts (or the only one); `lightTemplateId`: the same art for light shirts. */
+export type StudioArtVersion = { label?: string; templateId: string; lightTemplateId?: string };
+/** One art of a studio-based page; its versions (e.g. "Adulto" / "Infantil") are picked after the art and need a label when there are several. */
+export type StudioArt = { label: string; versions: StudioArtVersion[] };
+export const MAX_STUDIO_ARTS = 8;
+export const MAX_ART_VERSIONS = 3;
+export const STUDIO_TEMPLATE_ID = /^\d{13}-[a-f0-9-]{36}$/;
 
 export const MAX_CUSTOM_FIELDS = 10;
 export const MAX_LINE_GROUP = 10;
@@ -563,6 +573,28 @@ class Collector {
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 const isStr = (v: unknown, max: number): v is string => typeof v === "string" && v.length > 0 && v.length <= max;
+
+function checkStudioArts(c: Collector, path: string, arts: unknown): void {
+  if (!Array.isArray(arts) || arts.length < 1 || arts.length > MAX_STUDIO_ARTS) return c.fail(path, `1..${MAX_STUDIO_ARTS} arts`);
+  const seen = new Set<string>();
+  arts.forEach((art, i) => {
+    const p = `${path}[${i}]`;
+    if (!isRecord(art) || !isStr(art.label, 40)) return c.fail(`${p}.label`, "1..40 chars");
+    const versions = art.versions;
+    if (!Array.isArray(versions) || versions.length < 1 || versions.length > MAX_ART_VERSIONS) return c.fail(`${p}.versions`, `1..${MAX_ART_VERSIONS} versions`);
+    versions.forEach((version: unknown, j: number) => {
+      const q = `${p}.versions[${j}]`;
+      if (!isRecord(version)) return c.fail(q, "must be an object");
+      if (version.label === undefined ? versions.length > 1 : !isStr(version.label, 40)) c.fail(`${q}.label`, "1..40 chars, required when an art has several versions");
+      for (const key of ["templateId", "lightTemplateId"] as const) {
+        const id = version[key];
+        if (id === undefined && key === "lightTemplateId") continue;
+        if (typeof id !== "string" || !STUDIO_TEMPLATE_ID.test(id) || seen.has(id)) c.fail(`${q}.${key}`, "a studio template id, used once per model");
+        else seen.add(id);
+      }
+    });
+  });
+}
 
 function checkColor(c: Collector, path: string, v: unknown): void {
   if (typeof v !== "string") return c.fail(path, "must be a colour");
@@ -913,6 +945,7 @@ function checkCustomizer(c: Collector, path: string, v: unknown): void {
   }
   if (v.cardImage !== undefined) checkMediaRef(c, `${path}.cardImage`, v.cardImage);
   if (v.pageMockup !== undefined) checkMediaRef(c, `${path}.pageMockup`, v.pageMockup);
+  if (v.studioArts !== undefined) checkStudioArts(c, `${path}.studioArts`, v.studioArts);
   if (v.previewMode !== "mockupWithTextSummary") c.fail(`${path}.previewMode`, "must be mockupWithTextSummary");
   if (typeof v.active !== "boolean") c.fail(`${path}.active`, "must be boolean");
   else if (v.active && !v.pageMockup) c.fail(`${path}.pageMockup`, "an active model needs its page mockup");
