@@ -4,6 +4,9 @@ import type { Customizer, StudioArt, StudioArtVersion } from "../site-config/sch
 export type ArtPick = { art: number; version: number; light: boolean };
 export type ArtChoice = { art: StudioArt; version: StudioArtVersion; light: boolean; templateId: string };
 
+/** Arts of one family order (the same surname on several arts or versions, e.g. Adulto and Infantil). */
+export const MAX_FAMILY_ARTS = 4;
+
 /** Every base a model can render, dark and light. */
 export const studioTemplateIds = (m: Pick<Customizer, "studioArts">): string[] => (m.studioArts ?? []).flatMap((a) => a.versions.flatMap((v) => [v.templateId, ...(v.lightTemplateId ? [v.lightTemplateId] : [])]));
 

@@ -28,6 +28,15 @@ Um modelo pode oferecer várias artes (até 8), e o cliente escolhe qual persona
 
 O cliente informa nome, ao menos um canal de contato e a confirmação solicitada. **Salvar e enviar solicitação** guarda as escolhas na fila existente e mostra uma referência. O link **Ver minha solicitação** também apresenta a prévia da arte, além do resumo e do andamento. Não há galeria pública, upload de PNG pelo cliente nem geração de produto nessa etapa.
 
+
+### No celular (95% do acesso)
+
+A página segue uma ordem só: título com uma frase, prévia na camiseta (com **Tela cheia**), os quadradinhos de cor, **1. Escolha a arte** (miniaturas com "Silva", servidas recortadas por `/api/personalizar/{região}/{modelo}/miniatura/{base}`, só para bases do modelo publicado; na prévia do painel, `/admin/estampas/miniatura/{base}`), **Versão** (miniaturas com "Adulto" / "Infantil"), **2. Escreva o sobrenome** e **3. Como falamos com você?**. O aviso de que não é compra aparece uma vez, junto do botão.
+
+- O sobrenome começa **vazio** ("Ex.: Silva"); enquanto vazio, a prévia mostra o exemplo e avisa "Mostrando o exemplo “Silva”. Escreva o seu sobrenome", que leva ao campo.
+- **Ver como ficou na camiseta** (logo abaixo do campo, só no celular) e **Tela cheia** abrem a prévia em tela inteira com o campo em cima (cabe acima do teclado), as cores e as artes: dá para escrever e ver ao mesmo tempo.
+- **Várias artes na mesma solicitação**: "Incluir outra arte com o mesmo sobrenome" (até 4, por exemplo Adulto e Infantil). A solicitação guarda a primeira em `values.artwork` e as outras em `values.moreArtwork`; o resumo numera as artes, e o painel mostra e abre cada uma no estúdio (`/admin/estampas?solicitacao=…&arte=2`).
+- O texto das bases geradas traz o exemplo do campo ("Silva"), então a miniatura salva pelo estúdio já mostra o exemplo.
 ## Bases com campo (só o sobrenome)
 
 Uma camada de texto pode ter um **campo** (`slot` em `model.ts`): um modelo de texto com `{campo}`, como `NATAL DOS {sobrenome}`, um rótulo, um limite de caracteres e a caixa das letras (`upper`, `title` ou `none`). Se a base tem pelo menos uma camada com campo, a loja mostra **um input por campo** (camadas com o mesmo campo compartilham a resposta) e **trava todo o resto**: textos, fontes, cores e posições. O navegador envia só `{ sobrenome: "..." }`; o servidor monta os textos a partir da base.
@@ -66,7 +75,7 @@ O script apaga o sobrenome do PNG (uma zona em volta do nome, incluindo o halo q
 
 As quatro fontes (OFL) ficam em `assets/print-studio/fonts/` e também entram na biblioteca do estúdio. A Graduate é mais leve e larga que a letra universitária original; o contorno compensa parte disso. Para trocar por outra fonte, coloque o arquivo em `assets/print-studio/fonts/`, registre em `font-server.ts` e no `FONTS` do script, e gere de novo.
 
-Para publicar em produção: em cada um dos 12 `.origens.json`, `/admin/estampas` → **Importar modelo** → conferir → **Salvar como modelo**. Depois, em `/admin/personalizacao`, um único modelo "Natal em família" (coleção, mockup) com cinco artes: Universitário, Eu vim pela ceia (versões Adulto, com a base "eu vim pela ceia", e Infantil, com "eu vim pelo presente"), Ceia dos, Árvore e Pavê ou pacumê, cada versão com a base escura e a clara. Salvar e publicar o modelo.
+Para publicar em produção: em cada um dos 12 `.origens.json`, `/admin/estampas` → **Importar modelo** → conferir → **Salvar como modelo**. Depois, em `/admin/personalizacao`, um único modelo "Natal em família" (coleção, mockup) com cinco artes: Universitário, Eu vim pela ceia (versões "Adulto", com a base "eu vim pela ceia", e "Infantil", com "eu vim pelo presente"), Ceia dos, Árvore e Pavê ou pacumê, cada versão com a base escura e a clara. Salvar e publicar o modelo.
 
 ## Atender no estúdio
 

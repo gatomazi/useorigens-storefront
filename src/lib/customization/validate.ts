@@ -8,7 +8,8 @@ import type { RequestArtwork } from "./artwork";
 
 export type FieldError = { key: string; message: string };
 export type SummaryLine = { label: string; value: string };
-export type Values = { fields: Record<string, string>; lines: string[]; artwork?: RequestArtwork };
+/** `moreArtwork`: the other arts of a family order on a studio page, sharing the answers of `artwork` (same surname, other art or version). */
+export type Values = { fields: Record<string, string>; lines: string[]; artwork?: RequestArtwork; moreArtwork?: RequestArtwork[] };
 export type SubmissionResult = { ok: true; values: Values; summary: SummaryLine[] } | { ok: false; errors: FieldError[] };
 
 /** The line-group key is reserved in error reports: `lines.<index>`. */
@@ -112,11 +113,15 @@ export function summaryOf(snapshot: ModelSnapshot, values: Values): SummaryLine[
   const g = snapshot.lineGroup;
   if (g) values.lines.forEach((value, i) => { if (value) out.push({ label: g.lineLabel.replace("{n}", String(i + 1)), value }); });
   if (values.artwork) {
-    if (values.artwork.choice) out.push({ label: "Arte escolhida", value: values.artwork.choice });
-    out.push({ label: "Base da arte", value: values.artwork.templateName });
+    const all = [values.artwork, ...(values.moreArtwork ?? [])];
+    const n = (i: number) => (all.length > 1 ? ` ${i + 1}` : "");
+    all.forEach((a, i) => {
+      if (a.choice) out.push({ label: `Arte escolhida${n(i)}`, value: a.choice });
+      out.push({ label: `Base da arte${n(i)}`, value: a.templateName });
+    });
     if (values.artwork.fields) {
       for (const f of values.artwork.fields) out.push({ label: f.label, value: f.value });
-      for (const l of values.artwork.layers) out.push({ label: "Texto na arte", value: l.text });
+      all.forEach((a, i) => { for (const l of a.layers) out.push({ label: `Texto na arte${n(i)}`, value: l.text }); });
     }
     else values.artwork.layers.forEach((l, i) => {
       const label = `${i + 1}. ${l.name}`;

@@ -10,7 +10,7 @@ import { publishedFor } from "@/lib/pages/public";
 import { liveCustomizer } from "@/lib/site-config/pages";
 import { validateArtworkInput } from "@/lib/customization/artwork";
 import { loadArtworkBase } from "@/lib/customization/artwork-server";
-import { choiceLabel, choiceOfTemplate, offersChoice, studioTemplateIds } from "@/lib/customization/studio-arts";
+import { choiceLabel, choiceOfTemplate, MAX_FAMILY_ARTS, offersChoice, studioTemplateIds } from "@/lib/customization/studio-arts";
 import type { PrintProject } from "@/lib/print-studio/model";
 
 export type SubmitResult =
@@ -23,7 +23,7 @@ export type SubmitResult =
  * request table only: never in a log, an analytics event, a URL or an error message, and what comes back is masked (never the full contact). It asks for
  * nothing else (no address, tax id or payment data) and it does NOT send anything to INK, to the customer or to the team: someone reads the queue.
  */
-export async function submitCustomizationAction(input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; artwork?: { templateId: string; layers?: unknown; fields?: unknown }; contact?: ContactInput; replaces?: string }): Promise<SubmitResult> {
+export async function submitCustomizationAction(input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; artwork?: { templateId: string; layers?: unknown; fields?: unknown; also?: unknown }; contact?: ContactInput; replaces?: string }): Promise<SubmitResult> {
   const fail = (message: string, errors: FieldError[] = []): SubmitResult => ({ ok: false, errors, message });
   const found = publishedFor(String(input.region));
   const model = found ? liveCustomizer(found.bundle.docs[found.region], String(input.slug)) : undefined;
@@ -46,6 +46,23 @@ export async function submitCustomizationAction(input: { region: string; slug: s
     const artwork = validateArtworkInput(base, choice.templateId, input.artwork);
     if (!artwork.ok) return fail("Confira os textos, fontes e cores da arte.", artwork.errors);
     checked.values.artwork = { ...artwork.artwork, ...(offersChoice(model) ? { choice: choiceLabel(choice) } : {}) };
+    // A family order: other arts or versions of the same model with the same answers (only for bases with fields, e.g. the surname).
+    const also = input.artwork.also;
+    if (also !== undefined) {
+      const ids = Array.isArray(also) ? also : [];
+      const picks = ids.map((id) => (typeof id === "string" ? choiceOfTemplate(model, id) : null));
+      const keys = [choice, ...picks].map((c) => (c ? `${model.studioArts!.indexOf(c.art)}:${c.art.versions.indexOf(c.version)}` : ""));
+      if (!Array.isArray(also) || ids.length > MAX_FAMILY_ARTS - 1 || !artwork.artwork.fields || picks.some((c) => !c) || new Set(keys).size !== keys.length) return fail("A lista de artes do pedido mudou. Recarregue a página antes de enviar.");
+      const more = [];
+      for (const pick of picks as NonNullable<(typeof picks)[number]>[]) {
+        const extra = await loadArtworkBase(pick.templateId).catch(() => null);
+        if (!extra) return fail("Uma das artes do pedido não está disponível agora. Tente novamente mais tarde.");
+        const checkedExtra = validateArtworkInput(extra, pick.templateId, { fields: input.artwork.fields });
+        if (!checkedExtra.ok) return fail("Confira os textos da arte.", checkedExtra.errors);
+        more.push({ ...checkedExtra.artwork, choice: choiceLabel(pick) });
+      }
+      if (more.length) checked.values.moreArtwork = more;
+    }
   } else if (input.artwork) return fail("Este modelo não permite edição da arte. Recarregue a página.");
   const token = tokenFor(secret, found.region, input.idempotencyKey);
   const replaces = typeof input.replaces === "string" && TOKEN_SHAPE.test(input.replaces) ? hashToken(input.replaces) : undefined;

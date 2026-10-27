@@ -25,6 +25,7 @@ FONTS = {
 }
 SLOT = {"field": "sobrenome", "label": "Sobrenome da família", "maxLength": 20, "example": "Silva"}
 
+# O texto da camada traz o exemplo do campo ("Silva"): é o que a miniatura salva pelo estúdio mostra no seletor de artes.
 # erase: (x0, y0, x1, y1, apagar) — dentro da zona, limpa tudo (inclusive o halo quase transparente que as artes trazem em volta
 # das letras) menos os elementos que `apagar` recusa, preservados com uma margem. Os critérios usam posição e tamanho, nunca cor,
 # para valerem nas duas versões.
@@ -110,7 +111,7 @@ def project(art, png: bytes, color: str, variant: str):
     # A largura medida pelo canvas inclui o espaçamento depois da última letra: compensa para centralizar a tinta.
     x = art["cx"] + art["spacing"] / 2 - art["box"] / 2
     text = {
-        "id": "sobrenome", "kind": "text", "name": "Sobrenome", "text": art["template"].replace("{sobrenome}", "TOMAZI" if art["case"] == "upper" else "Tomazi"),
+        "id": "sobrenome", "kind": "text", "name": "Sobrenome", "text": art["template"].replace("{sobrenome}", SLOT["example"].upper() if art["case"] == "upper" else SLOT["example"]),
         "x": round(x, 1), "y": round(y, 1), "visible": True, "fontId": art["font"], "fontSize": art["size"], "weight": weight, "color": color,
         "letterSpacing": art["spacing"], "lineHeight": 1.1, "align": "center", "boxWidth": art["box"],
         **({"arc": art["arc"]} if art.get("arc") else {}), **({"stroke": art["stroke"]} if art.get("stroke") else {}),
@@ -177,7 +178,7 @@ def main():
             clean.save(buf, "PNG", optimize=True, dpi=(300, 300))
             (out / f"{slug}.origens.json").write_text(json.dumps(project(this, buf.getvalue(), color, variant), ensure_ascii=False))
             if "--preview" in sys.argv:
-                for name in ("TOMAZI", "VASCONCELOS", "ALBUQUERQUE\nLINS"):
+                for name in ("SILVA", "VASCONCELOS", "ALBUQUERQUE\nLINS"):
                     if "\n" in name and not this.get("lines"):
                         continue
                     text = this["template"].replace("{sobrenome}", name if this["case"] == "upper" else name.title())

@@ -3,6 +3,7 @@
 import { artworkFields, artworkFonts, editableTexts, type ArtworkEdit } from "@/lib/customization/artwork";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { fontFamilyId, groupFontOptions, preferredFontVariant } from "@/lib/print-studio/font-options";
+import type { ReactNode } from "react";
 import styles from "./ArtworkEditor.module.css";
 
 export function ArtworkEditor({ base, edits, onChange, errors, uid }: { base: PrintProject; edits: ArtworkEdit[]; onChange: (edits: ArtworkEdit[]) => void; errors: Record<string, string>; uid: string }) {
@@ -45,12 +46,15 @@ export function ArtworkEditor({ base, edits, onChange, errors, uid }: { base: Pr
   );
 }
 
-/** A base with slots: one input per answer (e.g. the family name); texts, fonts, colours and positions stay as designed. */
-export function ArtworkFields({ base, values, onChange, errors, uid }: { base: PrintProject; values: Record<string, string>; onChange: (values: Record<string, string>) => void; errors: Record<string, string>; uid: string }) {
+/**
+ * A base with slots: one input per answer (e.g. the family name); texts, fonts, colours and positions stay as designed. `compact` (the
+ * full-screen preview) keeps only the inputs; `children` follow them (e.g. the button that opens that preview).
+ */
+export function ArtworkFields({ base, values, onChange, errors, uid, legend = "Coloque o nome da sua família", compact = false, children }: { base: PrintProject; values: Record<string, string>; onChange: (values: Record<string, string>) => void; errors: Record<string, string>; uid: string; legend?: ReactNode; compact?: boolean; children?: ReactNode }) {
   return (
-    <fieldset className={styles.editor}>
-      <legend className="t-h3">Coloque o nome da sua família</legend>
-      <p className="t-small text-ink-mute">A prévia mostra a arte com o nome que você escrever. As letras seguem o estilo da estampa, com maiúsculas ajustadas automaticamente.</p>
+    <fieldset className={compact ? styles.compactFields : styles.editor}>
+      <legend className={compact ? "sr-only" : "t-h3"}>{legend}</legend>
+      {!compact && <p className="t-small text-ink-mute">Maiúsculas e minúsculas se ajustam ao estilo da estampa.</p>}
       {errors.artwork && <p className={styles.error} role="alert">{errors.artwork}</p>}
       {artworkFields(base).map((field) => {
         const id = `${uid}-artwork-${field.id}`;
@@ -59,11 +63,12 @@ export function ArtworkFields({ base, values, onChange, errors, uid }: { base: P
         return (
           <div key={field.id} className={styles.textGroup}>
             <label className="t-label block" htmlFor={id}>{field.label}</label>
-            <input id={id} value={value} onChange={(e) => onChange({ ...values, [field.id]: e.target.value })} maxLength={field.maxLength} autoComplete="family-name" autoCapitalize="words" spellCheck={false} placeholder={field.example} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />
+            <input id={id} value={value} onChange={(e) => onChange({ ...values, [field.id]: e.target.value })} maxLength={field.maxLength} autoComplete="family-name" autoCapitalize="words" spellCheck={false} placeholder={`Ex.: ${field.example}`} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />
             <div className={styles.help} id={`${id}-help`}><span className={error ? styles.error : undefined} role={error ? "alert" : undefined}>{error ?? "Escreva como é: “Silva”, “dos Santos”, “Costa e Silva”"}</span><span>{[...value].length}/{field.maxLength}</span></div>
           </div>
         );
       })}
+      {children}
     </fieldset>
   );
 }

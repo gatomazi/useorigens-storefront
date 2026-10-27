@@ -19,6 +19,6 @@ export async function CustomizerPageView({ region, model, bundle, preview = fals
   }
   const mockup: PublicMockup = { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}), alt: ref.decorative ? "" : ref.alt || `${customizerProductLabel(model.source)} ${model.name}` };
   return (
-    <CustomizerForm region={region} model={model} mockup={mockup} {...(firstBase ? { firstBase, loadBase: preview ? loadPreviewArtworkBaseAction : loadArtworkBaseAction } : {})} submit={submitCustomizationAction} available={requestStoreOrNull() !== null} preview={preview} />
+    <CustomizerForm region={region} model={model} mockup={mockup} {...(firstBase ? { firstBase, loadBase: preview ? loadPreviewArtworkBaseAction : loadArtworkBaseAction, thumbs: preview ? "/admin/estampas/miniatura/{id}" : `/api/personalizar/${region}/${model.slug}/miniatura/{id}` } : {})} submit={submitCustomizationAction} available={requestStoreOrNull() !== null} preview={preview} />
   );
 }

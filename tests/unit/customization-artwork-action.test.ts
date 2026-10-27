@@ -66,8 +66,29 @@ describe("envio público da arte para a fila existente", () => {
       expect(await loadArtworkBaseAction({ region: "sul", slug: "sua-arte", templateId: lightId })).toMatchObject({ name: "Feliz tudo · camiseta clara" });
       expect(await loadArtworkBaseAction({ region: "sul", slug: "sua-arte", templateId: "1792427199789-94f180a0-474a-4a75-9fae-1fbdd72f2aac" })).toBeNull();
       expect(await loadArtworkBaseAction({ region: "sul", slug: "outro", templateId: lightId })).toBeNull();
+      // A family order: other arts of the same model, once each; the free-text base of this test has no fields, so it is refused.
+      const family = { region: "sul", slug: "sua-arte", contact, artwork: { templateId: "1792427199787-94f180a0-474a-4a75-9fae-1fbdd72f2aaa", layers: initialArtworkEdits(state.base!), also: ["1792427199788-94f180a0-474a-4a75-9fae-1fbdd72f2aab"] } };
+      expect(await submitCustomizationAction({ ...family, idempotencyKey: "family-free-text-key" })).toMatchObject({ ok: false, message: expect.stringContaining("lista de artes") });
+      expect(await submitCustomizationAction({ ...family, idempotencyKey: "family-unknown-key", artwork: { ...family.artwork, also: ["1792427199789-94f180a0-474a-4a75-9fae-1fbdd72f2aac"] } })).toMatchObject({ ok: false });
+      expect(await submitCustomizationAction({ ...family, idempotencyKey: "family-repeat-key", artwork: { ...family.artwork, also: [family.artwork.templateId] } })).toMatchObject({ ok: false });
       const stored = await state.store!.list({}, 20, 0);
       expect(stored.rows.find((r) => r.values.artwork?.templateId === lightId)).toBeDefined();
     } finally { state.model = single; }
+  });
+
+  test("grava um pedido de família: a mesma resposta em outra arte do modelo", async () => {
+    const [adult, kids] = ["1792427199787-94f180a0-474a-4a75-9fae-1fbdd72f2aaa", "1792427199788-94f180a0-474a-4a75-9fae-1fbdd72f2aab"];
+    const plain = state.base!;
+    const single = state.model!;
+    const slotted = createPreset("peleia");
+    slotted.layers[0] = { ...slotted.layers[0], kind: "text", text: "Silva", slot: { field: "sobrenome", label: "Sobrenome da família", template: "{sobrenome}", textCase: "title", maxLength: 20, example: "Silva" } } as typeof slotted.layers[0];
+    state.base = slotted;
+    state.model = { ...single, studioArts: [{ label: "Eu vim pela ceia", versions: [{ label: "Adulto", templateId: adult }, { label: "Infantil", templateId: kids }] }] };
+    try {
+      const result = await submitCustomizationAction({ region: "sul", slug: "sua-arte", idempotencyKey: "family-order-ok-key", contact, artwork: { templateId: adult, fields: { sobrenome: "dos Santos" }, also: [kids] } });
+      expect(result).toMatchObject({ ok: true, summary: expect.arrayContaining([{ label: "Arte escolhida 1", value: "Eu vim pela ceia · Adulto" }, { label: "Arte escolhida 2", value: "Eu vim pela ceia · Infantil" }, { label: "Sobrenome da família", value: "dos Santos" }]) });
+      const stored = (await state.store!.list({}, 50, 0)).rows.find((r) => r.values.artwork?.templateId === adult);
+      expect(stored?.values.moreArtwork).toEqual([expect.objectContaining({ templateId: kids, choice: "Eu vim pela ceia · Infantil" })]);
+    } finally { state.base = plain; state.model = single; }
   });
 });

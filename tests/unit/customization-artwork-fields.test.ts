@@ -67,6 +67,22 @@ describe("base com campo de sobrenome", () => {
     expect(summaryOf(snapshot, { fields: {}, lines: [], artwork: checked.artwork })).toEqual([{ label: "Base da arte", value: "Natal em família" }, { label: "Sobrenome da família", value: "Gonçalves" }, { label: "Texto na arte", value: "NATAL DOS GONÇALVES" }, { label: "Texto na arte", value: "Gonçalves" }]);
   });
 
+  test("o resumo de um pedido de família lista cada arte e o sobrenome uma vez", () => {
+    const project = base();
+    const one = validateArtworkInput(project, templateId, { fields: { sobrenome: "dos Santos" } });
+    const two = validateArtworkInput(project, "1792427199786-94f180a0-474a-4a75-9fae-1fbdd72f2aa9", { fields: { sobrenome: "dos Santos" } });
+    if (!one.ok || !two.ok) throw new Error("bases de teste inválidas");
+    const snapshot = { id: "cz", slug: "natal", name: "Natal", version: 1, fields: [] };
+    const values = { fields: {}, lines: [], artwork: { ...one.artwork, choice: "Eu vim pela ceia · Adulto" }, moreArtwork: [{ ...two.artwork, choice: "Eu vim pela ceia · Infantil" }] };
+    expect(summaryOf(snapshot, values)).toEqual([
+      { label: "Arte escolhida 1", value: "Eu vim pela ceia · Adulto" }, { label: "Base da arte 1", value: "Natal em família" },
+      { label: "Arte escolhida 2", value: "Eu vim pela ceia · Infantil" }, { label: "Base da arte 2", value: "Natal em família" },
+      { label: "Sobrenome da família", value: "dos Santos" },
+      { label: "Texto na arte 1", value: "NATAL DOS SANTOS" }, { label: "Texto na arte 1", value: "Dos Santos" },
+      { label: "Texto na arte 2", value: "NATAL DOS SANTOS" }, { label: "Texto na arte 2", value: "Dos Santos" },
+    ]);
+  });
+
   test("recusa vazio, longo, markup, números e letras fora do latim", () => {
     for (const sobrenome of [undefined, "", "   ", "x".repeat(21), "<b>Silva</b>", "Silva 2", "Ли", "Silva\nSouza", "--"]) {
       const checked = validateArtworkInput(base(), templateId, { fields: { sobrenome } });

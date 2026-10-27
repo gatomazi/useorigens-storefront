@@ -46,6 +46,7 @@ export default async function RequestDetail({ params, searchParams }: { params: 
   const mockup = model?.pageMockup ? published?.media[model.pageMockup.assetId] : undefined;
   const contact = record.contact;
   const artwork = await loadRequestArtwork(record.values.artwork).catch(() => null);
+  const moreArtwork = await Promise.all((record.values.moreArtwork ?? []).map((a) => loadRequestArtwork(a).catch(() => null)));
 
   return (
     <div className="space-y-6">
@@ -89,7 +90,7 @@ export default async function RequestDetail({ params, searchParams }: { params: 
       <section className="a-card p-5" aria-labelledby="dados">
         <h2 id="dados" className="a-h2">O que o cliente pediu</h2>
         <div className="mt-3 grid gap-5 md:grid-cols-[minmax(0,14rem)_1fr]">
-          {artwork ? <div><ArtworkPreview project={artwork} initialView="art" /><Link className="a-btn mt-3" href={`/admin/estampas?solicitacao=${record.id}`}>Abrir arte no estúdio</Link></div> : record.values.artwork ? <p className="a-muted">Não foi possível carregar a base da arte. As escolhas do cliente estão preservadas no resumo.</p> : mockup ? (
+          {artwork ? <div className="space-y-6">{[artwork, ...moreArtwork].map((project, i) => project ? <div key={i}>{moreArtwork.length > 0 && <p className="a-label">Arte {i + 1}</p>}<ArtworkPreview project={project} initialView="art" /><Link className="a-btn mt-3" href={`/admin/estampas?solicitacao=${record.id}${i ? `&arte=${i + 1}` : ""}`}>Abrir arte {moreArtwork.length > 0 ? `${i + 1} ` : ""}no estúdio</Link></div> : <p key={i} className="a-muted">Não foi possível carregar a base da arte {i + 1}.</p>)}</div> : record.values.artwork ? <p className="a-muted">Não foi possível carregar a base da arte. As escolhas do cliente estão preservadas no resumo.</p> : mockup ? (
             <figure>
               {/* eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin */}
               <img src={mockup.variants?.[0]?.src ?? mockup.src} width={mockup.width} height={mockup.height} alt={`Mockup ilustrativo: ${record.customizerName}`} className="h-auto w-full bg-black/5 object-contain" data-testid="request-mockup" />
