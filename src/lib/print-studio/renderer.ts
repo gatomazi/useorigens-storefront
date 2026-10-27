@@ -94,9 +94,13 @@ export function measureLayer(context: CanvasRenderingContext2D, layer: PrintLaye
   // An arch drops its ends by the sagitta of the drawn arc; the box is an approximation used for selection only.
   const sagitta = layer.arc ? layer.arc * (1 - Math.cos(Math.min(Math.PI / 2, Math.max(...metrics.map((m) => m.width)) / layer.arc / 2))) : 0;
   const height = Math.max(fontSize, ascent + descent + (lines.length - 1) * fontSize * layer.lineHeight) + sagitta;
-  // An arch grows upward, so its box starts above the layer's anchor.
-  const rise = layer.arc ? (lines.length - 1) * fontSize * layer.lineHeight : 0;
-  return { id: layer.id, x: layer.x, y: layer.y - rise, width, height };
+  return { id: layer.id, x: layer.x, y: layer.y, width, height };
+}
+
+/** Height added by a text layer's lines after the first, at the size it is drawn. */
+function extraLinesHeight(context: CanvasRenderingContext2D, layer: TextLayer, resources: RenderResources) {
+  const lines = layer.text.split("\n").length;
+  return lines > 1 ? (lines - 1) * setTextStyle(context, layer, resources) * layer.lineHeight : 0;
 }
 
 function drawText(context: CanvasRenderingContext2D, text: string, x: number, y: number, stroke: number) {
@@ -135,8 +139,10 @@ export function paintProject(canvas: HTMLCanvasElement, project: PrintProject, r
   context.scale(canvas.width / project.width, canvas.height / project.height);
   if (project.background) { context.fillStyle = project.background; context.fillRect(0, 0, project.width, project.height); }
   const bounds: LayerBounds[] = [];
-  for (const layer of project.layers) {
-    if (!layer.visible) continue;
+  for (const entry of project.layers) {
+    if (!entry.visible) continue;
+    const pusher = entry.kind === "image" && entry.pushedBy ? project.layers.find((l) => l.id === entry.pushedBy && l.kind === "text" && l.visible) : undefined;
+    const layer = pusher?.kind === "text" ? { ...entry, y: entry.y + extraLinesHeight(context, pusher, resources) } : entry;
     const box = measureLayer(context, layer, resources);
     bounds.push(box);
     if (layer.kind === "image") {
@@ -149,11 +155,11 @@ export function paintProject(canvas: HTMLCanvasElement, project: PrintProject, r
       const ascent = firstAscent(context, layer, lines, fontSize);
       const stroke = (layer.stroke ?? 0) * fontSize / layer.fontSize;
       if (layer.arc) {
-        // Extra lines stack upward on wider concentric arcs; the last line keeps the single-line baseline.
+        // Extra lines go below on tighter concentric arcs; the first line keeps the single-line baseline.
         const step = fontSize * layer.lineHeight;
         lines.forEach((line, index) => {
-          const up = (lines.length - 1 - index) * step;
-          paintArc(context, line, layer.x + box.width / 2, layer.y + ascent - up, layer.arc! + up, stroke);
+          const down = index * step;
+          paintArc(context, line, layer.x + box.width / 2, layer.y + ascent + down, Math.max(100, layer.arc! - down), stroke);
         });
         continue;
       }

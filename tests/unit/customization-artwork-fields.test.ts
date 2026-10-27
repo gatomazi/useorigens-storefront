@@ -1,7 +1,8 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { artworkFields, composeArtwork, editableTexts, fieldEdits, initialFieldValues, validateArtworkInput } from "@/lib/customization/artwork";
 import { summaryOf } from "@/lib/customization/validate";
-import { newTextLayer, parseProject, resizeProject, type PrintProject, type TextLayer } from "@/lib/print-studio/model";
+import { newTextLayer, parseProject, resizeProject, type ImageLayer, type PrintProject, type TextLayer } from "@/lib/print-studio/model";
+import { paintProject } from "@/lib/print-studio/renderer";
 
 const templateId = "1792427199785-94f180a0-474a-4a75-9fae-1fbdd72f2aa8";
 const slot = (template: string, textCase: "upper" | "title") => ({ field: "sobrenome", label: "Sobrenome da família", template, textCase, maxLength: 20, example: "Silva" });
@@ -73,6 +74,22 @@ describe("base com campo de sobrenome", () => {
       if (!checked.ok) expect(checked.errors[0].key).toBe("artwork.sobrenome");
     }
     expect(validateArtworkInput(base(), templateId, { fields: ["Silva"] }).ok).toBe(false);
+  });
+
+  test("a arte abaixo do sobrenome desce quando ele quebra em linhas", () => {
+    const art: ImageLayer = { id: "arte", kind: "image", name: "Arte fixa", x: 0, y: 0, visible: true, width: 4270, pushedBy: "assinatura", asset: { dataUrl: "data:image/png;base64,AA==", name: "arte.png", width: 4270, height: 4900 } };
+    const project = { ...base(), layers: [art, (base().layers[2] as TextLayer)] };
+    expect(parseProject(JSON.parse(JSON.stringify(project))).layers[0]).toMatchObject({ pushedBy: "assinatura" });
+    expect(parseProject(JSON.parse(JSON.stringify({ ...project, layers: [{ ...art, pushedBy: "outro" }] }))).layers[0]).not.toHaveProperty("pushedBy");
+    const imageY = (text: string) => {
+      const drawImage = vi.fn();
+      const context = { scale: vi.fn(), fillRect: vi.fn(), fillText: vi.fn(), strokeText: vi.fn(), save: vi.fn(), restore: vi.fn(), translate: vi.fn(), rotate: vi.fn(), drawImage, letterSpacing: "0px", measureText: () => ({ width: 1000, actualBoundingBoxAscent: 400, actualBoundingBoxDescent: 80 }) };
+      const painted = { ...project, layers: [art, { ...(project.layers[1] as TextLayer), text, fontSize: 900, lineHeight: 1.1 }] };
+      paintProject({ getContext: () => context } as unknown as HTMLCanvasElement, painted, { families: new Map([["hanken", "x"]]), images: new Map([["arte", {} as HTMLImageElement]]) }, 4270);
+      return drawImage.mock.calls[0][2];
+    };
+    expect(imageY("Tomazi")).toBe(0);
+    expect(imageY("Albuquerque\nLins")).toBeCloseTo(990);
   });
 
   test("o projeto guarda caixa, arco, contorno e campo, e a mudança de tamanho os acompanha", () => {

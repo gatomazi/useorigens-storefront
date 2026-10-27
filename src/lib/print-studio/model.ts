@@ -22,7 +22,7 @@ export type TextLayer = BaseLayer & {
   maxWidth?: number;
   /** Fixed text box: lines align inside it and shrink to fit it, so a centered name keeps its axis whatever its length. */
   boxWidth?: number;
-  /** Radius (px) of an upward arch drawn letter by letter; the box width is then the longest arc allowed. */
+  /** Radius (px) of an upward arch drawn letter by letter; the box width is then the longest arc allowed. Extra lines go below on concentric arcs. */
   arc?: number;
   /** Outline (px) in the text colour, drawn under the fill to thicken a light typeface. */
   stroke?: number;
@@ -31,11 +31,13 @@ export type TextLayer = BaseLayer & {
 };
 /** `template` carries `{field}`, e.g. "NATAL DOS {sobrenome}"; layers sharing a field share one answer. */
 /**
- * `maxLines` > 1 breaks a multi-word answer into balanced lines; only for a layout with room to grow (an arch grows upward).
+ * `maxLines` > 1 breaks a multi-word answer into balanced lines; extra lines grow downward, so use it where there is room below
+ * or where the art below follows the text (`ImageLayer.pushedBy`).
  * `dropParticle` removes a leading "da/das/do/dos" from the answer where the art already says "dos" ("NATAL DOS {sobrenome}").
  */
 export type TextSlot = { field: string; label: string; template: string; textCase: "upper" | "title" | "none"; maxLength: number; example: string; maxLines?: number; dropParticle?: boolean };
-export type ImageLayer = BaseLayer & { kind: "image"; asset: ImageAsset; width: number };
+/** `pushedBy`: id of a text layer above the image; the image moves down by the height of that text's extra lines. */
+export type ImageLayer = BaseLayer & { kind: "image"; asset: ImageAsset; width: number; pushedBy?: string };
 export type PrintLayer = TextLayer | ImageLayer;
 export type PrintProject = {
   version: 1;
@@ -132,11 +134,14 @@ export function parseProject(input: unknown): PrintProject {
     const l = object(entry);
     if (typeof l.visible !== "boolean") throw new Error("Visibilidade de camada inválida.");
     const base = { id: string(l.id, 100), name: string(l.name, 100), x: number(l.x, -10000, 10000), y: number(l.y, -10000, 10000), visible: l.visible, ...(l.groupId === undefined ? {} : { groupId: string(l.groupId, 100) }) };
-    if (l.kind === "image") return { ...base, kind: "image", asset: imageAsset(l.asset), width: number(l.width, 1, 10000) };
+    if (l.kind === "image") return { ...base, kind: "image", asset: imageAsset(l.asset), width: number(l.width, 1, 10000), ...(l.pushedBy === undefined ? {} : { pushedBy: string(l.pushedBy, 100) }) };
     if (l.kind !== "text" || !fontIds.has(String(l.fontId)) || !["left", "center", "right"].includes(String(l.align))) throw new Error("O projeto contém uma camada ou fonte desconhecida.");
     return { ...base, kind: "text", text: string(l.text, 3000), fontId: String(l.fontId), fontSize: number(l.fontSize, 8, 2000), weight: number(l.weight, 100, 900), color: color(l.color), letterSpacing: number(l.letterSpacing, -100, 300), lineHeight: number(l.lineHeight, 0.7, 3), align: l.align as TextLayer["align"], ...(l.maxWidth === undefined ? {} : { maxWidth: number(l.maxWidth, 1, 8000) }), ...(l.boxWidth === undefined ? {} : { boxWidth: number(l.boxWidth, 1, 8000) }), ...(l.arc === undefined ? {} : { arc: number(l.arc, 100, 50000) }), ...(l.stroke === undefined ? {} : { stroke: number(l.stroke, 0, 200) }), ...(l.slot === undefined ? {} : { slot: slot(l.slot) }) };
   });
   if (new Set(layers.map((l) => l.id)).size !== layers.length) throw new Error("Existem camadas duplicadas no projeto.");
+  // A text deleted in the studio releases the image that followed it.
+  const texts = new Set(layers.filter((l) => l.kind === "text").map((l) => l.id));
+  for (const l of layers) if (l.kind === "image" && l.pushedBy !== undefined && !texts.has(l.pushedBy)) delete l.pushedBy;
   return { version: PROJECT_VERSION, name: string(p.name, 150), width: number(p.width, 300, 8000), height: number(p.height, 300, 8000), dpi: number(p.dpi, 72, 600), background: p.background === null ? null : color(p.background), layers, fonts, reference: p.reference === null ? null : imageAsset(p.reference) };
 }
 
