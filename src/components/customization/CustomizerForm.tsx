@@ -511,20 +511,22 @@ export function CustomizerForm({
       </div>
 
       {studio && (
-        // The dialog itself never scrolls (`overflow-clip`): only the body below the header does, so "Pronto" stays on screen. The body is
-        // `relative` so the visually hidden radio inputs of the pickers (absolutely positioned) stay inside it; otherwise they stretch the
-        // dialog on shorter phones and it scrolls the header away.
+        // The dialog itself never scrolls (`overflow-clip`): only the body between the title and the footer does, so "Pronto" stays on screen,
+        // at the bottom where the thumb reaches it. The body is `relative` so the visually hidden radio inputs of the pickers (absolutely
+        // positioned) stay inside it; otherwise they stretch the dialog on shorter phones and it scrolls the title and the footer away.
         <dialog ref={fullRef} onClose={() => setFull(false)} aria-labelledby={`${uid}-full-title`} className="m-0 h-[100dvh] max-h-none w-full max-w-none overflow-clip bg-ground p-0 text-ink backdrop:bg-black/60 open:flex open:flex-col lg:m-auto lg:h-[92dvh] lg:max-w-xl">
           {full && <>
-            <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2">
+            <div className="border-b border-line px-4 py-3">
               <h2 id={`${uid}-full-title`} className="t-h3">Sua estampa</h2>
-              <button type="button" className="btn" onClick={() => fullRef.current?.close()}>Pronto</button>
             </div>
-            <div className="relative min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pb-6 pt-3">
+            <div className="relative min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 pb-2 pt-2">
               {/* The input first: with the phone keyboard open, the input and the art above it still fit on screen. */}
               {fieldMode && surnameStep(true)}
-              <div className="mx-auto w-full" style={{ maxWidth: "min(100%, 36svh)" }}>{previewBlock(true)}</div>
+              <div className="mx-auto w-full" style={{ maxWidth: "min(100%, 34svh)" }}>{previewBlock(true)}</div>
               <div className="mx-auto w-full max-w-[18.5rem]"><ShirtSwatches name={`${uid}-full-camiseta`} value={shirt} onChange={chooseShirt} colors={colors} /></div>
+            </div>
+            <div className="border-t border-line px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <button type="button" className="btn w-full" onClick={() => fullRef.current?.close()}>Pronto</button>
             </div>
           </>}
         </dialog>
