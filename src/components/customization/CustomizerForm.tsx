@@ -111,6 +111,10 @@ export function CustomizerForm({
   const family = fieldMode && offersChoice(model);
   // Direct purchase: only the typed text goes into the art (bases with fields), and the product is created at INK instead of a request.
   const buying = direct && fieldMode;
+  // "Conferi a escrita": a product at INK is permanent, so the customer confirms the exact text; changing it after ticking unticks it.
+  const typed = Object.values(fieldValues).join(" ").trim();
+  const [checkedFor, setCheckedFor] = useState<string | null>(null);
+  const confirmed = typed !== "" && checkedFor === typed;
 
   // Picking an art that is already in the order shows it instead of adding it twice.
   const choose = (next: Pick) => {
@@ -205,6 +209,7 @@ export function CustomizerForm({
     if (buying && artworkBase && templateId) {
       const art = validateArtworkInput(artworkBase, templateId, { fields: fieldValues });
       if (!art.ok) { showErrors(art.errors); setBanner("Confira o que você escreveu."); return; }
+      if (!confirmed) { showErrors([{ key: "conferi", message: "Marque para confirmar que conferiu a escrita na prévia." }]); return; }
       setErrors({});
       if (preview || !startProducts) { setBanner("Pré-visualização: nada foi criado."); return; }
       setPhase("sending");
@@ -476,6 +481,17 @@ export function CustomizerForm({
               {banner && <p className="border-2 border-[#9b1c1c] bg-white p-3 font-bold text-[#9b1c1c]" role="alert">{banner}</p>}
               {!available && !preview && <p className="border-2 border-ink bg-white p-3" role="status">O envio de solicitações não está disponível neste ambiente.</p>}
 
+              {buying && (
+                <div>
+                  <label className="flex items-start gap-3">
+                    <input id={`${uid}-conferi`} type="checkbox" checked={confirmed} onChange={(e) => setCheckedFor(e.target.checked ? typed : null)} disabled={!typed} className="mt-1 h-5 w-5 shrink-0 accent-[var(--color-ink,#000)]" aria-invalid={errors.conferi ? true : undefined} aria-describedby={`${uid}-conferi-hint`} />
+                    <span className="t-body">{typed ? <>Conferi a escrita de <strong>“{typed}”</strong></> : "Conferi a escrita do sobrenome"}<span className="text-[#9b1c1c]"> *</span></span>
+                  </label>
+                  <p id={`${uid}-conferi-hint`} className="t-small mt-1 pl-8 text-ink-mute">A camiseta sai como na prévia. <button type="button" className="font-bold underline underline-offset-4 lg:hidden" onClick={openFull}>Ver como ficou</button></p>
+                  {errors.conferi && <p className="mt-1 pl-8 text-[0.8125rem] font-bold text-[#9b1c1c]" role="alert">{errors.conferi}</p>}
+                </div>
+              )}
+
               <div>
                 <button type="submit" className="btn w-full sm:w-auto" disabled={phase === "sending" || (!available && !preview) || (studio && (!artworkBase || !artworkReady))}>{phase === "sending" ? (buying ? "Começando…" : "Enviando…") : buying ? (items.length > 1 ? `Criar minhas ${items.length} camisetas` : "Criar minha camiseta") : preview ? "Testar o envio (prévia)" : studio ? (items.length > 1 ? `Enviar solicitação (${items.length} artes)` : "Enviar solicitação") : "Enviar solicitação"}</button>
                 {buying ? (
@@ -519,7 +535,7 @@ export function CustomizerForm({
           {waiting && <>
             <div className="border-b border-line px-4 py-3"><h2 id={`${uid}-wait-title`} className="t-h3">{waiting.fallback ? "Quase lá" : "Criando a sua camiseta"}</h2></div>
             <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
-              <ProductWaiting items={waiting.items} surname={waiting.surname} showcase={waiting.showcase} bases={bases} loadBase={loadBase ? loadBaseById : undefined} fallback={waiting.fallback} onRequest={requestTeam} onBack={() => waitRef.current?.close()} />
+              <ProductWaiting items={waiting.items} surname={waiting.surname} showcase={waiting.showcase} bases={bases} loadBase={loadBase ? loadBaseById : undefined} fallback={waiting.fallback} onRequest={requestTeam} onClose={() => waitRef.current?.close()} onCancel={() => { waitRef.current?.close(); setCheckedFor(null); requestAnimationFrame(focusSurname); }} />
             </div>
           </>}
         </dialog>

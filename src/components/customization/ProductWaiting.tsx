@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import { carryCampaign } from "@/lib/analytics/campaign";
 import { CONTACT_CONFIRM_TEXT, CONTACT_KEYS, CONTACT_NOTICE } from "@/lib/customization/contact";
 import { composeArtwork, fieldEdits } from "@/lib/customization/artwork";
-import { isTerminal, type ProductStatus, type PublicProductJob } from "@/lib/customization/product-status";
+import { isTerminal, type PublicProductJob } from "@/lib/customization/product-status";
+import { track, untrack, updateTracked } from "@/lib/customization/product-tracker";
 import { shirtColorsFor } from "@/lib/customization/shirts";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { ArtworkPreview } from "./ArtworkPreview";
+import { Check, ProductSteps, Star } from "./ProductSteps";
 import { InfoTip } from "./InfoTip";
 
 export type ContactValues = { name: string; whatsapp: string; email: string; confirm: boolean };
@@ -20,21 +22,16 @@ const SPIN_MS = 2_000;
 const REDIRECT_MS = 2_000;
 /** Past this, the page offers the team's link while it keeps following the job. */
 const SLOW_MS = 180_000;
-const DONE_STEPS: Record<ProductStatus, number> = { queued: 0, creating: 1, photos: 2, ready: 3, failed: 0, check: 0 };
-
 const inputClass = "block w-full min-h-11 border-2 border-ink bg-white px-3 py-2 text-[1rem] text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-region-primary aria-[invalid=true]:border-[#9b1c1c]";
-const Star = ({ on }: { on: boolean }) => (
-  <svg aria-hidden="true" viewBox="0 0 20 20" className={`h-5 w-5 shrink-0 text-[#d8a800] ${on ? "motion-safe:animate-pulse" : ""}`} fill="currentColor"><path d="M10 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6-5.4-3.1-5.4 3.1 1.2-6L1.3 7.8l6.1-.7z" /></svg>
-);
-const Check = () => <svg aria-hidden="true" viewBox="0 0 20 20" className="h-5 w-5 shrink-0 text-region-primary" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10.5l4 4 8-9" /></svg>;
-const Dot = () => <span aria-hidden="true" className="flex h-5 w-5 shrink-0 items-center justify-center"><span className="h-2 w-2 rounded-full bg-line" /></span>;
 
 /**
  * The waiting screen of a direct purchase: the customer's own art turning through the shirt colours (only the garment's), the real steps of the job
  * (drawn, created at the store, photos, opening), then INK's page — with the campaign of the visit carried — after a short "Pronto!". A failed job,
- * a very slow one or the customer's own choice opens the team's way: a short contact form that registers the usual request.
+ * a very slow one or the customer's own choice opens the team's way: a short contact form that registers the usual request, while the job goes on
+ * ("Continuar aguardando"). The jobs are also kept in this browser (product-tracker.ts): "Continuar navegando" closes the screen and the floating
+ * tracker follows them on every page of the site.
  */
-export function ProductWaiting({ items: initial, surname, showcase, bases, loadBase, fallback, onRequest, onBack }: {
+export function ProductWaiting({ items: initial, surname, showcase, bases, loadBase, fallback, onRequest, onClose, onCancel }: {
   items: PublicProductJob[];
   surname: string;
   showcase: Showcase | null;
@@ -43,13 +40,20 @@ export function ProductWaiting({ items: initial, surname, showcase, bases, loadB
   /** Set when the start already said "the team does this one" (a name to review, the day's limit, an error). */
   fallback: string | null;
   onRequest: (contact: ContactValues) => Promise<RequestOutcome>;
-  onBack: () => void;
+  /** "Continuar navegando": closes the screen while the jobs go on (the floating tracker takes over). */
+  onClose: () => void;
+  /**
+   * "Cancelar e editar": the customer gives up on this order (a typo): it leaves the tracker and the page goes back to the name. The job itself is not
+   * stopped: another customer with the same name may be waiting for it, and a product nobody opens stays hidden at INK.
+   */
+  onCancel: () => void;
 }) {
   const [jobs, setJobs] = useState(initial);
   const [started] = useState(() => Date.now());
   const [now, setNow] = useState(started);
   const [askTeam, setAskTeam] = useState<string | null>(fallback);
   const pending = jobs.some((j) => !isTerminal(j.status));
+  useEffect(() => { if (initial.length) track(initial, surname); }, [initial, surname]);
 
   useEffect(() => {
     if (!pending) return;
@@ -65,6 +69,7 @@ export function ProductWaiting({ items: initial, surname, showcase, bases, loadB
         }
       }));
       setJobs(next);
+      next.forEach(updateTracked);
     }, POLL_MS);
     return () => clearInterval(timer);
   }, [jobs, pending]);
@@ -77,7 +82,7 @@ export function ProductWaiting({ items: initial, surname, showcase, bases, loadB
   // One product: off to INK a moment after "Pronto!" (the button stays, in case a browser in an app blocks it).
   useEffect(() => {
     if (!ready || !single?.url || askTeam) return;
-    const timer = setTimeout(() => window.location.assign(carryCampaign(single.url!)), REDIRECT_MS);
+    const timer = setTimeout(() => { untrack(single.id); window.location.assign(carryCampaign(single.url!)); }, REDIRECT_MS);
     return () => clearTimeout(timer);
   }, [ready, single, askTeam]);
 
@@ -102,8 +107,8 @@ export function ProductWaiting({ items: initial, surname, showcase, bases, loadB
     return base ? composeArtwork(base, fieldEdits(base, showcase.fields)) : null;
   }, [showcase, color, loaded]);
 
-  const step = single ? DONE_STEPS[single.status] : 0;
-  const steps = [`Arte com “${surname}”`, "Camiseta criada na loja", "Tirando as fotos", "Abrindo a sua camiseta"];
+  const running = jobs.length > 0 && !broken;
+  const cancel = () => { jobs.forEach((j) => untrack(j.id)); onCancel(); };
 
   return (
     <div className="space-y-5">
@@ -115,24 +120,17 @@ export function ProductWaiting({ items: initial, surname, showcase, bases, loadB
       )}
 
       {askTeam ? (
-        <TeamRequest message={askTeam} onRequest={onRequest} />
+        <TeamRequest message={askTeam} onRequest={onRequest} {...(running ? { onKeepWaiting: () => setAskTeam(null) } : {})} />
       ) : ready && single ? (
         <div className="space-y-3 text-center" role="status">
           <p className="t-h3">Pronto! Abrindo a sua camiseta na loja…</p>
-          <a className="btn w-full" href={carryCampaign(single.url!)}>Ver minha camiseta</a>
+          <a className="btn w-full" href={carryCampaign(single.url!)} onClick={() => untrack(single.id)}>Ver minha camiseta</a>
           <p className="t-small text-ink-mute">Na loja você escolhe o modelo, o tamanho e a cor.</p>
         </div>
       ) : single ? (
         <div className="space-y-3">
-          <ol className="space-y-2" aria-live="polite">
-            {steps.map((label, i) => (
-              <li key={label} className={`flex items-center gap-3 text-[1rem] ${i <= step ? "font-bold text-ink" : "text-ink-mute"}`}>
-                {i < step ? <Check /> : i === step ? <Star on /> : <Dot />}
-                <span>{label}{i === step && i < 3 ? "…" : ""}</span>
-              </li>
-            ))}
-          </ol>
-          <p className="t-small text-ink-mute">Leva cerca de 1 minuto. Pode deixar esta tela aberta.</p>
+          <ProductSteps status={single.status} surname={surname} />
+          <p className="t-small text-ink-mute">Leva cerca de 1 minuto. Pode continuar navegando: a gente avisa quando ficar pronta.</p>
         </div>
       ) : (
         <ul className="divide-y divide-line border-y border-line" aria-live="polite">
@@ -140,7 +138,7 @@ export function ProductWaiting({ items: initial, surname, showcase, bases, loadB
             <li key={j.id} className="flex items-center gap-3 py-2">
               {j.status === "ready" ? <Check /> : <Star on={!isTerminal(j.status)} />}
               <span className="min-w-0 flex-1 font-bold leading-tight">{j.label}<span className="block text-[0.8125rem] font-normal text-ink-mute">{j.status === "ready" ? "Pronta" : isTerminal(j.status) ? "A equipe vai cuidar desta" : "Criando…"}</span></span>
-              {j.status === "ready" && j.url && <a className="btn btn-ghost shrink-0" href={carryCampaign(j.url)}>Ver</a>}
+              {j.status === "ready" && j.url && <a className="btn btn-ghost shrink-0" href={carryCampaign(j.url)} onClick={() => untrack(j.id)}>Ver</a>}
             </li>
           ))}
         </ul>
@@ -153,16 +151,25 @@ export function ProductWaiting({ items: initial, surname, showcase, bases, loadB
         </p>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-        <button type="button" className="font-bold underline underline-offset-4" onClick={onBack}>Voltar e editar</button>
-        {!askTeam && !ready && <button type="button" className="text-[0.9375rem] underline underline-offset-4" onClick={() => setAskTeam("Deixe o seu contato e a gente manda o link pelo WhatsApp ou e-mail.")}>Prefere receber o link?</button>}
-      </div>
+      {running && !ready ? (
+        <div className="space-y-2 border-t border-line pt-4">
+          <button type="button" className="btn btn-ghost w-full" onClick={onClose}>Continuar navegando</button>
+          <div className="flex flex-wrap items-center justify-between gap-x-4">
+            <button type="button" className="min-h-11 text-[0.9375rem] underline underline-offset-4" onClick={cancel}>Cancelar e editar</button>
+            {!askTeam && <button type="button" className="min-h-11 text-[0.9375rem] underline underline-offset-4" onClick={() => setAskTeam("Deixe o seu contato e a gente manda o link pelo WhatsApp ou e-mail. A sua camiseta continua sendo criada.")}>Prefere receber o link?</button>}
+          </div>
+        </div>
+      ) : (
+        <div className="border-t border-line pt-4">
+          <button type="button" className="min-h-11 font-bold underline underline-offset-4" onClick={cancel}>Voltar e editar</button>
+        </div>
+      )}
     </div>
   );
 }
 
 /** The team's way: name and one channel, the confirmation, and the usual request is registered. */
-function TeamRequest({ message, onRequest }: { message: string; onRequest: (contact: ContactValues) => Promise<RequestOutcome> }) {
+function TeamRequest({ message, onRequest, onKeepWaiting }: { message: string; onRequest: (contact: ContactValues) => Promise<RequestOutcome>; onKeepWaiting?: () => void }) {
   const [contact, setContact] = useState<ContactValues>({ name: "", whatsapp: "", email: "", confirm: false });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [phase, setPhase] = useState<"idle" | "sending" | "done">("idle");
@@ -173,6 +180,7 @@ function TeamRequest({ message, onRequest }: { message: string; onRequest: (cont
       <div className="border-2 border-ink p-4" role="status">
         <p className="t-h3">Recebido!</p>
         <p className="t-body mt-1">A nossa equipe vai mandar o link da sua camiseta{channels.length ? ` (${channels.join(" · ")})` : ""}.</p>
+        {onKeepWaiting && <button type="button" className="btn btn-ghost mt-3 w-full" onClick={onKeepWaiting}>Continuar aguardando</button>}
       </div>
     );
   }
@@ -209,6 +217,7 @@ function TeamRequest({ message, onRequest }: { message: string; onRequest: (cont
       {errors[CONTACT_KEYS.confirm] && <p className="text-[0.8125rem] font-bold text-[#9b1c1c]" role="alert">{errors[CONTACT_KEYS.confirm]}</p>}
       {banner && <p className="border-2 border-[#9b1c1c] bg-white p-3 font-bold text-[#9b1c1c]" role="alert">{banner}</p>}
       <button type="submit" className="btn w-full" disabled={phase === "sending"}>{phase === "sending" ? "Enviando…" : "Receber o link"}</button>
+      {onKeepWaiting && <button type="button" className="btn btn-ghost w-full" onClick={onKeepWaiting}>Continuar aguardando</button>}
     </form>
   );
 }

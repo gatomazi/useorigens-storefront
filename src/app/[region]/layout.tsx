@@ -8,6 +8,7 @@ import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { PromoFab } from "@/components/promotions/PromoFab";
 import { AssistantFab } from "@/components/assistant/AssistantFab";
+import { ProductTracker } from "@/components/customization/ProductTracker";
 import { ConsentProvider } from "@/lib/consent/ConsentProvider";
 import { AnnouncementBar, Footer, Header } from "@/components/layout/SiteChrome";
 import { getCatalog } from "@/lib/catalog/repository";
@@ -83,6 +84,8 @@ export default async function RegionLayout({ children, params }: { children: Rea
       {/* Outside the region wrapper (fixed, like the coupons): it gets the region's colours here, so its button wears the header's colour. */}
       <div className="contents" style={{ ...regionThemeStyle(region), ...cssVars }}>
         <AssistantFab key={`assistant-${region}`} region={region} />
+        {/* A direct purchase still being made (kept in this browser): a reminder on every page that blinks once the shirt is ready. */}
+        <ProductTracker />
       </div>
     </ConsentProvider>
   );
