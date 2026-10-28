@@ -12,11 +12,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { region } = await params;
   if (!isRegionSlug(region)) return {};
   // A personal, per-device list has nothing for a crawler to index (see /busca's own robots handling).
-  return { title: "Meus Lugares", robots: { index: false, follow: true }, alternates: { canonical: `/${region}/meus-lugares` } };
+  return { title: "Minhas Estampas", robots: { index: false, follow: true }, alternates: { canonical: `/${region}/minhas-estampas` } };
 }
 
 /**
- * "Meus Lugares": the estampas the visitor saved (heart icon), read entirely from this browser's own storage —
+ * "Minhas Estampas" (formerly "Meus Lugares", /meus-lugares redirects here): the estampas the visitor saved (heart icon) and the shirts they
+ * personalized (direct purchase), read entirely from this browser's own storage —
  * there is nothing to render on the server (see src/lib/favorites/store.ts), so the page is a thin client shell.
  */
 export default async function MeusLugaresPage({ params }: Props) {

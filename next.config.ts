@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
     return [
       // The standalone prototype's file name: a link made with it opens the same world on the store (the query — world, roles, memories — is kept).
       { source: "/meu-pequeno-mundo-use-origens.html", destination: "/meu-pequeno-mundo", permanent: false },
+      // "Meus Lugares" became "Minhas Estampas" (it also lists the shirts the customer personalized): old links and bookmarks still arrive.
+      { source: "/:region/meus-lugares", destination: "/:region/minhas-estampas", permanent: true },
     ];
   },
   // The server draws the art of direct purchases with a native canvas (src/lib/print-studio/render-server.ts): its platform binary is loaded at

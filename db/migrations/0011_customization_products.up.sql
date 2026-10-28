@@ -33,5 +33,7 @@ create table customization_product (
 );
 create index customization_product_created_idx on customization_product (created_at desc);
 create index customization_product_status_idx on customization_product (region, status);
+-- "Minhas Estampas" and the buy session look a personalized product up by its INK id (it is hidden, so it is not in the synced catalog).
+create index customization_product_ink_idx on customization_product (ink_product_id) where ink_product_id is not null;
 
 insert into schema_migration (version) values ('0011_customization_products') on conflict do nothing;

@@ -128,8 +128,8 @@ export function MeusLugaresView({ region, storeLabels = {} }: { region: RegionSl
   if (favorites.length === 0) {
     return (
       <section aria-live="polite">
-        <h1 className="t-h2">Meus Lugares</h1>
-        <p className="t-body mt-3 max-w-xl text-ink-soft">Toque no coração de uma estampa para guardá-la aqui e montar sua seleção.</p>
+        <h1 className="t-h2">Minhas Estampas</h1>
+        <p className="t-body mt-3 max-w-xl text-ink-soft">Toque no coração de uma estampa para guardá-la aqui e montar sua seleção. As camisetas que você personalizar também aparecem aqui.</p>
         <p className="mt-6">
           <Link href={`/${region}`} className="link-line text-[0.9375rem] font-semibold">
             Explorar estampas
@@ -141,7 +141,7 @@ export function MeusLugaresView({ region, storeLabels = {} }: { region: RegionSl
 
   return (
     <div>
-      <h1 className="t-h2">Meus Lugares</h1>
+      <h1 className="t-h2">Minhas Estampas</h1>
       <p className="t-body mt-2 text-ink-soft">
         {favorites.length} {favorites.length === 1 ? "estampa salva" : "estampas salvas"}
       </p>
@@ -172,7 +172,7 @@ export function MeusLugaresView({ region, storeLabels = {} }: { region: RegionSl
                   <li key={groupKey(item.commerceStoreKey, item.inkProductId)} className="relative">
                     <button
                       type="button"
-                      aria-label={`Remover ${title} de Meus Lugares`}
+                      aria-label={`Remover ${title} de Minhas Estampas`}
                       onClick={() => removeFavorite(item.inkProductId, item.commerceStoreKey)}
                       className="absolute right-2 top-2 z-10 inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-white/90 text-ink shadow-sm"
                     >

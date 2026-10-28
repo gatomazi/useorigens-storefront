@@ -1,4 +1,6 @@
-import type { ProductStatus, PublicProductJob } from "./product-status";
+import type { CommerceStoreKey } from "../geo/regions";
+import { addFavorite, isFavorite } from "../favorites/store";
+import { inkPhotoOrPlaceholder, type ProductStatus, type PublicProductJob } from "./product-status";
 
 /**
  * The products a customer is waiting for, kept in this browser so the wait survives browsing the site (and a reload): the floating tracker reads it on
@@ -10,7 +12,16 @@ import type { ProductStatus, PublicProductJob } from "./product-status";
  * is the shared truth of WHICH jobs are still followed: a job removed on the INK side ("Ver minha camiseta", "Tirar da lista") disappears here too.
  */
 /** `page`: the personalization page the order came from (to go back to it when the team has to step in). */
-export type TrackedProduct = { id: string; label: string; surname: string; status: ProductStatus; url: string | null; image: string | null; startedAt: number; page: string };
+export type TrackedProduct = { id: string; label: string; surname: string; status: ProductStatus; url: string | null; image: string | null; startedAt: number; page: string; inkProductId?: string | null; store?: CommerceStoreKey | null };
+
+/**
+ * A ready shirt also goes into "Minhas Estampas" (the saved estampas, src/lib/favorites/store.ts), so the customer finds it again after the
+ * reminder is gone and can buy several with "Comprar minha lista". The page refreshes title, photo and link from the server.
+ */
+function remember(p: TrackedProduct): void {
+  if (p.status !== "ready" || !p.url || !p.inkProductId || !p.store || isFavorite(p.inkProductId, p.store)) return;
+  addFavorite({ inkProductId: p.inkProductId, commerceStoreKey: p.store, title: `${p.surname} · ${p.label}`, context: "Personalizada", imageUrl: inkPhotoOrPlaceholder(p.image), price: null });
+}
 
 const KEY = "uo:produtos-em-criacao";
 const COOKIE = "uo_produtos";
@@ -60,9 +71,10 @@ export function track(jobs: readonly PublicProductJob[], surname: string, now: n
   const list = readTracked(now);
   for (const j of jobs) {
     const known = list.find((p) => p.id === j.id);
-    const entry = { id: j.id, label: j.label, surname, status: j.status, url: j.url, image: j.image, startedAt: known?.startedAt ?? now, page: window.location.pathname };
+    const entry = { id: j.id, label: j.label, surname, status: j.status, url: j.url, image: j.image, startedAt: known?.startedAt ?? now, page: window.location.pathname, inkProductId: j.inkProductId, store: j.store };
     if (known) Object.assign(known, entry);
     else list.push(entry);
+    remember(entry);
   }
   write(list);
 }
@@ -72,7 +84,8 @@ export function updateTracked(job: PublicProductJob): void {
   const list = readTracked();
   const known = list.find((p) => p.id === job.id);
   if (!known || (known.status === job.status && known.url === job.url && known.image === job.image)) return;
-  Object.assign(known, { status: job.status, url: job.url, image: job.image });
+  Object.assign(known, { status: job.status, url: job.url, image: job.image, inkProductId: job.inkProductId, store: job.store });
+  remember(known);
   write(list);
 }
 

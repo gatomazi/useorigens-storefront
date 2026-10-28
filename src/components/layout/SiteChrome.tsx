@@ -92,7 +92,7 @@ export function Header({ region, headerActions }: { region: RegionSlug; headerAc
             blocks={navigation.blocks}
             search={<SearchDialog region={region} variant="field" source={SOURCES.searchDialog} />}
             account={accountLinks(storeForRegion(region))}
-            favorites={`/${region}/meus-lugares`}
+            favorites={`/${region}/minhas-estampas`}
           />
           <Link href={regionPath(region)} className="hidden min-h-11 items-center gap-2.5 sm:flex" aria-label={home}>
             <Image src={logo} alt="" width={40} height={40} className="h-9 w-9" priority unoptimized />
@@ -195,7 +195,7 @@ export function Header({ region, headerActions }: { region: RegionSlug; headerAc
               </ul>
             </HeaderDropdown>
           )}
-          {/* On phones, Meus Lugares is in the menu and the search is the field in the middle. */}
+          {/* On phones, Minhas Estampas is in the menu and the search is the field in the middle. */}
           <div className="hidden sm:contents">
             <FavoritesMenu region={region} labelled={actions.favorites === "label"} />
           </div>

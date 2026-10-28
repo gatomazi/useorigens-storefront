@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import type { RegionSlug } from "../geo/regions";
+import { storeForRegion } from "../catalog/commerce-mode";
 import { INK_COMMERCE_HOSTS } from "../ink/hosts";
 import type { StudioGarment } from "../site-config/schema";
 import { isTerminal, PRODUCT_STATUSES, type ProductStatus, type PublicProductJob } from "./product-status";
@@ -62,6 +63,8 @@ export interface ProductJobStore {
   /** Idempotent by `dedupeKey`: two customers typing the same name on the same art end on the same row (`created: false` for the second). */
   findOrCreate(input: NewProductJob): Promise<{ job: ProductJob; created: boolean }>;
   get(id: string): Promise<ProductJob | null>;
+  /** The job that made this INK product (a personalized product is hidden at INK, so the synced catalog does not know it). */
+  findByInkProductId(inkProductId: string): Promise<ProductJob | null>;
   /** Takes the job for `leaseMs` when nobody holds it and it is not terminal; null otherwise. Only the holder works on it. */
   claim(id: string, leaseMs: number, now?: Date): Promise<ProductJob | null>;
   /** Applies the patch; `release` also drops the lease; `onlyIf`: only while the job is in one of these states (null otherwise, nothing changed). */
@@ -114,4 +117,7 @@ export function safeInkUrl(raw: unknown): string | null {
   }
 }
 
-export const publicJob = (job: ProductJob): PublicProductJob => ({ id: job.id, label: job.artLabel, status: job.status, url: job.status === "ready" ? safeInkUrl(job.inkUrl) : null, image: job.status === "ready" ? job.inkImageUrl : null });
+export function publicJob(job: ProductJob): PublicProductJob {
+  const ready = job.status === "ready";
+  return { id: job.id, label: job.artLabel, status: job.status, url: ready ? safeInkUrl(job.inkUrl) : null, image: ready ? job.inkImageUrl : null, inkProductId: ready ? job.inkProductId : null, store: ready ? storeForRegion(job.region) : null };
+}

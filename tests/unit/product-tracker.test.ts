@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { readTracked, track, untrack } from "@/lib/customization/product-tracker";
+import { readTracked, track, untrack, updateTracked } from "@/lib/customization/product-tracker";
+import { getFavorites } from "@/lib/favorites/store";
 
 const A = "01M606P9RVCKGWG44QFM8VZCNW";
 const B = "01M606P9RVCKGWG44QFM8VZCNX";
@@ -24,7 +25,9 @@ function browser(host: string) {
     },
   });
 }
-const job = (id: string, status: "queued" | "ready" = "queued") => ({ id, label: "Universitário", status, url: null, image: null });
+const job = (id: string, status: "queued" | "ready" = "queued") => (status === "ready"
+  ? { id, label: "Universitário", status, url: "https://loja.useorigens.com.br/useorigens/product/silva", image: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/silva.jpg", inkProductId: "5143876", store: "use-sul" as const }
+  : { id, label: "Universitário", status, url: null, image: null, inkProductId: null, store: null });
 
 beforeEach(() => browser("www.useorigens.com.br"));
 afterEach(() => vi.unstubAllGlobals());
@@ -48,6 +51,17 @@ describe("pending products shared with the INK store", () => {
     untrack(A);
     expect(written.at(-1)).toMatch(/^uo_produtos=; .*Max-Age=0/);
     expect(readTracked()).toEqual([]);
+  });
+  test("a ready shirt goes into Minhas Estampas once; one still being made does not", () => {
+    track([job(A)], "Silva");
+    expect(getFavorites().filter((f) => f.inkProductId === "5143876")).toHaveLength(0);
+    updateTracked(job(A, "ready"));
+    updateTracked({ ...job(A, "ready"), image: "https://img.example/outra.jpg" });
+    expect(getFavorites().filter((f) => f.inkProductId === "5143876")).toEqual([expect.objectContaining({ commerceStoreKey: "use-sul", title: "Silva · Universitário", context: "Personalizada", imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/silva.jpg" })]);
+  });
+  test("a photo from anywhere but INK's CDN is saved as the plain shirt (the page shows it with next/image)", () => {
+    track([{ ...job(B, "ready"), inkProductId: "5143877", image: "https://elsewhere.example/x.jpg" }], "Souza");
+    expect(getFavorites().find((f) => f.inkProductId === "5143877")?.imageUrl).toBe("/personalizacao/camisetas/preta.webp");
   });
   test("a local server keeps its own list and writes no cookie", () => {
     browser("127.0.0.1");

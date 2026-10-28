@@ -24,7 +24,7 @@ export type NavigationConfig = {
   statesBlock?: NavBlockConfig;
   /** "Explorar outras regiões": automatic as well. */
   regionsBlock?: NavBlockConfig;
-  /** The header's buttons on the right ("Meus Lugares", "Conta", "Buscar"): the icon only or the icon with its word, each on its own (`headerActionsOf`). */
+  /** The header's buttons on the right ("Minhas Estampas", "Conta", "Buscar"): the icon only or the icon with its word, each on its own (`headerActionsOf`). */
   headerActions?: Partial<Record<HeaderAction, HeaderActionStyle>>;
 };
 
@@ -36,7 +36,7 @@ export const HEADER_ACTIONS = ["favorites", "account", "search"] as const;
 export type HeaderAction = (typeof HEADER_ACTIONS)[number];
 export const HEADER_ACTION_STYLES = ["icon", "label"] as const;
 export type HeaderActionStyle = (typeof HEADER_ACTION_STYLES)[number];
-export const HEADER_ACTION_LABEL: Record<HeaderAction, string> = { favorites: "Meus Lugares", account: "Conta", search: "Buscar" };
+export const HEADER_ACTION_LABEL: Record<HeaderAction, string> = { favorites: "Minhas Estampas", account: "Conta", search: "Buscar" };
 export const headerActionsOf = (nav: Pick<NavigationConfig, "headerActions"> | null | undefined): Record<HeaderAction, HeaderActionStyle> => ({
   favorites: nav?.headerActions?.favorites ?? "icon",
   account: nav?.headerActions?.account ?? "icon",

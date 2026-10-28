@@ -1,4 +1,4 @@
-import { resolveProductDisplay } from "@/lib/catalog/lookup";
+import { resolveAnyProductDisplay } from "@/lib/customization/products-server";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { mintListSession } from "@/lib/favorites/session";
 import { allow, clientKey } from "@/lib/rate-limit";
@@ -14,7 +14,7 @@ const MAX_ITEMS = 24; // matches LIST_SESSION_MAX_ITEMS
 type Body = { storeKey?: unknown; inkProductIds?: unknown };
 
 /**
- * POST /api/buy-session — "Comprar minha lista". Called from `/[region]/meus-lugares`, same origin, browser fetch.
+ * POST /api/buy-session — "Comprar minha lista". Called from `/[region]/minhas-estampas`, same origin, browser fetch.
  * Body: `{ storeKey, inkProductIds }` (both required, whitelisted, unknown fields ignored). The client only ever
  * supplies WHICH ids to buy; every id is re-validated against the live catalog here (never trusts price, title,
  * URL or availability from the page's own cached favorites) and anything no longer eligible is silently dropped —
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   let sellingStore: CommerceStoreKey | null = null;
   let firstProductUrl: string | null = null;
   for (const id of requestedIds) {
-    const display = resolveProductDisplay(storeKey as CommerceStoreKey, id);
+    const display = await resolveAnyProductDisplay(storeKey as CommerceStoreKey, id);
     if (!display?.url) continue;
     sellingStore ??= display.commerceStoreKey;
     if (display.commerceStoreKey !== sellingStore || eligible.includes(display.inkProductId)) continue;

@@ -188,24 +188,24 @@ test.describe("the rest of the header is untouched", () => {
     await expect(bar.locator(".typing-caret")).toHaveCount(0);
   });
 
-  test("given a phone, when the menu opens, then Meus Lugares is right under the search, with the number saved", async ({ page }) => {
+  test("given a phone, when the menu opens, then Minhas Estampas is right under the search, with the number saved", async ({ page }) => {
     await page.addInitScript(() => {
       const item = (n: number) => ({ inkProductId: String(n), commerceStoreKey: "sul", title: "Ponto de Origem", context: "Florianópolis · SC", imageUrl: "https://gcp-images.majestic.ink.rsvcloud.com/x.webp", price: 109.9, addedAt: n });
       localStorage.setItem("origens:favorites:v1", JSON.stringify({ v: 1, items: [item(1), item(2)] }));
     });
     const dialog = await openMenu(page, 390);
     const favorites = dialog.getByTestId("menu-favorites");
-    await expect(favorites).toHaveAttribute("href", "/sul/meus-lugares");
-    await expect(favorites).toContainText("Meus Lugares");
+    await expect(favorites).toHaveAttribute("href", "/sul/minhas-estampas");
+    await expect(favorites).toContainText("Minhas Estampas");
     await expect(favorites).toContainText("2");
     await expect(dialog.locator('[data-block="search"] + [data-testid="menu-favorites"]')).toHaveCount(1);
     await favorites.click();
-    await expect(page).toHaveURL(/\/sul\/meus-lugares$/);
+    await expect(page).toHaveURL(/\/sul\/minhas-estampas$/);
     await expect(dialog).toBeHidden();
   });
 
   for (const width of [1280, 1440]) {
-    test(`given ${width}px, when the header is read, then the desktop navigation, dropdown, search and Meus Lugares work and there is no menu button`, async ({ page }) => {
+    test(`given ${width}px, when the header is read, then the desktop navigation, dropdown, search and Minhas Estampas work and there is no menu button`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.goto("/sul");
       const header = page.locator("header.site-header");
@@ -218,7 +218,7 @@ test.describe("the rest of the header is untouched", () => {
       await expect(nav.getByRole("link", { name: "Ver estados" })).toBeVisible();
       await page.keyboard.press("Escape");
       await expect(header.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
-      await expect(header.getByRole("link", { name: /Meus Lugares/ })).toBeVisible();
+      await expect(header.getByRole("link", { name: /Minhas Estampas/ })).toBeVisible();
       // No setting (Menu › Ícones do topo): the three buttons on the right are the icon only, the word kept for screen readers.
       for (const id of ["favorites-trigger", "account-trigger"]) expect((await header.getByTestId(id).boundingBox())!.width, id).toBeLessThan(60);
       expect((await header.getByRole("button", { name: "Buscar", exact: true }).boundingBox())!.width).toBeLessThan(60);

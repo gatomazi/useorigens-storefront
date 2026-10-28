@@ -42,6 +42,7 @@ export function pgProductJobStore(db: Db): ProductJobStore {
       return { job: (await one(`select ${COLUMNS} from customization_product where dedupe_key = $1`, [input.dedupeKey]))!, created: false };
     },
     get: (id) => one(`select ${COLUMNS} from customization_product where id = $1`, [id]),
+    findByInkProductId: (inkProductId) => one(`select ${COLUMNS} from customization_product where ink_product_id = $1 limit 1`, [inkProductId]),
     claim: (id, leaseMs, now = new Date()) =>
       one(
         `update customization_product set lease_until = $2, updated_at = now() where id = $1 and status in ('queued', 'creating', 'photos') and (lease_until is null or lease_until < $3) returning ${COLUMNS}`,
@@ -91,6 +92,7 @@ export function fileProductJobStore(file: string = path.join(adminDevDir(), "cus
         return { job, created: true };
       }),
     get: async (id) => (await read()).products.find((p) => p.id === id) ?? null,
+    findByInkProductId: async (inkProductId) => (await read()).products.find((p) => p.inkProductId === inkProductId) ?? null,
     claim: (id, leaseMs, at = new Date()) =>
       withLock(async () => {
         const data = await read();

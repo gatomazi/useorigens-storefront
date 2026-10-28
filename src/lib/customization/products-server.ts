@@ -3,12 +3,14 @@ import { after } from "next/server";
 import { adminConfig } from "../admin/config";
 import { platform } from "../admin/platform";
 import { storeForRegion } from "../catalog/commerce-mode";
-import type { RegionSlug } from "../geo/regions";
+import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
+import { resolveProductDisplay, type ProductDisplay } from "../catalog/lookup";
 import { INK_API_BASE_URL, INK_STORES } from "../ink/config";
 import { composeArtwork, validateArtworkInput } from "./artwork";
 import { loadArtworkBase } from "./artwork-server";
 import { fakeInkProductClient, realInkProductClient, type InkProductClient } from "./ink-product-client";
-import type { ProductJob, ProductJobStore } from "./ink-products";
+import { safeInkUrl, type ProductJob, type ProductJobStore } from "./ink-products";
+import { inkPhotoOrPlaceholder } from "./product-status";
 import { fileProductJobStore, pgProductJobStore } from "./product-store";
 import { runProductJob, type WorkerDeps } from "./product-worker";
 
@@ -77,4 +79,34 @@ export function startProductJob(id: string, region: RegionSlug): void {
   if (!store || !client) return;
   const deps: WorkerDeps = { store, client, render: renderJobArts, now: () => new Date(), sleep: (ms) => new Promise((r) => setTimeout(r, ms)) };
   after(() => runProductJob(id, deps, describeJob).catch(() => undefined));
+}
+
+/**
+ * A personalized product as "Minhas Estampas" and the buy session show it: only once ready, only on our INK store (it is hidden there, so the
+ * synced catalog never has it). When INK had not made the photo within the minute the waiting screen waits, it is asked again here and kept.
+ */
+export async function personalizedDisplay(storeKey: CommerceStoreKey, inkProductId: string): Promise<ProductDisplay | null> {
+  const store = productStoreOrNull();
+  if (!store || !/^\d{1,20}$/.test(inkProductId)) return null;
+  try {
+    const job = await store.findByInkProductId(inkProductId);
+    const url = job?.status === "ready" ? safeInkUrl(job.inkUrl) : null;
+    if (!job || !url || storeForRegion(job.region) !== storeKey) return null;
+    let image = job.inkImageUrl;
+    if (!image) {
+      const seen = await inkProductClientFor(job.region)?.getProduct(inkProductId).catch(() => null);
+      if (seen?.imageUrl) {
+        image = seen.imageUrl;
+        await store.update(job.id, { inkImageUrl: image }, { onlyIf: ["ready"] }).catch(() => null);
+      }
+    }
+    return { inkProductId, commerceStoreKey: storeKey, title: job.name, context: "Personalizada", imageUrl: inkPhotoOrPlaceholder(image), price: Number(job.price), url };
+  } catch {
+    return null; // no table yet (migration 0011), the database away: the product simply shows as unavailable
+  }
+}
+
+/** The catalog first; a personalized product (hidden at INK) when the catalog does not know the id. */
+export async function resolveAnyProductDisplay(storeKey: CommerceStoreKey, inkProductId: string): Promise<ProductDisplay | null> {
+  return resolveProductDisplay(storeKey, inkProductId) ?? personalizedDisplay(storeKey, inkProductId);
 }

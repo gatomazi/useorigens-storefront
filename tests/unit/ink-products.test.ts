@@ -112,7 +112,8 @@ describe("making a product", () => {
     expect(calls.create[0].key).toBe(job.id);
     expect(calls.create[0].body).toMatchObject({ product_type_id: 1, name: NEW.name, price: "109.90", visible_in_store: false });
     expect((calls.create[0].body.arts as unknown[]).length).toBe(18);
-    expect(publicJob(done)).toEqual({ id: job.id, label: "Universitário", status: "ready", url: done.inkUrl, image: done.inkImageUrl });
+    expect(publicJob(done)).toEqual({ id: job.id, label: "Universitário", status: "ready", url: done.inkUrl, image: done.inkImageUrl, inkProductId: "5143876", store: expect.any(String) });
+    expect(publicJob({ ...done, status: "photos" })).toMatchObject({ url: null, image: null, inkProductId: null, store: null });
   });
 
   test("two runs at once create ONE product: the second finds the job held", async () => {

@@ -13,7 +13,7 @@ function HeartIcon({ className }: { className: string }) {
   );
 }
 
-/** Header trigger for "Meus Lugares": heart + count, same shape as CartMirrorMenu's own trigger. Always visible (no token gate — this is local, not a mirror of anything remote). */
+/** Header trigger for "Minhas Estampas": heart + count, same shape as CartMirrorMenu's own trigger. Always visible (no token gate — this is local, not a mirror of anything remote). */
 /** `labelled`: the word next to the heart from 640px (the menu's "Ícones do topo"); otherwise the icon only, the word for screen readers and the tooltip. */
 export function FavoritesMenu({ region, labelled = true }: { region: RegionSlug; labelled?: boolean }) {
   const count = useSyncExternalStore(
@@ -24,9 +24,9 @@ export function FavoritesMenu({ region, labelled = true }: { region: RegionSlug;
 
   return (
     <Link
-      href={`/${region}/meus-lugares`}
+      href={`/${region}/minhas-estampas`}
       data-testid="favorites-trigger"
-      title={labelled ? undefined : "Meus Lugares"}
+      title={labelled ? undefined : "Minhas Estampas"}
       className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 px-2 font-semibold sm:px-3"
     >
       <span className="relative inline-flex">
@@ -37,8 +37,8 @@ export function FavoritesMenu({ region, labelled = true }: { region: RegionSlug;
           </span>
         ) : null}
       </span>
-      {labelled && <span className="hidden sm:inline">Meus Lugares</span>}
-      <span className={labelled ? "sr-only sm:hidden" : "sr-only"}>Meus Lugares{count > 0 ? `, ${count} ${count === 1 ? "estampa salva" : "estampas salvas"}` : ""}</span>
+      {labelled && <span className="hidden sm:inline">Minhas Estampas</span>}
+      <span className={labelled ? "sr-only sm:hidden" : "sr-only"}>Minhas Estampas{count > 0 ? `, ${count} ${count === 1 ? "estampa salva" : "estampas salvas"}` : ""}</span>
     </Link>
   );
 }

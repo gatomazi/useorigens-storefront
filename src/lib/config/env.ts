@@ -179,7 +179,7 @@ export function allowFixtureSync(): boolean {
 }
 
 /**
- * Signing key for the "buy session" identifier (`/meus-lugares` → "Comprar minha lista" → INK, see
+ * Signing key for the "buy session" identifier (`/minhas-estampas` → "Comprar minha lista" → INK, see
  * docs/buy-session-consumer.md; authoritative contract in use-origens-workers' docs/buy-session-contract.md).
  * Server-only, never shared with the `use-origens-workers` repo:
  * that Worker only relays the opaque id to `GET /api/buy-session/<id>`, which is the sole verifier. Unset means

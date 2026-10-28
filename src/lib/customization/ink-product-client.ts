@@ -96,7 +96,8 @@ export function fakeInkProductClient({ createMs = 30_000, photoMs = 20_000 }: { 
       const known = byKey.get(idempotencyKey);
       if (known) return made.get(known)!.view;
       await new Promise((r) => setTimeout(r, createMs));
-      const id = String(9_000_000 + made.size + 1);
+      // Unique across restarts of the dev server (a fixed counter would hand the same number to two names and mix them up in "Minhas Estampas").
+      const id = `9${Date.now().toString().slice(-9)}${made.size}`;
       const result = { id, url: `https://loja.useorigens.com.br/useorigens/product/teste-local-${id}`, imageUrl: null };
       made.set(id, { view: result, at: Date.now() });
       byKey.set(idempotencyKey, id);
