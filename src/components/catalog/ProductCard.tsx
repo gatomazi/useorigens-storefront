@@ -157,7 +157,7 @@ export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSec
       >
         {buy?.style === "fab" && <CardFab label={buy.label} />}
       </ProductPhoto>
-      <CardTags discount={tags?.discount ? item.discount : undefined} text={tags?.text} />
+      <CardTags discount={tags?.discount ? item.discount : undefined} text={tags?.onSale && !item.listPrice ? undefined : tags?.text} />
       <div className={INFO}>
         {item.eyebrow && <p className="mb-1 font-display text-[1.6rem] font-extrabold leading-none">{item.eyebrow}</p>}
         <h3 className={NAME}>{item.name}</h3>

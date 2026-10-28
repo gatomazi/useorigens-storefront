@@ -227,7 +227,7 @@ describe("the seasonal themes (Black Friday and Natal)", () => {
     // Its product showcases carry the "% OFF" of the products on promotion and the date's own tag; nothing else in them changes.
     const showcases = black.home!.sections.filter((s) => s.template === "product-carousel");
     expect(showcases.length).toBeGreaterThan(0);
-    for (const s of showcases) expect(s.layout?.tags).toEqual({ discount: true, text: "Black Friday" });
+    for (const s of showcases) expect(s.layout?.tags).toEqual({ discount: true, text: "Black Friday", onSale: true });
     // The strip and the footer keep the editorial treatment.
     expect(homeThemeCssVars(black, resolveTheme("sul", black, undefined).effective)).toHaveProperty("--footer-bg");
     expect(validateScopeDoc(black).ok).toBe(true);

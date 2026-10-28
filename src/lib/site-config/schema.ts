@@ -156,9 +156,10 @@ export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
 /**
  * Tags drawn on the product pictures of a section (product sections only; absent = none). `discount`: "18% OFF" on every product INK (or Uma Penca)
  * has on promotion right now, worked out from the two prices the store sent, never typed. `text`: the section's own tag on every product card
- * ("Black Friday", "Lançamento"), the same for all of them.
+ * ("Black Friday", "Lançamento"), the same for all of them; with `onSale`, only on the cards of products on promotion (a "Black Friday" tag never
+ * sits on a full price).
  */
-export type ProductTags = { discount?: true; text?: string };
+export type ProductTags = { discount?: true; text?: string; onSale?: true };
 export const MAX_TAG_TEXT = 24;
 export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string; buyStyle?: CardBuyStyle; tags?: ProductTags };
 export { DEFAULT_BUY_LABEL, MAX_BUY_LABEL };
@@ -761,11 +762,12 @@ function checkSection(c: Collector, path: string, v: unknown): void {
         const ok =
           v.template === "product-carousel" &&
           isRecord(t) &&
-          Object.keys(t).every((k) => k === "discount" || k === "text") &&
+          Object.keys(t).every((k) => k === "discount" || k === "text" || k === "onSale") &&
           (t.discount === undefined || t.discount === true) &&
+          (t.onSale === undefined || (t.onSale === true && t.text !== undefined)) &&
           (t.text === undefined || (isStr(t.text, MAX_TAG_TEXT) && t.text.trim() === t.text)) &&
           (t.discount === true || t.text !== undefined);
-        if (!ok) c.fail(`${path}.layout.tags`, `product sections only: { discount?: true, text?: 1..${MAX_TAG_TEXT} chars }, at least one`);
+        if (!ok) c.fail(`${path}.layout.tags`, `product sections only: { discount?: true, text?: 1..${MAX_TAG_TEXT} chars, onSale?: true (with text) }, at least one`);
       }
     }
   }

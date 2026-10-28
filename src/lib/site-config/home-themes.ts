@@ -170,8 +170,8 @@ const SEASONAL_HERO: Record<SeasonalThemeName, { title: string; subtitle: string
   },
 };
 
-/** The Black theme's tags on the product pictures: the "% OFF" of every product INK has on promotion, and the date's own name. */
-const BLACK_TAGS = { discount: true, text: "Black Friday" } as const;
+/** The Black theme's tags on the product pictures: the "% OFF" and the date's own name, both only on the products INK has on promotion. */
+const BLACK_TAGS = { discount: true, text: "Black Friday", onSale: true } as const;
 
 /** The Black theme's header and mobile menu: black, like its opening (the rest of the palette is the theme in use's). */
 const BLACK_CHROME = { headerBackground: "#111111", headerText: "#ffffff", mobileMenuBackground: "#111111", mobileMenuText: "#ffffff" } as const;

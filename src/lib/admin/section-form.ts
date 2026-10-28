@@ -260,7 +260,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     let tags: ProductTags | undefined = section.layout?.tags;
     if (f.get("tags_present") !== null) {
       const text = f.get("tags_custom") !== null ? str(f, "tags_text").slice(0, MAX_TAG_TEXT).trim() : "";
-      const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text } : {}) };
+      const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text, ...(f.get("tags_on_sale") !== null ? { onSale: true as const } : {}) } : {}) };
       tags = next.discount || next.text ? next : undefined;
     }
     patch.layout = { variant, tone, surface, ...(display === "grid" || display === "paged" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(buyStyle ? { buyStyle } : {}), ...(tags ? { tags } : {}) };
