@@ -4,11 +4,32 @@ import type { ProductStatus, PublicProductJob } from "./product-status";
  * The products a customer is waiting for, kept in this browser so the wait survives browsing the site (and a reload): the floating tracker reads it on
  * every page. Only what the waiting screen already shows (the job id, the art, the typed name, the state, the link once ready); nothing else, and it
  * goes away after a day or once the customer opens the product. Storage can be missing (private mode, blocked): then the tracker simply shows nothing.
+ *
+ * The INK store (loja.useorigens.com.br) is another origin and cannot read this storage, so the job ids also go into a cookie of the shared domain
+ * (`uo_produtos`, ids joined by "."): the Worker in front of INK shows the same reminder there (worker-lojas, docs/produto-em-criacao.md). The cookie
+ * is the shared truth of WHICH jobs are still followed: a job removed on the INK side ("Ver minha camiseta", "Tirar da lista") disappears here too.
  */
 /** `page`: the personalization page the order came from (to go back to it when the team has to step in). */
 export type TrackedProduct = { id: string; label: string; surname: string; status: ProductStatus; url: string | null; image: string | null; startedAt: number; page: string };
 
 const KEY = "uo:produtos-em-criacao";
+const COOKIE = "uo_produtos";
+const SHARED_DOMAIN = "useorigens.com.br";
+const JOB_ID = /^[0-9A-HJKMNP-TV-Z]{26}$/;
+const onSharedDomain = (): boolean => typeof location !== "undefined" && (location.hostname === SHARED_DOMAIN || location.hostname.endsWith(`.${SHARED_DOMAIN}`));
+
+/** The ids in the shared cookie, or null where there is no shared cookie (a local server, another host). */
+function cookieIds(): string[] | null {
+  if (!onSharedDomain()) return null;
+  const raw = document.cookie.split("; ").find((c) => c.startsWith(`${COOKIE}=`))?.slice(COOKIE.length + 1) ?? "";
+  return raw.split(".").filter((id) => JOB_ID.test(id));
+}
+
+function writeCookie(ids: string[]): void {
+  if (!onSharedDomain()) return;
+  const value = ids.filter((id) => JOB_ID.test(id)).join(".");
+  document.cookie = `${COOKIE}=${value}; Domain=.${SHARED_DOMAIN}; Path=/; Max-Age=${value ? 86_400 : 0}; SameSite=Lax; Secure`;
+}
 const EVENT = "uo:produtos-em-criacao";
 const DAY = 24 * 60 * 60 * 1000;
 const MAX = 6;
@@ -16,13 +37,15 @@ const MAX = 6;
 export function readTracked(now: number = Date.now()): TrackedProduct[] {
   try {
     const list = JSON.parse(localStorage.getItem(KEY) ?? "[]") as TrackedProduct[];
-    return Array.isArray(list) ? list.filter((p) => p && typeof p.id === "string" && now - p.startedAt < DAY) : [];
+    const shared = cookieIds();
+    return Array.isArray(list) ? list.filter((p) => p && typeof p.id === "string" && now - p.startedAt < DAY && (!shared || shared.includes(p.id))) : [];
   } catch {
     return [];
   }
 }
 
 function write(list: TrackedProduct[]): void {
+  writeCookie(list.slice(-MAX).map((p) => p.id));
   try {
     if (list.length) localStorage.setItem(KEY, JSON.stringify(list.slice(-MAX)));
     else localStorage.removeItem(KEY);
