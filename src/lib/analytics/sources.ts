@@ -32,6 +32,9 @@ export const SOURCES = {
   /** A city page's own "Mais de {mesorregião}" neighbour links — not in the command's own suggested list, but
    * a real, distinct source this codebase already has (`TrackedCityLink` in `[city]/page.tsx`). */
   cityNeighbours: "city_neighbours",
+  /** The header menu's "Sua cidade" journey (src/components/city-journey/CityJourney.tsx): the place chosen there (select_city) and the piece it
+   * opens in the store (GoToInk / select_item), all on one screen. */
+  suaCidade: "sua_cidade",
 
   // State selection: header "Regiões" dropdown, footer "Estados" column, and the home's own `#estados`
   // chooser (`StateCards`) are all the same conceptual action (picking a state from a state-picker UI), so

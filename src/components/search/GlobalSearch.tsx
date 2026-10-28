@@ -33,6 +33,12 @@ type Props = {
    * region into its designs, in place). Search/SelectCity are reported either way — it is still one conclusive search gesture.
    */
   onPick?: (result: GlobalResult) => boolean;
+  /** The field's own words (its label and, with an ellipsis, its placeholder) when it asks for one thing: "Digite o nome da sua cidade". */
+  fieldLabel?: string;
+  /** Places at a reading size instead of the sheet's display size (the "Sua cidade" journey keeps its field small and the screen calm). */
+  compact?: boolean;
+  /** What is in the field now, as it is typed (the "Sua cidade" journey hides its shortcuts while the visitor types). */
+  onQueryChange?: (query: string) => void;
 };
 
 export function SearchIcon({ className }: { className: string }) {
@@ -78,7 +84,7 @@ function Thumb({ result }: { result: GlobalResult }) {
  * floating dropdown), so it behaves the same on a phone, in a sheet, and with a screen reader. A design is ONE row per place × family, its
  * pieces counted from the product cluster, never one row per piece.
  */
-export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false, boxed = false, placesOnly = false, onPick }: Props) {
+export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false, boxed = false, placesOnly = false, onPick, fieldLabel, compact = false, onQueryChange }: Props) {
   const copy = placeSearchCopy(region);
   const router = useRouter();
   const uid = useId();
@@ -204,7 +210,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
         <Thumb result={r} />
         {place ? (
           <span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
-            <span className="min-w-0 break-words text-[clamp(1.375rem,3.4vw,2.25rem)] font-extrabold leading-tight tracking-tight">{r.title}</span>
+            <span className={`min-w-0 break-words font-extrabold leading-tight tracking-tight ${compact ? "text-[1.25rem] sm:text-[1.5rem]" : "text-[clamp(1.375rem,3.4vw,2.25rem)]"}`}>{r.title}</span>
             <span className={`t-place min-w-0 text-[0.95rem] sm:text-right ${isActive ? "text-white/80" : muted}`}>
               {r.subtitle}
               {regionNote}
@@ -236,7 +242,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
     <div className="w-full">
       <div className={sticky ? "sticky top-0 z-10 -mx-5 bg-ground px-5 pb-1 pt-1 sm:-mx-10 sm:px-10" : boxed ? "relative text-ink" : ""}>
         <label htmlFor={`${uid}-input`} className="sr-only">
-          {copy.label}
+          {fieldLabel ?? copy.label}
         </label>
         {boxed && <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-6 w-6 -translate-y-1/2 sm:left-5" />}
         <input
@@ -256,11 +262,12 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
           inputMode="search"
           maxLength={80}
           // The box's icon already says "search", and a phone's width (minus the icon) cuts the longer wording.
-          placeholder={boxed ? copy.field : copy.placeholder}
+          placeholder={fieldLabel ? `${fieldLabel}…` : boxed ? copy.field : copy.placeholder}
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
             setActive(0);
+            onQueryChange?.(event.target.value);
           }}
           onKeyDown={onKeyDown}
           className={

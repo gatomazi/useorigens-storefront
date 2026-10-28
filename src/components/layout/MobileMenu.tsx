@@ -90,7 +90,7 @@ const CLOSE_ICON = (
  */
 export function MobileMenu({ blocks, search, account = [], favorites }: {
   blocks: NavBlockData[];
-  /** "Sua cidade": the city search, first thing in the menu (the store's own search sheet). */
+  /** "Sua cidade": the city journey (place, design, piece on one screen), first thing in the menu. */
   search?: ReactNode;
   /** "Sua conta": the store's account links (AccountMenu), last in the menu; on phones the header has no room for a fourth icon. */
   account?: { label: string; href: string }[];

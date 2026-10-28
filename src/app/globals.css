@@ -430,6 +430,25 @@ a:hover > .photo img,
   animation-delay: 400ms;
 }
 
+/* The "Sua cidade" journey (components/city-journey/CityJourney.tsx): each step, and each design card, comes in from a little below. */
+@keyframes journey-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.journey-in {
+  animation: journey-in 420ms var(--ease-out) both;
+}
+/* Its step titles take the focus when a step opens, so a screen reader starts there; they are not controls and draw no focus ring. */
+.city-journey h2[tabindex="-1"]:focus {
+  outline: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

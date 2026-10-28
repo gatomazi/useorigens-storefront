@@ -399,6 +399,30 @@ export function trackAssistant(event: AssistantEvent, params: AssistantParams & 
   sendGtag("event", event, { ...rest, region, surface: "storefront", feature_version: "assistant_v1", ...(event === "origens_assistant_item_click" || event === "origens_assistant_link_click" ? { transport_type: "beacon" } : {}) });
 }
 
+export type CityJourneyEvent = "origens_sua_cidade_open" | "origens_sua_cidade_model" | "origens_sua_cidade_piece" | "origens_sua_cidade_error";
+export type CityJourneyParams = {
+  /** Where the journey was opened: the desktop header's menu or the phone menu. */
+  entry_point?: "header" | "menu";
+  city_slug?: string;
+  uf?: string;
+  family?: string;
+  /** The piece's slug (src/lib/catalog/garments.ts: "classica", "oversized"…). */
+  garment_type?: string;
+  position?: number;
+  model_count?: number;
+  piece_count?: number;
+};
+/**
+ * The header's "Sua cidade" journey (src/components/city-journey/CityJourney.tsx), GA4 only: opened, a design chosen, a piece chosen, the place's
+ * data failing to load. The place chosen is the usual `select_city` (and Search, from the search field) and the click to the store the usual
+ * GoToInk / select_item + go_to_ink, all with source `sua_cidade`: these events only fill in the steps between them.
+ */
+export function trackCityJourney(event: CityJourneyEvent, params: CityJourneyParams & { region: string }): void {
+  if (!gtagReady()) return;
+  const { region, ...rest } = params;
+  sendGtag("event", event, { ...rest, region, surface: "storefront", feature_version: "sua_cidade_v1" });
+}
+
 export type GuideEvent = "origens_guide_view" | "origens_guide_open" | "origens_guide_dismiss" | "origens_guide_city_select" | "origens_guide_results" | "origens_guide_product_click" | "origens_guide_error";
 export type GuideParams = {
   guide_path?: "city" | "prints" | "city_context" | "reopen";
