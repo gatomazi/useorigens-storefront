@@ -164,8 +164,8 @@ const SEASONAL_HERO: Record<SeasonalThemeName, { title: string; subtitle: string
     colors: { background: "#111111", title: "#ffffff", highlight: "#e2b64a", rule: "#e2b64a", text: "#e6e6e6", link: "#e2b64a", field: "#e2b64a" },
   },
   natal: {
-    title: "Presente\nque tem\nendereço.",
-    subtitle: "A camiseta da cidade de quem você ama, ou o sobrenome da família numa estampa de Natal.",
+    title: "Natal é\nestar\njunto.",
+    subtitle: "A mesa cheia, a casa barulhenta, o abraço que a gente esperou o ano todo. Presentes para quem estará lá.",
     colors: { highlight: "#a8322d", rule: "#a8322d" },
   },
 };

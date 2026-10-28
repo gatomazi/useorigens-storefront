@@ -8,8 +8,8 @@ na loja não muda até você escolher outro e publicar.
 
 | | Black Friday | Natal |
 |---|---|---|
-| Título | A origem / entra na / **Black.** | Presente / que tem / **endereço.** |
-| Texto | Camisetas de R$ 119,90 por R$ 99,90. Busque a sua cidade e garanta a sua: chega antes do Natal. | A camiseta da cidade de quem você ama, ou o sobrenome da família numa estampa de Natal. |
+| Título | A origem / entra na / **Black.** | Natal é / estar / **junto.** |
+| Texto | Camisetas de R$ 119,90 por R$ 99,90. Busque a sua cidade e garanta a sua: chega antes do Natal. | A mesa cheia, a casa barulhenta, o abraço que a gente esperou o ano todo. Presentes para quem estará lá. |
 | Cores da abertura | metade do texto preta, título branco, destaque e traço amarelos (#e2b64a), busca com moldura amarela | destaque e traço em vermelho (#a8322d), o resto como no tema em uso |
 | Topo e menu do celular | pretos | como no tema em uso |
 | Etiquetas nas fotos | "% OFF" e "Black Friday" nas vitrines de produtos, as duas **só nos produtos em promoção** | como no tema em uso |
@@ -43,6 +43,8 @@ no Editorial), o mais simples é criar o tema sazonal de novo a partir dele. Ele
 
 ### Abertura: um banner por produto em destaque
 
+A abertura diz "Natal é estar junto": as fotos mostram gente reunida, não uma pessoa sozinha.
+
 - **Tamanho:** 1920×1440 px (4:3). O mesmo arquivo serve para celular e desktop.
 - **Corte:** no celular a foto vira uma faixa de cerca de 6:5, no desktop uma metade de cerca de 9:8. Deixe a pessoa e a
   estampa **no centro**, com folga nas bordas. A faixa do produto (nome, cidade, preço) fica **embaixo** da foto, sem cobrir nada.
@@ -55,7 +57,7 @@ Cenas sugeridas, uma por produto em destaque:
 
 1. Alguém abre uma caixa de presente e levanta a camiseta da cidade, com a mesa de ceia desfocada atrás.
 2. Duas gerações (pai e filha, avó e neto) na varanda com pisca-pisca, um deles vestindo a camiseta.
-3. Uma pessoa vestindo a camiseta, segurando um presente embrulhado, numa rua de cidade do Sul enfeitada.
+3. Amigos ou um casal chegando à ceia com presentes nas mãos, um deles vestindo a camiseta, recebidos com abraço na porta.
 
 ### Chamada "Natal em família" (opcional)
 

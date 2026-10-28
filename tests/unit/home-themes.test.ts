@@ -199,7 +199,7 @@ describe("the seasonal themes (Black Friday and Natal)", () => {
     expect(doc.home!.sections).toEqual(before.home!.sections);
     const natal = doc.homeThemes!.natal!;
     const [hero, call, showcase, ...rest] = natal.sections;
-    expect(hero).toMatchObject({ id: before.home!.sections[0].id, variant: "feature", title: "Presente\nque tem\nendereço.", heroColors: { highlight: "#a8322d" } });
+    expect(hero).toMatchObject({ id: before.home!.sections[0].id, variant: "feature", title: "Natal é\nestar\njunto.", heroColors: { highlight: "#a8322d" } });
     expect(call).toMatchObject({ template: "campaign", variant: "split", cta: { dest: { kind: "customizer", customizerId: "natal1" } } });
     expect(showcase).toMatchObject({ template: "product-carousel", source: { kind: "ink-category", collectionId: 154424 } });
     expect(rest).toEqual(before.home!.sections.slice(1));

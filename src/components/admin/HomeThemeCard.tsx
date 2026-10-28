@@ -8,7 +8,7 @@ const ABOUT: Record<HomeThemeName, string> = {
   original: "O visual que a loja já tem: header na cor da região, o cinza das fotos como fundo, as seções nas composições de sempre.",
   editorial: "A direção editorial: verde profundo, fundo creme e terracota; abertura com produto ou banner em destaque, faixa de estados, cards de coleção e campanha dividida. Faixa do topo e rodapé no verde.",
   black: "Para a Black Friday: nasce como cópia do tema em uso, com a abertura escura (fundo preto, destaque amarelo, “de R$ 119,90 por R$ 99,90”), o topo preto e as etiquetas “% OFF” e “Black Friday” nos produtos em promoção. Depois da data, volte ao tema de antes em “Usar na loja”.",
-  natal: "Para o Natal: nasce como cópia do tema em uso, com a abertura “Presente que tem endereço.” em vermelho e, logo abaixo, a chamada para o Natal em família e a vitrine da coleção Natal. Depois da data, volte ao tema de antes em “Usar na loja”.",
+  natal: "Para o Natal: nasce como cópia do tema em uso, com a abertura “Natal é estar junto.” em vermelho e, logo abaixo, a chamada para o Natal em família e a vitrine da coleção Natal. Depois da data, volte ao tema de antes em “Usar na loja”.",
 };
 
 /**
