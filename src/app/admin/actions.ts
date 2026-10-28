@@ -57,6 +57,8 @@ import { HEADER_ACTIONS, type HeaderAction, type HeaderActionStyle } from "@/lib
 import { readablePromotionError, rowsToConfig } from "@/lib/admin/promotions-form";
 import type { InkThemeConfig } from "@/lib/site-config/ink-theme-schema";
 import { readableTopBarError, topBarFromForm } from "@/lib/admin/top-bar-form";
+import { postAddKitFromForm, kitFormPromotionId, type KitInkCheck } from "@/lib/admin/post-add-kit-form";
+import { fetchProgressivePromotion } from "@/lib/ink/promotions-client";
 import { assistantFromForm, readableAssistantError, type AssistantRow } from "@/lib/admin/assistant-form";
 import { mergeInkFaq, parseInkFaq, suggestedFor } from "@/lib/assistant/ink-faq";
 import { INK_FAQ_COPY, INK_FAQ_COPY_DATE } from "@/lib/assistant/ink-faq-copy";
@@ -927,6 +929,37 @@ export async function saveTopBarAction(fd: FormData) {
   if (!outcome.ok) back(here, { err: outcome.errors.map((e) => readableTopBarError(e, scope)) });
   await audit(actor, "draft.save", scope, "set-top-bar");
   back(here, { ok: `Rascunho da faixa do topo de ${scopeName(scope)} salvo. Nada muda na loja nem na INK até você publicar.` });
+}
+
+// ── Monte seu kit (por região) ───────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Saves "Monte seu kit" of a region (switch, chosen INK promotion, texts) as a DRAFT. The chosen promotion is read from INK now: its code is INK's, and one
+ * that cannot be the kit (by value, only some products, first purchase, finished) is refused while turning it on. Nothing reaches the INK pages until Publicar.
+ */
+export async function savePostAddKitAction(fd: FormData) {
+  const { actor, scope } = await editScope(fd);
+  const here = "/admin/kit";
+  const id = kitFormPromotionId(text(fd, "promotionId"));
+  let check: KitInkCheck = { kind: "none" };
+  if (typeof id === "number") {
+    try {
+      const promotion = await fetchProgressivePromotion(storeOf(scope), id);
+      check = promotion ? { kind: "found", promotion } : { kind: "missing" };
+    } catch {
+      check = { kind: "unreachable" };
+    }
+  }
+  const parsed = postAddKitFromForm(
+    { enabled: fd.get("enabled") === "on", promotionId: text(fd, "promotionId"), promotionCode: text(fd, "promotionCode"), eyebrow: text(fd, "eyebrow"), title: text(fd, "title"), lead: text(fd, "lead") },
+    check,
+  );
+  if (!parsed.ok) back(here, { err: parsed.errors });
+  const outcome = await applyAndSave(scope, { type: "set-post-add-kit", postAddKit: parsed.value }, revNumber(fd), actor);
+  revalidatePath("/admin", "layout");
+  if (!outcome.ok) back(here, { err: outcome.errors });
+  await audit(actor, "draft.save", scope, "set-post-add-kit");
+  back(here, { ok: `Rascunho do kit de ${scopeName(scope)} salvo. Nada muda na INK até você publicar.` });
 }
 
 export async function saveAssistantAction(fd: FormData) {

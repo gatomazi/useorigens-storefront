@@ -19,6 +19,7 @@ import { validatePodio } from "./podio-schema";
 import { validateStatePage } from "./state-page-schema";
 import { validatePromotions } from "./promotions-schema";
 import { validateTopBar } from "./top-bar-schema";
+import { validatePostAddKit } from "./post-add-kit-schema";
 import { validateAssistant } from "./assistant-schema";
 import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
@@ -175,7 +176,8 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // And the state-page switches: an invalid one means every section shows, as before they existed.
   // And the top strip: an invalid one means the storefront's default strip and the INK's own on its pages.
   // And the assistant: an invalid one means no chat, and the INK keeps its own "Ajuda?" and WhatsApp.
-  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "assistant", "inkTheme"] as const) {
+  // And "Monte seu kit": an invalid one means the post-add modal as INK draws it.
+  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "assistant", "inkTheme", "postAddKit"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
@@ -190,6 +192,7 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
       : key === "topBar" ? validateTopBar(candidate[key], scope, `${scope}.topBar`)
       : key === "assistant" ? validateAssistant(candidate[key], scope, `${scope}.assistant`)
       : key === "inkTheme" ? validateInkTheme(candidate[key], scope, `${scope}.inkTheme`)
+      : key === "postAddKit" ? validatePostAddKit(candidate[key], scope, `${scope}.postAddKit`)
       : validatePromotions(candidate[key], scope, `${scope}.promotions`);
     if (!r.ok) {
       diagnostics.push(`${scope}: ${key} is invalid and was ignored (${r.errors[0]})`);
