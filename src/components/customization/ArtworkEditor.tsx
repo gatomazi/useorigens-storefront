@@ -4,6 +4,7 @@ import { artworkFields, artworkFonts, editableTexts, type ArtworkEdit } from "@/
 import type { PrintProject } from "@/lib/print-studio/model";
 import { fontFamilyId, groupFontOptions, preferredFontVariant } from "@/lib/print-studio/font-options";
 import type { ReactNode } from "react";
+import { InfoTip } from "./InfoTip";
 import styles from "./ArtworkEditor.module.css";
 
 export function ArtworkEditor({ base, edits, onChange, errors, uid }: { base: PrintProject; edits: ArtworkEdit[]; onChange: (edits: ArtworkEdit[]) => void; errors: Record<string, string>; uid: string }) {
@@ -50,21 +51,33 @@ export function ArtworkEditor({ base, edits, onChange, errors, uid }: { base: Pr
  * A base with slots: one input per answer (e.g. the family name); texts, fonts, colours and positions stay as designed. `compact` (the
  * full-screen preview) keeps only the inputs; `children` follow them (e.g. the button that opens that preview).
  */
+const FIELD_HINT = "Escreva como é: “Silva”, “dos Santos”, “Costa e Silva”. Maiúsculas e minúsculas se ajustam ao estilo da estampa.";
+
+/**
+ * The fields of a base with text slots (e.g. only the surname). How to write it sits behind an "i" (and is the field's description for screen
+ * readers); the counter shows only near the limit. With a single field the legend already names it, so its label is for screen readers only.
+ * `compact`: the full-screen view, where the legend is hidden and the label shows.
+ */
 export function ArtworkFields({ base, values, onChange, errors, uid, legend = "Coloque o nome da sua família", compact = false, children }: { base: PrintProject; values: Record<string, string>; onChange: (values: Record<string, string>) => void; errors: Record<string, string>; uid: string; legend?: ReactNode; compact?: boolean; children?: ReactNode }) {
+  const fields = artworkFields(base);
+  const tip = <InfoTip label="Como escrever">{FIELD_HINT}</InfoTip>;
   return (
-    <fieldset className={compact ? styles.compactFields : styles.editor}>
-      <legend className={compact ? "sr-only" : "t-h3"}>{legend}</legend>
-      {!compact && <p className="t-small text-ink-mute">Maiúsculas e minúsculas se ajustam ao estilo da estampa.</p>}
+    <fieldset className={compact ? styles.compactFields : styles.fields}>
+      <legend className={compact ? "sr-only" : "t-h3"}>{legend}{!compact && tip}</legend>
       {errors.artwork && <p className={styles.error} role="alert">{errors.artwork}</p>}
-      {artworkFields(base).map((field) => {
+      {fields.map((field) => {
         const id = `${uid}-artwork-${field.id}`;
         const error = errors[`artwork.${field.id}`];
         const value = values[field.id] ?? "";
+        const count = [...value].length;
         return (
           <div key={field.id} className={styles.textGroup}>
-            <label className="t-label block" htmlFor={id}>{field.label}</label>
+            <div className={!compact && fields.length === 1 ? "sr-only" : "flex items-center"}><label className="t-label" htmlFor={id}>{field.label}</label>{compact && tip}</div>
             <input id={id} value={value} onChange={(e) => onChange({ ...values, [field.id]: e.target.value })} maxLength={field.maxLength} autoComplete="family-name" autoCapitalize="words" spellCheck={false} placeholder={`Ex.: ${field.example}`} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />
-            <div className={styles.help} id={`${id}-help`}><span className={error ? styles.error : undefined} role={error ? "alert" : undefined}>{error ?? "Escreva como é: “Silva”, “dos Santos”, “Costa e Silva”"}</span><span>{[...value].length}/{field.maxLength}</span></div>
+            <div className={styles.help} id={`${id}-help`}>
+              {error ? <span className={styles.error} role="alert">{error}</span> : <span className="sr-only">{FIELD_HINT}</span>}
+              {count >= field.maxLength - 5 && <span className={`ml-auto ${count > field.maxLength ? styles.error : ""}`}>{count}/{field.maxLength}</span>}
+            </div>
           </div>
         );
       })}

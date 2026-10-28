@@ -12,6 +12,7 @@ import type { PrintProject } from "@/lib/print-studio/model";
 import { ArtworkEditor, ArtworkFields } from "./ArtworkEditor";
 import { ArtworkPreview, type PreviewView } from "./ArtworkPreview";
 import { ArtPicker, ShirtSwatches } from "./StudioPickers";
+import { InfoTip } from "./InfoTip";
 import styles from "./ArtworkEditor.module.css";
 
 /** Fetches another base of the model when the customer picks it: the page ships only the first one (each carries the full-size art). */
@@ -136,10 +137,11 @@ export function CustomizerForm({
 
   const artOptions = () => arts.map((a, i) => ({ key: i, label: a.label, thumb: thumb(choiceOf(arts, { art: i, version: i === pick.art ? pick.version : 0, light })!.templateId) }));
   const versionOptions = () => choice!.art.versions.map((v, j) => ({ key: j, label: `${choice!.art.label} · ${v.label ?? `Versão ${j + 1}`}`, caption: v.label ?? `Versão ${j + 1}`, thumb: thumb(choiceOf(arts, { art: pick.art, version: j, light })!.templateId) }));
-  const artPickers = (where: string, strip = false) => choice && (
+  // Only on the page: the full-screen view offers just the colours, so a tap there never swaps the art the customer picked.
+  const artPickers = choice && (
     <>
-      {arts.length > 1 && <ArtPicker legend={strip ? "Arte" : "1. Escolha a arte"} name={`${uid}-${where}-arte`} options={artOptions()} value={pick.art} onChange={(art) => choose({ art, version: 0 })} shirt={shirt} strip={strip} />}
-      {choice.art.versions.length > 1 && <ArtPicker legend="Versão" name={`${uid}-${where}-versao`} options={versionOptions()} value={pick.version} onChange={(version) => choose({ art: pick.art, version })} shirt={shirt} strip={strip} />}
+      {arts.length > 1 && <ArtPicker legend="1. Escolha a arte" name={`${uid}-arte`} options={artOptions()} value={pick.art} onChange={(art) => choose({ art, version: 0 })} shirt={shirt} />}
+      {choice.art.versions.length > 1 && <ArtPicker legend="Versão" name={`${uid}-versao`} options={versionOptions()} value={pick.version} onChange={(version) => choose({ art: pick.art, version })} shirt={shirt} />}
     </>
   );
 
@@ -239,7 +241,7 @@ export function CustomizerForm({
   );
   const surnameStep = (compact: boolean) => firstBase && (
     <ArtworkFields base={firstBase} values={fieldValues} onChange={setFieldValues} errors={compact ? {} : errors} uid={compact ? `${uid}-full` : uid} legend={arts.length > 1 ? "2. Escreva o sobrenome" : "Escreva o sobrenome"} compact={compact}>
-      {!compact && <div className="mt-3 lg:hidden"><button type="button" className="btn btn-ghost inline-flex w-full items-center justify-center gap-2" onClick={openFull} aria-haspopup="dialog"><ExpandIcon />Ver como ficou na camiseta</button></div>}
+      {!compact && <div className="mt-2 lg:hidden"><button type="button" className={`btn btn-ghost ${styles.seeShirt} inline-flex w-full items-center justify-center gap-2`} onClick={openFull} aria-haspopup="dialog"><ExpandIcon />Ver como ficou na camiseta</button></div>}
     </ArtworkFields>
   );
 
@@ -275,9 +277,9 @@ export function CustomizerForm({
             <p className="t-caption mt-2 text-center">Imagem ilustrativa. Confira seus dados de personalização.</p>
             </>}
             {studio && fieldMode && showingExample && phase !== "done" && (
-              <button type="button" onClick={focusSurname} className="mt-3 min-h-11 text-left text-[0.9375rem] font-bold underline decoration-2 underline-offset-4">Mostrando o exemplo “{slots[0]?.example}”. Escreva o seu sobrenome</button>
+              <button type="button" onClick={focusSurname} className="mt-1 min-h-11 text-left text-[0.875rem] font-semibold underline underline-offset-4">É só um exemplo. Escreva o seu sobrenome</button>
             )}
-            {studio && phase !== "done" && <div className="mt-4"><ShirtSwatches name={`${uid}-camiseta`} value={shirt} onChange={chooseShirt} /></div>}
+            {studio && phase !== "done" && <div className="mt-2"><ShirtSwatches name={`${uid}-camiseta`} value={shirt} onChange={chooseShirt} /></div>}
           </div>
         </div>
 
@@ -309,9 +311,9 @@ export function CustomizerForm({
               <button type="button" className="btn btn-ghost" onClick={editAgain}>Editar e enviar de novo</button>
             </div>
           ) : (
-            <form onSubmit={onSubmit} noValidate className="space-y-8" aria-describedby={`${uid}-notice`}>
-              <fieldset disabled={phase === "sending"} className="min-w-0 space-y-8">
-              {studio && <div className="space-y-6">{artPickers("form")}</div>}
+            <form onSubmit={onSubmit} noValidate className="space-y-6" aria-describedby={`${uid}-notice`}>
+              <fieldset disabled={phase === "sending"} className="min-w-0 space-y-6">
+              {studio && <div className="space-y-5">{artPickers}</div>}
               {family && (
                 <div className="space-y-3" data-testid="family-order">
                   {items.length > 1 && (
@@ -330,8 +332,12 @@ export function CustomizerForm({
                       </ul>
                     </div>
                   )}
-                  {items.length < MAX_FAMILY_ARTS && nextPick && <button type="button" className="btn btn-ghost inline-flex w-full items-center justify-center gap-2" onClick={addItem}><PlusIcon />Incluir outra arte com o mesmo sobrenome</button>}
-                  <p className="t-small text-ink-mute">Por exemplo, adulto e infantil para a família toda. Até {MAX_FAMILY_ARTS} artes por solicitação.</p>
+                  {items.length < MAX_FAMILY_ARTS && nextPick && (
+                    <div className="flex items-center gap-3">
+                      <button type="button" className="btn btn-ghost inline-flex min-w-0 flex-1 items-center justify-center gap-2" onClick={addItem}><PlusIcon />Incluir outra arte com o mesmo sobrenome</button>
+                      <InfoTip label="Sobre incluir outra arte">Por exemplo, adulto e infantil para a família toda. Até {MAX_FAMILY_ARTS} artes por solicitação.</InfoTip>
+                    </div>
+                  )}
                 </div>
               )}
               {studio && (fieldMode
@@ -380,10 +386,9 @@ export function CustomizerForm({
                 </fieldset>
               )}
 
-              <div className="border-t border-line pt-6">
-                <fieldset className="space-y-4" data-testid="contact-fieldset" data-clarity-mask="True">
-                  <legend className="t-h3">{studio && arts.length > 1 ? "3. Como falamos com você?" : "Como podemos entrar em contato com você?"}</legend>
-                  <p className="t-small text-ink-mute">Informe o seu nome e pelo menos um canal: WhatsApp ou e-mail (pode ser os dois).</p>
+              <div className="border-t border-line pt-5">
+                <fieldset className="space-y-3" data-testid="contact-fieldset" data-clarity-mask="True">
+                  <legend className="t-h3">{studio && arts.length > 1 ? "3. Como falamos com você?" : "Como podemos entrar em contato com você?"}<InfoTip label="Quais contatos informar">O seu nome e pelo menos um canal: WhatsApp ou e-mail (pode ser os dois).</InfoTip></legend>
                   {([
                     { key: "name", errKey: CONTACT_KEYS.name, label: "Nome", required: true, type: "text", autoComplete: "name", inputMode: undefined, placeholder: "Como devemos chamar você" },
                     { key: "whatsapp", errKey: CONTACT_KEYS.whatsapp, label: "WhatsApp", required: false, type: "tel", autoComplete: "tel", inputMode: "tel" as const, placeholder: "(51) 99999-9999" },
@@ -392,19 +397,21 @@ export function CustomizerForm({
                     const id = `${uid}-${f.errKey.replace(".", "-")}`;
                     return (
                       <div key={f.key}>
-                        <label htmlFor={id} className="t-label block">{f.label}{f.required ? <span className="text-[#9b1c1c]"> *</span> : <span className="text-ink-mute"> (opcional se informar o outro)</span>}</label>
+                        <label htmlFor={id} className="t-label block">{f.label}{f.required && <span className="text-[#9b1c1c]"> *</span>}</label>
                         <input id={id} name={f.key} type={f.type} inputMode={f.inputMode} autoComplete={f.autoComplete} value={contact[f.key]} onChange={(e) => setContact((c) => ({ ...c, [f.key]: e.target.value }))} placeholder={f.placeholder} maxLength={f.key === "email" ? 254 : 90} className={`${inputClass} mt-1`} aria-invalid={errors[f.errKey] ? true : undefined} aria-describedby={`${id}-msg`} />
-                        <p id={`${id}-msg`} className={`mt-1 min-h-[1.25rem] text-[0.8125rem] ${errors[f.errKey] ? "font-bold text-[#9b1c1c]" : ""}`} role={errors[f.errKey] ? "alert" : undefined}>{errors[f.errKey] ?? ""}</p>
+                        {errors[f.errKey] && <p id={`${id}-msg`} className="mt-1 text-[0.8125rem] font-bold text-[#9b1c1c]" role="alert">{errors[f.errKey]}</p>}
                       </div>
                     );
                   })}
                   <div>
-                    <label className="flex items-start gap-3">
-                      <input id={`${uid}-contact-confirm`} name="contactConfirm" type="checkbox" checked={contact.confirm} onChange={(e) => setContact((c) => ({ ...c, confirm: e.target.checked }))} className="mt-1 h-5 w-5 shrink-0 accent-[var(--color-ink,#000)]" aria-invalid={errors[CONTACT_KEYS.confirm] ? true : undefined} aria-describedby={`${uid}-contact-confirm-msg`} />
-                      <span className="t-body">{CONTACT_CONFIRM_TEXT}</span>
-                    </label>
-                    <p className="t-small mt-1 text-ink-mute">{CONTACT_NOTICE}</p>
-                    <p id={`${uid}-contact-confirm-msg`} className={`mt-1 min-h-[1.25rem] text-[0.8125rem] ${errors[CONTACT_KEYS.confirm] ? "font-bold text-[#9b1c1c]" : ""}`} role={errors[CONTACT_KEYS.confirm] ? "alert" : undefined}>{errors[CONTACT_KEYS.confirm] ?? ""}</p>
+                    <div className="flex items-start">
+                      <label className="flex items-start gap-3">
+                        <input id={`${uid}-contact-confirm`} name="contactConfirm" type="checkbox" checked={contact.confirm} onChange={(e) => setContact((c) => ({ ...c, confirm: e.target.checked }))} className="mt-1 h-5 w-5 shrink-0 accent-[var(--color-ink,#000)]" aria-invalid={errors[CONTACT_KEYS.confirm] ? true : undefined} aria-describedby={`${uid}-contact-confirm-msg`} />
+                        <span className="t-body">{CONTACT_CONFIRM_TEXT}</span>
+                      </label>
+                      <span className="mt-0.5 shrink-0"><InfoTip label="Como usamos o seu contato">{CONTACT_NOTICE}</InfoTip></span>
+                    </div>
+                    {errors[CONTACT_KEYS.confirm] && <p id={`${uid}-contact-confirm-msg`} className="mt-1 text-[0.8125rem] font-bold text-[#9b1c1c]" role="alert">{errors[CONTACT_KEYS.confirm]}</p>}
                   </div>
                 </fieldset>
               </div>
@@ -423,8 +430,9 @@ export function CustomizerForm({
 
               <div>
                 <button type="submit" className="btn w-full sm:w-auto" disabled={phase === "sending" || (!available && !preview) || (studio && (!artworkBase || !artworkReady))}>{phase === "sending" ? "Enviando…" : preview ? "Testar o envio (prévia)" : studio ? (items.length > 1 ? `Enviar solicitação (${items.length} artes)` : "Enviar solicitação") : "Enviar solicitação"}</button>
-                <p id={`${uid}-notice`} className="t-small mt-3 max-w-xl text-ink-mute" {...(studio ? { "data-testid": "customization-intro" } : {})}>
-                  Enviar registra a sua solicitação de criação com a nossa equipe, com o resumo acima. <strong>Esta etapa não é uma compra nem reserva um produto.</strong> Não pedimos endereço, CPF, senha nem dados de pagamento.
+                <p className="t-small mt-3 flex max-w-xl items-center text-ink-mute">
+                  <span id={`${uid}-notice`} {...(studio ? { "data-testid": "customization-intro" } : {})}><strong>Não é uma compra:</strong> a gente prepara a estampa e fala com você.</span>
+                  <InfoTip label="O que acontece ao enviar">Enviar registra a sua solicitação de criação com a nossa equipe, com o resumo acima. Esta etapa não é uma compra nem reserva um produto. Não pedimos endereço, CPF, senha nem dados de pagamento.</InfoTip>
                 </p>
               </div>
               </fieldset>
@@ -434,18 +442,20 @@ export function CustomizerForm({
       </div>
 
       {studio && (
-        <dialog ref={fullRef} onClose={() => setFull(false)} aria-labelledby={`${uid}-full-title`} className="m-0 h-[100dvh] max-h-none w-full max-w-none bg-ground p-0 text-ink backdrop:bg-black/60 open:flex open:flex-col lg:m-auto lg:h-[92dvh] lg:max-w-xl">
+        // The dialog itself never scrolls (`overflow-clip`): only the body below the header does, so "Pronto" stays on screen. The body is
+        // `relative` so the visually hidden radio inputs of the pickers (absolutely positioned) stay inside it; otherwise they stretch the
+        // dialog on shorter phones and it scrolls the header away.
+        <dialog ref={fullRef} onClose={() => setFull(false)} aria-labelledby={`${uid}-full-title`} className="m-0 h-[100dvh] max-h-none w-full max-w-none overflow-clip bg-ground p-0 text-ink backdrop:bg-black/60 open:flex open:flex-col lg:m-auto lg:h-[92dvh] lg:max-w-xl">
           {full && <>
             <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2">
               <h2 id={`${uid}-full-title`} className="t-h3">Sua estampa</h2>
               <button type="button" className="btn" onClick={() => fullRef.current?.close()}>Pronto</button>
             </div>
-            <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pb-6 pt-3">
+            <div className="relative min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 pb-6 pt-3">
               {/* The input first: with the phone keyboard open, the input and the art above it still fit on screen. */}
               {fieldMode && surnameStep(true)}
               <div className="mx-auto w-full" style={{ maxWidth: "min(100%, 36svh)" }}>{previewBlock(true)}</div>
-              <ShirtSwatches name={`${uid}-full-camiseta`} value={shirt} onChange={chooseShirt} row />
-              {artPickers("full", true)}
+              <div className="mx-auto w-full max-w-[18.5rem]"><ShirtSwatches name={`${uid}-full-camiseta`} value={shirt} onChange={chooseShirt} /></div>
             </div>
           </>}
         </dialog>
