@@ -83,7 +83,8 @@ function Stage({ pieces, visited, selected, alt }: { pieces: JourneyPiece[]; vis
   const [ready, setReady] = useState<string[]>([]);
   const shown = ready.includes(selected) ? selected : (ready.at(-1) ?? selected);
   return (
-    <div className="relative aspect-[800/820] overflow-hidden rounded-lg bg-ground" data-testid="journey-stage">
+    // Below the desktop layout the photo is capped: a tablet's full width would push the pieces under the purchase bar.
+    <div className="relative mx-auto aspect-[800/820] w-full max-w-md overflow-hidden rounded-lg bg-ground lg:max-w-none" data-testid="journey-stage">
       {pieces
         .filter((p) => visited.includes(p.slug))
         .map((p) => (
