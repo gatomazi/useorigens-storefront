@@ -600,6 +600,42 @@ dialog::backdrop {
   }
 }
 
+/* The "Camiseta pronta!" reminder of a direct purchase (components/customization/ProductTracker.tsx): it must catch the eye while the customer
+   browses, so it glows and, every few seconds, gives a short shake. `rotate` (not `transform`) so it never fights the `translate` that centres it.
+   Nothing with reduced motion: the colour alone says it is ready. */
+@keyframes uo-nudge {
+  0%,
+  70%,
+  100% {
+    rotate: 0deg;
+  }
+  74% {
+    rotate: -5deg;
+  }
+  78% {
+    rotate: 5deg;
+  }
+  82% {
+    rotate: -3deg;
+  }
+  86% {
+    rotate: 3deg;
+  }
+  90% {
+    rotate: 0deg;
+  }
+}
+@keyframes uo-glow {
+  50% {
+    opacity: 0.82;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .uo-attention {
+    animation: uo-nudge 2.8s ease-in-out infinite, uo-glow 1.4s ease-in-out infinite;
+  }
+}
+
 /* Assistant button ("Pergunte aqui"): until the visitor opens it once in the visit, a soft glow in the region's accent — three slow breaths when it
    appears, then a still halo (AssistantWidget sets data-glow). The shadow of a pseudo-element, so only its opacity moves: the button's own transform
    is its hover, and an outer shadow is never painted over the button itself. Reduced motion: the still halo only. */

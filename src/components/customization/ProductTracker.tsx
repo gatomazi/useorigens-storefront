@@ -11,7 +11,7 @@ const ShirtIcon = () => <svg aria-hidden="true" viewBox="0 0 24 24" className="h
 
 /**
  * The floating reminder of a direct purchase that is still being made, on every page of the site: the customer chose "Continuar navegando" (or
- * left the page) and the server goes on. It follows the jobs kept in this browser, blinks once a shirt is ready and opens a small panel with the
+ * left the page) and the server goes on. It follows the jobs kept in this browser, glows and shakes once a shirt is ready and opens a small panel with the
  * steps and "Ver minha camiseta". Bottom centre, between the coupons (left) and the help chat (right), above the cookie bar while it shows. It
  * stays quiet while a dialog of the page is open (the waiting screen itself) and while the tab is hidden.
  */
@@ -89,7 +89,7 @@ export function ProductTracker() {
         </div>
       )}
       <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} style={{ bottom: lift }}
-        className={`fixed left-1/2 z-40 flex min-h-12 max-w-[calc(100vw-11rem)] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap border-2 px-3 text-[0.875rem] font-bold shadow-[0_8px_24px_rgb(0_0_0/0.22)] ${ready.length ? "border-[var(--region-primary)] bg-[var(--region-primary)] text-white motion-safe:animate-pulse" : "border-ink bg-paper text-ink"}`}>
+        className={`fixed left-1/2 z-40 flex min-h-12 max-w-[calc(100vw-11rem)] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap border-2 px-3 text-[0.875rem] font-bold shadow-[0_8px_24px_rgb(0_0_0/0.22)] ${ready.length ? "uo-attention border-[var(--region-primary)] bg-[var(--region-primary)] text-white" : "border-ink bg-paper text-ink"}`}>
         <ShirtIcon />
         <span className="truncate">{label}</span>
         {!ready.length && pending.length > 0 && <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-[#d8a800] motion-safe:animate-pulse" />}
