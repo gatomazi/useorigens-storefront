@@ -32,13 +32,16 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
 
 type Shot = { src: string; alt: string };
 
-/** The cities with a shirt and the states (and the DF) they are in, across every region the store sells: counted from the catalog, never typed. */
+/**
+ * The cities with a shirt and the states (and the DF) they are in, summed over the three regions: the single store sells Sul, Norte and
+ * Centro-Oeste whatever the site has launched. Counted from the catalog, never typed; a region whose catalog is missing adds nothing.
+ */
 function storeReach() {
   const catalog = getCatalog();
   let cities = 0;
   let states = 0;
   let df = false;
-  for (const region of REGION_SLUGS.filter(isRegionLaunched)) {
+  for (const region of REGION_SLUGS) {
     const covered = catalog.coveredCityIds(region);
     cities += covered.size;
     for (const uf of REGIONS[region].ufs) {
@@ -50,24 +53,23 @@ function storeReach() {
   return { cities, states, df };
 }
 
-/** Real shirts of the region for the hero and the three profiles; a missing pick falls back to another real one, never to a placeholder. */
-function shots(region: RegionSlug): { hero: Shot[]; profile: Record<PartnerProfile, Shot | null> } {
+/** Real shirts of the region for the three profiles, one each; a missing pick falls back to another real one, never to a placeholder. */
+function shots(region: RegionSlug): Record<PartnerProfile, Shot | null> {
   const home = getRegionHome(region);
-  const hero = home.heroFamilies.map((d) => ({ src: d.imageUrl, alt: `Camiseta ${d.familyName} de ${d.cityName}` }));
   const traco = home.showcase?.families.find((f) => f.family.id === "traco");
   const wanted: Record<PartnerProfile, (Shot | undefined)[]> = {
     ambassador: home.fala.slice(0, 2).map((p) => ({ src: p.imageUrl, alt: `Camiseta ${p.name}` })),
     artist: [traco && home.showcase ? { src: traco.primary.imageUrl, alt: `Camiseta ${traco.family.name} de ${home.showcase.city.name}` } : undefined, ...home.recreations.slice(0, 2).map((p) => ({ src: p.imageUrl, alt: `Camiseta ${p.name}` }))],
     collab: [...home.recreations.slice(1, 3), ...home.terra.slice(0, 2)].map((p) => ({ src: p.imageUrl, alt: `Camiseta ${p.name}` })),
   };
-  const used = new Set(hero.map((s) => s.src));
+  const used = new Set<string>();
   const pool = [...home.terra, ...home.feitoParaVoce, ...home.ddd].map((p) => ({ src: p.imageUrl, alt: `Camiseta ${p.name}` }));
   const pick = (list: (Shot | undefined)[]): Shot | null => {
     const found = [...list, ...pool].find((s): s is Shot => !!s && !used.has(s.src)) ?? null;
     if (found) used.add(found.src);
     return found;
   };
-  return { hero, profile: { ambassador: pick(wanted.ambassador), artist: pick(wanted.artist), collab: pick(wanted.collab) } };
+  return { ambassador: pick(wanted.ambassador), artist: pick(wanted.artist), collab: pick(wanted.collab) };
 }
 
 const formAvailable = (): boolean => {
@@ -84,13 +86,13 @@ const Eyebrow = ({ children, className = "" }: { children: React.ReactNode; clas
 
 /**
  * "Seja parceiro": the partner programme (embaixador, artista, collab) and its application form. A coded page, not a CMS hotpage: the form, the
- * FAQ and the numbers have no CMS section. The words live in src/lib/partners/copy.ts; the shirts are the region's own (home data), the cities and
- * states are counted from the catalog. Applications are kept by submitPartnerAction and read in the panel ("Parceiros").
+ * FAQ and the numbers have no CMS section. The words live in src/lib/partners/copy.ts; the shirts of the profiles are the region's own (home data), the
+ * cities and states are counted from the catalog of the three regions. Applications are kept by submitPartnerAction and read in the panel ("Parceiros").
  */
 export default async function PartnerPage({ params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
-  const { hero, profile } = shots(region);
+  const profile = shots(region);
   const reach = storeReach();
   const heroPhoto = usableBannerAsset("hero", bannerFor(region, "hero"));
   const campaignPhoto = usableBannerAsset("campaign", bannerFor(region, "campaign"));
@@ -106,35 +108,23 @@ export default async function PartnerPage({ params }: { params: Promise<{ region
     <>
       <section aria-labelledby="partner-title" className="relative isolate">
         {heroPhoto && <RegionalPhotoSection asset={heroPhoto} priority />}
-        <div className="wrap pb-12 pt-8 lg:pb-20 lg:pt-14">
-          <div className="grid gap-8 lg:grid-cols-12 lg:items-center lg:gap-8">
-            <div className="lg:col-span-7">
-              <span aria-hidden="true" className="mb-3 block h-[3px] w-12 bg-region-accent lg:mb-4" />
-              <Eyebrow className="regional-caption">{HERO.eyebrow}</Eyebrow>
-              {/* The display face of .t-display, spelled out: that class is unlayered and would override the smaller desktop size this two-line title needs. */}
-              <h1 id="partner-title" className="mt-3 font-display text-[clamp(3.4rem,14vw,7rem)] font-extrabold uppercase leading-[0.98] tracking-[0.004em] [overflow-wrap:break-word] [text-wrap:balance] lg:text-[clamp(4rem,6.6vw,6.25rem)]">
-                {titleLines.map((line, i) => (
-                  <Fragment key={i}>
-                    {i > 0 && <br />}
-                    {line}
-                  </Fragment>
-                ))}
-              </h1>
-              <p className="t-body mt-5 max-w-lg">{HERO.body}</p>
-              <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
-                <a href="#inscricao" className="btn">{HERO.cta}</a>
-                <a href="#como-funciona" className="link-static font-semibold text-ink decoration-region-primary decoration-2">{HERO.secondary}</a>
-              </div>
+        <div className="wrap pb-12 pt-8 lg:pb-24 lg:pt-16">
+          <div className="max-w-4xl">
+            <span aria-hidden="true" className="mb-3 block h-[3px] w-12 bg-region-accent lg:mb-4" />
+            <Eyebrow className="regional-caption">{HERO.eyebrow}</Eyebrow>
+            <h1 id="partner-title" className="t-display mt-3">
+              {titleLines.map((line, i) => (
+                <Fragment key={i}>
+                  {i > 0 && <br />}
+                  {line}
+                </Fragment>
+              ))}
+            </h1>
+            <p className="t-body mt-5 max-w-lg">{HERO.body}</p>
+            <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <a href="#inscricao" className="btn">{HERO.cta}</a>
+              <a href="#como-funciona" className="link-static font-semibold text-ink decoration-region-primary decoration-2">{HERO.secondary}</a>
             </div>
-            {hero.length > 0 && (
-              <ul className="grid grid-cols-3 gap-2 sm:gap-3 lg:col-span-5" aria-label="Camisetas da Use Origens">
-                {hero.map((s, i) => (
-                  <li key={s.src} className={`settle settle-${i + 1} overflow-hidden rounded-lg border border-black/15 bg-ground`}>
-                    <ProductPhoto src={s.src} alt={s.alt} sizes="(min-width: 1024px) 13vw, 31vw" priority={i < 2} className="photo-contain" />
-                  </li>
-                ))}
-              </ul>
-            )}
           </div>
         </div>
       </section>
