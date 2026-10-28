@@ -170,12 +170,15 @@ const SEASONAL_HERO: Record<SeasonalThemeName, { title: string; subtitle: string
   },
 };
 
+/** The Black theme's tags on the product pictures: the "% OFF" of every product INK has on promotion, and the date's own name. */
+const BLACK_TAGS = { discount: true, text: "Black Friday" } as const;
+
 /** The Black theme's header and mobile menu: black, like its opening (the rest of the palette is the theme in use's). */
 const BLACK_CHROME = { headerBackground: "#111111", headerText: "#ffffff", mobileMenuBackground: "#111111", mobileMenuText: "#ffffff" } as const;
 
 /**
  * A new seasonal theme, built from the theme IN USE when it is created (its sections, its palette): the same home with the season's opening (see
- * `SEASONAL_HERO`). Natal also brings, right under the opening, the call to the Natal personalisation model (when the region has it active) and a
+ * `SEASONAL_HERO`). Black also tags the product showcases ("16% OFF", "Black Friday"); Natal brings, right under the opening, the call to the Natal personalisation model (when the region has it active) and a
  * showcase of the Natal collection (when the store has it), each only if the home does not already have one. Putting it on the store and swapping back
  * are the ordinary theme swap: the theme that was in use is kept as it was.
  */
@@ -187,6 +190,11 @@ export function seasonalTheme(name: SeasonalThemeName, doc: ScopeDoc, collection
   if (at >= 0) {
     const hero = sections[at];
     sections[at] = { ...hero, variant: "feature", title: look.title, subtitle: look.subtitle, heroColors: { ...hero.heroColors, ...look.colors } };
+  }
+
+  if (name === "black") {
+    // Every product showcase gets the tags, unless the owner already gave it some of its own.
+    for (const s of sections) if (s.template === "product-carousel" && s.layout && !s.layout.tags) s.layout = { ...s.layout, tags: { ...BLACK_TAGS } };
   }
 
   if (name === "natal") {

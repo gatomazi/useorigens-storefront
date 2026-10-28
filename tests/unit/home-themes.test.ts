@@ -224,6 +224,10 @@ describe("the seasonal themes (Black Friday and Natal)", () => {
     // Dark at the top only: the header and menu are black, the page ground (product cards, every page) is not.
     expect(black.theme?.colors).toMatchObject({ headerBackground: "#111111", mobileMenuBackground: "#111111", pageBackground: before.theme!.colors.pageBackground });
     expect(black.homeThemes!.editorial).toEqual({ sections: before.home!.sections, theme: before.theme });
+    // Its product showcases carry the "% OFF" of the products on promotion and the date's own tag; nothing else in them changes.
+    const showcases = black.home!.sections.filter((s) => s.template === "product-carousel");
+    expect(showcases.length).toBeGreaterThan(0);
+    for (const s of showcases) expect(s.layout?.tags).toEqual({ discount: true, text: "Black Friday" });
     // The strip and the footer keep the editorial treatment.
     expect(homeThemeCssVars(black, resolveTheme("sul", black, undefined).effective)).toHaveProperty("--footer-bg");
     expect(validateScopeDoc(black).ok).toBe(true);
