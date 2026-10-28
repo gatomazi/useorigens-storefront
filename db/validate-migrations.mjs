@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications", "0011_customization_products"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -197,6 +197,20 @@ await accepts("audit for a product link", `insert into audit_log (actor,action) 
   const back = (await legacy.query(`select status from customization_request order by id`)).rows.map((r) => r.status);
   back.length === 6 ? ok("0005 down keeps every request") : bad("down keeps requests", String(back.length));
   await legacy.close();
+}
+
+// 0011 · products created at INK for direct purchase.
+{
+  const KEY = "a".repeat(64);
+  const row = (id, key, extra = "") => `insert into customization_product (id, dedupe_key, region, customizer_id, customizer_slug, name, art_label, field_values, template_id, garment, product_type_id, price${extra ? ", " + extra.split("=")[0] : ""})
+    values ('${id}', '${key}', 'sul', 'cz-1', 'natal', 'Silva | Natal', 'Universitário', '{"sobrenome":"Silva"}', '1793146922614-16838d1a-8fa1-441a-9d54-3c1df53976d5', 'camiseta', 1, '109.90'${extra ? ", " + extra.split("=")[1] : ""})`;
+  await accepts("a queued product job", row("01J00000000000000000000P01", KEY));
+  await rejects("the same name on the same art twice (0011 dedupe_key)", row("01J00000000000000000000P02", KEY));
+  await rejects("a price INK would not take (0011)", row("01J00000000000000000000P03", "b".repeat(64)).replace("'109.90'", "'109,90'"));
+  await rejects("ready without the INK link (0011)", row("01J00000000000000000000P04", "c".repeat(64), "status='ready'"));
+  await rejects("a product link that is not https (0011)", `update customization_product set ink_product_id='5143876', status='photos', ink_url='http://loja.useorigens.com.br/x' where id='01J00000000000000000000P01'`);
+  await accepts("created at INK, waiting for the photo", `update customization_product set ink_product_id='5143876', status='photos', ink_url='https://loja.useorigens.com.br/useorigens/product/silva' where id='01J00000000000000000000P01'`);
+  await rejects("waiting for photos without the INK product id (0011)",row("01J00000000000000000000P05", "d".repeat(64), "status='photos'"));
 }
 await db.close();
 console.log(failures === 0 ? "\nRESULT: ALL CHECKS PASSED" : `\nRESULT: ${failures} FAILED`);

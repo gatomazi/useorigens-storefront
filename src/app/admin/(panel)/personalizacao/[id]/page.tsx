@@ -122,10 +122,21 @@ export default async function CustomizerEditor({ params, searchParams }: { param
             <fieldset className="space-y-4">
               <legend className="a-h2 mb-3">Editor de arte para o cliente</legend>
               <StudioArtsEditor initial={model.studioArts ?? []} templates={templates.map((t) => ({ id: t.id, name: `${t.name} · ${when(t.createdAt)}` }))} max={MAX_STUDIO_ARTS} maxVersions={MAX_ART_VERSIONS} disabled={templateError} />
-              <p className="a-muted text-[0.875rem]">Sem artes, a página usa o formulário de textos. Com mais de uma arte, o cliente escolhe qual quer personalizar; com mais de uma versão (por exemplo, Adulto e Infantil), escolhe a versão. A prévia mostra a arte numa camiseta, e o cliente pode trocar a cor da camiseta só para ver como fica: nas camisetas branca e cinza aparece a base “branca e cinza” (arte escura), nas demais a outra base. A primeira arte aparece ao abrir a página, numa camiseta preta. Todas as bases precisam pedir os mesmos campos (por exemplo, só o sobrenome). A solicitação registra a arte escolhida.</p>
+              <p className="a-muted text-[0.875rem]">Sem artes, a página usa o formulário de textos. Com mais de uma arte, o cliente escolhe qual quer personalizar; com mais de uma versão (por exemplo, Adulto e Infantil), escolhe a versão. A prévia mostra a arte numa camiseta, e o cliente pode trocar a cor da camiseta só para ver como fica: nas camisetas branca, cinza e amarela aparece a base “branca, cinza e amarela” (arte escura), nas demais a outra base. Uma versão na Camiseta Infantil mostra só as 6 cores que a INK tem para ela. A primeira arte aparece ao abrir a página, numa camiseta preta. Todas as bases precisam pedir os mesmos campos (por exemplo, só o sobrenome). A solicitação registra a arte escolhida.</p>
               <p className="a-muted text-[0.875rem]">Numa base sem campo, o cliente edita os textos visíveis, a fonte e a cor, com prévia ao vivo. A posição dos elementos e as logos seguem a base. Os campos e o grupo de linhas abaixo ficam substituídos pelos textos da arte.</p>
               <p className="a-muted text-[0.875rem]">Prepare a composição em <Link className="a-link" href="/admin/estampas">Estúdio de estampas</Link> e use <strong>Salvar como modelo</strong>. As fontes incorporadas à base e as fontes padrão ficam disponíveis para o cliente. Salve o rascunho para testar na prévia ao lado; publique para disponibilizar na loja.</p>
               {templateError && <p className="a-flash err">Não foi possível carregar as bases. Recarregue a página para trocar as artes; as atuais serão preservadas.</p>}
+            </fieldset>
+
+            <fieldset className="space-y-3" data-testid="direct-purchase">
+              <legend className="a-h2 mb-3">Compra direta na INK</legend>
+              <input type="hidden" name="direct_form" value="1" />
+              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="direct_enabled" defaultChecked={model.directPurchase?.enabled ?? false} /> Criar o produto na INK e levar o cliente até ele</label>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div><label className="a-label" htmlFor="direct_price">Preço da camiseta (R$)</label><input id="direct_price" name="direct_price" className="a-input" inputMode="decimal" placeholder="109,90" defaultValue={(model.directPurchase?.price ?? "109.90").replace(".", ",")} /></div>
+                <div><label className="a-label" htmlFor="direct_kids_price">Preço da Camiseta Infantil (R$)</label><input id="direct_kids_price" name="direct_kids_price" className="a-input" inputMode="decimal" placeholder="obrigatório com versão infantil" defaultValue={model.directPurchase?.kidsPrice?.replace(".", ",") ?? ""} /></div>
+              </div>
+              <p className="a-muted text-[0.875rem]">Só para artes com campo (por exemplo, só o sobrenome). Ao tocar em criar, o servidor desenha a arte, cria um produto <strong>oculto</strong> na INK (a arte escura na branca, na cinza e na amarela; a clara nas outras) e leva o cliente até ele quando a foto fica pronta, ou depois de 1 minuto. O mesmo nome na mesma arte reaproveita o produto. Nomes com palavrões ou ofensas, o limite do dia e qualquer erro caem na solicitação para a equipe. A INK não apaga produtos: veja todos em <Link className="a-link" href="/admin/personalizacao/produtos">Produtos criados</Link>.</p>
             </fieldset>
 
             <CustomFieldsEditor

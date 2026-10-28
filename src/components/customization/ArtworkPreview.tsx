@@ -12,7 +12,7 @@ export type PreviewView = "shirt" | "art";
  * The art as the customer will get it: on a shirt photo by default, or alone and larger. `shirt`: the shirt colour (`SHIRT_COLORS` id) the page
  * picked; without it, the preview offers its own colour choice, starting from one that contrasts with the art. `view`/`onViewChange` let the page keep the view when the preview is remounted for another art.
  */
-export function ArtworkPreview({ project, onReady, shirt, view: controlled, onViewChange, initialView = "shirt", compact = false, actions }: {
+export function ArtworkPreview({ project, onReady, shirt, view: controlled, onViewChange, initialView = "shirt", compact = false, actions, controls = true }: {
   project: PrintProject;
   onReady?: (ready: boolean) => void;
   shirt?: string;
@@ -23,6 +23,8 @@ export function ArtworkPreview({ project, onReady, shirt, view: controlled, onVi
   compact?: boolean;
   /** Extra buttons on the view row (e.g. "Tela cheia"). */
   actions?: React.ReactNode;
+  /** False: no "Na camiseta / Só a arte" row (the waiting screen's showcase). */
+  controls?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState("");
@@ -59,11 +61,11 @@ export function ArtworkPreview({ project, onReady, shirt, view: controlled, onVi
   const onShirt = view === "shirt";
   return (
     <figure className={styles.preview} aria-label="Prévia da sua estampa">
-      <div className={styles.views} role="group" aria-label="Como ver a prévia">
+      {controls && <div className={styles.views} role="group" aria-label="Como ver a prévia">
         <button type="button" aria-pressed={onShirt} onClick={() => setView("shirt")}>Na camiseta</button>
         <button type="button" aria-pressed={!onShirt} onClick={() => setView("art")}>Só a arte</button>
         {actions}
-      </div>
+      </div>}
       <div className={onShirt ? styles.stage : styles.canvasWrap} style={onShirt ? undefined : { backgroundColor: color.swatch }} aria-busy={painted !== project && !error}>
         {/* eslint-disable-next-line @next/next/no-img-element -- a small static photo laid under the canvas, not a content image */}
         {onShirt && <img className={styles.shirt} src={shirtPhoto(color.id)} alt="" width={800} height={820} />}

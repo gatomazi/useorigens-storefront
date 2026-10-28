@@ -1,4 +1,4 @@
-import { resolveProductDisplay } from "@/lib/catalog/lookup";
+import { resolveAnyProductDisplay } from "@/lib/customization/products-server";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
 import { allow, clientKey } from "@/lib/rate-limit";
 
@@ -30,15 +30,15 @@ export async function GET(request: Request) {
     .filter((id) => /^[A-Za-z0-9_-]{1,40}$/.test(id))
     .slice(0, MAX_IDS);
 
-  const items = ids.map((inkProductId) => {
-    const display = resolveProductDisplay(store as CommerceStoreKey, inkProductId);
+  const items = await Promise.all(ids.map(async (inkProductId) => {
+    const display = await resolveAnyProductDisplay(store as CommerceStoreKey, inkProductId);
     // No usable purchase URL (removed, delisted, or INK returned something we can't trust) is unavailable too.
     // `inkProductId` stays the id the browser saved (its key); `purchaseId`/`purchaseStoreKey` are what is actually sold (single-store mode
     // translates an old regional id through the old → new map — the saved favorite itself is never rewritten).
     if (!display?.url) return { inkProductId, available: false as const };
     const { inkProductId: purchaseId, commerceStoreKey: purchaseStoreKey, ...shown } = display;
     return { ...shown, inkProductId, url: display.url, available: true, purchaseId, purchaseStoreKey };
-  });
+  }));
   return json({ items }, 200);
 }
 

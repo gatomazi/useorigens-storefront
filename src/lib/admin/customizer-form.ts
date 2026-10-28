@@ -49,7 +49,7 @@ export function parseStudioArts(raw: string): { arts: StudioArt[]; errors: strin
     const label = text(r.label);
     const versions = (Array.isArray(r.versions) ? r.versions : []).map((v) => {
       const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
-      return { label: text(o.label), templateId: text(o.templateId), lightTemplateId: text(o.lightTemplateId) };
+      return { label: text(o.label), templateId: text(o.templateId), lightTemplateId: text(o.lightTemplateId), garment: o.garment === "infantil" ? ("infantil" as const) : undefined };
     }).filter((v) => v.label || v.templateId || v.lightTemplateId);
     if (!label && versions.length === 0) continue;
     const name = label || `Arte ${arts.length + 1}`;
@@ -63,12 +63,18 @@ export function parseStudioArts(raw: string): { arts: StudioArt[]; errors: strin
       if (versions.length > 1 && !v.label) errors.push(`Dê um nome a cada versão de “${name}” (por exemplo, Adulto e Infantil).`);
       if (v.label.length > 40) errors.push(`O nome da versão “${v.label.slice(0, 40)}…” passa de 40 caracteres.`);
     }
-    arts.push({ label: name, versions: versions.map((v) => ({ ...(versions.length > 1 ? { label: v.label } : {}), templateId: v.templateId, ...(v.lightTemplateId ? { lightTemplateId: v.lightTemplateId } : {}) })) });
+    arts.push({ label: name, versions: versions.map((v) => ({ ...(versions.length > 1 ? { label: v.label } : {}), templateId: v.templateId, ...(v.lightTemplateId ? { lightTemplateId: v.lightTemplateId } : {}), ...(v.garment ? { garment: v.garment } : {}) })) });
   }
   if (arts.length > MAX_STUDIO_ARTS) errors.push(`No máximo ${MAX_STUDIO_ARTS} artes por modelo.`);
   const ids = arts.flatMap((a) => a.versions.flatMap((v) => [v.templateId, v.lightTemplateId].filter(Boolean)));
   if (new Set(ids).size !== ids.length) errors.push("Cada base do estúdio só pode aparecer uma vez no modelo.");
   return { arts, errors: [...new Set(errors)] };
+}
+
+/** "109,90", "R$ 109,90" or "109.90" as INK takes it ("109.90"); null when it is not a price. */
+export function inkPrice(raw: string): string | null {
+  const m = /^(?:R\$\s*)?(\d{1,4})(?:[.,](\d{2}))?$/.exec(raw.trim());
+  return m ? `${m[1]}.${m[2] ?? "00"}` : null;
 }
 
 export type ParsedCustomizer = { patch: Partial<Omit<Customizer, "id" | "version">>; errors: string[] };
@@ -102,6 +108,20 @@ export function parseCustomizerForm(f: Fields, current: Customizer, region: { st
     const parsed = parseStudioArts(str(f, "studio_arts_json"));
     errors.push(...parsed.errors);
     if (parsed.errors.length === 0) patch.studioArts = parsed.arts.length ? parsed.arts : undefined;
+  }
+  // Direct purchase: only when the form carries its block (the hidden marker), so a form without it never turns it off.
+  if (f.get("direct_form") !== null) {
+    const enabled = f.get("direct_enabled") !== null;
+    const price = inkPrice(str(f, "direct_price"));
+    const kidsPrice = inkPrice(str(f, "direct_kids_price"));
+    const arts = patch.studioArts ?? current.studioArts ?? [];
+    const kids = arts.some((a) => a.versions.some((v) => v.garment === "infantil"));
+    if (str(f, "direct_price") && !price) errors.push("Preço da camiseta inválido: use o formato 109,90.");
+    if (str(f, "direct_kids_price") && !kidsPrice) errors.push("Preço da Camiseta Infantil inválido: use o formato 96,00.");
+    if (enabled && !arts.length) errors.push("A compra direta precisa das artes do estúdio.");
+    if (enabled && !price) errors.push("Informe o preço da camiseta para ligar a compra direta.");
+    if (enabled && kids && !kidsPrice) errors.push("Informe o preço da Camiseta Infantil: uma versão é infantil.");
+    patch.directPurchase = price || enabled ? { enabled, price: price ?? "109.90", ...(kidsPrice ? { kidsPrice } : {}) } : undefined;
   }
 
   // Fields: a JSON list maintained by the editor's add/remove rows. Keys are stable once a field exists; a new row gets one from its label.

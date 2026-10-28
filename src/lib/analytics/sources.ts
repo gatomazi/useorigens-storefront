@@ -77,7 +77,7 @@ export const SOURCES = {
   pdpGuideCollection: "pdp_guia_colecao",
   /** The help chat ("Pergunte aqui", src/components/assistant): a design it suggested. */
   assistant: "assistente",
-  /** "Comprar minha lista" on `/meus-lugares`: the click that opens the first product of a buy session. */
+  /** "Comprar minha lista" on `/minhas-estampas`: the click that opens the first product of a buy session. */
   meusLugares: "meus_lugares",
   /** `/<region>/outros-artigos`: an Uma Penca article (caneca, ecobag) — GA4 only, see `trackGoToUmaPenca`. */
   outrosArtigos: "outros_artigos",

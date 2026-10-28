@@ -53,13 +53,13 @@ async function interceptInkNavigation(page: Page) {
   });
 }
 
-test.describe("Meus Lugares: Comprar minha lista carries the buy-session id to INK", () => {
+test.describe("Minhas Estampas: Comprar minha lista carries the buy-session id to INK", () => {
   test("given one eligible favorite, then the navigation URL includes ?ls=<sessionId> on the very first hop", async ({ page }) => {
     await seedFavorite(page);
     await mockResolveAndSession(page);
     await interceptInkNavigation(page);
 
-    await page.goto("/sul/meus-lugares");
+    await page.goto("/sul/minhas-estampas");
     await expect(page.getByRole("button", { name: "Comprar minha lista" })).toBeEnabled();
     await Promise.all([page.waitForURL(`${FIRST_PRODUCT_URL}**`), page.getByRole("button", { name: "Comprar minha lista" }).click()]);
 
@@ -78,7 +78,7 @@ test.describe("Meus Lugares: Comprar minha lista carries the buy-session id to I
     });
     await interceptInkNavigation(page);
 
-    await page.goto("/sul/meus-lugares");
+    await page.goto("/sul/minhas-estampas");
     await expect(page.getByRole("button", { name: "Comprar minha lista" })).toBeEnabled();
     await Promise.all([page.waitForURL(`${FIRST_PRODUCT_URL}**`), page.getByRole("button", { name: "Comprar minha lista" }).click()]);
 

@@ -49,6 +49,7 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.1",
+    "@napi-rs/canvas": "1.0.11",
     "embla-carousel-react": "^8.6.0",
     "next": "16.3.5",
     "pg": "^8.23.0",

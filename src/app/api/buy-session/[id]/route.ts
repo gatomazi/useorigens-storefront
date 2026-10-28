@@ -1,4 +1,4 @@
-import { resolveProductDisplay } from "@/lib/catalog/lookup";
+import { resolveAnyProductDisplay } from "@/lib/customization/products-server";
 import { verifyListSession } from "@/lib/favorites/session";
 import { allow, clientKey } from "@/lib/rate-limit";
 
@@ -44,7 +44,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const candidates = session.inkProductIds.filter((productId) => !done.has(productId));
 
   for (const productId of candidates) {
-    const display = resolveProductDisplay(session.storeKey, productId);
+    const display = await resolveAnyProductDisplay(session.storeKey, productId);
     if (display?.url) {
       return json({ next: { inkProductId: display.inkProductId, title: display.title, imageUrl: display.imageUrl, url: display.url }, position, total }, 200);
     }

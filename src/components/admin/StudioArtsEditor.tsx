@@ -1,17 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import type { StudioArt } from "@/lib/site-config/schema";
+import type { StudioArt, StudioGarment } from "@/lib/site-config/schema";
 
-type Row = { label: string; versions: { label: string; templateId: string; lightTemplateId: string }[] };
+type Row = { label: string; versions: { label: string; templateId: string; lightTemplateId: string; garment: StudioGarment }[] };
 export type TemplateOption = { id: string; name: string };
 
-const emptyVersion = () => ({ label: "", templateId: "", lightTemplateId: "" });
-const toRows = (arts: StudioArt[]): Row[] => arts.map((a) => ({ label: a.label, versions: a.versions.map((v) => ({ label: v.label ?? "", templateId: v.templateId, lightTemplateId: v.lightTemplateId ?? "" })) }));
+const emptyVersion = (): Row["versions"][number] => ({ label: "", templateId: "", lightTemplateId: "", garment: "camiseta" });
+const toRows = (arts: StudioArt[]): Row[] => arts.map((a) => ({ label: a.label, versions: a.versions.map((v) => ({ label: v.label ?? "", templateId: v.templateId, lightTemplateId: v.lightTemplateId ?? "", garment: v.garment ?? "camiseta" })) }));
 
 /**
  * The arts the customer picks from on a studio-based page: each art has one or more versions (e.g. Adulto / Infantil), and each version a base
- * for dark shirts and, optionally, one for light shirts. The list travels as JSON in one hidden input; `parseStudioArts` and the schema check it
+ * for dark shirts and, optionally, one for light shirts, plus the INK garment it is printed on when the model sells directly. The list travels as JSON in one hidden input; `parseStudioArts` and the schema check it
  * again, so nothing here is trusted. With `disabled` (the bases could not be listed) nothing is posted and the saved arts are kept.
  */
 export function StudioArtsEditor({ initial, templates, max, maxVersions, disabled = false }: { initial: StudioArt[]; templates: TemplateOption[]; max: number; maxVersions: number; disabled?: boolean }) {
@@ -58,9 +58,15 @@ export function StudioArtsEditor({ initial, templates, max, maxVersions, disable
                     : <p className="a-muted text-[0.8125rem]">Uma versão. Adicione outra (por exemplo, Infantil) se a arte tiver.</p>}
                   {r.versions.length > 1 && <button type="button" className="a-btn sm danger" onClick={() => setArt(i, { versions: r.versions.filter((_, k) => k !== j) })} disabled={disabled}>Remover versão</button>}
                 </div>
-                <div className="mt-2 grid gap-3 md:grid-cols-2">
+                <div className="mt-2 grid gap-3 md:grid-cols-[1fr_1fr_12rem]">
                   <div><label className="a-label" htmlFor={`art-${i}-v-${j}-dark`}>Base · camisetas escuras e coloridas</label>{select(`art-${i}-v-${j}-dark`, v.templateId, (value) => setVersion(i, j, { templateId: value }), "Escolha a base")}</div>
-                  <div><label className="a-label" htmlFor={`art-${i}-v-${j}-light`}>Base · camisetas branca e cinza (opcional)</label>{select(`art-${i}-v-${j}-light`, v.lightTemplateId, (value) => setVersion(i, j, { lightTemplateId: value }), "Usar a mesma base")}</div>
+                  <div><label className="a-label" htmlFor={`art-${i}-v-${j}-light`}>Base · camisetas branca, cinza e amarela (opcional)</label>{select(`art-${i}-v-${j}-light`, v.lightTemplateId, (value) => setVersion(i, j, { lightTemplateId: value }), "Usar a mesma base")}</div>
+                  <div><label className="a-label" htmlFor={`art-${i}-v-${j}-garment`}>Peça na INK</label>
+                    <select id={`art-${i}-v-${j}-garment`} className="a-select" value={v.garment} onChange={(e) => setVersion(i, j, { garment: e.target.value as StudioGarment })} disabled={disabled}>
+                      <option value="camiseta">Camiseta</option>
+                      <option value="infantil">Camiseta Infantil</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             ))}

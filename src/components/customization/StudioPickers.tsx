@@ -1,6 +1,6 @@
 "use client";
 
-import { SHIRT_COLORS, shirtColor } from "@/lib/customization/shirts";
+import { SHIRT_COLORS, shirtColor, type ShirtColor } from "@/lib/customization/shirts";
 import { InfoTip } from "./InfoTip";
 
 export type ArtOption = { key: number; label: string; thumb: string; caption?: string };
@@ -38,15 +38,15 @@ export function ArtPicker({ legend, name, options, value, onChange, shirt }: { l
 
 /**
  * Shirt colours as plain squares, like INK, in two rows at most (never a sideways scroll); the name is for screen readers and the line below,
- * with the "only for viewing" note behind an "i".
+ * with the "only for viewing" note behind an "i". `colors`: the garment's colours (the Camiseta Infantil has six).
  */
-export function ShirtSwatches({ name, value, onChange }: { name: string; value: string; onChange: (id: string) => void }) {
+export function ShirtSwatches({ name, value, onChange, colors = SHIRT_COLORS }: { name: string; value: string; onChange: (id: string) => void; colors?: ShirtColor[] }) {
   const current = shirtColor(value);
   return (
     <fieldset className="min-w-0">
       <legend className="sr-only">Cor da camiseta na prévia</legend>
       <div className="grid max-w-[18.5rem] grid-cols-5 gap-2.5">
-        {SHIRT_COLORS.map((c) => (
+        {colors.map((c) => (
           <label key={c.id} className="block aspect-square min-h-11 cursor-pointer" title={c.label}>
             <input type="radio" name={name} checked={c.id === value} onChange={() => onChange(c.id)} className="peer sr-only" />
             <span className={`block h-full w-full ring-offset-2 ring-offset-ground peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-region-primary ${c.id === value ? "ring-[3px] ring-ink" : "ring-1 ring-black/20"}`} style={{ backgroundColor: c.swatch }} />

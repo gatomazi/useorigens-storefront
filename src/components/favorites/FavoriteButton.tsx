@@ -29,7 +29,7 @@ export function FavoriteButton({ item, className = "" }: { item: Omit<FavoriteIt
     <button
       type="button"
       aria-pressed={saved}
-      aria-label={saved ? `Remover ${item.title} de Meus Lugares` : `Salvar ${item.title} em Meus Lugares`}
+      aria-label={saved ? `Remover ${item.title} de Minhas Estampas` : `Salvar ${item.title} em Minhas Estampas`}
       data-testid="favorite-button"
       onClick={(event) => {
         event.preventDefault();

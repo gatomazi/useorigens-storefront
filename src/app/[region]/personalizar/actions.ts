@@ -12,6 +12,9 @@ import { validateArtworkInput } from "@/lib/customization/artwork";
 import { loadArtworkBase } from "@/lib/customization/artwork-server";
 import { choiceLabel, choiceOfTemplate, MAX_FAMILY_ARTS, offersChoice, studioTemplateIds } from "@/lib/customization/studio-arts";
 import type { PrintProject } from "@/lib/print-studio/model";
+import { isTerminal, PRODUCT_TYPE, productJobKey, productName, publicJob, type PublicProductJob } from "@/lib/customization/ink-products";
+import { inkProductClientFor, missingProductTable, productStoreOrNull, startProductJob } from "@/lib/customization/products-server";
+import { needsReview } from "@/lib/customization/review-words";
 
 export type SubmitResult =
   | { ok: true; reference: string; shortReference: string; summary: SummaryLine[]; channels: string[]; duplicate: boolean; expiresAt: string; modelVersion: number }
@@ -95,4 +98,74 @@ export async function loadArtworkBaseAction(input: { region: string; slug: strin
   const forwarded = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   if (!allow(`czbase:${forwarded}`, 60, 10 * 60_000)) return null;
   return loadArtworkBase(input.templateId).catch(() => null);
+}
+
+export type StartProductsResult =
+  | { ok: true; items: PublicProductJob[] }
+  | { ok: false; errors: FieldError[]; message: string; fallback: boolean };
+
+/** New products a day, all customers together, before the page falls back to the request flow (the products are permanent at INK). */
+const dailyCap = (): number => {
+  const n = Number(process.env.CUSTOMIZATION_PRODUCTS_DAILY_CAP);
+  return Number.isInteger(n) && n > 0 ? n : 300;
+};
+
+/**
+ * Direct purchase: for each art of the order (one, or a family's several) finds the product already made for the same name or queues a new one, and
+ * returns at once; the products are made after the response (`startProductJob`) and the waiting page follows them. Same checks as a request (the
+ * published model, the immutable bases, the fields), no contact asked. `fallback: true` means "offer the request to the team": the model has no
+ * direct purchase here, the name needs a person's look, the day's ceiling was reached or the table is not there yet.
+ */
+export async function startProductsAction(input: { region: string; slug: string; artwork?: { templateId?: unknown; fields?: unknown; also?: unknown } }): Promise<StartProductsResult> {
+  const fail = (message: string, fallback = false, errors: FieldError[] = []): StartProductsResult => ({ ok: false, errors, message, fallback });
+  const found = publishedFor(String(input.region));
+  const model = found ? liveCustomizer(found.bundle.docs[found.region], String(input.slug)) : undefined;
+  if (!found || !model) return fail("Este modelo não está disponível.");
+  const direct = model.directPurchase;
+  const store = productStoreOrNull();
+  const client = inkProductClientFor(found.region);
+  if (!model.studioArts?.length || !direct?.enabled || !store || !client) return fail("A criação automática não está disponível agora.", true);
+  const forwarded = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!allow(`czp:${forwarded}`, 10, 10 * 60_000) || !allow(`czpd:${forwarded}`, 40, 24 * 60 * 60_000)) return fail("Muitas tentativas seguidas. Aguarde alguns minutos.");
+
+  const ids = [input.artwork?.templateId, ...(Array.isArray(input.artwork?.also) ? input.artwork.also : input.artwork?.also === undefined ? [] : [null])];
+  const picks = ids.map((id) => (typeof id === "string" ? choiceOfTemplate(model, id) : null));
+  const keys = picks.map((c) => (c ? `${model.studioArts!.indexOf(c.art)}:${c.art.versions.indexOf(c.version)}` : ""));
+  if (picks.some((c) => !c) || ids.length > MAX_FAMILY_ARTS || new Set(keys).size !== keys.length) return fail("A arte deste modelo mudou. Recarregue a página antes de continuar.");
+
+  const items: { pick: NonNullable<(typeof picks)[number]>; fields: Record<string, string>; printed: string[] }[] = [];
+  for (const pick of picks as NonNullable<(typeof picks)[number]>[]) {
+    const base = await loadArtworkBase(pick.version.templateId).catch(() => null);
+    if (!base) return fail("Esta arte não está disponível agora. Tente novamente mais tarde.", true);
+    const checked = validateArtworkInput(base, pick.version.templateId, { fields: input.artwork?.fields });
+    if (!checked.ok) return fail("Confira o que você escreveu.", false, checked.errors);
+    if (!checked.artwork.fields?.length) return fail("Esta arte não pode ser criada automaticamente.", true);
+    items.push({ pick, fields: Object.fromEntries(checked.artwork.fields.map((f) => [f.id, f.value])), printed: checked.artwork.layers.map((l) => l.text) });
+  }
+  if (items.some(({ fields }) => needsReview(Object.values(fields).join(" ")))) return fail("Este nome passa pela nossa equipe antes de virar camiseta. Deixe o seu contato e a gente manda o link.", true);
+  const prices = items.map(({ pick }) => ((pick.version.garment ?? "camiseta") === "infantil" ? direct.kidsPrice : direct.price));
+  if (prices.some((p) => !p)) return fail("A criação automática não está disponível para esta versão.", true);
+
+  try {
+    if ((await store.countCreatedSince(new Date(Date.now() - 24 * 60 * 60_000))) >= dailyCap()) return fail("Hoje a criação automática chegou ao limite. Deixe o seu contato e a gente manda o link.", true);
+    const out: PublicProductJob[] = [];
+    for (const [i, { pick, fields, printed }] of items.entries()) {
+      const garment = pick.version.garment ?? "camiseta";
+      const lightTemplateId = pick.version.lightTemplateId ?? null;
+      const artLabel = choiceLabel({ ...pick, light: false, templateId: pick.version.templateId });
+      let { job } = await store.findOrCreate({
+        dedupeKey: productJobKey({ region: found.region, templateId: pick.version.templateId, lightTemplateId, garment, printed }),
+        region: found.region, customizerId: model.id, customizerSlug: model.slug,
+        name: productName(fields, model.name, artLabel), artLabel, fields,
+        templateId: pick.version.templateId, lightTemplateId, garment, productTypeId: PRODUCT_TYPE[garment], price: prices[i]!,
+      });
+      // A job that failed before INK held anything is tried again for the next customer; one that needs a check stays with the team.
+      if (job.status === "failed" && !job.inkProductId) job = (await store.update(job.id, { status: "queued", attempts: 0, error: null })) ?? job;
+      if (!isTerminal(job.status)) startProductJob(job.id, found.region);
+      out.push(publicJob(job));
+    }
+    return { ok: true, items: out };
+  } catch (e) {
+    return fail(missingProductTable(e) ? "A criação automática ainda não está disponível." : "Não foi possível começar agora. Tente de novo em instantes.", true);
+  }
 }

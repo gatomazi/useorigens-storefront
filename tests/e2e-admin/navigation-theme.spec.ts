@@ -127,7 +127,7 @@ test("given the desktop header of a region with launched neighbours, when read, 
   await expect(others.getByRole("link")).toHaveText(["Sul", "Centro-Oeste"]);
   await expect(others.getByRole("link", { name: "Sul", exact: true })).toHaveCSS("color", "rgb(0, 0, 0)");
   await expect(others.getByRole("link", { name: "Sul", exact: true })).toHaveAttribute("href", "/sul");
-  await expect(header.getByRole("link", { name: /Meus Lugares/ })).toBeVisible();
+  await expect(header.getByRole("link", { name: /Minhas Estampas/ })).toBeVisible();
   await expect(header.getByRole("button", { name: "Buscar", exact: true })).toBeVisible();
 });
 
