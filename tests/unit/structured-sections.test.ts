@@ -103,6 +103,17 @@ describe("editing the structured sections", () => {
     expect(sectionReadability(structuredDefaults("states", "norte", "custom-s", new Set()))).toEqual([]);
   });
 
+  test("given a split campaign, when judged for readability, then its panel colour is checked against the text the store gives it (ink on a light one)", () => {
+    const split = { ...structuredDefaults("campaign", "sul", "custom-c", new Set()), variant: "split" as const };
+    const on = (color: `#${string}`) => sectionReadability({ ...split, appearance: { ...split.appearance, fill: { kind: "solid", color } } });
+    // The peach of "Personalização: chamada para um modelo" carries ink, not white: it publishes.
+    expect(on("#e8c9a9").some((i) => i.level === "blocking")).toBe(false);
+    expect(on("#213b30").some((i) => i.level === "blocking")).toBe(false);
+    // A mid colour fails either way.
+    expect(on("#999999").some((i) => i.level === "blocking")).toBe(true);
+    expect(sectionReadability({ ...split, appearance: { ...split.appearance, fill: { kind: "none" } } })).toEqual([]);
+  });
+
   test("given a section saved before this feature (no count, no cta on the campaign), when validated, then it is still valid (backward compatible)", () => {
     for (const s of seed.docs.sul.home!.sections) expect(validateSection(s).ok, s.id).toBe(true);
   });

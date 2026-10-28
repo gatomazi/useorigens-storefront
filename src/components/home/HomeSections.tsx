@@ -13,7 +13,7 @@ import { Fragment } from "react";
 import { StateCards } from "@/components/home/StateCards";
 import { StateStrip } from "@/components/home/StateStrip";
 import { cssColor } from "@/components/banners/SectionBackdrop";
-import { relativeLuminance } from "@/lib/site-config/color";
+import { colorTone, fillTone } from "@/lib/site-config/color";
 import type { BannerAsset } from "@/lib/editorial/banners";
 import { MundoBlocoHome } from "@/components/mundo/entrada/MundoEntradas";
 import { mundoEntradasAtivas } from "@/lib/mundo/flag";
@@ -504,18 +504,6 @@ function gridTiles(s: Section, media: PublishedBundle["media"], links: Collectio
 
 /** A collection card's colour as CSS (the region's colour when none). */
 const tileColor = (color: Color | undefined): string => cssColor(color ?? "token:region-primary");
-
-/** The text a colour carries when the owner did not choose: white on a dark colour (the region's, near-black), ink on a light one. */
-function colorTone(color: Color | undefined): "light" | "dark" {
-  if (!color || color === "token:region-primary" || color === "token:near-black") return "light";
-  if (color === "token:ground") return "dark";
-  return relativeLuminance(color) > 0.35 ? "dark" : "light";
-}
-
-/** The text tone of a fill (its first colour). */
-function fillTone(fill: Fill): "light" | "dark" {
-  return fill.kind === "solid" ? colorTone(fill.color) : fill.kind === "gradient" ? colorTone(fill.from) : "light";
-}
 
 /** The split campaign's figure: the section's picture, each screen with its own crop and framing (null: no picture, the shirts stand in). */
 function splitFigure(bg: ReturnType<typeof resolveBackground>): BannerAsset | null {
