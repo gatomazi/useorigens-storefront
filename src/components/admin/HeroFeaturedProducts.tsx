@@ -41,7 +41,7 @@ function SlotCard({ slot }: { slot: FeaturedSlotView }) {
     <div className="flex gap-3">
       <Thumb src={slot.imageUrl} />
       <div className="min-w-0 text-[0.875rem]">
-        <p className="font-bold">{slot.familyName ?? "Produto"} {slot.cityName ? <span className="font-normal">· {slot.cityName} · {slot.uf}</span> : <span className="a-muted font-normal">#{slot.value.split(":")[1]}</span>}</p>
+        <p className="font-bold">{slot.familyName ?? "Produto"} {slot.cityName ? <span className="font-normal">· {slot.cityName} · {slot.uf}</span> : <span className="a-muted font-normal">{slot.ok ? "· peça (sem cidade) " : ""}#{slot.value.split(":")[1]}</span>}</p>
         <p className="a-muted">{slot.price ? `${slot.price} (preço do catálogo sincronizado)` : "Sem preço no catálogo"}</p>
         {slot.ok ? <span className="a-badge ok">Disponível na loja</span> : <span className="a-badge bad">Não aparece na loja: {slot.reason}. Substitua.</span>}
         {slot.buyUrl && <a href={slot.buyUrl} target="_blank" rel="noreferrer" className="a-link ml-2">Ver na loja ↗</a>}
@@ -191,8 +191,8 @@ export function HeroFeaturedProducts({
             )}
             {openSlot === i && (
               <div className="mt-3 border-t border-black/15 pt-3">
-                <label className="a-label" htmlFor={`hero-search-${i}`}>{scope === "centro-oeste" ? "Buscar por cidade, Região Administrativa, UF, estilo ou ID do produto" : "Buscar por cidade, UF, estilo ou ID do produto"}</label>
-                <input id={`hero-search-${i}`} className="a-input" value={query} onChange={(e) => run(e.target.value)} placeholder={scope === "centro-oeste" ? "Ex.: taguatinga · águas claras coordenadas · df · 123456" : "Ex.: belém coordenadas · pa · 123456"} autoComplete="off" />
+                <label className="a-label" htmlFor={`hero-search-${i}`}>{scope === "centro-oeste" ? "Buscar por cidade, Região Administrativa, UF, estilo, nome da peça ou ID do produto" : "Buscar por cidade, UF, estilo, nome da peça ou ID do produto"}</label>
+                <input id={`hero-search-${i}`} className="a-input" value={query} onChange={(e) => run(e.target.value)} placeholder={scope === "centro-oeste" ? "Ex.: taguatinga · águas claras coordenadas · df · capivara · 123456" : "Ex.: belém coordenadas · pa · capivara · 123456"} autoComplete="off" />
                 {pending && <p className="a-muted mt-2 text-[0.8125rem]">Buscando…</p>}
                 {found?.error && <p className="a-flash err mt-2">{found.error}</p>}
                 {found && !found.error && found.results.length === 0 && <p className="a-muted mt-2 text-[0.875rem]">Nenhum produto elegível encontrado na loja {regionName}.</p>}
@@ -206,7 +206,7 @@ export function HeroFeaturedProducts({
                           <li key={c.productId} className="flex items-start gap-3 border border-black/15 p-2">
                             <Thumb src={c.imageUrl} />
                             <div className="min-w-0 flex-1 text-[0.8125rem]">
-                              <p className="font-bold">{c.familyName} · {c.cityName} · {c.uf}{c.localityType === "administrative_region" ? " · Região Administrativa" : ""}</p>
+                              <p className="font-bold">{c.familyName}{c.cityName ? ` · ${c.cityName} · ${c.uf}` : " · peça (sem cidade)"}{c.localityType === "administrative_region" ? " · Região Administrativa" : ""}</p>
                               <p className="a-muted">{c.price ?? "Sem preço"} · {c.primary ? "produto principal" : "outra versão"} · #{c.productId}</p>
                               <a href={c.buyUrl} target="_blank" rel="noreferrer" className="a-link">Ver na loja ↗</a>
                               <div className="mt-1"><button type="button" className="a-btn sm" disabled={already} onClick={() => { const next = [...slots]; next[i] = { ...fromCandidate(c), ...(slots[i]?.image ? { image: slots[i]!.image } : {}) }; setOpenSlot(null); submit(next); }}>{already ? "Já escolhido" : "Usar aqui"}</button></div>

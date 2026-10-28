@@ -59,6 +59,11 @@ Cenas sugeridas, uma por produto em destaque:
 2. Duas gerações (pai e filha, avó e neto) na varanda com pisca-pisca, um deles vestindo a camiseta.
 3. Amigos ou um casal chegando à ceia com presentes nas mãos, um deles vestindo a camiseta, recebidos com abraço na porta.
 
+### Misturar cidades e peças de Natal
+
+Os produtos em destaque aceitam estampas de cidade **e** peças sem cidade (as da coleção Natal, como "Bah, é natal de novo?"). No
+painel, busque pelo nome da peça. Ela aparece com o nome e o preço, sem "cidade · UF", e o clique vai direto para a página dela na INK.
+
 ### Chamada "Natal em família" (opcional)
 
 Sem foto própria, a seção usa o mockup do modelo. Com foto, são **dois arquivos**:
