@@ -20,7 +20,7 @@ import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import { PodioTeaser } from "@/components/podio/PodioTeaser";
 import { getPodiumLeaders } from "@/lib/podio/server";
 import { SOURCES } from "@/lib/analytics/sources";
-import { SearchDialog } from "@/components/search/SearchDialog";
+import { CityJourneyTrigger } from "@/components/city-journey/CityJourney";
 import { heroCards, heroSlides } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
@@ -126,7 +126,7 @@ export function HomeSections({
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
                   <div className="mt-3">
-                    <SearchDialog region={region} variant="link" label="Encontre aqui a sua cidade" source={SOURCES.homeStylesSearch} />
+                    <CityJourneyTrigger variant="link" />
                   </div>
                 </div>
                 <div className="min-w-0 lg:col-span-8 xl:col-span-9">
@@ -140,9 +140,9 @@ export function HomeSections({
                     {s.title}
                   </h2>
                   {s.subtitle && <CitySubtitle text={s.subtitle} city={showcase.city.name} />}
-                  {/* The styles are shown on ONE example city: a quiet way to the visitor's own, through the same search sheet as the header. */}
+                  {/* The styles are shown on ONE example city: a quiet way to the visitor's own, through the same journey as the header's "Sua cidade". */}
                   <div className="mt-3">
-                    <SearchDialog region={region} variant="link" label="Encontre aqui a sua cidade" source={SOURCES.homeStylesSearch} />
+                    <CityJourneyTrigger variant="link" />
                   </div>
                 </div>
                 <FamilyGrid entries={entries} hrefBase={cityPath} cityName={showcase.city.name} stateUf={showcase.city.uf} sourceSection={SOURCES.homeStyles} directToInk buy={cardButton} />

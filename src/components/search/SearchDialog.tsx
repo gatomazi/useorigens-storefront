@@ -11,7 +11,7 @@ import { TypingHint } from "./TypingHint";
 /**
  * The global search (places, designs, collections) as a native modal <dialog> (focus trap and Esc come from the platform): a full-screen sheet
  * on phones, a wide sheet on larger screens. Its triggers: the header icon, the hero field, the field under a heading of its own (`field`, a
- * city page's "Busque outra cidade"), a quiet text link next to styles shown on an example (`link`, "Encontre aqui a sua cidade") and, on phones, the
+ * city page's "Busque outra cidade"), a quiet text link next to a state's styles (`link`, "Não achou a sua cidade? Encontre aqui") and, on phones, the
  * field in the middle of the header (`bar`, "Busque por lugar…", typing what it finds). The header menu's "Sua cidade" is not a search any more: it
  * opens the city journey (src/components/city-journey/CityJourney.tsx).
  * A field low on a page opens the sheet instead of searching inline, so the phone keyboard never covers the results.

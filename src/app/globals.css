@@ -448,6 +448,43 @@ a:hover > .photo img,
 .city-journey h2[tabindex="-1"]:focus {
   outline: none;
 }
+.city-journey {
+  scrollbar-color: color-mix(in srgb, var(--ink) 28%, transparent) transparent;
+}
+/* The journey's variants of the store's classes are rules, not utilities: this stylesheet is not layered, so `.chip` and `.btn` would win over a
+   utility on the same element. The shortcuts fill with the header's colour under the pointer, white on it; the purchase bar's button is compact on
+   phones, so the chosen piece and its price keep their room beside it. */
+.city-journey .chip {
+  background: rgb(255 255 255 / 0.6);
+}
+.city-journey .chip:hover {
+  background: var(--region-primary);
+  border-color: var(--region-primary);
+  color: #fff;
+}
+.city-journey .journey-buy .btn {
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+}
+@media (min-width: 640px) {
+  .city-journey .journey-buy .btn {
+    min-height: 3.25rem;
+    padding: 0 1.75rem;
+    font-size: 0.9375rem;
+  }
+}
+/* The chosen piece's photo: as large as the screen allows with the row of pieces and the purchase bar still in view (a third of the height on
+   phones, measured on a 390×664 Safari viewport; on the desktop layout, the height left between the two bars), never wider than its column. */
+.journey-stage {
+  max-width: min(100%, calc(34dvh * 800 / 820));
+}
+@media (min-width: 1024px) {
+  .journey-stage {
+    max-width: min(100%, calc((100dvh - 13rem) * 800 / 820));
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

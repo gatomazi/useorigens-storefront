@@ -21,7 +21,8 @@ export const SOURCES = {
   stateSearch: "state_search",
   /** A city page's "Busque outra cidade" field under the styles (it opens the search sheet). */
   citySearch: "city_search",
-  /** "Encontre aqui a sua cidade" under the styles that show one example city (the home's "Sua cidade, de 8 jeitos"); it opens the search sheet. */
+  /** "Encontre aqui a sua cidade" under the styles that show one example city (the home's "Sua cidade, de 8 jeitos"), while it opened the search
+   * sheet. Since 27/10/2026 that link opens the "Sua cidade" journey (source `suaCidade`); kept so older reports keep their meaning. */
   homeStylesSearch: "home_styles_search",
   /** "Não achou a sua cidade? Encontre aqui" under a state page's "Escolha o estilo"; it opens the search sheet. */
   stateStylesSearch: "state_styles_search",

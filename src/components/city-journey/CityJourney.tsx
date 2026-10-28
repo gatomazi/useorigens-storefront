@@ -2,44 +2,58 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { PriceText } from "@/components/catalog/PriceText";
 import { CARD_FOOT, CARD_INFO, CARD_NAME, CARD_PRICE, cardFrame } from "@/components/catalog/ProductCard";
-import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { GlobalSearch, SearchIcon } from "@/components/search/GlobalSearch";
 import { SOURCES } from "@/lib/analytics/sources";
 import { trackCityJourney, trackGoToInk, trackSelectCity, type CityJourneyParams } from "@/lib/analytics/track";
 import type { CityJourneyData, JourneyModel, JourneyPick, JourneyPiece } from "@/lib/catalog/city-journey";
 import { CLASSIC_GARMENT_TYPE_ID } from "@/lib/catalog/garments";
 import { formatPrice } from "@/lib/format";
 import { allAdministrativeRegions } from "@/lib/geo/administrative-regions";
-import type { RegionSlug } from "@/lib/geo/regions";
+import { STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { guideCityQuery } from "@/lib/guide/dismiss";
 import type { GlobalResult } from "@/lib/search/global";
+import { prepareCities, searchCities, type SearchCity } from "@/lib/search/rank";
 
 /**
- * "Sua cidade", the first word of the header's menu: a journey on ONE screen, never a page change — the place (the store's own search, places
- * only, or a shortcut), then its designs side by side like products, then the piece (the classic tee or another garment type of the same
- * design), and the button that opens that exact product in the store. A full-screen native <dialog> (focus trap, Escape and the inert page come
- * from the platform), drawn in the header's colours on top and the page's ground below, at every width.
+ * "Sua cidade": a journey on ONE screen, never a page change — the place (the store's own search, places only, a shortcut, or a state's list of
+ * places), then its designs side by side like products, then the piece (the classic tee or another garment type of the same design), with the
+ * purchase bar that opens that exact product in the store. A full-screen native <dialog> (focus trap, Escape and the inert page come from the
+ * platform), drawn in the header's colours on top and the page's ground below, at every width.
  *
- * Data: one request per place (`/api/cidades/<region>/<uf>/<slug>`, src/lib/catalog/city-journey.ts), kept for the visit, so going back and
- * forth costs nothing. A place of another region or a state found by the search opens its own page, as the search always does: the store view
- * of a purchase follows the region being browsed (CampaignCarry), so a design of another region is never sold from here.
+ * ONE journey per page, mounted in the header (`CityJourney`); every way into it is a `CityJourneyTrigger` (the header menu's word, the phone
+ * menu's box, the home's "Encontre aqui a sua cidade") that opens that same dialog, so a place chosen from any of them is the place every other
+ * one reopens on, and the dialog never sits inside the phone menu's own.
+ *
+ * Data: one request per place (`/api/cidades/<region>/<uf>/<slug>`, src/lib/catalog/city-journey.ts) and, for a state, the region's index of
+ * places (`/api/cidades/<region>`), each kept for the visit. A place of another region found by the search opens its own page, as the search
+ * always does: the store view of a purchase follows the region being browsed (CampaignCarry), so a design of another region is never sold here.
  *
  * Measured with the store's usual events (Search / SelectCity / GoToInk, source `sua_cidade`) and, in between, `origens_sua_cidade_*` (GA4).
  * The button to the store is a plain link: the campaign and the region go along on the click (CampaignCarry), the same tab, like every card.
+ *
+ * This stylesheet is not layered, so the store's own classes (`.wrap`, `.btn`, `.chip`, `.t-*`) win over utilities on the same element: widths
+ * live on an inner box and the journey's variants of those classes are rules in globals.css (`.city-journey`), never utilities piled on top.
  */
 type Step = "city" | "model" | "piece";
+type Entry = NonNullable<CityJourneyParams["entry_point"]>;
 type Loaded = { status: "loading" } | { status: "error" } | { status: "ok"; data: CityJourneyData | null };
+type Places = { status: "loading" } | { status: "error" } | { status: "ok"; list: SearchCity[] };
+type OpenDetail = { entry: Entry; opener: HTMLElement | null };
 
+const OPEN_EVENT = "origens:sua-cidade";
 const STEPS: readonly { id: Step; label: string }[] = [
   { id: "city", label: "Cidade" },
   { id: "model", label: "Modelo" },
   { id: "piece", label: "Peça" },
 ];
 const stepIndex = (step: Step) => STEPS.findIndex((s) => s.id === step);
+// The photos of step 2's cards: the stage reuses this exact request as its first picture, already in the browser's cache.
+const CARD_SIZES = "(min-width: 1280px) 17vw, (min-width: 1024px) 22vw, (min-width: 640px) 30vw, 46vw";
 
-// The places already asked for in this visit (both triggers share them). A failure is never remembered: "Tentar de novo" asks again.
+// The places already asked for in this visit. A failure is never remembered: "Tentar de novo" asks again.
 const journeys = new Map<string, Promise<CityJourneyData | null>>();
 function fetchJourney(region: RegionSlug, place: JourneyPick): Promise<CityJourneyData | null> {
   const key = `${region}/${place.uf.toLowerCase()}/${place.slug}`;
@@ -52,6 +66,20 @@ function fetchJourney(region: RegionSlug, place: JourneyPick): Promise<CityJourn
   });
   journeys.set(key, request);
   request.catch(() => journeys.delete(key));
+  return request;
+}
+
+// The region's places with designs (the compact index the city search has always used), asked for the first time a state is opened.
+const regionPlaces = new Map<RegionSlug, Promise<SearchCity[]>>();
+function fetchPlaces(region: RegionSlug): Promise<SearchCity[]> {
+  const known = regionPlaces.get(region);
+  if (known) return known;
+  const request = fetch(`/api/cidades/${region}`).then(async (res) => {
+    if (!res.ok) throw new Error(`cidades ${res.status}`);
+    return (await res.json()) as SearchCity[];
+  });
+  regionPlaces.set(region, request);
+  request.catch(() => regionPlaces.delete(region));
   return request;
 }
 
@@ -75,59 +103,242 @@ function PinIcon({ className }: { className: string }) {
   );
 }
 
-/**
- * The big photo of the chosen design in the chosen piece. Every piece seen keeps its picture mounted, so going back to one is instant; a piece
- * whose picture is still on its way keeps the last one on screen until it arrives (a cross-fade, never an empty frame).
- */
-function Stage({ pieces, visited, selected, alt }: { pieces: JourneyPiece[]; visited: string[]; selected: string; alt: string }) {
-  const [ready, setReady] = useState<string[]>([]);
-  const shown = ready.includes(selected) ? selected : (ready.at(-1) ?? selected);
+function CheckIcon({ className }: { className: string }) {
   return (
-    // Below the desktop layout the photo is capped: a tablet's full width would push the pieces under the purchase bar.
-    <div className="relative mx-auto aspect-[800/820] w-full max-w-md overflow-hidden rounded-lg bg-ground lg:max-w-none" data-testid="journey-stage">
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m5 12.5 4.5 4.5L19 7.5" />
+    </svg>
+  );
+}
+
+/**
+ * A way into the page's journey: the word in the desktop header's menu (`nav`), the box under "Sua cidade" in the phone menu (`field`), or a quiet
+ * link next to styles shown on an example city (`link`, the home's "Encontre aqui a sua cidade"). Each one only opens the journey of the header.
+ */
+export function CityJourneyTrigger({ variant, label = "Encontre aqui a sua cidade" }: { variant: "nav" | "field" | "link"; label?: string }) {
+  const entry: Entry = variant === "nav" ? "header" : variant === "field" ? "menu" : "home";
+  const open = (event: React.MouseEvent<HTMLButtonElement>) =>
+    window.dispatchEvent(new CustomEvent<OpenDetail>(OPEN_EVENT, { detail: { entry, opener: event.currentTarget } }));
+  if (variant === "nav") {
+    return (
+      // A word in the header's menu: it opens the journey, so it is a button, drawn like the menu's links.
+      <button type="button" onClick={open} aria-haspopup="dialog" className="inline-flex min-h-11 items-center whitespace-nowrap py-1 text-[0.9375rem] font-semibold" data-testid="header-sua-cidade">
+        <span className="link-line">Sua cidade</span>
+      </button>
+    );
+  }
+  if (variant === "field") {
+    return (
+      <button
+        type="button"
+        onClick={open}
+        aria-haspopup="dialog"
+        className="group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper"
+        data-testid="menu-sua-cidade"
+      >
+        <PinIcon className="h-6 w-6 shrink-0" />
+        <span className="flex-1 text-[1.0625rem] font-medium text-ink-mute">Qual é a sua cidade?</span>
+        <span aria-hidden="true" className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center bg-ink text-white transition-colors group-hover:bg-region-primary">
+          <ArrowIcon className="h-5 w-5" />
+        </span>
+      </button>
+    );
+  }
+  return (
+    <button type="button" onClick={open} aria-haspopup="dialog" className="link-static inline-flex min-h-11 items-center gap-1.5 font-semibold" data-testid="home-sua-cidade">
+      <PinIcon className="h-4 w-4 shrink-0" />
+      {label}
+    </button>
+  );
+}
+
+/**
+ * The big photo of the chosen design in the chosen piece, as large as the screen allows with the pieces and the purchase bar in view
+ * (`.journey-stage`). Under it, always, the small picture of that same piece already in the browser (the card of step 2 for the first piece, the
+ * piece's thumbnail for the others): the frame is never empty and never shows the piece chosen before; the large picture fades in over it.
+ * Every piece seen keeps its large picture mounted, so switching back to one is instant.
+ */
+function Stage({ pieces, visited, selected, alt, className = "" }: { pieces: JourneyPiece[]; visited: string[]; selected: string; alt: string; className?: string }) {
+  const [ready, setReady] = useState<string[]>([]);
+  const first = visited[0];
+  const standIn = pieces.find((p) => p.slug === selected);
+  return (
+    <div className={`journey-stage relative mx-auto aspect-[800/820] w-full overflow-hidden rounded-lg bg-ground ${className}`} data-testid="journey-stage">
+      {standIn && (
+        // The thumbnail is small: drawn slightly out of focus it reads as "on its way", not as a poor photo.
+        <Image
+          key={`stand-in-${standIn.slug}`}
+          src={standIn.image}
+          alt=""
+          fill
+          sizes={standIn.slug === first ? CARD_SIZES : "96px"}
+          quality={standIn.slug === first ? 80 : 70}
+          className={`object-contain ${standIn.slug === first ? "" : "scale-[1.02] blur-[3px]"}`}
+        />
+      )}
       {pieces
         .filter((p) => visited.includes(p.slug))
         .map((p) => (
           <Image
             key={p.slug}
             src={p.image}
-            alt={p.slug === shown ? alt : ""}
-            aria-hidden={p.slug === shown ? undefined : true}
+            alt={p.slug === selected ? alt : ""}
+            aria-hidden={p.slug === selected ? undefined : true}
             fill
             sizes="(min-width: 1024px) 46vw, 100vw"
             quality={80}
             loading="eager"
             onLoad={() => setReady((list) => (list.includes(p.slug) ? list : [...list, p.slug]))}
             className="object-contain"
-            style={{ opacity: p.slug === shown ? 1 : 0, transition: "opacity 320ms var(--ease-out)" }}
+            // The piece chosen fades in; the one left goes at once, so two pieces never show through each other.
+            style={{ opacity: p.slug === selected && ready.includes(p.slug) ? 1 : 0, transition: p.slug === selected ? "opacity 320ms var(--ease-out)" : "none" }}
           />
         ))}
-      {!ready.includes(selected) && (
-        <span aria-hidden="true" className="absolute bottom-3 left-1/2 h-1 w-16 -translate-x-1/2 overflow-hidden rounded-full bg-black/10">
-          <span className="block h-full w-1/2 animate-pulse bg-black/30" />
-        </span>
-      )}
     </div>
   );
 }
 
-export function CityJourney({ region, variant, picks = [], finishIn }: {
+/** A state's places with designs, by mesoregion, with a filter: the visitor who types a state chooses the city here, without leaving. */
+function StatePlaces({ region, uf, heading, onPick }: { region: RegionSlug; uf: string; heading: RefObject<HTMLHeadingElement | null>; onPick: (place: JourneyPick) => void }) {
+  const [places, setPlaces] = useState<Places>({ status: "loading" });
+  const [attempt, setAttempt] = useState(0);
+  const [filter, setFilter] = useState("");
+  const name = STATE_NAMES[uf] ?? uf;
+
+  useEffect(() => {
+    let live = true;
+    fetchPlaces(region).then(
+      (list) => {
+        if (live) setPlaces({ status: "ok", list });
+      },
+      () => {
+        if (live) setPlaces({ status: "error" });
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [region, attempt]);
+
+  const inState = useMemo(() => (places.status === "ok" ? places.list.filter((p) => p.u === uf) : []), [places, uf]);
+  const prepared = useMemo(() => prepareCities(inState), [inState]);
+  const groups = useMemo(() => {
+    const byMeso = new Map<string, SearchCity[]>();
+    for (const place of inState) {
+      const key = place.m ?? name;
+      const list = byMeso.get(key) ?? [];
+      list.push(place);
+      byMeso.set(key, list);
+    }
+    return [...byMeso.entries()]
+      .map(([meso, list]) => ({ meso, list: list.sort((a, b) => a.n.localeCompare(b.n, "pt-BR")) }))
+      .sort((a, b) => a.meso.localeCompare(b.meso, "pt-BR"));
+  }, [inState, name]);
+  const query = filter.trim();
+  const found = query ? searchCities(prepared, query, { ufs: [uf], limit: 60 }).flatMap((r) => (r.type === "city" ? [r.city] : [])) : null;
+  const regions = inState.some((p) => p.t === "ra");
+  const noun = regions ? (inState.length === 1 ? "localidade" : "localidades") : inState.length === 1 ? "cidade" : "cidades";
+
+  const item = (place: SearchCity) => (
+    <li key={`${place.u}/${place.s}`} className="break-inside-avoid">
+      <button type="button" onClick={() => onPick({ name: place.n, uf: place.u, slug: place.s })} className="flex min-h-11 w-full items-center py-1 text-left text-[0.9375rem] font-semibold leading-snug hover:text-region-ink">
+        <span className="link-line">{place.n}</span>
+      </button>
+    </li>
+  );
+
+  return (
+    <section className="journey-in wrap pb-14 pt-6 sm:pt-10" data-step="state">
+      <h2 ref={heading} tabIndex={-1} className="font-display text-[clamp(2.5rem,8vw,4.75rem)] font-extrabold uppercase leading-[0.98] tracking-[0.004em]">
+        {name}
+      </h2>
+      <p className="t-place mt-2 text-ink-soft">{places.status === "ok" ? `${inState.length} ${noun} com estampa` : "Escolha a sua cidade"}</p>
+
+      {places.status === "loading" && (
+        <p role="status" className="t-small mt-8 text-ink-soft">
+          Carregando as cidades de {name}…
+        </p>
+      )}
+      {places.status === "error" && (
+        <div role="alert" className="mt-8">
+          <p className="font-semibold">Não conseguimos carregar as cidades agora.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setPlaces({ status: "loading" });
+              setAttempt((n) => n + 1);
+            }}
+            className="btn btn-ghost mt-4"
+          >
+            Tentar de novo
+          </button>
+        </div>
+      )}
+      {places.status === "ok" && (
+        <>
+          <div className="relative mt-6 max-w-xl text-ink">
+            <label htmlFor={`filtro-${uf}`} className="sr-only">
+              Filtrar as cidades de {name}
+            </label>
+            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2" />
+            <input
+              id={`filtro-${uf}`}
+              type="text"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              placeholder="Filtre pelo nome…"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="search"
+              maxLength={80}
+              className="block min-h-14 w-full border-2 border-ink bg-white pl-12 pr-4 text-[1.0625rem] font-semibold text-ink placeholder:font-medium placeholder:text-ink-mute"
+            />
+          </div>
+          {found ? (
+            found.length > 0 ? (
+              <ul className="mt-6 columns-2 gap-x-6 sm:columns-3 lg:columns-4" data-testid="journey-state-places">
+                {found.map(item)}
+              </ul>
+            ) : (
+              <p className="t-small mt-6 text-ink-soft">Nenhuma cidade de {name} com esse nome. Confira a grafia.</p>
+            )
+          ) : (
+            <div className="mt-8 space-y-8" data-testid="journey-state-places">
+              {groups.map((group) => (
+                <section key={group.meso} aria-label={group.meso}>
+                  <h3 className="t-label text-ink-mute">
+                    {group.meso} <span className="font-normal">· {group.list.length}</span>
+                  </h3>
+                  <ul className="mt-2 columns-2 gap-x-6 sm:columns-3 lg:columns-4 xl:columns-5">{group.list.map(item)}</ul>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+/** The page's one journey (the header mounts it): it opens when any `CityJourneyTrigger` asks for it. */
+export function CityJourney({ region, picks = [], finishIn }: {
   region: RegionSlug;
-  /** `nav`: the word in the desktop header's menu. `field`: the box under "Sua cidade" in the phone menu. */
-  variant: "nav" | "field";
   /** Shortcuts under the field (src/lib/catalog/city-journey.ts `journeyPicks`). */
   picks?: JourneyPick[];
-  /** Where the purchase ends ("na nossa loja online"): said under the button. */
+  /** Where the purchase ends ("na nossa loja online"): said in the purchase bar. */
   finishIn: string;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  const trigger = useRef<HTMLButtonElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const entry = useRef<Entry>("header");
   const scroller = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const ticket = useRef(0);
   const pageOverflow = useRef("");
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<Step>("city");
+  const [stateUf, setStateUf] = useState<string | null>(null);
   const [place, setPlace] = useState<JourneyPick | null>(null);
   const [loaded, setLoaded] = useState<Loaded>({ status: "loading" });
   const [modelId, setModelId] = useState<string | null>(null);
@@ -139,10 +350,45 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
   const models = data?.models ?? [];
   const model = models.find((m) => m.familyId === modelId) ?? null;
   const piece = model?.pieces.find((p) => p.slug === pieceSlug) ?? model?.pieces[0] ?? null;
-  const entryPoint = variant === "nav" ? "header" : "menu";
   const withRegions = allAdministrativeRegions().some((r) => r.regionSlug === region);
   const track = (event: Parameters<typeof trackCityJourney>[0], extra: CityJourneyParams = {}) =>
-    trackCityJourney(event, { region, entry_point: entryPoint, ...(place ? { city_slug: place.slug, uf: place.uf } : {}), ...extra });
+    trackCityJourney(event, { region, entry_point: entry.current, ...(place ? { city_slug: place.slug, uf: place.uf } : {}), ...extra });
+
+  // The city step always comes back with an empty field, so its words and shortcuts come back with it.
+  const goTo = (next: Step) => {
+    if (next === "city") {
+      setTyping(false);
+      setStateUf(null);
+    }
+    setStep(next);
+  };
+  const openJourney = ({ entry: from, opener: by }: OpenDetail) => {
+    entry.current = from;
+    opener.current = by;
+    // A place already chosen in this visit opens on its designs (still loading or loaded): closing was not giving up on it. "Trocar cidade" is
+    // right there. A place that failed or has no designs starts over at the field.
+    const resume = place !== null && loaded.status !== "error" && !(loaded.status === "ok" && models.length === 0);
+    goTo(resume ? "model" : "city");
+    setOpen(true);
+    pageOverflow.current = document.documentElement.style.overflow;
+    document.documentElement.style.overflow = "hidden";
+    dialog.current?.showModal();
+    track("origens_sua_cidade_open");
+  };
+  const close = () => dialog.current?.close();
+
+  // Any trigger of the page opens this one dialog (the listener always reaches the latest render's state).
+  const latestOpen = useRef(openJourney);
+  useEffect(() => {
+    latestOpen.current = openJourney;
+  });
+  useEffect(() => {
+    const onOpen = (event: Event) => {
+      if (!dialog.current?.open) latestOpen.current((event as CustomEvent<OpenDetail>).detail);
+    };
+    window.addEventListener(OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_EVENT, onOpen);
+  }, []);
 
   // A native listener, not JSX `onClose`: a close done by the platform (Escape) must always reach the state, or the next tap would not reopen it.
   useEffect(() => {
@@ -151,7 +397,7 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
     const onClose = () => {
       setOpen(false);
       document.documentElement.style.overflow = pageOverflow.current;
-      trigger.current?.focus({ preventScroll: true });
+      opener.current?.focus({ preventScroll: true });
     };
     node.addEventListener("close", onClose);
     return () => node.removeEventListener("close", onClose);
@@ -161,24 +407,8 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
   useEffect(() => {
     if (!open) return;
     scroller.current?.scrollTo({ top: 0 });
-    if (step !== "city") heading.current?.focus({ preventScroll: true });
-  }, [open, step]);
-
-  // The city step always comes back with an empty field, so its words and shortcuts come back with it.
-  const goTo = (next: Step) => {
-    if (next === "city") setTyping(false);
-    setStep(next);
-  };
-  const openJourney = () => {
-    // A place already chosen in this visit opens on its designs: closing was not giving up on it. "Trocar cidade" is right there.
-    goTo(place && loaded.status === "ok" && models.length > 0 ? "model" : "city");
-    setOpen(true);
-    pageOverflow.current = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = "hidden";
-    dialog.current?.showModal();
-    track("origens_sua_cidade_open");
-  };
-  const close = () => dialog.current?.close();
+    if (step !== "city" || stateUf) heading.current?.focus({ preventScroll: true });
+  }, [open, step, stateUf]);
 
   const choosePlace = (next: JourneyPick) => {
     const mine = ++ticket.current;
@@ -195,19 +425,30 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
       () => {
         if (mine !== ticket.current) return;
         setLoaded({ status: "error" });
-        trackCityJourney("origens_sua_cidade_error", { region, entry_point: entryPoint, city_slug: next.slug, uf: next.uf });
+        trackCityJourney("origens_sua_cidade_error", { region, entry_point: entry.current, city_slug: next.slug, uf: next.uf });
       },
     );
   };
-  // A place of this region chosen in the search stays here; a state or a place of another region opens its own page (`onNavigate` closes this).
+  const openState = (uf: string) => {
+    setStateUf(uf);
+    setTyping(false);
+    trackCityJourney("origens_sua_cidade_state", { region, entry_point: entry.current, uf });
+  };
+  // A place or a state of this region chosen in the search stays here; a place of another region opens its own page (`onNavigate` closes this).
   const pickResult = (result: GlobalResult): boolean => {
-    const query = result.kind === "locality" && result.region === region ? guideCityQuery(result.href, region) : null;
+    if (result.region !== region) return false;
+    if (result.kind === "state" && result.uf) {
+      openState(result.uf);
+      return true;
+    }
+    const query = result.kind === "locality" ? guideCityQuery(result.href, region) : null;
     if (!query) return false;
     const [uf, slug] = query.split("/");
     choosePlace({ name: result.title, uf: uf.toUpperCase(), slug });
     return true;
   };
-  const pickShortcut = (pick: JourneyPick) => {
+  // A shortcut or a place of a state's list: a city choice without a search (SelectCity only).
+  const pickPlace = (pick: JourneyPick) => {
     trackSelectCity({ city: pick.name, state: pick.uf, region, source: SOURCES.suaCidade });
     choosePlace(pick);
   };
@@ -242,6 +483,7 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
   const back = () => {
     if (step === "piece") goTo("model");
     else if (step === "model") goTo("city");
+    else if (stateUf) setStateUf(null);
     else close();
   };
   const retry = () => place && choosePlace(place);
@@ -263,7 +505,7 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
     <div className="shrink-0 pt-[env(safe-area-inset-top)]" style={{ background: "var(--nav-header-bg, var(--region-primary))", color: "var(--nav-header-text, #fff)" }}>
       <div className="flex h-14 items-center gap-2 px-[var(--gutter)] md:h-16">
         <div className="flex min-w-0 flex-1 items-center">
-          {step === "city" ? (
+          {step === "city" && !stateUf ? (
             <p className="hidden items-center gap-2.5 whitespace-nowrap text-[0.8125rem] font-semibold uppercase leading-none tracking-[0.14em] sm:flex">
               <span aria-hidden="true" className="inline-block h-[3px] w-5" style={{ background: "var(--region-accent, currentColor)" }} />
               Sua cidade
@@ -283,10 +525,10 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
             const here = i === current;
             const mark = (
               <>
-                <span aria-hidden="true" className={`flex h-6 w-6 shrink-0 items-center justify-center border-2 text-[0.75rem] font-bold leading-none ${here ? "border-current bg-[var(--nav-header-text,#fff)] text-[var(--nav-header-bg,var(--region-primary))]" : done ? "border-current" : "border-current/40 opacity-60"}`}>
-                  {done ? "✓" : i + 1}
+                <span aria-hidden="true" className={`flex h-6 w-6 shrink-0 items-center justify-center border-2 text-[0.75rem] font-bold leading-none ${here ? "border-current bg-[var(--nav-header-text,#fff)] text-[var(--nav-header-bg,var(--region-primary))]" : done ? "border-current" : "border-current/50 opacity-80"}`}>
+                  {done ? <CheckIcon className="h-3.5 w-3.5" /> : i + 1}
                 </span>
-                <span className={`max-w-[9rem] truncate text-[0.8125rem] font-semibold ${here ? "" : "hidden lg:inline"} ${!here && !done ? "opacity-60" : ""}`}>{done ? reachedValue(s.id) : s.label}</span>
+                <span className={`max-w-[9rem] truncate text-[0.8125rem] font-semibold ${here ? "" : "hidden lg:inline"} ${!here && !done ? "opacity-80" : ""}`}>{done ? reachedValue(s.id) : s.label}</span>
               </>
             );
             return (
@@ -318,42 +560,46 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
     </div>
   );
 
+  // The question and its field keep a reading width (an inner box: `.wrap` sets its own max-width and would win over a utility next to it).
   const cityStep = (
-    <section className="journey-in wrap max-w-3xl pb-14 pt-8 sm:pt-14 lg:pt-20" data-step="city">
-      <h2 ref={heading} tabIndex={-1} className="font-display text-[clamp(2.75rem,10vw,5.5rem)] font-extrabold uppercase leading-[0.98] tracking-[0.004em]">
-        Qual é a sua <span className={ACCENT}>cidade?</span>
-      </h2>
-      {/* Out of the way while typing: on a phone the keyboard takes half the screen, and the results need the rest. */}
-      {!typing && <p className="t-body mt-4 max-w-xl text-ink-soft">Escolha a cidade e veja os modelos dela lado a lado. Depois, é só escolher a peça.</p>}
-      <div className="mt-7 sm:mt-9">
-        <GlobalSearch
-          region={region}
-          autoFocus
-          boxed
-          compact
-          placesOnly
-          fieldLabel={withRegions ? "Digite sua cidade ou região" : "Digite o nome da sua cidade"}
-          source={SOURCES.suaCidade}
-          onPick={pickResult}
-          onNavigate={close}
-          onQueryChange={(q) => setTyping(q.trim().length > 0)}
-        />
-      </div>
-      {picks.length > 0 && !typing && (
-        <div className="mt-8" data-testid="journey-picks">
-          <p className="t-label text-ink-mute">Em destaque</p>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {picks.map((pick) => (
-              <li key={`${pick.uf}/${pick.slug}`}>
-                <button type="button" onClick={() => pickShortcut(pick)} className="chip bg-white/60 hover:border-region-primary hover:bg-region-primary hover:text-white">
-                  {pick.name}
-                  <span className="text-[0.8125rem] font-normal opacity-70">{pick.uf}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
+    <section className="journey-in wrap pb-14 pt-8 sm:pt-14 lg:pt-20" data-step="city">
+      <div className="max-w-3xl">
+        <h2 ref={heading} tabIndex={-1} className="font-display text-[clamp(2.75rem,10vw,5.5rem)] font-extrabold uppercase leading-[0.98] tracking-[0.004em]">
+          Qual é a sua <span className={ACCENT}>cidade?</span>
+        </h2>
+        {/* Out of the way while typing: on a phone the keyboard takes half the screen, and the results need the rest. */}
+        {!typing && <p className="t-body mt-4 max-w-xl text-ink-soft">Escolha a cidade e veja os modelos dela lado a lado. Depois, é só escolher a peça.</p>}
+        <div className="mt-7 sm:mt-9">
+          <GlobalSearch
+            region={region}
+            autoFocus
+            boxed
+            compact
+            placesOnly
+            fieldLabel={withRegions ? "Digite sua cidade ou região" : "Digite o nome da sua cidade"}
+            source={SOURCES.suaCidade}
+            onPick={pickResult}
+            onState={openState}
+            onNavigate={close}
+            onQueryChange={(q) => setTyping(q.trim().length > 0)}
+          />
         </div>
-      )}
+        {picks.length > 0 && !typing && (
+          <div className="mt-8" data-testid="journey-picks">
+            <p className="t-label text-ink-mute">Em destaque</p>
+            <ul className="mt-3 flex flex-wrap gap-2">
+              {picks.map((pick) => (
+                <li key={`${pick.uf}/${pick.slug}`}>
+                  <button type="button" onClick={() => pickPlace(pick)} className="chip">
+                    {pick.name}
+                    <span className="text-[0.8125rem] font-normal opacity-70">{pick.uf}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </section>
   );
 
@@ -382,10 +628,10 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
       <div className="xl:sticky xl:top-10">
         <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 xl:block">
           <div className="min-w-0">
-            <p className="t-place text-[1.0625rem] text-ink-soft sm:text-[1.25rem]">{data?.place.subtitle ?? place.uf}</p>
-            <h2 ref={heading} tabIndex={-1} className="mt-1 font-display text-[clamp(2.5rem,8vw,4.75rem)] font-extrabold uppercase leading-[0.98] tracking-[0.004em] [hyphens:auto] xl:text-[3.25rem]">
+            <h2 ref={heading} tabIndex={-1} className="font-display text-[clamp(2.5rem,8vw,4.75rem)] font-extrabold uppercase leading-[0.98] tracking-[0.004em] [hyphens:auto] xl:text-[3.25rem]">
               {place.name}
             </h2>
+            <p className="t-place mt-2 text-ink-soft">{data?.place.subtitle ?? STATE_NAMES[place.uf] ?? place.uf}</p>
           </div>
           <button type="button" onClick={() => goTo("city")} className="link-static inline-flex min-h-11 items-center font-semibold xl:mt-2">
             Trocar cidade
@@ -402,7 +648,7 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
       <div className="min-w-0">
         {loaded.status === "loading" && skeleton}
         {loaded.status === "error" && (
-          <div className="mt-8 xl:mt-0">
+          <div role="alert" className="mt-8 xl:mt-0">
             <p className="font-semibold">Não conseguimos carregar os modelos agora.</p>
             <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3">
               <button type="button" onClick={retry} className="btn btn-ghost">
@@ -430,7 +676,7 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
                 <li key={m.familyId} className="journey-in" style={{ animationDelay: `${Math.min(i, 7) * 45}ms` }}>
                   <button type="button" onClick={() => chooseModel(m, i + 1)} className={`${cardFrame(false)} photo-hover w-full text-left`} data-model={m.familyId}>
                     <span className="photo photo-contain">
-                      <Image src={m.pieces[0].image} alt="" fill sizes="(min-width: 1280px) 17vw, (min-width: 1024px) 22vw, (min-width: 640px) 30vw, 46vw" quality={80} loading={i < 4 ? "eager" : undefined} />
+                      <Image src={m.pieces[0].image} alt="" fill sizes={CARD_SIZES} quality={80} loading={i < 4 ? "eager" : undefined} />
                     </span>
                     <span className={CARD_INFO}>
                       <span className={`${CARD_NAME} font-semibold`}>{m.name}</span>
@@ -451,138 +697,116 @@ export function CityJourney({ region, variant, picks = [], finishIn }: {
     </section>
   );
 
+  // Phones: the design's name, its photo and the row of pieces right under it, all above the purchase bar. Desktop: the photo on the left (as tall
+  // as the space between the bars), the name and the grid of pieces on the right; the purchase bar stays at the bottom at every width.
   const pieceStep = data && model && piece && (
-    <section className="journey-in wrap pb-10 pt-5 sm:pt-8 lg:pb-16" data-step="piece">
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] lg:items-start lg:gap-12">
-        <Stage key={model.familyId} pieces={model.pieces} visited={visited} selected={piece.slug} alt={`${piece.label}, estampa ${model.name}, ${data.place.name}`} />
-        <div className="min-w-0 lg:pt-4">
-          <p className="t-place text-[1.0625rem] text-ink-soft sm:text-[1.25rem]">
-            {data.place.name} · {data.place.uf}
-          </p>
-          <h2 ref={heading} tabIndex={-1} className="mt-1 text-[clamp(1.875rem,4vw,2.75rem)] font-extrabold leading-[1.05] tracking-tight">
-            {model.name}
-          </h2>
-          <p className="t-small mt-2 text-ink-soft">{model.description}</p>
-          {/* Phones and tablets read the price in the purchase bar at the bottom, never twice: the pieces get its room here. */}
-          <p className="mt-3 hidden text-[1.75rem] font-extrabold tabular-nums leading-tight lg:block" aria-live="polite" data-testid="journey-price">
-            <PriceText price={formatPrice(piece.price) ?? ""} listPrice={piece.listPrice ? formatPrice(piece.listPrice) : undefined} listClassName="mr-2 align-middle text-[0.6em] font-medium opacity-70" />
-          </p>
-
-          {model.pieces.length > 1 ? (
-            // `min-w-0`: a fieldset is as wide as its content by default, and the row of pieces would then push the whole screen sideways.
-            <fieldset className="mt-6 min-w-0">
-              <legend className="text-[1.0625rem] font-bold">
-                Quer em outra peça? <span className="font-normal text-ink-mute">· {piece.label}</span>
-              </legend>
-              {/* One row that scrolls sideways on phones (the button stays in view below); a grid from the desktop layout up. */}
-              <ul className="no-scrollbar -mx-[var(--gutter)] mt-3 flex gap-2 overflow-x-auto px-[var(--gutter)] pb-1 lg:mx-0 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0 xl:grid-cols-5" data-testid="journey-pieces">
-                {model.pieces.map((p) => (
-                  <li key={p.slug} className="w-[5.75rem] shrink-0 lg:w-auto">
-                    <button
-                      type="button"
-                      aria-pressed={p.slug === piece.slug}
-                      onClick={() => choosePiece(p)}
-                      className="group relative flex h-full w-full flex-col overflow-hidden rounded-md border-2 border-black/15 bg-[var(--card-fill)] text-left transition-colors hover:border-black/40 aria-pressed:border-region-primary"
-                      data-piece={p.slug}
-                    >
-                      <span className="photo photo-contain">
-                        <Image src={p.image} alt="" fill sizes="96px" quality={70} />
+    <section className="journey-in wrap pb-8 pt-3 sm:pt-6 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:items-start lg:gap-x-12 lg:pt-8" data-step="piece">
+      <div className="lg:col-start-2 lg:row-start-1 lg:pt-4">
+        <h2 ref={heading} tabIndex={-1} className="text-[clamp(1.5rem,4vw,2.75rem)] font-extrabold leading-[1.05] tracking-tight">
+          {model.name}
+        </h2>
+        <p className="t-place mt-1 text-ink-soft">
+          {data.place.name} · {data.place.uf}
+        </p>
+        <p className="t-small mt-2 hidden text-ink-soft lg:block">{model.description}</p>
+      </div>
+      <Stage key={model.familyId} pieces={model.pieces} visited={visited} selected={piece.slug} alt={`${piece.label}, estampa ${model.name}, ${data.place.name}`} className="mt-2 sm:mt-3 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:mt-0" />
+      <div className="mt-3 min-w-0 sm:mt-4 lg:col-start-2 lg:row-start-2 lg:mt-6">
+        {model.pieces.length > 1 ? (
+          // `min-w-0`: a fieldset is as wide as its content by default, and the row of pieces would then push the whole screen sideways.
+          <fieldset className="min-w-0">
+            {/* On phones the purchase bar already names the piece chosen: the question keeps to one line. */}
+            <legend className="text-[1.0625rem] font-bold">
+              Quer em outra peça? <span className="hidden font-normal text-ink-mute sm:inline">· {piece.label}</span>
+            </legend>
+            {/* One row that scrolls sideways on phones; a grid from the desktop layout up. */}
+            <ul className="no-scrollbar -mx-[var(--gutter)] mt-2 flex gap-2 overflow-x-auto px-[var(--gutter)] pb-1 lg:mx-0 lg:mt-3 lg:grid lg:grid-cols-4 lg:overflow-visible lg:px-0 xl:grid-cols-5" data-testid="journey-pieces">
+              {model.pieces.map((p) => (
+                <li key={p.slug} className="w-[5.25rem] shrink-0 lg:w-auto">
+                  <button
+                    type="button"
+                    aria-pressed={p.slug === piece.slug}
+                    onClick={() => choosePiece(p)}
+                    className="group relative flex h-full w-full flex-col overflow-hidden rounded-md border-2 border-black/15 bg-[var(--card-fill)] text-left transition-colors hover:border-black/40 aria-pressed:border-region-primary"
+                    data-piece={p.slug}
+                  >
+                    <span className="photo photo-contain">
+                      <Image src={p.image} alt="" fill sizes="96px" quality={70} />
+                    </span>
+                    {p.slug === piece.slug && (
+                      <span aria-hidden="true" className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center bg-region-primary text-white">
+                        <CheckIcon className="h-3.5 w-3.5" />
                       </span>
-                      {p.slug === piece.slug && (
-                        <span aria-hidden="true" className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center bg-region-primary text-[0.6875rem] font-bold text-white">
-                          ✓
-                        </span>
-                      )}
-                      <span className="flex grow flex-col px-1.5 pb-1.5 pt-1">
-                        <span className="line-clamp-2 text-[0.8125rem] font-semibold leading-tight">{p.label}</span>
-                        <span className="mt-auto pt-0.5 text-[0.75rem] tabular-nums text-ink-mute">{formatPrice(p.price)}</span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </fieldset>
-          ) : (
-            <p className="t-small mt-6 text-ink-soft">Este modelo está disponível em {piece.label.toLowerCase()}.</p>
+                    )}
+                    <span className="flex grow flex-col px-1.5 pb-1.5 pt-1">
+                      <span className="line-clamp-2 text-[0.8125rem] font-semibold leading-tight">{p.label}</span>
+                      <span className="mt-auto pt-0.5 text-[0.75rem] tabular-nums text-ink-mute">{formatPrice(p.price)}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </fieldset>
+        ) : (
+          <p className="t-small text-ink-soft">Este modelo está disponível em {piece.label.toLowerCase()}.</p>
+        )}
+        <p className="t-small mt-4 text-ink-soft lg:hidden">{model.description}</p>
+        <div className="mt-4 flex flex-col items-start gap-1 lg:mt-6">
+          {model.versions > 0 && (
+            <Link href={model.page} onClick={close} className="link-static inline-flex min-h-11 items-center font-semibold">
+              {model.versions === 1 ? "Ver mais 1 versão deste modelo" : `Ver mais ${model.versions} versões deste modelo`}
+            </Link>
           )}
-
-          <div className="mt-7 hidden lg:block">
-            <a href={piece.href} onClick={goToStore} className="btn w-full sm:w-auto sm:min-w-80" data-testid="journey-cta">
-              Escolher tamanho na loja
-              <ArrowIcon className="h-5 w-5" />
-            </a>
-            <p className="t-caption mt-3 max-w-sm">Tamanho, cor, frete e pagamento você define {finishIn}.</p>
-          </div>
-          <div className="mt-5 flex flex-col items-start gap-1 lg:mt-6">
-            {model.versions > 0 && (
-              <Link href={model.page} onClick={close} className="link-static inline-flex min-h-11 items-center font-semibold">
-                {model.versions === 1 ? "Ver mais 1 versão deste modelo" : `Ver mais ${model.versions} versões deste modelo`}
-              </Link>
-            )}
-            <button type="button" onClick={() => goTo("model")} className="link-static inline-flex min-h-11 items-center font-semibold">
-              Ver os outros modelos de {data.place.name}
-            </button>
-          </div>
+          <button type="button" onClick={() => goTo("model")} className="link-static inline-flex min-h-11 items-center font-semibold">
+            Ver os outros modelos de {data.place.name}
+          </button>
         </div>
       </div>
     </section>
   );
 
-  return (
-    <>
-      {variant === "nav" ? (
-        // A word in the header's menu: it opens the journey, so it is a button, drawn like the menu's links.
-        <button ref={trigger} type="button" onClick={openJourney} aria-haspopup="dialog" className="inline-flex min-h-11 items-center whitespace-nowrap py-1 text-[0.9375rem] font-semibold" data-testid="header-sua-cidade">
-          <span className="link-line">Sua cidade</span>
-        </button>
-      ) : (
-        <button
-          ref={trigger}
-          type="button"
-          onClick={openJourney}
-          aria-haspopup="dialog"
-          className="group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper"
-          data-testid="menu-sua-cidade"
-        >
-          <PinIcon className="h-6 w-6 shrink-0" />
-          <span className="flex-1 text-[1.0625rem] font-medium text-ink-mute">Qual é a sua cidade?</span>
-          <span aria-hidden="true" className="-mr-2 flex h-11 w-11 shrink-0 items-center justify-center bg-ink text-white transition-colors group-hover:bg-region-primary">
-            <ArrowIcon className="h-5 w-5" />
-          </span>
-        </button>
-      )}
+  // The end of the journey, at every width: what was chosen, its price, what is left to choose in the store, and the one button that goes there.
+  const buyBar = data && model && piece && (
+    <div className="journey-buy shrink-0 border-t border-line bg-ground px-[var(--gutter)] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3" data-testid="journey-buy-bar">
+      <div className="mx-auto flex max-w-[90rem] items-center gap-3 sm:gap-6">
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[0.8125rem] font-semibold leading-tight text-ink-soft">
+            <span className="hidden sm:inline">
+              {data.place.name} · {model.name} ·{" "}
+            </span>
+            {piece.label}
+          </p>
+          <p className="text-[1.125rem] font-extrabold tabular-nums leading-tight sm:text-[1.25rem]" aria-live="polite" data-testid="journey-price">
+            {price(piece)}
+          </p>
+        </div>
+        <p className="t-caption hidden max-w-[17rem] lg:block">Cor, tamanho e frete você escolhe {finishIn}.</p>
+        <a href={piece.href} onClick={goToStore} className="btn shrink-0" data-testid="journey-cta">
+          {/* The narrowest phones keep the price in full: the short word there, the whole sentence from the tablet up. */}
+          <span className="min-[360px]:hidden">Comprar</span>
+          <span className="hidden min-[360px]:inline sm:hidden">Escolher tamanho</span>
+          <span className="hidden sm:inline">Escolher tamanho na loja</span>
+          <ArrowIcon className="h-4 w-4 shrink-0" />
+        </a>
+      </div>
+      {/* Under the row up to the tablet (one line on the narrowest phone); beside the button, with the store's own name, on the desktop layout. */}
+      <p className="t-caption mt-1.5 lg:hidden">Cor, tamanho e frete você escolhe na loja.</p>
+    </div>
+  );
 
-      <dialog ref={dialog} aria-label="Sua cidade" className="city-journey m-0 h-dvh max-h-none w-full max-w-none bg-ground p-0 text-ink backdrop:bg-black/60" data-testid="sua-cidade">
-        {open && (
-          <div className="flex h-full flex-col">
-            {bar}
-            <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-              {step === "city" && cityStep}
-              {step === "model" && modelStep}
-              {step === "piece" && pieceStep}
-            </div>
-            {/* Phones and tablets: the button to the store stays at the bottom of the screen while the pieces are chosen. */}
-            {step === "piece" && model && piece && (
-              <div className="shrink-0 border-t border-line bg-ground px-[var(--gutter)] pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 lg:hidden" data-testid="journey-buy-bar">
-                <div className="flex items-center gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[0.8125rem] font-semibold leading-tight text-ink-soft">{piece.label}</p>
-                    <p className="text-[1.125rem] font-extrabold tabular-nums leading-tight" aria-live="polite">
-                      {price(piece)}
-                    </p>
-                  </div>
-                  <a href={piece.href} onClick={goToStore} className="btn shrink-0 gap-2 px-4 text-[0.8125rem] min-[400px]:px-5 min-[400px]:text-[0.875rem]" data-testid="journey-cta-bar">
-                    {/* The narrowest phones keep the price in full: the short word there, the whole one from 360px. */}
-                    <span className="min-[360px]:hidden">Comprar</span>
-                    <span className="hidden min-[360px]:inline">Escolher tamanho</span>
-                    <ArrowIcon className="h-4 w-4" />
-                  </a>
-                </div>
-              </div>
-            )}
+  return (
+    <dialog ref={dialog} aria-label="Sua cidade" className="city-journey m-0 h-dvh max-h-none w-full max-w-none bg-ground p-0 text-ink backdrop:bg-black/60" data-testid="sua-cidade">
+      {open && (
+        <div className="flex h-full flex-col">
+          {bar}
+          <div ref={scroller} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+            {step === "city" && (stateUf ? <StatePlaces region={region} uf={stateUf} heading={heading} onPick={pickPlace} /> : cityStep)}
+            {step === "model" && modelStep}
+            {step === "piece" && pieceStep}
           </div>
-        )}
-      </dialog>
-    </>
+          {step === "piece" && buyBar}
+        </div>
+      )}
+    </dialog>
   );
 }

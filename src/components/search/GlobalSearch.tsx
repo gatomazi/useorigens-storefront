@@ -39,6 +39,8 @@ type Props = {
   compact?: boolean;
   /** What is in the field now, as it is typed (the "Sua cidade" journey hides its shortcuts while the visitor types). */
   onQueryChange?: (query: string) => void;
+  /** The states offered when nothing is found open in place instead of their pages (the "Sua cidade" journey lists a state's places itself). */
+  onState?: (uf: string) => void;
 };
 
 export function SearchIcon({ className }: { className: string }) {
@@ -84,7 +86,7 @@ function Thumb({ result }: { result: GlobalResult }) {
  * floating dropdown), so it behaves the same on a phone, in a sheet, and with a screen reader. A design is ONE row per place × family, its
  * pieces counted from the product cluster, never one row per piece.
  */
-export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false, boxed = false, placesOnly = false, onPick, fieldLabel, compact = false, onQueryChange }: Props) {
+export function GlobalSearch({ region, autoFocus = false, onNavigate, source, sticky = false, boxed = false, placesOnly = false, onPick, fieldLabel, compact = false, onQueryChange, onState }: Props) {
   const copy = placeSearchCopy(region);
   const router = useRouter();
   const uid = useId();
@@ -312,13 +314,23 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
           <ul className="mt-4 flex flex-wrap gap-2">
             {REGIONS[region].ufs.map((uf) => (
               <li key={uf}>
-                <Link
-                  href={`/${region}/${uf.toLowerCase()}`}
-                  onClick={() => onNavigate?.()}
-                  className="inline-flex min-h-11 items-center border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors hover:bg-ink hover:text-white"
-                >
-                  {STATE_NAMES[uf]}
-                </Link>
+                {onState ? (
+                  <button
+                    type="button"
+                    onClick={() => onState(uf)}
+                    className="inline-flex min-h-11 items-center border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors hover:bg-ink hover:text-white"
+                  >
+                    {STATE_NAMES[uf]}
+                  </button>
+                ) : (
+                  <Link
+                    href={`/${region}/${uf.toLowerCase()}`}
+                    onClick={() => onNavigate?.()}
+                    className="inline-flex min-h-11 items-center border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors hover:bg-ink hover:text-white"
+                  >
+                    {STATE_NAMES[uf]}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
