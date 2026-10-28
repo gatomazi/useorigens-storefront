@@ -123,6 +123,47 @@ describe("pieces that are not a city's (Christmas shirts) in the opening", () =>
   });
 });
 
+describe("products marked on a hero picture (compre o look)", () => {
+  const image = { assetId: "upload:look", alt: "Duas pessoas", decorative: false };
+  const hero = () => structuredClone(buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null }).docs.sul.home!.sections.find((s) => s.template === "hero")!);
+
+  test("given a picture with marked products, when the slides are built, then each eligible one comes with its card and place in the picture", () => {
+    const [slide] = mod.heroSlides("sul", [{ store: "use-sul", productId: "9001", image, pins: [{ store: "use-sul", productId: "9001", x: 20, y: 60 }, { store: "use-sul", productId: "9501", x: 70, y: 65 }, { store: "use-sul", productId: "9502", x: 50, y: 50 }] }], []);
+    // The piece without a photo (9502) is left out, like an ineligible card.
+    expect(slide.pins?.map((p) => [p.card.familyName, p.x, p.y])).toEqual([["Ponto de Origem", 20, 60], ["Capivara de Reveião", 70, 65]]);
+  });
+
+  test("given marks without a picture, or no mark that can be shown, then the slide keeps its product bar (no pins)", () => {
+    const [noImage, none] = mod.heroSlides("sul", [{ store: "use-sul", productId: "9001", pins: [{ store: "use-sul", productId: "9001", x: 1, y: 1 }] }, { store: "use-sul", productId: "9501", image, pins: [{ store: "use-sul", productId: "9502", x: 1, y: 1 }] }], []);
+    expect(noImage.pins).toBeUndefined();
+    expect(none.pins).toBeUndefined();
+  });
+
+  test("given the editor's fields, when parsed, then the marks of a position with a banner are read and rounded; a malformed list is refused", () => {
+    const fd = (entries: Record<string, string>) => { const f = new FormData(); for (const [k, v] of Object.entries(entries)) f.set(k, v); return f; };
+    const base = { featured_1: "use-sul:9001", featured_image_1: "upload:look", featured_alt_1: "" };
+    const ok = parseFeaturedFields(fd({ ...base, featured_pins_1: JSON.stringify([{ p: "use-sul:9001", x: 20.04, y: 60 }, { p: "use-sul:9501", x: 70, y: 65.26 }]) }));
+    expect(ok.invalid).toEqual([]);
+    expect(ok.refs[0].pins).toEqual([{ store: "use-sul", productId: "9001", x: 20, y: 60 }, { store: "use-sul", productId: "9501", x: 70, y: 65.3 }]);
+    // Without a banner the marks are not kept; an empty list is no marks.
+    expect(parseFeaturedFields(fd({ featured_1: "use-sul:9001", featured_pins_1: JSON.stringify([{ p: "use-sul:9001", x: 1, y: 1 }]) })).refs[0]).not.toHaveProperty("pins");
+    expect(parseFeaturedFields(fd({ ...base, featured_pins_1: "" })).refs[0]).not.toHaveProperty("pins");
+    for (const bad of ["{", "[{\"p\":\"x\",\"x\":1,\"y\":1}]", JSON.stringify([{ p: "use-sul:1", x: 120, y: 1 }]), JSON.stringify([{ p: "use-sul:1", x: 1, y: 1 }, { p: "use-sul:1", x: 2, y: 2 }])]) {
+      expect(parseFeaturedFields(fd({ ...base, featured_pins_1: bad })).invalid, bad).toEqual(["marcas da posição 1"]);
+    }
+  });
+
+  test("given the marks, when validated, then they need the picture, 1..4 products, each once, at 0..100%", () => {
+    const pin = (productId: string, x = 50, y = 50) => ({ store: "use-sul" as const, productId, x, y });
+    const withPins = (pins: unknown, img: unknown = image) => ({ ...hero(), variant: "feature" as const, featured: [{ store: "use-sul" as const, productId: "9001", ...(img ? { image: img } : {}), pins }] });
+    expect(validateSection(withPins([pin("9001"), pin("9501")]) as never).ok).toBe(true);
+    for (const bad of [[], [pin("1"), pin("2"), pin("3"), pin("4"), pin("5")], [pin("9001"), pin("9001")], [pin("9001", 101)], [pin("9001", -1)], [{ ...pin("9001"), color: "red" }], [{ store: "use-sul", productId: "abc", x: 1, y: 1 }]]) {
+      expect(validateSection(withPins(bad) as never).ok, JSON.stringify(bad)).toBe(false);
+    }
+    expect(validateSection(withPins([pin("9001")], null) as never).ok).toBe(false);
+  });
+});
+
 describe("hero product search", () => {
   test("given a query, when searched in Norte, then only eligible Norte products match by city, UF, style or id, and the other stores never appear", () => {
     expect(mod.searchFeaturedCandidates("norte", "belem").results.map((r) => r.productId).sort()).toEqual(["7001", "7002"]);

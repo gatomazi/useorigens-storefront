@@ -242,6 +242,10 @@ export async function saveSection(fd: FormData) {
       // ineligible (the panel flags it and the storefront omits it), so a resync never erases the owner's choice.
       const rejected = slots.filter((sl) => !sl.ok && !kept.has(`${sl.ref.store}:${sl.ref.productId}`));
       if (rejected.length > 0) back(`/admin/home/${id}`, { err: rejected.map((sl) => `Produto ${sl.ref.productId} não pode ser usado: ${sl.reason}.`) });
+      // The same for the products marked on each banner: a NEW mark must be showable; one already saved is kept (flagged in the panel).
+      const keptPins = new Set((section.featured ?? []).flatMap((r) => (r.pins ?? []).map((p) => `${r.store}:${r.productId}>${p.store}:${p.productId}`)));
+      const badPins = refs.flatMap((r) => (r.pins?.length ? resolveFeatured(scope, r.pins).filter((p) => !p.ok && !keptPins.has(`${r.store}:${r.productId}>${p.ref.store}:${p.ref.productId}`)) : []));
+      if (badPins.length > 0) back(`/admin/home/${id}`, { err: badPins.map((p) => `Produto ${p.ref.productId} não pode ser marcado na foto: ${p.reason}.`) });
       patch.featured = refs;
       // The "feature" opening only: how it goes through the products (absent = always the first).
       patch.featuredRotation = ("variant" in patch ? patch.variant : section.variant) === "feature" ? parseFeaturedRotation(fd) : section.featuredRotation;

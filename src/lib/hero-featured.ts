@@ -75,8 +75,13 @@ export function resolveFeatured(region: RegionSlug, refs: readonly FeaturedProdu
   });
 }
 
-/** One product of the "feature" opening as the public draws it: the card and, when the owner gave it one, its own banner. */
-export type HeroSlide = { card: HeroFamilyCard; image?: MediaRef };
+/** A product marked on a picture, as the public draws it: its card and where it sits in the picture (% of its width and height). */
+export type HeroSlidePin = { card: HeroFamilyCard; x: number; y: number };
+/**
+ * One product of the "feature" opening as the public draws it: the card and, when the owner gave it one, its own banner. `pins`: the products marked
+ * on that banner that can be shown (an ineligible one is left out, like an ineligible card); absent or empty = the product bar, as before.
+ */
+export type HeroSlide = { card: HeroFamilyCard; image?: MediaRef; pins?: HeroSlidePin[] };
 
 /**
  * The products the public hero draws, each with its banner. `featured === undefined` (never customised): Sul keeps its three original cards
@@ -84,7 +89,11 @@ export type HeroSlide = { card: HeroFamilyCard; image?: MediaRef };
  */
 export function heroSlides(region: RegionSlug, featured: readonly FeaturedProductRef[] | undefined, legacy: HeroFamilyCard[]): HeroSlide[] {
   if (featured === undefined) return (region === "sul" ? legacy : []).map((card) => ({ card }));
-  return resolveFeatured(region, featured).flatMap((s) => (s.card ? [{ card: s.card, ...(s.ref.image ? { image: s.ref.image } : {}) }] : []));
+  return resolveFeatured(region, featured).flatMap((s) => {
+    if (!s.card) return [];
+    const pins = s.ref.image && s.ref.pins ? resolveFeatured(region, s.ref.pins).flatMap((p, j) => (p.card ? [{ card: p.card, x: s.ref.pins![j].x, y: s.ref.pins![j].y }] : [])) : [];
+    return [{ card: s.card, ...(s.ref.image ? { image: s.ref.image } : {}), ...(pins.length > 0 ? { pins } : {}) }];
+  });
 }
 
 /** The cards of the three-card hero: its first `HERO_CARDS` eligible products (a list kept for the "feature" opening may hold more). */
