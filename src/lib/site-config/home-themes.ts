@@ -159,12 +159,12 @@ export const NATAL_CUSTOMIZER_SLUG = "natal-em-familia";
  */
 const SEASONAL_HERO: Record<SeasonalThemeName, { title: string; subtitle: string; colors: HeroColors }> = {
   black: {
-    title: "A origem\ntambém entra\nna Black.",
+    title: "A origem\nentra na\nBlack.",
     subtitle: "Camisetas de R$ 119,90 por R$ 99,90. Busque a sua cidade e garanta a sua: chega antes do Natal.",
     colors: { background: "#111111", title: "#ffffff", highlight: "#e2b64a", rule: "#e2b64a", text: "#e6e6e6", link: "#e2b64a", field: "#e2b64a" },
   },
   natal: {
-    title: "Presente que\ntem\nendereço.",
+    title: "Presente que\ntem endereço.",
     subtitle: "A camiseta da cidade de quem você ama, ou o sobrenome da família numa estampa de Natal. Peça até 06/12 para chegar antes do Natal.",
     colors: { highlight: "#a8322d", rule: "#a8322d" },
   },

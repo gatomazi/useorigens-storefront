@@ -1,6 +1,6 @@
 import { editHomeThemeAction, setHomeThemeAction } from "@/app/admin/actions";
 import type { RegionSlug } from "@/lib/geo/regions";
-import { EDITORIAL_PALETTE, hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
+import { EDITORIAL_PALETTE, hasHomeTheme, HOME_THEME_LABEL, isSeasonalTheme } from "@/lib/site-config/home-themes";
 import { HOME_THEMES, homeThemeOf, type HomeThemeName, type ScopeDoc } from "@/lib/site-config/schema";
 import { REGION_THEME } from "@/lib/theme/region-theme";
 
@@ -40,10 +40,15 @@ export function HomeThemeCard({ region, doc, editing, active, live, rev, readOnl
     natal: [EDITORIAL_PALETTE.colors.brandPrimary!, EDITORIAL_PALETTE.colors.pageBackground!, "#a8322d"],
   };
   const swatches = (name: HomeThemeName): string[] => {
-    const theme = homeThemeOf(doc) === name ? doc.theme : doc.homeThemes?.[name]?.theme;
+    const inUse = homeThemeOf(doc) === name;
+    const theme = inUse ? doc.theme : doc.homeThemes?.[name]?.theme;
     const c = theme?.mode === "override" ? theme.colors : {};
     const [primary, page, accent] = fallback[name];
-    return [c.brandPrimary ?? primary, c.pageBackground ?? page, c.accent ?? accent];
+    if (!isSeasonalTheme(name)) return [c.brandPrimary ?? primary, c.pageBackground ?? page, c.accent ?? accent];
+    // A seasonal theme shares the palette it was copied from: what tells it apart is its top and its opening's colours.
+    const hero = (inUse ? doc.home?.sections : doc.homeThemes?.[name]?.sections)?.find((s) => s.template === "hero")?.heroColors;
+    const hex = (v: string | undefined) => (v?.startsWith("#") ? v : undefined);
+    return [c.headerBackground ?? c.brandPrimary ?? primary, hex(hero?.background) ?? c.pageBackground ?? page, hex(hero?.highlight) ?? c.accent ?? accent];
   };
   const hidden = (theme: HomeThemeName) => (
     <>

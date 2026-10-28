@@ -199,7 +199,7 @@ describe("the seasonal themes (Black Friday and Natal)", () => {
     expect(doc.home!.sections).toEqual(before.home!.sections);
     const natal = doc.homeThemes!.natal!;
     const [hero, call, showcase, ...rest] = natal.sections;
-    expect(hero).toMatchObject({ id: before.home!.sections[0].id, variant: "feature", title: "Presente que\ntem\nendereço.", heroColors: { highlight: "#a8322d" } });
+    expect(hero).toMatchObject({ id: before.home!.sections[0].id, variant: "feature", title: "Presente que\ntem endereço.", heroColors: { highlight: "#a8322d" } });
     expect(call).toMatchObject({ template: "campaign", variant: "split", cta: { dest: { kind: "customizer", customizerId: "natal1" } } });
     expect(showcase).toMatchObject({ template: "product-carousel", source: { kind: "ink-category", collectionId: 154424 } });
     expect(rest).toEqual(before.home!.sections.slice(1));
@@ -219,7 +219,7 @@ describe("the seasonal themes (Black Friday and Natal)", () => {
     const before = live();
     const black = run(before, { type: "set-home-theme", theme: "black", collections: all });
     expect(black.homeTheme).toBe("black");
-    expect(black.home!.sections[0]).toMatchObject({ title: "A origem\ntambém entra\nna Black.", heroColors: { background: "#111111", highlight: "#e2b64a" } });
+    expect(black.home!.sections[0]).toMatchObject({ title: "A origem\nentra na\nBlack.", heroColors: { background: "#111111", highlight: "#e2b64a" } });
     expect(black.home!.sections[0].subtitle).toContain("R$ 99,90");
     // Dark at the top only: the header and menu are black, the page ground (product cards, every page) is not.
     expect(black.theme?.colors).toMatchObject({ headerBackground: "#111111", mobileMenuBackground: "#111111", pageBackground: before.theme!.colors.pageBackground });
@@ -231,7 +231,7 @@ describe("the seasonal themes (Black Friday and Natal)", () => {
     expect(back.homeTheme).toBe("editorial");
     expect(back.home!.sections).toEqual(before.home!.sections);
     expect(back.theme).toEqual(before.theme);
-    expect(back.homeThemes!.black!.sections[0].title).toBe("A origem\ntambém entra\nna Black.");
+    expect(back.homeThemes!.black!.sections[0].title).toBe("A origem\nentra na\nBlack.");
     expect(diffDocs(before, black).map((c) => c.text)[0]).toBe("Tema da home: Editorial → Black Friday (as seções do Editorial ficam guardadas)");
   });
 
