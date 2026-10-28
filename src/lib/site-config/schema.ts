@@ -15,6 +15,7 @@ import { validateNavigation, validateTheme, validateNeutralTheme, type Navigatio
 import { validateInkTheme, type InkThemeConfig } from "./ink-theme-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
 import { validateTopBar, type TopBarConfig } from "./top-bar-schema";
+import { validatePostAddKit, type PostAddKitConfig } from "./post-add-kit-schema";
 import { validateAssistant, type AssistantConfig } from "./assistant-schema";
 import { validateStatePage, type StatePageConfig } from "./state-page-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
@@ -448,6 +449,11 @@ export type ScopeDoc = {
    * INK production time. Absent or no live message = the storefront's default strip and the INK's own. Published with the region.
    */
   topBar?: TopBarConfig;
+  /**
+   * REGION only: "Monte seu kit", the block in INK's "Produto adicionado ao carrinho" modal (`post-add-kit-schema.ts`): which progressive promotion of the
+   * INK store it shows and the texts. The tiers are INK's, read live. Absent or off = the modal as INK draws it. Published with the region.
+   */
+  postAddKit?: PostAddKitConfig;
   /**
    * REGION only: "Assistente", the help chat of the storefront and of the INK pages (`assistant-schema.ts`): the store's answers, the opening line and the
    * WhatsApp of the hand-off. Absent or off = no chat (the INK keeps its own "Ajuda?" and WhatsApp). Published with the region.
@@ -1234,6 +1240,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.assistant !== undefined) {
     const r = validateAssistant(input.assistant, sc, "doc.assistant");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.postAddKit !== undefined) {
+    const r = validatePostAddKit(input.postAddKit, sc, "doc.postAddKit");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.statePage !== undefined) {
