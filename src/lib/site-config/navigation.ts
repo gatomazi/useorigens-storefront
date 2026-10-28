@@ -12,7 +12,7 @@ import { REGION_THEME } from "../theme/region-theme";
 import { contrastRatio, rgbTriplet } from "./color";
 import { headerLinks } from "./nav";
 import { NAV_DESTINATIONS, THEME_COLOR_KEYS, type NavBlockConfig, type NavDestination, type NavigationConfig, type ThemeColorKey, type ThemeColors } from "./navigation-schema";
-import type { CollectionHighlight, MenuHighlightColors, Scope, ScopeDoc } from "./schema";
+import { hasEditorialChrome, homeThemeOf, type CollectionHighlight, type MenuHighlightColors, type Scope, type ScopeDoc } from "./schema";
 
 export * from "./navigation-schema";
 
@@ -84,11 +84,11 @@ export function resolveTheme(region: RegionSlug, doc: Pick<ScopeDoc, "theme"> | 
 }
 
 /**
- * What the editorial theme adds beyond its palette: the strip above the header and the footer on the palette's main colour (so they follow it when the
+ * What the editorial theme (and the seasonal ones made from it) adds beyond its palette: the strip above the header and the footer on the palette's main colour (so they follow it when the
  * owner edits it; the strip's own colours, CMS "Faixa do topo", still win). Empty for the original theme: nothing changes.
  */
 export function homeThemeCssVars(doc: Pick<ScopeDoc, "homeTheme"> | undefined, effective: ThemeColors): Record<string, string> {
-  if (doc?.homeTheme !== "editorial") return {};
+  if (!hasEditorialChrome(homeThemeOf(doc))) return {};
   return { "--strip-bg": effective.brandPrimary, "--footer-bg": effective.brandPrimary };
 }
 

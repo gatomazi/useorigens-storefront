@@ -23,7 +23,7 @@ import type { MundoModo } from "../site-config/mundo-schema";
 import type { InkThemeConfig } from "../site-config/ink-theme-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
 import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, MENU_HIGHLIGHT_KEYS, type Appearance, type CollectionHighlight, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
-import { HOME_THEME_LABEL, hasHomeTheme, newEditorialTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
+import { HOME_THEME_LABEL, hasHomeTheme, isSeasonalTheme, newEditorialTheme, seasonalTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
 import type { RegionSlug } from "../geo/regions";
 import type { ProductSort } from "../catalog/product-sort";
 
@@ -209,7 +209,13 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-state-row-display") return editStateRowDisplay(doc, op);
   if (op.type === "set-home-theme" || op.type === "create-home-theme") {
     if (doc.scope === "global" || !doc.home) return fail("only a region's home has a theme");
-    const created = op.theme === "editorial" && !hasHomeTheme(doc, "editorial") ? newEditorialTheme(doc.scope as RegionSlug, doc.home.sections, op.collections ?? {}, ctx.newId) : undefined;
+    const created = hasHomeTheme(doc, op.theme)
+      ? undefined
+      : op.theme === "editorial"
+        ? newEditorialTheme(doc.scope as RegionSlug, doc.home.sections, op.collections ?? {}, ctx.newId)
+        : isSeasonalTheme(op.theme)
+          ? seasonalTheme(op.theme, doc, op.collections ?? {}, ctx.newId)
+          : undefined;
     let next: ScopeDoc | null;
     if (op.type === "set-home-theme") {
       next = swapHomeTheme(doc, op.theme, created);

@@ -1,5 +1,6 @@
 /**
- * The two THEMES of a region's home (`ScopeDoc.homeTheme`): "original", the look the store has had, and "editorial", the approved editorial direction.
+ * The THEMES of a region's home (`ScopeDoc.homeTheme`): "original", the look the store has had, "editorial", the approved editorial direction, and the
+ * two seasonal ones, "black" and "natal" (see `seasonalTheme`).
  * Like the themes of a shop platform, each keeps its own sections (the same section types, edited with the same editor); switching swaps the lists and
  * nothing is lost. Pure (no I/O): the panel, the draft operations, the tests and the preview script share it.
  *
@@ -10,13 +11,18 @@
  */
 import type { RegionSlug } from "../geo/regions";
 import type { ThemeConfig } from "./navigation-schema";
-import { homeThemeOf, type Appearance, type CollectionRef, type GridTile, type HomeThemeName, type KeptHomeTheme, type ScopeDoc, type Section } from "./schema";
+import { homeThemeOf, type Appearance, type CollectionRef, type GridTile, type HeroColors, type HomeThemeName, type KeptHomeTheme, type ScopeDoc, type Section } from "./schema";
 import { structuredDefaults, uniqueAnchor } from "./structured";
 
-export const HOME_THEME_LABEL: Record<HomeThemeName, string> = { original: "Original", editorial: "Editorial" };
+export const HOME_THEME_LABEL: Record<HomeThemeName, string> = { original: "Original", editorial: "Editorial", black: "Black Friday", natal: "Natal" };
 
-/** The collections the editorial composition is built on, by their slug in the region's store (resolved on the server from the synced snapshot). */
-export const EDITORIAL_COLLECTION_SLUGS = { terra: "da-nossa-terra", fala: "fala-daqui", jeito: "do-nosso-jeito", novidades: "novidades" } as const;
+/** The seasonal themes: made from the theme in use (never from scratch), put on the store for a date and swapped back after it. */
+export const SEASONAL_THEMES = ["black", "natal"] as const satisfies readonly HomeThemeName[];
+export type SeasonalThemeName = (typeof SEASONAL_THEMES)[number];
+export const isSeasonalTheme = (name: HomeThemeName): name is SeasonalThemeName => (SEASONAL_THEMES as readonly string[]).includes(name);
+
+/** The collections the editorial and seasonal compositions are built on, by their slug in the region's store (resolved on the server from the synced snapshot). */
+export const EDITORIAL_COLLECTION_SLUGS = { terra: "da-nossa-terra", fala: "fala-daqui", jeito: "do-nosso-jeito", novidades: "novidades", natal: "natal" } as const;
 export type EditorialCollections = Partial<Record<keyof typeof EDITORIAL_COLLECTION_SLUGS, CollectionRef>>;
 
 const plain = (fill: Appearance["fill"] = { kind: "none" }): Appearance => ({ fill, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } });
@@ -141,6 +147,85 @@ export const EDITORIAL_PALETTE: ThemeConfig = {
 /** A new editorial theme for a region, built from the sections it has now (see `editorialSeed`), with the editorial palette. */
 export function newEditorialTheme(region: RegionSlug, sections: readonly Section[], collections: EditorialCollections, newId: () => string): KeptHomeTheme {
   return { sections: editorialSeed(region, sections, collections, newId), theme: structuredClone(EDITORIAL_PALETTE) };
+}
+
+/** The page of the Natal personalisation model (the surname on the Christmas designs) the Natal theme calls right under its opening. */
+export const NATAL_CUSTOMIZER_SLUG = "natal-em-familia";
+
+/**
+ * The opening of each seasonal theme. Only the reading half changes: the products and their banners stay the ones the theme in use has (the owner picks
+ * the season's pictures in the section editor). The Black one is dark through the opening's own colours, never through the palette's page ground (that
+ * would darken every page of the store, product cards included).
+ */
+const SEASONAL_HERO: Record<SeasonalThemeName, { title: string; subtitle: string; colors: HeroColors }> = {
+  black: {
+    title: "A origem\ntambém entra\nna Black.",
+    subtitle: "Camisetas de R$ 119,90 por R$ 99,90. Busque a sua cidade e garanta a sua: chega antes do Natal.",
+    colors: { background: "#111111", title: "#ffffff", highlight: "#e2b64a", rule: "#e2b64a", text: "#e6e6e6", link: "#e2b64a", field: "#e2b64a" },
+  },
+  natal: {
+    title: "Presente que\ntem\nendereço.",
+    subtitle: "A camiseta da cidade de quem você ama, ou o sobrenome da família numa estampa de Natal. Peça até 06/12 para chegar antes do Natal.",
+    colors: { highlight: "#a8322d", rule: "#a8322d" },
+  },
+};
+
+/** The Black theme's header and mobile menu: black, like its opening (the rest of the palette is the theme in use's). */
+const BLACK_CHROME = { headerBackground: "#111111", headerText: "#ffffff", mobileMenuBackground: "#111111", mobileMenuText: "#ffffff" } as const;
+
+/**
+ * A new seasonal theme, built from the theme IN USE when it is created (its sections, its palette): the same home with the season's opening (see
+ * `SEASONAL_HERO`). Natal also brings, right under the opening, the call to the Natal personalisation model (when the region has it active) and a
+ * showcase of the Natal collection (when the store has it), each only if the home does not already have one. Putting it on the store and swapping back
+ * are the ordinary theme swap: the theme that was in use is kept as it was.
+ */
+export function seasonalTheme(name: SeasonalThemeName, doc: ScopeDoc, collections: EditorialCollections, newId: () => string): KeptHomeTheme {
+  const sections = structuredClone(doc.home?.sections ?? []);
+  const taken = new Set(sections.map((s) => s.anchor));
+  const look = SEASONAL_HERO[name];
+  const at = sections.findIndex((s) => s.template === "hero");
+  if (at >= 0) {
+    const hero = sections[at];
+    sections[at] = { ...hero, variant: "feature", title: look.title, subtitle: look.subtitle, heroColors: { ...hero.heroColors, ...look.colors } };
+  }
+
+  if (name === "natal") {
+    const added: Section[] = [];
+    const model = doc.customizers?.find((m) => m.slug === NATAL_CUSTOMIZER_SLUG && m.active);
+    const linked = (id: string) => sections.some((s) => s.cta?.dest.kind === "customizer" && s.cta.dest.customizerId === id);
+    if (model && !linked(model.id)) {
+      const anchor = uniqueAnchor(`personalizar-${model.slug}`, taken);
+      taken.add(anchor);
+      const base = structuredDefaults("campaign", doc.scope as RegionSlug, newId(), taken);
+      added.push({
+        ...base, anchor, headingId: `${anchor}-title`, active: true, variant: "split",
+        title: "Natal em família, com o seu sobrenome.",
+        subtitle: "Escolha a arte, digite o sobrenome e veja na camiseta antes de pedir.",
+        cta: { label: "Colocar o meu sobrenome", dest: { kind: "customizer", customizerId: model.id } },
+        appearance: plain({ kind: "solid", color: "#e8c9a9" }),
+      });
+    }
+    const natal = collections.natal;
+    const shown = natal && sections.some((s) => s.source?.kind === "ink-category" && s.source.store === natal.store && s.source.collectionId === natal.collectionId);
+    if (natal && !shown) {
+      const anchor = uniqueAnchor("natal", taken);
+      taken.add(anchor);
+      added.push({
+        id: newId(), anchor, headingId: `${anchor}-title`, template: "product-carousel", active: true,
+        title: "Para vestir na ceia.", subtitle: "As estampas de Natal da loja, para a família inteira.",
+        source: { kind: "ink-category", store: natal.store, collectionId: natal.collectionId, order: "category", limit: 8 },
+        layout: { variant: "standard", tone: "light", surface: "plain", display: "carousel" },
+        analyticsSource: "homeCollection",
+        cta: { label: "Ver tudo de Natal", dest: { kind: "collection-page", store: natal.store, collectionId: natal.collectionId } },
+        appearance: plain(),
+      });
+    }
+    sections.splice(at >= 0 ? at + 1 : 0, 0, ...added);
+  }
+
+  const palette = doc.theme ? structuredClone(doc.theme) : undefined;
+  if (name === "black" && palette?.mode === "override") palette.colors = { ...palette.colors, ...BLACK_CHROME };
+  return { sections, ...(palette ? { theme: palette } : {}) };
 }
 
 /**
