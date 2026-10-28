@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { getFavorites, subscribeFavorites } from "@/lib/favorites/store";
+import { CountBadge } from "@/components/favorites/CountBadge";
 import { trackSelectState } from "@/lib/analytics/track";
 import { SOURCES } from "@/lib/analytics/sources";
 import type { NavBlockData, NavItemData } from "@/lib/site-config/navigation";
@@ -152,10 +153,14 @@ export function MobileMenu({ blocks, search, account = [], favorites }: {
   return (
     <>
       <button ref={trigger} type="button" onClick={open} aria-haspopup="dialog" className="inline-flex min-h-11 min-w-11 items-center justify-center lg:hidden">
-        <span className="sr-only">Abrir menu</span>
-        <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-          <path d="M4 7h16M4 12h16M4 17h16" />
-        </svg>
+        <span className="sr-only">Abrir menu{favorites && saved > 0 ? `, ${saved} ${saved === 1 ? "estampa salva" : "estampas salvas"}` : ""}</span>
+        <span className="relative inline-flex">
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+          {/* On phones "Minhas Estampas" lives in this menu: its count shows on the button, so a shirt that just got ready is noticed. */}
+          {favorites && <CountBadge count={saved} className="absolute -right-2.5 -top-2" />}
+        </span>
       </button>
 
       <dialog ref={dialog} aria-label="Menu" onClose={onClose} onKeyDown={trapTab} className="nav-menu m-0 h-dvh max-h-none w-full max-w-none p-0 backdrop:bg-black">
@@ -183,7 +188,7 @@ export function MobileMenu({ blocks, search, account = [], favorites }: {
                 </svg>
                 Minhas Estampas
                 {saved > 0 && (
-                  <span className="ml-auto inline-flex h-7 min-w-7 items-center justify-center border-2 border-current px-1.5 text-[0.875rem] font-bold leading-none">
+                  <span className="ml-auto inline-flex h-7 min-w-7 items-center justify-center rounded-full bg-white px-2 text-[0.875rem] font-bold leading-none text-ink tabular-nums">
                     {saved}
                     <span className="sr-only"> {saved === 1 ? "estampa salva" : "estampas salvas"}</span>
                   </span>

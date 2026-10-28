@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { CountBadge } from "./CountBadge";
 import { useSyncExternalStore } from "react";
 import { getFavorites, subscribeFavorites } from "@/lib/favorites/store";
 import type { RegionSlug } from "@/lib/geo/regions";
@@ -31,11 +32,7 @@ export function FavoritesMenu({ region, labelled = true }: { region: RegionSlug;
     >
       <span className="relative inline-flex">
         <HeartIcon className="h-5 w-5" />
-        {count > 0 ? (
-          <span aria-hidden="true" className="absolute -right-2 -top-2 flex h-4 min-w-4 items-center justify-center bg-white px-[3px] text-[0.6875rem] font-bold leading-none text-ink">
-            {count}
-          </span>
-        ) : null}
+        <CountBadge count={count} className="absolute -right-2.5 -top-2" />
       </span>
       {labelled && <span className="hidden sm:inline">Minhas Estampas</span>}
       <span className={labelled ? "sr-only sm:hidden" : "sr-only"}>Minhas Estampas{count > 0 ? `, ${count} ${count === 1 ? "estampa salva" : "estampas salvas"}` : ""}</span>
