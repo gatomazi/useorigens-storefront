@@ -1,9 +1,10 @@
 # Monte seu kit (depois de adicionar ao carrinho)
 
 No modal **"Produto adicionado ao carrinho"** da INK, acima dos botões, as faixas de **uma promoção progressiva da INK** escolhida no painel, já com o
-preço da peça que acabou de ser adicionada: de quanto sai por quanto, quanto fica cada peça e quanto economiza. O código vem com "Copiar cupom". Os
-botões nativos passam a se chamar **"Escolher mais produtos"** e **"Finalizar compra"**, lado a lado; por baixo continuam sendo os da INK (fechar o
-modal e abrir o carrinho, onde o cliente cola o cupom). A busca de estampas e "As mais vendidas" seguem abaixo.
+preço da peça que acabou de ser adicionada: de quanto sai por quanto, quanto fica cada peça e quanto economiza. O código vem com o botão "Copiar cupom".
+Abaixo, um botão só: "Ver carrinho" passa a se chamar **"Finalizar compra"** (continua sendo o da INK: abre o carrinho, onde o cliente cola o cupom) e o
+"Continuar comprando" sai enquanto há kit, porque a busca de estampas logo abaixo faz esse papel (o × fecha o modal). A busca e "As mais vendidas" seguem
+abaixo.
 
 ```
 INK (promoção progressiva: código, faixas, datas)

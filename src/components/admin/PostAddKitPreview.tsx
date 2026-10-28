@@ -21,11 +21,16 @@ export function PostAddKitPreview({ eyebrow, title, lead, code, auto, kind, tier
         <p className="text-[0.6875rem] font-bold uppercase tracking-[0.08em]" style={{ color: accent }}>{eyebrow}</p>
         <p className="mt-1 text-[1.25rem] font-bold leading-tight">{title}</p>
         <p className="mt-1 text-[0.8125rem] leading-snug text-[#4b5563]">{lead}</p>
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="inline-flex min-h-9 items-center rounded-[4px] px-3 text-[0.875rem] font-bold" style={{ background: `color-mix(in srgb, ${accent} 12%, #fff)`, color: accent }}>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <span className="inline-flex min-h-10 items-center rounded-[4px] px-3 text-[0.875rem] font-bold" style={{ background: `color-mix(in srgb, ${accent} 12%, #fff)`, color: accent }}>
             {auto ? "Desconto aplicado no carrinho" : <>Cupom {code}</>}
           </span>
-          {!auto && <span className="text-[0.875rem] font-bold underline" style={{ color: accent }}>Copiar cupom</span>}
+          {!auto && (
+            <span className="inline-flex min-h-10 items-center gap-1.5 rounded-[4px] border-[1.5px] bg-white px-3.5 text-[0.875rem] font-bold" style={{ borderColor: accent, color: accent }}>
+              <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="2" /><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" /></svg>
+              Copiar cupom
+            </span>
+          )}
         </div>
         <ol className="mt-3 space-y-2" data-testid="kit-preview-tiers">
           {shown.map((t, i) => {
@@ -55,9 +60,11 @@ export function PostAddKitPreview({ eyebrow, title, lead, code, auto, kind, tier
         <p className="mt-2 text-[0.6875rem] leading-snug text-[#6b7280]">Em peças com preços diferentes, o total do kit pode variar.</p>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
-        <span className="flex min-h-12 items-center justify-center border border-[#111827] px-2 text-center text-[0.875rem] font-semibold">Escolher mais produtos</span>
-        <span className="flex min-h-12 items-center justify-center bg-[#111827] px-2 text-center text-[0.875rem] font-bold uppercase tracking-[0.04em] text-white">Finalizar compra</span>
+      <div className="mt-4">
+        <span className="flex min-h-[52px] items-center justify-center gap-2 bg-[#111827] px-3 text-center text-[0.9375rem] font-bold leading-tight text-white">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 18a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm10 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4ZM5.2 4H2V2h4.8l1 2H21l-3.5 8H8.6l-1.1 2H19v2H4.2l2.6-4.7L5.2 4Z" /></svg>
+          Finalizar compra
+        </span>
       </div>
       <p className="a-muted mt-3 text-center text-[0.75rem]">Abaixo continuam a busca de estampas e “As mais vendidas”.</p>
     </div>

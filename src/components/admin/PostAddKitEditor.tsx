@@ -44,8 +44,9 @@ export function PostAddKitEditor({ region, config, promotions, inkError, now, re
             <span>
               <strong>Mostrar o kit depois de adicionar ao carrinho</strong>
               <span className="a-muted block text-[0.8125rem]">
-                No modal “Produto adicionado ao carrinho” da INK, acima dos botões, com as faixas da promoção escolhida abaixo. Os botões passam a se chamar
-                “Escolher mais produtos” e “Finalizar compra”, mas continuam sendo os da INK. Desligado: o modal volta a ser como a INK desenha.
+                No modal “Produto adicionado ao carrinho” da INK, acima do botão, com as faixas da promoção escolhida abaixo. “Ver carrinho” passa a se chamar
+                “Finalizar compra” (continua sendo o da INK) e o “Continuar comprando” sai: a busca de estampas logo abaixo faz esse papel, e o × fecha o
+                modal. Desligado: o modal volta a ser como a INK desenha.
               </span>
             </span>
           </label>
