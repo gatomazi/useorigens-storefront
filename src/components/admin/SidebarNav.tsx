@@ -15,7 +15,7 @@ const isActive = (item: Item, pathname: string) => (item.active ? item.active(pa
  * "Publicar" is not here: it sits in the top bar, with the count of what is waiting. On a phone the menu folds behind one button.
  * `storeHref` is the public page of the region being edited; `null` while that region is still in preview (its public page is a 404).
  */
-export function SidebarNav({ pendingRequests = 0, owner = false, regionName = "Sul", storeHref = "/sul", storeLabel = "Abrir a loja local ↗" }: { pendingRequests?: number; owner?: boolean; regionName?: string; storeHref?: string | null; storeLabel?: string }) {
+export function SidebarNav({ pendingRequests = 0, newPartners = 0, owner = false, regionName = "Sul", storeHref = "/sul", storeLabel = "Abrir a loja local ↗" }: { pendingRequests?: number; newPartners?: number; owner?: boolean; regionName?: string; storeHref?: string | null; storeLabel?: string }) {
   const pathname = usePathname();
   // Open for the page it was opened on: following a link closes it, with no effect to sync.
   const [openOn, setOpenOn] = useState<string | null>(null);
@@ -47,6 +47,7 @@ export function SidebarNav({ pendingRequests = 0, owner = false, regionName = "S
         { href: SOLICITACOES, label: "Solicitações", badge: { count: pendingRequests, testId: "pending-requests", title: "Solicitações de personalização esperando a equipe", srLabel: "solicitações pendentes" } },
         { href: "/admin/assistente", label: "Assistente", active: (p) => p === "/admin/assistente" },
         { href: "/admin/assistente/perguntas", label: "Perguntas do assistente" },
+        { href: "/admin/parceiros", label: "Parceiros", badge: { count: newPartners, testId: "new-partners", title: "Inscrições de parceiros no estado Nova", srLabel: "inscrições novas" } },
       ],
     },
     {

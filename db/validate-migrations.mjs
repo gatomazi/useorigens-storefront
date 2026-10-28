@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -104,6 +104,16 @@ await rejects("a refused message keeps no text (0009)", `insert into assistant_q
 await accepts("a refused message as its kind only (0009)", `insert into assistant_question (region, surface, question, question_key, kind) values ('sul','site',null,'','refuse')`);
 await rejects("an assistant question from an unknown surface (0009)", `insert into assistant_question (region, surface, question, question_key, kind) values ('sul','app','oi','oi','greeting')`);
 await rejects("an assistant question of an unknown kind (0009)", `insert into assistant_question (region, surface, question, question_key, kind) values ('sul','site','oi','oi','ai')`);
+const PA = (id, extra = "") => `insert into partner_application (id, region, profile, name, whatsapp, city, notice_version, idempotency_key${extra ? ", " + extra.split("=")[0] : ""}) values ('${id}','sul','artist','Ana Souza','+5548999990000','Florianópolis','2026-10-v1','key-${id.slice(-6)}-abcdefghij'${extra ? ", " + extra.split("=")[1] : ""})`;
+await accepts("a partner application with the required fields only (0010)", PA("01J0000000000000000000PA01"));
+await rejects("the same idempotency key twice (0010)", `insert into partner_application (id, region, profile, name, whatsapp, city, notice_version, idempotency_key) values ('01J0000000000000000000PA02','sul','artist','Ana Souza','+5548999990000','Florianópolis','2026-10-v1','key-00PA01-abcdefghij')`);
+await rejects("a partner application of an unknown profile (0010)", `insert into partner_application (id, region, profile, name, whatsapp, city, notice_version, idempotency_key) values ('01J0000000000000000000PA03','sul','reseller','Ana Souza','+5548999990000','Florianópolis','2026-10-v1','key-0PA03-abcdefghij')`);
+await rejects("a WhatsApp number that was not normalised (0010)", PA("01J0000000000000000000PA04").replace("+5548999990000", "(48) 99999-0000"));
+await rejects("an Instagram link instead of the handle (0010)", PA("01J0000000000000000000PA05", "instagram='https://instagram.com/ana'"));
+await rejects("a partner application without the authorisation version (0010)", `insert into partner_application (id, region, profile, name, whatsapp, city, notice_version, idempotency_key) values ('01J0000000000000000000PA06','sul','artist','Ana Souza','+5548999990000','Florianópolis','','key-0PA06-abcdefghij')`);
+await accepts("the partner status moves (0010)", `update partner_application set status='partner' where id='01J0000000000000000000PA01'`);
+await rejects("an unknown partner status (0010)", `update partner_application set status='maybe' where id='01J0000000000000000000PA01'`);
+await accepts("the audit log takes partner.status (0010)", `insert into audit_log (actor, action, scope, target) values ('owner','partner.status','sul','01J0000000000000000000PA01')`);
 await accepts("a sync run starts", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await rejects("a second collections sync at the same time (partial unique index)", `insert into sync_run (kind, requested_by) values ('collections','owner')`);
 await accepts("a catalog sync may run in parallel with a collections sync", `insert into sync_run (kind, requested_by) values ('catalog','owner')`);

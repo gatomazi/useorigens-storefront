@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { measurementRequiresConsent } from "@/lib/consent/policy";
 import { clarityProjectId } from "@/lib/config/public-env";
 import { PrivacyPreferencesLink } from "@/components/consent/PrivacyPreferencesLink";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
+import { PARTNER_RETENTION_DAYS } from "@/lib/partners/application";
 
 export const revalidate = 3600;
 
@@ -25,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ region: s
  * than shown as placeholders or invented. When they are confirmed, add "Responsável e contato" / "Prazo de
  * retenção" sections here (see docs/deploy/ for the open items).
  */
-const LAST_UPDATED = "9 de outubro de 2026";
+const LAST_UPDATED = "27 de outubro de 2026";
 
 export default async function PrivacyPolicyPage({ params }: { params: Promise<{ region: string }> }) {
   const { region } = await params;
@@ -121,6 +123,19 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
             quem perguntou: nem IP, nem cookie, nem identificação do visitante. E-mails e números longos (telefone, CEP, número de pedido) são
             apagados do texto antes de guardar, e mensagens com CPF, cartão ou senha não são guardadas. Para tratar do seu pedido, use Meus pedidos
             ou o WhatsApp, sem escrever dados pessoais no chat.
+          </p>
+        </section>
+
+        <section>
+          <h2 className="t-h3">Inscrição no programa de parceiros</h2>
+          <p className="t-body mt-2 text-ink-soft">
+            Quem se inscreve em{" "}
+            <Link href={`/${region}/seja-parceiro`} className="link-line font-semibold">
+              Seja parceiro
+            </Link>{" "}
+            nos informa nome, WhatsApp, cidade e perfil e, se quiser, e-mail, Instagram, número de seguidores e uma mensagem. Usamos esses dados só para
+            avaliar a inscrição e conversar sobre a parceria. Eles ficam guardados por até {PARTNER_RETENTION_DAYS} dias e depois são apagados; quando a
+            parceria é fechada, ficam enquanto ela durar. Não pedimos CPF, endereço nem dados bancários nessa etapa.
           </p>
         </section>
 

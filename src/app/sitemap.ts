@@ -26,7 +26,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const cmsBundle = siteConfigHomeEnabled() ? homeBundle() : null;
 
   for (const region of launchedRegions()) {
-    entries.push(entry(`/${region}`), entry(`/${region}/privacidade`));
+    entries.push(entry(`/${region}`), entry(`/${region}/privacidade`), entry(`/${region}/seja-parceiro`));
 
     const cities = [...catalog.coveredLocalityIds(region)].flatMap((id) => {
       const city = localityById(id);
