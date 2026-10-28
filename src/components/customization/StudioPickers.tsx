@@ -1,6 +1,7 @@
 "use client";
 
 import { SHIRT_COLORS, shirtColor } from "@/lib/customization/shirts";
+import { InfoTip } from "./InfoTip";
 
 export type ArtOption = { key: number; label: string; thumb: string; caption?: string };
 
@@ -35,7 +36,7 @@ export function ArtPicker({ legend, name, options, value, onChange, shirt, strip
   );
 }
 
-/** Shirt colours as plain squares, like INK; the name is for screen readers and the line below. Only for viewing the art. */
+/** Shirt colours as plain squares, like INK; the name is for screen readers and the line below, with the "only for viewing" note behind an "i". */
 export function ShirtSwatches({ name, value, onChange, row = false }: { name: string; value: string; onChange: (id: string) => void; row?: boolean }) {
   const current = shirtColor(value);
   return (
@@ -50,7 +51,8 @@ export function ShirtSwatches({ name, value, onChange, row = false }: { name: st
           </label>
         ))}
       </div>
-      <p className="t-small mt-2 text-ink-mute" aria-live="polite">Camiseta {current.label.toLowerCase()} · só para ver como fica. A cor você escolhe na compra.</p>
+      <p className="t-small mt-2 flex items-center text-ink-mute"><span aria-live="polite">Camiseta {current.label.toLowerCase()}</span>
+        <InfoTip label="Sobre a cor e a prévia">Só para ver como fica: a cor você escolhe na compra. A prévia é uma simulação, e a nossa equipe confere a arte antes de preparar o produto.</InfoTip></p>
     </fieldset>
   );
 }

@@ -19,7 +19,7 @@ export function ArtworkPreview({ project, onReady, shirt, view: controlled, onVi
   view?: PreviewView;
   onViewChange?: (view: PreviewView) => void;
   initialView?: PreviewView;
-  /** The full-screen preview: no caption or colour menu. */
+  /** The full-screen preview: no caption or colour menu (with `shirt`, the caption is never shown). */
   compact?: boolean;
   /** Extra buttons on the view row (e.g. "Tela cheia"). */
   actions?: React.ReactNode;
@@ -70,7 +70,8 @@ export function ArtworkPreview({ project, onReady, shirt, view: controlled, onVi
         <canvas ref={canvas} className={onShirt ? styles.printArea : styles.canvas} role="img" aria-label="Composição com os textos, fontes e cores escolhidos. O resumo da personalização apresenta os mesmos textos." />
       </div>
       {error && <p className={styles.error} role="alert">{error}</p>}
-      {!compact && <figcaption className={styles.caption}>{onShirt ? "Simulação na camiseta. " : ""}Nossa equipe confere a composição antes de preparar o produto.</figcaption>}
+      {/* With `shirt`, the page's colour swatches carry this note behind an "i". */}
+      {!compact && !shirt && <figcaption className={styles.caption}>{onShirt ? "Simulação na camiseta. " : ""}Nossa equipe confere a composição antes de preparar o produto.</figcaption>}
       {!shirt && !compact && <>
         <label className={styles.background}>Cor da camiseta na prévia
           <select value={color.id} onChange={(e) => setBackground(e.target.value)}>
