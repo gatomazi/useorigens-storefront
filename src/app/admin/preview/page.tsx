@@ -16,7 +16,7 @@ import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { seedFromEnv } from "@/lib/site-config/published";
 import { HOME_THEME_LABEL, withHomeTheme } from "@/lib/site-config/home-themes";
 import { homeThemeCssVars, resolveTheme, themeCssVars } from "@/lib/site-config/navigation";
-import { HOME_THEMES, homeThemeOf, type HomeThemeName } from "@/lib/site-config/schema";
+import { hasEditorialChrome, HOME_THEMES, homeThemeOf, type HomeThemeName } from "@/lib/site-config/schema";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Pré-visualização · Use Origens", robots: { index: false, follow: false } };
@@ -59,7 +59,7 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
   const model = customizerId ? effective.docs[scope].customizers?.find((m) => m.id === customizerId) : undefined;
   const label = `${usingPublished ? "Pré-visualização · publicado" : `Pré-visualização · rascunho${ws.record ? ` rev ${ws.record.rev}` : " (sem alterações)"}`} · tema ${HOME_THEME_LABEL[homeThemeOf(doc)]}`;
   return (
-    <PreviewShell region={scope} cityCount={home.cityCount} syncedAt={catalog.syncedAt} label={label} cssVars={cssVars} onBrand={homeThemeOf(doc) === "editorial"} headerActions={headerActionsOf(doc.navigation)}>
+    <PreviewShell region={scope} cityCount={home.cityCount} syncedAt={catalog.syncedAt} label={label} cssVars={cssVars} onBrand={hasEditorialChrome(homeThemeOf(doc))} headerActions={headerActionsOf(doc.navigation)}>
       {customizerId ? (
         model ? <CustomizerPageView region={scope} model={model} bundle={effective} preview /> : <p className="wrap py-14">Este modelo tem um problema de configuração e não pode ser desenhado (corrija os avisos no editor).</p>
       ) : pageId ? (

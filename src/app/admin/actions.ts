@@ -519,7 +519,7 @@ export async function setHomeThemeAction(fd: FormData) {
   const here = themeScreen(fd);
   if (!(HOME_THEMES as readonly string[]).includes(theme)) back(here, { err: ["Tema desconhecido."] });
   const ws = await loadWorkspace(scope);
-  const collections = theme === "editorial" ? editorialCollections(scope, ws.doc) : undefined;
+  const collections = theme === "original" ? undefined : editorialCollections(scope, ws.doc);
   const outcome = await applyAndSave(scope, { type: "set-home-theme", theme, collections }, revNumber(fd), actor);
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(here, { err: outcome.errors });

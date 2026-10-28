@@ -1,12 +1,14 @@
 import { editHomeThemeAction, setHomeThemeAction } from "@/app/admin/actions";
 import type { RegionSlug } from "@/lib/geo/regions";
-import { EDITORIAL_PALETTE, hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
+import { EDITORIAL_PALETTE, hasHomeTheme, HOME_THEME_LABEL, isSeasonalTheme } from "@/lib/site-config/home-themes";
 import { HOME_THEMES, homeThemeOf, type HomeThemeName, type ScopeDoc } from "@/lib/site-config/schema";
 import { REGION_THEME } from "@/lib/theme/region-theme";
 
 const ABOUT: Record<HomeThemeName, string> = {
   original: "O visual que a loja já tem: header na cor da região, o cinza das fotos como fundo, as seções nas composições de sempre.",
   editorial: "A direção editorial: verde profundo, fundo creme e terracota; abertura com produto ou banner em destaque, faixa de estados, cards de coleção e campanha dividida. Faixa do topo e rodapé no verde.",
+  black: "Para a Black Friday: nasce como cópia do tema em uso, com a abertura escura (fundo preto, destaque amarelo, “de R$ 119,90 por R$ 99,90”), o topo preto e as etiquetas “% OFF” e “Black Friday” nos produtos em promoção. Depois da data, volte ao tema de antes em “Usar na loja”.",
+  natal: "Para o Natal: nasce como cópia do tema em uso, com a abertura “Natal é estar junto.” em vermelho e, logo abaixo, a chamada para o Natal em família e a vitrine da coleção Natal. Depois da data, volte ao tema de antes em “Usar na loja”.",
 };
 
 /**
@@ -33,12 +35,20 @@ export function HomeThemeCard({ region, doc, editing, active, live, rev, readOnl
   const fallback: Record<HomeThemeName, string[]> = {
     original: [REGION_THEME[region].primary, "#e5e5e5", REGION_THEME[region].accent],
     editorial: [EDITORIAL_PALETTE.colors.brandPrimary!, EDITORIAL_PALETTE.colors.pageBackground!, EDITORIAL_PALETTE.colors.accent!],
+    // Not created yet: the colours of their openings (the palette itself will be the theme in use's).
+    black: ["#111111", "#ffffff", "#e2b64a"],
+    natal: [EDITORIAL_PALETTE.colors.brandPrimary!, EDITORIAL_PALETTE.colors.pageBackground!, "#a8322d"],
   };
   const swatches = (name: HomeThemeName): string[] => {
-    const theme = homeThemeOf(doc) === name ? doc.theme : doc.homeThemes?.[name]?.theme;
+    const inUse = homeThemeOf(doc) === name;
+    const theme = inUse ? doc.theme : doc.homeThemes?.[name]?.theme;
     const c = theme?.mode === "override" ? theme.colors : {};
     const [primary, page, accent] = fallback[name];
-    return [c.brandPrimary ?? primary, c.pageBackground ?? page, c.accent ?? accent];
+    if (!isSeasonalTheme(name)) return [c.brandPrimary ?? primary, c.pageBackground ?? page, c.accent ?? accent];
+    // A seasonal theme shares the palette it was copied from: what tells it apart is its top and its opening's colours.
+    const hero = (inUse ? doc.home?.sections : doc.homeThemes?.[name]?.sections)?.find((s) => s.template === "hero")?.heroColors;
+    const hex = (v: string | undefined) => (v?.startsWith("#") ? v : undefined);
+    return [c.headerBackground ?? c.brandPrimary ?? primary, hex(hero?.background) ?? c.pageBackground ?? page, hex(hero?.highlight) ?? c.accent ?? accent];
   };
   const hidden = (theme: HomeThemeName) => (
     <>
@@ -51,7 +61,7 @@ export function HomeThemeCard({ region, doc, editing, active, live, rev, readOnl
   return (
     <section id="tema-da-home" className="a-card scroll-mt-4 p-5" aria-labelledby="tema-da-home-titulo" data-testid="home-theme">
       <h2 id="tema-da-home-titulo" className="a-h2">Tema da home</h2>
-      <p className="a-muted mt-2 max-w-3xl">Dois temas, como numa plataforma de loja: cada um tem as <strong>próprias seções</strong> e as <strong>próprias cores</strong>. Escolha qual tema editar; Home e Aparência passam a mostrar e salvar só o dele. Editar um tema não o coloca na loja: isso é o botão “Usar na loja”, que vale quando a região for publicada.</p>
+      <p className="a-muted mt-2 max-w-3xl">Temas, como numa plataforma de loja: cada um tem as <strong>próprias seções</strong> e as <strong>próprias cores</strong>. Black Friday e Natal são cópias do tema em uso feitas na hora em que você os cria, com a abertura da data. Escolha qual tema editar; Home e Aparência passam a mostrar e salvar só o dele. Editar um tema não o coloca na loja: isso é o botão “Usar na loja”, que vale quando a região for publicada.</p>
       <div className="mt-4 grid gap-4 md:grid-cols-2" role="group" aria-label="Temas da home">
         {HOME_THEMES.map((name) => {
           const exists = hasHomeTheme(doc, name);

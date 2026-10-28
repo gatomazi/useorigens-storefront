@@ -1,4 +1,5 @@
 /** WCAG colour maths shared by the admin (editor warnings) and the resolvers. Pure (no I/O). Only `#rrggbb` is understood. */
+import type { Color, Fill } from "./schema";
 
 export const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 
@@ -21,4 +22,16 @@ export function contrastRatio(a: string, b: string): number {
 export function rgbTriplet(hex: string): string {
   const n = Number.parseInt(hex.slice(1), 16);
   return `${(n >> 16) & 255} ${(n >> 8) & 255} ${n & 255}`;
+}
+
+/** The text a colour carries when the owner did not choose: white ("light") on a dark colour (the region's, near-black), ink ("dark") on a light one. */
+export function colorTone(color: Color | undefined): "light" | "dark" {
+  if (!color || color === "token:region-primary" || color === "token:near-black") return "light";
+  if (color === "token:ground") return "dark";
+  return relativeLuminance(color) > 0.35 ? "dark" : "light";
+}
+
+/** The text tone of a fill (its first colour), as `colorTone`. */
+export function fillTone(fill: Fill): "light" | "dark" {
+  return fill.kind === "solid" ? colorTone(fill.color) : fill.kind === "gradient" ? colorTone(fill.from) : "light";
 }

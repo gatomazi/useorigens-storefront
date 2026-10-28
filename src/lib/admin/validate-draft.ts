@@ -10,6 +10,7 @@ import { storeOf } from "./scope";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
 import { isUmaPencaSource, type Customizer, type Page, type ScopeDoc, type Section, type Source } from "../site-config/schema";
 import { groundReadability, heroTextColors, readability, type ReadabilityIssue } from "./contrast";
+import { fillTone } from "../site-config/color";
 import { isArticleOfRegion } from "../umapenca/region";
 import { readUmaPencaSnapshot } from "../umapenca/snapshot";
 import { ARTICLE_KIND_LABELS } from "../umapenca/types";
@@ -147,6 +148,13 @@ export function sectionTone(section: Section): "light" | "dark" | null {
 }
 
 export function sectionReadability(section: Section): ReadabilityIssue[] {
+  if (section.template === "campaign" && section.variant === "split") {
+    // The split campaign draws its picture on the other half and picks its text by its panel's colour (white on a dark one, ink on a light one), so
+    // only that colour is judged, against the text it really gets. No colour: the region's own, under white text.
+    const fill = section.appearance.fill;
+    if (fill.kind === "none") return [];
+    return readability(section.appearance, fillTone(fill) === "light" ? "dark" : "light", false);
+  }
   const tone = sectionTone(section);
   if (!tone) return [];
   const image = section.appearance.image;

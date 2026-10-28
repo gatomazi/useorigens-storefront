@@ -16,6 +16,7 @@ import type { Metadata } from "next";
 import { isRegionSlug, type RegionSlug } from "@/lib/geo/regions";
 import { regionThemeStyle } from "@/lib/theme/region-theme";
 import { regionChrome } from "@/lib/site-config/chrome";
+import { hasEditorialChrome } from "@/lib/site-config/schema";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { publishedTracking } from "@/lib/site-config/tracking";
 import { cartRegionFor, commercePlan, regionCarryFor } from "@/lib/catalog/commerce-mode";
@@ -69,7 +70,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
         <AnnouncementBar region={region} cityCount={catalog.coveredCityIds(region).size} />
         <Header region={region} />
         <main id="conteudo">{children}</main>
-        <Footer region={region} syncedAt={catalog.syncedAt} onBrand={homeTheme === "editorial"} />
+        <Footer region={region} syncedAt={catalog.syncedAt} onBrand={hasEditorialChrome(homeTheme)} />
       </div>
       {/* useSearchParams inside MetaPixel/GoogleAnalytics needs a Suspense boundary so the rest of the tree can still prerender. */}
       <Suspense fallback={null}>

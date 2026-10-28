@@ -543,12 +543,14 @@ export function SectionEditorForm({
               <input type="hidden" name="tags_present" value="1" />
               <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="tags_discount" defaultChecked={Boolean(section.layout?.tags?.discount)} /> Desconto (“18% OFF”) nos produtos em promoção</label>
               <p className="a-muted text-[0.8125rem]">Calculado com os dois preços que a INK (ou a Uma Penca) envia, arredondado como a própria loja mostra. Só aparece nos produtos com promoção valendo, depois de sincronizar o catálogo; sem promoção, nenhuma etiqueta.</p>
-              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="tags_custom" checked={tagOn} onChange={(e) => setTagOn(e.target.checked)} /> Etiqueta própria em todos os cards desta seção</label>
+              <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="tags_custom" checked={tagOn} onChange={(e) => setTagOn(e.target.checked)} /> Etiqueta própria nos cards desta seção</label>
               {tagOn && (
                 <div className="max-w-xs">
                   <label className="a-label" htmlFor="tags_text">Texto da etiqueta</label>
                   <input id="tags_text" name="tags_text" defaultValue={section.layout?.tags?.text ?? ""} className="a-input" maxLength={MAX_TAG_TEXT} placeholder="Ex.: Black Friday" required />
                   <p className="a-muted mt-1 text-[0.8125rem]">Até {MAX_TAG_TEXT} caracteres, em caixa alta na foto. Com o desconto ligado, as duas aparecem juntas.</p>
+                  <label className="mt-2 flex items-center gap-2 font-bold"><input type="checkbox" name="tags_on_sale" defaultChecked={Boolean(section.layout?.tags?.onSale)} /> Só nos produtos em promoção</label>
+                  <p className="a-muted text-[0.8125rem]">Desmarcado, aparece em todos os cards. Marcado, só onde a loja mostra o “de/por” (ex.: “Black Friday” nunca fica sobre um preço cheio).</p>
                 </div>
               )}
             </fieldset>

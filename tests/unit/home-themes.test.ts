@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { applyOp } from "@/lib/admin/draft-ops";
 import { diffDocs } from "@/lib/admin/diff";
-import { EDITORIAL_PALETTE, editorialSeed, withHomeTheme, type EditorialCollections } from "@/lib/site-config/home-themes";
+import { EDITORIAL_PALETTE, editorialSeed, NATAL_CUSTOMIZER_SLUG, withHomeTheme, type EditorialCollections } from "@/lib/site-config/home-themes";
 import { homeThemeCssVars, resolveTheme } from "@/lib/site-config/navigation";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
@@ -178,5 +178,75 @@ describe("the editorial seed alone", () => {
     const out = editorialSeed("sul", bare, {}, () => `x${++n}`);
     expect(out.map((s) => s.template)).toEqual(["hero", "states", "city-styles", "campaign", "footer"]);
     expect(new Set(out.map((s) => s.anchor)).size).toBe(out.length);
+  });
+});
+
+describe("the seasonal themes (Black Friday and Natal)", () => {
+  const NATAL = { store: SUL, collectionId: 154424 };
+  const MODEL = { id: "natal1", slug: NATAL_CUSTOMIZER_SLUG, name: "Natal em família", source: { store: SUL, collectionId: 154424 }, fields: [], previewMode: "mockupWithTextSummary", active: true, version: 1, pageMockup: { assetId: "m1", alt: "Camiseta Natal em família", decorative: false } };
+  /** The store as it is live: the editorial theme in use, the original kept, the Natal model published. */
+  const live = (model: object | null = MODEL): ScopeDoc => ({ ...toEditorial(sul()), ...(model ? { customizers: [model as never] } : {}) });
+  const run = (doc: ScopeDoc, op: Parameters<typeof applyOp>[1]) => {
+    const r = applyOp(doc, op, ctx);
+    if (!r.ok) throw new Error(r.errors.join("; "));
+    return r.doc;
+  };
+
+  test("given the editorial theme in use, when the Natal theme is created, then it copies it with the Natal opening, the personalisation call and the Natal showcase, and the store does not change", () => {
+    const before = live();
+    const doc = run(before, { type: "create-home-theme", theme: "natal", collections: { ...all, natal: NATAL } });
+    expect(doc.homeTheme).toBe("editorial");
+    expect(doc.home!.sections).toEqual(before.home!.sections);
+    const natal = doc.homeThemes!.natal!;
+    const [hero, call, showcase, ...rest] = natal.sections;
+    expect(hero).toMatchObject({ id: before.home!.sections[0].id, variant: "feature", title: "Natal é\nestar\njunto.", heroColors: { highlight: "#a8322d" } });
+    expect(call).toMatchObject({ template: "campaign", variant: "split", cta: { dest: { kind: "customizer", customizerId: "natal1" } } });
+    expect(showcase).toMatchObject({ template: "product-carousel", source: { kind: "ink-category", collectionId: 154424 } });
+    expect(rest).toEqual(before.home!.sections.slice(1));
+    // Its palette is the one in use when it was made (the owner's colours, not a new palette).
+    expect(natal.theme).toEqual(before.theme);
+    expect(validateScopeDoc(doc).ok).toBe(true);
+  });
+
+  test("given no active Natal model and no Natal collection, when the Natal theme is created, then only the opening changes (nothing points elsewhere)", () => {
+    const before = live({ ...MODEL, active: false });
+    const natal = run(before, { type: "create-home-theme", theme: "natal", collections: all }).homeThemes!.natal!;
+    expect(natal.sections.length).toBe(before.home!.sections.length);
+    expect(natal.sections.slice(1)).toEqual(before.home!.sections.slice(1));
+  });
+
+  test("given the Black theme put on the store, when the date is over and the owner goes back to the editorial, then the editorial returns exactly as it was", () => {
+    const before = live();
+    const black = run(before, { type: "set-home-theme", theme: "black", collections: all });
+    expect(black.homeTheme).toBe("black");
+    expect(black.home!.sections[0]).toMatchObject({ title: "A origem\nentra na\nBlack.", heroColors: { background: "#111111", highlight: "#e2b64a" } });
+    expect(black.home!.sections[0].subtitle).toContain("R$ 99,90");
+    // Dark at the top only: the header and menu are black, the page ground (product cards, every page) is not.
+    expect(black.theme?.colors).toMatchObject({ headerBackground: "#111111", mobileMenuBackground: "#111111", pageBackground: before.theme!.colors.pageBackground });
+    expect(black.homeThemes!.editorial).toEqual({ sections: before.home!.sections, theme: before.theme });
+    // Its product showcases carry the "% OFF" of the products on promotion and the date's own tag; nothing else in them changes.
+    const showcases = black.home!.sections.filter((s) => s.template === "product-carousel");
+    expect(showcases.length).toBeGreaterThan(0);
+    for (const s of showcases) expect(s.layout?.tags).toEqual({ discount: true, text: "Black Friday", onSale: true });
+    // The strip and the footer keep the editorial treatment.
+    expect(homeThemeCssVars(black, resolveTheme("sul", black, undefined).effective)).toHaveProperty("--footer-bg");
+    expect(validateScopeDoc(black).ok).toBe(true);
+    const back = run(black, { type: "set-home-theme", theme: "editorial" });
+    expect(back.homeTheme).toBe("editorial");
+    expect(back.home!.sections).toEqual(before.home!.sections);
+    expect(back.theme).toEqual(before.theme);
+    expect(back.homeThemes!.black!.sections[0].title).toBe("A origem\nentra na\nBlack.");
+    expect(diffDocs(before, black).map((c) => c.text)[0]).toBe("Tema da home: Editorial → Black Friday (as seções do Editorial ficam guardadas)");
+  });
+
+  test("given a published file with the Natal theme in use, when the storefront reads it, then it is kept as it is", () => {
+    const before = live();
+    const doc = run(before, { type: "set-home-theme", theme: "natal", collections: { ...all, natal: NATAL } });
+    const raw = { ...seed, docs: { ...seed.docs, sul: doc } };
+    const { bundle, diagnostics } = sanitizeBundle(JSON.parse(JSON.stringify(raw)), seed);
+    // (The test model's mockup is not in a media table: that diagnostic is about the model, not the theme.)
+    expect(diagnostics.filter((d) => d.includes("homeTheme"))).toEqual([]);
+    expect(bundle?.docs.sul.homeTheme).toBe("natal");
+    expect(bundle?.docs.sul.homeThemes?.editorial?.sections).toEqual(before.home!.sections);
   });
 });

@@ -60,10 +60,12 @@ export type Appearance = {
   overlay: Overlay;
 };
 
-/** The themes of a region's home (see `ScopeDoc.homeTheme`). */
-export const HOME_THEMES = ["original", "editorial"] as const;
+/** The themes of a region's home (see `ScopeDoc.homeTheme`): the store's two looks and the two seasonal ones built on the editorial composition. */
+export const HOME_THEMES = ["original", "editorial", "black", "natal"] as const;
 export type HomeThemeName = (typeof HOME_THEMES)[number];
 export const homeThemeOf = (doc: Pick<ScopeDoc, "homeTheme"> | undefined): HomeThemeName => doc?.homeTheme ?? "original";
+/** Whether a theme has the editorial chrome (the strip and the footer on the palette's main colour): every theme but the original. */
+export const hasEditorialChrome = (name: HomeThemeName): boolean => name !== "original";
 /** A theme not in use: its sections and its palette, exactly as the theme in use keeps them in `home.sections` and `theme`. */
 export type KeptHomeTheme = { sections: Section[]; theme?: ThemeConfig };
 
@@ -154,9 +156,10 @@ export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
 /**
  * Tags drawn on the product pictures of a section (product sections only; absent = none). `discount`: "18% OFF" on every product INK (or Uma Penca)
  * has on promotion right now, worked out from the two prices the store sent, never typed. `text`: the section's own tag on every product card
- * ("Black Friday", "Lançamento"), the same for all of them.
+ * ("Black Friday", "Lançamento"), the same for all of them; with `onSale`, only on the cards of products on promotion (a "Black Friday" tag never
+ * sits on a full price).
  */
-export type ProductTags = { discount?: true; text?: string };
+export type ProductTags = { discount?: true; text?: string; onSale?: true };
 export const MAX_TAG_TEXT = 24;
 export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string; buyStyle?: CardBuyStyle; tags?: ProductTags };
 export { DEFAULT_BUY_LABEL, MAX_BUY_LABEL };
@@ -429,8 +432,9 @@ export type ScopeDoc = {
   /** GLOBAL only: independent palette for `/` and `/regioes`, never inherited by regions. */
   neutralTheme?: ThemeConfig;
   /**
-   * The THEME of the region's home, like a theme of a shop platform: "original" (the look the store has had, absent) or "editorial" (the approved editorial
-   * direction: a deep-green, cream and terracotta palette as the base of `theme`, a green strip and footer). `home.sections` are ALWAYS the sections of
+   * The THEME of the region's home, like a theme of a shop platform: "original" (the look the store has had, absent), "editorial" (the approved editorial
+   * direction: a deep-green, cream and terracotta palette as the base of `theme`, a green strip and footer) or one of the seasonal ones, "black" and
+   * "natal" (a copy of the theme in use when created, with their own opening: see home-themes.ts). `home.sections` are ALWAYS the sections of
    * this theme (the one being edited in the draft, or the one live once published); the other theme keeps its own sections in `homeThemes`, edited
    * with the very same section editor once the owner switches to it. Switching swaps the two lists; nothing is lost.
    */
@@ -758,11 +762,12 @@ function checkSection(c: Collector, path: string, v: unknown): void {
         const ok =
           v.template === "product-carousel" &&
           isRecord(t) &&
-          Object.keys(t).every((k) => k === "discount" || k === "text") &&
+          Object.keys(t).every((k) => k === "discount" || k === "text" || k === "onSale") &&
           (t.discount === undefined || t.discount === true) &&
+          (t.onSale === undefined || (t.onSale === true && t.text !== undefined)) &&
           (t.text === undefined || (isStr(t.text, MAX_TAG_TEXT) && t.text.trim() === t.text)) &&
           (t.discount === true || t.text !== undefined);
-        if (!ok) c.fail(`${path}.layout.tags`, `product sections only: { discount?: true, text?: 1..${MAX_TAG_TEXT} chars }, at least one`);
+        if (!ok) c.fail(`${path}.layout.tags`, `product sections only: { discount?: true, text?: 1..${MAX_TAG_TEXT} chars, onSale?: true (with text) }, at least one`);
       }
     }
   }
@@ -1305,7 +1310,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
     if (sc === "global") c.fail("doc.home", "global has no home in V1");
     checkHomeSections(c, "doc.home.sections", isRecord(input.home) ? input.home.sections : undefined, sc);
   }
-  if (input.homeTheme !== undefined && (sc === "global" || input.homeTheme !== "editorial")) c.fail("doc.homeTheme", "a region's home theme: editorial (absent = original)");
+  if (input.homeTheme !== undefined && (sc === "global" || input.homeTheme === "original" || !(HOME_THEMES as readonly unknown[]).includes(input.homeTheme))) c.fail("doc.homeTheme", "a region's home theme: editorial, black or natal (absent = original)");
   if (input.homeThemes !== undefined) {
     if (sc === "global" || !isRecord(input.homeThemes)) c.fail("doc.homeThemes", "a region's kept home themes");
     else {
