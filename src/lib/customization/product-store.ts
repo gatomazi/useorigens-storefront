@@ -23,7 +23,7 @@ const toJob = (r: Row): ProductJob => ({
   inkProductId: r.ink_product_id, inkUrl: r.ink_url, inkImageUrl: r.ink_image_url, error: r.error, attempts: r.attempts,
   leaseUntil: isoOrNull(r.lease_until), createdAt: iso(r.created_at), updatedAt: iso(r.updated_at), inkCreatedAt: isoOrNull(r.ink_created_at), readyAt: isoOrNull(r.ready_at),
 });
-const PATCH_COLUMN: Record<keyof ProductJobPatch, string> = { status: "status", inkProductId: "ink_product_id", inkUrl: "ink_url", inkImageUrl: "ink_image_url", error: "error", attempts: "attempts", inkCreatedAt: "ink_created_at", readyAt: "ready_at" };
+const PATCH_COLUMN: Record<keyof ProductJobPatch, string> = { status: "status", inkProductId: "ink_product_id", inkUrl: "ink_url", inkImageUrl: "ink_image_url", error: "error", attempts: "attempts", inkCreatedAt: "ink_created_at", readyAt: "ready_at", leaseUntil: "lease_until" };
 
 /** The Postgres store of products created at INK (table `customization_product`, migration 0011). All SQL is parameterised. */
 export function pgProductJobStore(db: Db): ProductJobStore {
@@ -52,7 +52,9 @@ export function pgProductJobStore(db: Db): ProductJobStore {
       const sets = keys.map((k, i) => `${PATCH_COLUMN[k]} = $${i + 2}`);
       if (opts?.release) sets.push("lease_until = null");
       sets.push("updated_at = now()");
-      return one(`update customization_product set ${sets.join(", ")} where id = $1 returning ${COLUMNS}`, [id, ...keys.map((k) => patch[k] ?? null)]);
+      const params: unknown[] = [id, ...keys.map((k) => patch[k] ?? null)];
+      const guard = opts?.onlyIf ? ` and status = any($${params.push([...opts.onlyIf])})` : "";
+      return one(`update customization_product set ${sets.join(", ")} where id = $1${guard} returning ${COLUMNS}`, params);
     },
     async list(filter, limit, offset) {
       const where: string[] = [];
@@ -103,7 +105,7 @@ export function fileProductJobStore(file: string = path.join(adminDevDir(), "cus
       withLock(async () => {
         const data = await read();
         const job = data.products.find((p) => p.id === id);
-        if (!job) return null;
+        if (!job || (opts?.onlyIf && !opts.onlyIf.includes(job.status))) return null;
         Object.assign(job, patch, opts?.release ? { leaseUntil: null } : {}, { updatedAt: now() });
         await write(data);
         return job;

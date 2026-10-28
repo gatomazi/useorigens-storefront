@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { carryCampaign } from "@/lib/analytics/campaign";
 import { CONTACT_CONFIRM_TEXT, CONTACT_KEYS, CONTACT_NOTICE } from "@/lib/customization/contact";
 import { composeArtwork, fieldEdits } from "@/lib/customization/artwork";
-import { isTerminal, type ProductStatus, type PublicProductJob } from "@/lib/customization/ink-products";
+import { isTerminal, type ProductStatus, type PublicProductJob } from "@/lib/customization/product-status";
 import { shirtColorsFor } from "@/lib/customization/shirts";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { ArtworkPreview } from "./ArtworkPreview";

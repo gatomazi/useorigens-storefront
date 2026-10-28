@@ -133,14 +133,14 @@ export async function startProductsAction(input: { region: string; slug: string;
   const keys = picks.map((c) => (c ? `${model.studioArts!.indexOf(c.art)}:${c.art.versions.indexOf(c.version)}` : ""));
   if (picks.some((c) => !c) || ids.length > MAX_FAMILY_ARTS || new Set(keys).size !== keys.length) return fail("A arte deste modelo mudou. Recarregue a página antes de continuar.");
 
-  const items: { pick: NonNullable<(typeof picks)[number]>; fields: Record<string, string> }[] = [];
+  const items: { pick: NonNullable<(typeof picks)[number]>; fields: Record<string, string>; printed: string[] }[] = [];
   for (const pick of picks as NonNullable<(typeof picks)[number]>[]) {
     const base = await loadArtworkBase(pick.version.templateId).catch(() => null);
     if (!base) return fail("Esta arte não está disponível agora. Tente novamente mais tarde.", true);
     const checked = validateArtworkInput(base, pick.version.templateId, { fields: input.artwork?.fields });
     if (!checked.ok) return fail("Confira o que você escreveu.", false, checked.errors);
     if (!checked.artwork.fields?.length) return fail("Esta arte não pode ser criada automaticamente.", true);
-    items.push({ pick, fields: Object.fromEntries(checked.artwork.fields.map((f) => [f.id, f.value])) });
+    items.push({ pick, fields: Object.fromEntries(checked.artwork.fields.map((f) => [f.id, f.value])), printed: checked.artwork.layers.map((l) => l.text) });
   }
   if (items.some(({ fields }) => needsReview(Object.values(fields).join(" ")))) return fail("Este nome passa pela nossa equipe antes de virar camiseta. Deixe o seu contato e a gente manda o link.", true);
   const prices = items.map(({ pick }) => ((pick.version.garment ?? "camiseta") === "infantil" ? direct.kidsPrice : direct.price));
@@ -149,12 +149,12 @@ export async function startProductsAction(input: { region: string; slug: string;
   try {
     if ((await store.countCreatedSince(new Date(Date.now() - 24 * 60 * 60_000))) >= dailyCap()) return fail("Hoje a criação automática chegou ao limite. Deixe o seu contato e a gente manda o link.", true);
     const out: PublicProductJob[] = [];
-    for (const [i, { pick, fields }] of items.entries()) {
+    for (const [i, { pick, fields, printed }] of items.entries()) {
       const garment = pick.version.garment ?? "camiseta";
       const lightTemplateId = pick.version.lightTemplateId ?? null;
       const artLabel = choiceLabel({ ...pick, light: false, templateId: pick.version.templateId });
       let { job } = await store.findOrCreate({
-        dedupeKey: productJobKey({ region: found.region, templateId: pick.version.templateId, lightTemplateId, garment, fields }),
+        dedupeKey: productJobKey({ region: found.region, templateId: pick.version.templateId, lightTemplateId, garment, printed }),
         region: found.region, customizerId: model.id, customizerSlug: model.slug,
         name: productName(fields, model.name, artLabel), artLabel, fields,
         templateId: pick.version.templateId, lightTemplateId, garment, productTypeId: PRODUCT_TYPE[garment], price: prices[i]!,

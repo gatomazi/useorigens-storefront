@@ -55,6 +55,16 @@ describe.each([
     expect(await s.claim(j.id, 60_000, new Date(t0.getTime() + 62_000))).not.toBeNull();
   });
 
+  test("an update guarded by the state changes nothing once the job moved on", async () => {
+    const s = store();
+    const { job: j } = await s.findOrCreate(job());
+    await s.update(j.id, { status: "photos", inkProductId: "5143876", inkUrl: "https://loja.useorigens.com.br/useorigens/product/silva" });
+    expect(await s.update(j.id, { status: "check", error: "tarde demais" }, { onlyIf: ["queued", "creating"] })).toBeNull();
+    expect(await s.get(j.id)).toMatchObject({ status: "photos", error: null });
+    const later = new Date(Date.now() + 40_000).toISOString();
+    expect(await s.update(j.id, { leaseUntil: later }, { onlyIf: ["photos"] })).toMatchObject({ leaseUntil: later });
+  });
+
   test("a finished job is never taken again", async () => {
     const s = store();
     const { job: j } = await s.findOrCreate(job());

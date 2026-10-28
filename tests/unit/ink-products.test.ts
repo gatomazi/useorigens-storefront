@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { InkRequestError, type InkProductClient, type InkProductView } from "@/lib/customization/ink-product-client";
 import { inkArts, productJobKey, productName, publicJob, safeInkUrl, type NewProductJob, type PrintArea, type ProductJobStore } from "@/lib/customization/ink-products";
 import { fileProductJobStore } from "@/lib/customization/product-store";
-import { PHOTO_WAIT_MS, runProductJob, type WorkerDeps } from "@/lib/customization/product-worker";
+import { PHOTO_WAIT_MS, retryDelayMs, runProductJob, type WorkerDeps } from "@/lib/customization/product-worker";
 import { needsReview } from "@/lib/customization/review-words";
 import { inkColorTakesDarkInk, SHIRT_COLORS, shirtColorsFor } from "@/lib/customization/shirts";
 
@@ -40,10 +40,11 @@ describe("colours: one table for the preview and the product", () => {
 
 describe("naming, reuse and links", () => {
   const base = { region: "sul" as const, templateId: "t-dark", lightTemplateId: "t-light", garment: "camiseta" as const };
-  test("the same name on the same art version is the same product; spaces do not matter, case does", () => {
-    expect(productJobKey({ ...base, fields: { sobrenome: "Silva" } })).toBe(productJobKey({ ...base, fields: { sobrenome: " Silva " } }));
-    expect(productJobKey({ ...base, fields: { sobrenome: "Silva" } })).not.toBe(productJobKey({ ...base, fields: { sobrenome: "SILVA" } }));
-    expect(productJobKey({ ...base, fields: { sobrenome: "Silva" } })).not.toBe(productJobKey({ ...base, garment: "infantil", fields: { sobrenome: "Silva" } }));
+  test("the same printed text on the same art version is the same product; spaces do not matter", () => {
+    expect(productJobKey({ ...base, printed: ["SILVA"] })).toBe(productJobKey({ ...base, printed: [" SILVA "] }));
+    expect(productJobKey({ ...base, printed: ["SILVA"] })).not.toBe(productJobKey({ ...base, printed: ["Silva"] }));
+    expect(productJobKey({ ...base, printed: ["SILVA"] })).not.toBe(productJobKey({ ...base, garment: "infantil", printed: ["SILVA"] }));
+    expect(productJobKey({ ...base, printed: ["SILVA"] })).not.toBe(productJobKey({ ...base, lightTemplateId: null, printed: ["SILVA"] }));
   });
   test("the INK title is what was typed, the model and the art", () => {
     expect(productName({ sobrenome: "Silva" }, "Natal em família", "Universitário")).toBe("Silva | Natal em família Universitário");
@@ -121,6 +122,16 @@ describe("making a product", () => {
     expect(calls.create).toHaveLength(1);
   });
 
+  test("a run whose lease expired while the first one worked never creates a second product", async () => {
+    const { job } = await store.findOrCreate(NEW);
+    const { client, calls } = scriptedInk({});
+    const slow: InkProductClient = { ...client, async createProduct(body, key) { clock += 4 * 60_000; return client.createProduct(body, key); } };
+    const d = deps(slow, { render: async () => { clock += 4 * 60_000; return { darkInk: DARK, lightInk: LIGHT }; } });
+    await Promise.all([runProductJob(job.id, d, describeJob), runProductJob(job.id, d, describeJob)]);
+    expect(calls.create).toHaveLength(1);
+    expect(await store.get(job.id)).toMatchObject({ status: "ready", inkProductId: "5143876" });
+  });
+
   test("a second customer with the same name lands on the same job", async () => {
     const a = await store.findOrCreate(NEW);
     const b = await store.findOrCreate(NEW);
@@ -140,7 +151,12 @@ describe("making a product", () => {
     const { job } = await store.findOrCreate(NEW);
     const { client, calls } = scriptedInk({ create: (n) => (n === 1 ? new InkRequestError("POST → 503", 503, true) : { id: "5143876", url: "https://loja.useorigens.com.br/useorigens/product/silva", imageUrl: "https://img.example/x.jpg" }) });
     await runProductJob(job.id, deps(client), describeJob);
-    expect(await store.get(job.id)).toMatchObject({ status: "queued", attempts: 1, leaseUntil: null });
+    const waiting = (await store.get(job.id))!;
+    expect(waiting).toMatchObject({ status: "queued", attempts: 1 });
+    expect(Date.parse(waiting.leaseUntil!) - clock).toBe(retryDelayMs(1));
+    await runProductJob(job.id, deps(client), describeJob); // too soon: the pause holds it
+    expect(calls.create).toHaveLength(1);
+    clock += retryDelayMs(1) + 1;
     await runProductJob(job.id, deps(client), describeJob);
     expect(await store.get(job.id)).toMatchObject({ status: "ready" });
     expect(calls.create.map((c) => c.key)).toEqual([job.id, job.id]);

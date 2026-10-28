@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import type { RegionSlug } from "../geo/regions";
 import { INK_COMMERCE_HOSTS } from "../ink/hosts";
 import type { StudioGarment } from "../site-config/schema";
+import { isTerminal, PRODUCT_STATUSES, type ProductStatus, type PublicProductJob } from "./product-status";
 import { inkColorTakesDarkInk } from "./shirts";
 
 /**
@@ -9,10 +10,7 @@ import { inkColorTakesDarkInk } from "./shirts";
  * One row per (art version, typed values): the row is the job that makes the product and, once made, the product every later customer with the same
  * name reuses. INK has no DELETE, so a product is permanent: the owner sees them all in the panel.
  */
-export const PRODUCT_STATUSES = ["queued", "creating", "photos", "ready", "failed", "check"] as const;
-export type ProductStatus = (typeof PRODUCT_STATUSES)[number];
-/** No more work on these: ready (link known), failed (nothing created; can be queued again) or check (INK may have created it: a person looks). */
-export const isTerminal = (s: ProductStatus): boolean => s === "ready" || s === "failed" || s === "check";
+export { isTerminal, PRODUCT_STATUSES, type ProductStatus, type PublicProductJob };
 
 export const PRODUCT_STATUS_LABEL: Record<ProductStatus, string> = {
   queued: "Na fila",
@@ -57,7 +55,7 @@ export type ProductJob = {
 };
 
 export type NewProductJob = Pick<ProductJob, "dedupeKey" | "region" | "customizerId" | "customizerSlug" | "name" | "artLabel" | "fields" | "templateId" | "lightTemplateId" | "garment" | "productTypeId" | "price">;
-export type ProductJobPatch = Partial<Pick<ProductJob, "status" | "inkProductId" | "inkUrl" | "inkImageUrl" | "error" | "attempts" | "inkCreatedAt" | "readyAt">>;
+export type ProductJobPatch = Partial<Pick<ProductJob, "status" | "inkProductId" | "inkUrl" | "inkImageUrl" | "error" | "attempts" | "inkCreatedAt" | "readyAt" | "leaseUntil">>;
 export type ProductJobFilter = { region?: RegionSlug; status?: ProductStatus };
 
 export interface ProductJobStore {
@@ -66,17 +64,19 @@ export interface ProductJobStore {
   get(id: string): Promise<ProductJob | null>;
   /** Takes the job for `leaseMs` when nobody holds it and it is not terminal; null otherwise. Only the holder works on it. */
   claim(id: string, leaseMs: number, now?: Date): Promise<ProductJob | null>;
-  /** Applies the patch; `release` also drops the lease. */
-  update(id: string, patch: ProductJobPatch, opts?: { release?: boolean }): Promise<ProductJob | null>;
+  /** Applies the patch; `release` also drops the lease; `onlyIf`: only while the job is in one of these states (null otherwise, nothing changed). */
+  update(id: string, patch: ProductJobPatch, opts?: { release?: boolean; onlyIf?: readonly ProductStatus[] }): Promise<ProductJob | null>;
   list(filter: ProductJobFilter, limit: number, offset: number): Promise<{ rows: ProductJob[]; total: number }>;
   /** Jobs created since a moment (the daily ceiling of new products). */
   countCreatedSince(since: Date): Promise<number>;
 }
 
-/** Same art version + same typed values = same product. Field order and surrounding spaces do not matter; letter case does (it can show in the art). */
-export function productJobKey(input: { region: RegionSlug; templateId: string; lightTemplateId: string | null; garment: StudioGarment; fields: Record<string, string> }): string {
-  const fields = Object.keys(input.fields).sort().map((k) => [k, input.fields[k].trim()]);
-  return createHash("sha256").update(JSON.stringify([input.region, input.templateId, input.lightTemplateId ?? "", input.garment, fields])).digest("hex");
+/**
+ * Same art version + same PRINTED text = same product: what the art shows after its own case and line rules ("silva" and "Silva" on an art in
+ * capitals are one shirt). Surrounding spaces do not matter.
+ */
+export function productJobKey(input: { region: RegionSlug; templateId: string; lightTemplateId: string | null; garment: StudioGarment; printed: readonly string[] }): string {
+  return createHash("sha256").update(JSON.stringify([input.region, input.templateId, input.lightTemplateId ?? "", input.garment, input.printed.map((t) => t.trim())])).digest("hex");
 }
 
 /** "Silva | Natal em família Universitário": what was typed, then the model and the art (INK shows it as the product title; the slug follows it). */
@@ -114,6 +114,4 @@ export function safeInkUrl(raw: unknown): string | null {
   }
 }
 
-/** What the waiting screen shows of a job: never the internal error or the store's ids. */
-export type PublicProductJob = { id: string; label: string; status: ProductStatus; url: string | null; image: string | null };
 export const publicJob = (job: ProductJob): PublicProductJob => ({ id: job.id, label: job.artLabel, status: job.status, url: job.status === "ready" ? safeInkUrl(job.inkUrl) : null, image: job.status === "ready" ? job.inkImageUrl : null });
