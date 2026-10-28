@@ -64,7 +64,7 @@ export function ProductTracker() {
 
   if (!items.length) return null;
   const ready = items.filter((p) => p.status === "ready" && p.url);
-  // Short: on a phone the button sits between the coupons and the help chat (about 14 rem).
+  // Short: on a phone the button sits between the coupons and the help chat (56 px each at 16 px from the edge; 10 rem leaves 8 px to each).
   const label = ready.length ? (ready.length > 1 ? `${ready.length} camisetas prontas!` : "Camiseta pronta!") : pending.length ? "Criando camiseta…" : "Sua camiseta";
   const lift = `calc(max(1rem, env(safe-area-inset-bottom)) + ${bottom}px)`;
 
@@ -99,7 +99,7 @@ export function ProductTracker() {
         </div>
       )}
       <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} style={{ bottom: lift }}
-        className={`fixed left-1/2 z-40 flex min-h-12 max-w-[calc(100vw-11rem)] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap border-2 px-3 text-[0.875rem] font-bold shadow-[0_8px_24px_rgb(0_0_0/0.22)] ${ready.length ? "uo-attention border-[var(--region-primary)] bg-[var(--region-primary)] text-white" : "border-ink bg-paper text-ink"}`}>
+        className={`fixed left-1/2 z-40 flex min-h-12 max-w-[calc(100vw-10rem)] -translate-x-1/2 items-center justify-center gap-1.5 whitespace-nowrap border-2 px-2.5 text-[0.875rem] font-bold shadow-[0_8px_24px_rgb(0_0_0/0.22)] ${ready.length ? "uo-attention border-[var(--region-primary)] bg-[var(--region-primary)] text-white" : "border-ink bg-paper text-ink"}`}>
         {!ready.length && pending.length > 0 ? <WorkingIcon /> : <ShirtIcon />}
         <span className="truncate">{label}</span>
         {!ready.length && pending.length > 0 && <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-[#d8a800] motion-safe:animate-pulse" />}
