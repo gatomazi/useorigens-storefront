@@ -19,7 +19,17 @@ export type FeaturedSlotView = {
   buyUrl?: string | null;
   /** "feature" opening only: this product's own banner (a media id) and its description (empty = decorative). */
   image?: { assetId: string; alt: string };
+  /** "feature" opening, with a banner only: the products marked on it ("compre o look"), where they sit in % of the picture. */
+  pins?: PinView[];
 };
+
+/** A product marked on a banner, as the server resolved it (or as just chosen). */
+export type PinView = { value: string; x: number; y: number; ok: boolean; reason: string | null; familyName?: string; cityName?: string; uf?: string; imageUrl?: string | null };
+/** At most this many products marked on one banner (the schema's MAX_HERO_PINS). */
+const MAX_PINS = 4;
+/** "Use aqui" in the search goes to a position (`pin` absent), to a new mark at `at`, or to mark `pin` (its product replaced). */
+type Target = { slot: number; pin?: number | "new"; at?: { x: number; y: number } };
+const pinLine = (p: PinView) => `${p.familyName ?? `Produto #${p.value.split(":")[1]}`}${p.cityName ? ` · ${p.cityName} · ${p.uf}` : ""}`;
 
 const ROTATIONS: readonly [FeaturedRotation | "", string, string][] = [
   ["", "Sempre o primeiro", "A abertura mostra só o produto da posição 1."],
@@ -71,7 +81,11 @@ export function HeroFeaturedProducts({
   const modeRef = useRef<HTMLInputElement>(null);
   // The three-card hero keeps its three fixed positions; the "feature" opening lists the products chosen, plus one empty position to add another.
   const [slots, setSlots] = useState<(FeaturedSlotView | null)[]>(() => (feature ? initial.slice(0, max) : Array.from({ length: max }, (_, i) => initial[i] ?? null)));
-  const [openSlot, setOpenSlot] = useState<number | null>(null);
+  const [target, setTarget] = useState<Target | null>(null);
+  const openSlot = target && target.pin === undefined ? target.slot : null;
+  const setOpenSlot = (slot: number | null) => setTarget(slot === null ? null : { slot });
+  // A mark being moved: the next click on its picture puts it there.
+  const [moving, setMoving] = useState<{ slot: number; pin: number } | null>(null);
   const [query, setQuery] = useState("");
   const [found, setFound] = useState<{ results: FeaturedCandidate[]; total: number; error?: string } | null>(null);
   const [pending, start] = useTransition();
@@ -88,6 +102,7 @@ export function HeroFeaturedProducts({
       set(`featured_${i + 1}`, next[i]?.value ?? "");
       set(`featured_image_${i + 1}`, next[i]?.image?.assetId ?? "");
       set(`featured_alt_${i + 1}`, next[i]?.image?.alt ?? "");
+      set(`featured_pins_${i + 1}`, next[i]?.image && next[i]?.pins?.length ? JSON.stringify(next[i]!.pins!.map((p) => ({ p: p.value, x: p.x, y: p.y }))) : "");
     }
     form.requestSubmit();
   };
@@ -130,6 +145,7 @@ export function HeroFeaturedProducts({
           <input type="hidden" name={`featured_${i + 1}`} defaultValue={slots[i]?.value ?? ""} />
           {feature && <input type="hidden" name={`featured_image_${i + 1}`} defaultValue={slots[i]?.image?.assetId ?? ""} />}
           {feature && <input type="hidden" name={`featured_alt_${i + 1}`} defaultValue={slots[i]?.image?.alt ?? ""} />}
+          {feature && <input type="hidden" name={`featured_pins_${i + 1}`} defaultValue={slots[i]?.image && slots[i]?.pins?.length ? JSON.stringify(slots[i]!.pins!.map((p) => ({ p: p.value, x: p.x, y: p.y }))) : ""} />}
         </span>
       ))}
       {feature ? (
@@ -189,8 +205,41 @@ export function HeroFeaturedProducts({
                 </div>
               </div>
             )}
-            {openSlot === i && (
+            {feature && slot?.image && (
+              <PinsEditor
+                slot={slot}
+                index={i}
+                picture={media.find((m) => m.assetId === slot.image!.assetId)}
+                thumb={thumbOf?.(slot.image.assetId)}
+                target={target}
+                moving={moving}
+                onPlace={(at) => {
+                  if (moving?.slot === i) {
+                    const pins = (slot.pins ?? []).map((p, k) => (k === moving.pin ? { ...p, ...at } : p));
+                    setMoving(null);
+                    submit(slots.map((s, k) => (k === i && s ? { ...s, pins } : s)));
+                  } else if ((slot.pins?.length ?? 0) < MAX_PINS) {
+                    setMoving(null);
+                    setTarget({ slot: i, pin: "new", at });
+                    setQuery("");
+                    setFound(null);
+                  }
+                }}
+                onMove={(pin) => { setTarget(null); setMoving(moving?.slot === i && moving.pin === pin ? null : { slot: i, pin }); }}
+                onReplace={(pin) => { setMoving(null); setTarget({ slot: i, pin }); setQuery(""); setFound(null); }}
+                onRemove={(pin) => { setMoving(null); setTarget(null); submit(slots.map((s, k) => (k === i && s ? { ...s, pins: (s.pins ?? []).filter((_, j) => j !== pin) } : s))); }}
+                onMarkOwn={() => {
+                  if (!target?.at) return;
+                  const own: PinView = { value: slot.value, ...target.at, ok: slot.ok, reason: slot.reason, familyName: slot.familyName, cityName: slot.cityName, uf: slot.uf, imageUrl: slot.imageUrl };
+                  setTarget(null);
+                  submit(slots.map((s, k) => (k === i && s ? { ...s, pins: [...(s.pins ?? []), own] } : s)));
+                }}
+                onCancel={() => setTarget(null)}
+              />
+            )}
+            {target?.slot === i && (target.pin !== undefined || openSlot === i) && (
               <div className="mt-3 border-t border-black/15 pt-3">
+                {target.pin !== undefined && <p className="a-label">{target.pin === "new" ? "Qual produto está nessa marca?" : `Trocar o produto da marca ${(target.pin as number) + 1}`}</p>}
                 <label className="a-label" htmlFor={`hero-search-${i}`}>{scope === "centro-oeste" ? "Buscar por cidade, Região Administrativa, UF, estilo, nome da peça ou ID do produto" : "Buscar por cidade, UF, estilo, nome da peça ou ID do produto"}</label>
                 <input id={`hero-search-${i}`} className="a-input" value={query} onChange={(e) => run(e.target.value)} placeholder={scope === "centro-oeste" ? "Ex.: taguatinga · águas claras coordenadas · df · capivara · 123456" : "Ex.: belém coordenadas · pa · capivara · 123456"} autoComplete="off" />
                 {pending && <p className="a-muted mt-2 text-[0.8125rem]">Buscando…</p>}
@@ -201,7 +250,9 @@ export function HeroFeaturedProducts({
                     <p className="a-muted mt-2 text-[0.8125rem]">{found.total > found.results.length ? `Mostrando ${found.results.length} de ${found.total}. Refine a busca.` : `${found.total} resultado(s).`}</p>
                     <ul className="mt-2 grid gap-2 md:grid-cols-2" aria-label="Resultados">
                       {found.results.map((c) => {
-                        const already = slots.some((s) => s?.value === `${c.store}:${c.productId}`);
+                        const value = `${c.store}:${c.productId}`;
+                        const forPin = target.pin !== undefined;
+                        const already = forPin ? (slots[i]?.pins ?? []).some((p) => p.value === value) : slots.some((s) => s?.value === value);
                         return (
                           <li key={c.productId} className="flex items-start gap-3 border border-black/15 p-2">
                             <Thumb src={c.imageUrl} />
@@ -209,7 +260,20 @@ export function HeroFeaturedProducts({
                               <p className="font-bold">{c.familyName}{c.cityName ? ` · ${c.cityName} · ${c.uf}` : " · peça (sem cidade)"}{c.localityType === "administrative_region" ? " · Região Administrativa" : ""}</p>
                               <p className="a-muted">{c.price ?? "Sem preço"} · {c.primary ? "produto principal" : "outra versão"} · #{c.productId}</p>
                               <a href={c.buyUrl} target="_blank" rel="noreferrer" className="a-link">Ver na loja ↗</a>
-                              <div className="mt-1"><button type="button" className="a-btn sm" disabled={already} onClick={() => { const next = [...slots]; next[i] = { ...fromCandidate(c), ...(slots[i]?.image ? { image: slots[i]!.image } : {}) }; setOpenSlot(null); submit(next); }}>{already ? "Já escolhido" : "Usar aqui"}</button></div>
+                              <div className="mt-1"><button type="button" className="a-btn sm" disabled={already} onClick={() => {
+                                if (forPin) {
+                                  const chosen: PinView = { value, x: 0, y: 0, ok: true, reason: null, familyName: c.familyName, cityName: c.cityName, uf: c.uf, imageUrl: c.imageUrl };
+                                  const current = slots[i]?.pins ?? [];
+                                  const pins = target.pin === "new" ? [...current, { ...chosen, ...target.at! }] : current.map((p, k) => (k === target.pin ? { ...chosen, x: p.x, y: p.y } : p));
+                                  setTarget(null);
+                                  submit(slots.map((s, k) => (k === i && s ? { ...s, pins } : s)));
+                                  return;
+                                }
+                                const next = [...slots];
+                                next[i] = { ...fromCandidate(c), ...(slots[i]?.image ? { image: slots[i]!.image } : {}), ...(slots[i]?.pins ? { pins: slots[i]!.pins } : {}) };
+                                setOpenSlot(null);
+                                submit(next);
+                              }}>{already ? (forPin ? "Já marcado nesta foto" : "Já escolhido") : forPin ? "Marcar este" : "Usar aqui"}</button></div>
                             </div>
                           </li>
                         );
@@ -224,5 +288,83 @@ export function HeroFeaturedProducts({
       </ol>
       {scope === "sul" && <button type="button" className="a-btn ghost sm" onClick={() => submit(slots, "reset")}>Voltar aos três cards originais do código</button>}
     </fieldset>
+  );
+}
+
+/**
+ * The banner of one position with its marks ("compre o look"): the whole picture (uncropped, so a click lands where the shirt really is), a numbered
+ * dot per marked product, and the list to move, change or remove each one. A click on the picture adds a mark there (then the search asks which
+ * product it is) or, while one is being moved, puts it there.
+ */
+function PinsEditor({ slot, index, picture, thumb, target, moving, onPlace, onMove, onReplace, onRemove, onMarkOwn, onCancel }: {
+  slot: FeaturedSlotView;
+  index: number;
+  picture?: MediaOption;
+  thumb?: string;
+  target: Target | null;
+  moving: { slot: number; pin: number } | null;
+  onPlace: (at: { x: number; y: number }) => void;
+  onMove: (pin: number) => void;
+  onReplace: (pin: number) => void;
+  onRemove: (pin: number) => void;
+  onMarkOwn: () => void;
+  onCancel: () => void;
+}) {
+  const pins = slot.pins ?? [];
+  const pending = target?.slot === index && target.pin === "new" ? target.at : undefined;
+  const movingHere = moving?.slot === index ? moving.pin : null;
+  const ownMarked = pins.some((p) => p.value === slot.value);
+  if (!picture) return null;
+  const pct = (n: number) => Math.round(Math.min(100, Math.max(0, n)) * 10) / 10;
+  return (
+    <div className="mt-3 border-t border-black/15 pt-3" data-testid={`pins-${index + 1}`}>
+      <p className="a-label">Produtos marcados na foto (compre o look)</p>
+      <p className="a-muted text-[0.8125rem]">
+        Clique na foto, no meio da camiseta, para marcar o produto (até {MAX_PINS} por foto). Na loja, cada marca vira um “+” que abre o card do produto e a
+        faixa embaixo da foto some. Sem marcas, fica a faixa de sempre, com o produto desta posição. Uma marca que cair fora do corte do celular não aparece
+        nele: prefira marcas longe das bordas.
+      </p>
+      <div
+        className={`relative mt-2 w-full max-w-[30rem] select-none overflow-hidden bg-neutral-200 ${pins.length < MAX_PINS || movingHere !== null ? "cursor-crosshair" : ""}`}
+        style={{ aspectRatio: `${picture.width} / ${picture.height}` }}
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          onPlace({ x: pct(((e.clientX - r.left) / r.width) * 100), y: pct(((e.clientY - r.top) / r.height) * 100) });
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element -- the media file itself, uncropped, so a click maps to the picture */}
+        <img src={thumb ?? picture.src} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+        {pins.map((p, k) => (
+          <span key={p.value} aria-hidden="true" style={{ left: `${p.x}%`, top: `${p.y}%` }} className={`absolute grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full text-[0.8125rem] font-bold shadow-[0_1px_6px_rgb(0_0_0/0.4)] ${movingHere === k ? "bg-black text-white" : p.ok ? "bg-white text-black" : "bg-[#b42318] text-white"}`}>
+            {k + 1}
+          </span>
+        ))}
+        {pending && <span aria-hidden="true" style={{ left: `${pending.x}%`, top: `${pending.y}%` }} className="absolute grid h-7 w-7 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-black text-[0.8125rem] font-bold text-white shadow-[0_1px_6px_rgb(0_0_0/0.4)]">?</span>}
+      </div>
+      {movingHere !== null && <p className="a-flash ok mt-2 text-[0.875rem]">Clique na foto onde a marca {movingHere + 1} deve ficar.</p>}
+      {pending && (
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="text-[0.875rem]">Marca nova: escolha o produto abaixo{ownMarked ? "" : " ou"}</span>
+          {!ownMarked && <button type="button" className="a-btn sm" onClick={onMarkOwn}>Marcar “{slot.familyName ?? "o produto desta posição"}{slot.cityName ? ` · ${slot.cityName}` : ""}”</button>}
+          <button type="button" className="a-btn sm ghost" onClick={onCancel}>Cancelar</button>
+        </div>
+      )}
+      {pins.length > 0 && (
+        <ol className="mt-2 space-y-1.5">
+          {pins.map((p, k) => (
+            <li key={p.value} className="flex flex-wrap items-center gap-2 text-[0.875rem]">
+              <span className="a-badge">{k + 1}</span>
+              <span className="font-bold">{pinLine(p)}</span>
+              {!p.ok && <span className="a-badge bad">Não aparece na loja: {p.reason}</span>}
+              <span className="flex gap-1.5">
+                <button type="button" className="a-btn sm ghost" onClick={() => onMove(k)} aria-pressed={movingHere === k}>{movingHere === k ? "Cancelar" : "Mover"}</button>
+                <button type="button" className="a-btn sm ghost" onClick={() => onReplace(k)}>Trocar produto</button>
+                <button type="button" className="a-btn sm ghost" onClick={() => onRemove(k)} aria-label={`Remover a marca ${k + 1}`}>Remover</button>
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
   );
 }

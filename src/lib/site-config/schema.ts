@@ -124,7 +124,18 @@ export type Source = (
  * A product of the hero, by stable reference. `image` ("feature" opening only): the banner drawn in the product's half while this product is the one
  * shown, instead of the section's picture; absent = the section's picture, else the product's own photo.
  */
-export type FeaturedProductRef = { store: CommerceStoreKey; productId: string; image?: MediaRef };
+/**
+ * A product marked on a hero picture ("compre o look"): a real product of the region's store and where it sits in the picture, in % of the
+ * picture's own width and height (0..100, from its top-left corner), so it follows the picture whatever the crop of each screen.
+ */
+export type HeroPin = { store: CommerceStoreKey; productId: string; x: number; y: number };
+/** At most this many products marked on one picture. */
+export const MAX_HERO_PINS = 4;
+/**
+ * `pins` (with `image` only): the products marked on that picture. The "feature" opening then draws a "+" over each one, which opens its card, and no
+ * product bar under the picture; the reference's own product is still the one the slide is named after.
+ */
+export type FeaturedProductRef = { store: CommerceStoreKey; productId: string; image?: MediaRef; pins?: HeroPin[] };
 /** The products a hero keeps: the "feature" opening shows them one at a time (`featuredRotation`); the three-card hero, the first `HERO_CARDS`. */
 export const MAX_FEATURED = 8;
 export const HERO_CARDS = 3;
@@ -787,8 +798,23 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       const seen = new Set<string>();
       v.featured.forEach((ref, i) => {
         if (!isRecord(ref) || typeof ref.store !== "string" || !STORES.includes(ref.store) || typeof ref.productId !== "string" || !/^\d{1,20}$/.test(ref.productId)) return c.fail(`${path}.featured[${i}]`, "must be { store, productId (numeric INK id), image? }");
-        for (const key of Object.keys(ref)) if (key !== "store" && key !== "productId" && key !== "image") c.fail(`${path}.featured[${i}].${key}`, "unknown field");
+        for (const key of Object.keys(ref)) if (key !== "store" && key !== "productId" && key !== "image" && key !== "pins") c.fail(`${path}.featured[${i}].${key}`, "unknown field");
         if (ref.image !== undefined) checkMediaRef(c, `${path}.featured[${i}].image`, ref.image);
+        if (ref.pins !== undefined) {
+          const pins = ref.pins;
+          if (ref.image === undefined || !Array.isArray(pins) || pins.length === 0 || pins.length > MAX_HERO_PINS) c.fail(`${path}.featured[${i}].pins`, `with an image only: 1..${MAX_HERO_PINS} marked products`);
+          else {
+            const marked = new Set<string>();
+            pins.forEach((pin, j) => {
+              const at = `${path}.featured[${i}].pins[${j}]`;
+              const inside = (n: unknown) => typeof n === "number" && Number.isFinite(n) && n >= 0 && n <= 100;
+              if (!isRecord(pin) || typeof pin.store !== "string" || !STORES.includes(pin.store) || typeof pin.productId !== "string" || !/^\d{1,20}$/.test(pin.productId) || !inside(pin.x) || !inside(pin.y) || Object.keys(pin).some((k) => !["store", "productId", "x", "y"].includes(k))) return c.fail(at, "must be { store, productId (numeric INK id), x, y (0..100) }");
+              const id = `${pin.store}:${pin.productId}`;
+              if (marked.has(id)) c.fail(at, "the same product marked twice");
+              marked.add(id);
+            });
+          }
+        }
         const key = `${ref.store}:${ref.productId}`;
         if (seen.has(key)) c.fail(`${path}.featured[${i}]`, "the same product twice");
         seen.add(key);
@@ -1043,7 +1069,10 @@ function checkRegionRules(c: Collector, base: string, sections: unknown[], sc: S
     }
     if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(region.ufs as readonly string[]).includes(uf)) c.fail(`${at}.stateCovers.${uf}`, "not a state of this region");
     checkTileRegion(c, at, s.tiles, sc);
-    if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`${at}.featured[${j}].store`, "belongs to another region's INK store"); });
+    if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => {
+      if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`${at}.featured[${j}].store`, "belongs to another region's INK store");
+      if (isRecord(ref) && Array.isArray(ref.pins)) ref.pins.forEach((pin, k) => { if (isRecord(pin) && !regionMayUseStore(sc as RegionSlug, pin.store)) c.fail(`${at}.featured[${j}].pins[${k}].store`, "belongs to another region's INK store"); });
+    });
   });
 }
 
@@ -1178,7 +1207,10 @@ function checkHomeSections(c: Collector, path: string, sections: unknown, sc: Sc
         // A state cover belongs to a state of THIS region.
         if (isRecord(s.stateCovers)) for (const uf of Object.keys(s.stateCovers)) if (!(REGIONS[sc as RegionSlug]?.ufs as readonly string[] | undefined)?.includes(uf)) c.fail(`${path}[${i}].stateCovers.${uf}`, "not a state of this region");
         // The hero's cards are products of THIS region's own INK store (a Norte card can never be a Sul product).
-        if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => { if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`${path}[${i}].featured[${j}].store`, "belongs to another region's INK store"); });
+        if (Array.isArray(s.featured)) s.featured.forEach((ref, j) => {
+          if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`${path}[${i}].featured[${j}].store`, "belongs to another region's INK store");
+          if (isRecord(ref) && Array.isArray(ref.pins)) ref.pins.forEach((pin, k) => { if (isRecord(pin) && !regionMayUseStore(sc as RegionSlug, pin.store)) c.fail(`${path}[${i}].featured[${j}].pins[${k}].store`, "belongs to another region's INK store"); });
+        });
         const navDest = isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null;
         if (navDest && (navDest.kind === "ink-collection" || navDest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, navDest.store)) c.fail(`${path}[${i}].nav.dest.store`, "belongs to another region's INK store");
         if (navDest && navDest.kind === "route" && typeof navDest.path === "string" && navDest.path !== `/${sc}` && !navDest.path.startsWith(`/${sc}/`)) c.fail(`${path}[${i}].nav.dest.path`, "must be a page of this region");

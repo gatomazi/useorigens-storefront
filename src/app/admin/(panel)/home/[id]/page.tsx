@@ -35,7 +35,12 @@ export default async function EditSection({ params, searchParams }: { params: Pr
   const media = await listMedia();
   const anchor = section.template === "hero" ? undefined : section.anchor;
   const slotViews = (refs: FeaturedProductRef[]): FeaturedSlotView[] =>
-    resolveFeatured(scope, refs as never).map((sl) => ({ value: `${sl.ref.store}:${sl.ref.productId}`, ok: sl.ok, reason: sl.reason, familyName: sl.card?.familyName, cityName: sl.card?.cityName, uf: sl.card?.uf, price: sl.card?.price, imageUrl: sl.imageUrl, buyUrl: sl.buyUrl, ...(sl.ref.image ? { image: { assetId: sl.ref.image.assetId, alt: sl.ref.image.alt } } : {}) }));
+    resolveFeatured(scope, refs as never).map((sl) => ({
+      value: `${sl.ref.store}:${sl.ref.productId}`, ok: sl.ok, reason: sl.reason, familyName: sl.card?.familyName, cityName: sl.card?.cityName, uf: sl.card?.uf, price: sl.card?.price, imageUrl: sl.imageUrl, buyUrl: sl.buyUrl,
+      ...(sl.ref.image ? { image: { assetId: sl.ref.image.assetId, alt: sl.ref.image.alt } } : {}),
+      // The products marked on its banner, each resolved like a position (a mark that can no longer be shown is flagged, never dropped here).
+      ...(sl.ref.pins?.length ? { pins: resolveFeatured(scope, sl.ref.pins).map((p, k) => ({ value: `${p.ref.store}:${p.ref.productId}`, x: sl.ref.pins![k].x, y: sl.ref.pins![k].y, ok: p.ok, reason: p.reason, familyName: p.card?.familyName, cityName: p.card?.cityName, uf: p.card?.uf, imageUrl: p.imageUrl })) } : {}),
+    }));
   // Sul that was never customised keeps the three cards the code has always shown (read-only until the owner customises them).
   const featured =
     section.template === "hero"

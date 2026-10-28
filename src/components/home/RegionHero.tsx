@@ -16,6 +16,8 @@ import type { Color, FeaturedRotation, HeroColorKey, HeroColors } from "@/lib/si
 import { cssColor } from "@/components/banners/SectionBackdrop";
 import { HEX_COLOR, relativeLuminance } from "@/lib/site-config/color";
 import { HeroSlides } from "./HeroSlides";
+import { HeroPins } from "./HeroPins";
+import type { HeroSlidePin } from "@/lib/hero-featured";
 
 const HERO_COPY = { title: "O seu lugar,\ndo seu jeito.", body: "Encontre sua cidade e vista o lugar que faz parte de você." };
 
@@ -74,7 +76,7 @@ export function RegionHero({
   /** "feature" only: the section's picture (CMS), a banner in the product's place (the product's bar stays over it when there is one). */
   panelImage?: BannerAsset | null;
   /** "feature" only: the products it goes through, each with its own banner (null = the section's picture); absent = the first of `trio`. */
-  slides?: { product: HeroFamilyCard; image: BannerAsset | null }[];
+  slides?: { product: HeroFamilyCard; image: BannerAsset | null; pins?: HeroSlidePin[] }[];
   /** "feature" only: how it goes through `slides` (CMS `featuredRotation`); absent = always the first. */
   rotation?: FeaturedRotation;
   /** "feature" only: the colours of the reading half (CMS `heroColors`); absent = the theme's own. */
@@ -184,7 +186,7 @@ function FeatureHero({
 }: {
   region: RegionSlug;
   cityCount: number;
-  slides: { product: HeroFamilyCard; image: BannerAsset | null }[];
+  slides: { product: HeroFamilyCard; image: BannerAsset | null; pins?: HeroSlidePin[] }[];
   rotation?: FeaturedRotation;
   colors?: HeroColors;
   copy: { title: string; body: string };
@@ -204,10 +206,10 @@ function FeatureHero({
   const panel = several ? (
     <HeroSlides mode={rotation} labels={slides.map((sl) => [sl.product.familyName, placeOf(sl.product)].filter(Boolean).join(", "))}>
       {/* A drawn product is not known on the server, so no picture is loaded first; a sliding one, only the first. */}
-      {slides.map((sl, i) => <FeaturePanel key={sl.product.familyId} product={sl.product} image={sl.image ?? panelImage} color={panelColor} call={call} priority={rotation === "slide" && i === 0} />)}
+      {slides.map((sl, i) => <FeaturePanel key={sl.product.familyId} product={sl.product} image={sl.image ?? panelImage} pins={sl.image ? sl.pins : undefined} color={panelColor} call={call} priority={rotation === "slide" && i === 0} />)}
     </HeroSlides>
   ) : (
-    (product || panelImage) && <FeaturePanel product={product} image={slides[0]?.image ?? panelImage} color={panelColor} call={call} priority />
+    (product || panelImage) && <FeaturePanel product={product} image={slides[0]?.image ?? panelImage} pins={slides[0]?.image ? slides[0].pins : undefined} color={panelColor} call={call} priority />
   );
   return (
     <section aria-labelledby="hero-title" className="relative isolate border-y border-line">
@@ -272,7 +274,19 @@ function inkOn(color: Color): string {
  * bar under it, or the product's photo on the tint (a compact row below 1024px); a banner alone when there is no product. `priority`: its picture is
  * the first thing the page loads (false for a product that may not be the one shown).
  */
-function FeaturePanel({ product, image, color, call, priority }: { product: HeroFamilyCard | undefined; image: BannerAsset | null; color?: string; call: string; priority: boolean }) {
+function FeaturePanel({ product, image, pins, color, call, priority }: { product: HeroFamilyCard | undefined; image: BannerAsset | null; pins?: HeroSlidePin[]; color?: string; call: string; priority: boolean }) {
+  if (image && pins && pins.length > 0) {
+    // "Compre o look": the products marked on the picture, each behind its "+"; no product bar, and the picture itself is not a link.
+    const views = pins.map(({ card, x, y }) => ({ id: card.familyId, x, y, name: card.familyName, place: placeOf(card), price: card.price, ...(card.listPrice ? { listPrice: card.listPrice } : {}), imageUrl: card.imageUrl, href: card.href }));
+    return (
+      <HeroPanel color={color}>
+        <span className="relative block min-h-[20rem] flex-1 sm:min-h-[24rem] lg:min-h-0">
+          <BannerBackground asset={image} priority={priority} sizes="(min-width: 1024px) 50vw, 100vw" alt={image.alt} />
+          <HeroPins pins={views} width={image.desktop.width} height={image.desktop.height} focal={image.focal} focalDesktop={image.focalDesktop} call={call} />
+        </span>
+      </HeroPanel>
+    );
+  }
   return (
     <HeroPanel href={product?.href} color={color} row={!image}>
       {image ? (

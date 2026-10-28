@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, variantsOf, type HeroColors, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
+import { FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
 import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, TILE_VEILS, type TileFormat, type TileVeil, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
@@ -351,9 +351,36 @@ export function parseFeaturedFields(f: Fields): { refs: FeaturedProductRef[]; in
     }
     const assetId = str(f, `featured_image_${slot}`);
     const alt = str(f, `featured_alt_${slot}`).slice(0, 200);
-    refs.push({ store: m[1] as CommerceStoreKey, productId: m[2], ...(assetId ? { image: { assetId, alt, decorative: alt === "" } } : {}) });
+    // The products marked on the banner (`featured_pins_N`, JSON [{ p: "store:id", x, y }]): only with a banner; a malformed list is an error.
+    const pins = assetId ? parsePins(str(f, `featured_pins_${slot}`)) : [];
+    if (pins === null) {
+      invalid.push(`marcas da posição ${slot}`);
+      continue;
+    }
+    refs.push({ store: m[1] as CommerceStoreKey, productId: m[2], ...(assetId ? { image: { assetId, alt, decorative: alt === "" } } : {}), ...(pins.length > 0 ? { pins } : {}) });
   }
   return { refs, invalid };
+}
+
+/** The marks posted for one banner: [] when none, null when the list is not one the editor writes (never half-read). */
+function parsePins(raw: string): HeroPin[] | null {
+  if (!raw) return [];
+  let list: unknown;
+  try {
+    list = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(list) || list.length > MAX_HERO_PINS) return null;
+  const pins: HeroPin[] = [];
+  for (const item of list) {
+    const m = item && typeof item === "object" ? /^(use-sul|use-norte|use-centro):(\d{1,20})$/.exec(String((item as { p?: unknown }).p)) : null;
+    const { x, y } = item as { x?: unknown; y?: unknown };
+    if (!m || typeof x !== "number" || typeof y !== "number" || !(x >= 0 && x <= 100) || !(y >= 0 && y <= 100)) return null;
+    if (pins.some((p) => p.store === m[1] && p.productId === m[2])) return null;
+    pins.push({ store: m[1] as CommerceStoreKey, productId: m[2], x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 });
+  }
+  return pins;
 }
 
 /** The "feature" opening's rotation (`featured_rotation`): "random" / "slide", or undefined for always the first. */
