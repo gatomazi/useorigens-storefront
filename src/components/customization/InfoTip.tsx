@@ -16,7 +16,7 @@ export function InfoTip({ label, children }: { label: string; children: React.Re
   useEffect(() => {
     if (!open) return;
     const away = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
-    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } };
+    const escape = (e: KeyboardEvent) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setOpen(false); } };
     document.addEventListener("pointerdown", away);
     // Capture, so Escape closes the bubble before it reaches an open <dialog> (which would close the full-screen view).
     document.addEventListener("keydown", escape, true);

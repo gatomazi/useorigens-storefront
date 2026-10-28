@@ -137,10 +137,11 @@ export function CustomizerForm({
 
   const artOptions = () => arts.map((a, i) => ({ key: i, label: a.label, thumb: thumb(choiceOf(arts, { art: i, version: i === pick.art ? pick.version : 0, light })!.templateId) }));
   const versionOptions = () => choice!.art.versions.map((v, j) => ({ key: j, label: `${choice!.art.label} · ${v.label ?? `Versão ${j + 1}`}`, caption: v.label ?? `Versão ${j + 1}`, thumb: thumb(choiceOf(arts, { art: pick.art, version: j, light })!.templateId) }));
-  const artPickers = (where: string, strip = false) => choice && (
+  // Only on the page: the full-screen view offers just the colours, so a tap there never swaps the art the customer picked.
+  const artPickers = choice && (
     <>
-      {arts.length > 1 && <ArtPicker legend={strip ? "Arte" : "1. Escolha a arte"} name={`${uid}-${where}-arte`} options={artOptions()} value={pick.art} onChange={(art) => choose({ art, version: 0 })} shirt={shirt} strip={strip} />}
-      {choice.art.versions.length > 1 && <ArtPicker legend="Versão" name={`${uid}-${where}-versao`} options={versionOptions()} value={pick.version} onChange={(version) => choose({ art: pick.art, version })} shirt={shirt} strip={strip} />}
+      {arts.length > 1 && <ArtPicker legend="1. Escolha a arte" name={`${uid}-arte`} options={artOptions()} value={pick.art} onChange={(art) => choose({ art, version: 0 })} shirt={shirt} />}
+      {choice.art.versions.length > 1 && <ArtPicker legend="Versão" name={`${uid}-versao`} options={versionOptions()} value={pick.version} onChange={(version) => choose({ art: pick.art, version })} shirt={shirt} />}
     </>
   );
 
@@ -312,7 +313,7 @@ export function CustomizerForm({
           ) : (
             <form onSubmit={onSubmit} noValidate className="space-y-6" aria-describedby={`${uid}-notice`}>
               <fieldset disabled={phase === "sending"} className="min-w-0 space-y-6">
-              {studio && <div className="space-y-5">{artPickers("form")}</div>}
+              {studio && <div className="space-y-5">{artPickers}</div>}
               {family && (
                 <div className="space-y-3" data-testid="family-order">
                   {items.length > 1 && (
@@ -454,8 +455,7 @@ export function CustomizerForm({
               {/* The input first: with the phone keyboard open, the input and the art above it still fit on screen. */}
               {fieldMode && surnameStep(true)}
               <div className="mx-auto w-full" style={{ maxWidth: "min(100%, 36svh)" }}>{previewBlock(true)}</div>
-              <ShirtSwatches name={`${uid}-full-camiseta`} value={shirt} onChange={chooseShirt} row />
-              {artPickers("full", true)}
+              <div className="mx-auto w-full max-w-[18.5rem]"><ShirtSwatches name={`${uid}-full-camiseta`} value={shirt} onChange={chooseShirt} /></div>
             </div>
           </>}
         </dialog>

@@ -39,4 +39,5 @@
    black buttons without competing with "Enviar". `button.` outranks `.btn-ghost`, whose own colours would otherwise win. `--region-primary`,
    not `--color-region-primary`: the theme token is resolved at :root (`@theme inline`), before the region wrapper sets its colour. */
 button.seeShirt { border-color: var(--region-primary); background: var(--region-primary); color: #fff; }
-button.seeShirt:hover { background: transparent; color: var(--region-primary); }
+/* Only with a real pointer: on a phone the hover state sticks after a tap and would leave the button hollow. */
+@media (hover: hover) { button.seeShirt:hover { background: transparent; color: var(--region-primary); } }
