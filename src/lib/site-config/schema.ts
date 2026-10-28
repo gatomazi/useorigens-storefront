@@ -368,6 +368,11 @@ export type Customizer = {
   pageMockup?: MediaRef;
   /** Opt-in public art editor on immutable bases saved in the internal print studio: the customer picks an art (then its version and the shirt colour, when it has them). */
   studioArts?: StudioArt[];
+  /**
+   * Direct purchase (studio arts with fields only): instead of a request to the team, the server draws the art, creates a hidden product at INK and
+   * takes the customer to it. Off unless `enabled`; the request flow stays as the fallback.
+   */
+  directPurchase?: DirectPurchase;
   fields: CustomField[];
   lineGroup?: LineGroup;
   /** V1: the static mockup plus a live text summary. The mockup already carries printed text, so text is never drawn over it. */
@@ -376,8 +381,14 @@ export type Customizer = {
   version: number;
 };
 
-/** `templateId`: the base for dark shirts (or the only one); `lightTemplateId`: the same art for light shirts. */
-export type StudioArtVersion = { label?: string; templateId: string; lightTemplateId?: string };
+/** The INK garment a version is printed on (direct purchase): the adult Camiseta (absent) or the Camiseta Infantil, which has fewer colours. */
+export const STUDIO_GARMENTS = ["camiseta", "infantil"] as const;
+export type StudioGarment = (typeof STUDIO_GARMENTS)[number];
+/** `templateId`: the base for dark shirts (or the only one); `lightTemplateId`: the same art for light shirts; `garment`: absent = camiseta. */
+export type StudioArtVersion = { label?: string; templateId: string; lightTemplateId?: string; garment?: StudioGarment };
+/** Prices of the products created at INK, as INK takes them ("109.90"); `kidsPrice` is required when a version is on the Camiseta Infantil. */
+export type DirectPurchase = { enabled: boolean; price: string; kidsPrice?: string };
+export const PRICE = /^\d{1,4}\.\d{2}$/;
 /** One art of a studio-based page; its versions (e.g. "Adulto" / "Infantil") are picked after the art and need a label when there are several. */
 export type StudioArt = { label: string; versions: StudioArtVersion[] };
 export const MAX_STUDIO_ARTS = 8;
@@ -586,6 +597,7 @@ function checkStudioArts(c: Collector, path: string, arts: unknown): void {
       const q = `${p}.versions[${j}]`;
       if (!isRecord(version)) return c.fail(q, "must be an object");
       if (version.label === undefined ? versions.length > 1 : !isStr(version.label, 40)) c.fail(`${q}.label`, "1..40 chars, required when an art has several versions");
+      if (version.garment !== undefined && !(STUDIO_GARMENTS as readonly unknown[]).includes(version.garment)) c.fail(`${q}.garment`, `one of ${STUDIO_GARMENTS.join(", ")}`);
       for (const key of ["templateId", "lightTemplateId"] as const) {
         const id = version[key];
         if (id === undefined && key === "lightTemplateId") continue;
@@ -946,6 +958,16 @@ function checkCustomizer(c: Collector, path: string, v: unknown): void {
   if (v.cardImage !== undefined) checkMediaRef(c, `${path}.cardImage`, v.cardImage);
   if (v.pageMockup !== undefined) checkMediaRef(c, `${path}.pageMockup`, v.pageMockup);
   if (v.studioArts !== undefined) checkStudioArts(c, `${path}.studioArts`, v.studioArts);
+  if (v.directPurchase !== undefined) {
+    const d = v.directPurchase;
+    if (!isRecord(d) || typeof d.enabled !== "boolean" || typeof d.price !== "string" || !PRICE.test(d.price)) c.fail(`${path}.directPurchase`, "must be { enabled, price: \"109.90\", kidsPrice? }");
+    else {
+      if (d.kidsPrice !== undefined && (typeof d.kidsPrice !== "string" || !PRICE.test(d.kidsPrice))) c.fail(`${path}.directPurchase.kidsPrice`, "a price like \"96.00\"");
+      const kids = Array.isArray(v.studioArts) && v.studioArts.some((a) => isRecord(a) && Array.isArray(a.versions) && a.versions.some((x) => isRecord(x) && x.garment === "infantil"));
+      if (d.enabled && !Array.isArray(v.studioArts)) c.fail(`${path}.directPurchase`, "direct purchase needs studio arts");
+      if (d.enabled && kids && d.kidsPrice === undefined) c.fail(`${path}.directPurchase.kidsPrice`, "required when a version is on the Camiseta Infantil");
+    }
+  }
   if (v.previewMode !== "mockupWithTextSummary") c.fail(`${path}.previewMode`, "must be mockupWithTextSummary");
   if (typeof v.active !== "boolean") c.fail(`${path}.active`, "must be boolean");
   else if (v.active && !v.pageMockup) c.fail(`${path}.pageMockup`, "an active model needs its page mockup");

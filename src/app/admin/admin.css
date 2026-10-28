@@ -20,6 +20,7 @@
 .a-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.15rem 0.5rem; font-size: 0.6875rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; border: 1px solid rgb(0 0 0 / 0.3); background: #fff; }
 .a-badge.ok { background: #e3ecd9; border-color: #4d543d; color: #2d3520; }
 .a-badge.warn { background: #fbefd0; border-color: #b8842a; color: #6b4a0c; }
+.a-badge.err { background: #f6dcdc; border-color: #9b1c1c; color: #6e1414; }
 .a-badge.bad { background: #f6dcda; border-color: #8c1d18; color: #6f1712; }
 .a-badge.dev { background: #000; color: #fff; border-color: #000; }
 .a-table { width: 100%; border-collapse: collapse; font-size: 0.9375rem; }

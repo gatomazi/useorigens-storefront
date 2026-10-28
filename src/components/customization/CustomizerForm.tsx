@@ -1,18 +1,19 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import { initialValues, lineLabelOf, normalizeValue, orderedFields, validateSubmission, type FieldError, type SummaryLine, type Values } from "@/lib/customization/validate";
 import { CONTACT_CONFIRM_TEXT, CONTACT_KEYS, CONTACT_NOTICE, validateContact } from "@/lib/customization/contact";
 import type { Customizer } from "@/lib/site-config/schema";
-import type { SubmitResult } from "@/app/[region]/personalizar/actions";
+import type { StartProductsResult, SubmitResult } from "@/app/[region]/personalizar/actions";
 import { artworkFields, composeArtwork, fieldEdits, initialArtworkEdits, validateArtworkInput, type ArtworkEdit } from "@/lib/customization/artwork";
 import { choiceLabel, choiceOf, MAX_FAMILY_ARTS, offersChoice, type ArtChoice } from "@/lib/customization/studio-arts";
-import { SHIRT_COLORS, shirtColor } from "@/lib/customization/shirts";
+import { SHIRT_COLORS, shirtColor, shirtColorsFor } from "@/lib/customization/shirts";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { ArtworkEditor, ArtworkFields } from "./ArtworkEditor";
 import { ArtworkPreview, type PreviewView } from "./ArtworkPreview";
 import { ArtPicker, ShirtSwatches } from "./StudioPickers";
 import { InfoTip } from "./InfoTip";
+import { ProductWaiting, type RequestOutcome, type Showcase } from "./ProductWaiting";
 import styles from "./ArtworkEditor.module.css";
 
 /** Fetches another base of the model when the customer picks it: the page ships only the first one (each carries the full-size art). */
@@ -20,6 +21,10 @@ export type LoadBase = (input: { region: string; slug: string; templateId: strin
 export type PublicMockup = { src: string; width: number; height: number; variants?: { w: number; src: string }[]; alt: string };
 type ContactValues = { name: string; whatsapp: string; email: string; confirm: boolean };
 type Submit = (input: { region: string; slug: string; idempotencyKey: string; fields?: unknown; lines?: unknown; artwork?: { templateId: string; layers?: unknown; fields?: unknown; also?: string[] }; contact?: { name: string; whatsapp: string; email: string; confirm: boolean }; replaces?: string }) => Promise<SubmitResult>;
+
+/** Direct purchase: starts (or finds) the products of the order at INK; see `startProductsAction`. */
+type StartProducts = (input: { region: string; slug: string; artwork: { templateId: string; fields: Record<string, string>; also?: string[] } }) => Promise<StartProductsResult>;
+type Waiting = { items: Extract<StartProductsResult, { ok: true }>["items"]; fallback: string | null; surname: string; showcase: Showcase | null };
 
 const newKey = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID().replaceAll("-", "") : `${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`.padEnd(24, "0"));
 
@@ -39,7 +44,7 @@ const samePick = (a: Pick, b: Pick) => a.art === b.art && a.version === b.versio
 const inputClass = "block w-full min-h-11 border-2 border-ink bg-white px-3 py-2 text-[1rem] text-ink placeholder:text-ink-mute focus:outline-none focus:ring-2 focus:ring-region-primary aria-[invalid=true]:border-[#9b1c1c]";
 
 export function CustomizerForm({
-  region, model, mockup, firstBase, loadBase, thumbs = "", submit, available, preview = false,
+  region, model, mockup, firstBase, loadBase, thumbs = "", submit, available, preview = false, direct = false, startProducts,
 }: {
   region: string;
   model: Customizer;
@@ -54,6 +59,10 @@ export function CustomizerForm({
   available: boolean;
   /** Admin preview: fully interactive, never sends. */
   preview?: boolean;
+  /** The model sells directly (`directPurchase.enabled`): the page asks only what goes on the art and creates the product at INK. */
+  direct?: boolean;
+  /** Absent in the admin preview, which never creates anything. */
+  startProducts?: StartProducts;
 }) {
   const uid = useId();
   const arts = useMemo(() => (firstBase && model.studioArts?.length ? model.studioArts : []), [firstBase, model.studioArts]);
@@ -62,8 +71,11 @@ export function CustomizerForm({
   const [items, setItems] = useState<Pick[]>([{ art: 0, version: 0 }]);
   const [active, setActive] = useState(0);
   const pick = items[Math.min(active, items.length - 1)];
-  // The shirt colour is only for viewing; it decides which version of the art is drawn (light shirts get the "camiseta clara" base).
-  const [shirt, setShirt] = useState(SHIRT_COLORS[0].id);
+  // The shirt colour is only for viewing; it decides which version of the art is drawn (light shirts get the "camiseta clara" base). The Camiseta
+  // Infantil comes in six colours: on a kids version the swatches keep to them and a colour it does not have shows as the first one.
+  const colors = useMemo(() => shirtColorsFor(arts[pick.art]?.versions[pick.version]?.garment === "infantil"), [arts, pick]);
+  const [chosenShirt, setShirt] = useState(SHIRT_COLORS[0].id);
+  const shirt = colors.some((c) => c.id === chosenShirt) ? chosenShirt : colors[0].id;
   const light = shirtColor(shirt).light;
   const choice = useMemo(() => (studio ? choiceOf(arts, { ...pick, light }) : null), [studio, arts, pick, light]);
   const itemChoices = useMemo(() => (studio ? items.map((p) => choiceOf(arts, { ...p, light })).filter((c): c is ArtChoice => c !== null) : []), [studio, arts, items, light]);
@@ -97,6 +109,8 @@ export function CustomizerForm({
   const artworkInput = fieldMode ? { fields: fieldValues } : { layers: artworkEdits };
   const artworkProject = useMemo(() => artworkBase ? composeArtwork(artworkBase, fieldMode ? fieldEdits(artworkBase, previewValues) : artworkEdits) : null, [artworkBase, fieldMode, previewValues, artworkEdits]);
   const family = fieldMode && offersChoice(model);
+  // Direct purchase: only the typed text goes into the art (bases with fields), and the product is created at INK instead of a request.
+  const buying = direct && fieldMode;
 
   // Picking an art that is already in the order shows it instead of adding it twice.
   const choose = (next: Pick) => {
@@ -126,13 +140,18 @@ export function CustomizerForm({
   const fullRef = useRef<HTMLDialogElement>(null);
   const [full, setFull] = useState(false);
   const openFull = () => { setFull(true); fullRef.current?.showModal(); };
+  // The waiting screen of a direct purchase, over the page like the full-screen view.
+  const waitRef = useRef<HTMLDialogElement>(null);
+  const [waiting, setWaiting] = useState<Waiting | null>(null);
+  const openWaiting = (w: Waiting) => { setWaiting(w); requestAnimationFrame(() => waitRef.current?.showModal()); };
+  const loadBaseById = useCallback((templateId: string) => (loadBase ? loadBase({ region, slug: model.slug, templateId }) : Promise.resolve(null)), [loadBase, region, model.slug]);
   useEffect(() => {
-    if (!full) return;
+    if (!full && !waiting) return;
     const root = document.documentElement;
     const before = root.style.overflow;
     root.style.overflow = "hidden";
     return () => { root.style.overflow = before; };
-  }, [full]);
+  }, [full, waiting]);
   const focusSurname = () => { const first = slots[0]; if (first) document.getElementById(`${uid}-artwork-${first.id}`)?.focus(); };
 
   const artOptions = () => arts.map((a, i) => ({ key: i, label: a.label, thumb: thumb(choiceOf(arts, { art: i, version: i === pick.art ? pick.version : 0, light })!.templateId) }));
@@ -183,6 +202,23 @@ export function CustomizerForm({
     setBanner(null);
     if (phase === "sending") return;
     if (studio && (!artworkBase || !templateId)) { setBanner("Aguarde a arte carregar."); return; }
+    if (buying && artworkBase && templateId) {
+      const art = validateArtworkInput(artworkBase, templateId, { fields: fieldValues });
+      if (!art.ok) { showErrors(art.errors); setBanner("Confira o que você escreveu."); return; }
+      setErrors({});
+      if (preview || !startProducts) { setBanner("Pré-visualização: nada foi criado."); return; }
+      setPhase("sending");
+      const result = await startProducts({ region, slug: model.slug, artwork: { templateId: itemChoices[0]?.templateId ?? templateId, fields: fieldValues, ...(itemChoices.length > 1 ? { also: itemChoices.slice(1).map((c) => c.templateId) } : {}) } }).catch(() => null);
+      setPhase("idle");
+      if (!result) { setBanner("A conexão caiu. Tente de novo."); return; }
+      if (!result.ok && !result.fallback) { showErrors(result.errors); setBanner(result.message); return; }
+      const first = itemChoices[0]?.version;
+      openWaiting({
+        items: result.ok ? result.items : [], fallback: result.ok ? null : result.message, surname: Object.values(fieldValues).join(" ").trim(),
+        showcase: first ? { templateId: first.templateId, ...(first.lightTemplateId ? { lightTemplateId: first.lightTemplateId } : {}), fields: fieldValues, kids: first.garment === "infantil" } : null,
+      });
+      return;
+    }
     const checked = artworkBase && templateId ? validateArtworkInput(artworkBase, templateId, artworkInput) : validateSubmission(model, { fields: values.fields, lines: values.lines });
     const contactChecked = validateContact(contact);
     const problems = [...(checked.ok ? [] : checked.errors), ...(contactChecked.ok ? [] : contactChecked.errors)];
@@ -213,6 +249,16 @@ export function CustomizerForm({
     }
     setPhase("idle");
   }
+
+  /** The team's way out of a direct purchase: the usual request, with the contact typed on the waiting screen. */
+  const requestTeam = async (c: ContactValues): Promise<RequestOutcome> => {
+    const artwork = templateId ? { fields: fieldValues, templateId: itemChoices[0]?.templateId ?? templateId, ...(itemChoices.length > 1 ? { also: itemChoices.slice(1).map((x) => x.templateId) } : {}) } : undefined;
+    const result = await submit({ region, slug: model.slug, idempotencyKey: idem.current, fields: values.fields, lines: values.lines, ...(artwork ? { artwork } : {}), contact: c });
+    if (result.ok) return { ok: true, channels: result.channels };
+    const map: Record<string, string> = {};
+    for (const e of result.errors) map[e.key] ??= e.message;
+    return { ok: false, message: result.message, errors: map };
+  };
 
   const editAgain = () => {
     previous.current = done?.reference; // the earlier reference is cancelled when the new one is registered
@@ -252,7 +298,7 @@ export function CustomizerForm({
           <h1 className="t-h1" style={studio ? { fontSize: "clamp(2.25rem, 8vw, 7.5rem)" } : undefined}>{model.name}</h1>
           {model.description && <p className="t-body mt-3 max-w-xl text-ink-soft">{model.description}</p>}
           {studio ? (
-            !model.description && <p className="t-body mt-2 max-w-xl text-ink-soft">Monte a estampa com o sobrenome da sua família. A gente prepara e fala com você pelo WhatsApp ou e-mail.</p>
+            !model.description && <p className="t-body mt-2 max-w-xl text-ink-soft">{buying ? "Monte a estampa com o sobrenome da sua família e compre na hora, na loja Use Origens." : "Monte a estampa com o sobrenome da sua família. A gente prepara e fala com você pelo WhatsApp ou e-mail."}</p>
           ) : (
             <p className="t-body mt-3 max-w-xl" data-testid="customization-intro">
               Envie sua ideia de personalização. Nossa equipe prepara a estampa e entra em contato pelo canal informado quando ela estiver pronta para você realizar a compra. Esta etapa não é uma compra nem reserva um produto.
@@ -279,7 +325,7 @@ export function CustomizerForm({
             {studio && fieldMode && showingExample && phase !== "done" && (
               <button type="button" onClick={focusSurname} className="mt-1 min-h-11 text-left text-[0.875rem] font-semibold underline underline-offset-4">É só um exemplo. Escreva o seu sobrenome</button>
             )}
-            {studio && phase !== "done" && <div className="mt-2"><ShirtSwatches name={`${uid}-camiseta`} value={shirt} onChange={chooseShirt} /></div>}
+            {studio && phase !== "done" && <div className="mt-2"><ShirtSwatches name={`${uid}-camiseta`} value={shirt} onChange={chooseShirt} colors={colors} /></div>}
           </div>
         </div>
 
@@ -386,6 +432,7 @@ export function CustomizerForm({
                 </fieldset>
               )}
 
+              {!buying && <>
               <div className="border-t border-line pt-5">
                 <fieldset className="space-y-3" data-testid="contact-fieldset" data-clarity-mask="True">
                   <legend className="t-h3">{studio && arts.length > 1 ? "3. Como falamos com você?" : "Como podemos entrar em contato com você?"}<InfoTip label="Quais contatos informar">O seu nome e pelo menos um canal: WhatsApp ou e-mail (pode ser os dois).</InfoTip></legend>
@@ -424,16 +471,22 @@ export function CustomizerForm({
                   </dl>
                 )}
               </section>
+              </>}
 
               {banner && <p className="border-2 border-[#9b1c1c] bg-white p-3 font-bold text-[#9b1c1c]" role="alert">{banner}</p>}
               {!available && !preview && <p className="border-2 border-ink bg-white p-3" role="status">O envio de solicitações não está disponível neste ambiente.</p>}
 
               <div>
-                <button type="submit" className="btn w-full sm:w-auto" disabled={phase === "sending" || (!available && !preview) || (studio && (!artworkBase || !artworkReady))}>{phase === "sending" ? "Enviando…" : preview ? "Testar o envio (prévia)" : studio ? (items.length > 1 ? `Enviar solicitação (${items.length} artes)` : "Enviar solicitação") : "Enviar solicitação"}</button>
-                <p className="t-small mt-3 flex max-w-xl items-center text-ink-mute">
+                <button type="submit" className="btn w-full sm:w-auto" disabled={phase === "sending" || (!available && !preview) || (studio && (!artworkBase || !artworkReady))}>{phase === "sending" ? (buying ? "Começando…" : "Enviando…") : buying ? (items.length > 1 ? `Criar minhas ${items.length} camisetas` : "Criar minha camiseta") : preview ? "Testar o envio (prévia)" : studio ? (items.length > 1 ? `Enviar solicitação (${items.length} artes)` : "Enviar solicitação") : "Enviar solicitação"}</button>
+                {buying ? (
+                  <p className="t-small mt-3 flex max-w-xl items-center text-ink-mute">
+                    <span id={`${uid}-notice`}><strong>A gente cria a sua camiseta</strong> e leva você até ela na loja.</span>
+                    <InfoTip label="O que acontece ao criar">Leva cerca de 1 minuto. Na loja Use Origens você escolhe o modelo, o tamanho e a cor e finaliza a compra. Não pedimos endereço, CPF, senha nem dados de pagamento aqui.</InfoTip>
+                  </p>
+                ) : <p className="t-small mt-3 flex max-w-xl items-center text-ink-mute">
                   <span id={`${uid}-notice`} {...(studio ? { "data-testid": "customization-intro" } : {})}><strong>Não é uma compra:</strong> a gente prepara a estampa e fala com você.</span>
                   <InfoTip label="O que acontece ao enviar">Enviar registra a sua solicitação de criação com a nossa equipe, com o resumo acima. Esta etapa não é uma compra nem reserva um produto. Não pedimos endereço, CPF, senha nem dados de pagamento.</InfoTip>
-                </p>
+                </p>}
               </div>
               </fieldset>
             </form>
@@ -455,7 +508,18 @@ export function CustomizerForm({
               {/* The input first: with the phone keyboard open, the input and the art above it still fit on screen. */}
               {fieldMode && surnameStep(true)}
               <div className="mx-auto w-full" style={{ maxWidth: "min(100%, 36svh)" }}>{previewBlock(true)}</div>
-              <div className="mx-auto w-full max-w-[18.5rem]"><ShirtSwatches name={`${uid}-full-camiseta`} value={shirt} onChange={chooseShirt} /></div>
+              <div className="mx-auto w-full max-w-[18.5rem]"><ShirtSwatches name={`${uid}-full-camiseta`} value={shirt} onChange={chooseShirt} colors={colors} /></div>
+            </div>
+          </>}
+        </dialog>
+      )}
+
+      {buying && (
+        <dialog ref={waitRef} onClose={() => setWaiting(null)} aria-labelledby={`${uid}-wait-title`} className="m-0 h-[100dvh] max-h-none w-full max-w-none overflow-clip bg-ground p-0 text-ink backdrop:bg-black/60 open:flex open:flex-col lg:m-auto lg:h-auto lg:max-h-[92dvh] lg:max-w-xl">
+          {waiting && <>
+            <div className="border-b border-line px-4 py-3"><h2 id={`${uid}-wait-title`} className="t-h3">{waiting.fallback ? "Quase lá" : "Criando a sua camiseta"}</h2></div>
+            <div className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-6 pt-4">
+              <ProductWaiting items={waiting.items} surname={waiting.surname} showcase={waiting.showcase} bases={bases} loadBase={loadBase ? loadBaseById : undefined} fallback={waiting.fallback} onRequest={requestTeam} onBack={() => waitRef.current?.close()} />
             </div>
           </>}
         </dialog>

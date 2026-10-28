@@ -43,16 +43,16 @@ async function seedUser(email: string, role: "owner" | "editor" = "editor", scop
 describe("migrations", () => {
   test("given a fresh database, when migrated, then every migration is applied once and a second run applies nothing", async () => {
     const fresh = await createPgliteDb();
-    expect(await migrate(fresh, migrations)).toEqual(["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications"]);
+    expect(await migrate(fresh, migrations)).toEqual(["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications", "0011_customization_products"]);
     expect(await migrate(fresh, migrations)).toEqual([]);
-    expect(await migrationStatus(fresh, migrations)).toEqual({ applied: ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications"], pending: [], unknown: [] });
+    expect(await migrationStatus(fresh, migrations)).toEqual({ applied: ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications", "0011_customization_products"], pending: [], unknown: [] });
     await fresh.close();
   });
 
   test("given a database that is behind, when its status is read, then the pending versions are reported and nothing is applied", async () => {
     const half = await createPgliteDb();
     await migrate(half, migrations.slice(0, 1));
-    expect((await migrationStatus(half, migrations)).pending).toEqual(["0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications"]);
+    expect((await migrationStatus(half, migrations)).pending).toEqual(["0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications", "0011_customization_products"]);
     await half.close();
   });
 

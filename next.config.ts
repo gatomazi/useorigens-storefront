@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
       { source: "/meu-pequeno-mundo-use-origens.html", destination: "/meu-pequeno-mundo", permanent: false },
     ];
   },
+  // The server draws the art of direct purchases with a native canvas (src/lib/print-studio/render-server.ts): its platform binary is loaded at
+  // run time from node_modules, never bundled.
+  serverExternalPackages: ["@napi-rs/canvas"],
   experimental: {
     // Print layouts embed fonts and logos alongside a full-size PNG. The authenticated route separately caps the upload at 56 MB.
     proxyClientMaxBodySize: "57mb",
