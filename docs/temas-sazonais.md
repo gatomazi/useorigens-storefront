@@ -8,8 +8,8 @@ na loja não muda até você escolher outro e publicar.
 
 | | Black Friday | Natal |
 |---|---|---|
-| Título | A origem / entra na / **Black.** | Presente que / **tem endereço.** |
-| Texto | Camisetas de R$ 119,90 por R$ 99,90. Busque a sua cidade e garanta a sua: chega antes do Natal. | A camiseta da cidade de quem você ama, ou o sobrenome da família numa estampa de Natal. Peça até 06/12 para chegar antes do Natal. |
+| Título | A origem / entra na / **Black.** | Presente / que tem / **endereço.** |
+| Texto | Camisetas de R$ 119,90 por R$ 99,90. Busque a sua cidade e garanta a sua: chega antes do Natal. | A camiseta da cidade de quem você ama, ou o sobrenome da família numa estampa de Natal. |
 | Cores da abertura | metade do texto preta, título branco, destaque e traço amarelos (#e2b64a), busca com moldura amarela | destaque e traço em vermelho (#a8322d), o resto como no tema em uso |
 | Topo e menu do celular | pretos | como no tema em uso |
 | Seções novas | nenhuma | logo abaixo da abertura: a chamada "Natal em família, com o seu sobrenome." (botão para a personalização) e a vitrine "Para vestir na ceia." (coleção Natal) |
