@@ -286,7 +286,7 @@ export function CustomizerForm({
   const mid = mockup.variants?.[Math.min(1, (mockup.variants?.length ?? 1) - 1)]?.src ?? mockup.src;
   const previewBlock = (compact: boolean) => artworkProject ? (
     <ArtworkPreview key={`${compact ? "full" : "page"}-${templateId}`} project={artworkProject} onReady={compact ? undefined : setArtworkReady} view={previewView} onViewChange={setPreviewView} shirt={shirt} compact={compact}
-      actions={compact ? undefined : <button type="button" className={styles.viewsEnd} onClick={openFull} aria-haspopup="dialog"><span className="inline-flex items-center gap-1.5"><ExpandIcon />Tela cheia</span></button>} />
+      actions={compact ? undefined : <button type="button" className={styles.viewsEnd} onClick={openFull} aria-haspopup="dialog" aria-label="Tela cheia" title="Tela cheia"><span className="inline-flex items-center justify-center gap-1.5"><ExpandIcon /><span className={styles.viewsLabel}>Tela cheia</span></span></button>} />
   ) : (
     <div className={`mt-14 flex w-full items-center justify-center bg-[#242424] p-6 text-center text-white ${previewView === "shirt" ? "aspect-[800/820]" : "aspect-[4270/4900]"}`} role="status" aria-live="polite">{baseError || "Carregando a arte…"}</div>
   );

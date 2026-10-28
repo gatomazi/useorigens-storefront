@@ -12,7 +12,7 @@
 .colorControl input { width: 48px; height: 46px; padding: 3px; border: 2px solid var(--color-ink, #171717); background: white; cursor: pointer; }
 .help { display: flex; justify-content: space-between; gap: .75rem; color: var(--color-ink-mute, #565656); font-size: .8125rem; margin-top: .3rem; }
 .error { color: #9b1c1c; font-size: .875rem; font-weight: 600; }
-.preview { min-width: 0; width: 100%; margin: 0; }
+.preview { min-width: 0; width: 100%; margin: 0; container-type: inline-size; }
 .canvasWrap { width: 100%; aspect-ratio: 4270 / 4900; overflow: hidden; }
 .canvas { display: block; width: 100%; height: 100%; }
 .caption { color: var(--color-ink-mute, #565656); font-size: .8125rem; line-height: 1.5; margin-top: .6rem; }
@@ -22,6 +22,12 @@
 @media (max-width: 360px) { .styles { grid-template-columns: minmax(0, 1fr); } }
 .views { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .75rem; }
 .views .viewsEnd { margin-left: auto; }
+/* A narrow preview (a 320–360 px phone, or a desktop window under ~770 px tall, where the shirt is capped at 20 rem) has no room for the three
+   buttons on one line: "Tela cheia" keeps only its icon (its name stays in aria-label), so the row never breaks. */
+@container (max-width: 22rem) {
+  .views .viewsEnd { min-width: 44px; padding-inline: .6rem; }
+  .viewsLabel { display: none; }
+}
 .views button { min-height: 44px; padding: .4rem .9rem; white-space: nowrap; border: 2px solid var(--color-ink, #171717); background: white; color: var(--color-ink, #171717); font: inherit; font-size: .875rem; font-weight: 700; cursor: pointer; }
 .views button[aria-pressed="true"] { background: var(--color-ink, #171717); color: white; }
 .views button:focus-visible { outline: 2px solid var(--color-region-primary, #316444); outline-offset: 3px; }
