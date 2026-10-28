@@ -17,7 +17,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   const visitor = request.headers.get("x-origens-visitor");
   const key = visitor && VISITOR.test(visitor) ? `v:${visitor}` : `ip:${clientKey(request.headers)}`;
-  if (!ID.test(id) || !allow(`czps:${key}`, 300, 10 * 60_000)) return Response.json({ error: "not found" }, { status: 404, headers: NO_STORE });
+  if (!ID.test(id)) return Response.json({ error: "not found" }, { status: 404, headers: NO_STORE });
+  // Up to 4 shirts of one order polled every 5 s (here and on INK) fit with room to spare; past it, 429 (never a 404, which means "no such job").
+  if (!allow(`czps:${key}`, 1_200, 10 * 60_000)) return Response.json({ error: "slow down" }, { status: 429, headers: { ...NO_STORE, "Retry-After": "30" } });
   const store = productStoreOrNull();
   const job = store ? await store.get(id).catch(() => null) : null;
   if (!job) return Response.json({ error: "not found" }, { status: 404, headers: NO_STORE });
