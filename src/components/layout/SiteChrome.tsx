@@ -269,6 +269,11 @@ export function Footer({ region, syncedAt, onBrand = false }: { region: RegionSl
               </a>
             </li>
             <li>
+              <Link href={`/${region}/seja-parceiro`} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]">
+                Seja parceiro
+              </Link>
+            </li>
+            <li>
               <Link href={`/${region}/privacidade`} className="link-line inline-flex min-h-11 min-w-11 items-center text-[0.9375rem]">
                 Política de privacidade
               </Link>

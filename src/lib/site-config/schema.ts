@@ -390,7 +390,7 @@ export const MAX_PAGES = 60;
 export const MAX_CUSTOMIZERS = 40;
 export const PAGE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /** Segments a page or a customizer may never use as its slug (static routes and words that would read as routes). */
-export const RESERVED_SLUGS: readonly string[] = ["h", "colecoes", "personalizar", "privacidade", "solicitacao", "api", "admin", "media", "novo", "preview"];
+export const RESERVED_SLUGS: readonly string[] = ["h", "colecoes", "personalizar", "privacidade", "solicitacao", "api", "admin", "media", "novo", "preview", "seja-parceiro"];
 
 export type ScopeDoc = {
   schemaVersion: 1;

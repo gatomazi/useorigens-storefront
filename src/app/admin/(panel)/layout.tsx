@@ -3,6 +3,7 @@ import { logoutAction, setScopeAction } from "@/app/admin/actions";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { pendingPublishes } from "@/lib/admin/pending";
 import { platform } from "@/lib/admin/platform";
+import { partnerStoreOrNull } from "@/lib/partners/server";
 import { currentScope, editableScopes, scopeName } from "@/lib/admin/scope";
 import { seedForEnv } from "@/lib/admin/publishing";
 import { siteUrl } from "@/lib/config/env";
@@ -22,6 +23,8 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const published = await platform().files.read();
   // Requests still waiting for someone, in the regions this person may act on. A missing table (migration not applied yet) must never break the panel.
   const openRequests = await platform().requests.countOpen(editable).catch(() => 0);
+  // Partner applications nobody has looked at yet (same rule: before migration 0010 it is simply 0).
+  const newPartners = (await partnerStoreOrNull()?.countNew(editable).catch(() => 0)) ?? 0;
   // What is waiting to be published here (region, pages, models and, for the owner, the global document): the count on the "Publicar" shortcut.
   const pending = await pendingPublishes(scope, actor).catch(() => null);
   const pendingTitle = pending
@@ -36,7 +39,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <span className="mt-1 block text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-white/70">{prod ? "Painel" : "Painel · local"}</span>
         </Link>
         <AdminSearch region={scope} owner={prod && actor.role === "owner"} />
-        <SidebarNav pendingRequests={openRequests} owner={prod && actor.role === "owner"} regionName={scopeName(scope)} storeHref={launchedIn(scope) ? (prod ? `${siteUrl().replace(/\/$/, "")}/${scope}` : `/${scope}`) : null} storeLabel={prod ? "Abrir a loja ↗" : "Abrir a loja local ↗"} />
+        <SidebarNav pendingRequests={openRequests} newPartners={newPartners} owner={prod && actor.role === "owner"} regionName={scopeName(scope)} storeHref={launchedIn(scope) ? (prod ? `${siteUrl().replace(/\/$/, "")}/${scope}` : `/${scope}`) : null} storeLabel={prod ? "Abrir a loja ↗" : "Abrir a loja local ↗"} />
         <div className="mt-auto hidden text-[0.75rem] leading-snug text-white/70 lg:block">
           {prod ? (
             <>
