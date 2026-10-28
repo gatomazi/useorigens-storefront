@@ -19,6 +19,11 @@ import { HeroSlides } from "./HeroSlides";
 
 const HERO_COPY = { title: "O seu lugar,\ndo seu jeito.", body: "Encontre sua cidade e vista o lugar que faz parte de você." };
 
+/** The line under a card's name: its place ("Porto Alegre · RS"), or none for a piece that is not a city's (a Christmas shirt). */
+const placeOf = (card: HeroFamilyCard): string | null => (card.cityName ? `${card.cityName} · ${card.uf}` : null);
+/** A card's picture, in words. */
+const photoAlt = (card: HeroFamilyCard): string => (card.cityName ? `Camiseta ${card.familyName} de ${card.cityName}` : card.familyName);
+
 /**
  * Hero ("O seu lugar, do seu jeito."): headline, search and the three commercial families (Ponto de Origem, Feito em,
  * Coordenadas), one real product each. Everything is drawn in code.
@@ -125,15 +130,17 @@ export function RegionHero({
                     href={d.href}
                     className="group flex h-full flex-col overflow-hidden rounded-lg border border-black/15 bg-ground text-ink transition-colors hover:border-black/35 focus-visible:border-region-primary"
                   >
-                    <ProductPhoto src={d.imageUrl} alt={`Camiseta ${d.familyName} de ${d.cityName}`} sizes="(min-width: 1024px) 15vw, (min-width: 768px) 28vw, 62vw" priority={i < 2} className="photo-contain">
+                    <ProductPhoto src={d.imageUrl} alt={photoAlt(d)} sizes="(min-width: 1024px) 15vw, (min-width: 768px) 28vw, 62vw" priority={i < 2} className="photo-contain">
                       {buy?.style === "fab" && <CardFab label={buy.label} />}
                     </ProductPhoto>
                     <div className="flex grow flex-col p-3 md:p-4">
                       <p className="line-clamp-2 text-[0.9375rem] font-medium leading-[1.3] md:text-base">{d.familyName}</p>
                       {/* Not .t-place: that unlayered class would override the size utilities below. */}
-                      <p className="mt-1 font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
-                        {d.cityName} · {d.uf}
-                      </p>
+                      {placeOf(d) && (
+                        <p className="mt-1 font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
+                          {placeOf(d)}
+                        </p>
+                      )}
                       <div className="mt-auto pt-1">
                         {buy?.style === "link" ? (
                           <CardCall label={buy.label} price={d.price ? <p className={CARD_PRICE}><PriceText price={d.price} listPrice={d.listPrice} /></p> : undefined} />
@@ -195,7 +202,7 @@ function FeatureHero({
   // One product (or none, or "always the first"): one half, as before. Several, drawn or sliding: one half per product, its own banner or the section's.
   const several = rotation !== undefined && slides.length > 1;
   const panel = several ? (
-    <HeroSlides mode={rotation} labels={slides.map((sl) => `${sl.product.familyName}, ${sl.product.cityName} · ${sl.product.uf}`)}>
+    <HeroSlides mode={rotation} labels={slides.map((sl) => [sl.product.familyName, placeOf(sl.product)].filter(Boolean).join(", "))}>
       {/* A drawn product is not known on the server, so no picture is loaded first; a sliding one, only the first. */}
       {slides.map((sl, i) => <FeaturePanel key={sl.product.familyId} product={sl.product} image={sl.image ?? panelImage} color={panelColor} call={call} priority={rotation === "slide" && i === 0} />)}
     </HeroSlides>
@@ -278,7 +285,7 @@ function FeaturePanel({ product, image, color, call, priority }: { product: Hero
           // One picture for every width: a thumbnail in the phone's row, the large photo from 1024px.
           <span className={`flex shrink-0 items-center justify-center py-4 pl-[var(--gutter)] lg:flex-1 lg:py-14 ${ALIGN_END} lg:pl-14`}>
             <span className="block w-24 overflow-hidden rounded-md sm:w-28 lg:w-full lg:max-w-[26rem]">
-              <ProductPhoto src={product.imageUrl} alt={`Camiseta ${product.familyName} de ${product.cityName}`} sizes="(min-width: 1024px) 26rem, 7rem" priority={priority} className="photo-contain" />
+              <ProductPhoto src={product.imageUrl} alt={photoAlt(product)} sizes="(min-width: 1024px) 26rem, 7rem" priority={priority} className="photo-contain" />
             </span>
           </span>
         )
@@ -298,9 +305,11 @@ function FeaturePanel({ product, image, color, call, priority }: { product: Hero
             )}
             <span className="min-w-0">
               <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
-              <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
-                {product.cityName} · {product.uf}
-              </span>
+              {placeOf(product) && (
+                <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
+                  {placeOf(product)}
+                </span>
+              )}
             </span>
           </span>
           <span className="flex items-baseline gap-4">

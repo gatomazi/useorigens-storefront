@@ -6,7 +6,7 @@ import { storeForRegion } from "./catalog/commerce-mode";
 import { canonicalRef } from "./catalog/references";
 import { isSubLocality, localityOfBinding } from "./catalog/locality-binding";
 import { resolveCityProduct } from "./catalog/resolver";
-import type { UnrankedBinding } from "./catalog/types";
+import { merchRegions, type MerchProduct, type UnrankedBinding } from "./catalog/types";
 import { formatListPrice, formatPrice } from "./format";
 import type { LocalityType } from "./geo/cities";
 import { localityKindLabel } from "./geo/localities";
@@ -22,6 +22,9 @@ import { HERO_CARDS, MAX_FEATURED, type FeaturedProductRef, type MediaRef } from
  * never called. A reference is eligible only when the product is present in THIS region's own store snapshot, is a canonical style of a
  * locality of this region that has pages here (a municipality OR a Federal District administrative region), has a photo and a verified purchase link; anything else is omitted from the storefront (only that
  * card) and flagged in the panel, and its reference is kept in the draft so the owner can replace it.
+ *
+ * A PIECE that is not a city's (merch: the Christmas shirts, the bodies) is eligible too when the store sells it in this region, with a photo and a
+ * verified purchase link. It has no page of ours, so its card goes straight to INK (like its card in a collection) and has no place line.
  */
 export type FeaturedSlot = { ref: FeaturedProductRef; ok: boolean; reason: string | null; card: HeroFamilyCard | null; buyUrl: string | null; imageUrl: string | null };
 
@@ -42,6 +45,15 @@ function cardOf(region: RegionSlug, b: UnrankedBinding, catalog: Catalog): { car
   };
 }
 
+/** A piece that is not a city's: its own name, no place, straight to its INK page (`cityName` and `uf` empty). */
+function pieceCardOf(region: RegionSlug, m: MerchProduct): { card: HeroFamilyCard | null; reason: string | null } {
+  if (!merchRegions(m).includes(region)) return { card: null, reason: "peça vendida em outra região" };
+  if (!m.imageUrl) return { card: null, reason: "sem foto no catálogo" };
+  const href = purchaseUrl(m);
+  if (!href) return { card: null, reason: "sem link de compra verificado" };
+  return { card: { familyId: `peca:${m.inkProductId}`, familyName: m.name.replace(/\s+/g, " ").trim(), cityName: "", uf: "", imageUrl: m.imageUrl, price: formatPrice(m.price), listPrice: formatListPrice(m), href }, reason: null };
+}
+
 /** Resolves each reference against the snapshot, in order, with the reason when it cannot be shown. */
 export function resolveFeatured(region: RegionSlug, refs: readonly FeaturedProductRef[]): FeaturedSlot[] {
   const catalog = getCatalog();
@@ -50,7 +62,13 @@ export function resolveFeatured(region: RegionSlug, refs: readonly FeaturedProdu
     const served = canonicalRef({ store: ref.store, id: ref.productId });
     if (!served) return { ref, ok: false, reason: "produto da loja regional sem correspondência confirmada na loja única", card: null, buyUrl: null, imageUrl: null };
     if (served.store !== storeForRegion(region)) return { ref, ok: false, reason: "produto de outra loja da INK", card: null, buyUrl: null, imageUrl: null };
-    const binding = catalog.productsOfStore(served.store).cityDesigns.get(served.id);
+    const products = catalog.productsOfStore(served.store);
+    const binding = products.cityDesigns.get(served.id);
+    const piece = binding ? undefined : products.merch.get(served.id);
+    if (piece) {
+      const { card, reason } = pieceCardOf(region, piece);
+      return { ref, ok: card !== null, reason, card, buyUrl: purchaseUrl(piece), imageUrl: piece.imageUrl || null };
+    }
     if (!binding) return { ref, ok: false, reason: "o produto não existe mais no catálogo sincronizado", card: null, buyUrl: null, imageUrl: null };
     const { card, reason } = cardOf(region, binding, catalog);
     return { ref, ok: card !== null, reason, card, buyUrl: purchaseUrl(binding), imageUrl: binding.imageUrl || null };
@@ -88,10 +106,12 @@ export function legacyFeaturedRefs(region: RegionSlug): FeaturedProductRef[] {
 export type FeaturedCandidate = {
   store: CommerceStoreKey;
   productId: string;
+  /** The style's name, or the piece's own name for a piece that is not a city's. */
   familyName: string;
-  /** The place's name: a city or an administrative region (`localityType` says which). */
+  /** The place's name: a city or an administrative region (`localityType` says which). Empty for a piece that is not a city's. */
   cityName: string;
-  localityType: LocalityType;
+  /** Absent for a piece that is not a city's. */
+  localityType?: LocalityType;
   uf: string;
   price: string | null;
   imageUrl: string;
@@ -125,6 +145,15 @@ function indexOf(region: RegionSlug): Indexed[] {
       haystack: { city: normalizeText(card.cityName), uf: card.uf.toLowerCase(), family: normalizeText(card.familyName), familyId: familyById(b.designFamily)?.id ?? "", id: b.inkProductId, parent: isRegion ? normalizeText(place.parentLabel) : "", kind: isRegion ? normalizeText(localityKindLabel(place)) : "" },
     });
   }
+  // The pieces that are not a city's (the Christmas shirts, the bodies), found by their name or id.
+  for (const m of catalog.productsOfStore(store).merch.values()) {
+    const { card } = pieceCardOf(region, m);
+    if (!card) continue;
+    built.push({
+      candidate: { store, productId: m.inkProductId, familyName: card.familyName, cityName: "", uf: "", price: card.price, imageUrl: card.imageUrl, buyUrl: card.href, href: card.href, primary: false },
+      haystack: { city: "", uf: "", family: normalizeText(card.familyName), familyId: "peca", id: m.inkProductId, parent: "", kind: "" },
+    });
+  }
   perStore.set(store, built);
   return built;
 }
@@ -136,7 +165,8 @@ export function searchFeaturedCandidates(region: RegionSlug, query: string, limi
   const matches = indexOf(region).filter(({ haystack: h }) =>
     tokens.every((t) => h.city.includes(t) || h.uf === t || h.parent.includes(t) || h.kind.includes(t) || h.family.includes(t) || h.familyId.includes(t) || h.id === t || (t.length >= 5 && h.id.startsWith(t))),
   );
-  matches.sort((a, b) => Number(b.candidate.primary) - Number(a.candidate.primary) || a.candidate.cityName.localeCompare(b.candidate.cityName, "pt-BR") || a.candidate.familyName.localeCompare(b.candidate.familyName, "pt-BR"));
+  // City styles first (the main one of each city ahead), then the pieces that are not a city's.
+  matches.sort((a, b) => Number(b.candidate.primary) - Number(a.candidate.primary) || Number(!a.candidate.cityName) - Number(!b.candidate.cityName) || a.candidate.cityName.localeCompare(b.candidate.cityName, "pt-BR") || a.candidate.familyName.localeCompare(b.candidate.familyName, "pt-BR"));
   return { results: matches.slice(0, Math.min(limit, 24)).map((m) => m.candidate), total: matches.length };
 }
 

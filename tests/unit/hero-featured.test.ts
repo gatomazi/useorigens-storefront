@@ -18,7 +18,11 @@ const binding = (store: string, cityId: string, family: string, id: string, extr
   storeProductUrl: `https://www.${store === "use-norte" ? "usenorte" : store === "use-centro" ? "usecentro" : "usesul"}.com.br/x/product/p-${id}`,
   imageUrl: `https://img.example/${id}.jpg`, price: 109.9, syncedAt: NOW, ...extra,
 });
-const store = (key: string, bindings: unknown[]) => ({ commerceStoreKey: key, syncedAt: NOW, productCount: bindings.length, bindings, merch: [], excluded: [] });
+const store = (key: string, bindings: unknown[], merch: unknown[] = []) => ({ commerceStoreKey: key, syncedAt: NOW, productCount: bindings.length + merch.length, bindings, merch, excluded: [] });
+const piece = (id: string, name: string, extra: Record<string, unknown> = {}) => ({
+  inkProductId: id, commerceStoreKey: "use-sul", regionSlug: "sul", name, slug: `p-${id}`, storeProductUrl: `https://www.usesul.com.br/x/product/p-${id}`,
+  imageUrl: `https://img.example/${id}.jpg`, price: 99.9, listPrice: 119.9, totalSalesCount: 0, syncedAt: NOW, ...extra,
+});
 
 let dir: string;
 let mod: typeof import("@/lib/hero-featured");
@@ -27,7 +31,11 @@ beforeAll(async () => {
   const snapshot = {
     version: 1,
     stores: {
-      "use-sul": store("use-sul", [binding("use-sul", floripa.id, "ponto-de-origem", "9001")]),
+      "use-sul": store("use-sul", [binding("use-sul", floripa.id, "ponto-de-origem", "9001")], [
+        piece("9501", "Capivara  de Reveião"),
+        piece("9502", "Quero-Quero de Natal", { imageUrl: "" }), // no photo: not eligible
+        piece("9503", "Cuia do Norte", { regionSlug: "norte" }), // sold in another region
+      ]),
       "use-norte": store("use-norte", [
         binding("use-norte", belem.id, "ponto-de-origem", "7001"),
         binding("use-norte", belem.id, "coordenadas", "7002"),
@@ -92,6 +100,26 @@ describe("hero featured products resolve against the region's own catalog snapsh
     const legacy = [1, 2, 3, 4, 5].map((n) => ({ ...sul[0], familyId: `f${n}`, familyName: `F${n}` }));
     expect(mod.heroCards("sul", undefined, legacy).map((c) => c.familyName)).toEqual(["F1", "F2", "F3"]);
     expect(mod.heroSlides("sul", undefined, legacy)).toHaveLength(5);
+  });
+});
+
+describe("pieces that are not a city's (Christmas shirts) in the opening", () => {
+  test("given a Natal piece of the region, when resolved, then its card has its own name, no place and goes straight to INK, beside a city style", () => {
+    const slides = mod.heroSlides("sul", [{ store: "use-sul", productId: "9001" }, { store: "use-sul", productId: "9501" }], []);
+    expect(slides.map((s) => s.card.familyName)).toEqual(["Ponto de Origem", "Capivara de Reveião"]);
+    expect(slides[1].card).toMatchObject({ cityName: "", uf: "", href: "https://www.usesul.com.br/x/product/p-9501", price: expect.stringContaining("99,90"), listPrice: expect.stringContaining("119,90") });
+  });
+
+  test("given a piece without a photo or of another region, when resolved, then it is ineligible with its reason", () => {
+    const [noPhoto, elsewhere] = mod.resolveFeatured("sul", [{ store: "use-sul", productId: "9502" }, { store: "use-sul", productId: "9503" }]);
+    expect(noPhoto).toMatchObject({ ok: false, reason: "sem foto no catálogo" });
+    expect(elsewhere).toMatchObject({ ok: false, reason: "peça vendida em outra região" });
+  });
+
+  test("given the panel's search, when a piece's name is typed, then it is found after the city styles, and never one that cannot be shown", () => {
+    expect(mod.searchFeaturedCandidates("sul", "capivara").results).toMatchObject([{ productId: "9501", cityName: "", familyName: "Capivara de Reveião" }]);
+    expect(mod.searchFeaturedCandidates("sul", "natal").total).toBe(0); // the only "Natal" piece has no photo
+    expect(mod.searchFeaturedCandidates("norte", "cuia").total).toBe(0);
   });
 });
 
