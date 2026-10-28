@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { InkRequestError, type InkProductClient, type InkProductView } from "@/lib/customization/ink-product-client";
 import { inkArts, productJobKey, productName, publicJob, safeInkUrl, type NewProductJob, type PrintArea, type ProductJobStore } from "@/lib/customization/ink-products";
 import { fileProductJobStore } from "@/lib/customization/product-store";
-import { PHOTO_WAIT_MS, retryDelayMs, runProductJob, type WorkerDeps } from "@/lib/customization/product-worker";
+import { FINAL_PHOTO_WAIT_MS, PHOTO_WAIT_MS, retryDelayMs, runProductJob, type WorkerDeps } from "@/lib/customization/product-worker";
 import { needsReview } from "@/lib/customization/review-words";
 import { inkColorTakesDarkInk, SHIRT_COLORS, shirtColorsFor } from "@/lib/customization/shirts";
 
@@ -146,6 +146,38 @@ describe("making a product", () => {
     await runProductJob(job.id, deps(client), describeJob);
     expect(await store.get(job.id)).toMatchObject({ status: "ready", inkImageUrl: null });
     expect(clock - start).toBeGreaterThanOrEqual(PHOTO_WAIT_MS);
+  });
+
+  // 28/10/2026: right after the creation INK answered with a provisional photo under /cache/; the final one came about a minute later.
+  const CACHE_PHOTO = "https://gcp-images.majestic.ink.rsvcloud.com/cache/37c62f993540c41a744e9ec6d6701244.jpg";
+  const FINAL_PHOTO = "https://gcp-images.majestic.ink.rsvcloud.com/images/product_v2/main_image/9a9c09251845946a34447b73b50e3a40.jpg";
+  const SILVA_URL = "https://loja.useorigens.com.br/useorigens/product/silva";
+
+  test("a provisional photo (/cache/) sends the customer at once, and the final one replaces it as soon as INK has it", async () => {
+    const { job } = await store.findOrCreate(NEW);
+    const { client, calls } = scriptedInk({ get: (n) => ({ id: "5143876", url: SILVA_URL, imageUrl: n < 4 ? CACHE_PHOTO : FINAL_PHOTO }) });
+    const start = clock;
+    await runProductJob(job.id, deps(client), describeJob);
+    const done = (await store.get(job.id))!;
+    expect(done).toMatchObject({ status: "ready", inkUrl: SILVA_URL, inkImageUrl: FINAL_PHOTO, error: null });
+    expect(Date.parse(done.readyAt!) - start).toBeLessThan(PHOTO_WAIT_MS); // ready with the first photo, not held for the final one
+    expect(calls.get).toBe(4); // and it stops asking once the final photo is there
+  });
+
+  test("without the final photo, the provisional one stays and the job is still ready", async () => {
+    const { job } = await store.findOrCreate(NEW);
+    const { client } = scriptedInk({ get: () => ({ id: "5143876", url: SILVA_URL, imageUrl: CACHE_PHOTO }) });
+    const start = clock;
+    await runProductJob(job.id, deps(client), describeJob);
+    expect(await store.get(job.id)).toMatchObject({ status: "ready", inkImageUrl: CACHE_PHOTO, error: null });
+    expect(clock - start).toBeGreaterThanOrEqual(FINAL_PHOTO_WAIT_MS);
+  });
+
+  test("INK failing while the final photo is looked for changes nothing", async () => {
+    const { job } = await store.findOrCreate(NEW);
+    const { client } = scriptedInk({ get: (n) => (n === 1 ? { id: "5143876", url: SILVA_URL, imageUrl: CACHE_PHOTO } : new InkRequestError("GET → 404", 404, false)) });
+    await runProductJob(job.id, deps(client), describeJob);
+    expect(await store.get(job.id)).toMatchObject({ status: "ready", inkImageUrl: CACHE_PHOTO, error: null });
   });
 
   test("INK busy (429/5xx/network): back in the queue, retried later with the SAME key", async () => {

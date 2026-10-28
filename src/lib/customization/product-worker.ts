@@ -1,5 +1,6 @@
 import { InkRequestError, type InkProductClient } from "./ink-product-client";
 import { inkArts, safeInkUrl, type ProductJob, type ProductJobStore } from "./ink-products";
+import { isProvisionalInkPhoto } from "./product-status";
 
 export type WorkerDeps = {
   store: ProductJobStore;
@@ -20,6 +21,9 @@ const MAX_ATTEMPTS = 4;
 export const retryDelayMs = (attempts: number): number => 20_000 * 2 ** Math.max(0, attempts - 1);
 /** Without a link this long after the creation, a person looks at it. */
 const LINK_GIVE_UP_MS = 10 * 60_000;
+/** INK's first photo can be a provisional one (/cache/): the final one came about a minute later on 28/10/2026. It is looked for this long. */
+export const FINAL_PHOTO_WAIT_MS = 3 * 60_000;
+const FINAL_PHOTO_POLL_MS = 15_000;
 /** States in which nothing exists at INK yet: the only ones an error before the creation may change. */
 const BEFORE_INK = ["queued", "creating"] as const;
 
@@ -74,10 +78,26 @@ export async function runProductJob(id: string, deps: WorkerDeps, describe: (job
         if (!(e instanceof InkRequestError && e.transient)) throw e;
       }
     }
-    if (url) await deps.store.update(job.id, { status: "ready", inkUrl: url, inkImageUrl: image, readyAt: deps.now().toISOString() }, { release: true, onlyIf: ["photos"] });
-    else if (deps.now().getTime() > since + LINK_GIVE_UP_MS) await deps.store.update(job.id, { status: "check", error: "a INK não devolveu um link da loja" }, { release: true, onlyIf: ["photos"] });
+    if (url) {
+      const ready = await deps.store.update(job.id, { status: "ready", inkUrl: url, inkImageUrl: image, readyAt: deps.now().toISOString() }, { release: true, onlyIf: ["photos"] });
+      // The customer goes now, with the provisional photo; the final one replaces it as soon as INK has it.
+      if (ready && isProvisionalInkPhoto(image)) await swapForFinalPhoto(ready, deps);
+    } else if (deps.now().getTime() > since + LINK_GIVE_UP_MS) await deps.store.update(job.id, { status: "check", error: "a INK não devolveu um link da loja" }, { release: true, onlyIf: ["photos"] });
     else await deps.store.update(job.id, { inkImageUrl: image }, { release: true, onlyIf: ["photos"] }); // still "photos": the next run asks INK again
   } catch (e) {
     await deps.store.update(job.id, { status: "check", attempts: job.attempts + 1, error: (e instanceof Error ? e.message : String(e)).slice(0, 300) }, { release: true, onlyIf: ["photos"] });
+  }
+}
+
+/** Looks for INK's final photo for a while; nothing here may change the job but its picture (a failure keeps the provisional one). */
+async function swapForFinalPhoto(job: ProductJob, deps: WorkerDeps): Promise<void> {
+  const until = deps.now().getTime() + FINAL_PHOTO_WAIT_MS;
+  while (deps.now().getTime() < until) {
+    await deps.sleep(FINAL_PHOTO_POLL_MS);
+    const seen = await deps.client.getProduct(job.inkProductId!).catch(() => null);
+    if (seen?.imageUrl && !isProvisionalInkPhoto(seen.imageUrl)) {
+      await deps.store.update(job.id, { inkImageUrl: seen.imageUrl }, { onlyIf: ["ready"] }).catch(() => null);
+      return;
+    }
   }
 }
