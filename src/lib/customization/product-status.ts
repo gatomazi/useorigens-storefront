@@ -18,11 +18,21 @@ export type PublicProductJob = { id: string; label: string; status: ProductStatu
 
 /** Where a personalized shirt's photo is shown with `next/image` ("Minhas Estampas"), only INK's CDN is allowed; anything else is the plain shirt. */
 export const PERSONALIZED_PLACEHOLDER = "/personalizacao/camisetas/preta.webp";
-export function inkPhotoOrPlaceholder(raw: string | null | undefined): string {
+/**
+ * The paths of INK's CDN a product photo comes from, the same ones next.config.ts lets `next/image` load: the final photo and the provisional one INK
+ * answers with in the first minute after a creation. Any other path would be a broken picture, so it is the plain shirt too.
+ */
+const INK_PHOTO_PATHS = ["/images/product_v2/", "/cache/"];
+const inkPhoto = (raw: string | null | undefined): URL | null => {
   try {
     const url = new URL(raw ?? "");
-    return url.protocol === "https:" && url.hostname === INK_IMAGE_HOST && !url.port && !url.username ? url.toString() : PERSONALIZED_PLACEHOLDER;
+    return url.protocol === "https:" && url.hostname === INK_IMAGE_HOST && !url.port && !url.username && INK_PHOTO_PATHS.some((p) => url.pathname.startsWith(p)) ? url : null;
   } catch {
-    return PERSONALIZED_PLACEHOLDER;
+    return null;
   }
+};
+export function inkPhotoOrPlaceholder(raw: string | null | undefined): string {
+  return inkPhoto(raw)?.toString() ?? PERSONALIZED_PLACEHOLDER;
 }
+/** INK's provisional photo (under /cache/): shown at once, then swapped by the worker for the final one. */
+export const isProvisionalInkPhoto = (raw: string | null | undefined): boolean => inkPhoto(raw)?.pathname.startsWith("/cache/") ?? false;

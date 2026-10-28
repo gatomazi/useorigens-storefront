@@ -26,6 +26,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "gcp-images.majestic.ink.rsvcloud.com", pathname: "/images/product_v2/**" },
       // The cart mirror ("Meu carrinho") shows INK cart thumbnails, which live under product_art. Nothing broader is opened.
       { protocol: "https", hostname: "gcp-images.majestic.ink.rsvcloud.com", pathname: "/images/product_art/**" },
+      // A personalized shirt's first photo (direct purchase): right after the creation INK answers with a provisional picture under /cache/, and the
+      // final one (product_v2/main_image) comes about a minute later (28/10/2026). Without it "Minhas Estampas" showed a broken picture.
+      { protocol: "https", hostname: "gcp-images.majestic.ink.rsvcloud.com", pathname: "/cache/**" },
       // "Guia de medidas": INK's own official size-table images, the same ones its "Confira suas medidas" modal shows (src/lib/catalog/size-guides.ts).
       { protocol: "https", hostname: "gcp-images.majestic.ink.rsvcloud.com", pathname: "/images/size_table/**" },
       // "Outros artigos" (canecas, ecobags) come from the Uma Penca feed; their photos are on its imgix hosts (src/lib/umapenca/hosts.ts).
