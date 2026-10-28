@@ -77,7 +77,7 @@ export function PartnerForm({ region, available, blurbs }: { region: RegionSlug;
     key.current ??= newKey();
     let result: PartnerSubmitResult;
     try {
-      result = await submitPartnerAction({ ...input, region, idempotencyKey: key.current, website: honeypot.current?.value ?? "" });
+      result = await submitPartnerAction({ ...input, region, idempotencyKey: key.current, trap: honeypot.current?.value ?? "" });
     } catch {
       result = { ok: false, errors: [], message: "Não foi possível enviar agora. Confira a sua conexão e tente de novo." };
     }
@@ -190,8 +190,8 @@ export function PartnerForm({ region, available, blurbs }: { region: RegionSlug;
 
       {/* Never seen by people (off screen, out of the tab order): a robot that fills it is answered with a success and nothing is kept. */}
       <div className="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
-        <label htmlFor={`${uid}-website`}>Não preencha este campo</label>
-        <input ref={honeypot} id={`${uid}-website`} name="website" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
+        <label htmlFor={`${uid}-hp`}>Não preencha este campo</label>
+        <input ref={honeypot} id={`${uid}-hp`} name="hp_x7" type="text" tabIndex={-1} autoComplete="off" defaultValue="" />
       </div>
 
       <div>

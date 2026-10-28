@@ -98,7 +98,7 @@ export default async function PartnerPage({ params }: { params: Promise<{ region
   const numbers = [
     ...SOCIAL_PROOF,
     ...(reach.cities > 0 ? [{ value: numberPt.format(reach.cities), label: "cidades com camiseta própria na loja" }] : []),
-    ...(reach.states > 0 ? [{ value: String(reach.states), label: reach.df ? "estados e o Distrito Federal, do Sul ao Norte" : "estados atendidos pela loja" }] : []),
+    ...(reach.states > 0 ? [{ value: String(reach.states), label: reach.df ? "estados e o Distrito Federal com camiseta própria na loja" : "estados com camiseta própria na loja" }] : []),
   ];
   const blurbs = Object.fromEntries(PARTNER_PROFILES.map((p) => [p, PROFILES[p].teaser])) as Record<PartnerProfile, string>;
 

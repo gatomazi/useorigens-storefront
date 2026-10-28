@@ -107,9 +107,13 @@ export default async function PartnersPage({ searchParams }: { searchParams: Pro
                 </td>
                 <td data-label="Perfil"><span className="a-badge">{PROFILE_LABEL[a.profile]}</span></td>
                 <td data-label="Contato">
-                  <a className="a-link font-semibold" href={whatsappUrl(a.whatsapp, partnerGreeting(a))} target="_blank" rel="noreferrer">{phone(a.whatsapp)}</a>
-                  <span className="a-muted block text-[0.75rem]">abre o WhatsApp com uma saudação</span>
-                  {a.email && <a className="a-link block text-[0.875rem] [overflow-wrap:anywhere]" href={mailtoUrl(a.email, "Programa de parceiros da Use Origens", partnerGreeting(a))}>{a.email}</a>}
+                  <a className="a-btn sm" href={whatsappUrl(a.whatsapp, partnerGreeting(a))} target="_blank" rel="noreferrer" title="Abre o WhatsApp com uma saudação para editar antes de enviar">Chamar no WhatsApp</a>
+                  {/* The number and the address stay folded: the list is often on a shared screen (same rule as the personalization queue). */}
+                  <details className="mt-1 text-[0.875rem]">
+                    <summary className="a-muted cursor-pointer">Ver contato{a.email ? " e e-mail" : ""}</summary>
+                    <p className="tabular-nums">{phone(a.whatsapp)}</p>
+                    {a.email && <a className="a-link block [overflow-wrap:anywhere]" href={mailtoUrl(a.email, "Programa de parceiros da Use Origens", partnerGreeting(a))}>{a.email}</a>}
+                  </details>
                 </td>
                 <td data-label="Instagram">
                   {a.instagram ? <a className="a-link" href={`https://www.instagram.com/${a.instagram}/`} target="_blank" rel="noreferrer">@{a.instagram}</a> : <span className="a-muted">—</span>}
