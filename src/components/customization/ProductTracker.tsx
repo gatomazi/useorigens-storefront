@@ -8,6 +8,16 @@ import { ProductSteps } from "./ProductSteps";
 
 const POLL_MS = 5_000;
 const ShirtIcon = () => <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M8 3.5 4 5.5 2.5 10l3 1.2V20.5h13V11.2l3-1.2L20 5.5l-4-2c-.6 1.5-2.1 2.5-4 2.5S8.6 5 8 3.5Z" /></svg>;
+const SHIRT_PATH = "M8 3.5 4 5.5 2.5 10l3 1.2V20.5h13V11.2l3-1.2L20 5.5l-4-2c-.6 1.5-2.1 2.5-4 2.5S8.6 5 8 3.5Z";
+/** While a shirt is being made: the small shirt inside two arrows that turn around it (still with reduced motion). */
+const WorkingIcon = () => (
+  <span aria-hidden="true" className="relative inline-flex h-7 w-7 shrink-0 items-center justify-center">
+    <svg viewBox="0 0 24 24" className="absolute inset-0 h-7 w-7 motion-safe:animate-[spin_1.6s_linear_infinite]" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" /><path d="M21 3v5h-5" /><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" /><path d="M8 16H3v5" />
+    </svg>
+    <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"><path d={SHIRT_PATH} /></svg>
+  </span>
+);
 
 /**
  * The floating reminder of a direct purchase that is still being made, on every page of the site: the customer chose "Continuar navegando" (or
@@ -90,7 +100,7 @@ export function ProductTracker() {
       )}
       <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} style={{ bottom: lift }}
         className={`fixed left-1/2 z-40 flex min-h-12 max-w-[calc(100vw-11rem)] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap border-2 px-3 text-[0.875rem] font-bold shadow-[0_8px_24px_rgb(0_0_0/0.22)] ${ready.length ? "uo-attention border-[var(--region-primary)] bg-[var(--region-primary)] text-white" : "border-ink bg-paper text-ink"}`}>
-        <ShirtIcon />
+        {!ready.length && pending.length > 0 ? <WorkingIcon /> : <ShirtIcon />}
         <span className="truncate">{label}</span>
         {!ready.length && pending.length > 0 && <span aria-hidden="true" className="h-2 w-2 shrink-0 rounded-full bg-[#d8a800] motion-safe:animate-pulse" />}
       </button>
