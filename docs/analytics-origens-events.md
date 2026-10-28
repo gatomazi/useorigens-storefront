@@ -31,6 +31,20 @@ Os links do guia para o storefront ("Ver todas as estampas de…", "Ver a coleç
 
 **O mesmo guia na página da estampa do storefront** (`/<região>/<uf>/<cidade>/<família>`, `src/components/catalog/PdpGuide.tsx`, `trackGuide` em `src/lib/analytics/track.ts`): mesmos sete eventos e parâmetros, pelo caminho único do storefront (`window.gtag` atrás do consentimento), com `surface=storefront` e `entry_point=storefront_design_page`; `product_slug` é o slug INK do produto principal da página. Diferença de semântica: `origens_guide_open` com `guide_path=city_context` ("Mais estampas de <cidade>") rola até "Outros estilos de <cidade>" da própria página em vez de abrir painel. O clique num produto do guia dispara, além de `origens_guide_product_click`, o `GoToInk`/`select_item`+`go_to_ink` de sempre com `source_section` `pdp_guia_cidade` ou `pdp_guia_colecao` — nunca `PageView`, `ViewContent`, `AddToCart` ou `Purchase`. Dimensões novas a criar no painel do GA4 (escopo evento): `feature_version`, `guide_path`, `guide_step`, `city_slug`, `uf`, `result_count`, `has_results`, `position`, `target_product_id`.
 
+### "Sua cidade" no menu do storefront (jornada numa tela só; rodada de 27/10/2026)
+
+"Sua cidade" (no topo do desktop, no menu do celular e no "Encontre aqui a sua cidade" da seção "Sua cidade, de 8 jeitos" da home) abre uma tela cheia com três passos, sem trocar de página: **cidade → modelo → peça**, e a barra de compra leva ao produto daquela peça na INK (`src/components/city-journey/CityJourney.tsx`, `trackCityJourney` em `src/lib/analytics/track.ts`). Só GA4, pelo caminho único do storefront (`window.gtag` atrás do consentimento). Parâmetros comuns: `region`, `surface=storefront`, `feature_version=sua_cidade_v1`, `entry_point` (`header` = topo do desktop, `menu` = menu do celular, `home` = link da home) e, depois de escolhida a cidade, `city_slug` e `uf`. Nunca o texto digitado.
+
+| Evento | Quando | Parâmetros próprios |
+|---|---|---|
+| `origens_sua_cidade_open` | a jornada abre (toque em "Sua cidade") | — |
+| `origens_sua_cidade_state` | um estado escolhido no campo abre a lista das cidades dele, ali mesmo | `uf` (do estado) |
+| `origens_sua_cidade_model` | um modelo da cidade é escolhido | `family`, `position` (1 = primeiro da grade), `model_count`, `piece_count` |
+| `origens_sua_cidade_piece` | outra peça é escolhida para o modelo | `family`, `garment_type` (slug da peça: `oversized`, `moletom-capuz`…) |
+| `origens_sua_cidade_error` | os modelos da cidade não carregaram | — |
+
+Os passos com evento próprio da loja não ganham um novo: a cidade escolhida no campo dispara `Search` + `SelectCity` / `view_search_results` + `select_city`, e o botão para a loja dispara `GoToInk` / `select_item` + `go_to_ink`, todos com origem `sua_cidade` (`source` ou `source_section`). Peça diferente da camiseta clássica leva `garment_type` com o nome da peça, como nas abas da página da cidade. Uma cidade escolhida na lista de um estado ou num atalho "Em destaque" dispara só `SelectCity` / `select_city`. Até 27/10/2026 o link da home abria a busca e media `select_city` com `source=home_styles_search`; desde então é a jornada (`sua_cidade` + `entry_point=home`). Funil sugerido: `origens_sua_cidade_open` → `select_city` (source `sua_cidade`) → `origens_sua_cidade_model` → `go_to_ink` (source_section `sua_cidade`). Dimensões a criar no painel do GA4 (escopo evento), se ainda não existirem: `family`, `garment_type`, `model_count`, `piece_count`; `city_slug`, `uf` e `position` são as mesmas do guia.
+
 Buckets: `cart_items_bucket` = total de **peças** do snapshot (`0`, `1`, `2`, `3_5`, `6_plus`; as faixas de promoção da INK são por peça); `mirror_age_bucket` = `under_1m`, `1_5m`, `5_30m`. **Proibido** em qualquer evento: `cart_ref`, corpo do snapshot, ids de sessão/cliente, e-mail/nome, texto de busca, URL com query, `page_location`/`link_url` com token.
 
 ## Implementação por host (caminho único de despacho)

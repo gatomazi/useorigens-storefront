@@ -21,7 +21,8 @@ export const SOURCES = {
   stateSearch: "state_search",
   /** A city page's "Busque outra cidade" field under the styles (it opens the search sheet). */
   citySearch: "city_search",
-  /** "Encontre aqui a sua cidade" under the styles that show one example city (the home's "Sua cidade, de 8 jeitos"); it opens the search sheet. */
+  /** "Encontre aqui a sua cidade" under the styles that show one example city (the home's "Sua cidade, de 8 jeitos"), while it opened the search
+   * sheet. Since 27/10/2026 that link opens the "Sua cidade" journey (source `suaCidade`); kept so older reports keep their meaning. */
   homeStylesSearch: "home_styles_search",
   /** "Não achou a sua cidade? Encontre aqui" under a state page's "Escolha o estilo"; it opens the search sheet. */
   stateStylesSearch: "state_styles_search",
@@ -32,6 +33,9 @@ export const SOURCES = {
   /** A city page's own "Mais de {mesorregião}" neighbour links — not in the command's own suggested list, but
    * a real, distinct source this codebase already has (`TrackedCityLink` in `[city]/page.tsx`). */
   cityNeighbours: "city_neighbours",
+  /** The header menu's "Sua cidade" journey (src/components/city-journey/CityJourney.tsx): the place chosen there (select_city) and the piece it
+   * opens in the store (GoToInk / select_item), all on one screen. */
+  suaCidade: "sua_cidade",
 
   // State selection: header "Regiões" dropdown, footer "Estados" column, and the home's own `#estados`
   // chooser (`StateCards`) are all the same conceptual action (picking a state from a state-picker UI), so

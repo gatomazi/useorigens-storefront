@@ -24,6 +24,8 @@ import { PriorityLinks } from "./PriorityLinks";
 import { highlightProps } from "./menu-highlight";
 import { CartMirrorMenu } from "../cart-mirror/CartMirrorMenu";
 import { cartRegionFor, checkoutStoreFor, storeForRegion } from "@/lib/catalog/commerce-mode";
+import { journeyPicks } from "@/lib/catalog/city-journey";
+import { CityJourney, CityJourneyTrigger } from "../city-journey/CityJourney";
 import { AccountMenu, accountLinks } from "./AccountMenu";
 import { FavoritesMenu } from "../favorites/FavoritesMenu";
 import { SearchDialog } from "../search/SearchDialog";
@@ -90,7 +92,7 @@ export function Header({ region, headerActions }: { region: RegionSlug; headerAc
         <div className="flex items-center gap-1">
           <MobileMenu
             blocks={navigation.blocks}
-            search={<SearchDialog region={region} variant="field" source={SOURCES.searchDialog} />}
+            search={<CityJourneyTrigger variant="field" />}
             account={accountLinks(storeForRegion(region))}
             favorites={`/${region}/meus-lugares`}
           />
@@ -103,8 +105,8 @@ export function Header({ region, headerActions }: { region: RegionSlug; headerAc
         <SearchDialog region={region} variant="bar" source={SOURCES.headerSearchBar} />
 
         <nav aria-label="Principal" className="hidden min-w-0 flex-1 items-center justify-center gap-6 px-4 lg:flex xl:gap-8 xl:px-8">
-          {/* The first path: the visitor's own city, through the same search as the icon on the right (a button: it opens the search, it goes nowhere). */}
-          <SearchDialog region={region} variant="nav" label="Sua cidade" />
+          {/* The first path: the visitor's own city, its designs and the piece, on one screen (a button: it opens the journey, it goes nowhere). */}
+          <CityJourneyTrigger variant="nav" />
           {states.length > 0 && (
             <HeaderDropdown className="relative">
               {/* Named after what it lists (the region's states): "Regiões" next to the "Sul ▾" region switcher read as two menus of the same thing. */}
@@ -209,6 +211,9 @@ export function Header({ region, headerActions }: { region: RegionSlug; headerAc
           </Link>
         </div>
       </div>
+      {/* "Sua cidade": the page's one journey (the place, its designs and the piece on one screen), opened by the menu's word, the phone menu's
+          box and the home's "Encontre aqui a sua cidade" (components/city-journey). Outside the row and the phone menu: only a closed dialog here. */}
+      <CityJourney region={region} picks={journeyPicks(region)} finishIn={checkoutStoreFor(region).finishIn} />
     </HeaderShell>
   );
 }
