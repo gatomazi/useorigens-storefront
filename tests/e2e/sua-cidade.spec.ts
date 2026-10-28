@@ -196,6 +196,13 @@ test.describe("Sua cidade: place, design and piece on one screen", () => {
 
     await journey.getByTestId("journey-back").click();
     await expect(journey.getByRole("heading", { level: 2 })).toHaveText("Florianópolis");
+
+    // Closing the journey (a modal of its own, opened over the phone menu's) returns to that menu, with the focus on its field.
+    await page.keyboard.press("Escape");
+    await expect(journey).toBeHidden();
+    const menu = page.getByRole("dialog", { name: "Menu" });
+    await expect(menu).toBeVisible();
+    await expect(menu.getByRole("button", { name: "Qual é a sua cidade?" })).toBeFocused();
   });
 
   test("given a place the region does not have, when its data is asked for, then the answer is a 404 and never an empty list", async ({ page }) => {
