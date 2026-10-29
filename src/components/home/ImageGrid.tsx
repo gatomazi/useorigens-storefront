@@ -151,7 +151,9 @@ export function ImageGrid({
   /** Extra classes of the `<section>` (on a CMS page with a dark ground, a grid with its own light background keeps dark text: `on-light`). */
   className?: string;
 }) {
-  const { grid, sizes } = COLUMNS[layout.columns];
+  // Fewer blocks than columns (a block whose collection the region does not have left the grid): the row fits the blocks it has, no empty slot.
+  const columns = Math.min(layout.columns, Math.max(2, tiles.length)) as GridLayout["columns"];
+  const { grid, sizes } = COLUMNS[columns];
   const overlay = layout.labels === "overlay";
   // Collection cards (product / banner): one per row on phones (a photo beside its text, a wide banner), the grid's columns from 768px.
   const cards = tiles.some((t) => t.format);
@@ -164,16 +166,16 @@ export function ImageGrid({
   const content = cards ? (
     <>
       {heading}
-      <ul className={`grid gap-3 sm:gap-4 lg:gap-5 ${CARD_COLUMNS[layout.columns]}`}>
+      <ul className={`grid gap-3 sm:gap-4 lg:gap-5 ${CARD_COLUMNS[columns]}`}>
         {tiles.map((tile, i) => (
           <li key={`${i}-${tile.href}`} className="min-w-0">
             {tile.format === "banner" ? (
-              <BannerTile tile={tile} aspect={ASPECT_MD[layout.aspect]} sizes={CARD_SIZES[layout.columns]} />
+              <BannerTile tile={tile} aspect={ASPECT_MD[layout.aspect]} sizes={CARD_SIZES[columns]} />
             ) : tile.format === "product" ? (
-              <ProductTile tile={tile} sizes={CARD_SIZES[layout.columns]} />
+              <ProductTile tile={tile} sizes={CARD_SIZES[columns]} />
             ) : (
               // A classic tile in a grid of collection cards takes the banner's shape (its picture, or the region's colour), so the row stays one family.
-              <BannerTile tile={{ ...tile, color: tile.color ?? "var(--region-primary)", tone: "light" }} aspect={ASPECT_MD[layout.aspect]} sizes={CARD_SIZES[layout.columns]} />
+              <BannerTile tile={{ ...tile, color: tile.color ?? "var(--region-primary)", tone: "light" }} aspect={ASPECT_MD[layout.aspect]} sizes={CARD_SIZES[columns]} />
             )}
           </li>
         ))}

@@ -296,4 +296,21 @@ describe("Seguir a Sul: imagens e produtos da região", () => {
     expect(validateScopeDoc({ ...doc("norte"), regional: [{ sectionId: "s1", stateCovers: { PA: img("capa-pa") } }, { sectionId: "s1", appearance: { focal } }] }).ok).toBe(false);
     expect(validateScopeDoc({ ...doc("norte"), regional: [{ sectionId: "s1", featured: [{ store: "use-norte", productId: "1" }] }] })).toMatchObject({ ok: true });
   });
+
+  test("a grade da região: blocos e colunas próprios (a Sul com 4, o Norte com 2)", () => {
+    const sul = sulWithStructure();
+    delete sul.homeTheme;
+    const grid: Section = { ...carousel(), id: "custom-grade", anchor: "grade", headingId: "grade-title", template: "image-grid", title: "Tem coisa que é só nossa.", source: undefined, layout: undefined, analyticsSource: undefined, cta: undefined, grid: { columns: 4, aspect: "portrait", labels: "below" }, tiles: [1, 2, 3, 4].map((n) => ({ label: `Sul ${n}`, dest: { kind: "route", path: "/sul/busca" } })) };
+    sul.home!.sections.splice(1, 0, grid);
+    const tiles = [{ label: "Da Nossa Terra", image: img("norte-terra"), dest: { kind: "route" as const, path: "/norte/busca" } }, { label: "Fala Daqui", image: img("norte-fala"), dest: { kind: "route" as const, path: "/norte/busca" } }];
+    const norte = { ...doc("norte"), follow: ["home" as const], regional: [{ sectionId: grid.id, tiles, grid: { columns: 2 as const, aspect: "portrait" as const, labels: "below" as const } }] };
+    expect(validateScopeDoc(norte)).toMatchObject({ ok: true });
+    const out = followedDoc(norte, sul, true).home!.sections.find((s) => s.id === grid.id)!;
+    expect(out.title).toBe("Tem coisa que é só nossa.");
+    expect(out.tiles!.map((t) => t.label)).toEqual(["Da Nossa Terra", "Fala Daqui"]);
+    expect(out.grid!.columns).toBe(2);
+    // Only the columns, keeping Sul's blocks; a layout that is not one of the grid's is refused.
+    expect(validateScopeDoc({ ...norte, regional: [{ sectionId: grid.id, grid: { columns: 2, aspect: "portrait", labels: "below" } }] })).toMatchObject({ ok: true });
+    expect(validateScopeDoc({ ...norte, regional: [{ sectionId: grid.id, grid: { columns: 5, aspect: "portrait", labels: "below" } }] }).ok).toBe(false);
+  });
 });

@@ -89,6 +89,7 @@ export function withRegional(s: Section, own: RegionalSection | undefined): Sect
   }
   if (s.template === "states" && own.stateCovers) next.stateCovers = structuredClone(own.stateCovers);
   if (s.template === "image-grid" && own.tiles) next.tiles = structuredClone(own.tiles);
+  if (s.template === "image-grid" && own.grid) next.grid = structuredClone(own.grid);
   return next;
 }
 

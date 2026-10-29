@@ -28,7 +28,7 @@ Uma seção da Sul que depende de uma coleção que a região ainda não tem **s
 - **bloco da grade** que leva a essa coleção: só o bloco sai.
 
 Quando a região passa a ter os produtos **na mesma coleção da INK** (ex.: releituras do Norte entrando em Do Nosso Jeito), a seção volta sozinha,
-sem mexer no painel. Na lista **Imagens e produtos do Norte**, cada seção fora da região aparece com o aviso **Fora do Norte** e o motivo.
+sem mexer no painel. Uma grade com menos blocos do que colunas se ajusta aos blocos que tem (2 blocos = 2 colunas), sem deixar buraco. Na lista **Imagens e produtos do Norte**, cada seção fora da região aparece com o aviso **Fora do Norte** e o motivo.
 
 ## Imagens e produtos de cada região
 
@@ -38,7 +38,7 @@ A ideia é seguir a **estrutura** da Sul: cada região mantém os produtos e os 
 - a foto da seção (celular e desktop, com o foco);
 - na abertura, os produtos em destaque e o banner de cada um;
 - a capa de cada estado;
-- os blocos de uma grade de imagens (imagem, texto e link).
+- os blocos de uma grade de imagens (imagem, texto e link) e o número de colunas (ex.: 2 colunas para os 2 blocos que a região tem).
 
 **Vale por tema:** cada tema da home da Sul (Original, Editorial, Black Friday, Natal) tem as próprias imagens e produtos da região. As fotos do
 dia a dia do Norte não cobrem a abertura de Natal da Sul: quando a Sul troca de tema, a lista passa a ser a do tema novo, e o que não for trocado

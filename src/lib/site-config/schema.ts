@@ -322,6 +322,8 @@ export type RegionalSection = {
   featuredRotation?: FeaturedRotation;
   stateCovers?: Record<string, MediaRef>;
   tiles?: GridTile[];
+  /** The grid's layout in this region (two columns for the two blocks it has, while Sul shows four). */
+  grid?: GridLayout;
 };
 export const MAX_REGIONAL = 60;
 
@@ -1244,9 +1246,13 @@ function checkRegional(c: Collector, path: string, v: unknown, sc: Scope): void 
     const key = `${e.sectionId}:${String(e.theme ?? "original")}`;
     if (seen.has(key)) c.fail(at, "one entry per section and theme");
     seen.add(key);
-    for (const key of Object.keys(e)) if (!["sectionId", "theme", "appearance", "featured", "featuredRotation", "stateCovers", "tiles"].includes(key)) c.fail(`${at}.${key}`, "unknown field");
-    const kinds = [e.featured !== undefined || e.featuredRotation !== undefined, e.stateCovers !== undefined, e.tiles !== undefined].filter(Boolean).length;
+    for (const key of Object.keys(e)) if (!["sectionId", "theme", "appearance", "featured", "featuredRotation", "stateCovers", "tiles", "grid"].includes(key)) c.fail(`${at}.${key}`, "unknown field");
+    const kinds = [e.featured !== undefined || e.featuredRotation !== undefined, e.stateCovers !== undefined, e.tiles !== undefined || e.grid !== undefined].filter(Boolean).length;
     if (kinds > 1) c.fail(at, "the opening's products, the states' covers or the grid's blocks: one of them");
+    const g = e.grid;
+    if (g !== undefined && (!isRecord(g) || !(GRID_COLUMNS as readonly unknown[]).includes(g.columns) || !(GRID_ASPECTS as readonly unknown[]).includes(g.aspect) || !(GRID_LABELS as readonly unknown[]).includes(g.labels))) {
+      c.fail(`${at}.grid`, `{columns: ${GRID_COLUMNS.join("|")}, aspect: ${GRID_ASPECTS.join("|")}, labels: ${GRID_LABELS.join("|")}}`);
+    }
     const look = isRecord(e.appearance) ? e.appearance : {};
     if (e.appearance !== undefined && (!isRecord(e.appearance) || Object.keys(e.appearance).some((k) => k !== "image" && k !== "focal"))) c.fail(`${at}.appearance`, "only { image?, focal }");
     const template = e.featured !== undefined || e.featuredRotation !== undefined ? "hero" : e.stateCovers !== undefined ? "states" : e.tiles !== undefined ? "image-grid" : "campaign";
@@ -1254,7 +1260,8 @@ function checkRegional(c: Collector, path: string, v: unknown, sc: Scope): void 
       id: e.sectionId, anchor: "regional", headingId: "regional-title", template, active: true,
       ...(template === "hero" ? { variant: "feature", featured: e.featured ?? [], ...(e.featuredRotation !== undefined ? { featuredRotation: e.featuredRotation } : {}) } : {}),
       ...(template === "states" ? { stateCovers: e.stateCovers } : {}),
-      ...(template === "image-grid" ? { tiles: e.tiles, grid: { columns: 4, aspect: "portrait", labels: "below" } } : {}),
+      // The blocks are checked as a grid's (the title and the layout are Sul's, or the entry's own `grid`, checked above).
+      ...(template === "image-grid" ? { title: "regional", tiles: e.tiles, grid: { columns: 4, aspect: "portrait", labels: "below" } } : {}),
       appearance: { fill: { kind: "none" }, focal: look.focal ?? { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" }, ...(look.image !== undefined ? { image: look.image } : {}) },
     };
     checkSection(c, at, section);
