@@ -12,7 +12,7 @@ export type PreviewView = "shirt" | "art";
  * The art as the customer will get it: on a shirt photo by default, or alone and larger. `shirt`: the shirt colour (`SHIRT_COLORS` id) the page
  * picked; without it, the preview offers its own colour choice, starting from one that contrasts with the art. `view`/`onViewChange` let the page keep the view when the preview is remounted for another art.
  */
-export function ArtworkPreview({ project, onReady, shirt, view: controlled, onViewChange, initialView = "shirt", compact = false, actions, controls = true }: {
+export function ArtworkPreview({ project, onReady, shirt, view: controlled, onViewChange, initialView = "shirt", compact = false, actions, controls = true, zoom = false }: {
   project: PrintProject;
   onReady?: (ready: boolean) => void;
   shirt?: string;
@@ -25,6 +25,8 @@ export function ArtworkPreview({ project, onReady, shirt, view: controlled, onVi
   actions?: React.ReactNode;
   /** False: no "Na camiseta / Só a arte" row (the waiting screen's showcase). */
   controls?: boolean;
+  /** On the shirt, closer to the print (the live banner): the shirt and the art scale together, so the art stays where it prints. */
+  zoom?: boolean;
 }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const [error, setError] = useState("");
@@ -67,9 +69,11 @@ export function ArtworkPreview({ project, onReady, shirt, view: controlled, onVi
         {actions}
       </div>}
       <div className={onShirt ? styles.stage : styles.canvasWrap} style={onShirt ? undefined : { backgroundColor: color.swatch }} aria-busy={painted !== project && !error}>
-        {/* eslint-disable-next-line @next/next/no-img-element -- a small static photo laid under the canvas, not a content image */}
-        {onShirt && <img className={styles.shirt} src={shirtPhoto(color.id)} alt="" width={800} height={820} />}
-        <canvas ref={canvas} className={onShirt ? styles.printArea : styles.canvas} role="img" aria-label="Composição com os textos, fontes e cores escolhidos. O resumo da personalização apresenta os mesmos textos." />
+        <div className={onShirt && zoom ? styles.zoomed : styles.layer}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- a small static photo laid under the canvas, not a content image */}
+          {onShirt && <img className={styles.shirt} src={shirtPhoto(color.id)} alt="" width={800} height={820} />}
+          <canvas ref={canvas} className={onShirt ? styles.printArea : styles.canvas} role="img" aria-label="Composição com os textos, fontes e cores escolhidos. O resumo da personalização apresenta os mesmos textos." />
+        </div>
       </div>
       {error && <p className={styles.error} role="alert">{error}</p>}
       {/* With `shirt`, the page's colour swatches carry this note behind an "i". */}

@@ -2,7 +2,12 @@ import "server-only";
 import { parseProjectFile } from "../print-studio/model";
 import { serverPrintStore } from "../print-studio/server";
 import { PRINT_ID } from "../print-studio/server-store";
-import { artworkFields, composeArtwork, editableTexts, publicArtworkBase, type RequestArtwork } from "./artwork";
+import { brazilCityExists } from "../geo/brazil-cities-server";
+import type { PrintProject } from "../print-studio/model";
+import { artworkFields, composeArtwork, editableTexts, publicArtworkBase, validateArtworkInput, type ArtworkInput, type RequestArtwork } from "./artwork";
+
+/** The server's check of a customer's art: what the browser checks, plus a city answer against IBGE's list. */
+export const checkArtworkInput = (base: PrintProject, templateId: string, input: ArtworkInput) => validateArtworkInput(base, templateId, input, { cityExists: brazilCityExists });
 
 /** A saved template is immutable. Never serve the private gallery or an arbitrary saved art to the storefront. */
 export async function loadArtworkBase(id: string) {

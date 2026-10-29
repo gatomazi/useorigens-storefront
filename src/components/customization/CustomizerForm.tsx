@@ -5,7 +5,8 @@ import { initialValues, lineLabelOf, normalizeValue, orderedFields, validateSubm
 import { CONTACT_CONFIRM_TEXT, CONTACT_KEYS, CONTACT_NOTICE, validateContact } from "@/lib/customization/contact";
 import type { Customizer } from "@/lib/site-config/schema";
 import type { StartProductsResult, SubmitResult } from "@/app/[region]/personalizar/actions";
-import { artworkFields, composeArtwork, fieldEdits, initialArtworkEdits, validateArtworkInput, type ArtworkEdit } from "@/lib/customization/artwork";
+import { artworkFields, composeArtwork, fieldEdits, fieldsCopy, fieldsSummary, initialArtworkEdits, validateArtworkInput, type ArtworkEdit } from "@/lib/customization/artwork";
+import { takePrefill } from "@/lib/customization/live-banner";
 import { choiceLabel, choiceOf, MAX_FAMILY_ARTS, offersChoice, type ArtChoice } from "@/lib/customization/studio-arts";
 import { SHIRT_COLORS, shirtColor, shirtColorsFor } from "@/lib/customization/shirts";
 import type { PrintProject } from "@/lib/print-studio/model";
@@ -102,6 +103,12 @@ export function CustomizerForm({
   // The surname starts empty (a prefilled example gets typed after, or sent by mistake); the preview shows the example until one is written.
   const slots = useMemo(() => (firstBase && studio ? artworkFields(firstBase) : []), [firstBase, studio]);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(() => Object.fromEntries(slots.map((f) => [f.id, ""])));
+  // What the visitor wrote in a live banner of the personalization page comes along (read once, after hydration; never from the address).
+  useEffect(() => {
+    if (!firstBase || !studio) return;
+    const carried = takePrefill(model.slug, firstBase);
+    if (Object.keys(carried).length) queueMicrotask(() => setFieldValues((v) => ({ ...v, ...carried })));
+  }, [firstBase, studio, model.slug]);
   const showingExample = slots.some((f) => !fieldValues[f.id]?.trim());
   const previewValues = useMemo(() => Object.fromEntries(slots.map((f) => [f.id, fieldValues[f.id]?.trim() ? fieldValues[f.id] : f.example])), [slots, fieldValues]);
   const [artworkReady, setArtworkReady] = useState(false);
@@ -112,7 +119,9 @@ export function CustomizerForm({
   // Direct purchase: only the typed text goes into the art (bases with fields), and the product is created at INK instead of a request.
   const buying = direct && fieldMode;
   // "Conferi a escrita": a product at INK is permanent, so the customer confirms the exact text; changing it after ticking unticks it.
-  const typed = Object.values(fieldValues).join(" ").trim();
+  const typed = firstBase && fieldMode ? fieldsSummary(firstBase, fieldValues) : "";
+  // The words around the fields follow the base: the surname bases keep theirs, a plate and a city speak of the print in general.
+  const words = firstBase ? fieldsCopy(firstBase) : null;
   const [checkedFor, setCheckedFor] = useState<string | null>(null);
   const confirmed = typed !== "" && checkedFor === typed;
 
@@ -219,7 +228,7 @@ export function CustomizerForm({
       if (!result.ok && !result.fallback) { showErrors(result.errors); setBanner(result.message); return; }
       const first = itemChoices[0]?.version;
       openWaiting({
-        items: result.ok ? result.items : [], fallback: result.ok ? null : result.message, surname: Object.values(fieldValues).join(" ").trim(),
+        items: result.ok ? result.items : [], fallback: result.ok ? null : result.message, surname: typed,
         showcase: first ? { templateId: first.templateId, ...(first.lightTemplateId ? { lightTemplateId: first.lightTemplateId } : {}), fields: fieldValues, kids: first.garment === "infantil" } : null,
       });
       return;
@@ -291,7 +300,7 @@ export function CustomizerForm({
     <div className={`mt-14 flex w-full items-center justify-center bg-[#242424] p-6 text-center text-white ${previewView === "shirt" ? "aspect-[800/820]" : "aspect-[4270/4900]"}`} role="status" aria-live="polite">{baseError || "Carregando a arte…"}</div>
   );
   const surnameStep = (compact: boolean) => firstBase && (
-    <ArtworkFields base={firstBase} values={fieldValues} onChange={setFieldValues} errors={compact ? {} : errors} uid={compact ? `${uid}-full` : uid} legend={arts.length > 1 ? "2. Escreva o sobrenome" : "Escreva o sobrenome"} compact={compact}>
+    <ArtworkFields base={firstBase} values={fieldValues} onChange={setFieldValues} errors={compact ? {} : errors} uid={compact ? `${uid}-full` : uid} legend={arts.length > 1 ? `2. ${words?.legend}` : words?.legend} compact={compact}>
       {!compact && <div className="mt-2 lg:hidden"><button type="button" className={`btn btn-ghost ${styles.seeShirt} inline-flex w-full items-center justify-center gap-2`} onClick={openFull} aria-haspopup="dialog"><ExpandIcon />Ver como ficou na camiseta</button></div>}
     </ArtworkFields>
   );
@@ -303,7 +312,7 @@ export function CustomizerForm({
           <h1 className="t-h1" style={studio ? { fontSize: "clamp(2.25rem, 8vw, 7.5rem)" } : undefined}>{model.name}</h1>
           {model.description && <p className="t-body mt-3 max-w-xl text-ink-soft">{model.description}</p>}
           {studio ? (
-            !model.description && <p className="t-body mt-2 max-w-xl text-ink-soft">{buying ? "Monte a estampa com o sobrenome da sua família e compre na hora, na loja Use Origens." : "Monte a estampa com o sobrenome da sua família. A gente prepara e fala com você pelo WhatsApp ou e-mail."}</p>
+            !model.description && <p className="t-body mt-2 max-w-xl text-ink-soft">{words?.intro(buying)}</p>
           ) : (
             <p className="t-body mt-3 max-w-xl" data-testid="customization-intro">
               Envie sua ideia de personalização. Nossa equipe prepara a estampa e entra em contato pelo canal informado quando ela estiver pronta para você realizar a compra. Esta etapa não é uma compra nem reserva um produto.
@@ -328,7 +337,7 @@ export function CustomizerForm({
             <p className="t-caption mt-2 text-center">Imagem ilustrativa. Confira seus dados de personalização.</p>
             </>}
             {studio && fieldMode && showingExample && phase !== "done" && (
-              <button type="button" onClick={focusSurname} className="mt-1 min-h-11 text-left text-[0.875rem] font-semibold underline underline-offset-4">É só um exemplo. Escreva o seu sobrenome</button>
+              <button type="button" onClick={focusSurname} className="mt-1 min-h-11 text-left text-[0.875rem] font-semibold underline underline-offset-4">{words?.exampleCta}</button>
             )}
             {studio && phase !== "done" && <div className="mt-2"><ShirtSwatches name={`${uid}-camiseta`} value={shirt} onChange={chooseShirt} colors={colors} /></div>}
           </div>
@@ -485,7 +494,7 @@ export function CustomizerForm({
                 <div>
                   <label className="flex items-start gap-3">
                     <input id={`${uid}-conferi`} type="checkbox" checked={confirmed} onChange={(e) => setCheckedFor(e.target.checked ? typed : null)} disabled={!typed} className="mt-1 h-5 w-5 shrink-0 accent-[var(--color-ink,#000)]" aria-invalid={errors.conferi ? true : undefined} aria-describedby={`${uid}-conferi-hint`} />
-                    <span className="t-body">{typed ? <>Conferi a escrita de <strong>“{typed}”</strong></> : "Conferi a escrita do sobrenome"}<span className="text-[#9b1c1c]"> *</span></span>
+                    <span className="t-body">{typed ? <>Conferi a escrita de <strong>“{typed}”</strong></> : words?.check}<span className="text-[#9b1c1c]"> *</span></span>
                   </label>
                   <p id={`${uid}-conferi-hint`} className="t-small mt-1 pl-8 text-ink-mute">A camiseta sai como na prévia. <button type="button" className="font-bold underline underline-offset-4 lg:hidden" onClick={openFull}>Ver como ficou</button></p>
                   {errors.conferi && <p className="mt-1 pl-8 text-[0.8125rem] font-bold text-[#9b1c1c]" role="alert">{errors.conferi}</p>}

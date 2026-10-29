@@ -7,7 +7,13 @@ import { CUSTOMIZER_SEGMENT, DEFAULT_PAGE_PRODUCTS, PAGE_SEGMENT, RESERVED_SLUGS
 
 export const PAGE_KIND_LABEL: Record<PageKind, string> = { hotpage: "Hotpage", categoryLanding: "Categoria-pai" };
 
-export const pageHref = (region: RegionSlug, page: Pick<Page, "kind" | "slug">): string => `/${region}/${PAGE_SEGMENT[page.kind]}/${page.slug}`;
+/**
+ * The hotpage that composes the region's personalization page (src/lib/customization/hub.ts): shown at `/<region>/personalizar`, its own `/h/`
+ * address redirecting there. ("personalizar" itself is a reserved page slug.)
+ */
+export const HUB_PAGE_SLUG = "personalize-a-sua";
+export const pageHref = (region: RegionSlug, page: Pick<Page, "kind" | "slug">): string =>
+  page.kind === "hotpage" && page.slug === HUB_PAGE_SLUG ? `/${region}/${CUSTOMIZER_SEGMENT}` : `/${region}/${PAGE_SEGMENT[page.kind]}/${page.slug}`;
 export const customizerHref = (region: RegionSlug, m: Pick<Customizer, "slug">): string => `/${region}/${CUSTOMIZER_SEGMENT}/${m.slug}`;
 
 export const findPage = (doc: ScopeDoc | undefined, kind: PageKind, slug: string): Page | undefined => doc?.pages?.find((p) => p.kind === kind && p.slug === slug);

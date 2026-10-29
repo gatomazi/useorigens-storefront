@@ -27,7 +27,7 @@ import { ARTICLE_KIND_LABELS, ARTICLE_KINDS, type ArticleKind } from "../umapenc
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
 export type Scope = (typeof SCOPES)[number];
 
-export const TEMPLATE_KEYS = ["hero", "page-hero", "city-styles", "product-carousel", "states", "campaign", "image-grid", "footer"] as const;
+export const TEMPLATE_KEYS = ["hero", "page-hero", "city-styles", "product-carousel", "states", "campaign", "image-grid", "footer", "personalization-live", "personalization-models"] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
 /** Closed list of analytics origins a carousel may report (keys of `SOURCES`); never a free string (would pollute Meta/GA4). */
@@ -280,6 +280,8 @@ export type Section = {
    * page. The other cards are ordinary products (the section's total stays what it was: 1 + N-1).
    */
   customizerCard?: { customizerId: string; image?: MediaRef; title: string; description?: string; button: string };
+  /** "personalization-live" only: the live banner of one model (see `LiveBanner`). */
+  live?: LiveBanner;
   /**
    * State chooser only: a cover picture per state (key = UF, e.g. "PA"). A state without one keeps the cover the code has for it (Sul) or shows
    * none. The images are resolved into the published media table like any section image.
@@ -429,6 +431,16 @@ export type StudioArtVersion = { label?: string; templateId: string; lightTempla
 /** Prices of the products created at INK, as INK takes them ("109.90"); `kidsPrice` is required when a version is on the Camiseta Infantil. */
 /** `inkCollectionId`: the INK category (usually a hidden one) every product of the model is created in, so the team finds them in INK's panel. */
 export type DirectPurchase = { enabled: boolean; price: string; kidsPrice?: string; inkCollectionId?: number };
+
+/**
+ * The live banner of a personalization model (template "personalization-live"): the section's title and text beside the model's fields and its
+ * art on a shirt, the art following what is typed. Until the visitor touches it, it plays `examples` one after another, as if someone typed them.
+ * `examples`: one line per example, the answers in the model's field order separated by " | " (a city as "Nome/UF": "Belém/PA | BEL-1616"); a line
+ * that does not fit the fields is skipped. By model id, like a carousel's customizer card: a region that follows Sul gets its own model of the same
+ * address, and the block disappears where there is none.
+ */
+export type LiveBanner = { customizerId: string; button: string; examples: string[] };
+export const MAX_LIVE_EXAMPLES = 8;
 export const PRICE = /^\d{1,4}\.\d{2}$/;
 /** One art of a studio-based page; its versions (e.g. "Adulto" / "Infantil") are picked after the art and need a label when there are several. */
 export type StudioArt = { label: string; versions: StudioArtVersion[] };
@@ -871,6 +883,16 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     if (v.template === "hero" || v.template === "footer" || v.template === "page-hero" || !isRecord(v.nav) || !isStr(v.nav.label, 24)) c.fail(`${path}.nav`, "not for the hero or footer; label 1..24 characters");
     else if (v.nav.dest !== undefined) checkDestination(c, `${path}.nav.dest`, v.nav.dest);
   }
+  if (v.template === "personalization-live" && v.live === undefined) c.fail(`${path}.live`, "required for a live banner");
+  if (v.live !== undefined) {
+    const lv = v.live;
+    if (v.template !== "personalization-live" || !isRecord(lv)) c.fail(`${path}.live`, "live banners only");
+    else {
+      if (typeof lv.customizerId !== "string" || !ID.test(lv.customizerId)) c.fail(`${path}.live.customizerId`, "invalid customizer id");
+      if (!isStr(lv.button, 32)) c.fail(`${path}.live.button`, "1..32 chars");
+      if (!Array.isArray(lv.examples) || lv.examples.length > MAX_LIVE_EXAMPLES || lv.examples.some((e) => !isStr(e, 160))) c.fail(`${path}.live.examples`, `0..${MAX_LIVE_EXAMPLES} lines of 1..160 chars`);
+    }
+  }
   if (v.customizerCard !== undefined) {
     const cc = v.customizerCard;
     if (v.template !== "product-carousel" || !isRecord(cc)) c.fail(`${path}.customizerCard`, "product carousels only");
@@ -949,7 +971,9 @@ function checkSection(c: Collector, path: string, v: unknown): void {
   checkAppearance(c, `${path}.appearance`, v.appearance);
 }
 
-const TEMPLATES_IN_PAGES: readonly string[] = ["page-hero", "product-carousel", "campaign", "states", "city-styles", "image-grid"];
+const TEMPLATES_IN_PAGES: readonly string[] = ["page-hero", "product-carousel", "campaign", "states", "city-styles", "image-grid", "personalization-live", "personalization-models"];
+/** The personalization blocks live on pages (the region's "Personalize a sua"), never on the home. */
+export const PAGE_ONLY_TEMPLATES: readonly TemplateKey[] = ["page-hero", "personalization-live", "personalization-models"];
 
 function checkSlug(c: Collector, path: string, v: unknown): void {
   if (typeof v !== "string" || v.length < 2 || v.length > 60 || !PAGE_SLUG.test(v)) c.fail(path, "2..60 chars: lowercase letters, digits and single hyphens");
@@ -995,6 +1019,11 @@ function checkPage(c: Collector, path: string, v: unknown): void {
     if (i === 0 && s.template !== "page-hero") c.fail(`${path}.sections[0]`, "the first section must be the page hero");
     if (i > 0 && s.template === "page-hero") c.fail(`${path}.sections[${i}]`, "the page hero appears once, first");
   });
+  // The page hero opens every page; it may stay hidden only while a live banner opens the page instead (its title becomes the page's heading).
+  const hero = sections[0];
+  if (isRecord(hero) && hero.template === "page-hero" && hero.active === false && !sections.some((s) => isRecord(s) && s.template === "personalization-live" && s.active === true)) {
+    c.fail(`${path}.sections[0]`, "the page hero may be hidden only when an active live banner opens the page");
+  }
   // The page numbers live in a parent-category landing's address (`/colecoes/<slug>/2`): one paged grid, there only.
   const paged = sections.filter((s) => isRecord(s) && isRecord(s.layout) && s.layout.display === "paged").length;
   if (paged > 0 && v.kind !== "categoryLanding") c.fail(`${path}.sections`, "a paged grid belongs to a parent-category landing");
@@ -1306,7 +1335,7 @@ function checkHomeSections(c: Collector, path: string, sections: unknown, sc: Sc
         const navDest = isRecord(s.nav) && isRecord(s.nav.dest) ? s.nav.dest : null;
         if (navDest && (navDest.kind === "ink-collection" || navDest.kind === "collection-page") && !regionMayUseStore(sc as RegionSlug, navDest.store)) c.fail(`${path}[${i}].nav.dest.store`, "belongs to another region's INK store");
         if (navDest && navDest.kind === "route" && typeof navDest.path === "string" && navDest.path !== `/${sc}` && !navDest.path.startsWith(`/${sc}/`)) c.fail(`${path}[${i}].nav.dest.path`, "must be a page of this region");
-        if (s.template === "page-hero") c.fail(`${path}[${i}].template`, "the page hero belongs to pages, not to the home");
+        if (typeof s.template === "string" && (PAGE_ONLY_TEMPLATES as readonly string[]).includes(s.template)) c.fail(`${path}[${i}].template`, s.template === "page-hero" ? "the page hero belongs to pages, not to the home" : "belongs to pages, not to the home");
         checkTileRegion(c, `${path}[${i}]`, s.tiles, sc);
         // An internal route stays inside the region's own pages (a Norte button never leads to /sul/...).
         if (dest && dest.kind === "route" && typeof dest.path === "string" && dest.path !== `/${sc}` && !dest.path.startsWith(`/${sc}/`)) c.fail(`${path}[${i}].cta.dest.path`, "must be a page of this region");

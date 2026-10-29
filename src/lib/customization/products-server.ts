@@ -7,8 +7,8 @@ import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import { resolveProductDisplay, type ProductDisplay } from "../catalog/lookup";
 import { publishedFor } from "../pages/public";
 import { INK_API_BASE_URL, INK_STORES } from "../ink/config";
-import { composeArtwork, validateArtworkInput } from "./artwork";
-import { loadArtworkBase } from "./artwork-server";
+import { composeArtwork } from "./artwork";
+import { checkArtworkInput, loadArtworkBase } from "./artwork-server";
 import { fakeInkProductClient, realInkProductClient, type InkProductClient } from "./ink-product-client";
 import { safeInkUrl, type ProductJob, type ProductJobStore } from "./ink-products";
 import { inkPhotoOrPlaceholder } from "./product-status";
@@ -53,7 +53,7 @@ export function inkProductClientFor(region: RegionSlug): InkProductClient | null
 async function artPng(templateId: string, fields: Record<string, string>): Promise<Buffer> {
   const base = await loadArtworkBase(templateId);
   if (!base) throw new Error(`a base ${templateId} não está disponível`);
-  const checked = validateArtworkInput(base, templateId, { fields });
+  const checked = checkArtworkInput(base, templateId, { fields });
   if (!checked.ok) throw new Error(`os textos não passam na base ${templateId}`);
   // Loaded here, not at the top: a page that never draws (every model without direct purchase) never loads the native canvas.
   const { renderProjectPng } = await import("../print-studio/render-server");

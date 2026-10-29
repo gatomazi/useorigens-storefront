@@ -19,6 +19,7 @@ import { getRegionHome } from "../home";
 import { launchedRegions } from "../regions/launched";
 import { siteConfigHomeEnabled } from "../site-config/flag";
 import { customizerHref, pageHref, PAGE_KIND_LABEL } from "../site-config/pages";
+import { HUB_PAGE_SLUG, personalizationCards, personalizationHubHref } from "../customization/hub";
 import { readPublished } from "../site-config/published";
 import type { PublishedBundle, ScopeDoc, Source as CarouselSource } from "../site-config/schema";
 import { collectionPagePath, collectionUrl, resolveSource, type EditorialItems, type SourceResult } from "../site-config/sources";
@@ -145,6 +146,14 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
         href: pageHref(region, page), ...(og ? { image: og.src } : {}), tag: page.kind === "hotpage" ? "Especial" : "Categoria", rank: 0,
         names: [page.title, ...(page.seo.title ? [page.seo.title] : [])], strong: [page.slug.replace(/-/g, " ")],
         weak: [page.seo.description ?? "", ...page.sections.map((s) => s.title ?? "")],
+      });
+    }
+    // The plain personalization page; once the owner composed it in the CMS, the page itself is listed above instead.
+    const hubComposed = (doc.pages ?? []).some((p) => p.kind === "hotpage" && p.slug === HUB_PAGE_SLUG && !p.archived);
+    if (!hubComposed && personalizationCards(doc, input.media ?? {}, region).length > 1) {
+      docs.push({
+        key: "cz-hub", kind: "page", region, title: "Personalize a sua", subtitle: "Todas as estampas personalizáveis", href: personalizationHubHref(region),
+        tag: "Personalize", rank: 1, names: ["Personalize a sua", "Estampas personalizáveis"], strong: ["personalizar", "personalizada", "personalizadas", "personalizavel"], weak: [],
       });
     }
     for (const model of doc.customizers ?? []) {

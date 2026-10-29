@@ -46,7 +46,7 @@ import type { CollectionRef, PageKind, RegionalSection, Section } from "@/lib/si
 import { followedDoc } from "@/lib/site-config/follow";
 import { legacyFeaturedRefs, resolveFeatured, searchFeaturedCandidates, type FeaturedCandidate } from "@/lib/hero-featured";
 import { buildRegionSeed } from "@/lib/admin/region-seed";
-import { STRUCTURED_TEMPLATES, type StructuredTemplate } from "@/lib/site-config/structured";
+import { PAGE_ONLY_STRUCTURED, STRUCTURED_TEMPLATES, type StructuredTemplate } from "@/lib/site-config/structured";
 import { launchBlockers } from "@/lib/admin/launch";
 import { isRegionScope, REGION_SCOPES, SCOPE_COOKIE, scopeName, scopeOf, storeOf } from "@/lib/admin/scope";
 import { applyAndSave, discardDraft, EDIT_THEME_COOKIE, loadEditorWorkspace, loadWorkspace, type SaveOutcome } from "@/lib/admin/workspace";
@@ -203,7 +203,7 @@ export async function setPodioAction(fd: FormData) {
 /** Adds one structured home component (city styles, state chooser, regional campaign) to the DRAFT of the region the form was rendered for. */
 export async function addStructuredSection(fd: FormData) {
   const template = text(fd, "template");
-  if (!(STRUCTURED_TEMPLATES as readonly string[]).includes(template)) back("/admin/home", { err: ["Modelo de seção desconhecido."] });
+  if (![...STRUCTURED_TEMPLATES, ...PAGE_ONLY_STRUCTURED].includes(template as StructuredTemplate)) back("/admin/home", { err: ["Modelo de seção desconhecido."] });
   return run(fd, { type: "add-structured", template: template as StructuredTemplate }, "Seção criada no rascunho. Ajuste os textos e a aparência; nada vai para a loja até publicar.", "/admin/home", true);
 }
 
@@ -1331,6 +1331,11 @@ async function runRaw(fd: FormData, op: DraftOp, okMessage: string, returnTo: st
 
 const pageKindOf = (fd: FormData): PageKind => (text(fd, "kind") === "categoryLanding" ? "categoryLanding" : "hotpage");
 const publishedPage = (base: import("@/lib/site-config/schema").ScopeDoc, id: string) => base.pages?.find((p) => p.id === id);
+
+/** Personalização, "Montar a página Personalize a sua": the region's personalization page as a draft page, ready to edit in Páginas. */
+export async function createHubPageAction(fd: FormData) {
+  return runRaw(fd, { type: "create-hub-page" }, "Página Personalize a sua criada no rascunho, com o banner ao vivo e os cards dos modelos. Ajuste e publique; até lá, a loja mostra a lista simples.", "/admin/personalizacao", (id) => `/admin/paginas/${id}`);
+}
 
 export async function createPageAction(fd: FormData) {
   return runRaw(fd, { type: "create-page", kind: pageKindOf(fd), title: text(fd, "title"), slug: text(fd, "slug") || undefined }, "Página criada no rascunho. Nada é público até publicar.", "/admin/paginas", (id) => `/admin/paginas/${id}`);

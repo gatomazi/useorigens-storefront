@@ -18,6 +18,8 @@ import { STATE_NAMES } from "@/lib/geo/regions";
 import { REGIONS } from "@/lib/geo/regions";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
+import { loadArtworkBase } from "@/lib/customization/artwork-server";
+import { liveExamples } from "@/lib/customization/live-banner";
 
 /** The section editor inside a page: the SAME form as the home's, carrying the page id so every save goes to that page. */
 export default async function PageSectionEditor({ params, searchParams }: { params: Promise<{ id: string; sid: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
@@ -36,6 +38,7 @@ export default async function PageSectionEditor({ params, searchParams }: { para
   const structured = section.template === "city-styles" ? cityStylesStatus(scope, section) : section.template === "states" ? statesStatus(scope) : section.template === "campaign" ? campaignStatus(scope) : section.template === "image-grid" ? imageGridStatus(section) : null;
   const stateCovers = section.template === "states" ? REGIONS[scope].ufs.map((uf) => ({ uf, name: STATE_NAMES[uf], legacy: usableBannerAsset("state", bannerFor(scope, "state", uf)) !== null })) : undefined;
   const customizers = (ws.doc.customizers ?? []).map((m) => ({ id: m.id, name: m.name, active: m.active, live: Boolean(published.customizers?.some((x) => x.id === m.id)) }));
+  const liveNotes = section.template === "personalization-live" ? await liveBannerNotes(section.live, ws.doc.customizers ?? []) : [];
 
   return (
     <div className="space-y-6">
@@ -53,7 +56,7 @@ export default async function PageSectionEditor({ params, searchParams }: { para
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,34rem)_1fr]">
         <section className="a-card p-5" aria-label="Editor da seção">
           <SectionEditorForm
-            section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={structured?.notes}
+            section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={[...(structured?.notes ?? []), ...liveNotes]}
             stateCovers={stateCovers} page={page.id} pages={pageOptions(ws.doc, published)} customizers={customizers} anchors={page.sections.map((s) => ({ anchor: s.anchor, label: s.title?.replace(/\n/g, " ") ?? s.anchor }))}
             collectionMembers={collectionOrderMembers(section, ws.doc)}
             collectionArrangement={collectionOrderArrangement(section, ws.doc)}
@@ -67,4 +70,21 @@ export default async function PageSectionEditor({ params, searchParams }: { para
       </div>
     </div>
   );
+}
+
+/** What the live banner will really play: each example line checked against the model's own fields (a line that does not fit is skipped there). */
+async function liveBannerNotes(live: import("@/lib/site-config/schema").LiveBanner | undefined, models: import("@/lib/site-config/schema").Customizer[]): Promise<string[]> {
+  const model = live ? models.find((m) => m.id === live.customizerId) : undefined;
+  const templateId = model?.studioArts?.[0]?.versions[0]?.templateId;
+  if (!live || !model) return ["O modelo escolhido não existe mais nesta região: escolha outro."];
+  if (!templateId) return [`“${model.name}” não tem editor de arte: o banner não aparece com ele.`];
+  const base = await loadArtworkBase(templateId).catch(() => null);
+  if (!base) return ["A arte do modelo não abriu agora; os exemplos serão conferidos quando ela abrir."];
+  const fields = (await import("@/lib/customization/artwork")).artworkFields(base);
+  const order = fields.map((f) => f.label).join(" | ");
+  const wrong = live.examples.filter((line) => liveExamples(base, [line]).length === 0);
+  return [
+    `Campos de “${model.name}”, nesta ordem: ${order}.`,
+    ...wrong.map((line) => `Este exemplo não serve e será pulado: “${line}”.`),
+  ];
 }

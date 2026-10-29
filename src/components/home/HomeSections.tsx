@@ -5,6 +5,10 @@ import { ProductCarousel } from "@/components/catalog/ProductCarousel";
 import { CollectionBrowser } from "@/components/catalog/CollectionBrowser";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { Campaign } from "@/components/home/Campaign";
+import { PersonalizationLive } from "@/components/customization/PersonalizationLive";
+import { CreateYourOwnCard } from "@/components/umapenca/CreateYourOwnCard";
+import { personalizationCards } from "@/lib/customization/hub";
+import { customizerHref } from "@/lib/site-config/pages";
 import { ImageGrid, type GridTileView } from "@/components/home/ImageGrid";
 import { PageHero } from "@/components/home/PageHero";
 import { PageGround } from "@/components/pages/PageGround";
@@ -297,6 +301,50 @@ export function HomeSections({
                 className={visual ? ["own-surface", darkPage ? "on-light" : ""].filter(Boolean).join(" ") : undefined}
                 backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
               />
+            );
+          }
+
+          case "personalization-live": {
+            // The region's own model (a followed page already points to it); without it, or without an art, the block is not shown.
+            const model = s.live ? doc?.customizers?.find((m) => m.id === s.live!.customizerId && m.active) : undefined;
+            const templateId = model?.studioArts?.[0]?.versions[0]?.templateId;
+            if (!s.live || !model || !templateId) return null;
+            const ref = model.cardImage ?? model.pageMockup;
+            const info = ref ? media[ref.assetId] : undefined;
+            const panelFill = bg.fill.kind === "none" ? null : <SectionBackdrop bg={{ ...bg, images: { mobile: null, desktop: null } }} />;
+            return (
+              <PersonalizationLive
+                key={s.id}
+                slug={model.slug}
+                href={customizerHref(region, model)}
+                baseUrl={`/api/personalizar/${region}/${model.slug}/base/${templateId}`}
+                title={s.title ?? model.name}
+                subtitle={s.subtitle}
+                button={s.live.button}
+                examples={s.live.examples}
+                poster={ref && info ? { src: info.variants?.at(-1)?.src ?? info.src, width: info.width, height: info.height, alt: ref.decorative ? "" : ref.alt || model.name } : null}
+                panel={panelFill}
+                panelTone={fillTone(bg.fill)}
+                anchor={s.anchor}
+                headingId={s.headingId}
+                opening={Boolean(page) && !sections.some((x) => x.template === "page-hero") && sections.find((x) => x.template === "personalization-live")?.id === s.id}
+              />
+            );
+          }
+
+          case "personalization-models": {
+            const cards = personalizationCards(doc, media, region);
+            if (cards.length === 0) return null;
+            return (
+              <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className="wrap py-12 lg:py-16">
+                <h2 id={s.headingId} className={s.title ? "text-[1.5rem] font-extrabold tracking-tight lg:text-[1.875rem]" : "sr-only"}>{s.title ?? "Estampas personalizáveis"}</h2>
+                {s.subtitle && <p className="t-body mt-2 max-w-[60ch] text-ink-soft">{s.subtitle}</p>}
+                <ul className="mt-8 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:mt-10 lg:grid-cols-4">
+                  {cards.map((card) => (
+                    <li key={card.id}><CreateYourOwnCard card={card} sizes="(min-width: 1024px) 25vw, 50vw" cta="Personalizar" /></li>
+                  ))}
+                </ul>
+              </section>
             );
           }
 

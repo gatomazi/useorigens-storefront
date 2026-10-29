@@ -10,7 +10,8 @@
  */
 import { sectionsUsing } from "../site-config/collections-enabled";
 import { effectiveMenu, movedOnTop, withMenu, withMenuPosition, type MenuPosition } from "../site-config/collection-menu";
-import { SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredTemplate } from "../site-config/structured";
+import { PAGE_ONLY_STRUCTURED, SINGLETON_TEMPLATES, structuredDefaults, uniqueAnchor, type StructuredTemplate } from "../site-config/structured";
+import { HUB_PAGE_SLUG } from "../customization/hub";
 import { newCollectionLanding, newPage, uniqueSlug } from "../site-config/pages";
 import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-schema";
 import type { PromotionsConfig } from "../site-config/promotions-schema";
@@ -23,12 +24,12 @@ import type { MundoModo } from "../site-config/mundo-schema";
 import type { InkThemeConfig } from "../site-config/ink-theme-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
 import { withFollowPart, type FollowPart } from "../site-config/follow-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, MENU_HIGHLIGHT_KEYS, type Appearance, type CollectionHighlight, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig, type RegionalSection } from "../site-config/schema";
+import { isUmaPencaSource, validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, MENU_HIGHLIGHT_KEYS, type Appearance, type CollectionHighlight, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig, type RegionalSection } from "../site-config/schema";
 import { HOME_THEME_LABEL, hasHomeTheme, isSeasonalTheme, newEditorialTheme, seasonalTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
 import type { RegionSlug } from "../geo/regions";
 import type { ProductSort } from "../catalog/product-sort";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "featuredRotation" | "heroColors" | "nav" | "customizerCard" | "tiles" | "grid" | "variant" | "regions">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "featuredRotation" | "heroColors" | "nav" | "customizerCard" | "live" | "tiles" | "grid" | "variant" | "regions">;
 
 export type DraftOp =
   /** `display: "grid"` creates the section already as a product grid (absent = a carousel). */
@@ -146,6 +147,8 @@ export type DraftOp =
   // ── Pages (hotpages and parent-category landings) ──
   /** `collection`: a parent-category landing that is the page of that collection (its hero, then every product of it, paged). */
   | { type: "create-page"; kind: PageKind; title: string; slug?: string; collection?: CollectionRef }
+  /** The region's "Personalize a sua" (`HUB_PAGE_SLUG`): the page hero, a live banner of the first model with the art editor and the models' cards. */
+  | { type: "create-hub-page" }
   /**
    * Title, slug, SEO and ground of a page (the slug of an already-published page is refused by the caller: its URL must not change).
    * `backdrop: null` takes the page back to the region's ground.
@@ -193,6 +196,7 @@ const fail = (...errors: string[]): OpResult => ({ ok: false, errors });
 
 /** Applies one operation. The input document is never mutated; on any problem nothing changes and the reasons come back. */
 export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
+  if (op.type === "create-hub-page") return hubPageOp(doc, ctx);
   if (op.type === "create-page" || op.type === "update-page" || op.type === "duplicate-page" || op.type === "set-page-archived" || op.type === "remove-page" || op.type === "in-page") return pageOp(doc, op, ctx);
   if (op.type === "create-customizer" || op.type === "update-customizer" || op.type === "duplicate-customizer" || op.type === "remove-customizer") return customizerOp(doc, op, ctx);
   if (op.type === "batch") {
@@ -417,10 +421,13 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     }
     case "add-structured": {
       if (doc.scope === "global") return fail("global has no home");
+      if ((PAGE_ONLY_STRUCTURED as readonly string[]).includes(op.template) && ctx.mode !== "page") return fail("this block belongs to pages, not to the home");
+      const liveModel = op.template === "personalization-live" ? firstStudioModel(doc) : undefined;
+      if (op.template === "personalization-live" && !liveModel) return fail("crie e ative primeiro um modelo de personalização com editor de arte");
       const existing = SINGLETON_TEMPLATES.includes(op.template) ? sections.find((s) => s.template === op.template) : undefined;
       if (existing) return fail(`this region already has this section ("${existing.title ?? existing.id}"): edit it instead of adding another`);
       const id = `${CUSTOM_PREFIX}${ctx.newId()}`;
-      const created = structuredDefaults(op.template, doc.scope, id, new Set(sections.map((s) => s.anchor)));
+      const created = structuredDefaults(op.template, doc.scope, id, new Set(sections.map((s) => s.anchor)), liveModel?.id);
       const check = validateSection(created);
       if (!check.ok) return { ok: false, errors: check.errors };
       // City styles go right after the hero (as on the Sul home); the state chooser and campaigns go before the footer, campaigns last; a grid goes
@@ -480,7 +487,9 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       return withSections(op.ids.map((id) => byId.get(id)!));
     }
     case "set-active": {
-      if (isLocked(next[index]) && !op.active) return fail("the hero and the footer cannot be hidden");
+      // A page's hero may give way to a live banner (the page's schema checks that one stays active).
+      const heroGivesWay = ctx.mode === "page" && next[index].template === "page-hero" && next.some((s) => s.template === "personalization-live" && s.active);
+      if (isLocked(next[index]) && !op.active && !heroGivesWay) return fail("the hero and the footer cannot be hidden");
       next[index].active = op.active;
       return withSections(next, op.id);
     }
@@ -697,6 +706,27 @@ const withPages = (doc: ScopeDoc, pages: Page[], focusId?: string): OpResult => 
   const check = validateScopeDoc(next);
   return check.ok ? { ok: true, doc: next, focusId } : { ok: false, errors: check.errors };
 };
+
+/** The first active model of the region with the art editor (not an Uma Penca one): what a new live banner shows. */
+const firstStudioModel = (doc: ScopeDoc): Customizer | undefined => doc.customizers?.find((m) => m.active && m.studioArts?.length && !isUmaPencaSource(m.source));
+
+function hubPageOp(doc: ScopeDoc, ctx: OpContext): OpResult {
+  if (doc.scope === "global") return fail("global has no pages");
+  const pages = (doc.pages ?? []).map((p) => structuredClone(p));
+  if (pages.some((p) => p.kind === "hotpage" && p.slug === HUB_PAGE_SLUG)) return fail("a página Personalize a sua já existe nesta região: edite-a em Páginas");
+  const page = newPage({ id: `${PAGE_PREFIX}${ctx.newId()}`, kind: "hotpage", title: "Personalize a sua", slug: HUB_PAGE_SLUG, heroId: `${CUSTOM_PREFIX}${ctx.newId()}`, subtitle: "Escolha a estampa e coloque o que é seu. Você vê na camiseta antes de comprar." });
+  const taken = new Set(page.sections.map((s) => s.anchor));
+  const model = firstStudioModel(doc);
+  if (model) {
+    const live = structuredDefaults("personalization-live", doc.scope, `${CUSTOM_PREFIX}${ctx.newId()}`, taken, model.id);
+    taken.add(live.anchor);
+    page.sections.push(live);
+  }
+  page.sections.push(structuredDefaults("personalization-models", doc.scope, `${CUSTOM_PREFIX}${ctx.newId()}`, taken));
+  const check = validatePage(page, doc.scope);
+  if (!check.ok) return { ok: false, errors: check.errors };
+  return withPages(doc, [...pages, page], page.id);
+}
 
 function pageOp(doc: ScopeDoc, op: Extract<DraftOp, { type: "create-page" | "update-page" | "duplicate-page" | "set-page-archived" | "remove-page" | "in-page" }>, ctx: OpContext): OpResult {
   if (doc.scope === "global") return fail("global has no pages");

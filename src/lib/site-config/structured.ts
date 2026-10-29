@@ -8,7 +8,9 @@ import { REGIONS, type RegionSlug } from "../geo/regions";
 import type { Appearance, Section } from "./schema";
 
 export const STRUCTURED_TEMPLATES = ["city-styles", "states", "campaign", "image-grid"] as const;
-export type StructuredTemplate = (typeof STRUCTURED_TEMPLATES)[number];
+/** Components of a page only (the region's "Personalize a sua"): never offered on the home, whose schema refuses them. */
+export const PAGE_ONLY_STRUCTURED = ["personalization-live", "personalization-models"] as const;
+export type StructuredTemplate = (typeof STRUCTURED_TEMPLATES)[number] | (typeof PAGE_ONLY_STRUCTURED)[number];
 
 /** City styles and the state chooser exist once per region (an existing one is edited, never duplicated); campaigns and grids may repeat. */
 export const SINGLETON_TEMPLATES: readonly StructuredTemplate[] = ["city-styles", "states"];
@@ -22,6 +24,11 @@ export const STRUCTURED_MODELS: readonly StructuredModel[] = [
   { template: "image-grid", name: "Grade de imagens", purpose: "Blocos com imagem e nome, cada um levando a uma coleção, página ou categoria — por exemplo “Compre por peça” ou “Coleções”. De 2 a 12 blocos." },
 ];
 
+export const PAGE_ONLY_MODELS: readonly StructuredModel[] = [
+  { template: "personalization-live", name: "Banner ao vivo", purpose: "Texto de um lado e a camiseta do outro: a arte de um modelo de personalização muda enquanto o cliente digita e, sozinha, vai mostrando exemplos. O botão leva à página do modelo já preenchida." },
+  { template: "personalization-models", name: "Estampas personalizáveis", purpose: "Os cards de todos os modelos de personalização publicados da região (com editor de arte), na ordem do painel, com o preço quando a compra é na hora." },
+];
+
 const noImage = (): Appearance => ({ fill: { kind: "none" }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } });
 
 /** A DOM id no other section uses: `base`, then `base-2`, `base-3`… (kept to 34 characters, the anchor limit is 40). */
@@ -31,9 +38,26 @@ export function uniqueAnchor(base: string, taken: ReadonlySet<string>): string {
   return anchor;
 }
 
-/** A new section of the given model with editorial defaults for `region`. It is only ever stored in the DRAFT: nothing reaches the public home until it is published. */
-export function structuredDefaults(template: StructuredTemplate, region: RegionSlug, id: string, takenAnchors: ReadonlySet<string>): Section {
+/**
+ * A new section of the given model with editorial defaults for `region`. It is only ever stored in the DRAFT: nothing reaches the public home until it
+ * is published. A live banner needs the model it shows (`customizerId`, one with the art editor).
+ */
+export function structuredDefaults(template: StructuredTemplate, region: RegionSlug, id: string, takenAnchors: ReadonlySet<string>, customizerId?: string): Section {
   const name = REGIONS[region].name;
+  if (template === "personalization-live") {
+    const anchor = uniqueAnchor("experimente", takenAnchors);
+    return {
+      id, anchor, headingId: `${anchor}-title`, template, active: true,
+      title: "Digite. Veja na camiseta.",
+      subtitle: "Escreva aqui e a estampa muda na hora. Quando ficar do seu jeito, é só seguir para a página da estampa e comprar.",
+      live: { customizerId: customizerId ?? "", button: "Personalizar a minha", examples: [] },
+      appearance: { ...noImage(), fill: { kind: "solid", color: "token:near-black" } },
+    };
+  }
+  if (template === "personalization-models") {
+    const anchor = uniqueAnchor("estampas", takenAnchors);
+    return { id, anchor, headingId: `${anchor}-title`, template, active: true, title: "Escolha a sua estampa", appearance: noImage() };
+  }
   if (template === "city-styles") {
     const anchor = uniqueAnchor("estilos", takenAnchors);
     return {

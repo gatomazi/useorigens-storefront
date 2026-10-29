@@ -14,6 +14,8 @@ const WORDS = new Set([
   "viado", "bicha", "sapatao", "traveco", "macaco", "macaca", "crioulo", "neguinho", "favelado", "judeuzinho",
   // ódio e crimes
   "nazi", "nazista", "hitler", "kkk", "estupro", "estuprador", "pedofilo", "pedofilia", "terrorista",
+  // siglas (a placa personalizada aceita 3 letras quaisquer)
+  "fdp", "pqp", "vsf", "tnc", "vtnc", "vtc", "krl", "crl", "pnc", "kct", "bct", "ppk", "cuz", "xxx",
   // inglês
   "fuck", "fucking", "shit", "bitch", "nigger", "nigga", "dick", "pussy", "cunt", "whore",
 ].map((w) => w.normalize("NFD").replace(/\p{M}/gu, "")));

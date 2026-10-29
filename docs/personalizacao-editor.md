@@ -50,9 +50,33 @@ Uma camada de texto pode ter um **campo** (`slot` em `model.ts`): um modelo de t
 - **"dos" automático** (`dropParticle`): onde a arte já diz "dos" ("NATAL DOS {sobrenome}", ou "ceia dos" desenhado acima), um "da/das/do/dos" no começo da resposta sai, então "dos Santos" vira "NATAL DOS SANTOS". "De", "Di" e "Du" ficam, porque fazem parte de sobrenomes como De Lucca e Di Napoli. "Dos" serve para qualquer sobrenome: é o plural da família ("os Silva", "os Oliveira").
 - **Quebra de linha** (`maxLines`): sobrenome composto vira linhas equilibradas, com as partículas presas à palavra seguinte ("Silva Pereira / dos Santos", "Costa / e Silva"). As linhas extras entram embaixo; no arco, em arcos concêntricos menores.
 - **Arte que desce** (`pushedBy` na camada de imagem): a imagem desce a altura das linhas extras do texto indicado, então a arte embaixo do nome acompanha a quebra.
+- **Tipo do campo** (`input`): sem ele, o cliente escreve letras (o sobrenome). Com `input: "city"`, escolhe o estado e depois a cidade, com autocomplete, entre os 5.571 municípios do IBGE (`data/geo/municipios-brasil.json`, gerado por `scripts/build-municipios-brasil.mts`). A resposta é guardada como `Nome/UF`, sai na arte como `UF - NOME`, e o servidor confere se a cidade existe na lista. Com `input: "plate"`, o cliente digita 3 letras e 4 números, que saem como `ABC-1234` (o hífen entra sozinho). A cidade não passa pela lista de palavras para a equipe (nomes reais como "Pau dos Ferros" e "Pau Brasil"), mas a placa passa, inclusive por siglas ofensivas de 3 letras.
+- Com campos de cidade ou placa, a página fala da estampa em geral ("Personalize a estampa", "Conferi o que vai na estampa"); só as bases de sobrenome mantêm o texto do sobrenome.
 - O resumo da solicitação mostra o que o cliente digitou e o **texto como sai na arte**.
 
 O estúdio preserva esses campos ao abrir e salvar, e renderiza arco, contorno e a arte que desce, mas ainda não tem controles para editá-los: ajuste pelo `.json`.
+
+### Página "Personalize a sua" e banner ao vivo
+
+`/<região>/personalizar` reúne os modelos com editor de arte. Sem nada montado, mostra a lista simples (`src/lib/customization/hub.ts`). Em **Personalização → Montar a página Personalize a sua**, ela vira uma página do CMS (hotpage `personalize-a-sua`, servida em `/<região>/personalizar`; o endereço `/h/` redireciona) com dois blocos só de página:
+
+- **Banner ao vivo** (`personalization-live`): título e texto, os campos do modelo e a camiseta com a arte mudando enquanto o cliente digita. Até alguém tocar, ele "digita" sozinho os exemplos do painel (uma linha por exemplo, respostas na ordem dos campos separadas por " | ", cidade como Nome/UF; o editor aponta a linha que não serve). Para fora da tela e com "reduzir movimento". A arte só baixa quando o banner chega perto da tela, por GET cacheável (`/api/personalizar/<região>/<modelo>/base/<arte>`). O botão leva o que o cliente escreveu (não os exemplos) para a página do modelo pela sessão da aba, nunca pelo endereço (GA4 e pixel leem a URL). A cor do painel de texto é a aparência do bloco.
+- **Estampas personalizáveis** (`personalization-models`): os cards dos modelos publicados.
+
+Uma região que segue as páginas da Sul mostra o seu modelo de mesmo endereço; sem ele, o banner some.
+
+### Placa · UF e cidade
+
+A arte da placa cinza antiga (`~/Downloads/Estampas Personalizaveis - Lote 1.png`) vira base com `scripts/placa-base.py`, na fonte Origens Placa embutida:
+
+```zsh
+../arte-lojas/.venv/bin/python scripts/placa-base.py "$HOME/Downloads/Estampas Personalizaveis - Lote 1.png" output/placa-base   # pillow, numpy
+npx tsx --conditions=react-server scripts/placa-previa.mts                                                                    # prévia exata
+```
+
+O script apaga os dois textos (o miolo da placa é preto liso) e põe uma camada de cidade (`input: "city"`, caixa dentro da moldura de cima) e uma de placa (`input: "plate"`, espaçamento fixo de 6% do tamanho, porque a fonte é mais larga que as letras do PNG). Cidade longa ("MT - VILA BELA DA SANTÍSSIMA TRINDADE") e placa larga ("WMW-8888") encolhem e continuam centradas. É uma arte só para todas as cores: na camiseta preta sobram a moldura e as letras prata. A prévia sai do mesmo desenho do servidor que cria a arte na INK, sobre camiseta branca e preta.
+
+Para pôr no ar: o código precisa estar em produção antes da base (o estúdio antigo descartaria o tipo dos campos ao importar). Depois, importar o `.origens.json` em Estampas, **Salvar como modelo**, criar o modelo de personalização com essa arte, ligar a compra direta, escolher a categoria na INK e publicar.
 
 ### Natal em família
 

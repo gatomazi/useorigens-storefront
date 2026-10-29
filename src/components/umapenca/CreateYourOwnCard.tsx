@@ -4,9 +4,9 @@ import type { CreateYourOwnCard as Card } from "@/lib/umapenca/customizer-cards"
  * "Crie a sua": the first card of a kind on "Outros artigos", leading to the model's personalization form. Same look as a carousel's customizer
  * card (ProductCarousel): the CMS mockup in the poster frame, the "Personalizável" tag, and a call to action instead of a price.
  */
-export function CreateYourOwnCard({ card, sizes, priority = false }: { card: Card; sizes: string; priority?: boolean }) {
+export function CreateYourOwnCard({ card, sizes, priority = false, cta = "Crie a sua" }: { card: Card; sizes: string; priority?: boolean; cta?: string }) {
   return (
-    <a href={card.href} className="group block" aria-label={`${card.title}. Crie a sua: você escolhe o texto (não é um produto pronto da loja).`}>
+    <a href={card.href} className="group block" aria-label={`${card.title}. ${cta}: você escolhe o texto (não é um produto pronto da loja).${card.price ? ` ${card.price}.` : ""}`}>
       <span className="photo photo-poster">
         {/* eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin (never through the image optimizer) */}
         <img
@@ -25,7 +25,8 @@ export function CreateYourOwnCard({ card, sizes, priority = false }: { card: Car
       <div className="mt-2">
         <h3 className="link-line inline text-[1.0625rem] font-bold leading-tight tracking-tight transition-colors group-hover:text-region-primary sm:text-[1.125rem]">{card.title}</h3>
         {card.description && <p className="t-caption mt-1">{card.description}</p>}
-        <p className="t-small mt-1 font-semibold underline decoration-region-accent decoration-2 underline-offset-4">Crie a sua →</p>
+        {card.price && <p className="t-small mt-1 font-bold">{card.price}</p>}
+        <p className="t-small mt-1 font-semibold underline decoration-region-accent decoration-2 underline-offset-4">{cta} →</p>
       </div>
     </a>
   );

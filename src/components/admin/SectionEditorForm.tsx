@@ -139,7 +139,7 @@ export function SectionEditorForm({
 }) {
   const a: Appearance = section.appearance;
   const isCarousel = section.template === "product-carousel";
-  const hasVisual = isCarousel || section.template === "hero" || section.template === "page-hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states" || section.template === "image-grid";
+  const hasVisual = isCarousel || section.template === "hero" || section.template === "page-hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states" || section.template === "image-grid" || section.template === "personalization-live";
 
   const [tone, setTone] = useState<"light" | "dark">(isCarousel ? section.layout?.tone ?? "light" : section.template === "campaign" ? "dark" : section.template === "page-hero" ? section.layout?.tone ?? "dark" : "light");
   const [fillKind, setFillKind] = useState<"none" | "solid" | "gradient">(a.fill.kind);
@@ -238,6 +238,28 @@ export function SectionEditorForm({
                   <span><span className="block font-bold">{label}</span><span className="a-muted block text-[0.8125rem]">{help}</span></span>
                 </label>
               ))}
+            </div>
+          </fieldset>
+        )}
+        {section.template === "personalization-live" && section.live && (
+          <fieldset className="space-y-4" data-testid="live-banner">
+            <legend className="a-h2 mb-2">Banner ao vivo</legend>
+            <div>
+              <label className="a-label" htmlFor="live_customizer">Modelo</label>
+              <select id="live_customizer" name="live_customizer" className="a-select" defaultValue={section.live.customizerId}>
+                {customizers.map((c) => <option key={c.id} value={c.id}>{c.name}{c.live ? "" : " (ainda não publicado)"}{c.active ? "" : " (desativado)"}</option>)}
+              </select>
+              <p className="a-muted mt-1 text-[0.8125rem]">A camiseta mostra a primeira arte do modelo. Ela só aparece com o modelo publicado e ativo, com editor de arte; sem isso, o banner não aparece.</p>
+            </div>
+            <div className="max-w-sm">
+              <label className="a-label" htmlFor="live_button">Texto do botão</label>
+              <input id="live_button" name="live_button" className="a-input" maxLength={32} defaultValue={section.live.button} />
+              <p className="a-muted mt-1 text-[0.8125rem]">Leva à página do modelo, já com o que o cliente escreveu.</p>
+            </div>
+            <div>
+              <label className="a-label" htmlFor="live_examples">Exemplos que ele “digita” sozinho (um por linha)</label>
+              <textarea id="live_examples" name="live_examples" className="a-textarea" rows={5} defaultValue={section.live.examples.join("\n")} placeholder={"Belém/PA | BEL-1616\nFlorianópolis/SC | FLO-1726"} />
+              <p className="a-muted mt-1 text-[0.8125rem]">As respostas na ordem dos campos do modelo, separadas por “ | ”; cidade como Nome/UF. Até 8 linhas. Sem exemplos, ele mostra o exemplo da própria arte. Quem ativou “reduzir movimento” no aparelho vê só o primeiro, parado.</p>
             </div>
           </fieldset>
         )}

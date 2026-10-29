@@ -21,10 +21,10 @@ import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { PAGE_KIND_LABEL, pageAsHomeDoc, pageHref } from "@/lib/site-config/pages";
 import type { Section } from "@/lib/site-config/schema";
-import { STRUCTURED_MODELS } from "@/lib/site-config/structured";
+import { PAGE_ONLY_MODELS, STRUCTURED_MODELS } from "@/lib/site-config/structured";
 import { PRODUCT_SORTS, PRODUCT_SORT_LABEL } from "@/lib/catalog/product-sort";
 
-const TYPE_LABEL: Record<string, string> = { "page-hero": "Topo da página", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens" };
+const TYPE_LABEL: Record<string, string> = { "page-hero": "Topo da página", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens", "personalization-live": "Banner ao vivo", "personalization-models": "Estampas personalizáveis" };
 const typeLabel = (s: Section) => (s.template === "product-carousel" && s.layout?.display === "grid" ? "Grade de produtos" : TYPE_LABEL[s.template] ?? s.template);
 const when = (iso: string | null) => (iso ? new Date(iso).toLocaleString("pt-BR") : "—");
 
@@ -128,6 +128,8 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
           rows={page.sections.map((s) => {
               const status = sourceStatus(s, ws.doc);
               const locked = s.template === "page-hero";
+              // The page's hero may give way to an active live banner, which then opens the page.
+              const liveOpens = locked && (!s.active || page.sections.some((x) => x.template === "personalization-live" && x.active));
               const custom = s.id.startsWith("custom-") && !locked;
               const readable = sectionReadability(s);
               const label = s.title?.replace(/\n/g, " ") ?? s.anchor;
@@ -144,10 +146,10 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
                     </p>
                   </td>
                   <td>{status ? (status.problem ? <span className="a-badge bad">{status.problem}</span> : <span className="a-muted">{status.label} · {status.products} produto(s)</span>) : <span className="a-muted">—</span>}</td>
-                  <td>{locked ? <span className="a-badge">Fixa</span> : s.active ? <span className="a-badge ok">Ativa</span> : <span className="a-badge">Oculta</span>}</td>
+                  <td>{locked && s.active ? <span className="a-badge">Fixa</span> : locked ? <span className="a-badge">Oculta (o banner ao vivo abre a página)</span> : s.active ? <span className="a-badge ok">Ativa</span> : <span className="a-badge">Oculta</span>}</td>
                   <td>
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
-                      {!locked && <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${label}”` : `Ativar “${label}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>}
+                      {(!locked || liveOpens) && <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${label}”` : `Ativar “${label}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>}
                       <Link href={`/admin/paginas/${page.id}/secoes/${s.id}`} className="a-btn sm">Editar</Link>
                       {s.template === "product-carousel" && <RowForm action={duplicateSection} rev={rev} scope={scope} id={s.id} page={page.id} label={`Duplicar “${label}”`}>Duplicar</RowForm>}
                       {custom && <RowForm action={removeSection} rev={rev} scope={scope} id={s.id} page={page.id} label={`Remover “${label}”`} danger>Remover</RowForm>}
@@ -179,7 +181,7 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
         <p className="a-muted mt-2 text-[0.8125rem]">Cada seção pode usar uma coleção diferente para organizar os subtemas. O total de cards é o número acima (até 24 no carrossel, até 48 na grade). A seção começa com a ordenação padrão da página; no editor, você pode escolher Novidades, Mais vendidas, preço ou a ordem da coleção. A ordem manual tem prioridade. Na grade, são 4 produtos por linha no desktop e 2 no celular.</p>
         <h3 className="mt-6 font-extrabold">Componentes</h3>
         <div className="mt-3 flex flex-wrap gap-3">
-          {STRUCTURED_MODELS.map((m) => (
+          {[...STRUCTURED_MODELS, ...PAGE_ONLY_MODELS].map((m) => (
             <form key={m.template} action={addStructuredSection}>
               {hidden}<input type="hidden" name="template" value={m.template} />
               <button type="submit" className="a-btn ghost" aria-label={`Adicionar ${m.name}`}>Adicionar {m.name}</button>

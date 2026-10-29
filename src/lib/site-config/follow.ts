@@ -116,9 +116,22 @@ function followedSections(sections: readonly Section[], ctx: Adapt, regional: re
       if (model) s.customizerCard.customizerId = model.id;
       else delete s.customizerCard;
     }
+    // A live banner shows the region's own model of the same address; without one the block is not shown.
+    if (s.live) {
+      const model = activeModel(ctx, s.live.customizerId);
+      if (model) s.live.customizerId = model.id;
+      else s.active = false;
+    }
     // Last: what the region chose itself (its own links in a grid, its covers and products) is never adapted again.
     return withRegional(s, own);
   });
+}
+
+/** A page whose hero gave way to a live banner gets its hero back where the region has no model for that banner (a page always opens with a heading). */
+function withOpening(sections: Section[]): Section[] {
+  const hero = sections[0];
+  if (hero?.template !== "page-hero" || hero.active || sections.some((s) => s.template === "personalization-live" && s.active)) return sections;
+  return [{ ...hero, active: true }, ...sections.slice(1)];
 }
 
 const refKey = (r: CollectionRef) => `${r.store}:${r.collectionId}`;
@@ -138,7 +151,7 @@ export function followedDoc(doc: ScopeDoc, sul: ScopeDoc | undefined, canFollow:
     const taken = new Set(own.filter((p) => !p.archived).map((p) => `${p.kind}:${p.slug}`));
     const pages = follows("pages") ? [...own, ...(sul.pages ?? []).filter((p) => !p.archived && !taken.has(`${p.kind}:${p.slug}`))] : own;
     const ctx: Adapt = { to: region, pages, sourceCustomizers: sul.customizers ?? [], customizers: doc.customizers ?? [] };
-    if (follows("pages")) next.pages = pages.map((p) => (own.includes(p) ? p : { ...p, sections: followedSections(p.sections, ctx) }));
+    if (follows("pages")) next.pages = pages.map((p) => (own.includes(p) ? p : { ...p, sections: withOpening(followedSections(p.sections, ctx)) }));
 
     if (follows("home") && sul.home) {
       next.home = { sections: followedSections(sul.home.sections, ctx, regionalOf(doc, sul)), ...(sul.home.backdrop ? { backdrop: structuredClone(sul.home.backdrop) } : {}) };

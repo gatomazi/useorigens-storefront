@@ -8,8 +8,8 @@ import { requestSecret, requestStoreOrNull } from "@/lib/customization/server";
 import { snapshotOf, summaryOf, validateSubmission, type FieldError, type SummaryLine } from "@/lib/customization/validate";
 import { publishedFor } from "@/lib/pages/public";
 import { liveCustomizer } from "@/lib/site-config/pages";
-import { validateArtworkInput } from "@/lib/customization/artwork";
-import { loadArtworkBase } from "@/lib/customization/artwork-server";
+import { artworkFields, fieldDisplay } from "@/lib/customization/artwork";
+import { checkArtworkInput, loadArtworkBase } from "@/lib/customization/artwork-server";
 import { choiceLabel, choiceOfTemplate, MAX_FAMILY_ARTS, offersChoice, studioTemplateIds } from "@/lib/customization/studio-arts";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { isTerminal, PRODUCT_TYPE, productJobKey, productName, publicJob, type PublicProductJob } from "@/lib/customization/ink-products";
@@ -46,7 +46,7 @@ export async function submitCustomizationAction(input: { region: string; slug: s
     if (!input.artwork || !choice) return fail("A arte deste modelo mudou. Recarregue a página antes de enviar.");
     const base = await loadArtworkBase(choice.templateId).catch(() => null);
     if (!base) return fail("Esta base não está disponível agora. Tente novamente mais tarde.");
-    const artwork = validateArtworkInput(base, choice.templateId, input.artwork);
+    const artwork = checkArtworkInput(base, choice.templateId, input.artwork);
     if (!artwork.ok) return fail("Confira os textos, fontes e cores da arte.", artwork.errors);
     checked.values.artwork = { ...artwork.artwork, ...(offersChoice(model) ? { choice: choiceLabel(choice) } : {}) };
     // A family order: other arts or versions of the same model with the same answers (only for bases with fields, e.g. the surname).
@@ -60,7 +60,7 @@ export async function submitCustomizationAction(input: { region: string; slug: s
       for (const pick of picks as NonNullable<(typeof picks)[number]>[]) {
         const extra = await loadArtworkBase(pick.templateId).catch(() => null);
         if (!extra) return fail("Uma das artes do pedido não está disponível agora. Tente novamente mais tarde.");
-        const checkedExtra = validateArtworkInput(extra, pick.templateId, { fields: input.artwork.fields });
+        const checkedExtra = checkArtworkInput(extra, pick.templateId, { fields: input.artwork.fields });
         if (!checkedExtra.ok) return fail("Confira os textos da arte.", checkedExtra.errors);
         more.push({ ...checkedExtra.artwork, choice: choiceLabel(pick) });
       }
@@ -133,30 +133,34 @@ export async function startProductsAction(input: { region: string; slug: string;
   const keys = picks.map((c) => (c ? `${model.studioArts!.indexOf(c.art)}:${c.art.versions.indexOf(c.version)}` : ""));
   if (picks.some((c) => !c) || ids.length > MAX_FAMILY_ARTS || new Set(keys).size !== keys.length) return fail("A arte deste modelo mudou. Recarregue a página antes de continuar.");
 
-  const items: { pick: NonNullable<(typeof picks)[number]>; fields: Record<string, string>; printed: string[] }[] = [];
+  const items: { pick: NonNullable<(typeof picks)[number]>; fields: Record<string, string>; shown: Record<string, string>; reviewed: string; printed: string[] }[] = [];
   for (const pick of picks as NonNullable<(typeof picks)[number]>[]) {
     const base = await loadArtworkBase(pick.version.templateId).catch(() => null);
     if (!base) return fail("Esta arte não está disponível agora. Tente novamente mais tarde.", true);
-    const checked = validateArtworkInput(base, pick.version.templateId, { fields: input.artwork?.fields });
+    const checked = checkArtworkInput(base, pick.version.templateId, { fields: input.artwork?.fields });
     if (!checked.ok) return fail("Confira o que você escreveu.", false, checked.errors);
     if (!checked.artwork.fields?.length) return fail("Esta arte não pode ser criada automaticamente.", true);
-    items.push({ pick, fields: Object.fromEntries(checked.artwork.fields.map((f) => [f.id, f.value])), printed: checked.artwork.layers.map((l) => l.text) });
+    const fields = Object.fromEntries(checked.artwork.fields.map((f) => [f.id, f.value]));
+    const kinds = artworkFields(base);
+    // A city comes from IBGE's list: real names like "Pau dos Ferros" are not reviewed.
+    const reviewed = kinds.filter((f) => f.input !== "city").map((f) => fields[f.id]).join(" ");
+    items.push({ pick, fields, shown: Object.fromEntries(kinds.map((f) => [f.id, fieldDisplay(f, fields[f.id] ?? "")])), reviewed, printed: checked.artwork.layers.map((l) => l.text) });
   }
-  if (items.some(({ fields }) => needsReview(Object.values(fields).join(" ")))) return fail("Este nome passa pela nossa equipe antes de virar camiseta. Deixe o seu contato e a gente manda o link.", true);
+  if (items.some(({ reviewed }) => needsReview(reviewed))) return fail("Este texto passa pela nossa equipe antes de virar camiseta. Deixe o seu contato e a gente manda o link.", true);
   const prices = items.map(({ pick }) => ((pick.version.garment ?? "camiseta") === "infantil" ? direct.kidsPrice : direct.price));
   if (prices.some((p) => !p)) return fail("A criação automática não está disponível para esta versão.", true);
 
   try {
     if ((await store.countCreatedSince(new Date(Date.now() - 24 * 60 * 60_000))) >= dailyCap()) return fail("Hoje a criação automática chegou ao limite. Deixe o seu contato e a gente manda o link.", true);
     const out: PublicProductJob[] = [];
-    for (const [i, { pick, fields, printed }] of items.entries()) {
+    for (const [i, { pick, fields, shown, printed }] of items.entries()) {
       const garment = pick.version.garment ?? "camiseta";
       const lightTemplateId = pick.version.lightTemplateId ?? null;
       const artLabel = choiceLabel({ ...pick, light: false, templateId: pick.version.templateId });
       let { job } = await store.findOrCreate({
         dedupeKey: productJobKey({ region: found.region, templateId: pick.version.templateId, lightTemplateId, garment, printed }),
         region: found.region, customizerId: model.id, customizerSlug: model.slug,
-        name: productName(fields, model.name, artLabel), artLabel, fields,
+        name: productName(shown, model.name, artLabel), artLabel, fields,
         templateId: pick.version.templateId, lightTemplateId, garment, productTypeId: PRODUCT_TYPE[garment], price: prices[i]!,
       });
       // A job that failed before INK held anything is tried again for the next customer; one that needs a check stays with the team.
