@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { applyOp, type DraftOp } from "@/lib/admin/draft-ops";
+import { diffDocs } from "@/lib/admin/diff";
 import { composeDoc } from "@/lib/admin/publishing";
 import { readabilityProblems } from "@/lib/admin/validate-draft";
 import { followedDoc } from "@/lib/site-config/follow";
@@ -48,10 +49,11 @@ describe("the ground of a home theme (Fundo da home)", () => {
     expect(off.home).not.toHaveProperty("backdrop");
   });
 
-  test("given a seasonal theme created while a ground is in use, when it is created, then it starts as a copy of that ground too", () => {
+  test("given a seasonal theme created while a ground is in use, when it is created, then it starts on the region's ground (its opening is made for it)", () => {
     const black = run(withBlackGround(), { type: "set-home-theme", theme: "black" });
     const natal = run(black, { type: "create-home-theme", theme: "natal" });
-    expect(natal.homeThemes?.natal?.backdrop).toEqual(BLACK);
+    expect(natal.homeThemes?.natal).not.toHaveProperty("backdrop");
+    expect(natal.home?.backdrop).toEqual(BLACK);
   });
 
   test("given a malformed ground, when validated, then the document is refused (in use and kept)", () => {
@@ -69,6 +71,17 @@ describe("the ground of a home theme (Fundo da home)", () => {
     expect(readabilityProblems(black).filter((p) => p.startsWith("Fundo da home"))).toEqual([]);
     const unreadable = run(black, { type: "set-home-backdrop", backdrop: { color: "#0a0a0a", tone: "light" } });
     expect(readabilityProblems(unreadable).some((p) => p.startsWith("Fundo da home"))).toBe(true);
+  });
+
+  test("given a ground change, when the publish summary is built, then it says so (kept theme and theme in use)", () => {
+    const base = sul();
+    const created = run(base, { type: "create-home-theme", theme: "black" });
+    const kept = withBlackGround();
+    expect(diffDocs(created, kept).map((c) => c.text)).toContain("Tema Black Friday (fora da loja): fundo da home alterado");
+    const black = run(kept, { type: "set-home-theme", theme: "black" });
+    const off = run(black, { type: "set-home-backdrop", backdrop: null });
+    expect(diffDocs(black, off).map((c) => c.text)).toContain("Fundo da home: volta ao fundo da região");
+    expect(diffDocs(black, black).some((c) => c.sectionId === "home-ground")).toBe(false);
   });
 
   test("given a published file, when the storefront reads it, then a valid ground is kept and a broken one is dropped without touching the home", () => {

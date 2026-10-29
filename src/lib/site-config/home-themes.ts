@@ -177,7 +177,7 @@ const BLACK_TAGS = { discount: true, text: "Black Friday", onSale: true } as con
 const BLACK_CHROME = { headerBackground: "#111111", headerText: "#ffffff", mobileMenuBackground: "#111111", mobileMenuText: "#ffffff" } as const;
 
 /**
- * A new seasonal theme, built from the theme IN USE when it is created (its sections, its ground, its palette): the same home with the season's opening (see
+ * A new seasonal theme, built from the theme IN USE when it is created (its sections, its palette; never its ground): the same home with the season's opening (see
  * `SEASONAL_HERO`). Black also tags the product showcases ("16% OFF", "Black Friday"); Natal brings, right under the opening, the call to the Natal personalisation model (when the region has it active) and a
  * showcase of the Natal collection (when the store has it), each only if the home does not already have one. Putting it on the store and swapping back
  * are the ordinary theme swap: the theme that was in use is kept as it was.
@@ -233,8 +233,9 @@ export function seasonalTheme(name: SeasonalThemeName, doc: ScopeDoc, collection
 
   const palette = doc.theme ? structuredClone(doc.theme) : undefined;
   if (name === "black" && palette?.mode === "override") palette.colors = { ...palette.colors, ...BLACK_CHROME };
-  const backdrop = doc.home?.backdrop ? structuredClone(doc.home.backdrop) : undefined;
-  return { sections, ...(backdrop ? { backdrop } : {}), ...(palette ? { theme: palette } : {}) };
+  // No ground of its own: each season's opening is made for the store's usual ground (a Natal copied from a black Black Friday would put its dark
+  // title on black). The owner gives it one in "Fundo da home".
+  return { sections, ...(palette ? { theme: palette } : {}) };
 }
 
 /**

@@ -30,7 +30,8 @@ transparente.
 - As seções sem fundo próprio (títulos, vitrines) ficam sobre o pattern. Os cards de produto pegam a cor do fundo, para o
   pattern não passar por baixo do nome e do preço. As seções com foto, cor ou papel continuam com o delas. Num fundo escuro,
   "Comece pelo seu estado" e "Sua cidade, do seu jeito" ficam sobre papel claro, porque não têm versão escura.
-- Um tema sazonal criado com um fundo em uso começa com uma cópia dele.
+- Um tema sazonal novo começa sempre no fundo normal, mesmo criado a partir de um tema com fundo (a abertura dele é pensada
+  para o fundo normal). Ligue o fundo depois, se quiser.
 - Norte e Centro-Oeste, quando seguem a home da Sul, mostram o mesmo fundo.
 - Texto claro sobre fundo claro, ou o contrário, impede a publicação, como nas páginas.
 
