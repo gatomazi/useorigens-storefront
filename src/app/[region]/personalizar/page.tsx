@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PublicPage } from "@/components/pages/PublicPage";
 import { CreateYourOwnCard } from "@/components/umapenca/CreateYourOwnCard";
-import { personalizationCards, personalizationHubHref } from "@/lib/customization/hub";
+import { HUB_PAGE_SLUG, personalizationCards, personalizationHubHref } from "@/lib/customization/hub";
 import { isRegionSlug, REGIONS } from "@/lib/geo/regions";
-import { publishedFor } from "@/lib/pages/public";
+import { pageMetadata, publishedFor } from "@/lib/pages/public";
+import { livePage } from "@/lib/site-config/pages";
 import { isRegionLaunched } from "@/lib/regions/launched";
 
 export const revalidate = 3600;
@@ -19,6 +21,12 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { region } = await params;
   if (!isRegionSlug(region)) return {};
+  const found = publishedFor(region);
+  const page = found ? livePage(found.bundle.docs[region], "hotpage", HUB_PAGE_SLUG) : undefined;
+  if (found && page) {
+    const meta = pageMetadata(region, page, found.bundle);
+    return { ...meta, alternates: { canonical: personalizationHubHref(region) }, openGraph: { ...meta.openGraph, url: personalizationHubHref(region) } };
+  }
   return {
     title: `Estampas personalizáveis · Use Origens ${REGIONS[region].name}`,
     description: "Coloque o sobrenome da família, a sua cidade ou a sua placa numa estampa Use Origens e veja na camiseta antes de comprar.",
@@ -28,13 +36,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 /**
- * Every personalized print of the region in one place (the surname, the plate…), each card leading to its own page. The models come from the
- * published CMS (src/lib/customization/hub.ts); with none, the page is a 404, so a menu link never lands on an empty shelf.
+ * Every personalized print of the region in one place (the surname, the plate…), each card leading to its own page. When the owner composed the
+ * page in the CMS (`HUB_PAGE_SLUG`), its sections are shown (the live banner, the models' cards…); otherwise the plain list of the published models
+ * (src/lib/customization/hub.ts). With neither, the page is a 404, so a menu link never lands on an empty shelf.
  */
 export default async function PersonalizationHubPage({ params }: Props) {
   const { region } = await params;
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const published = publishedFor(region);
+  const page = published ? livePage(published.bundle.docs[region], "hotpage", HUB_PAGE_SLUG) : undefined;
+  if (published && page) return <PublicPage region={region} bundle={published.bundle} page={page} />;
   const cards = published ? personalizationCards(published.bundle.docs[region], published.bundle.media, region) : [];
   if (cards.length === 0) notFound();
   const instant = cards.some((c) => c.price);

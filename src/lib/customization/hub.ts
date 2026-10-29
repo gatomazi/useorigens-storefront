@@ -1,10 +1,16 @@
 import type { RegionSlug } from "../geo/regions";
-import { customizerHref } from "../site-config/pages";
+import { customizerHref, HUB_PAGE_SLUG } from "../site-config/pages";
 import { isUmaPencaSource, type PublishedBundle, type ScopeDoc } from "../site-config/schema";
 import type { CreateYourOwnCard } from "../umapenca/customizer-cards";
 
 /** The region's page with every personalized print: `/<region>/personalizar`. */
 export const personalizationHubHref = (region: RegionSlug): string => `/${region}/personalizar`;
+
+/**
+ * The CMS page (a hotpage, `HUB_PAGE_SLUG`) that composes that address when the owner builds it ("Montar a página" in Personalização): its sections
+ * — the live banner, the models' cards, anything else a page takes — are shown at `/<region>/personalizar`. Without it, the plain list of models.
+ */
+export { HUB_PAGE_SLUG };
 
 /**
  * The cards of the personalization page: the region's PUBLISHED, active models with the art editor (the surname, the plate…), in the CMS order.

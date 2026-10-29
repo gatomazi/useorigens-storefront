@@ -4,6 +4,7 @@ import type { ArticleKind } from "../umapenca/types";
 import { SUL_INK, SUL_INK_ORIGIN } from "../ink/sul-domain";
 import { CUSTOMIZER_SEGMENT, PAGE_SEGMENT, type Destination, type EditorialModuleKey, type Section, type Source } from "./schema";
 import { sortProducts, type ProductSort, type ProductSalesUnits } from "../catalog/product-sort";
+import { pageHref } from "./pages";
 
 /**
  * Section data sources (docs/admin/cms-v1-round2.md §3, docs/admin/cms-v1-round3.md §3). A source either yields items or says,
@@ -107,7 +108,7 @@ export function destinationHref(dest: Destination, links?: CollectionLinks, regi
   if (dest.kind === "route") return dest.path;
   if (dest.kind === "external") return dest.url;
   if (dest.kind === "anchor") return `#${dest.anchor}`;
-  if (dest.kind === "page") return region ? `/${region}/${PAGE_SEGMENT[dest.pageKind]}/${dest.slug}` : null;
+  if (dest.kind === "page") return region ? pageHref(region, { kind: dest.pageKind, slug: dest.slug }) : null;
   if (dest.kind === "collection-page") {
     const slug = region ? links?.pageSlug?.(dest.store, dest.collectionId) : null;
     return region && slug ? collectionPagePath(region, slug) : null;

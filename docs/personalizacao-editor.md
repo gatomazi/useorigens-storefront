@@ -56,6 +56,15 @@ Uma camada de texto pode ter um **campo** (`slot` em `model.ts`): um modelo de t
 
 O estúdio preserva esses campos ao abrir e salvar, e renderiza arco, contorno e a arte que desce, mas ainda não tem controles para editá-los: ajuste pelo `.json`.
 
+### Página "Personalize a sua" e banner ao vivo
+
+`/<região>/personalizar` reúne os modelos com editor de arte. Sem nada montado, mostra a lista simples (`src/lib/customization/hub.ts`). Em **Personalização → Montar a página Personalize a sua**, ela vira uma página do CMS (hotpage `personalize-a-sua`, servida em `/<região>/personalizar`; o endereço `/h/` redireciona) com dois blocos só de página:
+
+- **Banner ao vivo** (`personalization-live`): título e texto, os campos do modelo e a camiseta com a arte mudando enquanto o cliente digita. Até alguém tocar, ele "digita" sozinho os exemplos do painel (uma linha por exemplo, respostas na ordem dos campos separadas por " | ", cidade como Nome/UF; o editor aponta a linha que não serve). Para fora da tela e com "reduzir movimento". A arte só baixa quando o banner chega perto da tela, por GET cacheável (`/api/personalizar/<região>/<modelo>/base/<arte>`). O botão leva o que o cliente escreveu (não os exemplos) para a página do modelo pela sessão da aba, nunca pelo endereço (GA4 e pixel leem a URL). A cor do painel de texto é a aparência do bloco.
+- **Estampas personalizáveis** (`personalization-models`): os cards dos modelos publicados.
+
+Uma região que segue as páginas da Sul mostra o seu modelo de mesmo endereço; sem ele, o banner some.
+
 ### Placa · UF e cidade
 
 A arte da placa cinza antiga (`~/Downloads/Estampas Personalizaveis - Lote 1.png`) vira base com `scripts/placa-base.py`, na fonte Origens Placa embutida:

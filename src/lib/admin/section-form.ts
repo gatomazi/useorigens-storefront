@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
+import { FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, MAX_LIVE_EXAMPLES, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
 import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, TILE_VEILS, type TileFormat, type TileVeil, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { REGION_SLUGS, STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
@@ -328,6 +328,11 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
   if (section.template === "image-grid" && f.get("grid_present") !== null) {
     patch.grid = parseGridLayout(f, section.grid);
     patch.tiles = parseGridTiles(f).tiles; // the caller refuses the save when `parseGridTiles` reports problems
+  }
+  // The live banner: its model, its button and the examples it plays (one per line, as typed; the editor page points out a line that does not fit).
+  if (section.template === "personalization-live" && f.get("live_customizer") !== null) {
+    const examples = str(f, "live_examples").split(/\r?\n/).map((line) => line.trim()).filter(Boolean).slice(0, MAX_LIVE_EXAMPLES).map((line) => line.slice(0, 160));
+    patch.live = { customizerId: str(f, "live_customizer"), button: str(f, "live_button").slice(0, 32) || "Personalizar a minha", examples };
   }
   if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", 8)), 1, 8);
   if (f.get("variant_present") !== null) {

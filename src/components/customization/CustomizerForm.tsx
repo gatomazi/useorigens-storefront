@@ -6,6 +6,7 @@ import { CONTACT_CONFIRM_TEXT, CONTACT_KEYS, CONTACT_NOTICE, validateContact } f
 import type { Customizer } from "@/lib/site-config/schema";
 import type { StartProductsResult, SubmitResult } from "@/app/[region]/personalizar/actions";
 import { artworkFields, composeArtwork, fieldEdits, fieldsCopy, fieldsSummary, initialArtworkEdits, validateArtworkInput, type ArtworkEdit } from "@/lib/customization/artwork";
+import { takePrefill } from "@/lib/customization/live-banner";
 import { choiceLabel, choiceOf, MAX_FAMILY_ARTS, offersChoice, type ArtChoice } from "@/lib/customization/studio-arts";
 import { SHIRT_COLORS, shirtColor, shirtColorsFor } from "@/lib/customization/shirts";
 import type { PrintProject } from "@/lib/print-studio/model";
@@ -102,6 +103,12 @@ export function CustomizerForm({
   // The surname starts empty (a prefilled example gets typed after, or sent by mistake); the preview shows the example until one is written.
   const slots = useMemo(() => (firstBase && studio ? artworkFields(firstBase) : []), [firstBase, studio]);
   const [fieldValues, setFieldValues] = useState<Record<string, string>>(() => Object.fromEntries(slots.map((f) => [f.id, ""])));
+  // What the visitor wrote in a live banner of the personalization page comes along (read once, after hydration; never from the address).
+  useEffect(() => {
+    if (!firstBase || !studio) return;
+    const carried = takePrefill(model.slug, firstBase);
+    if (Object.keys(carried).length) queueMicrotask(() => setFieldValues((v) => ({ ...v, ...carried })));
+  }, [firstBase, studio, model.slug]);
   const showingExample = slots.some((f) => !fieldValues[f.id]?.trim());
   const previewValues = useMemo(() => Object.fromEntries(slots.map((f) => [f.id, fieldValues[f.id]?.trim() ? fieldValues[f.id] : f.example])), [slots, fieldValues]);
   const [artworkReady, setArtworkReady] = useState(false);

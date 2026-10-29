@@ -188,6 +188,15 @@ export function buildRegionCopy(input: { source: ScopeDoc; destination: ScopeDoc
         warnings.add("O card de personalização sem modelo equivalente ativo será retirado. Copie ou configure o modelo nesta região e vincule-o novamente.");
       }
     }
+    if (s.live) {
+      const originalModel = source.customizers?.find((m) => m.id === s.live!.customizerId);
+      const target = originalModel && next.customizers?.find((m) => m.slug === originalModel.slug && m.active);
+      if (target) s.live.customizerId = target.id;
+      else {
+        s.active = false;
+        warnings.add("O banner ao vivo sem modelo equivalente ativo fica oculto. Copie ou configure o modelo nesta região e escolha-o no banner.");
+      }
+    }
     return s;
   });
 

@@ -76,6 +76,19 @@ function slotValue(slot: TextSlot, raw: string) {
   return slot.dropParticle ? value.replace(PARTICLE_START, "") : value;
 }
 
+/**
+ * One answer brought from outside the field (an example of the live banner, or what was typed there and carried to the model's page), made to
+ * fit the field as if typed into it: a plate to "ABC-1234", a city to a valid "Nome/UF", a name trimmed and within its length. Null: it does not fit.
+ * The server still checks the city against IBGE's list when the product is made.
+ */
+export function fieldAnswer(field: Pick<ArtworkField, "input" | "maxLength">, raw: string): string | null {
+  const value = normalizeValue(raw);
+  if (!value) return null;
+  if (field.input === "plate") return plateValue(value);
+  if (field.input === "city") return parseCityValue(value) ? value : null;
+  return [...value].length <= field.maxLength && !problemWith(value, field.maxLength) && NAME.test(value) ? value : null;
+}
+
 /** How an answer reads to the customer and the team: a city as "Santa Terezinha de Itaipu (PR)"; anything else as typed. */
 export function fieldDisplay(field: Pick<ArtworkField, "input">, value: string): string {
   const city = field.input === "city" ? parseCityValue(value) : null;

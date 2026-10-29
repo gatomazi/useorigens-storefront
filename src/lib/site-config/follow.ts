@@ -116,6 +116,12 @@ function followedSections(sections: readonly Section[], ctx: Adapt, regional: re
       if (model) s.customizerCard.customizerId = model.id;
       else delete s.customizerCard;
     }
+    // A live banner shows the region's own model of the same address; without one the block is not shown.
+    if (s.live) {
+      const model = activeModel(ctx, s.live.customizerId);
+      if (model) s.live.customizerId = model.id;
+      else s.active = false;
+    }
     // Last: what the region chose itself (its own links in a grid, its covers and products) is never adapted again.
     return withRegional(s, own);
   });

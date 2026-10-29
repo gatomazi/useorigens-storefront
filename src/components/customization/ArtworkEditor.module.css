@@ -48,7 +48,7 @@ button.seeShirt { border-color: var(--region-primary); background: var(--region-
 /* Only with a real pointer: on a phone the hover state sticks after a tap and would leave the button hollow. */
 @media (hover: hover) { button.seeShirt:hover { background: transparent; color: var(--region-primary); } }
 /* City of a print: the state (short) beside the city with its suggestions; stacked on a narrow column. */
-.city { display: grid; grid-template-columns: minmax(7.5rem, 2fr) minmax(0, 5fr); gap: .75rem; align-items: end; }
+.city { display: grid; grid-template-columns: minmax(10.5rem, 4fr) minmax(0, 5fr); gap: .75rem; align-items: end; }
 @media (max-width: 30rem) { .city { grid-template-columns: minmax(0, 1fr); gap: .5rem; } }
 .cityInput { position: relative; min-width: 0; }
 .city select.textarea { margin-top: .35rem; }
@@ -57,3 +57,6 @@ button.seeShirt { border-color: var(--region-primary); background: var(--region-
 .cityOption[aria-selected="true"], .cityOption:hover { background: var(--color-ground, #f2f0ea); font-weight: 600; }
 .cityEmpty { padding: .75rem; color: var(--color-ink-mute, #565656); font-size: .875rem; }
 .cityFailed { grid-column: 1 / -1; margin: 0; }
+/* Fields on a dark panel (the live banner): the notes under them stay readable. */
+.onDark .help { color: rgb(255 255 255 / .78); }
+.onDark .help .error { color: #ffb4ab; }

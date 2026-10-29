@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { createCustomizerAction, duplicateCustomizerAction } from "@/app/admin/actions";
+import { createHubPageAction, createCustomizerAction, duplicateCustomizerAction } from "@/app/admin/actions";
+import { HUB_PAGE_SLUG } from "@/lib/customization/hub";
 import { CollectionCombobox } from "@/components/admin/CollectionCombobox";
 import { Flash } from "@/components/admin/Flash";
 import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
@@ -26,6 +27,7 @@ export default async function CustomizationScreen({ searchParams }: { searchPara
   const store = storeOf(scope);
   const entries = toComboEntries(libraryEntries(store, enabledInternalIds(ws.doc, store)));
   const models = ws.doc.customizers ?? [];
+  const hubPage = ws.doc.pages?.find((p) => p.kind === "hotpage" && p.slug === HUB_PAGE_SLUG);
   const rev = ws.record?.rev ?? null;
 
   return (
@@ -36,6 +38,19 @@ export default async function CustomizationScreen({ searchParams }: { searchPara
       </div>
       <Flash ok={sp.ok} err={sp.err} />
       <RegionCopyPanel actor={actor} scope={scope} part="customizer" rev={rev} />
+
+      <section className="a-card p-5" aria-labelledby="pagina-personalize">
+        <h2 id="pagina-personalize" className="a-h2">Página “Personalize a sua”</h2>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Em <code>/{scope}/personalizar</code> a loja reúne todos os modelos com editor de arte. Sem página montada, ela mostra a lista simples dos modelos. Montada aqui, vira uma página do CMS: o banner ao vivo (texto de um lado, a camiseta mudando do outro), os cards dos modelos e qualquer outro bloco de página. Para pôr no menu, use Navegação com o destino <code>/{scope}/personalizar</code>.</p>
+        {hubPage ? (
+          <p className="mt-3"><Link className="a-btn ghost" href={`/admin/paginas/${hubPage.id}`}>Editar a página Personalize a sua</Link></p>
+        ) : (
+          <form action={createHubPageAction} className="mt-3">
+            <input type="hidden" name="rev" value={rev ?? "null"} /><input type="hidden" name="scope" value={scope} />
+            <button type="submit" className="a-btn">Montar a página Personalize a sua</button>
+          </form>
+        )}
+      </section>
 
       <section className="a-card p-5" aria-labelledby="novo">
         <h2 id="novo" className="a-h2">Novo modelo</h2>
