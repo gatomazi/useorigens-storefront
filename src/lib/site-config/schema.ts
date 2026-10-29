@@ -427,7 +427,8 @@ export type StudioGarment = (typeof STUDIO_GARMENTS)[number];
 /** `templateId`: the base for dark shirts (or the only one); `lightTemplateId`: the same art for light shirts; `garment`: absent = camiseta. */
 export type StudioArtVersion = { label?: string; templateId: string; lightTemplateId?: string; garment?: StudioGarment };
 /** Prices of the products created at INK, as INK takes them ("109.90"); `kidsPrice` is required when a version is on the Camiseta Infantil. */
-export type DirectPurchase = { enabled: boolean; price: string; kidsPrice?: string };
+/** `inkCollectionId`: the INK category (usually a hidden one) every product of the model is created in, so the team finds them in INK's panel. */
+export type DirectPurchase = { enabled: boolean; price: string; kidsPrice?: string; inkCollectionId?: number };
 export const PRICE = /^\d{1,4}\.\d{2}$/;
 /** One art of a studio-based page; its versions (e.g. "Adulto" / "Infantil") are picked after the art and need a label when there are several. */
 export type StudioArt = { label: string; versions: StudioArtVersion[] };
@@ -1040,6 +1041,7 @@ function checkCustomizer(c: Collector, path: string, v: unknown): void {
     if (!isRecord(d) || typeof d.enabled !== "boolean" || typeof d.price !== "string" || !PRICE.test(d.price)) c.fail(`${path}.directPurchase`, "must be { enabled, price: \"109.90\", kidsPrice? }");
     else {
       if (d.kidsPrice !== undefined && (typeof d.kidsPrice !== "string" || !PRICE.test(d.kidsPrice))) c.fail(`${path}.directPurchase.kidsPrice`, "a price like \"96.00\"");
+      if (d.inkCollectionId !== undefined && (typeof d.inkCollectionId !== "number" || !Number.isInteger(d.inkCollectionId) || d.inkCollectionId <= 0)) c.fail(`${path}.directPurchase.inkCollectionId`, "a positive INK category id");
       const kids = Array.isArray(v.studioArts) && v.studioArts.some((a) => isRecord(a) && Array.isArray(a.versions) && a.versions.some((x) => isRecord(x) && x.garment === "infantil"));
       if (d.enabled && !Array.isArray(v.studioArts)) c.fail(`${path}.directPurchase`, "direct purchase needs studio arts");
       if (d.enabled && kids && d.kidsPrice === undefined) c.fail(`${path}.directPurchase.kidsPrice`, "required when a version is on the Camiseta Infantil");

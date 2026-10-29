@@ -19,6 +19,8 @@ export interface InkProductClient {
   readonly live: boolean;
   printableAreas(productTypeId: number): Promise<PrintArea[]>;
   createProduct(body: Record<string, unknown>, idempotencyKey: string): Promise<InkProductView>;
+  /** Whether a category is still there: INK refuses a product with an unknown one. */
+  collectionExists(id: number): Promise<boolean>;
   getProduct(id: string): Promise<InkProductView>;
 }
 
@@ -28,9 +30,13 @@ const view = (p: Record<string, unknown> | undefined): InkProductView => ({
   imageUrl: typeof p?.main_image_url === "string" ? p.main_image_url : null,
 });
 
-/** The real INK API (`store.products.write`). Product types are cached for ten minutes: their print areas change only when INK adds a colour. */
+/**
+ * The real INK API (`store.products.write`; the same token reads a category). Product types are cached for ten minutes: their print areas change
+ * only when INK adds a colour. A category check is cached as long.
+ */
 export function realInkProductClient(token: string, base: string, fetchImpl: typeof fetch = fetch): InkProductClient {
   const types = new Map<number, { at: number; areas: PrintArea[] }>();
+  const categories = new Map<number, { at: number; exists: boolean }>();
   async function call(method: "GET" | "POST", route: string, body?: unknown, idempotencyKey?: string): Promise<Record<string, unknown>> {
     const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
     if (body !== undefined) Object.assign(headers, { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey ?? "" });
@@ -67,6 +73,14 @@ export function realInkProductClient(token: string, base: string, fetchImpl: typ
     async getProduct(id) {
       const data = await call("GET", `/v1/stores/products/${encodeURIComponent(id)}`);
       return view((data.product as Record<string, unknown>) ?? data);
+    },
+    async collectionExists(id) {
+      const cached = categories.get(id);
+      if (cached && Date.now() - cached.at < 10 * 60_000) return cached.exists;
+      // A 404 or a refused read leaves the category out; a network failure or a 5xx is retried with the job (a sale never waits on a category).
+      const exists = await call("GET", `/v1/stores/collections/${id}`).then(() => true, (e) => { if (e instanceof InkRequestError && e.transient) throw e; return false; });
+      categories.set(id, { at: Date.now(), exists });
+      return exists;
     },
   };
 }
@@ -107,6 +121,9 @@ export function fakeInkProductClient({ createMs = 30_000, photoMs = 20_000 }: { 
       const entry = made.get(id);
       if (!entry) throw new InkRequestError(`produto ${id} não encontrado`, 404, false);
       return Date.now() - entry.at >= photoMs ? { ...entry.view, imageUrl: "https://www.useorigens.com.br/personalizacao/camisetas/preta.webp" } : entry.view;
+    },
+    async collectionExists() {
+      return true;
     },
   };
 }

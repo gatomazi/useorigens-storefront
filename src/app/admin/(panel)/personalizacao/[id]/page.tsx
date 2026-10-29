@@ -16,7 +16,7 @@ import { platform } from "@/lib/admin/platform";
 import { currentScope, storeOf } from "@/lib/admin/scope";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { libraryEntries } from "@/lib/catalog/collection-source";
-import { findCollection } from "@/lib/catalog/collections-file";
+import { findCollection, getStoreCollections } from "@/lib/catalog/collections-file";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { customizerHref } from "@/lib/site-config/pages";
 import { MAX_ART_VERSIONS, MAX_CUSTOM_FIELDS, MAX_STUDIO_ARTS, customizerProductLabel, isUmaPencaSource } from "@/lib/site-config/schema";
@@ -51,6 +51,9 @@ export default async function CustomizerEditor({ params, searchParams }: { param
   const g = model.lineGroup;
   const hidden = <><input type="hidden" name="rev" value={rev ?? "null"} /><input type="hidden" name="scope" value={scope} /></>;
   const currentRef = umaPenca ? "" : `${source.store}:${source.collectionId}`;
+  // The direct purchase creates the product in the region's store; its categories, hidden ones first (the usual pick), by name.
+  const inkCategories = [...(getStoreCollections(store)?.collections ?? [])].sort((a, b) => Number(a.isAvailable) - Number(b.isAvailable) || a.name.localeCompare(b.name, "pt-BR"));
+  const inkCategory = model.directPurchase?.inkCollectionId;
 
   return (
     <div className="space-y-6">
@@ -135,6 +138,17 @@ export default async function CustomizerEditor({ params, searchParams }: { param
               <div className="grid gap-4 md:grid-cols-2">
                 <div><label className="a-label" htmlFor="direct_price">Preço da camiseta (R$)</label><input id="direct_price" name="direct_price" className="a-input" inputMode="decimal" placeholder="109,90" defaultValue={(model.directPurchase?.price ?? "109.90").replace(".", ",")} /></div>
                 <div><label className="a-label" htmlFor="direct_kids_price">Preço da Camiseta Infantil (R$)</label><input id="direct_kids_price" name="direct_kids_price" className="a-input" inputMode="decimal" placeholder="obrigatório com versão infantil" defaultValue={model.directPurchase?.kidsPrice?.replace(".", ",") ?? ""} /></div>
+              </div>
+              <div>
+                <label className="a-label" htmlFor="direct_collection">Categoria na INK</label>
+                <select id="direct_collection" name="direct_collection" className="a-select" defaultValue={inkCategory ? String(inkCategory) : ""}>
+                  <option value="">Nenhuma</option>
+                  {inkCategory && !inkCategories.some((c) => c.id === inkCategory) && <option value={inkCategory}>#{inkCategory} (ainda não sincronizada)</option>}
+                  <optgroup label="Ocultas">{inkCategories.filter((c) => !c.isAvailable).map((c) => <option key={c.id} value={c.id}>{c.name} · #{c.id}</option>)}</optgroup>
+                  <optgroup label="Públicas">{inkCategories.filter((c) => c.isAvailable).map((c) => <option key={c.id} value={c.id}>{c.name} · #{c.id}</option>)}</optgroup>
+                </select>
+                <p className="a-muted mt-1 text-[0.8125rem]">Todo produto criado por este modelo entra nesta categoria, para a equipe achar os personalizados no painel da INK. Prefira uma oculta (por exemplo, “Sobrenomes”). Uma categoria criada agora na INK aparece aqui depois de sincronizar as coleções. Se ela for apagada na INK, o produto é criado sem categoria e o aviso fica em Produtos criados.</p>
+                {model.directPurchase?.enabled && !inkCategory && <p className="a-flash err mt-2">A compra direta está ligada sem categoria: os produtos deste modelo não ficam agrupados na INK.</p>}
               </div>
               <p className="a-muted text-[0.875rem]">Só para artes com campo (por exemplo, só o sobrenome). Ao tocar em criar, o servidor desenha a arte, cria um produto <strong>oculto</strong> na INK (a arte escura na branca, na cinza e na amarela; a clara nas outras) e leva o cliente até ele quando a foto fica pronta, ou depois de 1 minuto. O mesmo nome na mesma arte reaproveita o produto. Nomes com palavrões ou ofensas, o limite do dia e qualquer erro caem na solicitação para a equipe. A INK não apaga produtos: veja todos em <Link className="a-link" href="/admin/personalizacao/produtos">Produtos criados</Link>.</p>
             </fieldset>

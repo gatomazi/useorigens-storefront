@@ -49,10 +49,15 @@ export async function runProductJob(id: string, deps: WorkerDeps, describe: (job
       const { darkInk, lightInk } = await deps.render(job);
       const creating = (await deps.store.update(id, { status: "creating", leaseUntil: new Date(deps.now().getTime() + LEASE_MS).toISOString() }, { onlyIf: BEFORE_INK })) ?? job;
       const arts = inkArts(await deps.client.printableAreas(creating.productTypeId), darkInk, lightInk);
-      const { description, tags, collections } = describe(creating);
-      const made = await deps.client.createProduct({ product_type_id: creating.productTypeId, name: creating.name, description, price: creating.price, visible_in_store: false, tags, collections, arts }, creating.id);
+      const { description, tags, collections: wanted } = describe(creating);
+      // A category deleted at INK would refuse the product: it is left out, and the job says so.
+      const collections: number[] = [];
+      for (const c of wanted) if (await deps.client.collectionExists(c)) collections.push(c);
+      const missing = wanted.filter((c) => !collections.includes(c));
+      const made = await deps.client.createProduct({ product_type_id: creating.productTypeId, name: creating.name, description, price: creating.price, visible_in_store: false, tags, ...(collections.length ? { collections } : {}), arts }, creating.id);
       if (!/^\d{1,20}$/.test(made.id)) throw new Error("a INK não devolveu o id do produto");
-      return deps.store.update(id, { status: "photos", inkProductId: made.id, inkUrl: safeInkUrl(made.url), inkImageUrl: made.imageUrl, inkCreatedAt: deps.now().toISOString(), error: null }, { onlyIf: BEFORE_INK });
+      const note = missing.length ? `criado sem a categoria ${missing.join(", ")}, que não existe na INK` : null;
+      return deps.store.update(id, { status: "photos", inkProductId: made.id, inkUrl: safeInkUrl(made.url), inkImageUrl: made.imageUrl, inkCreatedAt: deps.now().toISOString(), error: note }, { onlyIf: BEFORE_INK });
     } catch (e) {
       const message = (e instanceof Error ? e.message : String(e)).slice(0, 300);
       const attempts = job.attempts + 1;

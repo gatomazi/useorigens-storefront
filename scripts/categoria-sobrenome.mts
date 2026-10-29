@@ -1,5 +1,5 @@
 // Cria, uma vez, a categoria OCULTA "Sobrenomes" (a INK limita o nome a 20 caracteres) na loja única (use-sul) já com os produtos personalizados que existem, para a equipe
-// filtrar no painel da INK. Os produtos novos entram sozinhos (PERSONALIZED_COLLECTION_ID em src/lib/customization/products-server.ts).
+// filtrar no painel da INK. Os produtos novos entram pela "Categoria na INK" do modelo (painel → Personalização → Compra direta).
 // Sem --criar só lista o que faria. Os tokens ficam na Railway:
 //
 //   railway run --service useorigens-storefront -- node --conditions=react-server --import tsx scripts/categoria-sobrenome.mts [--criar]
