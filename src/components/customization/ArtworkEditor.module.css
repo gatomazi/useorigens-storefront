@@ -36,6 +36,9 @@
 .stage { position: relative; width: 100%; aspect-ratio: 800 / 820; overflow: hidden; background: #e5e5e5; }
 .shirt { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 .printArea { position: absolute; left: 30.25%; top: 28.78%; width: 39.75%; height: auto; display: block; }
+/* The shirt and the art move as one: the plain layer fills the stage; zoomed, it is scaled around the chest (the print area starts at 28.78%). */
+.layer, .zoomed { position: absolute; inset: 0; }
+.zoomed { transform: scale(1.55); transform-origin: 50% 40%; }
 .compactFields { min-width: 0; border: 0; margin: 0; padding: 0; }
 .compactFields .textGroup { padding-block: .25rem 0; border-bottom: 0; }
 /* Fields of a base with text slots (only the surname): close together, the hint behind an "i". */

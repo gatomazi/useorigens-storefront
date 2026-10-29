@@ -6,6 +6,7 @@ import { HUB_PAGE_SLUG, personalizationCards, personalizationHubHref } from "@/l
 import { isRegionSlug, REGIONS } from "@/lib/geo/regions";
 import { pageMetadata, publishedFor } from "@/lib/pages/public";
 import { livePage } from "@/lib/site-config/pages";
+import { hasImage, resolveBackground } from "@/lib/site-config/resolve";
 import { isRegionLaunched } from "@/lib/regions/launched";
 
 export const revalidate = 3600;
@@ -45,7 +46,12 @@ export default async function PersonalizationHubPage({ params }: Props) {
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const published = publishedFor(region);
   const page = published ? livePage(published.bundle.docs[region], "hotpage", HUB_PAGE_SLUG) : undefined;
-  if (published && page) return <PublicPage region={region} bundle={published.bundle} page={page} />;
+  if (published && page) {
+    // The short header of the site's listing pages, unless the owner dressed the page hero with a picture of its own.
+    const hero = page.sections.find((s) => s.active && s.template === "page-hero");
+    const compact = !hero || !hasImage(resolveBackground(hero.appearance, published.bundle.media));
+    return <PublicPage region={region} bundle={published.bundle} page={page} compactHero={compact} />;
+  }
   const cards = published ? personalizationCards(published.bundle.docs[region], published.bundle.media, region) : [];
   if (cards.length === 0) notFound();
   const instant = cards.some((c) => c.price);

@@ -100,7 +100,7 @@ export function PersonalizationLive({ slug, href, baseUrl, title, subtitle, butt
       <div className="relative flex items-center justify-center overflow-hidden bg-[#e4e4e4] px-[var(--gutter)] py-8 lg:order-2 lg:min-h-[36rem] lg:py-12">
         <div className="w-full max-w-[30rem]">
           {preview ? (
-            <ArtworkPreview project={preview} shirt="preta" controls={false} compact />
+            <ArtworkPreview project={preview} shirt="preta" controls={false} compact zoom />
           ) : poster ? (
             // eslint-disable-next-line @next/next/no-img-element -- a CMS upload served pre-sized from the media origin
             <img src={poster.src} width={poster.width} height={poster.height} alt={poster.alt} className="mx-auto h-auto w-full object-contain" />
