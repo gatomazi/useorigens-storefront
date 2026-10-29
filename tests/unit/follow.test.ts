@@ -100,13 +100,19 @@ describe("Seguir a Sul: o que o público vê", () => {
     expect(norte.home).toEqual(own);
   });
 
-  test("tema sazonal da Sul traz as cores dele; no tema original a região fica com as próprias", () => {
+  test("o tema da Sul vem só com a estrutura: as cores continuam as da região", () => {
     const norte = doc("norte");
     norte.follow = ["home"];
     norte.theme = { mode: "override", colors: { brandPrimary: "#123456" } };
     const sul = sulWithStructure();
     sul.theme = { mode: "override", colors: { brandPrimary: "#000000" } };
-    expect(followedDoc(norte, sul, true).theme).toEqual({ mode: "override", colors: { brandPrimary: "#000000" } });
+    const natal = followedDoc(norte, sul, true);
+    expect(natal.homeTheme).toBe(sul.homeTheme);
+    expect(natal.theme).toEqual(norte.theme);
+    // The palette the region keeps for that very theme wins over the one it uses.
+    norte.homeThemes = { [sul.homeTheme!]: { sections: [], theme: { mode: "override", colors: { brandPrimary: "#654321" } } } };
+    expect(followedDoc(norte, sul, true).theme).toEqual({ mode: "override", colors: { brandPrimary: "#654321" } });
+    delete norte.homeThemes;
     delete sul.homeTheme;
     const original = followedDoc(norte, sul, true);
     expect(original.theme).toEqual(norte.theme);

@@ -56,9 +56,11 @@ Para mudar uma parte inteira, use a configuração própria naquela parte (e, se
 
 ## O que continua de cada região
 
-Tracking, lançamento, cupons e promoções, pódio, modelos de personalização e a ordem de produtos de cada coleção. A paleta também é da região,
-exceto quando a home da Sul está num tema diferente do original (Editorial, Black Friday, Natal): aí as cores do tema vêm junto, porque o tema
-são as seções e as cores.
+Tracking, lançamento, cupons e promoções, pódio, modelos de personalização e a ordem de produtos de cada coleção. As cores também são da região,
+em qualquer tema: quando a home da Sul está em Editorial, Black Friday ou Natal, vêm as seções e o jeito do tema (faixa do topo e rodapé na cor
+principal), mas pintados com a paleta da região. Se a região tem cores próprias guardadas para aquele tema (Aparência → tema → cores), valem
+essas; senão, as que ela usa hoje. Cores escritas dentro de uma seção (o fundo vermelho da abertura de Natal, por exemplo) fazem parte da seção
+e vêm da Sul; as que usam a cor da região mudam junto.
 
 ## Loja única
 
