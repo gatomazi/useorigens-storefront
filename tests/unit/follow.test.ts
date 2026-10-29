@@ -217,6 +217,7 @@ describe("Seguir a Sul: imagens e produtos da região", () => {
 
   test("a estrutura vem da Sul; banner, produtos da abertura e capas são os da região", () => {
     const sul = sulWithStructure();
+    delete sul.homeTheme; // the original theme: the entries without a theme are its own
     const hero = sul.home!.sections[0];
     hero.appearance = { ...hero.appearance, image: { mobile: img("sul-hero") } };
     hero.featured = [{ store: "use-sul", productId: "111" }];
@@ -243,8 +244,29 @@ describe("Seguir a Sul: imagens e produtos da região", () => {
     expect(out.home!.sections.find((s) => s.id === "custom-novidades")!.appearance).toEqual(sul.home!.sections.find((s) => s.id === "custom-novidades")!.appearance);
   });
 
+  test("cada tema da Sul tem as imagens e os produtos da região: a abertura de Natal não leva a foto do dia a dia", () => {
+    const sul = sulWithStructure(); // Sul has Natal in use
+    const hero = sul.home!.sections[0];
+    hero.appearance = { ...hero.appearance, image: { mobile: img("sul-natal") } };
+    const norte = doc("norte");
+    norte.follow = ["home"];
+    norte.regional = [
+      { sectionId: hero.id, appearance: { image: { mobile: img("norte-dia-a-dia") }, focal } },
+      { sectionId: hero.id, theme: "natal", featured: [{ store: "use-sul", productId: "333" }] },
+    ];
+    expect(validateScopeDoc(norte)).toMatchObject({ ok: true });
+    let out = followedDoc(norte, sul, true).home!.sections[0];
+    expect(out.appearance.image).toEqual({ mobile: img("sul-natal") });
+    expect(out.featured).toEqual([{ store: "use-sul", productId: "333" }]);
+    delete sul.homeTheme;
+    out = followedDoc(norte, sul, true).home!.sections[0];
+    expect(out.appearance.image).toEqual({ mobile: img("norte-dia-a-dia") });
+    expect(validateScopeDoc({ ...norte, regional: [...norte.regional, { sectionId: hero.id, theme: "natal", appearance: { focal } }] }).ok).toBe(false);
+  });
+
   test("sem imagem na região = a seção fica sem a foto da Sul", () => {
     const sul = sulWithStructure();
+    delete sul.homeTheme;
     sul.home!.sections[1].appearance = { ...sul.home!.sections[1].appearance, image: { mobile: img("sul-banner") } };
     const norte = { ...doc("norte"), follow: ["home" as const], regional: [{ sectionId: sul.home!.sections[1].id, appearance: { focal } }] };
     expect(followedDoc(norte, sul, true).home!.sections[1].appearance.image).toBeUndefined();

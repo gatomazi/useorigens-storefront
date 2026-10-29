@@ -7,7 +7,9 @@ import type { RegionSlug } from "@/lib/geo/regions";
 import { canFollowSul } from "@/lib/site-config/published";
 import { FOLLOW_SOURCE, REGION_TOKEN, followsPart, type FollowPart } from "@/lib/site-config/follow-schema";
 import type { ScopeDoc, Section } from "@/lib/site-config/schema";
-import { followedDoc } from "@/lib/site-config/follow";
+import { followedDoc, regionalOf } from "@/lib/site-config/follow";
+import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
+import { homeThemeOf } from "@/lib/site-config/schema";
 
 /** The part with its article, inside a sentence ("Norte segue a home da Sul"). */
 const THE: Record<FollowPart, string> = { home: "a home", menu: "o menu", statePage: "a página do estado", pages: "as páginas" };
@@ -103,12 +105,13 @@ export async function RegionalSectionsList({ scope, doc }: { scope: RegionSlug; 
   if (scope === FOLLOW_SOURCE || !followsPart(doc, "home")) return null;
   const sul = await loadWorkspace(FOLLOW_SOURCE);
   const sections = (followedDoc(doc, sul.baseDoc, true).home?.sections ?? []).filter((s) => s.template !== "footer");
-  const own = new Set((doc.regional ?? []).map((e) => e.sectionId));
+  const own = new Set(regionalOf(doc, sul.baseDoc).map((e) => e.sectionId));
+  const theme = homeThemeOf(sul.baseDoc);
   return (
     <section id="imagens-regiao" className="a-card scroll-mt-4 overflow-x-auto" aria-labelledby="imagens-regiao-titulo" data-testid="regional-sections">
       <div className="p-4">
-        <h2 id="imagens-regiao-titulo" className="a-h2">Imagens e produtos do {scopeName(scope)}</h2>
-        <p className="a-muted mt-1 text-[0.875rem]">A estrutura é a da Sul publicada. Em cada seção, você pode trocar a foto (e, na abertura, os produtos e os banners de cada um) pelas do {scopeName(scope)}. O que não trocar segue a Sul.</p>
+        <h2 id="imagens-regiao-titulo" className="a-h2">Imagens e produtos do {scopeName(scope)} <span className="a-muted">· tema {HOME_THEME_LABEL[theme]}</span></h2>
+        <p className="a-muted mt-1 text-[0.875rem]">A estrutura é a da Sul publicada. Em cada seção, você pode trocar a foto (e, na abertura, os produtos e os banners de cada um) pelas do {scopeName(scope)}. O que não trocar segue a Sul. Cada tema da home da Sul (Original, Black Friday, Natal…) tem as próprias imagens e produtos do {scopeName(scope)}: quando a Sul troca de tema, esta lista passa a ser a do tema novo.</p>
       </div>
       <table className="a-table a-stack">
         <thead><tr><th scope="col">Seção da Sul</th><th scope="col">Imagens e produtos</th><th scope="col"><span className="sr-only">Editar</span></th></tr></thead>

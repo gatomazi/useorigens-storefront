@@ -21,7 +21,7 @@ import { REGIONS, REGION_SLUGS, STATE_NAMES, type RegionSlug } from "../geo/regi
 import { effectiveMenu } from "./collection-menu";
 import { FOLLOW_SOURCE, REGION_TOKEN, followsPart } from "./follow-schema";
 import { defaultStatesBlockLabel } from "./navigation";
-import { PAGE_SEGMENT, type CollectionRef, type Customizer, type Destination, type Page, type PublishedBundle, type RegionalSection, type ScopeDoc, type Section } from "./schema";
+import { homeThemeOf, PAGE_SEGMENT, type CollectionRef, type Customizer, type Destination, type Page, type PublishedBundle, type RegionalSection, type ScopeDoc, type Section } from "./schema";
 
 export { REGION_TOKEN };
 
@@ -69,6 +69,9 @@ export function followedDestination(d: Destination, ctx: Adapt): Destination | u
   segments[0] = ctx.to;
   return { kind: "route", path: `/${segments.join("/")}${url.search}${url.hash}` };
 }
+
+/** The region's own pictures and products for the home theme Sul has in use (each theme keeps its own: `RegionalSection.theme`). */
+export const regionalOf = (doc: ScopeDoc, sul: ScopeDoc): RegionalSection[] => (doc.regional ?? []).filter((e) => (e.theme ?? "original") === homeThemeOf(sul));
 
 /** The region's own pictures and products over one of Sul's sections (`ScopeDoc.regional`): only what the entry carries is replaced. */
 export function withRegional(s: Section, own: RegionalSection | undefined): Section {
@@ -136,7 +139,7 @@ export function followedDoc(doc: ScopeDoc, sul: ScopeDoc | undefined, canFollow:
     if (follows("pages")) next.pages = pages.map((p) => (own.includes(p) ? p : { ...p, sections: followedSections(p.sections, ctx) }));
 
     if (follows("home") && sul.home) {
-      next.home = { sections: followedSections(sul.home.sections, ctx, doc.regional) };
+      next.home = { sections: followedSections(sul.home.sections, ctx, regionalOf(doc, sul)) };
       if (sul.homeTheme) {
         // A theme other than the original is its sections AND its colours (Black Friday, Natal): the palette comes with it. On the original, the
         // region keeps its own colours.

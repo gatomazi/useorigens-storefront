@@ -32,7 +32,7 @@ import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
 import { enabledInternalIds, inkCollectionLinks } from "@/lib/site-config/collections-enabled";
 import { MUNDO_MODOS, type MundoModo } from "@/lib/site-config/mundo-schema";
-import { DEFAULT_BUY_LABEL, HOME_THEMES, isUmaPencaSource, MAX_BUY_LABEL, MAX_COLLECTION_NOTE, maxSectionProducts, MENU_HIGHLIGHT_KEYS, MIN_SECTION_PRODUCTS, type CollectionHighlight, type CollectionNote, type HomeThemeName, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, HOME_THEMES, homeThemeOf, isUmaPencaSource, MAX_BUY_LABEL, MAX_COLLECTION_NOTE, maxSectionProducts, MENU_HIGHLIGHT_KEYS, MIN_SECTION_PRODUCTS, type CollectionHighlight, type CollectionNote, type HomeThemeName, type ProductDisplay, type Scope, type TrackingConfig, type VendorSetting } from "@/lib/site-config/schema";
 import { CARD_BUY_STYLE_NAME, postedBuyStyle } from "@/lib/site-config/cards-schema";
 import { DEFAULT_CAROUSEL_END_LABEL, MAX_CAROUSEL_END_LABEL } from "@/lib/site-config/carousel-end-schema";
 import { hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
@@ -495,10 +495,10 @@ export async function setFollowAction(fd: FormData) {
  * One of Sul's sections as the region shows it while following Sul's home: `own` = with the region's pictures and products, else exactly Sul's (adapted).
  * Read from Sul's PUBLISHED document, the one the store follows.
  */
-async function followedSection(scope: RegionSlug, id: string, own: boolean): Promise<Section | undefined> {
+async function followedSection(scope: RegionSlug, id: string, own: boolean): Promise<{ section: Section | undefined; theme: HomeThemeName }> {
   const [ws, sul] = await Promise.all([loadWorkspace(scope), loadWorkspace(FOLLOW_SOURCE)]);
   const doc = { ...ws.doc, follow: ["home" as const], ...(own ? {} : { regional: undefined }) };
-  return followedDoc(doc, sul.baseDoc, true).home?.sections.find((s) => s.id === id);
+  return { section: followedDoc(doc, sul.baseDoc, true).home?.sections.find((s) => s.id === id), theme: homeThemeOf(sul.baseDoc) };
 }
 
 /**
@@ -510,11 +510,13 @@ export async function saveRegionalSection(fd: FormData) {
   const id = text(fd, "id");
   const to = `/admin/home/regional/${id}`;
   if (scope === FOLLOW_SOURCE) back("/admin/home", { err: ["A Sul edita as próprias seções direto."] });
-  const [base, current] = await Promise.all([followedSection(scope, id, false), followedSection(scope, id, true)]);
+  const [{ section: base, theme }, { section: current }] = await Promise.all([followedSection(scope, id, false), followedSection(scope, id, true)]);
   if (!base || !current) back("/admin/home", { err: ["Essa seção não está mais na home publicada da Sul."] });
   const patch = parseSectionForm(fd, current);
-  const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-  const entry: RegionalSection = { sectionId: id };
+  // "Nothing" is one value whatever its spelling (absent, [] or {}): an untouched empty list must not pin "no products" over a later list of Sul's.
+  const empty = (v: unknown) => v === undefined || v === null || (Array.isArray(v) && v.length === 0) || (typeof v === "object" && Object.keys(v as object).length === 0);
+  const same = (a: unknown, b: unknown) => (empty(a) && empty(b)) || JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+  const entry: RegionalSection = { sectionId: id, ...(theme !== "original" ? { theme } : {}) };
   if (patch.appearance && (!same(patch.appearance.image, base.appearance.image) || !same(patch.appearance.focal, base.appearance.focal))) {
     entry.appearance = { focal: patch.appearance.focal, ...(patch.appearance.image ? { image: patch.appearance.image } : {}) };
   }
@@ -538,14 +540,15 @@ export async function saveRegionalSection(fd: FormData) {
     if (problems.length > 0) back(to, { err: problems });
     if (patch.tiles && !same(patch.tiles, base.tiles)) entry.tiles = patch.tiles;
   }
-  const own = Object.keys(entry).length > 1;
-  return run(fd, { type: "set-regional", sectionId: id, entry: own ? entry : null }, own ? "Rascunho salvo: imagens e produtos desta região. Publique para valer na loja." : "Rascunho salvo: esta seção usa as imagens e os produtos da Sul.", to);
+  const own = Object.keys(entry).some((k) => k !== "sectionId" && k !== "theme");
+  return run(fd, { type: "set-regional", sectionId: id, theme, entry: own ? entry : null }, own ? "Rascunho salvo: imagens e produtos desta região. Publique para valer na loja." : "Rascunho salvo: esta seção usa as imagens e os produtos da Sul.", to);
 }
 
 /** Back to Sul's pictures and products in one of Sul's sections. */
 export async function clearRegionalSection(fd: FormData) {
   const id = text(fd, "id");
-  return run(fd, { type: "set-regional", sectionId: id, entry: null }, "Rascunho salvo: esta seção volta a usar as imagens e os produtos da Sul. Publique para valer na loja.", `/admin/home/regional/${id}`);
+  const theme = homeThemeOf((await loadWorkspace(FOLLOW_SOURCE)).baseDoc);
+  return run(fd, { type: "set-regional", sectionId: id, theme, entry: null }, "Rascunho salvo: esta seção volta a usar as imagens e os produtos da Sul. Publique para valer na loja.", `/admin/home/regional/${id}`);
 }
 
 /** "Página do estado": shows or hides a section that is not built from collections ("Destaques", "Escolha o estilo", "Regiões e cidades"). */

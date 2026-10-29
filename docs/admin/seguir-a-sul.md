@@ -28,6 +28,10 @@ A ideia é seguir a **estrutura** da Sul: cada região mantém os produtos e os 
 - a capa de cada estado;
 - os blocos de uma grade de imagens (imagem, texto e link).
 
+**Vale por tema:** cada tema da home da Sul (Original, Editorial, Black Friday, Natal) tem as próprias imagens e produtos da região. As fotos do
+dia a dia do Norte não cobrem a abertura de Natal da Sul: quando a Sul troca de tema, a lista passa a ser a do tema novo, e o que não for trocado
+nele mostra o da Sul.
+
 Só o que for trocado fica guardado na região. O resto continua seguindo a Sul, e uma mudança na Sul passa a valer lá também. **Voltar a usar as
 imagens e os produtos da Sul** desfaz a troca daquela seção. Textos, ordem, layout e as coleções das vitrines vêm sempre da Sul (cada região já
 mostra só os produtos dela em cada coleção).

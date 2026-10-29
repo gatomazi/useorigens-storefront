@@ -136,7 +136,7 @@ export type DraftOp =
   /** Norte / Centro-Oeste: follow Sul in one part, or go back to the region's own ("Seguir a Sul"; the own content is never touched). */
   | { type: "set-follow"; part: FollowPart; on: boolean }
   /** Norte / Centro-Oeste: the region's own pictures and products over one of Sul's sections (replaces that section's entry; `null` = back to Sul's). */
-  | { type: "set-regional"; sectionId: string; entry: RegionalSection | null }
+  | { type: "set-regional"; sectionId: string; theme: HomeThemeName; entry: RegionalSection | null }
   /** REGION only: replaces the "Tema da INK" (surfaces on/off and presets). Strictly validated. */
   | { type: "set-ink-theme"; inkTheme: InkThemeConfig }
   /** Launches / recalls a region publicly (takes effect only when published). */
@@ -349,7 +349,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   }
   if (op.type === "set-regional") {
     if (doc.scope === "global" || doc.scope === "sul") return fail("only a region that follows Sul has its own pictures and products over Sul's sections");
-    const rest = (doc.regional ?? []).filter((e) => e.sectionId !== op.sectionId);
+    const rest = (doc.regional ?? []).filter((e) => e.sectionId !== op.sectionId || (e.theme ?? "original") !== op.theme);
     const list = op.entry ? [...rest, op.entry] : rest;
     const next: ScopeDoc = { ...doc, regional: list };
     if (list.length === 0) delete next.regional;

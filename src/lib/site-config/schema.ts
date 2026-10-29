@@ -311,6 +311,11 @@ export type Section = {
 /** See `ScopeDoc.regional`. At most one of `featured` (the opening), `stateCovers` (the state chooser) and `tiles` (an image grid). */
 export type RegionalSection = {
   sectionId: string;
+  /**
+   * The home theme of Sul this entry belongs to (absent = the original). A seasonal theme is made from the theme in use with the SAME section ids, so
+   * without it a picture chosen for the everyday opening would cover Sul's Natal opening: each theme keeps its own pictures and products.
+   */
+  theme?: Exclude<HomeThemeName, "original">;
   /** The section's picture in this region; `image` absent = no picture here (the section's colour shows). */
   appearance?: Pick<Appearance, "image" | "focal">;
   featured?: FeaturedProductRef[];
@@ -1225,7 +1230,7 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
 
 /** The rules of a home's section list (the live home and every theme kept for later): `path` is where its errors are reported. */
 /**
- * `ScopeDoc.regional`: each entry is checked as the section it would make (its template follows from what it carries), with the region rules of the
+ * `ScopeDoc.regional`: one entry per section and theme, each checked as the section it would make (its template follows from what it carries), with the region rules of the
  * home's sections: covers of THIS region's states, products and links of its own store and pages.
  */
 function checkRegional(c: Collector, path: string, v: unknown, sc: Scope): void {
@@ -1235,9 +1240,11 @@ function checkRegional(c: Collector, path: string, v: unknown, sc: Scope): void 
   v.forEach((e, i) => {
     const at = `${path}[${i}]`;
     if (!isRecord(e) || typeof e.sectionId !== "string" || !ID.test(e.sectionId)) return c.fail(at, "must be { sectionId, … }");
-    if (seen.has(e.sectionId)) c.fail(at, "one entry per section");
-    seen.add(e.sectionId);
-    for (const key of Object.keys(e)) if (!["sectionId", "appearance", "featured", "featuredRotation", "stateCovers", "tiles"].includes(key)) c.fail(`${at}.${key}`, "unknown field");
+    if (e.theme !== undefined && (e.theme === "original" || !(HOME_THEMES as readonly unknown[]).includes(e.theme))) c.fail(`${at}.theme`, "a home theme other than the original (absent = original)");
+    const key = `${e.sectionId}:${String(e.theme ?? "original")}`;
+    if (seen.has(key)) c.fail(at, "one entry per section and theme");
+    seen.add(key);
+    for (const key of Object.keys(e)) if (!["sectionId", "theme", "appearance", "featured", "featuredRotation", "stateCovers", "tiles"].includes(key)) c.fail(`${at}.${key}`, "unknown field");
     const kinds = [e.featured !== undefined || e.featuredRotation !== undefined, e.stateCovers !== undefined, e.tiles !== undefined].filter(Boolean).length;
     if (kinds > 1) c.fail(at, "the opening's products, the states' covers or the grid's blocks: one of them");
     const look = isRecord(e.appearance) ? e.appearance : {};

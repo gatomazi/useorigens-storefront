@@ -671,13 +671,14 @@ export function SectionEditorForm({
               <select id="fallback" name="fallback" className="a-select" defaultValue={section.fallback ?? "crops"}><option value="crops">Recortes de camisetas (padrão)</option><option value="fill">Só a cor/degradê acima</option></select>
             </div>
           )}
+          </>)}
+          {/* In the regional mode too: the region's picture goes under Sul's veil and text colour, the place where a title can become unreadable. */}
           {issues.length > 0 && (
             <div className={`a-flash ${issues.some((i) => i.level === "blocking") ? "err" : "ok"}`} role="status">
               <p className="font-extrabold">Legibilidade do texto</p>
               {issues.map((i) => <p key={i.message}>{i.level === "blocking" ? "⛔ " : "⚠️ "}{i.message}</p>)}
             </div>
           )}
-          </>)}
         </fieldset>
       )}
 

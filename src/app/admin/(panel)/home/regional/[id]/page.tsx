@@ -15,7 +15,9 @@ import { currentScope, scopeName, storeOf } from "@/lib/admin/scope";
 import { toComboEntries } from "@/lib/admin/combo";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
-import { followedDoc } from "@/lib/site-config/follow";
+import { followedDoc, regionalOf } from "@/lib/site-config/follow";
+import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
+import { homeThemeOf } from "@/lib/site-config/schema";
 import { FOLLOW_SOURCE } from "@/lib/site-config/follow-schema";
 
 /**
@@ -31,7 +33,8 @@ export default async function RegionalSection({ params, searchParams }: { params
   const [ws, sul] = await Promise.all([loadWorkspace(scope), loadWorkspace(FOLLOW_SOURCE)]);
   const section = followedDoc({ ...ws.doc, follow: ["home"] }, sul.baseDoc, true).home?.sections.find((s) => s.id === id);
   if (!section) notFound();
-  const own = ws.doc.regional?.some((e) => e.sectionId === id) ?? false;
+  const theme = homeThemeOf(sul.baseDoc);
+  const own = regionalOf(ws.doc, sul.baseDoc).some((e) => e.sectionId === id);
 
   const media = await listMedia();
   const slotViews = (refs: FeaturedProductRef[]): FeaturedSlotView[] =>
@@ -52,6 +55,7 @@ export default async function RegionalSection({ params, searchParams }: { params
         <p className="mt-2 flex flex-wrap items-center gap-2">
           <span className="a-badge">{section.template}</span>
           {own ? <span className="a-badge ok">Próprias do {scopeName(scope)}</span> : <span className="a-badge">As da Sul</span>}
+          <span className="a-badge" title="Cada tema da home da Sul tem as próprias imagens e produtos desta região">Tema {HOME_THEME_LABEL[theme]}</span>
         </p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />

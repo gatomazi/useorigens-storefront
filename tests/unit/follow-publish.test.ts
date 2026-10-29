@@ -4,7 +4,7 @@ import { describe, expect, test, vi } from "vitest";
 vi.mock("@/lib/site-config/published", async (original) => ({ ...(await original<typeof import("@/lib/site-config/published")>()), canFollowSul: () => true }));
 
 import { defaultAppearance } from "@/lib/admin/draft-ops";
-import { preflight, seedForEnv } from "@/lib/admin/publishing";
+import { composeBundle, preflight, seedForEnv } from "@/lib/admin/publishing";
 import type { Section } from "@/lib/site-config/schema";
 
 const headless = { releases: { head: async () => null } as never, media: async () => ({}) };
@@ -23,5 +23,14 @@ describe("Seguir a Sul na publicação da região", () => {
     expect(own.join(" ")).toContain("Vitrine antiga");
     const following = { ...norteWithStaleHome(), follow: ["home" as const] };
     expect(await preflight(headless, following)).toEqual([]);
+  });
+
+  test("uma imagem enviada para o Norte sobre uma seção da Sul entra na tabela de mídia publicada", async () => {
+    const asked: string[] = [];
+    const deps = { releases: { head: async () => null } as never, media: async (ids: Set<string>) => { asked.push(...ids); return Object.fromEntries([...ids].filter((id) => id.startsWith("01J")).map((id) => [id, { src: `/media/${id}.webp`, width: 1200, height: 1500 }])); } };
+    const norte = { ...structuredClone(seedForEnv().docs.norte), follow: ["home" as const], regional: [{ sectionId: "seed-hero", appearance: { image: { mobile: { assetId: "01JNORTEBANNER", alt: "Belém", decorative: false } }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } } } }] };
+    const bundle = await composeBundle(deps, norte, "r-test");
+    expect(asked).toContain("01JNORTEBANNER");
+    expect(bundle.media["01JNORTEBANNER"]).toMatchObject({ src: "/media/01JNORTEBANNER.webp" });
   });
 });

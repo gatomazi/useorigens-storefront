@@ -10,7 +10,7 @@ import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
 import { kitTexts } from "../site-config/post-add-kit-schema";
 import { assistantLabel, assistantTopics, type AssistantAnswer } from "../site-config/assistant-schema";
-import { HOME_THEMES, homeThemeOf, type CollectionHighlight, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
+import { HOME_THEMES, homeThemeOf, type CollectionHighlight, type HomeThemeName, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
 import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
@@ -126,13 +126,17 @@ function followChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
 /** The region's own pictures and products over Sul's sections, one line per section that changed. */
 function regionalChanges(published: ScopeDoc, draft: ScopeDoc, sulSection: (id: string) => string | null): Change[] {
   if (draft.scope === "global") return [];
-  const was = new Map((published.regional ?? []).map((e) => [e.sectionId, json(e)]));
-  const now = new Map((draft.regional ?? []).map((e) => [e.sectionId, json(e)]));
+  const key = (e: { sectionId: string; theme?: HomeThemeName }) => `${e.sectionId}|${e.theme ?? "original"}`;
+  const was = new Map((published.regional ?? []).map((e) => [key(e), json(e)]));
+  const now = new Map((draft.regional ?? []).map((e) => [key(e), json(e)]));
   const name = REGIONS[draft.scope].name;
-  return [...new Set([...was.keys(), ...now.keys()])].flatMap((id) => {
-    if (was.get(id) === now.get(id)) return [];
-    const text = !now.has(id) ? `volta a usar as imagens e os produtos da Sul` : !was.has(id) ? `passa a ter imagens e produtos próprios do ${name}` : `imagens e produtos do ${name} alterados`;
-    return [{ kind: "follow" as const, sectionId: `regional-${id}`, text: `“${sulSection(id) ?? id}” (seção da Sul): ${text}` }];
+  return [...new Set([...was.keys(), ...now.keys()])].flatMap((k) => {
+    if (was.get(k) === now.get(k)) return [];
+    const [id, theme] = k.split("|") as [string, HomeThemeName];
+    const inTheme = theme === "original" ? "" : `, tema ${HOME_THEME_LABEL[theme]}`;
+    if (!now.has(k)) return [{ kind: "follow" as const, sectionId: `regional-${k}`, text: `“${sulSection(id) ?? id}” (seção da Sul${inTheme}): volta a usar as imagens e os produtos da Sul` }];
+    const text = !was.has(k) ? `passa a ter imagens e produtos próprios do ${name}` : `imagens e produtos do ${name} alterados`;
+    return [{ kind: "follow" as const, sectionId: `regional-${k}`, text: `“${sulSection(id) ?? id}” (seção da Sul${inTheme}): ${text}` }];
   });
 }
 
