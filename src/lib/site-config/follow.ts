@@ -9,7 +9,8 @@
  *        links to Sul's pages go to the region's (`/sul/h/x` → `/norte/h/x`); a link to a state or a model the region does not have is left out
  *        (a grid tile then leads to the region's home); state covers keep only the region's states; a personalization card is matched by the model's
  *        address. Collections are the same INK collections: in the single store each region already shows only its own products in them, and a
- *        product of another region (a hero card of Curitiba) is dropped when the public resolves it.
+ *        product of another region (a hero card of Curitiba) is dropped when the public resolves it. Following the home, a theme other than the
+ *        original (Black Friday, Natal) brings Sul's colours with it.
  *
  * A region follows only while it sells in the same INK store as Sul (`canFollow`): under the regional stores (the rollback of the single store) the refs
  * of Sul mean nothing to the others, so each region shows its own content again.
@@ -18,7 +19,7 @@ import { REGIONS, REGION_SLUGS, STATE_NAMES, type RegionSlug } from "../geo/regi
 import { effectiveMenu } from "./collection-menu";
 import { FOLLOW_SOURCE, REGION_TOKEN, followsPart } from "./follow-schema";
 import { defaultStatesBlockLabel } from "./navigation";
-import { PAGE_SEGMENT, type CollectionArrangement, type CollectionRef, type Customizer, type Destination, type Page, type PublishedBundle, type ScopeDoc, type Section } from "./schema";
+import { PAGE_SEGMENT, type CollectionRef, type Customizer, type Destination, type Page, type PublishedBundle, type ScopeDoc, type Section } from "./schema";
 
 export { REGION_TOKEN };
 
@@ -113,8 +114,13 @@ export function followedDoc(doc: ScopeDoc, sul: ScopeDoc | undefined, canFollow:
 
     if (follows("home") && sul.home) {
       next.home = { sections: followedSections(sul.home.sections, ctx) };
-      if (sul.homeTheme) next.homeTheme = sul.homeTheme;
-      else delete next.homeTheme;
+      if (sul.homeTheme) {
+        // A theme other than the original is its sections AND its colours (Black Friday, Natal): the palette comes with it. On the original, the
+        // region keeps its own colours.
+        next.homeTheme = sul.homeTheme;
+        if (sul.theme) next.theme = structuredClone(sul.theme);
+        else delete next.theme;
+      } else delete next.homeTheme;
     }
 
     const collections = { ...(doc.collections ?? { enabled: [] }) };
@@ -127,6 +133,10 @@ export function followedDoc(doc: ScopeDoc, sul: ScopeDoc | undefined, canFollow:
       collections.menu = effectiveMenu(sul).menu;
       delete collections.navbarGroups;
       delete collections.navbar;
+      for (const key of ["descriptions", "highlights"] as const) {
+        if (sul.collections?.[key]) (collections as Record<string, unknown>)[key] = structuredClone(sul.collections[key]);
+        else delete collections[key];
+      }
     }
     if (follows("statePage")) {
       if (sul.statePage) next.statePage = structuredClone(sul.statePage);
@@ -136,12 +146,10 @@ export function followedDoc(doc: ScopeDoc, sul: ScopeDoc | undefined, canFollow:
         else delete collections[key];
       }
     }
-    // What Sul's structure stands on comes with it: the internal collections Sul enabled, and Sul's order of a collection the region never arranged.
+    // The internal collections Sul enabled come with its structure (a section on one would not render otherwise). Sul's ORDER of a collection does
+    // not: it lists Sul's products, and any order with ids switches a section's own sort off; each region keeps its own.
     const enabled = new Map([...(sul.collections?.enabled ?? []), ...collections.enabled].map((r) => [refKey(r), r]));
     collections.enabled = [...enabled.values()];
-    const arranged = new Set((collections.arrangements ?? []).map(refKey));
-    const borrowed: CollectionArrangement[] = (sul.collections?.arrangements ?? []).filter((a) => !arranged.has(refKey(a)));
-    if (borrowed.length) collections.arrangements = [...(collections.arrangements ?? []), ...structuredClone(borrowed)];
     next.collections = collections;
   }
 

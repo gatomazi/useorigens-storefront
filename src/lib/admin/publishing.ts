@@ -5,7 +5,9 @@ import { bundleChecksum } from "../site-config/checksum";
 import { publish, reconcile, type FileState, type PublishOutcome, type PublishPorts, type ReleaseRecord } from "../site-config/publish-flow";
 import { resolveTracking, type TrackingOrigin } from "../site-config/resolve";
 import { mediaRefsOfDoc, validateBundle, type Customizer, type Destination, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "../site-config/schema";
-import { REGION_SLUGS } from "../geo/regions";
+import { REGION_SLUGS, type RegionSlug } from "../geo/regions";
+import { followsPart } from "../site-config/follow-schema";
+import { canFollowSul } from "../site-config/published";
 import { highlightProblems, themeProblems } from "../site-config/navigation";
 import { neutralThemeProblems } from "../site-config/neutral-theme";
 import { pageAsHomeDoc } from "../site-config/pages";
@@ -168,7 +170,10 @@ export async function preflight(deps: Pick<PublishDeps, "releases" | "media">, d
   const strict = validateBundle(bundle);
   const composed = bundle.docs[doc.scope];
   const problems = strict.ok ? [] : strict.errors;
-  if (target.kind === "region") return [...problems, ...collectionProblems(doc), ...readabilityProblems(doc), ...linkProblems(composed, doc.home?.sections ?? []), ...themeBlockers(bundle, doc.scope)];
+  // A region that follows Sul's home shows Sul's (checked when Sul published it): its own, kept sections never block its publish.
+  const ownHome = !(followsPart(doc, "home") && canFollowSul(doc.scope as RegionSlug));
+  const homeProblems = ownHome ? [...collectionProblems(doc), ...readabilityProblems(doc), ...linkProblems(composed, doc.home?.sections ?? [])] : [];
+  if (target.kind === "region") return [...problems, ...homeProblems, ...themeBlockers(bundle, doc.scope)];
   if (target.kind === "page") {
     const page = composed.pages!.find((p) => p.id === target.id)!;
     const asHome = pageAsHomeDoc(composed, page);

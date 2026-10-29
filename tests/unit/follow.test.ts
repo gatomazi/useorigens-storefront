@@ -94,10 +94,23 @@ describe("Seguir a Sul: o que o público vê", () => {
     // The page is not followed: the link to it has nowhere to go. A link to a state of Sul neither.
     expect(out.home!.sections.find((s) => s.id === "custom-links")!.cta).toBeUndefined();
     expect(out.home!.sections.find((s) => s.id === "custom-pr")!.cta).toBeUndefined();
-    // Sul's internal collection and order come along; the region's own home stays stored in its document.
+    // Sul's internal collection comes along, its order of products does not; the region's own home stays stored in its document.
     expect(out.collections!.enabled).toContainEqual({ store: "use-sul", collectionId: 99 });
-    expect(out.collections!.arrangements).toEqual([{ store: "use-sul", collectionId: 10, productIds: ["1", "2"] }]);
+    expect(out.collections!.arrangements).toBeUndefined();
     expect(norte.home).toEqual(own);
+  });
+
+  test("tema sazonal da Sul traz as cores dele; no tema original a região fica com as próprias", () => {
+    const norte = doc("norte");
+    norte.follow = ["home"];
+    norte.theme = { mode: "override", colors: { brandPrimary: "#123456" } };
+    const sul = sulWithStructure();
+    sul.theme = { mode: "override", colors: { brandPrimary: "#000000" } };
+    expect(followedDoc(norte, sul, true).theme).toEqual({ mode: "override", colors: { brandPrimary: "#000000" } });
+    delete sul.homeTheme;
+    const original = followedDoc(norte, sul, true);
+    expect(original.theme).toEqual(norte.theme);
+    expect(original.homeTheme).toBeUndefined();
   });
 
   test("com as páginas seguidas, os links da Sul passam a apontar para a região, e a página da região vence a da Sul", () => {
@@ -114,8 +127,11 @@ describe("Seguir a Sul: o que o público vê", () => {
   test("menu e página do estado seguidos trazem a navegação, o menu de coleções e a hierarquia da Sul", () => {
     const norte = doc("norte");
     norte.follow = ["menu", "statePage"];
-    norte.collections = { enabled: [], navbarGroups: { top: [{ store: "use-sul", collectionId: 5 }], more: [] }, stateRows: [{ store: "use-sul", collectionId: 5 }] };
-    const out = followedDoc(norte, sulWithStructure(), true);
+    norte.collections = { enabled: [], navbarGroups: { top: [{ store: "use-sul", collectionId: 5 }], more: [] }, stateRows: [{ store: "use-sul", collectionId: 5 }], descriptions: [{ store: "use-sul", collectionId: 5, text: "Do Norte" }] };
+    const sul = sulWithStructure();
+    sul.collections!.descriptions = [{ store: "use-sul", collectionId: 10, text: "Novidades" }];
+    const out = followedDoc(norte, sul, true);
+    expect(out.collections!.descriptions).toEqual([{ store: "use-sul", collectionId: 10, text: "Novidades" }]);
     expect(out.navigation!.statesBlock!.label).toBe("Estados do Norte");
     expect(out.collections!.menu).toEqual({ top: [{ store: "use-sul", collectionId: 10 }], hidden: [], added: [] });
     expect(out.collections!.navbarGroups).toBeUndefined();
