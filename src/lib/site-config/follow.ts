@@ -9,8 +9,8 @@
  *        links to Sul's pages go to the region's (`/sul/h/x` → `/norte/h/x`); a link to a state or a model the region does not have is left out
  *        (a grid tile then leads to the region's home); state covers keep only the region's states; a personalization card is matched by the model's
  *        address. Collections are the same INK collections: in the single store each region already shows only its own products in them, and a
- *        product of another region (a hero card of Curitiba) is dropped when the public resolves it. Following the home, a theme other than the
- *        original (Black Friday, Natal) brings Sul's colours with it.
+ *        product of another region (a hero card of Curitiba) is dropped when the public resolves it. Following the home, Sul's theme in use
+ *        (Black Friday, Natal) comes with its sections and chrome, but the colours stay the region's own.
  *   3. Following the home, the region's own pictures and products (`ScopeDoc.regional`) go over Sul's sections: the structure is Sul's, the banners
  *      and the products of the opening, the states' covers and the grid's blocks can be the region's.
  *
@@ -142,13 +142,13 @@ export function followedDoc(doc: ScopeDoc, sul: ScopeDoc | undefined, canFollow:
 
     if (follows("home") && sul.home) {
       next.home = { sections: followedSections(sul.home.sections, ctx, regionalOf(doc, sul)) };
-      if (sul.homeTheme) {
-        // A theme other than the original is its sections AND its colours (Black Friday, Natal): the palette comes with it. On the original, the
-        // region keeps its own colours.
-        next.homeTheme = sul.homeTheme;
-        if (sul.theme) next.theme = structuredClone(sul.theme);
-        else delete next.theme;
-      } else delete next.homeTheme;
+      // Sul's theme is its structure (sections and chrome), never its colours: the region keeps its own palette, the one it keeps for that theme
+      // when it has one (`homeThemes`), else the one it uses.
+      const name = homeThemeOf(sul);
+      const kept = homeThemeOf(doc) === name ? undefined : doc.homeThemes?.[name]?.theme;
+      if (kept) next.theme = structuredClone(kept);
+      if (sul.homeTheme) next.homeTheme = sul.homeTheme;
+      else delete next.homeTheme;
     }
 
     const collections = { ...(doc.collections ?? { enabled: [] }) };

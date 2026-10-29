@@ -57,7 +57,7 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
   const effective = bundle ?? raw;
   const page = pageId ? effective.docs[scope].pages?.find((p) => p.id === pageId) : undefined;
   const model = customizerId ? effective.docs[scope].customizers?.find((m) => m.id === customizerId) : undefined;
-  // The colours, the theme and the header of the document as the store shows it: following Sul's home in Natal brings Sul's Natal palette along.
+  // The colours, the theme and the header of the document as the store shows it: following Sul's home in Natal brings its chrome, with the region's palette.
   const shown = effective.docs[scope] ?? doc;
   const palette = resolveTheme(scope, shown, usingPublished ? global.baseDoc : global.doc);
   const cssVars = { ...themeCssVars(palette.configured, palette.effective), ...homeThemeCssVars(shown, palette.effective) };

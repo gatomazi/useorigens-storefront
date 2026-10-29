@@ -21,7 +21,7 @@ const THE: Record<FollowPart, string> = { home: "a home", menu: "o menu", stateP
 
 /** What comes along when the part follows Sul, in the words of the panel. */
 const WHAT: Record<FollowPart, string> = {
-  home: "seções, ordem, textos, imagens e o tema em uso",
+  home: "seções, ordem, textos, imagens e o tema em uso (as cores continuam as desta região)",
   menu: "navegação e menu de coleções, no site e na barra que aparece na INK",
   statePage: "seções ligadas, categorias, subcategorias e grades",
   pages: "as páginas da Sul passam a existir aqui também; uma página desta região com o mesmo endereço vence a da Sul",
