@@ -1,4 +1,4 @@
-import { deleteMediaAction, uploadMediaAction } from "@/app/admin/actions";
+import { deleteMediaAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { MediaUploader } from "@/components/admin/MediaUploader";
 import { canUpload, listMedia, MAX_UPLOAD_BYTES } from "@/lib/admin/media";
@@ -22,7 +22,7 @@ export default async function MediaPage({ searchParams }: { searchParams: Promis
       </div>
       <Flash ok={sp.ok} err={sp.err} />
       {uploads ? (
-        <MediaUploader action={uploadMediaAction} maxMb={MAX_UPLOAD_BYTES / 1024 / 1024} />
+        <MediaUploader endpoint="/admin/midia/enviar" maxMb={MAX_UPLOAD_BYTES / 1024 / 1024} />
       ) : (
         <p className="a-flash err">O envio de imagens ainda não está configurado neste ambiente (falta o Bucket do Railway: variáveis BUCKET_*). Você pode usar os banners do projeto.</p>
       )}
