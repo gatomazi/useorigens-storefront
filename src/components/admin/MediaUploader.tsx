@@ -40,7 +40,20 @@ async function prepare(file: File, maxBytes: number): Promise<{ file: File; note
   return { file, note: file.size > maxBytes ? "grande demais" : null };
 }
 
-export function MediaUploader({ action, maxMb }: { action: (fd: FormData) => Promise<UploadResult>; maxMb: number }) {
+/**
+ * Sends one file to the upload route (`app/admin/midia/enviar/route.ts`; a route rather than a Server Action, see there). An answer that is not
+ * the route's own (a page of Cloudflare, of the platform) becomes a message with its status, never a silent failure.
+ */
+async function upload(endpoint: string, file: File): Promise<UploadResult> {
+  const fd = new FormData();
+  fd.set("file", file);
+  const response = await fetch(endpoint, { method: "POST", body: fd, cache: "no-store" });
+  const result = (await response.json().catch(() => null)) as UploadResult | null;
+  if (result && typeof result.ok === "boolean" && typeof result.message === "string") return result;
+  return { ok: false, message: response.status === 403 ? "a proteção do site (Cloudflare) recusou o envio (403); tente de novo e, se repetir, avise com o horário" : `o servidor respondeu ${response.status}; tente de novo` };
+}
+
+export function MediaUploader({ endpoint, maxMb }: { endpoint: string; maxMb: number }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<Row[]>([]);
@@ -63,12 +76,10 @@ export function MediaUploader({ action, maxMb }: { action: (fd: FormData) => Pro
         continue;
       }
       try {
-        const fd = new FormData();
-        fd.set("file", file);
-        const result = await action(fd);
+        const result = await upload(endpoint, file);
         patch(i, { state: result.ok ? "ok" : "error", message: `${result.message}${note ? ` (${note})` : ""}` });
       } catch {
-        patch(i, { state: "error", message: "a conexão foi interrompida durante o envio; tente de novo (imagem muito grande ou rede instável)" });
+        patch(i, { state: "error", message: "a conexão caiu durante o envio; tente de novo" });
       }
     }
     setBusy(false);

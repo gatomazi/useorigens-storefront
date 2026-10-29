@@ -6,8 +6,7 @@ import { after } from "next/server";
 import { cookies, headers } from "next/headers";
 import { requireAdmin, SESSION_COOKIE, SESSION_COOKIE_PATH, SESSION_TTL_MS } from "@/lib/admin/auth/guard";
 import { hashAdminPassword, passwordProblem, verifyAdminPassword } from "@/lib/admin/auth/password";
-import { deleteUpload, saveUpload } from "@/lib/admin/media";
-import { describeUploadFailure } from "@/lib/admin/media/upload-errors";
+import { deleteUpload } from "@/lib/admin/media";
 import { platform } from "@/lib/admin/platform";
 import { publishRelease, reconcileReleases, type PublishDeps } from "@/lib/admin/publishing";
 import { publishDeps } from "@/lib/admin/ops";
@@ -1115,26 +1114,6 @@ export async function previewAssistantAction(scopeRaw: string, rowsRaw: string, 
   const fallback = assistantFromForm(rows, { enabled: true, whatsapp: "", greeting: "" }, scope);
   const config = full.ok ? full.value : fallback.ok ? fallback.value : { enabled: true, answers: [] };
   return assistantReply(scope, config, message.slice(0, 300));
-}
-
-/**
- * Uploads ONE picture and answers with a result (no redirect), so the media screen can send several one after another and show each outcome.
- * The browser shrinks very large photos first (MediaUploader); the server still decodes, validates and re-encodes everything itself.
- */
-export async function uploadMediaAction(fd: FormData): Promise<{ ok: boolean; message: string }> {
-  const actor = await requireAdmin({ mutation: true });
-  const file = fd.get("file");
-  if (!(file instanceof File) || file.size === 0) return { ok: false, message: "Escolha um arquivo." };
-  if (!allow(`upload:${actor.id}`, 60, 10 * 60_000)) return { ok: false, message: "Muitos envios seguidos. Aguarde alguns minutos." };
-  const result = await saveUpload(Buffer.from(await file.arrayBuffer()), file.name, actor.id === "dev-local" ? null : actor.id).catch((error: unknown) => {
-    // The reason is logged (never a secret: the object-store client only reports the HTTP status) and its class shown to the owner.
-    console.error("[admin] media upload failed:", error instanceof Error ? `${error.name}: ${error.message}`.slice(0, 300) : "unknown");
-    return { ok: false as const, error: describeUploadFailure(error, process.env.BUCKET_ADDRESSING) };
-  });
-  revalidatePath("/admin", "layout");
-  if (!result.ok) return { ok: false, message: result.error };
-  await audit(actor, "media.upload", "sul", result.choice.assetId);
-  return { ok: true, message: result.duplicate ? `A imagem "${result.choice.label}" já existia; foi reaproveitada.` : `Imagem "${result.choice.label}" enviada${platform().mode === "prod" ? "" : " (somente neste computador)"}.` };
 }
 
 export async function deleteMediaAction(fd: FormData) {
