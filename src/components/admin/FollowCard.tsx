@@ -100,7 +100,7 @@ export function FollowFold({ following, scope, children }: { following: boolean;
   );
 }
 
-const REGIONAL_WHAT: Partial<Record<Section["template"], string>> = { hero: "foto, produtos e banners da abertura", states: "capa de cada estado", "image-grid": "blocos da grade (imagem, texto e link)" };
+const REGIONAL_WHAT: Partial<Record<Section["template"], string>> = { hero: "foto, produtos e banners da abertura", states: "capa de cada estado", "image-grid": "blocos da grade (imagem, texto e link) e colunas" };
 
 const collectionName = (store: CommerceStoreKey, collectionId: number) => findCollection(store, collectionId)?.name ?? `coleção ${collectionId}`;
 

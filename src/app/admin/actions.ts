@@ -539,6 +539,7 @@ export async function saveRegionalSection(fd: FormData) {
     const { problems } = parseGridTiles(fd);
     if (problems.length > 0) back(to, { err: problems });
     if (patch.tiles && !same(patch.tiles, base.tiles)) entry.tiles = patch.tiles;
+    if (patch.grid && !same(patch.grid, base.grid)) entry.grid = patch.grid;
   }
   const own = Object.keys(entry).some((k) => k !== "sectionId" && k !== "theme");
   return run(fd, { type: "set-regional", sectionId: id, theme, entry: own ? entry : null }, own ? "Rascunho salvo: imagens e produtos desta região. Publique para valer na loja." : "Rascunho salvo: esta seção usa as imagens e os produtos da Sul.", to);
