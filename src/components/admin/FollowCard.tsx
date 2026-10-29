@@ -3,7 +3,12 @@ import { setFollowAction, setScopeAction } from "@/app/admin/actions";
 import { canEdit, type Actor } from "@/lib/admin/store/ports";
 import { REGION_SCOPES, scopeName } from "@/lib/admin/scope";
 import { loadWorkspace } from "@/lib/admin/workspace";
-import type { RegionSlug } from "@/lib/geo/regions";
+import type { CommerceStoreKey, RegionSlug } from "@/lib/geo/regions";
+import { categoryProps } from "@/lib/catalog/collection-source";
+import { MIN_USABLE_PRODUCTS } from "@/lib/catalog/collections";
+import { findCollection } from "@/lib/catalog/collections-file";
+import { getCatalog } from "@/lib/catalog/repository";
+import { campaignLeadsNowhere, destinationHref } from "@/lib/site-config/sources";
 import { canFollowSul } from "@/lib/site-config/published";
 import { FOLLOW_SOURCE, REGION_TOKEN, followsPart, type FollowPart } from "@/lib/site-config/follow-schema";
 import type { ScopeDoc, Section } from "@/lib/site-config/schema";
@@ -97,6 +102,34 @@ export function FollowFold({ following, scope, children }: { following: boolean;
 
 const REGIONAL_WHAT: Partial<Record<Section["template"], string>> = { hero: "foto, produtos e banners da abertura", states: "capa de cada estado", "image-grid": "blocos da grade (imagem, texto e link)" };
 
+const collectionName = (store: CommerceStoreKey, collectionId: number) => findCollection(store, collectionId)?.name ?? `coleção ${collectionId}`;
+
+/**
+ * What of one of Sul's sections the region leaves out today, in the panel's words (null: it shows whole). Same rules as the store: a campaign whose button
+ * has nowhere to go, a showcase without the region's products, a grid block leading to a collection the region does not have. All of it comes back by
+ * itself once the region has the products.
+ */
+function regionGap(s: Section, sulActive: boolean, props: ReturnType<typeof categoryProps>, region: RegionSlug): string | null {
+  const name = scopeName(region);
+  if (sulActive && !s.active) return `Não aparece no ${name}: o botão leva a um modelo ou uma página que o ${name} não tem.`;
+  if (!s.active) return null;
+  const dest = s.cta?.dest;
+  if (campaignLeadsNowhere(s, props.links, region)) {
+    return dest && (dest.kind === "collection-page" || dest.kind === "ink-collection")
+      ? `Não aparece no ${name}: a coleção ${collectionName(dest.store, dest.collectionId)} ainda não tem produtos do ${name} (mínimo ${MIN_USABLE_PRODUCTS}).`
+      : `Não aparece no ${name}: o botão não tem para onde levar aqui.`;
+  }
+  if (s.template === "product-carousel" && s.source?.kind === "ink-category") {
+    const found = props.categories(s.source);
+    if (found.status !== "ok" || found.items.length === 0) return `Não aparece no ${name}: a coleção ${collectionName(s.source.store, s.source.collectionId)} não tem produtos do ${name}.`;
+  }
+  if (s.template === "image-grid") {
+    const out = (s.tiles ?? []).filter((t) => !destinationHref(t.dest, props.links, region)).map((t) => `“${t.label}”`);
+    if (out.length) return `No ${name}, sai${out.length > 1 ? "em" : ""} da grade: ${out.join(", ")} (a coleção ainda não tem produtos do ${name}).`;
+  }
+  return null;
+}
+
 /**
  * On a region that follows Sul's home: Sul's sections as this region shows them, each with a link to its own pictures and products (`regional`). The
  * structure stays Sul's; the banners and the products are the region's when it chooses them.
@@ -104,8 +137,12 @@ const REGIONAL_WHAT: Partial<Record<Section["template"], string>> = { hero: "fot
 export async function RegionalSectionsList({ scope, doc }: { scope: RegionSlug; doc: ScopeDoc }) {
   if (scope === FOLLOW_SOURCE || !followsPart(doc, "home")) return null;
   const sul = await loadWorkspace(FOLLOW_SOURCE);
-  const sections = (followedDoc(doc, sul.baseDoc, true).home?.sections ?? []).filter((s) => s.template !== "footer");
+  const followed = followedDoc(doc, sul.baseDoc, true);
+  const sections = (followed.home?.sections ?? []).filter((s) => s.template !== "footer");
   const own = new Set(regionalOf(doc, sul.baseDoc).map((e) => e.sectionId));
+  const catalog = getCatalog();
+  const props = categoryProps((store) => catalog.productsOfStore(store), followed);
+  const sulActive = new Set((sul.baseDoc.home?.sections ?? []).filter((s) => s.active).map((s) => s.id));
   const theme = homeThemeOf(sul.baseDoc);
   return (
     <section id="imagens-regiao" className="a-card scroll-mt-4 overflow-x-auto" aria-labelledby="imagens-regiao-titulo" data-testid="regional-sections">
@@ -116,13 +153,20 @@ export async function RegionalSectionsList({ scope, doc }: { scope: RegionSlug; 
       <table className="a-table a-stack">
         <thead><tr><th scope="col">Seção da Sul</th><th scope="col">Imagens e produtos</th><th scope="col"><span className="sr-only">Editar</span></th></tr></thead>
         <tbody>
-          {sections.map((s) => (
+          {sections.map((s) => {
+            const gap = regionGap(s, sulActive.has(s.id), props, scope);
+            return (
             <tr key={s.id} className={s.active ? "" : "opacity-60"}>
-              <td data-label="Seção da Sul"><span className="font-bold">{s.title?.replace(/\n/g, " ") ?? s.anchor}</span>{!s.active && <span className="a-badge ml-2">Oculta na Sul</span>}<p className="a-muted text-[0.8125rem]">{REGIONAL_WHAT[s.template] ?? "foto da seção"}</p></td>
+              <td data-label="Seção da Sul">
+                <span className="font-bold">{s.title?.replace(/\n/g, " ") ?? s.anchor}</span>{!sulActive.has(s.id) && <span className="a-badge ml-2">Oculta na Sul</span>}
+                <p className="a-muted text-[0.8125rem]">{REGIONAL_WHAT[s.template] ?? "foto da seção"}</p>
+                {gap && <p className="mt-1 text-[0.8125rem]" data-testid="regional-gap"><span className="a-badge warn mr-1">Fora do {scopeName(scope)}</span>{gap}</p>}
+              </td>
               <td data-label="Imagens e produtos">{own.has(s.id) ? <span className="a-badge ok">Próprias do {scopeName(scope)}</span> : <span className="a-badge">As da Sul</span>}</td>
               <td className="text-right"><Link href={`/admin/home/regional/${s.id}`} className="a-btn sm ghost">Editar</Link></td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </section>

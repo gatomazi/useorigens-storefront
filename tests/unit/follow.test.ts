@@ -6,7 +6,7 @@ import { followedDestination, followedDoc, withFollowing, withRegionName } from 
 import { newPage } from "@/lib/site-config/pages";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { buildSeedBundle } from "@/lib/site-config/seed";
-import { validateScopeDoc, type Customizer, type Section } from "@/lib/site-config/schema";
+import { validateScopeDoc, type Customizer, type Destination, type Section } from "@/lib/site-config/schema";
 
 const seed = () => buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null });
 const doc = (region: RegionSlug = "sul") => structuredClone(seed().docs[region]);
@@ -167,6 +167,23 @@ describe("Seguir a Sul: o que o público vê", () => {
     norte.customizers = [model({ id: "cz-norte" })];
     out = followedDoc(norte, sul, true);
     expect(out.home!.sections[1].customizerCard!.customizerId).toBe("cz-norte");
+  });
+
+  test("uma campanha cujo botão não tem para onde ir na região sai (não fica sem botão)", async () => {
+    const { campaignLeadsNowhere } = await import("@/lib/site-config/sources");
+    const campaign = (id: string, dest: Destination): Section => ({ ...carousel(), id, anchor: id, headingId: `${id}-title`, template: "campaign", variant: "split", title: "Você conhece a referência", cta: { label: "Conhecer", dest } });
+    const sul = doc();
+    sul.customizers = [model()];
+    sul.home!.sections.splice(1, 0, campaign("camp-natal", { kind: "customizer", customizerId: "cz-sul" }), campaign("camp-jeito", { kind: "collection-page", store: "use-sul", collectionId: 10 }));
+    const norte = doc("norte");
+    norte.follow = ["home"];
+    const out = followedDoc(norte, sul, true).home!.sections;
+    expect(out[1]).toMatchObject({ id: "camp-natal", active: false });
+    expect(out[2]).toMatchObject({ id: "camp-jeito", active: true });
+    // A coleção sem produtos do Norte não tem página lá: a campanha não é desenhada. Quando o Norte passa a ter, ela volta sozinha.
+    expect(campaignLeadsNowhere(out[2], { pageSlug: () => null }, "norte")).toBe(true);
+    expect(campaignLeadsNowhere(out[2], { pageSlug: () => "do-nosso-jeito" }, "norte")).toBe(false);
+    expect(campaignLeadsNowhere({ ...out[2], cta: undefined }, { pageSlug: () => null }, "norte")).toBe(false);
   });
 
   test("destinos: link para outra região fica como está; personalizar só se a região tiver o modelo", () => {

@@ -34,7 +34,7 @@ import { numberPt } from "@/lib/format";
 import { collectionFacets } from "@/lib/search/collection-filter";
 import type { ProductSort } from "@/lib/catalog/product-sort";
 import { arrangementOf } from "@/lib/site-config/collections-enabled";
-import { destinationHref, resolveSource, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type SourceResult, type UmaPencaLookup } from "@/lib/site-config/sources";
+import { campaignLeadsNowhere, destinationHref, resolveSource, type CategoryLookup, type CollectionLinks, type CollectionPageLookup, type SourceResult, type UmaPencaLookup } from "@/lib/site-config/sources";
 
 /** A collection page gets its mini search when it has more products than this (fewer fit on one screen anyway). */
 const SEARCH_FROM = 12;
@@ -231,6 +231,7 @@ export function HomeSections({
           }
 
           case "campaign": {
+            if (campaignLeadsNowhere(s, links, region)) return null;
             const image = hasImage(bg);
             const useFill = !image && s.fallback === "fill" && bg.fill.kind !== "none";
             const ctaHref = s.cta ? destinationHref(s.cta.dest, links, region) : null;
