@@ -49,6 +49,24 @@ describe("the ground of a home theme (Fundo da home)", () => {
     expect(off.home).not.toHaveProperty("backdrop");
   });
 
+  test("given a ground, when sections are edited (in use or in the kept theme), then the ground stays", () => {
+    const kept = withBlackGround();
+    const black = run(kept, { type: "set-home-theme", theme: "black" });
+    const target = black.home!.sections.find((s) => s.template === "product-carousel")!;
+    const ops: DraftOp[] = [
+      { type: "update", id: target.id, patch: { title: "Outro título" } },
+      { type: "set-active", id: target.id, active: !target.active },
+      { type: "move", id: target.id, direction: "down" },
+      { type: "duplicate", id: target.id },
+      { type: "link-collection-pages", refs: [] },
+    ];
+    for (const op of ops) {
+      expect(run(black, op).home?.backdrop, op.type).toEqual(BLACK);
+      // The panel edits a kept theme through `in-home-theme`: its ground must survive the round trip too.
+      expect(run(kept, { type: "in-home-theme", theme: "black", op }).homeThemes?.black?.backdrop, `in-home-theme ${op.type}`).toEqual(BLACK);
+    }
+  });
+
   test("given a seasonal theme created while a ground is in use, when it is created, then it starts on the region's ground (its opening is made for it)", () => {
     const black = run(withBlackGround(), { type: "set-home-theme", theme: "black" });
     const natal = run(black, { type: "create-home-theme", theme: "natal" });

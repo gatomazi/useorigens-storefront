@@ -393,7 +393,8 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   const index = "id" in op ? sections.findIndex((s) => s.id === op.id) : -1;
   if ("id" in op && index < 0) return fail(`section "${op.id}" does not exist`);
   const next = sections.map((s) => structuredClone(s));
-  const withSections = (list: Section[], focusId?: string): OpResult => ({ ok: true, doc: { ...doc, home: { sections: list } }, focusId });
+  // `...doc.home`: a section edit keeps the rest of the home (its ground, "Fundo da home").
+  const withSections = (list: Section[], focusId?: string): OpResult => ({ ok: true, doc: { ...doc, home: { ...doc.home, sections: list } }, focusId });
 
   switch (op.type) {
     case "add-carousel": {
@@ -546,7 +547,7 @@ function linkCollectionPages(doc: ScopeDoc, refs: CollectionRef[]): OpResult {
     ...(s.nav?.dest ? { nav: { ...s.nav, dest: swap(s.nav.dest) } } : {}),
     ...(s.tiles ? { tiles: s.tiles.map((t) => ({ ...t, dest: swap(t.dest) })) } : {}),
   });
-  const next: ScopeDoc = { ...doc, ...(doc.home ? { home: { sections: doc.home.sections.map(fix) } } : {}), ...(doc.pages ? { pages: doc.pages.map((p) => ({ ...p, sections: p.sections.map(fix) })) } : {}) };
+  const next: ScopeDoc = { ...doc, ...(doc.home ? { home: { ...doc.home, sections: doc.home.sections.map(fix) } } : {}), ...(doc.pages ? { pages: doc.pages.map((p) => ({ ...p, sections: p.sections.map(fix) })) } : {}) };
   const check = validateScopeDoc(next);
   return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
 }
