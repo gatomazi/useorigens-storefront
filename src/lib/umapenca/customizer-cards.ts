@@ -6,6 +6,8 @@ export type CreateYourOwnCard = {
   href: string;
   title: string;
   description?: string;
+  /** The shirt price when the model sells it on the spot ("R$ 109,90"); the personalization page shows it. */
+  price?: string;
   image: { src: string; width: number; height: number; variants?: { w: number; src: string }[]; alt: string };
 };
 
