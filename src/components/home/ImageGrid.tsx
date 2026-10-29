@@ -92,7 +92,7 @@ function ProductTile({ tile, sizes }: { tile: GridTileView; sizes: string }) {
   return (
     <TileLink
       tile={tile}
-      className={`group grid h-full grid-cols-[minmax(0,40%)_minmax(0,1fr)] items-center gap-4 rounded-lg p-3 transition-[filter] duration-200 hover:brightness-[0.97] active:brightness-[0.93] md:flex md:flex-col md:items-stretch md:gap-0 md:p-5 ${tile.tone === "light" ? "text-white" : "text-ink"}`}
+      className={`group grid h-full grid-cols-[minmax(0,40%)_minmax(0,1fr)] items-center gap-4 rounded-lg p-3 transition-[filter] duration-200 hover:brightness-[0.97] active:brightness-[0.93] md:flex md:flex-col md:items-stretch md:gap-0 md:p-5 ${tile.tone === "light" ? "text-white" : "on-light text-ink"}`}
       style={{ background: tile.color }}
     >
       {tile.product ? (
@@ -117,7 +117,7 @@ function ProductTile({ tile, sizes }: { tile: GridTileView; sizes: string }) {
 function BannerTile({ tile, aspect, sizes }: { tile: GridTileView; aspect: string; sizes: string }) {
   const light = tile.tone !== "dark";
   return (
-    <TileLink tile={tile} className={`group relative flex h-full flex-col overflow-hidden rounded-lg ${light ? "text-white" : "text-ink"}`} style={{ background: tile.color }}>
+    <TileLink tile={tile} className={`group relative flex h-full flex-col overflow-hidden rounded-lg ${light ? "text-white" : "on-light text-ink"}`} style={{ background: tile.color }}>
       <span aria-hidden="true" className={`block aspect-[16/10] w-full ${aspect}`} />
       {tile.image && (
         <span className="absolute inset-0 block transition-transform duration-500 motion-safe:group-hover:scale-[1.035]">
