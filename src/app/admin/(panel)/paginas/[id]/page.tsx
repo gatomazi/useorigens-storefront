@@ -128,6 +128,8 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
           rows={page.sections.map((s) => {
               const status = sourceStatus(s, ws.doc);
               const locked = s.template === "page-hero";
+              // The page's hero may give way to an active live banner, which then opens the page.
+              const liveOpens = locked && (!s.active || page.sections.some((x) => x.template === "personalization-live" && x.active));
               const custom = s.id.startsWith("custom-") && !locked;
               const readable = sectionReadability(s);
               const label = s.title?.replace(/\n/g, " ") ?? s.anchor;
@@ -144,10 +146,10 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
                     </p>
                   </td>
                   <td>{status ? (status.problem ? <span className="a-badge bad">{status.problem}</span> : <span className="a-muted">{status.label} · {status.products} produto(s)</span>) : <span className="a-muted">—</span>}</td>
-                  <td>{locked ? <span className="a-badge">Fixa</span> : s.active ? <span className="a-badge ok">Ativa</span> : <span className="a-badge">Oculta</span>}</td>
+                  <td>{locked && s.active ? <span className="a-badge">Fixa</span> : locked ? <span className="a-badge">Oculta (o banner ao vivo abre a página)</span> : s.active ? <span className="a-badge ok">Ativa</span> : <span className="a-badge">Oculta</span>}</td>
                   <td>
                     <div className="flex flex-wrap items-center justify-end gap-1.5">
-                      {!locked && <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${label}”` : `Ativar “${label}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>}
+                      {(!locked || liveOpens) && <RowForm action={setSectionActive} rev={rev} scope={scope} id={s.id} page={page.id} extra={{ active: String(!s.active) }} label={s.active ? `Ocultar “${label}”` : `Ativar “${label}”`}>{s.active ? "Ocultar" : "Ativar"}</RowForm>}
                       <Link href={`/admin/paginas/${page.id}/secoes/${s.id}`} className="a-btn sm">Editar</Link>
                       {s.template === "product-carousel" && <RowForm action={duplicateSection} rev={rev} scope={scope} id={s.id} page={page.id} label={`Duplicar “${label}”`}>Duplicar</RowForm>}
                       {custom && <RowForm action={removeSection} rev={rev} scope={scope} id={s.id} page={page.id} label={`Remover “${label}”`} danger>Remover</RowForm>}

@@ -1018,6 +1018,11 @@ function checkPage(c: Collector, path: string, v: unknown): void {
     if (i === 0 && s.template !== "page-hero") c.fail(`${path}.sections[0]`, "the first section must be the page hero");
     if (i > 0 && s.template === "page-hero") c.fail(`${path}.sections[${i}]`, "the page hero appears once, first");
   });
+  // The page hero opens every page; it may stay hidden only while a live banner opens the page instead (its title becomes the page's heading).
+  const hero = sections[0];
+  if (isRecord(hero) && hero.template === "page-hero" && hero.active === false && !sections.some((s) => isRecord(s) && s.template === "personalization-live" && s.active === true)) {
+    c.fail(`${path}.sections[0]`, "the page hero may be hidden only when an active live banner opens the page");
+  }
   // The page numbers live in a parent-category landing's address (`/colecoes/<slug>/2`): one paged grid, there only.
   const paged = sections.filter((s) => isRecord(s) && isRecord(s.layout) && s.layout.display === "paged").length;
   if (paged > 0 && v.kind !== "categoryLanding") c.fail(`${path}.sections`, "a paged grid belongs to a parent-category landing");

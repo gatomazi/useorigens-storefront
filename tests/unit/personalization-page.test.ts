@@ -76,6 +76,21 @@ describe("the personalization page in the CMS", () => {
     live = followedDoc(norte, sul, true).pages!.find((p) => p.slug === HUB_PAGE_SLUG)!.sections[1];
     expect(live).toMatchObject({ active: true, live: { customizerId: "cz-norte" } });
   });
+  test("the live banner may open the page in place of its hero, never leaving the page without an opening", () => {
+    const doc = run(Object.assign(start(), { customizers: [model({ id: "cz-sul" })] }), { type: "create-hub-page" });
+    const [heroId, liveId] = hub(doc).sections.map((s) => s.id);
+    const hidden = run(doc, { type: "in-page", page: hub(doc).id, op: { type: "set-active", id: heroId, active: false } });
+    expect(hub(hidden).sections[0].active).toBe(false);
+    expect(validatePage(hub(hidden), "sul").ok).toBe(true);
+    expect(applyOp(hidden, { type: "in-page", page: hub(hidden).id, op: { type: "set-active", id: liveId, active: false } }, ctx()).ok).toBe(false);
+    const plain = run(start(), { type: "create-hub-page" }); // no live banner: the hero stays
+    expect(applyOp(plain, { type: "in-page", page: hub(plain).id, op: { type: "set-active", id: hub(plain).sections[0].id, active: false } }, ctx()).ok).toBe(false);
+    // Norte follows Sul's pages but has no model: no banner, so the hero comes back.
+    const norte = start("norte");
+    norte.follow = ["pages"];
+    const followed = followedDoc(norte, hidden, true).pages!.find((p) => p.slug === HUB_PAGE_SLUG)!;
+    expect(followed.sections.map((s) => [s.template, s.active])).toEqual([["page-hero", true], ["personalization-live", false], ["personalization-models", true]]);
+  });
   test("the editor's fields become the banner's model, button and examples", () => {
     const section = { id: "s", anchor: "a", headingId: "a-title", template: "personalization-live", active: true, live: { customizerId: "cz-placa", button: "Ir", examples: [] }, appearance: defaultAppearance() } as Section;
     const form = (e: Record<string, string>) => ({ get: (k: string) => (k in e ? e[k] : null) });

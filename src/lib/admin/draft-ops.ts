@@ -475,7 +475,9 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       return withSections(op.ids.map((id) => byId.get(id)!));
     }
     case "set-active": {
-      if (isLocked(next[index]) && !op.active) return fail("the hero and the footer cannot be hidden");
+      // A page's hero may give way to a live banner (the page's schema checks that one stays active).
+      const heroGivesWay = ctx.mode === "page" && next[index].template === "page-hero" && next.some((s) => s.template === "personalization-live" && s.active);
+      if (isLocked(next[index]) && !op.active && !heroGivesWay) return fail("the hero and the footer cannot be hidden");
       next[index].active = op.active;
       return withSections(next, op.id);
     }

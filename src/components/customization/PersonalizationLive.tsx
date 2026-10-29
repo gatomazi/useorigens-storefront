@@ -27,10 +27,13 @@ const CITY_MS = 700;
  * plays under "reduce motion" (the first example stays). The art (a ~1 MB base) loads only once the banner is near the screen; the model's picture
  * stands in until then. The button carries what the VISITOR wrote (never the examples) to the model's page, in the tab's session.
  */
-export function PersonalizationLive({ slug, href, baseUrl, title, subtitle, button, examples, poster, panel, panelTone, anchor, headingId }: {
+export function PersonalizationLive({ slug, href, baseUrl, title, subtitle, button, examples, poster, panel, panelTone, anchor, headingId, opening = false }: {
   slug: string; href: string; baseUrl: string; title: string; subtitle?: string; button: string; examples: string[]; poster: Poster | null;
   panel: ReactNode; panelTone: "light" | "dark"; anchor: string; headingId: string;
+  /** The banner opens the page (its hero hidden): its title is the page's heading. */
+  opening?: boolean;
 }) {
+  const Heading = opening ? "h1" : "h2";
   const uid = useId();
   const root = useRef<HTMLElement>(null);
   const [near, setNear] = useState(false);
@@ -111,7 +114,7 @@ export function PersonalizationLive({ slug, href, baseUrl, title, subtitle, butt
         {panel ?? <div aria-hidden="true" className="absolute inset-0 -z-10 bg-region-primary" />}
         <div className="w-full px-[var(--gutter)] py-10 sm:py-12 lg:max-w-[40rem] lg:px-14 lg:py-16 xl:px-20">
           <span aria-hidden="true" className="mb-5 block h-[3px] w-12 bg-region-accent" />
-          <h2 id={headingId} className="font-display text-[clamp(2.25rem,4.6vw,4.25rem)] font-extrabold uppercase leading-[0.95] tracking-[0.004em] [text-wrap:balance]">{title}</h2>
+          <Heading id={headingId} className="font-display text-[clamp(2.25rem,4.6vw,4.25rem)] font-extrabold uppercase leading-[0.95] tracking-[0.004em] [text-wrap:balance]">{title}</Heading>
           {subtitle && <p className={`t-body mt-4 max-w-md ${light ? "text-white/85" : "text-ink-soft"}`}>{subtitle}</p>}
           {base && (
             <div className={`mt-6 ${light ? `${styles.onDark} [&_.t-label]:text-white [&_legend]:text-white` : ""}`}>

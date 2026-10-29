@@ -324,6 +324,7 @@ export function HomeSections({
                 panelTone={fillTone(bg.fill)}
                 anchor={s.anchor}
                 headingId={s.headingId}
+                opening={Boolean(page) && !sections.some((x) => x.template === "page-hero") && sections.find((x) => x.template === "personalization-live")?.id === s.id}
               />
             );
           }
