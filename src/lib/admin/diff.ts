@@ -118,7 +118,7 @@ function followChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
     const now = followsPart(draft, part);
     if (followsPart(published, part) === now || draft.scope === "global") return [];
     const name = REGIONS[draft.scope].name;
-    return [{ kind: "follow" as const, sectionId: `follow-${part}`, text: `${FOLLOW_PART_LABELS[part]}: ${now ? `passa a seguir a Sul (a configuração própria de ${name} fica guardada)` : `deixa de seguir a Sul e volta à configuração própria de ${name}`}` }];
+    return [{ kind: "follow" as const, sectionId: `follow-${part}`, text: `${FOLLOW_PART_LABELS[part]}: ${now ? `passa a seguir a Sul (a configuração própria do ${name} fica guardada)` : `deixa de seguir a Sul e volta à configuração própria do ${name}`}` }];
   });
 }
 

@@ -173,8 +173,8 @@ describe("Seguir a Sul no painel", () => {
     const { diffDocs } = await import("@/lib/admin/diff");
     const norte = doc("norte");
     const changes = diffDocs(norte, withFollowPart(norte, "home", true)).filter((c) => c.kind === "follow");
-    expect(changes.map((c) => c.text)).toEqual(["Home: passa a seguir a Sul (a configuração própria de Norte fica guardada)"]);
-    expect(diffDocs(withFollowPart(norte, "menu", true), norte).find((c) => c.kind === "follow")!.text).toContain("volta à configuração própria de Norte");
+    expect(changes.map((c) => c.text)).toEqual(["Home: passa a seguir a Sul (a configuração própria do Norte fica guardada)"]);
+    expect(diffDocs(withFollowPart(norte, "menu", true), norte).find((c) => c.kind === "follow")!.text).toContain("volta à configuração própria do Norte");
   });
 
   test("a operação de rascunho só aceita Norte e Centro-Oeste", async () => {
