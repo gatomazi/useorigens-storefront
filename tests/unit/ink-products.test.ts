@@ -99,7 +99,7 @@ const NEW: NewProductJob = { dedupeKey: "a".repeat(64), region: "sul", customize
 const deps = (client: InkProductClient, over: Partial<WorkerDeps> = {}): WorkerDeps => ({
   store, client, render: async () => ({ darkInk: DARK, lightInk: LIGHT }), now: () => new Date(clock), sleep: async (ms) => { clock += ms; }, ...over,
 });
-const describeJob = () => ({ description: "d", tags: ["personalizado"] });
+const describeJob = () => ({ description: "d", tags: ["personalizado"], collections: [7] });
 
 describe("making a product", () => {
   test("draws, creates it hidden with the job id as the key, waits for the photo and is ready", async () => {
@@ -110,7 +110,7 @@ describe("making a product", () => {
     expect(done).toMatchObject({ status: "ready", inkProductId: "5143876", inkUrl: "https://loja.useorigens.com.br/useorigens/product/silva", inkImageUrl: "https://img.example/silva.jpg", leaseUntil: null });
     expect(calls.create).toHaveLength(1);
     expect(calls.create[0].key).toBe(job.id);
-    expect(calls.create[0].body).toMatchObject({ product_type_id: 1, name: NEW.name, price: "109.90", visible_in_store: false });
+    expect(calls.create[0].body).toMatchObject({ product_type_id: 1, name: NEW.name, price: "109.90", visible_in_store: false, tags: ["personalizado"], collections: [7] });
     expect((calls.create[0].body.arts as unknown[]).length).toBe(18);
     expect(publicJob(done)).toEqual({ id: job.id, label: "Universitário", status: "ready", url: done.inkUrl, image: done.inkImageUrl, inkProductId: "5143876", store: expect.any(String) });
     expect(publicJob({ ...done, status: "photos" })).toMatchObject({ url: null, image: null, inkProductId: null, store: null });

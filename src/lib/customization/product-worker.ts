@@ -41,7 +41,7 @@ function oneAtATime<T>(task: () => Promise<T>): Promise<T> {
  * product until the link and the photo are there or the photo wait is over. The Idempotency-Key is the job id, forever the same. A transient failure
  * keeps the job for a later try after a growing pause; a 409 "indeterminate" goes to `check`; an error never overwrites a job that reached INK.
  */
-export async function runProductJob(id: string, deps: WorkerDeps, describe: (job: ProductJob) => { description: string; tags: string[] }): Promise<void> {
+export async function runProductJob(id: string, deps: WorkerDeps, describe: (job: ProductJob) => { description: string; tags: string[]; collections: number[] }): Promise<void> {
   const held = await oneAtATime(async (): Promise<ProductJob | null> => {
     const job = await deps.store.claim(id, LEASE_MS, deps.now());
     if (!job || job.inkProductId) return job;
@@ -49,8 +49,8 @@ export async function runProductJob(id: string, deps: WorkerDeps, describe: (job
       const { darkInk, lightInk } = await deps.render(job);
       const creating = (await deps.store.update(id, { status: "creating", leaseUntil: new Date(deps.now().getTime() + LEASE_MS).toISOString() }, { onlyIf: BEFORE_INK })) ?? job;
       const arts = inkArts(await deps.client.printableAreas(creating.productTypeId), darkInk, lightInk);
-      const { description, tags } = describe(creating);
-      const made = await deps.client.createProduct({ product_type_id: creating.productTypeId, name: creating.name, description, price: creating.price, visible_in_store: false, tags, arts }, creating.id);
+      const { description, tags, collections } = describe(creating);
+      const made = await deps.client.createProduct({ product_type_id: creating.productTypeId, name: creating.name, description, price: creating.price, visible_in_store: false, tags, collections, arts }, creating.id);
       if (!/^\d{1,20}$/.test(made.id)) throw new Error("a INK não devolveu o id do produto");
       return deps.store.update(id, { status: "photos", inkProductId: made.id, inkUrl: safeInkUrl(made.url), inkImageUrl: made.imageUrl, inkCreatedAt: deps.now().toISOString(), error: null }, { onlyIf: BEFORE_INK });
     } catch (e) {

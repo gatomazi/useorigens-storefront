@@ -66,10 +66,18 @@ export async function renderJobArts(job: ProductJob): Promise<{ darkInk: Buffer;
   return { darkInk, lightInk };
 }
 
-/** The product's description and tags at INK; the tags let the team find (and exclude) every personalized product. */
+/**
+ * "Sobrenomes", a hidden category of the single store (use-sul, where every region's product is created), made once by
+ * scripts/categoria-sobrenome.mts on 29/10/2026: the team filters every personalized product by it in INK's panel. It must exist: INK refuses a
+ * product with an unknown category.
+ */
+export const PERSONALIZED_COLLECTION_ID = 155154;
+
+/** The product's description, tags and category at INK; the tags and the category let the team find (and exclude) every personalized product. */
 export const describeJob = (job: ProductJob) => ({
   description: "Estampa personalizada, montada na página de personalização da Use Origens.",
   tags: ["personalizado", `personalizado-${job.customizerSlug}`.slice(0, 40)],
+  collections: [PERSONALIZED_COLLECTION_ID],
 });
 
 /** Runs the job after the response is sent (Next's `after`): the customer's request returns at once and the waiting page follows the job. */
