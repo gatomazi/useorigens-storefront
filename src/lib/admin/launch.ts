@@ -2,6 +2,8 @@ import "server-only";
 import { regionReadiness } from "../catalog/readiness";
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import type { ScopeDoc } from "../site-config/schema";
+import { followsPart } from "../site-config/follow-schema";
+import { canFollowSul } from "../site-config/published";
 import { collectionProblems, readabilityProblems, sourceStatus } from "./validate-draft";
 
 /**
@@ -14,6 +16,8 @@ export async function launchBlockers(region: Exclude<RegionSlug, "sul">, doc: Sc
   const out: string[] = [];
   const readiness = regionReadiness(region);
   if (!readiness.ready) out.push(`o catálogo da loja ${name} cobre só ${readiness.coveredCities} de ${readiness.totalCities} cidades (mínimo 50%): sincronize o catálogo desta loja`);
+  // Following Sul, the region shows Sul's published home (already checked when Sul published it), not its own.
+  if (followsPart(doc, "home") && canFollowSul(region)) return out;
   if (!doc.home) return [...out, "a home ainda não foi criada (use “Criar home inicial”)"];
   const active = doc.home.sections.filter((s) => s.active && s.template !== "footer");
   if (active.length === 0) out.push("não há seções ativas");

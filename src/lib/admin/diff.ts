@@ -4,22 +4,24 @@ import { HEADER_ACTIONS, HEADER_ACTION_LABEL, headerActionsOf } from "../site-co
 import { podioEnabledIn } from "../site-config/podio-schema";
 import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkIncentiveText, inkThemeOf, INK_THEME_SURFACES, paletteOf } from "../site-config/ink-theme";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
+import { FOLLOW_PARTS, FOLLOW_PART_LABELS, followsPart } from "../site-config/follow-schema";
+import { REGIONS } from "../geo/regions";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
 import { kitTexts } from "../site-config/post-add-kit-schema";
 import { assistantLabel, assistantTopics, type AssistantAnswer } from "../site-config/assistant-schema";
-import { HOME_THEMES, homeThemeOf, type CollectionHighlight, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
+import { HOME_THEMES, homeThemeOf, type CollectionHighlight, type HomeThemeName, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
 import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "assistant" | "podio" | "ink-theme" | "post-add-kit"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "assistant" | "podio" | "ink-theme" | "post-add-kit" | "follow"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
 
 const EDITED_FIELDS: [keyof Section, string][] = [
-  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["featured", "produtos em destaque do hero"], ["featuredRotation", "alternância dos produtos do hero"], ["heroColors", "cores do lado do texto do hero"], ["count", "quantidade de estilos"], ["stateCovers", "banners dos estados"], ["nav", "menu do topo"], ["fallback", "alternativa sem imagem"], ["tiles", "blocos da grade"], ["grid", "layout da grade"], ["variant", "composição"],
+  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["featured", "produtos em destaque do hero"], ["featuredRotation", "alternância dos produtos do hero"], ["heroColors", "cores do lado do texto do hero"], ["count", "quantidade de estilos"], ["stateCovers", "banners dos estados"], ["nav", "menu do topo"], ["fallback", "alternativa sem imagem"], ["tiles", "blocos da grade"], ["grid", "layout da grade"], ["variant", "composição"], ["regions", "regiões em que aparece"],
 ];
 
 /** Name of an INK collection for the publish screen (injected: this module stays pure). */
@@ -27,7 +29,8 @@ export type CollectionNamer = (ref: CollectionRef) => string | null;
 /** Whether an INK collection is public (injected too): it decides where a collection the menu does not mention sits. */
 export type CollectionVisibility = (ref: CollectionRef) => boolean;
 
-export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer = () => null, isPublic: CollectionVisibility = () => true): Change[] {
+/** `sulSection`: the title of one of Sul's sections by id, for the lines about a region's own pictures over Sul's sections (`regional`). */
+export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer = () => null, isPublic: CollectionVisibility = () => true, sulSection: (id: string) => string | null = () => null): Change[] {
   // Sections and colours are compared with the SAME theme as published (switching themes is one line, not every section of both).
   const sameTheme = swapHomeTheme(published, homeThemeOf(draft)) ?? published;
   const before = sameTheme.home?.sections ?? [];
@@ -70,7 +73,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft), ...followChanges(published, draft), ...regionalChanges(published, draft, sulSection));
   return changes;
 }
 
@@ -108,6 +111,33 @@ function stateRowsChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: Collecti
   for (const r of newIn(nowGrids, wasGrids)) out.push({ kind: "edited", sectionId: "state-grids", text: `Página do estado: “${name(r)}” passa a aparecer em grade` });
   for (const r of newIn(wasGrids, nowGrids)) out.push({ kind: "edited", sectionId: "state-grids", text: `Página do estado: “${name(r)}” volta a ser carrossel` });
   return out;
+}
+
+/** A part that starts or stops following Sul ("Seguir a Sul"). Pure. */
+function followChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  return FOLLOW_PARTS.flatMap((part) => {
+    const now = followsPart(draft, part);
+    if (followsPart(published, part) === now || draft.scope === "global") return [];
+    const name = REGIONS[draft.scope].name;
+    return [{ kind: "follow" as const, sectionId: `follow-${part}`, text: `${FOLLOW_PART_LABELS[part]}: ${now ? `passa a seguir a Sul (a configuração própria do ${name} fica guardada)` : `deixa de seguir a Sul e volta à configuração própria do ${name}`}` }];
+  });
+}
+
+/** The region's own pictures and products over Sul's sections, one line per section that changed. */
+function regionalChanges(published: ScopeDoc, draft: ScopeDoc, sulSection: (id: string) => string | null): Change[] {
+  if (draft.scope === "global") return [];
+  const key = (e: { sectionId: string; theme?: HomeThemeName }) => `${e.sectionId}|${e.theme ?? "original"}`;
+  const was = new Map((published.regional ?? []).map((e) => [key(e), json(e)]));
+  const now = new Map((draft.regional ?? []).map((e) => [key(e), json(e)]));
+  const name = REGIONS[draft.scope].name;
+  return [...new Set([...was.keys(), ...now.keys()])].flatMap((k) => {
+    if (was.get(k) === now.get(k)) return [];
+    const [id, theme] = k.split("|") as [string, HomeThemeName];
+    const inTheme = theme === "original" ? "" : `, tema ${HOME_THEME_LABEL[theme]}`;
+    if (!now.has(k)) return [{ kind: "follow" as const, sectionId: `regional-${k}`, text: `“${sulSection(id) ?? id}” (seção da Sul${inTheme}): volta a usar as imagens e os produtos da Sul` }];
+    const text = !was.has(k) ? `passa a ter imagens e produtos próprios do ${name}` : `imagens e produtos do ${name} alterados`;
+    return [{ kind: "follow" as const, sectionId: `regional-${k}`, text: `“${sulSection(id) ?? id}” (seção da Sul${inTheme}): ${text}` }];
+  });
 }
 
 /** A state-page section switched on or off. Pure. */

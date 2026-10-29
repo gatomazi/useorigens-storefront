@@ -9,6 +9,8 @@ import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from 
 import { SINGLETON_TEMPLATES, STRUCTURED_MODELS } from "@/lib/site-config/structured";
 import { Flash } from "@/components/admin/Flash";
 import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
+import { FollowCard, FollowFold, RegionalSectionsList } from "@/components/admin/FollowCard";
+import { followsPart } from "@/lib/site-config/follow-schema";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { collectionProblems, sectionReadability, sourceStatus } from "@/lib/admin/validate-draft";
@@ -80,6 +82,9 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         </div>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
+      <FollowCard actor={actor} scope={scope} part="home" doc={ws.doc} baseDoc={ws.baseDoc} rev={rev} to="/admin/home" />
+      <RegionalSectionsList scope={scope} doc={ws.doc} />
+      <FollowFold following={followsPart(ws.doc, "home")} scope={scope}>
       {/* Only the sections of the theme being edited: each theme has its own (add, edit and order them here, for that theme alone). */}
       <HomeThemeCard region={scope} doc={ws.doc} editing={ws.editingTheme} active={ws.activeTheme} live={ws.liveTheme} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} to="/admin/home" />
       <RegionCopyPanel actor={actor} scope={scope} part="home" rev={rev} />
@@ -121,6 +126,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
                     <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[0.8125rem]">
                       <span className="a-badge">{typeLabel(s)}</span>
                       {custom && <span className="a-badge ok">Criada aqui</span>}
+                      {s.regions && <span className="a-badge warn" title="Só aparece nessas regiões (vale para as que seguem a Sul)">Só {s.regions.map((r) => scopeName(r)).join(" e ")}</span>}
                       {s.nav && <span className="a-badge ok" title="Aparece no menu do topo da loja">Menu: {s.nav.label}</span>}
                       {s.layout?.buyLabel && <span className="a-badge ok">{s.layout.buyStyle === "fab" ? "Carrinho" : s.layout.buyStyle === "link" ? "Chamada" : "Botão"} “{s.layout.buyLabel}”</span>}
                       {s.layout?.tags && <span className="a-badge ok">Etiquetas: {[s.layout.tags.discount ? "% OFF" : null, s.layout.tags.text ? `“${s.layout.tags.text}”${s.layout.tags.onSale ? " (só em promoção)" : ""}` : null].filter(Boolean).join(" + ")}</span>}
@@ -249,6 +255,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
         </ul>
       </section>
       )}
+      </FollowFold>
 
       <section className="a-card p-5" aria-label="Pré-visualização do rascunho">
         <PreviewFrame version={ws.record?.rev ?? 0} height={700} />

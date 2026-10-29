@@ -5,7 +5,7 @@
  */
 import { FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
 import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, TILE_VEILS, type TileFormat, type TileVeil, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
-import { STATE_NAMES } from "../geo/regions";
+import { REGION_SLUGS, STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { postedBuyStyle } from "../site-config/cards-schema";
 import { ARTICLE_KINDS } from "../umapenca/types";
@@ -229,6 +229,11 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
   // A field that is not in the form is left alone; a field that is present and empty clears the value (a carousel's title is then rejected).
   if (f.get("title") !== null) patch.title = str(f, "title") || undefined;
   if (f.get("subtitle") !== null) patch.subtitle = str(f, "subtitle") || undefined;
+  // "Aparece em" (Sul's editor): one box per region; all of them (or none) = every region, stored as nothing.
+  if (f.get("regions_field") !== null) {
+    const chosen = REGION_SLUGS.filter((r) => f.get(`region_${r}`) !== null);
+    patch.regions = chosen.length === 0 || chosen.length === REGION_SLUGS.length ? undefined : chosen;
+  }
   if (section.template === "product-carousel" || section.template === "campaign" || section.template === "hero" || section.template === "city-styles" || section.template === "states" || section.template === "page-hero" || section.template === "image-grid") {
     patch.appearance = parseAppearance(f, section.appearance);
   }

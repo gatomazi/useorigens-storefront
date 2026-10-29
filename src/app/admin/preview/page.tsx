@@ -13,7 +13,8 @@ import { editingHomeTheme, loadWorkspace } from "@/lib/admin/workspace";
 import { currentScope } from "@/lib/admin/scope";
 import { getRegionHome } from "@/lib/home";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
-import { seedFromEnv } from "@/lib/site-config/published";
+import { canFollowSul, seedFromEnv } from "@/lib/site-config/published";
+import { withFollowing } from "@/lib/site-config/follow";
 import { HOME_THEME_LABEL, withHomeTheme } from "@/lib/site-config/home-themes";
 import { homeThemeCssVars, resolveTheme, themeCssVars } from "@/lib/site-config/navigation";
 import { hasEditorialChrome, HOME_THEMES, homeThemeOf, type HomeThemeName } from "@/lib/site-config/schema";
@@ -24,7 +25,7 @@ export const metadata: Metadata = { title: "Pré-visualização · Use Origens",
 /**
  * The home, rendered with the storefront's real components from the DRAFT (or, with ?source=published, from what is published in the
  * sandbox). It goes through the very same tolerant reader the storefront uses (`sanitizeBundle`), so what shows here is what the storefront
- * would show, including sections dropped for being invalid. Read-only: it writes nothing and fires no tracking.
+ * would show, including sections dropped for being invalid and the parts a region follows from Sul. Read-only: it writes nothing and fires no tracking.
  */
 export default async function AdminPreview({ searchParams }: { searchParams: Promise<{ source?: string; page?: string; customizer?: string; tema?: string }> }) {
   const actor = await requireAdmin();
@@ -51,7 +52,8 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
     notFound();
   }
   const { bundle: sanitized } = sanitizeBundle(raw, seedFromEnv());
-  const bundle = sanitized ? withPreviewMedia(sanitized) : null;
+  // As the public reads it: a region that follows Sul shows Sul's published structure in the parts it follows (`follow.ts`).
+  const bundle = sanitized ? withPreviewMedia(withFollowing(sanitized, canFollowSul)) : null;
   const catalog = getCatalog();
   const home = getRegionHome(scope);
   const effective = bundle ?? raw;

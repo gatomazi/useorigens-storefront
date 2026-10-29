@@ -17,6 +17,7 @@ import { validateNavigation, validateTheme, validateNeutralTheme } from "./navig
 import { validateInkTheme } from "./ink-theme-schema";
 import { validatePodio } from "./podio-schema";
 import { validateStatePage } from "./state-page-schema";
+import { validateFollow } from "./follow-schema";
 import { validatePromotions } from "./promotions-schema";
 import { validateTopBar } from "./top-bar-schema";
 import { validatePostAddKit } from "./post-add-kit-schema";
@@ -177,7 +178,8 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // And the top strip: an invalid one means the storefront's default strip and the INK's own on its pages.
   // And the assistant: an invalid one means no chat, and the INK keeps its own "Ajuda?" and WhatsApp.
   // And "Monte seu kit": an invalid one means the post-add modal as INK draws it.
-  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "assistant", "inkTheme", "postAddKit"] as const) {
+  // And "Seguir a Sul": an invalid one means the region shows its own content, as before the switch existed.
+  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "assistant", "inkTheme", "postAddKit", "follow"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
@@ -193,6 +195,7 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
       : key === "assistant" ? validateAssistant(candidate[key], scope, `${scope}.assistant`)
       : key === "inkTheme" ? validateInkTheme(candidate[key], scope, `${scope}.inkTheme`)
       : key === "postAddKit" ? validatePostAddKit(candidate[key], scope, `${scope}.postAddKit`)
+      : key === "follow" ? validateFollow(candidate[key], scope, `${scope}.follow`)
       : validatePromotions(candidate[key], scope, `${scope}.promotions`);
     if (!r.ok) {
       diagnostics.push(`${scope}: ${key} is invalid and was ignored (${r.errors[0]})`);
@@ -202,7 +205,8 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   if (!pages) delete (candidate as { pages?: unknown }).pages;
   if (!customizers) delete (candidate as { customizers?: unknown }).customizers;
   // The home's theme is cosmetic and the kept theme is never drawn: an invalid one is dropped (the live sections keep rendering, on the original look).
-  for (const key of ["homeTheme", "homeThemes"] as const) {
+  // The region's own pictures and products over Sul's sections: an invalid list means Sul's, as before it existed.
+  for (const key of ["homeTheme", "homeThemes", "regional"] as const) {
     if (candidate[key] === undefined) continue;
     const alone = { schemaVersion: 1, scope, tracking: candidate.tracking, ...(key === "homeThemes" && candidate.homeTheme ? { homeTheme: candidate.homeTheme } : {}), [key]: candidate[key] };
     const r = validateScopeDoc(alone);

@@ -13,6 +13,7 @@ import { pendingTrackingChanges, seedForEnv } from "@/lib/admin/publishing";
 import { changedLabel, currentScope, REGION_SCOPES, scopeName } from "@/lib/admin/scope";
 import { loadWorkspace } from "@/lib/admin/workspace";
 import { PAGE_KIND_LABEL, pageHref } from "@/lib/site-config/pages";
+import { FOLLOW_SOURCE } from "@/lib/site-config/follow-schema";
 
 const when = (iso: string | number | null) => (iso ? new Date(iso).toLocaleString("pt-BR") : "—");
 
@@ -22,7 +23,9 @@ export default async function PublishPage({ searchParams }: { searchParams: Prom
   const prod = platform().mode === "prod";
   const sp = await searchParams;
   const ws = await loadWorkspace(scope);
-  const changes = diffDocs(ws.baseDoc, ws.doc, (ref) => findCollection(ref.store, ref.collectionId)?.name ?? null, (ref) => findCollection(ref.store, ref.collectionId)?.isAvailable ?? false);
+  // A region's own pictures over Sul's sections are listed by the title of Sul's section (as published).
+  const sulHome = ws.doc.regional?.length || ws.baseDoc.regional?.length ? (await loadWorkspace(FOLLOW_SOURCE)).baseDoc.home?.sections ?? [] : [];
+  const changes = diffDocs(ws.baseDoc, ws.doc, (ref) => findCollection(ref.store, ref.collectionId)?.name ?? null, (ref) => findCollection(ref.store, ref.collectionId)?.isAvailable ?? false, (id) => sulHome.find((x) => x.id === id)?.title?.replace(/\n/g, " ") ?? null);
   const errors = await preflightDoc(ws.doc);
   const trackingLines = await pendingTrackingChanges(publishDeps(), ws.doc);
   const { rows: history, total, pages, page, headId } = await historyPage(Number(sp.p));

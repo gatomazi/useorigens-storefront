@@ -1,11 +1,15 @@
 import "server-only";
 import { readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { storeForRegion } from "../catalog/commerce-mode";
 import { catalogSnapshotDir } from "../config/env";
+import { FOLLOW_SOURCE } from "./follow-schema";
+import { withFollowing } from "./follow";
 import { bundleChecksum } from "./checksum";
 import { sanitizeBundle } from "./sanitize";
 import { buildSeedBundle } from "./seed";
 import type { PublishedBundle } from "./schema";
+import type { RegionSlug } from "../geo/regions";
 
 /**
  * Where the published configuration lives. `SITE_CONFIG_DIR` (absolute) wins; otherwise a `site-config/` namespace INSIDE the catalog
@@ -28,6 +32,9 @@ export type PublishedState =
   | { source: "published"; bundle: PublishedBundle; checksum: string; diagnostics: string[]; mtimeMs: number }
   | { source: "seed"; bundle: PublishedBundle; reason: string; diagnostics: string[] };
 
+/** A region follows Sul only while it sells in Sul's INK store (the single store); under the regional stores Sul's references mean nothing there. */
+export const canFollowSul = (region: RegionSlug): boolean => storeForRegion(region) === storeForRegion(FOLLOW_SOURCE);
+
 export function seedFromEnv(): PublishedBundle {
   return buildSeedBundle({ metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || null, ga4MeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || null });
 }
@@ -39,6 +46,9 @@ let cache: { file: string; mtimeMs: number; state: PublishedState } | null = nul
  * nothing. Read from a LOCAL file only (no database, no INK) and cached by mtime, so a publish is picked up on the next render and
  * an unchanged file costs one `stat`. Invalid optional sections are dropped with diagnostics (sanitize.ts); a missing, unreadable,
  * corrupt or version-incompatible file yields the seed with the reason.
+ *
+ * What it returns is what the PUBLIC sees: Norte and Centro-Oeste already carry the parts they follow from Sul, and each region only its own sections
+ * (`follow.ts`). The panel and the publisher read the stored documents (admin store), never this.
  */
 export function readPublished(file: string = publishedFilePath()): PublishedState {
   let mtimeMs = 0;
@@ -55,7 +65,7 @@ export function readPublished(file: string = publishedFilePath()): PublishedStat
     const raw: unknown = JSON.parse(readFileSync(file, "utf8"));
     const { bundle, diagnostics } = sanitizeBundle(raw, fallback);
     state = bundle
-      ? { source: "published", bundle, checksum: bundleChecksum(raw), diagnostics, mtimeMs }
+      ? { source: "published", bundle: withFollowing(bundle, canFollowSul), checksum: bundleChecksum(raw), diagnostics, mtimeMs }
       : { source: "seed", bundle: fallback, reason: diagnostics[0] ?? "unusable published.json", diagnostics };
   } catch (err) {
     state = { source: "seed", bundle: fallback, reason: `unreadable published.json (${err instanceof Error ? err.message : "error"})`, diagnostics: [] };

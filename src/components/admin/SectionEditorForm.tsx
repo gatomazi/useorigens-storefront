@@ -1,5 +1,7 @@
 "use client";
 
+import { REGIONS, REGION_SLUGS } from "@/lib/geo/regions";
+import { FOLLOW_SOURCE, REGION_TOKEN } from "@/lib/site-config/follow-schema";
 import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
 import { CollectionOrder, type OrderMember } from "@/components/admin/CollectionOrder";
@@ -100,8 +102,13 @@ function AnchorPicker({ anchors, current }: { anchors: { anchor: string; label: 
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pageDefaultSort, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement,
+  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pageDefaultSort, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement, regional = false,
 }: {
+  /**
+   * One of Sul's sections on a region that follows Sul ("Imagens e produtos"): only what the region may have of its own (the picture, the opening's
+   * products, the states' covers, the grid's blocks); texts, layout and products' sources stay Sul's.
+   */
+  regional?: boolean;
   /** Collection carousels: the saved collection's products in INK's order, for the order list (absent when it does not resolve). */
   collectionMembers?: OrderMember[];
   /** How this region arranges the saved collection now (`arrangementOf`): it belongs to the collection, every section built on it shares it. */
@@ -189,14 +196,32 @@ export function SectionEditorForm({
       <input type="hidden" name="scope" value={scope} />
       <input type="hidden" name="id" value={section.id} />
       {page && <><input type="hidden" name="page" value={page} /><input type="hidden" name="page_scope" value="1" /></>}
+      {regional && <p className="a-muted text-[0.875rem]">Textos, ordem, layout e coleções desta seção vêm da Sul. Aqui ficam só as imagens e os produtos desta região.</p>}
 
+      {!regional && (
       <fieldset className="space-y-4">
         <legend className="a-h2 mb-3">Conteúdo</legend>
         <div>
           <label className="a-label" htmlFor="title">Título</label>
           {section.template === "hero" ? <textarea id="title" name="title" defaultValue={section.title} className="a-textarea" maxLength={120} rows={2} /> : <input id="title" name="title" defaultValue={section.title} className="a-input" maxLength={120} />}
           {section.template === "hero" && <p className="a-muted mt-1 text-[0.8125rem]">Uma quebra de linha vira a quebra do título.</p>}
+          {scope === FOLLOW_SOURCE && <p className="a-muted mt-1 text-[0.8125rem]">Use <code>{REGION_TOKEN}</code> onde deve entrar o nome da região (“Sul”, ou “Norte” e “Centro-Oeste” quando seguem a Sul).</p>}
         </div>
+        {scope === FOLLOW_SOURCE && section.template !== "hero" && section.template !== "footer" && section.template !== "page-hero" && (
+          <fieldset data-testid="section-regions">
+            <legend className="a-label">Aparece em</legend>
+            <input type="hidden" name="regions_field" value="1" />
+            <div className="flex flex-wrap gap-4">
+              {REGION_SLUGS.map((r) => (
+                <label key={r} className="flex items-center gap-2 text-[0.9375rem]">
+                  <input type="checkbox" name={`region_${r}`} defaultChecked={!section.regions || section.regions.includes(r)} />
+                  {REGIONS[r].name}
+                </label>
+              ))}
+            </div>
+            <p className="a-muted mt-1 text-[0.8125rem]">Vale para as regiões que seguem a Sul. Desmarque uma região para tirar esta seção só de lá; para trocar o conteúdo nela, duplique a seção e deixe cada cópia em uma região.</p>
+          </fieldset>
+        )}
         <div>
           <label className="a-label" htmlFor="subtitle">Subtítulo</label>
           <textarea id="subtitle" name="subtitle" defaultValue={section.subtitle} className="a-textarea" maxLength={300} />
@@ -230,6 +255,7 @@ export function SectionEditorForm({
           </div>
         )}
       </fieldset>
+      )}
 
       {section.template === "states" && stateCovers && (
         <fieldset className="space-y-4">
@@ -271,7 +297,7 @@ export function SectionEditorForm({
         />
       )}
 
-      {section.template === "hero" && <HeroColorsEditor colors={section.heroColors} feature={section.variant === "feature"} sectionGround={fillKind === "solid" && choice === "custom" ? solid : undefined} />}
+      {!regional && section.template === "hero" && <HeroColorsEditor colors={section.heroColors} feature={section.variant === "feature"} sectionGround={fillKind === "solid" && choice === "custom" ? solid : undefined} />}
 
       {section.template === "hero" && featured && (
         <HeroFeaturedProducts
@@ -289,7 +315,7 @@ export function SectionEditorForm({
         />
       )}
 
-      {section.template === "page-hero" && (
+      {!regional && section.template === "page-hero" && (
         <fieldset className="space-y-3">
           <legend className="a-h2 mb-3">Cor do texto</legend>
           <select name="layout_tone" className="a-select max-w-xs" value={tone} onChange={(e) => setTone(e.target.value as "light" | "dark")} aria-label="Cor do texto">
@@ -299,7 +325,7 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
-      {isCarousel && display !== "paged" && (
+      {!regional && isCarousel && display !== "paged" && (
         <fieldset className="space-y-4">
           <legend className="a-h2 mb-3">Primeiro card personalizável</legend>
           <input type="hidden" name="cc_present" value="1" />
@@ -337,7 +363,7 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
-      {(section.template === "campaign" || section.template === "page-hero") && (
+      {!regional && (section.template === "campaign" || section.template === "page-hero") && (
         <fieldset className="space-y-4">
           <legend className="a-h2 mb-3">Botão</legend>
           <div className="grid gap-4 md:grid-cols-2">
@@ -385,7 +411,7 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
-      {isCarousel && (
+      {!regional && isCarousel && (
         <>
           <fieldset className="space-y-4">
             <legend className="a-h2 mb-3">Produtos</legend>
@@ -560,8 +586,9 @@ export function SectionEditorForm({
 
       {hasVisual && (
         <fieldset className="space-y-5">
-          <legend className="a-h2 mb-3">Fundo</legend>
-          <p className="a-muted text-[0.875rem]">A imagem é opcional e faz parte da própria seção. Sem imagem, aparece a cor ou o degradê escolhido — nunca uma faixa vazia.</p>
+          <legend className="a-h2 mb-3">{regional ? "Imagem" : "Fundo"}</legend>
+          <p className="a-muted text-[0.875rem]">{regional ? "A foto desta seção nesta região. Sem imagem, aparece a cor da seção, a mesma da Sul." : "A imagem é opcional e faz parte da própria seção. Sem imagem, aparece a cor ou o degradê escolhido — nunca uma faixa vazia."}</p>
+          {!regional && (<>
           <div role="radiogroup" aria-label="Cor de fundo" className="flex flex-wrap gap-4">
             {([["none", "Sem cor própria"], ["solid", "Cor sólida"], ["gradient", "Degradê"]] as const).map(([k, l]) => (
               <label key={k} className="flex items-center gap-2 font-bold"><input type="radio" name="fill_kind" value={k} checked={fillKind === k} onChange={() => setFillKind(k)} /> {l}</label>
@@ -588,6 +615,7 @@ export function SectionEditorForm({
               <div><label className="a-label" htmlFor="grad_angle">Ângulo {gAngle}°</label><input id="grad_angle" name="grad_angle" type="range" min={0} max={360} value={gAngle} onChange={(e) => setGAngle(Number(e.target.value))} className="w-full" /></div>
             </div>
           )}
+          </>)}
 
           <div className="grid gap-4 md:grid-cols-2">
             {([["mobile", "Imagem mobile", imgM, setImgM, "img_mobile"], ["desktop", "Imagem desktop", imgD, setImgD, "img_desktop"]] as const).map(([k, label, value, set, name]) => (
@@ -618,6 +646,7 @@ export function SectionEditorForm({
             </>
           )}
           {!hasImage && (<><input type="hidden" name="focal_mx" value={focM.x} /><input type="hidden" name="focal_my" value={focM.y} /><input type="hidden" name="focal_dx" value={focD.x} /><input type="hidden" name="focal_dy" value={focD.y} /></>)}
+          {!regional && (<>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
@@ -642,6 +671,8 @@ export function SectionEditorForm({
               <select id="fallback" name="fallback" className="a-select" defaultValue={section.fallback ?? "crops"}><option value="crops">Recortes de camisetas (padrão)</option><option value="fill">Só a cor/degradê acima</option></select>
             </div>
           )}
+          </>)}
+          {/* In the regional mode too: the region's picture goes under Sul's veil and text colour, the place where a title can become unreadable. */}
           {issues.length > 0 && (
             <div className={`a-flash ${issues.some((i) => i.level === "blocking") ? "err" : "ok"}`} role="status">
               <p className="font-extrabold">Legibilidade do texto</p>
@@ -651,7 +682,7 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
-      {section.template !== "hero" && section.template !== "footer" && section.template !== "page-hero" && !page && (
+      {!regional && section.template !== "hero" && section.template !== "footer" && section.template !== "page-hero" && !page && (
         <fieldset className="space-y-3">
           <legend className="a-h2 mb-3">Menu do topo</legend>
           <input type="hidden" name="nav_present" value="1" />
