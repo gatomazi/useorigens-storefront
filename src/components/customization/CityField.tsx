@@ -1,25 +1,86 @@
 "use client";
 
 import { useEffect, useId, useMemo, useState, type KeyboardEvent, type ReactNode } from "react";
-import { BRAZIL_UF_NAMES, BRAZIL_UFS, cityValue, exactCity, loadBrazilCities, parseCityValue, searchCities, type BrazilCity } from "@/lib/geo/brazil-cities";
+import { BRAZIL_UF_NAMES, cityValue, exactCity, exactUf, loadBrazilCities, parseCityValue, searchCities, searchUfs, ufLabel, type BrazilCity } from "@/lib/geo/brazil-cities";
 import styles from "./ArtworkEditor.module.css";
 
+type Option = { key: string; label: string };
+
 /**
- * A city of Brazil for a print ("PR - SANTA TEREZINHA DE ITAIPU"): the state first, then the city with autocomplete (an ARIA combobox; no
- * `<datalist>`, unreliable on iOS and in the Instagram browser). The answer is "Nome/UF" and exists only once a city of the list is picked;
- * a full name typed without picking counts when the field is left. The list (IBGE, ~50 KB) loads only where this field is shown.
+ * A text field with suggestions underneath (an ARIA combobox; no `<datalist>`, unreliable on iOS and in the Instagram browser). The parent owns
+ * the text and the options; picking sends the option, leaving the field lets the parent accept a full name typed without picking.
+ */
+function Combobox({ id, label, tip, query, onType, options, onPick, onLeave, listLabel, empty, openWhenEmpty = false, picked, disabled, placeholder, invalid, describedBy }: {
+  id: string; label: string; tip?: ReactNode; query: string; onType: (text: string) => void; options: Option[]; onPick: (key: string) => void; onLeave: () => void;
+  listLabel: string; empty: ReactNode; openWhenEmpty?: boolean; picked: boolean; disabled?: boolean; placeholder: string; invalid?: boolean; describedBy?: string;
+}) {
+  const listId = useId();
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const pick = (option: Option) => { setOpen(false); onPick(option.key); };
+  const keys = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      setOpen(true);
+      if (options.length) setActive((i) => (i + (e.key === "ArrowDown" ? 1 : options.length - 1)) % options.length);
+    } else if (e.key === "Enter" && open && options[active]) {
+      e.preventDefault();
+      pick(options[active]);
+    } else if (e.key === "Escape") setOpen(false);
+  };
+  const showList = open && !picked && (openWhenEmpty || query.trim() !== "");
+  return (
+    <div className={styles.cityInput}>
+      <div className="flex items-center"><label className="t-label" htmlFor={id}>{label}</label>{tip}</div>
+      <input
+        id={id}
+        role="combobox"
+        aria-expanded={showList}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        aria-activedescendant={showList && options[active] ? `${listId}-${active}` : undefined}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
+        value={query}
+        disabled={disabled}
+        onChange={(e) => { onType(e.target.value); setOpen(true); setActive(0); }}
+        onFocus={(e) => { setOpen(true); if (picked) e.target.select(); }}
+        onBlur={() => { setOpen(false); onLeave(); }}
+        onKeyDown={keys}
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck={false}
+        placeholder={placeholder}
+        className={styles.textarea}
+      />
+      {showList && (
+        <ul id={listId} role="listbox" aria-label={listLabel} className={styles.cityList}>
+          {options.length ? options.map((option, i) => (
+            // mousedown keeps the focus in the field, so the click still picks (on touch too).
+            <li key={option.key} id={`${listId}-${i}`} role="option" aria-selected={i === active} className={styles.cityOption} onMouseDown={(e) => e.preventDefault()} onClick={() => pick(option)}>
+              {option.label}
+            </li>
+          )) : <li className={styles.cityEmpty}>{empty}</li>}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A city of Brazil for a print ("PR - SANTA TEREZINHA DE ITAIPU"): the state, then the city, both typed with suggestions. The answer is "Nome/UF"
+ * and exists only once a city of the list is picked; a full state or city name typed without picking counts when its field is left. The city
+ * list (IBGE, ~50 KB) loads only where this field is shown.
  */
 export function CityField({ id, label, tip, value, onChange, error, describedBy }: { id: string; label: string; tip?: ReactNode; value: string; onChange: (value: string) => void; error?: string; describedBy: string }) {
-  const listId = useId();
   const picked = parseCityValue(value);
   const [uf, setUf] = useState(picked?.uf ?? "");
+  const [ufQuery, setUfQuery] = useState(picked ? ufLabel(picked.uf) : "");
   const [query, setQuery] = useState(picked?.name ?? "");
   const [cities, setCities] = useState<BrazilCity[] | null>(null);
   // The list comes as a separate download: on a weak phone connection it can fail, and the customer can try again.
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [open, setOpen] = useState(false);
-  const [active, setActive] = useState(0);
 
   useEffect(() => {
     let live = true;
@@ -33,89 +94,53 @@ export function CityField({ id, label, tip, value, onChange, error, describedBy 
     setShown(value);
     if (picked) {
       setUf(picked.uf);
+      setUfQuery(ufLabel(picked.uf));
       setQuery(picked.name);
     }
   }
 
-  const options = useMemo(() => (cities && uf && query.trim() ? searchCities(cities, uf, query) : []), [cities, uf, query]);
-  const pick = (city: BrazilCity) => {
-    setQuery(city.name);
-    setOpen(false);
-    onChange(cityValue(city));
+  const ufOptions = useMemo(() => searchUfs(uf ? "" : ufQuery).map((u) => ({ key: u, label: ufLabel(u) })), [uf, ufQuery]);
+  const cityOptions = useMemo(() => (cities && uf && query.trim() ? searchCities(cities, uf, query).map((c) => ({ key: c.id, label: c.name })) : []), [cities, uf, query]);
+
+  const pickUf = (next: string) => {
+    setUf(next);
+    setUfQuery(ufLabel(next));
+    setQuery("");
+    if (value) onChange("");
+    requestAnimationFrame(() => document.getElementById(id)?.focus());
   };
-  const type = (text: string) => {
-    setQuery(text);
-    setOpen(true);
-    setActive(0);
+  const typeUf = (text: string) => {
+    setUfQuery(text);
+    if (uf) { setUf(""); setQuery(""); }
     if (value) onChange("");
   };
-  const leave = () => {
-    setOpen(false);
-    if (!value && cities && uf) {
-      const city = exactCity(cities, uf, query);
-      if (city) pick(city);
-    }
+  const pickCity = (city: BrazilCity) => {
+    setQuery(city.name);
+    onChange(cityValue(city));
   };
-  const keys = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault();
-      setOpen(true);
-      if (options.length) setActive((i) => (i + (e.key === "ArrowDown" ? 1 : options.length - 1)) % options.length);
-    } else if (e.key === "Enter" && open && options[active]) {
-      e.preventDefault();
-      pick(options[active]);
-    } else if (e.key === "Escape") setOpen(false);
+  const typeCity = (text: string) => {
+    setQuery(text);
+    if (value) onChange("");
   };
-  const showList = open && query.trim() !== "" && !value;
 
   return (
     <div className={styles.city}>
-      <div>
-        <label className="t-label" htmlFor={`${id}-uf`}>Estado</label>
-        <select id={`${id}-uf`} className={styles.textarea} value={uf} onChange={(e) => { setUf(e.target.value); setQuery(""); onChange(""); requestAnimationFrame(() => document.getElementById(id)?.focus()); }}>
-          <option value="">Escolha</option>
-          {BRAZIL_UFS.map((u) => <option key={u} value={u}>{u} · {BRAZIL_UF_NAMES[u]}</option>)}
-        </select>
-      </div>
+      <Combobox
+        id={`${id}-uf`} label="Estado" query={ufQuery} onType={typeUf} options={ufOptions} onPick={pickUf} openWhenEmpty picked={Boolean(uf)}
+        onLeave={() => { const typed = !uf && exactUf(ufQuery); if (typed) pickUf(typed); }}
+        listLabel="Estados" empty={<>Nenhum estado com “{ufQuery.trim()}”.</>} placeholder="Digite o estado" />
       {failed && (
         <p className={`${styles.error} ${styles.cityFailed}`} role="alert">
           Não foi possível carregar a lista de cidades. <button type="button" className="underline underline-offset-4" onClick={retry}>Tentar de novo</button>
         </p>
       )}
-      <div className={styles.cityInput}>
-        <div className="flex items-center"><label className="t-label" htmlFor={id}>{label}</label>{tip}</div>
-        <input
-          id={id}
-          role="combobox"
-          aria-expanded={showList}
-          aria-controls={listId}
-          aria-autocomplete="list"
-          aria-activedescendant={showList && options[active] ? `${listId}-${active}` : undefined}
-          aria-invalid={Boolean(error)}
-          aria-describedby={describedBy}
-          value={query}
-          disabled={!uf}
-          onChange={(e) => type(e.target.value)}
-          onFocus={() => setOpen(true)}
-          onBlur={leave}
-          onKeyDown={keys}
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          placeholder={uf ? "Digite o nome da cidade" : "Escolha o estado primeiro"}
-          className={styles.textarea}
-        />
-        {showList && (
-          <ul id={listId} role="listbox" aria-label={`Cidades de ${BRAZIL_UF_NAMES[uf]}`} className={styles.cityList}>
-            {!cities ? <li className={styles.cityEmpty}>{failed ? "A lista de cidades não carregou." : "Carregando as cidades…"}</li> : options.length ? options.map((city, i) => (
-              // mousedown keeps the focus in the field, so the click still picks (on touch too).
-              <li key={city.id} id={`${listId}-${i}`} role="option" aria-selected={i === active} className={styles.cityOption} onMouseDown={(e) => e.preventDefault()} onClick={() => pick(city)}>
-                {city.name}
-              </li>
-            )) : <li className={styles.cityEmpty}>Nenhuma cidade com “{query.trim()}” em {BRAZIL_UF_NAMES[uf]}.</li>}
-          </ul>
-        )}
-      </div>
+      <Combobox
+        id={id} label={label} tip={tip} query={query} onType={typeCity} options={cityOptions} picked={Boolean(value)} invalid={Boolean(error)} describedBy={describedBy}
+        onPick={(key) => { const city = cities?.find((c) => c.id === key); if (city) pickCity(city); }}
+        onLeave={() => { const typed = !value && cities && uf ? exactCity(cities, uf, query) : null; if (typed) pickCity(typed); }}
+        listLabel={uf ? `Cidades de ${BRAZIL_UF_NAMES[uf]}` : "Cidades"}
+        empty={!uf ? "Escolha o estado primeiro." : !cities ? (failed ? "A lista de cidades não carregou." : "Carregando as cidades…") : <>Nenhuma cidade com “{query.trim()}” em {BRAZIL_UF_NAMES[uf]}.</>}
+        placeholder="Digite o nome da cidade" />
     </div>
   );
 }

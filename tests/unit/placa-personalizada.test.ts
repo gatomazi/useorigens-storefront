@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import sharp from "sharp";
 import { artworkFields, composeArtwork, fieldDisplay, fieldEdits, fieldsCopy, fieldsSummary, plateValue, typedPlate, validateArtworkFields } from "@/lib/customization/artwork";
 import { needsReview } from "@/lib/customization/review-words";
-import { cityValue, exactCity, parseCityValue, searchCities, type BrazilCity } from "@/lib/geo/brazil-cities";
+import { cityValue, exactCity, exactUf, parseCityValue, searchCities, searchUfs, ufLabel, type BrazilCity } from "@/lib/geo/brazil-cities";
 import { parseProjectFile, type PrintProject } from "@/lib/print-studio/model";
 import { renderProjectPng } from "@/lib/print-studio/render-server";
 
@@ -82,6 +82,17 @@ describe("city answers", () => {
     expect(searchCities(CITIES, "PR", "cur").map((c) => c.name)[0]).toBe("Curitiba");
     expect(searchCities(CITIES, "PR", "xyzw")).toEqual([]);
     expect(exactCity(CITIES, "PA", "belem")?.name).toBe("Belém");
+  });
+  test("the state is typed too: by abbreviation or name, accents aside", () => {
+    expect(searchUfs("pr")[0]).toBe("PR");
+    expect(searchUfs("para")).toEqual(["PA", "PB", "PR"]);
+    expect(searchUfs("sao")).toEqual(["SP"]);
+    expect(searchUfs("grande")).toEqual(["RN", "RS"]);
+    expect(searchUfs("")).toHaveLength(27);
+    expect(searchUfs("xx")).toEqual([]);
+    expect(["sc", "Santa Catarina", "santa catarina", "SC · Santa Catarina", "goias"].map(exactUf)).toEqual(["SC", "SC", "SC", "SC", "GO"]);
+    expect(exactUf("santa")).toBeNull();
+    expect(ufLabel("PR")).toBe("PR · Paraná");
   });
   test("reads well to the customer and the team", () => {
     expect(fieldDisplay({ input: "city" }, "Santa Terezinha de Itaipu/PR")).toBe("Santa Terezinha de Itaipu (PR)");

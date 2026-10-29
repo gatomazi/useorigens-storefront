@@ -53,3 +53,26 @@ export function exactCity(cities: readonly BrazilCity[], uf: string, query: stri
   const q = normalizeText(query);
   return q ? cities.find((c) => c.uf === uf && normalizeText(c.name) === q) ?? null : null;
 }
+
+/** A state as the field shows it once picked: "PR · Paraná". */
+export const ufLabel = (uf: string): string => `${uf} · ${BRAZIL_UF_NAMES[uf]}`;
+
+/**
+ * The states matching what was typed, by abbreviation or name, accents and case aside ("pr" finds Paraná first, "para" finds Pará, Paraíba and
+ * Paraná): the exact abbreviation first, then names starting with it, then names with a word starting with it. Empty: all 27.
+ */
+export function searchUfs(query: string): string[] {
+  const q = normalizeText(query);
+  if (!q) return BRAZIL_UFS;
+  const rank = (uf: string) => {
+    const name = normalizeText(BRAZIL_UF_NAMES[uf]);
+    return uf.toLowerCase() === q ? 0 : name.startsWith(q) ? 1 : ` ${name}`.includes(` ${q}`) ? 2 : -1;
+  };
+  return BRAZIL_UFS.map((uf) => ({ uf, r: rank(uf) })).filter((x) => x.r >= 0).sort((a, b) => a.r - b.r || BRAZIL_UF_NAMES[a.uf].localeCompare(BRAZIL_UF_NAMES[b.uf], "pt-BR")).map((x) => x.uf);
+}
+
+/** The state typed in full (abbreviation, name or "PR · Paraná"), so it counts without picking. */
+export function exactUf(query: string): string | null {
+  const q = normalizeText(query);
+  return BRAZIL_UFS.find((uf) => q === uf.toLowerCase() || q === normalizeText(BRAZIL_UF_NAMES[uf]) || q === normalizeText(ufLabel(uf))) ?? null;
+}
