@@ -158,7 +158,7 @@ export function ImageGrid({
   // Collection cards (product / banner): one per row on phones (a photo beside its text, a wide banner), the grid's columns from 768px.
   const cards = tiles.some((t) => t.format);
   const heading = (
-    <div className="mb-8 max-w-2xl lg:mb-12">
+    <div className="ground-plate mb-8 w-fit max-w-2xl lg:mb-12">
       <h2 id={headingId} className="t-h2">{title}</h2>
       {subtitle && <p className="t-body mt-3 text-ink-soft">{subtitle}</p>}
     </div>

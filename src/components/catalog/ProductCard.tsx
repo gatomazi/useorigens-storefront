@@ -21,7 +21,7 @@ import { PriceText } from "./PriceText";
 export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllHref, viewAllLabel, children }: { labelledBy: string; title: string; intro?: string; dark: boolean; viewAllHref?: string; viewAllLabel: string; children?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 pb-6 sm:pb-8">
-      <div className="max-w-2xl">
+      <div className="ground-plate max-w-2xl">
         <h2 id={labelledBy} className="t-h2">
           {title}
         </h2>
@@ -34,7 +34,7 @@ export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllH
           // control, not as a line of text, and fills only under the pointer.
           <a
             href={viewAllHref}
-            className={`group inline-flex h-11 items-center gap-2 border-2 px-4 text-[0.8125rem] font-bold uppercase tracking-[0.04em] transition-colors sm:h-12 ${dark ? "border-white/40 text-white hover:border-white hover:bg-white hover:text-ink" : "border-ink/25 text-ink hover:border-ink hover:bg-ink hover:text-white"}`}
+            className={`ground-solid group inline-flex h-11 items-center gap-2 border-2 px-4 text-[0.8125rem] font-bold uppercase tracking-[0.04em] transition-colors sm:h-12 ${dark ? "border-white/40 text-white hover:border-white hover:bg-white hover:text-ink" : "border-ink/25 text-ink hover:border-ink hover:bg-ink hover:text-white"}`}
           >
             {viewAllLabel}
             <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
