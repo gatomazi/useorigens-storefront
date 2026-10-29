@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FollowCard } from "@/components/admin/FollowCard";
 import { archivePageAction, createPageAction, duplicatePageAction } from "@/app/admin/actions";
 import { Flash } from "@/components/admin/Flash";
 import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
@@ -33,6 +34,7 @@ export default async function PagesScreen({ searchParams }: { searchParams: Prom
         <p className="a-muted mt-2 max-w-3xl">Hotpages (editoriais, como “Dia dos Pais”) e categorias-pai (páginas temáticas que organizam subcoleções). As duas usam as mesmas seções da home. Cada página é publicada sozinha: publicar uma página nunca mexe na home nem em outra página, e criar uma página não a torna pública.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
+      <FollowCard actor={actor} scope={scope} part="pages" doc={ws.doc} baseDoc={ws.baseDoc} rev={ws.record?.rev ?? null} to="/admin/paginas" />
       <RegionCopyPanel actor={actor} scope={scope} part="page" rev={rev} />
 
       <section className="a-card p-5" aria-labelledby="nova-pagina">

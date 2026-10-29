@@ -26,6 +26,7 @@ import { canEdit, type Actor } from "@/lib/admin/store/ports";
 import { collectionPageSlug, stateCategoryCollections, stateSubcategoriesInUse, stateSubcategoryChoice } from "@/lib/catalog/collection-source";
 import { getCatalog } from "@/lib/catalog/repository";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, type StatePageSection } from "@/lib/site-config/state-page-schema";
+import { FOLLOW_PARTS, FOLLOW_PART_LABELS, type FollowPart } from "@/lib/site-config/follow-schema";
 import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
@@ -472,6 +473,21 @@ export async function setStateRowDisplayAction(fd: FormData) {
   revalidatePath("/admin", "layout");
   if (!outcome.ok) back(to, { err: outcome.errors });
   back(`${to}#${anchor}`, { ok: grid ? "Essa linha passa a aparecer em grade, a partir de 1 produto (vale depois que você publicar)." : "Essa linha volta a ser carrossel, que precisa de 3 produtos (vale depois que você publicar)." });
+}
+
+const FOLLOW_RETURN: Record<FollowPart, string> = { home: "/admin/home", menu: "/admin/navegacao", statePage: "/admin/estados", pages: "/admin/paginas" };
+
+/** "Seguir a Sul" of one part, as a DRAFT (Norte / Centro-Oeste). The region's own content of that part is kept either way. */
+export async function setFollowAction(fd: FormData) {
+  const part = text(fd, "part");
+  const on = text(fd, "on") === "true";
+  if (!(FOLLOW_PARTS as readonly string[]).includes(part)) back("/admin", { err: ["Parte desconhecida."] });
+  const label = FOLLOW_PART_LABELS[part as FollowPart];
+  // Back to the screen the switch was on (the menu has two: Navegação and Coleções); only those, never an arbitrary path.
+  const from = text(fd, "to");
+  const to = from === "/admin/colecoes" ? from : FOLLOW_RETURN[part as FollowPart];
+  const ok = on ? `Rascunho salvo: ${label} passa a seguir a Sul. Publique para valer na loja.` : `Rascunho salvo: ${label} volta à configuração própria desta região. Publique para valer na loja.`;
+  return run(fd, { type: "set-follow", part: part as FollowPart, on }, ok, `${to}#seguir-sul`);
 }
 
 /** "Página do estado": shows or hides a section that is not built from collections ("Destaques", "Escolha o estilo", "Regiões e cidades"). */

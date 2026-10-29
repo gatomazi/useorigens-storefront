@@ -4,6 +4,8 @@ import { HEADER_ACTIONS, HEADER_ACTION_LABEL, headerActionsOf } from "../site-co
 import { podioEnabledIn } from "../site-config/podio-schema";
 import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkIncentiveText, inkThemeOf, INK_THEME_SURFACES, paletteOf } from "../site-config/ink-theme";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
+import { FOLLOW_PARTS, FOLLOW_PART_LABELS, followsPart } from "../site-config/follow-schema";
+import { REGIONS } from "../geo/regions";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
 import { kitTexts } from "../site-config/post-add-kit-schema";
@@ -13,13 +15,13 @@ import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "assistant" | "podio" | "ink-theme" | "post-add-kit"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "assistant" | "podio" | "ink-theme" | "post-add-kit" | "follow"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
 
 const EDITED_FIELDS: [keyof Section, string][] = [
-  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["featured", "produtos em destaque do hero"], ["featuredRotation", "alternância dos produtos do hero"], ["heroColors", "cores do lado do texto do hero"], ["count", "quantidade de estilos"], ["stateCovers", "banners dos estados"], ["nav", "menu do topo"], ["fallback", "alternativa sem imagem"], ["tiles", "blocos da grade"], ["grid", "layout da grade"], ["variant", "composição"],
+  ["title", "título"], ["subtitle", "subtítulo"], ["cta", "botão/link"], ["source", "fonte"], ["layout", "layout"], ["appearance", "aparência"], ["featured", "produtos em destaque do hero"], ["featuredRotation", "alternância dos produtos do hero"], ["heroColors", "cores do lado do texto do hero"], ["count", "quantidade de estilos"], ["stateCovers", "banners dos estados"], ["nav", "menu do topo"], ["fallback", "alternativa sem imagem"], ["tiles", "blocos da grade"], ["grid", "layout da grade"], ["variant", "composição"], ["regions", "regiões em que aparece"],
 ];
 
 /** Name of an INK collection for the publish screen (injected: this module stays pure). */
@@ -70,7 +72,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft), ...followChanges(published, draft));
   return changes;
 }
 
@@ -108,6 +110,16 @@ function stateRowsChanges(published: ScopeDoc, draft: ScopeDoc, nameOf: Collecti
   for (const r of newIn(nowGrids, wasGrids)) out.push({ kind: "edited", sectionId: "state-grids", text: `Página do estado: “${name(r)}” passa a aparecer em grade` });
   for (const r of newIn(wasGrids, nowGrids)) out.push({ kind: "edited", sectionId: "state-grids", text: `Página do estado: “${name(r)}” volta a ser carrossel` });
   return out;
+}
+
+/** A part that starts or stops following Sul ("Seguir a Sul"). Pure. */
+function followChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  return FOLLOW_PARTS.flatMap((part) => {
+    const now = followsPart(draft, part);
+    if (followsPart(published, part) === now || draft.scope === "global") return [];
+    const name = REGIONS[draft.scope].name;
+    return [{ kind: "follow" as const, sectionId: `follow-${part}`, text: `${FOLLOW_PART_LABELS[part]}: ${now ? `passa a seguir a Sul (a configuração própria de ${name} fica guardada)` : `deixa de seguir a Sul e volta à configuração própria de ${name}`}` }];
+  });
 }
 
 /** A state-page section switched on or off. Pure. */

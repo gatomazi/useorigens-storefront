@@ -18,8 +18,9 @@ import { validateTopBar, type TopBarConfig } from "./top-bar-schema";
 import { validatePostAddKit, type PostAddKitConfig } from "./post-add-kit-schema";
 import { validateAssistant, type AssistantConfig } from "./assistant-schema";
 import { validateStatePage, type StatePageConfig } from "./state-page-schema";
+import { validateFollow, type FollowPart } from "./follow-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
-import { REGIONS, regionMayUseStore, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { REGIONS, REGION_SLUGS, regionMayUseStore, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
 import { isProductSort, type ProductSort } from "../catalog/product-sort";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS, type ArticleKind } from "../umapenca/types";
 
@@ -290,6 +291,11 @@ export type Section = {
   grid?: GridLayout;
   /** Hero, state chooser, city styles and campaign only: their composition (`SECTION_VARIANTS`); absent = the original one. */
   variant?: SectionVariant;
+  /**
+   * The regions that show this section (`follow.ts`): a section of Sul's home is also the home of every region that follows Sul, so the owner may keep
+   * one for Sul only, or add one for Norte only. Absent = every region. Never on the hero, the footer or a page's opening (a page always has them).
+   */
+  regions?: RegionSlug[];
   appearance: Appearance;
 };
 
@@ -487,6 +493,11 @@ export type ScopeDoc = {
   assistant?: AssistantConfig;
   /** REGION only: the state-page sections switched off ("Destaques", "Escolha o estilo", "Regiões e cidades", `state-page-schema.ts`). Absent = all on. */
   statePage?: StatePageConfig;
+  /**
+   * REGION other than Sul: the parts it FOLLOWS from Sul's published document instead of its own ("Seguir a Sul", `follow-schema.ts`). Absent = all its
+   * own. The region's own content of a followed part stays stored and unused. Published with the region.
+   */
+  follow?: FollowPart[];
   /** REGION only: "Tema da INK" (`ink-theme-schema.ts`): how the INK product page, cart and checkout look, by preset. Absent = all off. Published with the region. */
   inkTheme?: InkThemeConfig;
   /**
@@ -843,6 +854,10 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       if (!isStr(cc.button, 24)) c.fail(`${path}.customizerCard.button`, "1..24 chars");
       if (cc.image !== undefined) checkMediaRef(c, `${path}.customizerCard.image`, cc.image);
     }
+  }
+  if (v.regions !== undefined) {
+    if (v.template === "hero" || v.template === "footer" || v.template === "page-hero") c.fail(`${path}.regions`, "the opening and the footer show in every region");
+    else if (!Array.isArray(v.regions) || v.regions.length === 0 || v.regions.some((r) => !(REGION_SLUGS as readonly unknown[]).includes(r)) || new Set(v.regions).size !== v.regions.length) c.fail(`${path}.regions`, "one or more regions, each at most once");
   }
   if (v.stateCovers !== undefined) {
     if (v.template !== "states" || !isRecord(v.stateCovers) || Object.keys(v.stateCovers).length > 27) c.fail(`${path}.stateCovers`, "state chooser only, at most one cover per state");
@@ -1307,6 +1322,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.statePage !== undefined) {
     const r = validateStatePage(input.statePage, sc, "doc.statePage");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.follow !== undefined) {
+    const r = validateFollow(input.follow, sc, "doc.follow");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.inkTheme !== undefined) {

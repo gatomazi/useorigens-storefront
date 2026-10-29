@@ -1,5 +1,7 @@
 "use client";
 
+import { REGIONS, REGION_SLUGS } from "@/lib/geo/regions";
+import { FOLLOW_SOURCE, REGION_TOKEN } from "@/lib/site-config/follow-schema";
 import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
 import { CollectionOrder, type OrderMember } from "@/components/admin/CollectionOrder";
@@ -196,7 +198,23 @@ export function SectionEditorForm({
           <label className="a-label" htmlFor="title">Título</label>
           {section.template === "hero" ? <textarea id="title" name="title" defaultValue={section.title} className="a-textarea" maxLength={120} rows={2} /> : <input id="title" name="title" defaultValue={section.title} className="a-input" maxLength={120} />}
           {section.template === "hero" && <p className="a-muted mt-1 text-[0.8125rem]">Uma quebra de linha vira a quebra do título.</p>}
+          {scope === FOLLOW_SOURCE && <p className="a-muted mt-1 text-[0.8125rem]">Use <code>{REGION_TOKEN}</code> onde deve entrar o nome da região (“Sul”, ou “Norte” e “Centro-Oeste” quando seguem a Sul).</p>}
         </div>
+        {scope === FOLLOW_SOURCE && section.template !== "hero" && section.template !== "footer" && section.template !== "page-hero" && (
+          <fieldset data-testid="section-regions">
+            <legend className="a-label">Aparece em</legend>
+            <input type="hidden" name="regions_field" value="1" />
+            <div className="flex flex-wrap gap-4">
+              {REGION_SLUGS.map((r) => (
+                <label key={r} className="flex items-center gap-2 text-[0.9375rem]">
+                  <input type="checkbox" name={`region_${r}`} defaultChecked={!section.regions || section.regions.includes(r)} />
+                  {REGIONS[r].name}
+                </label>
+              ))}
+            </div>
+            <p className="a-muted mt-1 text-[0.8125rem]">Vale para as regiões que seguem a Sul. Desmarque uma região para tirar esta seção só de lá; para trocar o conteúdo nela, duplique a seção e deixe cada cópia em uma região.</p>
+          </fieldset>
+        )}
         <div>
           <label className="a-label" htmlFor="subtitle">Subtítulo</label>
           <textarea id="subtitle" name="subtitle" defaultValue={section.subtitle} className="a-textarea" maxLength={300} />

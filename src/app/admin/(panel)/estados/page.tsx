@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { FollowCard, FollowFold } from "@/components/admin/FollowCard";
+import { followsPart } from "@/lib/site-config/follow-schema";
 import { Flash } from "@/components/admin/Flash";
 import { PodioCard } from "@/components/admin/PodioCard";
 import { StatePageCards } from "@/components/admin/StatePageCards";
@@ -42,6 +44,8 @@ export default async function StatePagesScreen({ searchParams }: { searchParams:
         <p className="a-muted mt-2 max-w-3xl">Cada estado de {scopeName(scope)} tem uma página (ex.: <code>{statePath(ufs[0])}</code>). Aqui você decide as <strong>seções</strong> da página, as <strong>categorias e subcategorias</strong> dos carrosséis e liga ou desliga <strong>O Pódio</strong>. A foto do topo vem do catálogo e não é editada no painel. Tudo é rascunho até <Link href="/admin/publicar" className="a-link">Publicar</Link>.</p>
       </div>
       <Flash ok={sp.ok} err={sp.err} />
+      <FollowCard actor={actor} scope={scope} part="statePage" doc={ws.doc} baseDoc={ws.baseDoc} rev={ws.record?.rev ?? null} to="/admin/estados" />
+      <FollowFold following={followsPart(ws.doc, "statePage")} scope={scope}>
 
       {!synced ? (
         <p className="a-flash err">As coleções desta loja ainda não foram sincronizadas, então não há como montar os carrosséis. Sincronize em <Link href="/admin/sincronizacao" className="a-link">Sincronização</Link>.</p>
@@ -74,6 +78,7 @@ export default async function StatePagesScreen({ searchParams }: { searchParams:
         </>
       )}
 
+      </FollowFold>
       <PodioCard scope={scope} rev={rev} draft={podioEnabledIn(ws.doc)} live={podioEnabledIn(ws.baseDoc)} />
     </div>
   );
