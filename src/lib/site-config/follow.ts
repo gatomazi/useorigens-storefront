@@ -10,7 +10,7 @@
  *        (a grid tile then leads to the region's home); state covers keep only the region's states; a personalization card is matched by the model's
  *        address. Collections are the same INK collections: in the single store each region already shows only its own products in them, and a
  *        product of another region (a hero card of Curitiba) is dropped when the public resolves it. Following the home, Sul's theme in use
- *        (Black Friday, Natal) comes with its sections and chrome, but the colours stay the region's own.
+ *        (Black Friday, Natal) comes with its sections, chrome and ground ("Fundo da home"), but the palette stays the region's own.
  *   3. Following the home, the region's own pictures and products (`ScopeDoc.regional`) go over Sul's sections: the structure is Sul's, the banners
  *      and the products of the opening, the states' covers and the grid's blocks can be the region's.
  *
@@ -141,7 +141,7 @@ export function followedDoc(doc: ScopeDoc, sul: ScopeDoc | undefined, canFollow:
     if (follows("pages")) next.pages = pages.map((p) => (own.includes(p) ? p : { ...p, sections: followedSections(p.sections, ctx) }));
 
     if (follows("home") && sul.home) {
-      next.home = { sections: followedSections(sul.home.sections, ctx, regionalOf(doc, sul)) };
+      next.home = { sections: followedSections(sul.home.sections, ctx, regionalOf(doc, sul)), ...(sul.home.backdrop ? { backdrop: structuredClone(sul.home.backdrop) } : {}) };
       // Sul's theme is its structure (sections and chrome), never its colours: the region keeps its own palette, the one it keeps for that theme
       // when it has one (`homeThemes`), else the one it uses.
       const name = homeThemeOf(sul);
@@ -181,7 +181,7 @@ export function followedDoc(doc: ScopeDoc, sul: ScopeDoc | undefined, canFollow:
     next.collections = collections;
   }
 
-  if (next.home) next.home = { sections: sectionsFor(next.home.sections, region) };
+  if (next.home) next.home = { ...next.home, sections: sectionsFor(next.home.sections, region) };
   if (next.pages) next.pages = next.pages.map((p) => withRegionName({ ...p, sections: sectionsFor(p.sections, region) }, region));
   return next;
 }

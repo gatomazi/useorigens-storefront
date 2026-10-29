@@ -16,7 +16,24 @@ na loja não muda até você escolher outro e publicar.
 | Seções novas | nenhuma | logo abaixo da abertura: a chamada "Natal em família, com o seu sobrenome." (botão para a personalização) e a vitrine "Para vestir na ceia." (coleção Natal) |
 | Produtos e fotos da abertura | os do tema em uso | os do tema em uso, até você trocar pelas fotos de Natal |
 
-O fundo das páginas não muda em nenhum dos dois. Assim os cards de produto e as outras páginas continuam legíveis.
+Nenhum dos dois muda o fundo da loja (a cor de página da paleta). Assim os cards de produto e as outras páginas continuam legíveis.
+
+### Fundo da home (opcional, por tema)
+
+Em **Home → Fundo da home**, logo abaixo da lista de seções, cada tema pode ter um fundo próprio só na home. É o mesmo
+"Fundo da página" das hotpages: uma cor, a cor do texto (clara ou escura) e, se quiser, uma imagem repetida por cima como
+pattern, com tamanho e intensidade. Por exemplo, na Black: preto #111111, texto claro e um pattern dourado em PNG com fundo
+transparente.
+
+- O fundo vale só para o tema em edição. Ele entra e sai junto com o tema em "Usar na loja": de volta ao Editorial, a home
+  volta ao fundo normal.
+- As seções sem fundo próprio (títulos, vitrines) ficam sobre o pattern. Os cards de produto pegam a cor do fundo, para o
+  pattern não passar por baixo do nome e do preço. As seções com foto, cor ou papel continuam com o delas. Num fundo escuro,
+  "Comece pelo seu estado" e "Sua cidade, do seu jeito" ficam sobre papel claro, porque não têm versão escura.
+- Um tema sazonal novo começa sempre no fundo normal, mesmo criado a partir de um tema com fundo (a abertura dele é pensada
+  para o fundo normal). Ligue o fundo depois, se quiser.
+- Norte e Centro-Oeste, quando seguem a home da Sul, mostram o mesmo fundo.
+- Texto claro sobre fundo claro, ou o contrário, impede a publicação, como nas páginas.
 
 A chamada da personalização só entra se o modelo `natal-em-familia` estiver ativo. A vitrine só entra se a coleção Natal
 estiver na loja. Nenhuma das duas entra repetida se a home já tiver uma.

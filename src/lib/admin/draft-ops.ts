@@ -75,6 +75,8 @@ export type DraftOp =
    * theme in use is left exactly as it was.
    */
   | { type: "in-home-theme"; theme: HomeThemeName; op: DraftOp }
+  /** The ground of the home theme ("Fundo da home": colour, text tone, optional pattern); `null` gives the home back the region's own ground. */
+  | { type: "set-home-backdrop"; backdrop: PageBackdrop | null }
   /** The short descriptions of the menu's collections, all at once (the panel's form). An empty list removes them. */
   | { type: "set-collection-descriptions"; descriptions: CollectionNote[] }
   /** The highlighted collections of the bar (button, text and line colours), all at once (the panel's form). An empty list removes them. */
@@ -244,6 +246,15 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     if (!back) return fail("the theme in use could not be restored");
     const check = validateScopeDoc(back);
     return check.ok ? { ok: true, doc: back, ...(r.focusId ? { focusId: r.focusId } : {}) } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-home-backdrop") {
+    if (doc.scope === "global" || !doc.home) return fail("only a region's home has a ground");
+    const home: NonNullable<ScopeDoc["home"]> = { ...doc.home };
+    if (op.backdrop) home.backdrop = op.backdrop;
+    else delete home.backdrop;
+    const next: ScopeDoc = { ...doc, home };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }
   if (op.type === "set-collection-descriptions") {
     if (doc.scope === "global") return fail("global has no collections");

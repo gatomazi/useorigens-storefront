@@ -1400,6 +1400,13 @@ export async function savePageBackdropAction(fd: FormData) {
   return runRaw(fd, { type: "update-page", id, patch: { backdrop } }, backdrop ? "Fundo da página salvo no rascunho." : "A página voltou ao fundo da região (rascunho).", here);
 }
 
+/** "Fundo da home" of the theme being edited (the same form as a page's), or back to the region's ground when switched off. */
+export async function saveHomeBackdropAction(fd: FormData) {
+  const { backdrop, problems } = parsePageBackdrop(fd);
+  if (problems.length > 0) back("/admin/home", { err: problems });
+  return runRaw(fd, { type: "set-home-backdrop", backdrop }, backdrop ? "Fundo da home salvo no rascunho deste tema." : "A home deste tema voltou ao fundo da região (rascunho).", "/admin/home");
+}
+
 export async function duplicatePageAction(fd: FormData) {
   return runRaw(fd, { type: "duplicate-page", id: text(fd, "id") }, "Página duplicada como rascunho.", "/admin/paginas", (id) => `/admin/paginas/${id}`);
 }

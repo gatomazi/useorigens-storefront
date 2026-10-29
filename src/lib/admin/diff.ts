@@ -43,12 +43,16 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // A theme that is not on the store (kept) is published with the region too: say what changed in it, in one line.
   for (const name of HOME_THEMES) {
     if (name === themeNow) continue;
-    const was = name === themeWas ? { sections: published.home?.sections ?? [], ...(published.theme ? { theme: published.theme } : {}) } : published.homeThemes?.[name];
+    const was = name === themeWas ? { sections: published.home?.sections ?? [], ...(published.home?.backdrop ? { backdrop: published.home.backdrop } : {}), ...(published.theme ? { theme: published.theme } : {}) } : published.homeThemes?.[name];
     const now = draft.homeThemes?.[name];
     if (!now || json(was) === json(now)) continue;
-    const parts = !was ? ["criado"] : [json(was.sections) !== json(now.sections) ? "seções alteradas" : "", json(was.theme) !== json(now.theme) ? "cores alteradas" : ""].filter(Boolean);
+    const parts = !was ? ["criado"] : [json(was.sections) !== json(now.sections) ? "seções alteradas" : "", json(was.backdrop) !== json(now.backdrop) ? "fundo da home alterado" : "", json(was.theme) !== json(now.theme) ? "cores alteradas" : ""].filter(Boolean);
     changes.push({ kind: "theme", sectionId: `home-theme:${name}`, text: `Tema ${HOME_THEME_LABEL[name]} (fora da loja): ${parts.join(" e ")}` });
   }
+  // The ground of the theme in use ("Fundo da home"), against the same theme as published.
+  const groundWas = sameTheme.home?.backdrop;
+  const groundNow = draft.home?.backdrop;
+  if (json(groundWas) !== json(groundNow)) changes.push({ kind: "theme", sectionId: "home-ground", text: groundNow ? `Fundo da home: ${groundNow.color}${groundNow.pattern ? " com pattern" : ""}${groundWas ? " (alterado)" : ""}` : "Fundo da home: volta ao fundo da região" });
   const beforeIds = new Set(before.map((s) => s.id));
   const afterIds = new Set(after.map((s) => s.id));
   for (const s of after) if (!beforeIds.has(s.id)) changes.push({ kind: "added", sectionId: s.id, text: `Nova seção "${label(s)}"` });

@@ -67,8 +67,8 @@ export type HomeThemeName = (typeof HOME_THEMES)[number];
 export const homeThemeOf = (doc: Pick<ScopeDoc, "homeTheme"> | undefined): HomeThemeName => doc?.homeTheme ?? "original";
 /** Whether a theme has the editorial chrome (the strip and the footer on the palette's main colour): every theme but the original. */
 export const hasEditorialChrome = (name: HomeThemeName): boolean => name !== "original";
-/** A theme not in use: its sections and its palette, exactly as the theme in use keeps them in `home.sections` and `theme`. */
-export type KeptHomeTheme = { sections: Section[]; theme?: ThemeConfig };
+/** A theme not in use: its sections, its ground and its palette, exactly as the theme in use keeps them in `home.sections`, `home.backdrop` and `theme`. */
+export type KeptHomeTheme = { sections: Section[]; backdrop?: PageBackdrop; theme?: ThemeConfig };
 
 export type PageKind = "hotpage" | "categoryLanding";
 export const PAGE_KINDS: readonly PageKind[] = ["hotpage", "categoryLanding"];
@@ -359,7 +359,7 @@ export const MENU_HIGHLIGHT_KEYS = ["background", "text", "underline"] as const;
  */
 export type PageSeo = { title?: string; description?: string; ogImage?: MediaRef; indexable: boolean };
 /**
- * A page's own ground, for a themed page (Black Friday, Natal…): a colour under every section and, optionally, a picture repeated over it as a pattern
+ * A page's own ground, for a themed page or home theme (Black Friday, Natal…): a colour under every section and, optionally, a picture repeated over it as a pattern
  * (always decorative). A section with a surface of its own (a photo, a colour, paper) keeps painting it. `tone` is the ground's lightness, the same word
  * the sections use: "light" = dark text (the store's usual look), "dark" = light text. `size` is the width of one repeat in CSS pixels; `opacity` lets the
  * pattern sit softly over the colour.
@@ -448,7 +448,8 @@ export type ScopeDoc = {
   schemaVersion: 1;
   scope: Scope;
   tracking: TrackingConfig;
-  home?: { sections: Section[] };
+  /** `backdrop`: the ground of the theme in use ("Fundo da home"), the same as a page's; absent = the region's own ground. It goes with its theme. */
+  home?: { sections: Section[]; backdrop?: PageBackdrop };
   /**
    * Regions other than Sul: is the region publicly LAUNCHED (reachable in the storefront, listed in the navigation)? A region can be fully
    * editable, drafted and previewed in the CMS long before that. Absent/false = still in preview. Sul is always launched and ignores this.
@@ -1088,6 +1089,11 @@ export function validatePage(input: unknown, scope: Scope, path = "page"): Valid
   if (isRecord(input) && Array.isArray(input.sections)) checkRegionRules(c, path, input.sections, scope);
   return c.errors.length === 0 ? { ok: true, value: input as Page } : { ok: false, errors: c.errors };
 }
+export function validatePageBackdrop(input: unknown, path = "backdrop"): ValidationResult<PageBackdrop> {
+  const c = new Collector();
+  checkPageBackdrop(c, path, input);
+  return c.errors.length === 0 ? { ok: true, value: input as PageBackdrop } : { ok: false, errors: c.errors };
+}
 export function validateCustomizer(input: unknown, scope: Scope, path = "customizer"): ValidationResult<Customizer> {
   const c = new Collector();
   checkCustomizer(c, path, input);
@@ -1432,6 +1438,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   if (input.home !== undefined) {
     if (sc === "global") c.fail("doc.home", "global has no home in V1");
     checkHomeSections(c, "doc.home.sections", isRecord(input.home) ? input.home.sections : undefined, sc);
+    if (isRecord(input.home) && input.home.backdrop !== undefined) checkPageBackdrop(c, "doc.home.backdrop", input.home.backdrop);
   }
   if (input.homeTheme !== undefined && (sc === "global" || input.homeTheme === "original" || !(HOME_THEMES as readonly unknown[]).includes(input.homeTheme))) c.fail("doc.homeTheme", "a region's home theme: editorial, black or natal (absent = original)");
   if (input.homeThemes !== undefined) {
@@ -1447,7 +1454,8 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
             const r = validateTheme(kept.theme, sc, `doc.homeThemes.${name}.theme`);
             if (!r.ok) for (const e of r.errors) c.fail(`doc.homeThemes.${name}.theme`, e);
           }
-          if (isRecord(kept)) for (const key of Object.keys(kept)) if (key !== "sections" && key !== "theme") c.fail(`doc.homeThemes.${name}.${key}`, "unknown field");
+          if (isRecord(kept) && kept.backdrop !== undefined) checkPageBackdrop(c, `doc.homeThemes.${name}.backdrop`, kept.backdrop);
+          if (isRecord(kept)) for (const key of Object.keys(kept)) if (key !== "sections" && key !== "backdrop" && key !== "theme") c.fail(`doc.homeThemes.${name}.${key}`, "unknown field");
         }
       }
     }
@@ -1504,7 +1512,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   return c.errors.length === 0 ? { ok: true, value: input as unknown as ScopeDoc } : { ok: false, errors: c.errors };
 }
 
-/** Every media reference of a document (sections of the home and of the pages, covers, cards, SEO image, page pattern, models): what a publish must resolve into the media table. */
+/** Every media reference of a document (sections of the home and of the pages, covers, cards, SEO image, page and home pattern, models): what a publish must resolve into the media table. */
 export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
   if (!doc) return [];
   const out: MediaRef[] = [];
@@ -1512,6 +1520,7 @@ export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
     for (const r of [s.appearance?.image?.mobile, s.appearance?.image?.desktop, ...Object.values(s.stateCovers ?? {}), ...(s.featured ?? []).map((f) => f.image), s.customizerCard?.image, ...(s.tiles ?? []).flatMap((t) => [t.image, t.imageMobile])]) if (r) out.push(r);
   };
   for (const s of doc.home?.sections ?? []) ofSection(s);
+  if (doc.home?.backdrop?.pattern) out.push(doc.home.backdrop.pattern.image);
   for (const p of doc.pages ?? []) {
     if (p.seo.ogImage) out.push(p.seo.ogImage);
     if (p.backdrop?.pattern) out.push(p.backdrop.pattern.image);

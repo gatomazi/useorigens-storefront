@@ -2,7 +2,9 @@ import Link from "next/link";
 import { HomeThemeCard } from "@/components/admin/HomeThemeCard";
 import { canEdit } from "@/lib/admin/store/ports";
 import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
-import { addCollectionSection, addCustomizerSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, setSectionActive } from "@/app/admin/actions";
+import { addCollectionSection, addCustomizerSection, addStructuredSection, addUmaPencaSection, duplicateSection, initRegionHomeAction, removeSection, reorderSections, saveHomeBackdropAction, setSectionActive } from "@/app/admin/actions";
+import { PageBackdropEditor } from "@/components/admin/PageBackdropEditor";
+import { listMedia } from "@/lib/admin/media";
 import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
 import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
@@ -67,6 +69,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
   const umaPencaCounts = Object.fromEntries(ARTICLE_KINDS.map((k) => [k, umaPenca?.articles.filter((a) => a.kind === k && isArticleOfRegion(a, scope)).length ?? 0])) as Record<(typeof ARTICLE_KINDS)[number], number>;
   const anySelectable = entries.some((e) => e.selectable);
   const problems = collectionProblems(ws.doc);
+  const media = await listMedia();
 
   return (
     <div className="space-y-6">
@@ -157,6 +160,14 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
             })}
         />
       </div>
+      )}
+
+      {ws.doc.home && (
+      <section className="a-card p-5" aria-labelledby="fundo-home">
+        <h2 id="fundo-home" className="a-h2">Fundo da home · tema {HOME_THEME_LABEL[ws.editingTheme]}</h2>
+        <p className="a-muted mt-1 max-w-3xl text-[0.875rem]">Uma cor para a home inteira e, se quiser, uma imagem repetida por cima como pattern, como no fundo das páginas. Vale só para este tema: ao trocar de tema em “Usar na loja”, a home passa a usar o fundo do outro tema. As seções com fundo próprio (foto, cor, papel) continuam com o delas.</p>
+        <PageBackdropEditor target="home" backdrop={ws.doc.home.backdrop} media={media} action={saveHomeBackdropAction} hidden={<><input type="hidden" name="rev" value={rev ?? "null"} /><input type="hidden" name="scope" value={scope} /></>} />
+      </section>
       )}
 
       <p className="a-card flex flex-wrap items-center justify-between gap-3 p-4 text-[0.9375rem]" data-testid="home-podio-note">
