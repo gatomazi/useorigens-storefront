@@ -22,7 +22,7 @@ import { validatePromotions } from "./promotions-schema";
 import { validateTopBar } from "./top-bar-schema";
 import { validatePostAddKit } from "./post-add-kit-schema";
 import { validateAssistant } from "./assistant-schema";
-import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
+import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validatePageBackdrop, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PageBackdrop, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
 export type SanitizeResult = { bundle: PublishedBundle | null; diagnostics: string[] };
 
@@ -166,7 +166,15 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   }
   const { pages, customizers } = sanitizePagesAndModels(scope, raw, media, diagnostics);
   if (sections) sections = withoutOrphanCards(sections, customizers, scope, diagnostics);
-  const candidate = { ...raw, home: sections ? { sections } : undefined, pages, customizers } as unknown as ScopeDoc;
+  // The home's ground is cosmetic: an invalid one is dropped (the home keeps the region's ground); a pattern the table does not know is simply not drawn.
+  let backdrop: PageBackdrop | undefined;
+  if (sections && isRecord(raw.home) && raw.home.backdrop !== undefined) {
+    const r = validatePageBackdrop(raw.home.backdrop, `${scope}.home.backdrop`);
+    if (r.ok) backdrop = r.value;
+    else diagnostics.push(`${scope}: home backdrop is invalid and was ignored (${r.errors[0]})`);
+    if (backdrop?.pattern && !(backdrop.pattern.image.assetId in media)) diagnostics.push(`${scope}: home pattern "${backdrop.pattern.image.assetId}" is not in the media table (the ground renders without it)`);
+  }
+  const candidate = { ...raw, home: sections ? { sections, ...(backdrop ? { backdrop } : {}) } : undefined, pages, customizers } as unknown as ScopeDoc;
   // Navigation and theme are optional and cosmetic: an invalid one is dropped (the region keeps its current look and the default menu), never the region.
   // Promotions too: an invalid list means no button (never a broken region, never a half-checked coupon).
   // The cards' setting as well: an invalid one means each section decides, as before (never the global scope, which carries the tracking, back to the seed).

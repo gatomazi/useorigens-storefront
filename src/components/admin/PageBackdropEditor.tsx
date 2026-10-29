@@ -9,11 +9,12 @@ import { PATTERN_OPACITY, PATTERN_SIZE, type PageBackdrop } from "@/lib/site-con
 const isHex = (v: string) => /^#[0-9a-fA-F]{6}$/.test(v);
 
 /**
- * "Fundo da página" of a hotpage or landing (a themed page: Black Friday, Natal…): a colour, the text tone it calls for and, optionally, a picture
+ * "Fundo da página" of a hotpage or landing, or "Fundo da home" of a home theme (Black Friday, Natal…): a colour, the text tone it calls for and, optionally, a picture
  * repeated as a pattern. The preview on the right is drawn with the same rules as the store (colour, then the pattern at its size and intensity, then
  * the text); the readability check is the one the publish applies. Saving writes the draft only.
  */
-export function PageBackdropEditor({ backdrop, media, hidden, action }: { backdrop?: PageBackdrop; media: MediaOption[]; hidden: React.ReactNode; action: (fd: FormData) => Promise<void> }) {
+export function PageBackdropEditor({ backdrop, media, hidden, action, target = "page" }: { backdrop?: PageBackdrop; media: MediaOption[]; hidden: React.ReactNode; action: (fd: FormData) => Promise<void>; /** "home": the ground of the home theme being edited. */ target?: "page" | "home" }) {
+  const subject = target === "home" ? { on: "Usar um fundo próprio na home deste tema", off: "Desligado: a home deste tema usa o fundo normal da loja desta região.", whole: "toda a home" } : { on: "Usar um fundo próprio nesta página", off: "Desligado: a página usa o fundo normal da loja desta região.", whole: "toda a página" };
   const [on, setOn] = useState(Boolean(backdrop));
   const [color, setColor] = useState<string>(backdrop?.color ?? PAGE_BACKDROP_SUGGESTION.color);
   const [tone, setTone] = useState<"light" | "dark">(backdrop?.tone ?? PAGE_BACKDROP_SUGGESTION.tone);
@@ -34,9 +35,9 @@ export function PageBackdropEditor({ backdrop, media, hidden, action }: { backdr
     <form action={action} className="mt-3 space-y-4">
       {hidden}
       <label className="flex items-center gap-2 font-bold">
-        <input type="checkbox" name="backdrop_on" checked={on} onChange={(e) => setOn(e.target.checked)} /> Usar um fundo próprio nesta página
+        <input type="checkbox" name="backdrop_on" checked={on} onChange={(e) => setOn(e.target.checked)} /> {subject.on}
       </label>
-      {!on && <p className="a-muted text-[0.875rem]">Desligado: a página usa o fundo normal da loja desta região.</p>}
+      {!on && <p className="a-muted text-[0.875rem]">{subject.off}</p>}
       {on && (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <div className="space-y-4">
@@ -62,7 +63,7 @@ export function PageBackdropEditor({ backdrop, media, hidden, action }: { backdr
                 {media.some((m) => m.kind === "upload") && <optgroup label="Enviadas">{media.filter((m) => m.kind === "upload").map((m) => <option key={m.assetId} value={m.assetId}>{m.label} ({m.width}×{m.height})</option>)}</optgroup>}
                 <optgroup label="Banners do projeto">{media.filter((m) => m.kind === "banner").map((m) => <option key={m.assetId} value={m.assetId}>{m.label}</option>)}</optgroup>
               </select>
-              <p className="a-muted mt-1 text-[0.8125rem]">A imagem se repete lado a lado por toda a página. Funciona melhor um PNG/WebP com fundo transparente ou um desenho que encaixe nas bordas. Envie em Mídia. Tamanho recomendado: quadrada, o dobro do tamanho de cada repetição ({size * 2}×{size * 2} px para {size}px).</p>
+              <p className="a-muted mt-1 text-[0.8125rem]">A imagem se repete lado a lado por {subject.whole}. Funciona melhor um PNG/WebP com fundo transparente ou um desenho que encaixe nas bordas. Envie em Mídia. Tamanho recomendado: quadrada, o dobro do tamanho de cada repetição ({size * 2}×{size * 2} px para {size}px).</p>
             </div>
             {pattern && (
               <div className="grid gap-4 sm:grid-cols-2">

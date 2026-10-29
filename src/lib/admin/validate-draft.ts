@@ -171,7 +171,8 @@ export function pageGroundProblems(page: Page): string[] {
 
 /** Blocking readability problems of the ACTIVE sections (warnings are shown in the editor but never stop a publish). */
 export function readabilityProblems(doc: ScopeDoc): string[] {
-  return (doc.home?.sections ?? []).filter((s) => s.active).flatMap((s) => sectionReadability(s).filter((i) => i.level === "blocking").map((i) => `"${s.title ?? s.id}": ${i.message}`));
+  const ground = doc.home?.backdrop ? groundReadability(doc.home.backdrop).filter((i) => i.level === "blocking").map((i) => `Fundo da home: ${i.message}`) : [];
+  return [...ground, ...(doc.home?.sections ?? []).filter((s) => s.active).flatMap((s) => sectionReadability(s).filter((i) => i.level === "blocking").map((i) => `"${s.title ?? s.id}": ${i.message}`))];
 }
 
 /** Why a personalization model cannot be published (empty = it can): its collection must be real, in the region's own store and, when internal, enabled. */

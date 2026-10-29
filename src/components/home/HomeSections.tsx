@@ -70,12 +70,15 @@ export function HomeSections({
   const { showcase } = home;
   const cityPath = showcase ? `/${region}/${showcase.city.uf.toLowerCase()}/${showcase.city.slug}` : null;
   const editorial = { terra: home.terra, recreations: home.recreations, lenda: home.feitoParaVoce, dizeres: home.fala, ddd: home.ddd };
-  // A page with a ground of its own (PageGround): text with no surface of its own follows that ground. On a DARK ground, a section that paints a light
-  // surface goes back to dark text (`on-light`), and the two sections that have no dark version (city styles, states) sit on paper.
-  const pageTone = page?.backdrop?.tone;
+  // A page or a home theme with a ground of its own (PageGround): text with no surface of its own follows that ground. On a DARK ground, a section that
+  // paints a light surface goes back to dark text (`on-light`), and the two sections that have no dark version (city styles, states) sit on paper.
+  const ground = page ? page.backdrop : doc.home?.backdrop;
+  const pageTone = ground?.tone;
   // The hero's "explore by state" link points at the state chooser of THIS page, and only when there is one (never a dead anchor).
   const statesAnchor = sections.find((x) => x.template === "states")?.anchor ?? null;
   const darkPage = pageTone === "dark";
+  // A section back on a light surface: dark text, and cards on their own surface again (not the ground's colour, `--card-fill`, under dark text).
+  const onLightSurface = "on-light [--card-fill:transparent]";
   const paperLayer = <div aria-hidden="true" className="paper absolute inset-0 -z-10" />;
 
   const rendered = (
@@ -157,7 +160,7 @@ export function HomeSections({
               );
             }
             return (
-              <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className={`relative isolate overflow-hidden ${darkPage ? "on-light" : ""}`}>
+              <section key={s.id} id={s.anchor} aria-labelledby={s.headingId} className={`relative isolate overflow-hidden ${darkPage ? onLightSurface : ""}`}>
                 {visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : paperLayer}
                 <div className="wrap py-14 lg:py-24">{content}</div>
               </section>
@@ -173,7 +176,7 @@ export function HomeSections({
             return (
               <Fragment key={s.id}>
                 {s.variant === "strip" ? (
-                  <StateStrip region={region} states={states} title={s.title ?? "Escolha o seu estado"} subtitle={s.subtitle} anchor={s.anchor} headingId={s.headingId} backdrop={backdrop} className={darkPage ? "on-light" : undefined} />
+                  <StateStrip region={region} states={states} title={s.title ?? "Escolha o seu estado"} subtitle={s.subtitle} anchor={s.anchor} headingId={s.headingId} backdrop={backdrop} className={darkPage ? onLightSurface : undefined} />
                 ) : (
                 <StateCards
                   region={region}
@@ -183,7 +186,7 @@ export function HomeSections({
                   anchor={s.anchor}
                   headingId={s.headingId}
                   backdrop={backdrop}
-                  className={darkPage ? "on-light" : undefined}
+                  className={darkPage ? onLightSurface : undefined}
                   covers={resolveStateCovers(s, media)}
                 />
                 )}
@@ -303,7 +306,7 @@ export function HomeSections({
       })}
     </>
   );
-  return page?.backdrop ? <PageGround backdrop={page.backdrop} media={media}>{rendered}</PageGround> : rendered;
+  return ground ? <PageGround backdrop={ground} media={media}>{rendered}</PageGround> : rendered;
 }
 
 function CarouselSection({

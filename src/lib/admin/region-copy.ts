@@ -205,7 +205,7 @@ export function buildRegionCopy(input: { source: ScopeDoc; destination: ScopeDoc
       kept.add(collectionCopyKey(ref));
     }
     if (arrangements.length) next.collections = { ...next.collections, enabled: next.collections?.enabled ?? [], arrangements };
-    next.home = { sections: adaptSections(source.home.sections) };
+    next.home = { sections: adaptSections(source.home.sections), ...(source.home.backdrop ? { backdrop: structuredClone(source.home.backdrop) } : {}) };
     summary.push(`Substituir a home de ${REGIONS[to].name} por ${source.home.sections.length} seções de ${REGIONS[from].name}, na mesma ordem.`, ...source.home.sections.map((s) => `${s.title?.replace(/\n/g, " ") ?? s.anchor}${s.active ? "" : " (oculta)"}`));
   } else if (part === "navigation" || part === "collection-menu") {
     if (part === "navigation") {
