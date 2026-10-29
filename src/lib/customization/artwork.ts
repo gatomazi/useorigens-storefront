@@ -41,6 +41,20 @@ function applyCase(value: string, textCase: TextSlot["textCase"]) {
 
 const PARTICLE_START = /^d[ao]s?\s+/i; // da, das, do, dos: "de", "di" e "du" fazem parte de sobrenomes como De Lucca e Di Napoli
 
+/**
+ * A plate as it is typed: 3 letters, then 4 digits, the hyphen put in after the letters. A digit where a letter goes (or a letter where a digit
+ * goes) is dropped, so "1TO2M3" becomes "TOM-3" and the field never holds the wrong kind of character.
+ */
+export function typedPlate(raw: string): string {
+  let letters = "";
+  let digits = "";
+  for (const ch of raw.toUpperCase()) {
+    if (letters.length < 3 && /[A-Z]/.test(ch)) letters += ch;
+    else if (letters.length === 3 && digits.length < 4 && /\d/.test(ch)) digits += ch;
+  }
+  return digits || raw.includes("-") && letters.length === 3 ? `${letters}-${digits}` : letters;
+}
+
 /** "tom 1996", "TOM1996" or "tom-1996" → "TOM-1996"; null when it is not 3 letters and 4 digits (the old grey plate). */
 export function plateValue(raw: string): string | null {
   const m = /^([A-Z]{3})(\d{4})$/.exec(raw.toUpperCase().replace(/[^A-Z0-9]/g, ""));
@@ -57,7 +71,8 @@ function slotValue(slot: TextSlot, raw: string) {
     const city = parseCityValue(value);
     return city ? `${city.uf} - ${city.name}` : "";
   }
-  if (slot.input === "plate") return plateValue(value) ?? "";
+  // An unfinished plate shows as typed ("ABC-12"), so the preview follows the customer; only a full one is accepted.
+  if (slot.input === "plate") return plateValue(value) ?? typedPlate(value);
   return slot.dropParticle ? value.replace(PARTICLE_START, "") : value;
 }
 
@@ -92,6 +107,11 @@ export function fieldHint(field: Pick<ArtworkField, "input">): string {
   if (field.input === "city") return "Escolha o estado e comece a digitar o nome da cidade. Toque na cidade certa na lista.";
   if (field.input === "plate") return "3 letras e 4 números, como numa placa antiga: por exemplo, as suas iniciais e o ano em que você nasceu.";
   return SURNAME_HINT;
+}
+/** What a field always shows under it (not behind the "i"): the plate's shape. */
+export function fieldNote(field: Pick<ArtworkField, "input">): string | null {
+  if (field.input === "plate") return "3 letras e 4 números";
+  return null;
 }
 /** Words, with particles kept with the next word ("dos Santos"), split into at most `maxLines` lines of balanced length. */
 function breakLines(text: string, maxLines: number) {

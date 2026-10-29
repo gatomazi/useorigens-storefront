@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import sharp from "sharp";
-import { artworkFields, composeArtwork, fieldDisplay, fieldEdits, fieldsCopy, fieldsSummary, plateValue, validateArtworkFields } from "@/lib/customization/artwork";
+import { artworkFields, composeArtwork, fieldDisplay, fieldEdits, fieldsCopy, fieldsSummary, plateValue, typedPlate, validateArtworkFields } from "@/lib/customization/artwork";
 import { needsReview } from "@/lib/customization/review-words";
 import { cityValue, exactCity, parseCityValue, searchCities, type BrazilCity } from "@/lib/geo/brazil-cities";
 import { parseProjectFile, type PrintProject } from "@/lib/print-studio/model";
@@ -41,6 +41,10 @@ describe("plate answers", () => {
   test("letters and digits in any shape become ABC-1234; anything else is refused", () => {
     expect(["tom1996", "TOM-1996", " tom 1996 ", "t.o.m-1-9-9-6"].map(plateValue)).toEqual(["TOM-1996", "TOM-1996", "TOM-1996", "TOM-1996"]);
     expect(["TO-1996", "TOMA-196", "1996-TOM", "TOM-19967", "ÇÃO-1996", ""].map(plateValue)).toEqual([null, null, null, null, null, null]);
+  });
+  test("typing keeps letters where letters go and digits where digits go, and the preview follows", () => {
+    expect(["a", "abc", "abc1", "ABC-", "1t2o3m", "tom1996", "tom19967", "TOM-AZI", "abcd1234", "ab12c"].map(typedPlate)).toEqual(["A", "ABC", "ABC-1", "ABC-", "TOM", "TOM-1996", "TOM-1996", "TOM-", "ABC-1234", "ABC"]);
+    expect(fieldEdits(BASE, { cidade: "Belém/PA", placa: "ABC-12" }).map((e) => e.text)).toEqual(["PA - BELÉM", "ABC-12"]);
   });
   test("the server keeps the canonical plate", () => {
     const ok = validateArtworkFields(BASE, "t", { cidade: "Belém/PA", placa: "bel 1616" }, { cityExists: exists });

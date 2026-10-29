@@ -1,6 +1,6 @@
 "use client";
 
-import { artworkFields, artworkFonts, editableTexts, fieldHint, fieldsCopy, type ArtworkEdit, type ArtworkField } from "@/lib/customization/artwork";
+import { artworkFields, artworkFonts, editableTexts, fieldHint, fieldNote, fieldsCopy, typedPlate, type ArtworkEdit, type ArtworkField } from "@/lib/customization/artwork";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { fontFamilyId, groupFontOptions, preferredFontVariant } from "@/lib/print-studio/font-options";
 import type { ReactNode } from "react";
@@ -48,12 +48,6 @@ export function ArtworkEditor({ base, edits, onChange, errors, uid }: { base: Pr
   );
 }
 
-/** A plate as it is typed: capitals, the hyphen after the 3 letters, at most "ABC-1234" (the server checks letters and digits). */
-const typedPlate = (raw: string) => {
-  const chars = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
-  return chars.length > 3 ? `${chars.slice(0, 3)}-${chars.slice(3)}` : chars;
-};
-
 /**
  * The fields of a base with text slots: the surname, or a plate and a city. How to fill each sits behind an "i" (and is the field's description
  * for screen readers); a free text's counter shows only near the limit. With a single field the legend already names it, so its label is for
@@ -76,9 +70,10 @@ export function ArtworkFields({ base, values, onChange, errors, uid, legend, com
         const value = values[field.id] ?? "";
         const count = [...value].length;
         const set = (next: string) => onChange({ ...values, [field.id]: next });
+        const note = fieldNote(field);
         const help = (
           <div className={styles.help} id={`${id}-help`}>
-            {error ? <span className={styles.error} role="alert">{error}</span> : <span className="sr-only">{fieldHint(field)}</span>}
+            {error ? <span className={styles.error} role="alert">{error}</span> : note ? <span>{note}</span> : <span className="sr-only">{fieldHint(field)}</span>}
             {!field.input && count >= field.maxLength - 5 && <span className={`ml-auto ${count > field.maxLength ? styles.error : ""}`}>{count}/{field.maxLength}</span>}
           </div>
         );
@@ -92,7 +87,8 @@ export function ArtworkFields({ base, values, onChange, errors, uid, legend, com
           <div key={field.id} className={styles.textGroup}>
             <div className={!compact && single ? "sr-only" : "flex items-center"}><label className="t-label" htmlFor={id}>{field.label}</label>{single ? compact && tip : tipFor(field)}</div>
             {field.input === "plate"
-              ? <input id={id} value={value} onChange={(e) => set(typedPlate(e.target.value))} maxLength={8} autoComplete="off" autoCorrect="off" autoCapitalize="characters" spellCheck={false} placeholder={`Ex.: ${field.example}`} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />
+              // Letters, then digits: the phone keyboard turns numeric once the 3 letters are in.
+              ? <input id={id} value={value} onChange={(e) => set(typedPlate(e.target.value))} maxLength={8} inputMode={/^[A-Z]{3}/.test(value) ? "numeric" : "text"} autoComplete="off" autoCorrect="off" autoCapitalize="characters" spellCheck={false} placeholder={`Ex.: ${field.example}`} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />
               : <input id={id} value={value} onChange={(e) => set(e.target.value)} maxLength={field.maxLength} autoComplete="family-name" autoCapitalize="words" spellCheck={false} placeholder={`Ex.: ${field.example}`} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />}
             {help}
           </div>
