@@ -100,6 +100,7 @@ function followedSections(sections: readonly Section[], ctx: Adapt, regional: re
     if (s.cta) {
       const dest = followedDestination(s.cta.dest, ctx);
       if (dest) s.cta.dest = dest;
+      else if (s.template === "campaign") s.active = false; // without its button a campaign is a dead end (`campaignLeadsNowhere`)
       else delete s.cta;
     }
     if (s.nav?.dest) {

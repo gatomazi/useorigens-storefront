@@ -2,7 +2,7 @@ import type { CarouselItem } from "@/components/catalog/ProductCarousel";
 import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import type { ArticleKind } from "../umapenca/types";
 import { SUL_INK, SUL_INK_ORIGIN } from "../ink/sul-domain";
-import { CUSTOMIZER_SEGMENT, PAGE_SEGMENT, type Destination, type EditorialModuleKey, type Source } from "./schema";
+import { CUSTOMIZER_SEGMENT, PAGE_SEGMENT, type Destination, type EditorialModuleKey, type Section, type Source } from "./schema";
 import { sortProducts, type ProductSort, type ProductSalesUnits } from "../catalog/product-sort";
 
 /**
@@ -119,3 +119,10 @@ export function destinationHref(dest: Destination, links?: CollectionLinks, regi
   const slug = links?.inkSlug?.(dest.store, dest.collectionId);
   return slug ? collectionUrl(dest.store, slug) : null;
 }
+
+/**
+ * A campaign's button is its whole point: one whose button has no link in the region (a collection without enough of the region's products, a model it
+ * does not have) is left out rather than shown as a dead end. It comes back by itself once the region has them.
+ */
+export const campaignLeadsNowhere = (s: Section, links: CollectionLinks | undefined, region: RegionSlug): boolean =>
+  s.template === "campaign" && !!s.cta && !destinationHref(s.cta.dest, links, region);

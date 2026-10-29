@@ -18,6 +18,18 @@ Depois disso, basta editar e publicar **na Sul**. A região passa a mostrar a ve
 - `{regiao}` em qualquer texto de seção ou página vira o nome da região ("Sul", "Norte", "Centro-Oeste");
 - coleções são as mesmas da loja única: cada região já mostra só os produtos dela. Um produto de cidade de outra região some sozinho (um card de Curitiba na abertura não aparece no Norte), e uma vitrine sem produtos da região some inteira.
 
+## Quando a região ainda não tem a coleção
+
+Uma seção da Sul que depende de uma coleção que a região ainda não tem **sai sozinha** da região, sem ficar quebrada:
+
+- **campanha** cujo botão leva a uma coleção com menos de 3 produtos da região (ex.: "Você conhece a referência", que leva a Do Nosso Jeito), ou a
+  um modelo de personalização ou página que a região não tem: a seção inteira sai (sem o botão, ela seria um beco sem saída);
+- **vitrine** sem nenhum produto da região: sai;
+- **bloco da grade** que leva a essa coleção: só o bloco sai.
+
+Quando a região passa a ter os produtos **na mesma coleção da INK** (ex.: releituras do Norte entrando em Do Nosso Jeito), a seção volta sozinha,
+sem mexer no painel. Na lista **Imagens e produtos do Norte**, cada seção fora da região aparece com o aviso **Fora do Norte** e o motivo.
+
 ## Imagens e produtos de cada região
 
 A ideia é seguir a **estrutura** da Sul: cada região mantém os produtos e os banners dela. Na região que segue a home, a tela Home mostra
