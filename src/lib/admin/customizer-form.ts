@@ -114,14 +114,17 @@ export function parseCustomizerForm(f: Fields, current: Customizer, region: { st
     const enabled = f.get("direct_enabled") !== null;
     const price = inkPrice(str(f, "direct_price"));
     const kidsPrice = inkPrice(str(f, "direct_kids_price"));
+    const category = str(f, "direct_collection");
+    const inkCollectionId = /^\d{1,12}$/.test(category) && Number(category) > 0 ? Number(category) : undefined;
     const arts = patch.studioArts ?? current.studioArts ?? [];
     const kids = arts.some((a) => a.versions.some((v) => v.garment === "infantil"));
     if (str(f, "direct_price") && !price) errors.push("Preço da camiseta inválido: use o formato 109,90.");
     if (str(f, "direct_kids_price") && !kidsPrice) errors.push("Preço da Camiseta Infantil inválido: use o formato 96,00.");
+    if (category && !inkCollectionId) errors.push("Categoria da INK inválida.");
     if (enabled && !arts.length) errors.push("A compra direta precisa das artes do estúdio.");
     if (enabled && !price) errors.push("Informe o preço da camiseta para ligar a compra direta.");
     if (enabled && kids && !kidsPrice) errors.push("Informe o preço da Camiseta Infantil: uma versão é infantil.");
-    patch.directPurchase = price || enabled ? { enabled, price: price ?? "109.90", ...(kidsPrice ? { kidsPrice } : {}) } : undefined;
+    patch.directPurchase = price || enabled ? { enabled, price: price ?? "109.90", ...(kidsPrice ? { kidsPrice } : {}), ...(inkCollectionId ? { inkCollectionId } : {}) } : undefined;
   }
 
   // Fields: a JSON list maintained by the editor's add/remove rows. Keys are stable once a field exists; a new row gets one from its label.

@@ -35,12 +35,20 @@ describe("direct purchase in the model editor", () => {
     expect(parse({ studio_arts_json: ARTS, direct_form: "1", direct_price: "109,90" }).patch.directPurchase).toEqual({ enabled: false, price: "109.90" });
     expect(parse({ studio_arts_json: ARTS }).patch).not.toHaveProperty("directPurchase");
   });
+  test("the INK category is kept by its id; none is a valid choice", () => {
+    const on = { studio_arts_json: ARTS, direct_form: "1", direct_enabled: "on", direct_price: "109,90", direct_kids_price: "96,00" };
+    expect(parse({ ...on, direct_collection: "155154" }).patch.directPurchase).toEqual({ enabled: true, price: "109.90", kidsPrice: "96.00", inkCollectionId: 155154 });
+    expect(parse({ ...on, direct_collection: "" }).patch.directPurchase).not.toHaveProperty("inkCollectionId");
+    expect(parse({ ...on, direct_collection: "abc" }).errors).toEqual(["Categoria da INK inválida."]);
+  });
   test("the published contract checks the same rules", () => {
     const arts = JSON.parse(ARTS).map((a: { label: string; versions: { label: string; templateId: string; lightTemplateId: string; garment: string }[] }) => ({ label: a.label, versions: a.versions.map(({ label, templateId, lightTemplateId, garment }) => ({ ...(a.versions.length > 1 ? { label } : {}), templateId, ...(lightTemplateId ? { lightTemplateId } : {}), ...(garment === "infantil" ? { garment } : {}) })) }));
     const model = { ...current, studioArts: arts };
     expect(validateCustomizer({ ...model, directPurchase: { enabled: true, price: "109.90", kidsPrice: "96.00" } } as Customizer, "sul").ok).toBe(true);
     expect(validateCustomizer({ ...model, directPurchase: { enabled: true, price: "109.90" } } as Customizer, "sul").ok).toBe(false);
     expect(validateCustomizer({ ...model, directPurchase: { enabled: true, price: "109,90", kidsPrice: "96.00" } } as Customizer, "sul").ok).toBe(false);
+    expect(validateCustomizer({ ...model, directPurchase: { enabled: true, price: "109.90", kidsPrice: "96.00", inkCollectionId: 155154 } } as Customizer, "sul").ok).toBe(true);
+    expect(validateCustomizer({ ...model, directPurchase: { enabled: true, price: "109.90", kidsPrice: "96.00", inkCollectionId: "155154" } } as unknown as Customizer, "sul").ok).toBe(false);
     expect(validateCustomizer({ ...model, studioArts: [{ label: "X", versions: [{ templateId: A, garment: "moletom" }] }] } as unknown as Customizer, "sul").ok).toBe(false);
   });
 });

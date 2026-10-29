@@ -63,12 +63,13 @@ describe("names that go to the team first", () => {
 
 // ── The worker, with a scripted INK and a virtual clock ─────────────────────────────────────────────────────────────
 
-type Script = { create?: (n: number) => InkProductView | Error; get?: (n: number) => InkProductView | Error; areas?: PrintArea[] };
+type Script = { create?: (n: number) => InkProductView | Error; get?: (n: number) => InkProductView | Error; areas?: PrintArea[]; deletedCategories?: number[] };
 function scriptedInk(script: Script) {
   const calls = { create: [] as { body: Record<string, unknown>; key: string }[], get: 0 };
   const client: InkProductClient = {
     live: false,
     printableAreas: async () => script.areas ?? areas,
+    collectionExists: async (id) => !script.deletedCategories?.includes(id),
     async createProduct(body, key) {
       calls.create.push({ body, key });
       const r = script.create ? script.create(calls.create.length) : { id: "5143876", url: "https://loja.useorigens.com.br/useorigens/product/silva", imageUrl: null };
@@ -99,7 +100,7 @@ const NEW: NewProductJob = { dedupeKey: "a".repeat(64), region: "sul", customize
 const deps = (client: InkProductClient, over: Partial<WorkerDeps> = {}): WorkerDeps => ({
   store, client, render: async () => ({ darkInk: DARK, lightInk: LIGHT }), now: () => new Date(clock), sleep: async (ms) => { clock += ms; }, ...over,
 });
-const describeJob = () => ({ description: "d", tags: ["personalizado"] });
+const describeJob = () => ({ description: "d", tags: ["personalizado"], collections: [7] });
 
 describe("making a product", () => {
   test("draws, creates it hidden with the job id as the key, waits for the photo and is ready", async () => {
@@ -110,10 +111,25 @@ describe("making a product", () => {
     expect(done).toMatchObject({ status: "ready", inkProductId: "5143876", inkUrl: "https://loja.useorigens.com.br/useorigens/product/silva", inkImageUrl: "https://img.example/silva.jpg", leaseUntil: null });
     expect(calls.create).toHaveLength(1);
     expect(calls.create[0].key).toBe(job.id);
-    expect(calls.create[0].body).toMatchObject({ product_type_id: 1, name: NEW.name, price: "109.90", visible_in_store: false });
+    expect(calls.create[0].body).toMatchObject({ product_type_id: 1, name: NEW.name, price: "109.90", visible_in_store: false, tags: ["personalizado"], collections: [7] });
     expect((calls.create[0].body.arts as unknown[]).length).toBe(18);
     expect(publicJob(done)).toEqual({ id: job.id, label: "Universitário", status: "ready", url: done.inkUrl, image: done.inkImageUrl, inkProductId: "5143876", store: expect.any(String) });
     expect(publicJob({ ...done, status: "photos" })).toMatchObject({ url: null, image: null, inkProductId: null, store: null });
+  });
+
+  test("a category deleted at INK is left out: the product is made anyway and the job says so", async () => {
+    const { job } = await store.findOrCreate(NEW);
+    const { client, calls } = scriptedInk({ deletedCategories: [7] });
+    await runProductJob(job.id, deps(client), describeJob);
+    expect(calls.create[0].body).not.toHaveProperty("collections");
+    expect(await store.get(job.id)).toMatchObject({ status: "ready", inkProductId: "5143876", error: expect.stringContaining("categoria 7") });
+  });
+
+  test("a model without a category sends none", async () => {
+    const { job } = await store.findOrCreate(NEW);
+    const { client, calls } = scriptedInk({});
+    await runProductJob(job.id, deps(client), () => ({ description: "d", tags: ["personalizado"], collections: [] }));
+    expect(calls.create[0].body).not.toHaveProperty("collections");
   });
 
   test("two runs at once create ONE product: the second finds the job held", async () => {

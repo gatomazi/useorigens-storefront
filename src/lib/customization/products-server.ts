@@ -5,6 +5,7 @@ import { platform } from "../admin/platform";
 import { storeForRegion } from "../catalog/commerce-mode";
 import type { CommerceStoreKey, RegionSlug } from "../geo/regions";
 import { resolveProductDisplay, type ProductDisplay } from "../catalog/lookup";
+import { publishedFor } from "../pages/public";
 import { INK_API_BASE_URL, INK_STORES } from "../ink/config";
 import { composeArtwork, validateArtworkInput } from "./artwork";
 import { loadArtworkBase } from "./artwork-server";
@@ -66,11 +67,19 @@ export async function renderJobArts(job: ProductJob): Promise<{ darkInk: Buffer;
   return { darkInk, lightInk };
 }
 
-/** The product's description and tags at INK; the tags let the team find (and exclude) every personalized product. */
-export const describeJob = (job: ProductJob) => ({
-  description: "Estampa personalizada, montada na página de personalização da Use Origens.",
-  tags: ["personalizado", `personalizado-${job.customizerSlug}`.slice(0, 40)],
-});
+/**
+ * The product's description, tags and category at INK; the tags and the category let the team find (and exclude) every personalized product. The
+ * category is the published model's "Categoria na INK", read when the product is made.
+ */
+export function describeJob(job: ProductJob) {
+  const found = publishedFor(job.region);
+  const category = found?.bundle.docs[found.region]?.customizers?.find((m) => m.id === job.customizerId)?.directPurchase?.inkCollectionId;
+  return {
+    description: "Estampa personalizada, montada na página de personalização da Use Origens.",
+    tags: ["personalizado", `personalizado-${job.customizerSlug}`.slice(0, 40)],
+    collections: category ? [category] : [],
+  };
+}
 
 /** Runs the job after the response is sent (Next's `after`): the customer's request returns at once and the waiting page follows the job. */
 export function startProductJob(id: string, region: RegionSlug): void {
