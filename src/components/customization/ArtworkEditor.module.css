@@ -56,3 +56,4 @@ button.seeShirt { border-color: var(--region-primary); background: var(--region-
 .cityOption { min-height: 44px; display: flex; align-items: center; padding: .5rem .75rem; cursor: pointer; }
 .cityOption[aria-selected="true"], .cityOption:hover { background: var(--color-ground, #f2f0ea); font-weight: 600; }
 .cityEmpty { padding: .75rem; color: var(--color-ink-mute, #565656); font-size: .875rem; }
+.cityFailed { grid-column: 1 / -1; margin: 0; }

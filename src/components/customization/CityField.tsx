@@ -15,14 +15,18 @@ export function CityField({ id, label, tip, value, onChange, error, describedBy 
   const [uf, setUf] = useState(picked?.uf ?? "");
   const [query, setQuery] = useState(picked?.name ?? "");
   const [cities, setCities] = useState<BrazilCity[] | null>(null);
+  // The list comes as a separate download: on a weak phone connection it can fail, and the customer can try again.
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
     let live = true;
-    loadBrazilCities().then((list) => live && setCities(list), () => undefined);
+    loadBrazilCities().then((list) => live && setCities(list), () => live && setFailed(true));
     return () => { live = false; };
-  }, []);
+  }, [attempt]);
+  const retry = () => { setFailed(false); setAttempt((n) => n + 1); };
   // The same answer is shown in the page and in the full-screen view: a city picked in one shows in the other.
   const [shown, setShown] = useState(value);
   if (value !== shown) {
@@ -73,6 +77,11 @@ export function CityField({ id, label, tip, value, onChange, error, describedBy 
           {BRAZIL_UFS.map((u) => <option key={u} value={u}>{u} · {BRAZIL_UF_NAMES[u]}</option>)}
         </select>
       </div>
+      {failed && (
+        <p className={`${styles.error} ${styles.cityFailed}`} role="alert">
+          Não foi possível carregar a lista de cidades. <button type="button" className="underline underline-offset-4" onClick={retry}>Tentar de novo</button>
+        </p>
+      )}
       <div className={styles.cityInput}>
         <div className="flex items-center"><label className="t-label" htmlFor={id}>{label}</label>{tip}</div>
         <input
@@ -98,7 +107,7 @@ export function CityField({ id, label, tip, value, onChange, error, describedBy 
         />
         {showList && (
           <ul id={listId} role="listbox" aria-label={`Cidades de ${BRAZIL_UF_NAMES[uf]}`} className={styles.cityList}>
-            {!cities ? <li className={styles.cityEmpty}>Carregando as cidades…</li> : options.length ? options.map((city, i) => (
+            {!cities ? <li className={styles.cityEmpty}>{failed ? "A lista de cidades não carregou." : "Carregando as cidades…"}</li> : options.length ? options.map((city, i) => (
               // mousedown keeps the focus in the field, so the click still picks (on touch too).
               <li key={city.id} id={`${listId}-${i}`} role="option" aria-selected={i === active} className={styles.cityOption} onMouseDown={(e) => e.preventDefault()} onClick={() => pick(city)}>
                 {city.name}

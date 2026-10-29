@@ -142,7 +142,7 @@ export async function startProductsAction(input: { region: string; slug: string;
     if (!checked.artwork.fields?.length) return fail("Esta arte não pode ser criada automaticamente.", true);
     const fields = Object.fromEntries(checked.artwork.fields.map((f) => [f.id, f.value]));
     const kinds = artworkFields(base);
-    // A city comes from IBGE's list: real names like "Pinto Bandeira" are not reviewed.
+    // A city comes from IBGE's list: real names like "Pau dos Ferros" are not reviewed.
     const reviewed = kinds.filter((f) => f.input !== "city").map((f) => fields[f.id]).join(" ");
     items.push({ pick, fields, shown: Object.fromEntries(kinds.map((f) => [f.id, fieldDisplay(f, fields[f.id] ?? "")])), reviewed, printed: checked.artwork.layers.map((l) => l.text) });
   }

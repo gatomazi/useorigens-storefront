@@ -26,6 +26,7 @@ vi.mock("@/lib/customization/products-server", async () => ({
 
 import { startProductsAction } from "@/app/[region]/personalizar/actions";
 import { fileProductJobStore } from "@/lib/customization/product-store";
+import { needsReview } from "@/lib/customization/review-words";
 import { parseProjectFile } from "@/lib/print-studio/model";
 
 const TEMPLATE = "1793300715844-02b539b5-caf7-4e18-b9cf-0a245d34827c";
@@ -56,7 +57,8 @@ describe("direct purchase of the plate", () => {
     expect(rows[0]).toMatchObject({ name: "Belém (PA) BEL-1616 | Placa da sua cidade Placa", fields: { cidade: "Belém/PA", placa: "BEL-1616" } });
   });
   test("a real city is never sent to the team for its name; an offensive plate is", async () => {
-    expect(await buy({ cidade: "Pinto Bandeira/RS", placa: "TOM-1996" })).toMatchObject({ ok: true });
+    expect(needsReview("Pau dos Ferros")).toBe(true); // "pau" is on the list: only the skip lets the city through
+    expect(await buy({ cidade: "Pau dos Ferros/RN", placa: "TOM-1996" })).toMatchObject({ ok: true });
     expect(await buy({ cidade: "Belém/PA", placa: "FDP-1234" })).toMatchObject({ ok: false, fallback: true });
   });
   test("a city outside IBGE's list is refused on the server", async () => {
