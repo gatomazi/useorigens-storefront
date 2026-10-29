@@ -125,7 +125,7 @@ function regionGap(s: Section, sulActive: boolean, props: ReturnType<typeof cate
   }
   if (s.template === "image-grid") {
     const out = (s.tiles ?? []).filter((t) => !destinationHref(t.dest, props.links, region)).map((t) => `“${t.label}”`);
-    if (out.length) return `No ${name}, sai${out.length > 1 ? "em" : ""} da grade: ${out.join(", ")} (a coleção ainda não tem produtos do ${name}).`;
+    if (out.length) return `No ${name}, ${out.length > 1 ? "saem" : "sai"} da grade: ${out.join(", ")} (a coleção ainda não tem produtos do ${name}).`;
   }
   return null;
 }

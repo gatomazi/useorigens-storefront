@@ -42,8 +42,6 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
   const doc = withHomeTheme(source_, theme) ?? (tema ? null : source_);
   if (!doc) notFound();
   const global = await loadWorkspace("global");
-  const palette = resolveTheme(scope, doc, usingPublished ? global.baseDoc : global.doc);
-  const cssVars = { ...themeCssVars(palette.configured, palette.effective), ...homeThemeCssVars(doc, palette.effective) };
   const target = pageId ? ({ kind: "page", id: pageId } as const) : customizerId ? ({ kind: "customizer", id: customizerId } as const) : undefined;
   let raw;
   try {
@@ -59,9 +57,13 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
   const effective = bundle ?? raw;
   const page = pageId ? effective.docs[scope].pages?.find((p) => p.id === pageId) : undefined;
   const model = customizerId ? effective.docs[scope].customizers?.find((m) => m.id === customizerId) : undefined;
-  const label = `${usingPublished ? "Pré-visualização · publicado" : `Pré-visualização · rascunho${ws.record ? ` rev ${ws.record.rev}` : " (sem alterações)"}`} · tema ${HOME_THEME_LABEL[homeThemeOf(doc)]}`;
+  // The colours, the theme and the header of the document as the store shows it: following Sul's home in Natal brings Sul's Natal palette along.
+  const shown = effective.docs[scope] ?? doc;
+  const palette = resolveTheme(scope, shown, usingPublished ? global.baseDoc : global.doc);
+  const cssVars = { ...themeCssVars(palette.configured, palette.effective), ...homeThemeCssVars(shown, palette.effective) };
+  const label = `${usingPublished ? "Pré-visualização · publicado" : `Pré-visualização · rascunho${ws.record ? ` rev ${ws.record.rev}` : " (sem alterações)"}`} · tema ${HOME_THEME_LABEL[homeThemeOf(shown)]}`;
   return (
-    <PreviewShell region={scope} cityCount={home.cityCount} syncedAt={catalog.syncedAt} label={label} cssVars={cssVars} onBrand={hasEditorialChrome(homeThemeOf(doc))} headerActions={headerActionsOf(doc.navigation)}>
+    <PreviewShell region={scope} cityCount={home.cityCount} syncedAt={catalog.syncedAt} label={label} cssVars={cssVars} onBrand={hasEditorialChrome(homeThemeOf(shown))} headerActions={headerActionsOf(shown.navigation)}>
       {customizerId ? (
         model ? <CustomizerPageView region={scope} model={model} bundle={effective} preview /> : <p className="wrap py-14">Este modelo tem um problema de configuração e não pode ser desenhado (corrija os avisos no editor).</p>
       ) : pageId ? (
