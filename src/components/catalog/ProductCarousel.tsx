@@ -52,7 +52,7 @@ function Arrow({ direction, disabled, onClick, dark }: { direction: "prev" | "ne
       onClick={onClick}
       disabled={disabled}
       aria-label={direction === "prev" ? "Anteriores" : "Próximos"}
-      className={`inline-flex h-11 w-11 items-center justify-center border-2 transition-colors disabled:opacity-30 sm:h-12 sm:w-12 ${dark ? "border-white enabled:hover:bg-white enabled:hover:text-ink" : "border-ink enabled:hover:bg-ink enabled:hover:text-white"}`}
+      className={`ground-solid inline-flex h-11 w-11 items-center justify-center border-2 transition-colors disabled:opacity-30 sm:h-12 sm:w-12 ${dark ? "border-white enabled:hover:bg-white enabled:hover:text-ink" : "border-ink enabled:hover:bg-ink enabled:hover:text-white"}`}
     >
       <svg aria-hidden="true" viewBox="0 0 24 24" className={`h-5 w-5 ${direction === "prev" ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 12h14M13 6l6 6-6 6" />

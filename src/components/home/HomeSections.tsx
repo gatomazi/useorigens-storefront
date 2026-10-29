@@ -78,7 +78,7 @@ export function HomeSections({
   const statesAnchor = sections.find((x) => x.template === "states")?.anchor ?? null;
   const darkPage = pageTone === "dark";
   // A section back on a light surface: dark text, and cards on their own surface again (not the ground's colour, `--card-fill`, under dark text).
-  const onLightSurface = "on-light [--card-fill:transparent]";
+  const onLightSurface = "on-light own-surface";
   const paperLayer = <div aria-hidden="true" className="paper absolute inset-0 -z-10" />;
 
   const rendered = (
@@ -294,7 +294,7 @@ export function HomeSections({
                 subtitle={s.subtitle}
                 tiles={tiles}
                 layout={s.grid}
-                className={darkPage && visual ? "on-light" : undefined}
+                className={visual ? ["own-surface", darkPage ? "on-light" : ""].filter(Boolean).join(" ") : undefined}
                 backdrop={visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : undefined}
               />
             );
@@ -438,7 +438,7 @@ function CarouselSection({
 
   if (!visual && surface === "paper") {
     return (
-      <section id={s.anchor} className={["paper [--card-fill:transparent]", onLight].filter(Boolean).join(" ")}>
+      <section id={s.anchor} className={["paper own-surface", onLight].filter(Boolean).join(" ")}>
         <div className="wrap py-14 lg:py-24">{carousel}</div>
       </section>
     );
@@ -453,7 +453,7 @@ function CarouselSection({
   const surfaceClass = surface === "region-primary" ? "bg-region-primary" : surface === "paper" ? "paper" : "";
   const toneClass = tone === "dark" ? "text-white" : "";
   return (
-    <section id={s.anchor} className={["relative isolate overflow-hidden [--card-fill:transparent]", surfaceClass, toneClass, onLight].filter(Boolean).join(" ")}>
+    <section id={s.anchor} className={["relative isolate overflow-hidden own-surface", surfaceClass, toneClass, onLight].filter(Boolean).join(" ")}>
       {(hasImage(bg) || !isSameFill(bg.fill, NATIVE_FILL[surface])) && <SectionBackdrop bg={bg} priority={priority} nativeFill={NATIVE_FILL[surface]} />}
       <div className="wrap py-14 lg:py-24">{carousel}</div>
     </section>

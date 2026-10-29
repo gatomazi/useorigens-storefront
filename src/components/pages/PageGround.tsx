@@ -21,9 +21,11 @@ export function PageGround({ backdrop, media, children }: { backdrop: PageBackdr
   const src = pattern && info ? patternSrc(info, pattern.size) : null;
   const layer: CSSProperties | null =
     pattern && src && CSS_URL_SAFE.test(src) ? { backgroundImage: `url("${src}")`, backgroundSize: `${pattern.size}px auto`, backgroundRepeat: "repeat", opacity: pattern.opacity } : null;
+  // With a pattern, the headings and outlined buttons sit on a plate of the ground's colour (`.ground-plate`, `.ground-solid`: globals.css).
+  const plate: Record<string, string> = layer ? { "--plate-bg": `color-mix(in srgb, ${backdrop.color} 82%, transparent)`, "--plate-blur": "blur(10px)", "--plate-pad": "1rem", "--plate-solid": backdrop.color } : {};
   return (
     // `--card-fill`: product cards take the page colour, so the pattern runs between them and never under a name or a price.
-    <div data-page-ground={backdrop.tone} className={`relative isolate ${backdrop.tone === "dark" ? "page-dark" : ""}`} style={{ backgroundColor: backdrop.color, ["--card-fill" as string]: backdrop.color }}>
+    <div data-page-ground={backdrop.tone} className={`relative isolate ${backdrop.tone === "dark" ? "page-dark" : ""}`} style={{ backgroundColor: backdrop.color, ["--card-fill" as string]: backdrop.color, ...plate }}>
       {layer && <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10" style={layer} />}
       {children}
     </div>

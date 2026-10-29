@@ -27,6 +27,8 @@ transparente.
 
 - O fundo vale só para o tema em edição. Ele entra e sai junto com o tema em "Usar na loja": de volta ao Editorial, a home
   volta ao fundo normal.
+- Com pattern, o título e o subtítulo das seções sem fundo próprio ficam numa placa de vidro, a cor do fundo semitransparente
+  com desfoque. Os botões contornados ("Ver todos", setas) ganham a cor do fundo. Assim o pattern nunca passa atrás de um texto.
 - As seções sem fundo próprio (títulos, vitrines) ficam sobre o pattern. Os cards de produto pegam a cor do fundo, para o
   pattern não passar por baixo do nome e do preço. As seções com foto, cor ou papel continuam com o delas. Num fundo escuro,
   "Comece pelo seu estado" e "Sua cidade, do seu jeito" ficam sobre papel claro, porque não têm versão escura.

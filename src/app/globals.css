@@ -584,6 +584,37 @@ a:hover > .photo img,
   --ink-mute: #56564f;
   --line: rgb(0 0 0 / 0.22);
 }
+/*
+ * A ground with a pattern (PageGround): the headings and the outlined buttons of the sections with no surface of their own sit on the ground's
+ * colour, so the pattern never runs under a word or a control. The plate is frosted glass a little larger than the text (a pseudo-element: the
+ * layout does not move); the buttons get the plain colour (not under the pointer, where they fill as always). A section with a surface of its own
+ * (`.own-surface`) has no plate: its text is already on that surface. Without a pattern the variables are unset and nothing is drawn.
+ */
+.ground-plate {
+  position: relative;
+  isolation: isolate;
+}
+.ground-plate::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--plate-pad, 0px) * -0.75) calc(var(--plate-pad, 0px) * -1);
+  z-index: -1;
+  border-radius: 0.75rem;
+  background: var(--plate-bg, transparent);
+  -webkit-backdrop-filter: var(--plate-blur, none);
+  backdrop-filter: var(--plate-blur, none);
+  pointer-events: none;
+}
+.ground-solid:not(:hover) {
+  background-color: var(--plate-solid, transparent);
+}
+.own-surface {
+  --card-fill: transparent;
+  --plate-bg: transparent;
+  --plate-blur: none;
+  --plate-pad: 0px;
+  --plate-solid: transparent;
+}
 .search-input:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 8px;
