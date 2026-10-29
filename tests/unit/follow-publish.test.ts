@@ -27,7 +27,7 @@ describe("Seguir a Sul na publicação da região", () => {
 
   test("uma imagem enviada para o Norte sobre uma seção da Sul entra na tabela de mídia publicada", async () => {
     const asked: string[] = [];
-    const deps = { releases: { head: async () => null } as never, media: async (ids: Set<string>) => { asked.push(...ids); return Object.fromEntries([...ids].filter((id) => id.startsWith("01J")).map((id) => [id, { src: `/media/${id}.webp`, width: 1200, height: 1500 }])); } };
+    const deps = { releases: { head: async () => null } as never, media: async (ids: Iterable<string>) => { const list = [...ids]; asked.push(...list); return Object.fromEntries(list.filter((id) => id.startsWith("01J")).map((id) => [id, { src: `/media/${id}.webp`, width: 1200, height: 1500 }])); } };
     const norte = { ...structuredClone(seedForEnv().docs.norte), follow: ["home" as const], regional: [{ sectionId: "seed-hero", appearance: { image: { mobile: { assetId: "01JNORTEBANNER", alt: "Belém", decorative: false } }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } } } }] };
     const bundle = await composeBundle(deps, norte, "r-test");
     expect(asked).toContain("01JNORTEBANNER");
