@@ -9,7 +9,7 @@ import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from 
 import { SINGLETON_TEMPLATES, STRUCTURED_MODELS } from "@/lib/site-config/structured";
 import { Flash } from "@/components/admin/Flash";
 import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
-import { FollowCard, FollowFold } from "@/components/admin/FollowCard";
+import { FollowCard, FollowFold, RegionalSectionsList } from "@/components/admin/FollowCard";
 import { followsPart } from "@/lib/site-config/follow-schema";
 import { PreviewFrame } from "@/components/admin/PreviewFrame";
 import { requireAdmin } from "@/lib/admin/auth/guard";
@@ -83,6 +83,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       </div>
       <Flash ok={sp.ok} err={sp.err} />
       <FollowCard actor={actor} scope={scope} part="home" doc={ws.doc} baseDoc={ws.baseDoc} rev={rev} to="/admin/home" />
+      <RegionalSectionsList scope={scope} doc={ws.doc} />
       <FollowFold following={followsPart(ws.doc, "home")} scope={scope}>
       {/* Only the sections of the theme being edited: each theme has its own (add, edit and order them here, for that theme alone). */}
       <HomeThemeCard region={scope} doc={ws.doc} editing={ws.editingTheme} active={ws.activeTheme} live={ws.liveTheme} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} to="/admin/home" />

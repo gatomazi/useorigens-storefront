@@ -29,7 +29,8 @@ export type CollectionNamer = (ref: CollectionRef) => string | null;
 /** Whether an INK collection is public (injected too): it decides where a collection the menu does not mention sits. */
 export type CollectionVisibility = (ref: CollectionRef) => boolean;
 
-export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer = () => null, isPublic: CollectionVisibility = () => true): Change[] {
+/** `sulSection`: the title of one of Sul's sections by id, for the lines about a region's own pictures over Sul's sections (`regional`). */
+export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: CollectionNamer = () => null, isPublic: CollectionVisibility = () => true, sulSection: (id: string) => string | null = () => null): Change[] {
   // Sections and colours are compared with the SAME theme as published (switching themes is one line, not every section of both).
   const sameTheme = swapHomeTheme(published, homeThemeOf(draft)) ?? published;
   const before = sameTheme.home?.sections ?? [];
@@ -72,7 +73,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft), ...followChanges(published, draft));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft), ...followChanges(published, draft), ...regionalChanges(published, draft, sulSection));
   return changes;
 }
 
@@ -119,6 +120,19 @@ function followChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
     if (followsPart(published, part) === now || draft.scope === "global") return [];
     const name = REGIONS[draft.scope].name;
     return [{ kind: "follow" as const, sectionId: `follow-${part}`, text: `${FOLLOW_PART_LABELS[part]}: ${now ? `passa a seguir a Sul (a configuração própria do ${name} fica guardada)` : `deixa de seguir a Sul e volta à configuração própria do ${name}`}` }];
+  });
+}
+
+/** The region's own pictures and products over Sul's sections, one line per section that changed. */
+function regionalChanges(published: ScopeDoc, draft: ScopeDoc, sulSection: (id: string) => string | null): Change[] {
+  if (draft.scope === "global") return [];
+  const was = new Map((published.regional ?? []).map((e) => [e.sectionId, json(e)]));
+  const now = new Map((draft.regional ?? []).map((e) => [e.sectionId, json(e)]));
+  const name = REGIONS[draft.scope].name;
+  return [...new Set([...was.keys(), ...now.keys()])].flatMap((id) => {
+    if (was.get(id) === now.get(id)) return [];
+    const text = !now.has(id) ? `volta a usar as imagens e os produtos da Sul` : !was.has(id) ? `passa a ter imagens e produtos próprios do ${name}` : `imagens e produtos do ${name} alterados`;
+    return [{ kind: "follow" as const, sectionId: `regional-${id}`, text: `“${sulSection(id) ?? id}” (seção da Sul): ${text}` }];
   });
 }
 

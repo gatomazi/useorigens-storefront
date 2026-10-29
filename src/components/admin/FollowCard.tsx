@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { setFollowAction, setScopeAction } from "@/app/admin/actions";
 import { canEdit, type Actor } from "@/lib/admin/store/ports";
 import { REGION_SCOPES, scopeName } from "@/lib/admin/scope";
@@ -5,7 +6,8 @@ import { loadWorkspace } from "@/lib/admin/workspace";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { canFollowSul } from "@/lib/site-config/published";
 import { FOLLOW_SOURCE, REGION_TOKEN, followsPart, type FollowPart } from "@/lib/site-config/follow-schema";
-import type { ScopeDoc } from "@/lib/site-config/schema";
+import type { ScopeDoc, Section } from "@/lib/site-config/schema";
+import { followedDoc } from "@/lib/site-config/follow";
 
 /** The part with its article, inside a sentence ("Norte segue a home da Sul"). */
 const THE: Record<FollowPart, string> = { home: "a home", menu: "o menu", statePage: "a página do estado", pages: "as páginas" };
@@ -47,7 +49,7 @@ export async function FollowCard({ actor, scope, part, doc, baseDoc, rev, to }: 
           <h2 id="seguir-sul-titulo" className="a-h2">{following ? "Seguindo a Sul" : `Configuração própria do ${scopeName(scope)}`}</h2>
           <p className="a-muted mt-1 text-[0.875rem]">
             {following
-              ? <>O que está publicado na Sul vale aqui ({WHAT[part]}), adaptado ao {scopeName(scope)}: links da Sul passam a apontar para cá, estados que não são daqui saem e <code>{REGION_TOKEN}</code> vira “{scopeName(scope)}”. Mude na Sul e publique por lá. A configuração própria do {scopeName(scope)} fica guardada, fora da loja.</>
+              ? <>O que está publicado na Sul vale aqui ({WHAT[part]}), adaptado ao {scopeName(scope)}: links da Sul passam a apontar para cá, estados que não são daqui saem e <code>{REGION_TOKEN}</code> vira “{scopeName(scope)}”. Mude na Sul e publique por lá.{part === "home" && <> As imagens e os produtos podem ser os do {scopeName(scope)}: veja “Imagens e produtos”, abaixo.</>} A configuração própria do {scopeName(scope)} fica guardada, fora da loja.</>
               : <>Seguindo a Sul, você monta {THE[part]} uma vez só, na Sul ({WHAT[part]}), e o {scopeName(scope)} acompanha. A configuração de agora fica guardada para quando quiser voltar.</>}
           </p>
         </div>
@@ -88,5 +90,38 @@ export function FollowFold({ following, scope, children }: { following: boolean;
       <summary className="cursor-pointer font-semibold">Configuração própria do {scopeName(scope)} <span className="a-muted font-normal">(guardada, fora da loja enquanto segue a Sul)</span></summary>
       <div className="mt-4 space-y-6">{children}</div>
     </details>
+  );
+}
+
+const REGIONAL_WHAT: Partial<Record<Section["template"], string>> = { hero: "foto, produtos e banners da abertura", states: "capa de cada estado", "image-grid": "blocos da grade (imagem, texto e link)" };
+
+/**
+ * On a region that follows Sul's home: Sul's sections as this region shows them, each with a link to its own pictures and products (`regional`). The
+ * structure stays Sul's; the banners and the products are the region's when it chooses them.
+ */
+export async function RegionalSectionsList({ scope, doc }: { scope: RegionSlug; doc: ScopeDoc }) {
+  if (scope === FOLLOW_SOURCE || !followsPart(doc, "home")) return null;
+  const sul = await loadWorkspace(FOLLOW_SOURCE);
+  const sections = (followedDoc(doc, sul.baseDoc, true).home?.sections ?? []).filter((s) => s.template !== "footer");
+  const own = new Set((doc.regional ?? []).map((e) => e.sectionId));
+  return (
+    <section id="imagens-regiao" className="a-card scroll-mt-4 overflow-x-auto" aria-labelledby="imagens-regiao-titulo" data-testid="regional-sections">
+      <div className="p-4">
+        <h2 id="imagens-regiao-titulo" className="a-h2">Imagens e produtos do {scopeName(scope)}</h2>
+        <p className="a-muted mt-1 text-[0.875rem]">A estrutura é a da Sul publicada. Em cada seção, você pode trocar a foto (e, na abertura, os produtos e os banners de cada um) pelas do {scopeName(scope)}. O que não trocar segue a Sul.</p>
+      </div>
+      <table className="a-table a-stack">
+        <thead><tr><th scope="col">Seção da Sul</th><th scope="col">Imagens e produtos</th><th scope="col"><span className="sr-only">Editar</span></th></tr></thead>
+        <tbody>
+          {sections.map((s) => (
+            <tr key={s.id} className={s.active ? "" : "opacity-60"}>
+              <td data-label="Seção da Sul"><span className="font-bold">{s.title?.replace(/\n/g, " ") ?? s.anchor}</span>{!s.active && <span className="a-badge ml-2">Oculta na Sul</span>}<p className="a-muted text-[0.8125rem]">{REGIONAL_WHAT[s.template] ?? "foto da seção"}</p></td>
+              <td data-label="Imagens e produtos">{own.has(s.id) ? <span className="a-badge ok">Próprias do {scopeName(scope)}</span> : <span className="a-badge">As da Sul</span>}</td>
+              <td className="text-right"><Link href={`/admin/home/regional/${s.id}`} className="a-btn sm ghost">Editar</Link></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   );
 }

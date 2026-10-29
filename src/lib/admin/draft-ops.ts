@@ -23,7 +23,7 @@ import type { MundoModo } from "../site-config/mundo-schema";
 import type { InkThemeConfig } from "../site-config/ink-theme-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
 import { withFollowPart, type FollowPart } from "../site-config/follow-schema";
-import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, MENU_HIGHLIGHT_KEYS, type Appearance, type CollectionHighlight, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig } from "../site-config/schema";
+import { validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, MENU_HIGHLIGHT_KEYS, type Appearance, type CollectionHighlight, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig, type RegionalSection } from "../site-config/schema";
 import { HOME_THEME_LABEL, hasHomeTheme, isSeasonalTheme, newEditorialTheme, seasonalTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
 import type { RegionSlug } from "../geo/regions";
 import type { ProductSort } from "../catalog/product-sort";
@@ -135,6 +135,8 @@ export type DraftOp =
   | { type: "set-podio"; enabled: boolean }
   /** Norte / Centro-Oeste: follow Sul in one part, or go back to the region's own ("Seguir a Sul"; the own content is never touched). */
   | { type: "set-follow"; part: FollowPart; on: boolean }
+  /** Norte / Centro-Oeste: the region's own pictures and products over one of Sul's sections (replaces that section's entry; `null` = back to Sul's). */
+  | { type: "set-regional"; sectionId: string; entry: RegionalSection | null }
   /** REGION only: replaces the "Tema da INK" (surfaces on/off and presets). Strictly validated. */
   | { type: "set-ink-theme"; inkTheme: InkThemeConfig }
   /** Launches / recalls a region publicly (takes effect only when published). */
@@ -342,6 +344,15 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     if (doc.scope !== "global") return fail("the Meu Pequeno Mundo switch belongs to the global scope");
     const next: ScopeDoc = { ...doc, mundo: op.modo ? { modo: op.modo } : undefined };
     if (!op.modo) delete next.mundo;
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-regional") {
+    if (doc.scope === "global" || doc.scope === "sul") return fail("only a region that follows Sul has its own pictures and products over Sul's sections");
+    const rest = (doc.regional ?? []).filter((e) => e.sectionId !== op.sectionId);
+    const list = op.entry ? [...rest, op.entry] : rest;
+    const next: ScopeDoc = { ...doc, regional: list };
+    if (list.length === 0) delete next.regional;
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }

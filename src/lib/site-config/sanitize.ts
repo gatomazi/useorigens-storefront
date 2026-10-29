@@ -205,7 +205,8 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   if (!pages) delete (candidate as { pages?: unknown }).pages;
   if (!customizers) delete (candidate as { customizers?: unknown }).customizers;
   // The home's theme is cosmetic and the kept theme is never drawn: an invalid one is dropped (the live sections keep rendering, on the original look).
-  for (const key of ["homeTheme", "homeThemes"] as const) {
+  // The region's own pictures and products over Sul's sections: an invalid list means Sul's, as before it existed.
+  for (const key of ["homeTheme", "homeThemes", "regional"] as const) {
     if (candidate[key] === undefined) continue;
     const alone = { schemaVersion: 1, scope, tracking: candidate.tracking, ...(key === "homeThemes" && candidate.homeTheme ? { homeTheme: candidate.homeTheme } : {}), [key]: candidate[key] };
     const r = validateScopeDoc(alone);

@@ -26,7 +26,7 @@ import { canEdit, type Actor } from "@/lib/admin/store/ports";
 import { collectionPageSlug, stateCategoryCollections, stateSubcategoriesInUse, stateSubcategoryChoice } from "@/lib/catalog/collection-source";
 import { getCatalog } from "@/lib/catalog/repository";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, type StatePageSection } from "@/lib/site-config/state-page-schema";
-import { FOLLOW_PARTS, FOLLOW_PART_LABELS, type FollowPart } from "@/lib/site-config/follow-schema";
+import { FOLLOW_PARTS, FOLLOW_PART_LABELS, FOLLOW_SOURCE, type FollowPart } from "@/lib/site-config/follow-schema";
 import { findCollection } from "@/lib/catalog/collections-file";
 import { collectionState } from "@/lib/catalog/collections";
 import { REGION_SLUGS, type RegionSlug } from "@/lib/geo/regions";
@@ -43,7 +43,8 @@ import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
 import { parsePageBackdrop } from "@/lib/admin/page-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
 import { nextStatuses, productLinkFor, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
-import type { CollectionRef, PageKind } from "@/lib/site-config/schema";
+import type { CollectionRef, PageKind, RegionalSection, Section } from "@/lib/site-config/schema";
+import { followedDoc } from "@/lib/site-config/follow";
 import { legacyFeaturedRefs, resolveFeatured, searchFeaturedCandidates, type FeaturedCandidate } from "@/lib/hero-featured";
 import { buildRegionSeed } from "@/lib/admin/region-seed";
 import { STRUCTURED_TEMPLATES, type StructuredTemplate } from "@/lib/site-config/structured";
@@ -488,6 +489,63 @@ export async function setFollowAction(fd: FormData) {
   const to = from === "/admin/colecoes" ? from : FOLLOW_RETURN[part as FollowPart];
   const ok = on ? `Rascunho salvo: ${label} passa a seguir a Sul. Publique para valer na loja.` : `Rascunho salvo: ${label} volta à configuração própria desta região. Publique para valer na loja.`;
   return run(fd, { type: "set-follow", part: part as FollowPart, on }, ok, `${to}#seguir-sul`);
+}
+
+/**
+ * One of Sul's sections as the region shows it while following Sul's home: `own` = with the region's pictures and products, else exactly Sul's (adapted).
+ * Read from Sul's PUBLISHED document, the one the store follows.
+ */
+async function followedSection(scope: RegionSlug, id: string, own: boolean): Promise<Section | undefined> {
+  const [ws, sul] = await Promise.all([loadWorkspace(scope), loadWorkspace(FOLLOW_SOURCE)]);
+  const doc = { ...ws.doc, follow: ["home" as const], ...(own ? {} : { regional: undefined }) };
+  return followedDoc(doc, sul.baseDoc, true).home?.sections.find((s) => s.id === id);
+}
+
+/**
+ * "Imagens e produtos" of one of Sul's sections in a region that follows Sul's home. Only what differs from Sul's is kept, so a picture or a product the
+ * owner did not touch keeps following Sul; nothing left = back to Sul's.
+ */
+export async function saveRegionalSection(fd: FormData) {
+  const { scope } = await editScope(fd);
+  const id = text(fd, "id");
+  const to = `/admin/home/regional/${id}`;
+  if (scope === FOLLOW_SOURCE) back("/admin/home", { err: ["A Sul edita as próprias seções direto."] });
+  const [base, current] = await Promise.all([followedSection(scope, id, false), followedSection(scope, id, true)]);
+  if (!base || !current) back("/admin/home", { err: ["Essa seção não está mais na home publicada da Sul."] });
+  const patch = parseSectionForm(fd, current);
+  const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+  const entry: RegionalSection = { sectionId: id };
+  if (patch.appearance && (!same(patch.appearance.image, base.appearance.image) || !same(patch.appearance.focal, base.appearance.focal))) {
+    entry.appearance = { focal: patch.appearance.focal, ...(patch.appearance.image ? { image: patch.appearance.image } : {}) };
+  }
+  if (base.template === "hero" && text(fd, "featured_mode") === "edit") {
+    const { refs, invalid } = parseFeaturedFields(fd);
+    if (invalid.length > 0) back(to, { err: [`Produto inválido em: ${invalid.join(", ")}.`] });
+    // As on Sul's own editor: a NEW product (or mark on a banner) must be showable in this region; one already saved is kept (flagged in the panel).
+    const kept = new Set((current.featured ?? []).flatMap((r) => [`${r.store}:${r.productId}`, ...(r.pins ?? []).map((p) => `${r.store}:${r.productId}>${p.store}:${p.productId}`)]));
+    const rejected = resolveFeatured(scope, refs).filter((sl) => !sl.ok && !kept.has(`${sl.ref.store}:${sl.ref.productId}`));
+    const badPins = refs.flatMap((r) => (r.pins?.length ? resolveFeatured(scope, r.pins).filter((p) => !p.ok && !kept.has(`${r.store}:${r.productId}>${p.ref.store}:${p.ref.productId}`)) : []));
+    if (rejected.length + badPins.length > 0) back(to, { err: [...rejected, ...badPins].map((sl) => `Produto ${sl.ref.productId} não pode ser usado: ${sl.reason}.`) });
+    const rotation = base.variant === "feature" ? parseFeaturedRotation(fd) : undefined;
+    if (!same(refs, base.featured) || !same(rotation, base.featuredRotation)) {
+      entry.featured = refs;
+      if (rotation) entry.featuredRotation = rotation;
+    }
+  }
+  if (base.template === "states" && "stateCovers" in patch && !same(patch.stateCovers ?? {}, base.stateCovers ?? {})) entry.stateCovers = patch.stateCovers ?? {};
+  if (base.template === "image-grid") {
+    const { problems } = parseGridTiles(fd);
+    if (problems.length > 0) back(to, { err: problems });
+    if (patch.tiles && !same(patch.tiles, base.tiles)) entry.tiles = patch.tiles;
+  }
+  const own = Object.keys(entry).length > 1;
+  return run(fd, { type: "set-regional", sectionId: id, entry: own ? entry : null }, own ? "Rascunho salvo: imagens e produtos desta região. Publique para valer na loja." : "Rascunho salvo: esta seção usa as imagens e os produtos da Sul.", to);
+}
+
+/** Back to Sul's pictures and products in one of Sul's sections. */
+export async function clearRegionalSection(fd: FormData) {
+  const id = text(fd, "id");
+  return run(fd, { type: "set-regional", sectionId: id, entry: null }, "Rascunho salvo: esta seção volta a usar as imagens e os produtos da Sul. Publique para valer na loja.", `/admin/home/regional/${id}`);
 }
 
 /** "Página do estado": shows or hides a section that is not built from collections ("Destaques", "Escolha o estilo", "Regiões e cidades"). */

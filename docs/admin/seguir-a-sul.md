@@ -18,6 +18,20 @@ Depois disso, basta editar e publicar **na Sul**. A região passa a mostrar a ve
 - `{regiao}` em qualquer texto de seção ou página vira o nome da região ("Sul", "Norte", "Centro-Oeste");
 - coleções são as mesmas da loja única: cada região já mostra só os produtos dela. Um produto de cidade de outra região some sozinho (um card de Curitiba na abertura não aparece no Norte), e uma vitrine sem produtos da região some inteira.
 
+## Imagens e produtos de cada região
+
+A ideia é seguir a **estrutura** da Sul: cada região mantém os produtos e os banners dela. Na região que segue a home, a tela Home mostra
+**Imagens e produtos do Norte** (ou do Centro-Oeste): a lista das seções da Sul publicada, cada uma com **Editar**. Ali dá para trocar:
+
+- a foto da seção (celular e desktop, com o foco);
+- na abertura, os produtos em destaque e o banner de cada um;
+- a capa de cada estado;
+- os blocos de uma grade de imagens (imagem, texto e link).
+
+Só o que for trocado fica guardado na região. O resto continua seguindo a Sul, e uma mudança na Sul passa a valer lá também. **Voltar a usar as
+imagens e os produtos da Sul** desfaz a troca daquela seção. Textos, ordem, layout e as coleções das vitrines vêm sempre da Sul (cada região já
+mostra só os produtos dela em cada coleção).
+
 ## Mudar só uma região
 
 No editor de cada seção da Sul, **Aparece em** escolhe as regiões em que ela entra. Para trocar o conteúdo só no Norte, duplique a seção, deixe uma cópia em "Sul" e a outra em "Norte". A abertura e o rodapé aparecem sempre.
@@ -26,7 +40,9 @@ Para mudar uma parte inteira, use a configuração própria naquela parte (e, se
 
 ## O que continua de cada região
 
-Tracking, lançamento, aparência (paleta), cupons e promoções, pódio, modelos de personalização e a ordem de produtos que a própria região definiu numa coleção.
+Tracking, lançamento, cupons e promoções, pódio, modelos de personalização e a ordem de produtos de cada coleção. A paleta também é da região,
+exceto quando a home da Sul está num tema diferente do original (Editorial, Black Friday, Natal): aí as cores do tema vêm junto, porque o tema
+são as seções e as cores.
 
 ## Loja única
 

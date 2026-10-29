@@ -11,6 +11,8 @@
  *        address. Collections are the same INK collections: in the single store each region already shows only its own products in them, and a
  *        product of another region (a hero card of Curitiba) is dropped when the public resolves it. Following the home, a theme other than the
  *        original (Black Friday, Natal) brings Sul's colours with it.
+ *   3. Following the home, the region's own pictures and products (`ScopeDoc.regional`) go over Sul's sections: the structure is Sul's, the banners
+ *      and the products of the opening, the states' covers and the grid's blocks can be the region's.
  *
  * A region follows only while it sells in the same INK store as Sul (`canFollow`): under the regional stores (the rollback of the single store) the refs
  * of Sul mean nothing to the others, so each region shows its own content again.
@@ -19,7 +21,7 @@ import { REGIONS, REGION_SLUGS, STATE_NAMES, type RegionSlug } from "../geo/regi
 import { effectiveMenu } from "./collection-menu";
 import { FOLLOW_SOURCE, REGION_TOKEN, followsPart } from "./follow-schema";
 import { defaultStatesBlockLabel } from "./navigation";
-import { PAGE_SEGMENT, type CollectionRef, type Customizer, type Destination, type Page, type PublishedBundle, type ScopeDoc, type Section } from "./schema";
+import { PAGE_SEGMENT, type CollectionRef, type Customizer, type Destination, type Page, type PublishedBundle, type RegionalSection, type ScopeDoc, type Section } from "./schema";
 
 export { REGION_TOKEN };
 
@@ -68,9 +70,29 @@ export function followedDestination(d: Destination, ctx: Adapt): Destination | u
   return { kind: "route", path: `/${segments.join("/")}${url.search}${url.hash}` };
 }
 
-function followedSections(sections: readonly Section[], ctx: Adapt): Section[] {
+/** The region's own pictures and products over one of Sul's sections (`ScopeDoc.regional`): only what the entry carries is replaced. */
+export function withRegional(s: Section, own: RegionalSection | undefined): Section {
+  if (!own) return s;
+  const next: Section = { ...s };
+  if (own.appearance) {
+    next.appearance = { ...s.appearance, focal: structuredClone(own.appearance.focal) };
+    if (own.appearance.image) next.appearance.image = structuredClone(own.appearance.image);
+    else delete next.appearance.image;
+  }
+  if (s.template === "hero" && own.featured) {
+    next.featured = structuredClone(own.featured);
+    if (own.featuredRotation) next.featuredRotation = own.featuredRotation;
+    else delete next.featuredRotation;
+  }
+  if (s.template === "states" && own.stateCovers) next.stateCovers = structuredClone(own.stateCovers);
+  if (s.template === "image-grid" && own.tiles) next.tiles = structuredClone(own.tiles);
+  return next;
+}
+
+function followedSections(sections: readonly Section[], ctx: Adapt, regional: readonly RegionalSection[] = []): Section[] {
   const home: Destination = { kind: "route", path: `/${ctx.to}` };
   return sections.map((original) => {
+    const own = regional.find((e) => e.sectionId === original.id);
     const s = structuredClone(original);
     if (s.cta) {
       const dest = followedDestination(s.cta.dest, ctx);
@@ -89,7 +111,8 @@ function followedSections(sections: readonly Section[], ctx: Adapt): Section[] {
       if (model) s.customizerCard.customizerId = model.id;
       else delete s.customizerCard;
     }
-    return s;
+    // Last: what the region chose itself (its own links in a grid, its covers and products) is never adapted again.
+    return withRegional(s, own);
   });
 }
 
@@ -113,7 +136,7 @@ export function followedDoc(doc: ScopeDoc, sul: ScopeDoc | undefined, canFollow:
     if (follows("pages")) next.pages = pages.map((p) => (own.includes(p) ? p : { ...p, sections: followedSections(p.sections, ctx) }));
 
     if (follows("home") && sul.home) {
-      next.home = { sections: followedSections(sul.home.sections, ctx) };
+      next.home = { sections: followedSections(sul.home.sections, ctx, doc.regional) };
       if (sul.homeTheme) {
         // A theme other than the original is its sections AND its colours (Black Friday, Natal): the palette comes with it. On the original, the
         // region keeps its own colours.

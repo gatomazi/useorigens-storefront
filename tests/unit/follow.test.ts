@@ -210,3 +210,51 @@ describe("Seguir a Sul no painel", () => {
     expect(parseSectionForm({ get: () => null }, s)).not.toHaveProperty("regions");
   });
 });
+
+describe("Seguir a Sul: imagens e produtos da região", () => {
+  const img = (assetId: string) => ({ assetId, alt: assetId, decorative: false });
+  const focal = { mobile: { x: 40, y: 60 }, desktop: { x: 50, y: 50 } };
+
+  test("a estrutura vem da Sul; banner, produtos da abertura e capas são os da região", () => {
+    const sul = sulWithStructure();
+    const hero = sul.home!.sections[0];
+    hero.appearance = { ...hero.appearance, image: { mobile: img("sul-hero") } };
+    hero.featured = [{ store: "use-sul", productId: "111" }];
+    const states = sul.home!.sections.find((s) => s.template === "states")!;
+    states.stateCovers = { PR: img("capa-pr") };
+    const norte = doc("norte");
+    norte.follow = ["home"];
+    norte.regional = [
+      { sectionId: hero.id, appearance: { image: { mobile: img("norte-hero") }, focal }, featured: [{ store: "use-sul", productId: "222", image: img("banner-222") }], featuredRotation: "slide" },
+      { sectionId: states.id, stateCovers: { PA: img("capa-pa") } },
+      { sectionId: "secao-que-a-sul-tirou", appearance: { focal } },
+    ];
+    expect(validateScopeDoc(norte)).toMatchObject({ ok: true });
+    const out = followedDoc(norte, sul, true);
+    const outHero = out.home!.sections[0];
+    expect(outHero.title).toBe(hero.title);
+    expect(outHero.appearance.image).toEqual({ mobile: img("norte-hero") });
+    expect(outHero.appearance.focal).toEqual(focal);
+    expect(outHero.appearance.fill).toEqual(hero.appearance.fill);
+    expect(outHero.featured).toEqual([{ store: "use-sul", productId: "222", image: img("banner-222") }]);
+    expect(outHero.featuredRotation).toBe("slide");
+    expect(out.home!.sections.find((s) => s.template === "states")!.stateCovers).toEqual({ PA: img("capa-pa") });
+    // A section without an entry keeps Sul's own content.
+    expect(out.home!.sections.find((s) => s.id === "custom-novidades")!.appearance).toEqual(sul.home!.sections.find((s) => s.id === "custom-novidades")!.appearance);
+  });
+
+  test("sem imagem na região = a seção fica sem a foto da Sul", () => {
+    const sul = sulWithStructure();
+    sul.home!.sections[1].appearance = { ...sul.home!.sections[1].appearance, image: { mobile: img("sul-banner") } };
+    const norte = { ...doc("norte"), follow: ["home" as const], regional: [{ sectionId: sul.home!.sections[1].id, appearance: { focal } }] };
+    expect(followedDoc(norte, sul, true).home!.sections[1].appearance.image).toBeUndefined();
+  });
+
+  test("as regras: só quem segue, um tipo por seção, capas de estados da própria região", () => {
+    expect(validateScopeDoc({ ...doc(), regional: [{ sectionId: "seed-hero", appearance: { focal } }] }).ok).toBe(false);
+    expect(validateScopeDoc({ ...doc("norte"), regional: [{ sectionId: "s1", featured: [], stateCovers: {} }] }).ok).toBe(false);
+    expect(validateScopeDoc({ ...doc("norte"), regional: [{ sectionId: "s1", stateCovers: { PR: img("capa-pr") } }] }).ok).toBe(false);
+    expect(validateScopeDoc({ ...doc("norte"), regional: [{ sectionId: "s1", stateCovers: { PA: img("capa-pa") } }, { sectionId: "s1", appearance: { focal } }] }).ok).toBe(false);
+    expect(validateScopeDoc({ ...doc("norte"), regional: [{ sectionId: "s1", featured: [{ store: "use-norte", productId: "1" }] }] })).toMatchObject({ ok: true });
+  });
+});

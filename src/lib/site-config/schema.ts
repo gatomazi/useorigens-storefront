@@ -308,6 +308,18 @@ export type Section = {
  *   legacy    Sul only: keep using the build-time NEXT_PUBLIC_* value the storefront had before the CMS existed, until an explicit
  *             configuration replaces it. Never available to other regions, and never copied to them.
  */
+/** See `ScopeDoc.regional`. At most one of `featured` (the opening), `stateCovers` (the state chooser) and `tiles` (an image grid). */
+export type RegionalSection = {
+  sectionId: string;
+  /** The section's picture in this region; `image` absent = no picture here (the section's colour shows). */
+  appearance?: Pick<Appearance, "image" | "focal">;
+  featured?: FeaturedProductRef[];
+  featuredRotation?: FeaturedRotation;
+  stateCovers?: Record<string, MediaRef>;
+  tiles?: GridTile[];
+};
+export const MAX_REGIONAL = 60;
+
 export type VendorSetting = { mode: "inherit" } | { mode: "override"; id: string } | { mode: "disabled"; id?: string } | { mode: "legacy" };
 export type TrackingConfig = { meta: VendorSetting; ga4: VendorSetting };
 
@@ -498,6 +510,12 @@ export type ScopeDoc = {
    * own. The region's own content of a followed part stays stored and unused. Published with the region.
    */
   follow?: FollowPart[];
+  /**
+   * REGION other than Sul, while it follows Sul's home: its OWN pictures and products over Sul's structure, one entry per section of Sul (by id). Each
+   * replaces only what it carries: the section's picture and its focus, the opening's products (with their banners), the states' covers or the grid's
+   * blocks. An entry for a section Sul no longer has is ignored. Published with the region.
+   */
+  regional?: RegionalSection[];
   /** REGION only: "Tema da INK" (`ink-theme-schema.ts`): how the INK product page, cart and checkout look, by preset. Absent = all off. Published with the region. */
   inkTheme?: InkThemeConfig;
   /**
@@ -1206,6 +1224,43 @@ function checkCollections(c: Collector, path: string, v: unknown): void {
 }
 
 /** The rules of a home's section list (the live home and every theme kept for later): `path` is where its errors are reported. */
+/**
+ * `ScopeDoc.regional`: each entry is checked as the section it would make (its template follows from what it carries), with the region rules of the
+ * home's sections: covers of THIS region's states, products and links of its own store and pages.
+ */
+function checkRegional(c: Collector, path: string, v: unknown, sc: Scope): void {
+  if (sc === "global" || sc === "sul") return c.fail(path, "only a region that follows Sul has its own pictures and products over Sul's sections");
+  if (!Array.isArray(v) || v.length > MAX_REGIONAL) return c.fail(path, `at most ${MAX_REGIONAL} entries`);
+  const seen = new Set<unknown>();
+  v.forEach((e, i) => {
+    const at = `${path}[${i}]`;
+    if (!isRecord(e) || typeof e.sectionId !== "string" || !ID.test(e.sectionId)) return c.fail(at, "must be { sectionId, … }");
+    if (seen.has(e.sectionId)) c.fail(at, "one entry per section");
+    seen.add(e.sectionId);
+    for (const key of Object.keys(e)) if (!["sectionId", "appearance", "featured", "featuredRotation", "stateCovers", "tiles"].includes(key)) c.fail(`${at}.${key}`, "unknown field");
+    const kinds = [e.featured !== undefined || e.featuredRotation !== undefined, e.stateCovers !== undefined, e.tiles !== undefined].filter(Boolean).length;
+    if (kinds > 1) c.fail(at, "the opening's products, the states' covers or the grid's blocks: one of them");
+    const look = isRecord(e.appearance) ? e.appearance : {};
+    if (e.appearance !== undefined && (!isRecord(e.appearance) || Object.keys(e.appearance).some((k) => k !== "image" && k !== "focal"))) c.fail(`${at}.appearance`, "only { image?, focal }");
+    const template = e.featured !== undefined || e.featuredRotation !== undefined ? "hero" : e.stateCovers !== undefined ? "states" : e.tiles !== undefined ? "image-grid" : "campaign";
+    const section = {
+      id: e.sectionId, anchor: "regional", headingId: "regional-title", template, active: true,
+      ...(template === "hero" ? { variant: "feature", featured: e.featured ?? [], ...(e.featuredRotation !== undefined ? { featuredRotation: e.featuredRotation } : {}) } : {}),
+      ...(template === "states" ? { stateCovers: e.stateCovers } : {}),
+      ...(template === "image-grid" ? { tiles: e.tiles, grid: { columns: 4, aspect: "portrait", labels: "below" } } : {}),
+      appearance: { fill: { kind: "none" }, focal: look.focal ?? { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" }, ...(look.image !== undefined ? { image: look.image } : {}) },
+    };
+    checkSection(c, at, section);
+    const region = REGIONS[sc as RegionSlug];
+    if (isRecord(e.stateCovers)) for (const uf of Object.keys(e.stateCovers)) if (!region.ufs.includes(uf)) c.fail(`${at}.stateCovers.${uf}`, "not a state of this region");
+    if (Array.isArray(e.featured)) e.featured.forEach((ref, j) => {
+      if (isRecord(ref) && !regionMayUseStore(sc as RegionSlug, ref.store)) c.fail(`${at}.featured[${j}].store`, "belongs to another region's INK store");
+      if (isRecord(ref) && Array.isArray(ref.pins)) ref.pins.forEach((pin, k) => { if (isRecord(pin) && !regionMayUseStore(sc as RegionSlug, pin.store)) c.fail(`${at}.featured[${j}].pins[${k}].store`, "belongs to another region's INK store"); });
+    });
+    checkTileRegion(c, at, e.tiles, sc);
+  });
+}
+
 function checkHomeSections(c: Collector, path: string, sections: unknown, sc: Scope): void {
   if (!Array.isArray(sections)) c.fail(path, "must be an array");
   else {
@@ -1328,6 +1383,7 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
     const r = validateFollow(input.follow, sc, "doc.follow");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
+  if (input.regional !== undefined) checkRegional(c, "doc.regional", input.regional, sc);
   if (input.inkTheme !== undefined) {
     const r = validateInkTheme(input.inkTheme, sc, "doc.inkTheme");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
@@ -1446,6 +1502,7 @@ export function mediaRefsOfDoc(doc: ScopeDoc | undefined): MediaRef[] {
     for (const s of p.sections) ofSection(s);
   }
   for (const m of doc.customizers ?? []) for (const r of [m.cardImage, m.pageMockup]) if (r) out.push(r);
+  for (const e of doc.regional ?? []) for (const r of [e.appearance?.image?.mobile, e.appearance?.image?.desktop, ...Object.values(e.stateCovers ?? {}), ...(e.featured ?? []).map((f) => f.image), ...(e.tiles ?? []).flatMap((t) => [t.image, t.imageMobile])]) if (r) out.push(r);
   return out;
 }
 
