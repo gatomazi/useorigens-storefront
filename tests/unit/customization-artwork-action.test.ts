@@ -10,7 +10,10 @@ const state = vi.hoisted(() => ({ model: null as Customizer | null, store: null 
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-forwarded-for": "127.0.0.1" }) }));
 vi.mock("@/lib/admin/auth/rate-limit", () => ({ allow: () => true }));
 vi.mock("@/lib/customization/server", () => ({ requestStoreOrNull: () => state.store, requestSecret: () => "unit-test-reference-secret-only" }));
-vi.mock("@/lib/customization/artwork-server", () => ({ loadArtworkBase: async (id: string) => id === "1792427199786-94f180a0-474a-4a75-9fae-1fbdd72f2aa9" ? { ...state.base!, name: "Feliz tudo · camiseta clara" } : id.startsWith("1792427199") ? state.base : null }));
+vi.mock("@/lib/customization/artwork-server", async () => ({
+  loadArtworkBase: async (id: string) => id === "1792427199786-94f180a0-474a-4a75-9fae-1fbdd72f2aa9" ? { ...state.base!, name: "Feliz tudo · camiseta clara" } : id.startsWith("1792427199") ? state.base : null,
+  checkArtworkInput: (await import("@/lib/customization/artwork")).validateArtworkInput,
+}));
 vi.mock("@/lib/pages/public", () => ({ publishedFor: (region: string) => region === "sul" ? { region: "sul", bundle: { docs: { sul: { customizers: [state.model] } } } } : null }));
 
 import { loadArtworkBaseAction, submitCustomizationAction } from "@/app/[region]/personalizar/actions";

@@ -35,7 +35,11 @@ export type TextLayer = BaseLayer & {
  * or where the art below follows the text (`ImageLayer.pushedBy`).
  * `dropParticle` removes a leading "da/das/do/dos" from the answer where the art already says "dos" ("NATAL DOS {sobrenome}").
  */
-export type TextSlot = { field: string; label: string; template: string; textCase: "upper" | "title" | "none"; maxLength: number; example: string; maxLines?: number; dropParticle?: boolean };
+/**
+ * `input`: what the customer gives instead of free letters. "city": picks a municipality (UF, then the city with autocomplete); the answer is
+ * "Nome/UF" and prints as "UF - NOME". "plate": 3 letters and 4 digits, printed as "ABC-1234".
+ */
+export type TextSlot = { field: string; label: string; template: string; textCase: "upper" | "title" | "none"; maxLength: number; example: string; maxLines?: number; dropParticle?: boolean; input?: "city" | "plate" };
 /** `pushedBy`: id of a text layer above the image; the image moves down by the height of that text's extra lines. */
 export type ImageLayer = BaseLayer & { kind: "image"; asset: ImageAsset; width: number; pushedBy?: string };
 export type PrintLayer = TextLayer | ImageLayer;
@@ -107,7 +111,8 @@ function slot(value: unknown): TextSlot {
   const template = string(s.template, 200);
   if (!/^[a-z][a-z0-9-]*$/.test(field) || !template.includes(`{${field}}`)) throw new Error("O projeto contém um campo de personalização inválido.");
   if (!["upper", "title", "none"].includes(String(s.textCase))) throw new Error("O projeto contém um campo de personalização inválido.");
-  return { field, label: string(s.label, 60), template, textCase: s.textCase as TextSlot["textCase"], maxLength: number(s.maxLength, 1, 60), example: string(s.example, 60), ...(s.maxLines === undefined ? {} : { maxLines: number(s.maxLines, 1, 3) }), ...(s.dropParticle === undefined ? {} : { dropParticle: s.dropParticle === true }) };
+  if (s.input !== undefined && s.input !== "city" && s.input !== "plate") throw new Error("O projeto contém um campo de personalização inválido.");
+  return { field, label: string(s.label, 60), template, textCase: s.textCase as TextSlot["textCase"], maxLength: number(s.maxLength, 1, 60), example: string(s.example, 60), ...(s.maxLines === undefined ? {} : { maxLines: number(s.maxLines, 1, 3) }), ...(s.dropParticle === undefined ? {} : { dropParticle: s.dropParticle === true }), ...(s.input === undefined ? {} : { input: s.input as TextSlot["input"] }) };
 }
 function imageAsset(value: unknown): ImageAsset {
   const a = object(value);

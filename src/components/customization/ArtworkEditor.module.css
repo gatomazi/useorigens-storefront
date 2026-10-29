@@ -47,3 +47,12 @@
 button.seeShirt { border-color: var(--region-primary); background: var(--region-primary); color: #fff; }
 /* Only with a real pointer: on a phone the hover state sticks after a tap and would leave the button hollow. */
 @media (hover: hover) { button.seeShirt:hover { background: transparent; color: var(--region-primary); } }
+/* City of a print: the state (short) beside the city with its suggestions; stacked on a narrow column. */
+.city { display: grid; grid-template-columns: minmax(7.5rem, 2fr) minmax(0, 5fr); gap: .75rem; align-items: end; }
+@media (max-width: 30rem) { .city { grid-template-columns: minmax(0, 1fr); gap: .5rem; } }
+.cityInput { position: relative; min-width: 0; }
+.city select.textarea { margin-top: .35rem; }
+.cityList { position: absolute; z-index: 20; inset-inline: 0; top: 100%; max-height: 18rem; overflow-y: auto; margin: 0; padding: 0; list-style: none; background: white; border: 2px solid var(--color-ink, #171717); border-top: 0; }
+.cityOption { min-height: 44px; display: flex; align-items: center; padding: .5rem .75rem; cursor: pointer; }
+.cityOption[aria-selected="true"], .cityOption:hover { background: var(--color-ground, #f2f0ea); font-weight: 600; }
+.cityEmpty { padding: .75rem; color: var(--color-ink-mute, #565656); font-size: .875rem; }

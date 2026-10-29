@@ -15,6 +15,7 @@ export async function availableStudioFonts(): Promise<PrintFont[]> {
     { id: "font-caveat", name: "Caveat", weight: 400, file: "Caveat-Regular.ttf" },
     { id: "font-caveat-brush", name: "Caveat Brush", weight: 400, file: "CaveatBrush-Regular.ttf" },
     { id: "font-montserrat-semibold", name: "Montserrat SemiBold", weight: 600, file: "Montserrat-SemiBold.ttf" },
+    { id: "font-origens-placa", name: "Origens Placa", weight: 400, file: "OrigensPlaca-Regular.ttf" },
   ];
   return Promise.all(fonts.map(async ({ file, ...font }) => ({ ...font, dataUrl: `data:application/octet-stream;base64,${(await readFile(path.join(process.cwd(), "assets", "print-studio", "fonts", file))).toString("base64")}` })));
 }

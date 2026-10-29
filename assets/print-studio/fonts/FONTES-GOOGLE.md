@@ -10,3 +10,7 @@ Usadas nas bases "Natal em família" e oferecidas na biblioteca do estúdio. Tod
 | `Montserrat-SemiBold.ttf` | Montserrat SemiBold (Julieta Ulanovsky) | fonts.google.com/specimen/Montserrat |
 
 Os arquivos são o recorte "latin" do Fontsource (ASCII + Latin-1, com todos os acentos do português).
+
+## Fonte própria
+
+`OrigensPlaca-Regular.ttf` (Origens Placa) é da Use Origens: desenhada para a estampa da placa (pacote `OrigensPlaca-Pacote.zip`, 29/10/2026), com A–Z, 0–9, os acentos do português e números de largura igual. Sem restrição de incorporação. Cobre o nome de todos os 5.571 municípios do IBGE.

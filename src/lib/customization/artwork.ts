@@ -1,3 +1,4 @@
+import { parseCityValue } from "../geo/brazil-cities";
 import { BUILTIN_FONTS, type PrintProject, type TextLayer, type TextSlot } from "../print-studio/model";
 import { pdfFontCharacterError } from "../print-studio/pdf-fonts";
 import { fontOptionWeight } from "../print-studio/font-options";
@@ -13,14 +14,14 @@ export type RequestArtwork = {
   /** On a page with several arts or versions: the one picked ("Eu vim pela ceia · Infantil"). */
   choice?: string;
 };
-export type ArtworkField = { id: string; label: string; maxLength: number; example: string };
+export type ArtworkField = { id: string; label: string; maxLength: number; example: string; input?: TextSlot["input"] };
 export type ArtworkInput = { layers?: unknown; fields?: unknown };
 
 const slotLayers = (project: PrintProject) => project.layers.filter((l): l is TextLayer & { slot: TextSlot } => l.visible && l.kind === "text" && Boolean(l.slot));
 /** One question per slot field, in layer order. A base with slots locks every other text, font and colour. */
 export function artworkFields(project: PrintProject): ArtworkField[] {
   const out: ArtworkField[] = [];
-  for (const { slot } of slotLayers(project)) if (!out.some((f) => f.id === slot.field)) out.push({ id: slot.field, label: slot.label, maxLength: slot.maxLength, example: slot.example });
+  for (const { slot } of slotLayers(project)) if (!out.some((f) => f.id === slot.field)) out.push({ id: slot.field, label: slot.label, maxLength: slot.maxLength, example: slot.example, ...(slot.input ? { input: slot.input } : {}) });
   return out;
 }
 export const editableTexts = (project: PrintProject): TextLayer[] => slotLayers(project).length ? [] : project.layers.filter((l): l is TextLayer => l.visible && l.kind === "text");
@@ -39,10 +40,58 @@ function applyCase(value: string, textCase: TextSlot["textCase"]) {
 }
 
 const PARTICLE_START = /^d[ao]s?\s+/i; // da, das, do, dos: "de", "di" e "du" fazem parte de sobrenomes como De Lucca e Di Napoli
-/** Where the art already says "dos", an answer typed as "dos Santos" or "da Silva" drops its own leading particle. */
+
+/** "tom 1996", "TOM1996" or "tom-1996" → "TOM-1996"; null when it is not 3 letters and 4 digits (the old grey plate). */
+export function plateValue(raw: string): string | null {
+  const m = /^([A-Z]{3})(\d{4})$/.exec(raw.toUpperCase().replace(/[^A-Z0-9]/g, ""));
+  return m ? `${m[1]}-${m[2]}` : null;
+}
+
+/**
+ * What a slot prints for an answer. Where the art already says "dos", an answer typed as "dos Santos" or "da Silva" drops its own leading
+ * particle; a city ("Nome/UF") prints as "UF - Nome"; a plate as "ABC-1234". An answer of the wrong shape prints nothing.
+ */
 function slotValue(slot: TextSlot, raw: string) {
   const value = normalizeValue(raw);
+  if (slot.input === "city") {
+    const city = parseCityValue(value);
+    return city ? `${city.uf} - ${city.name}` : "";
+  }
+  if (slot.input === "plate") return plateValue(value) ?? "";
   return slot.dropParticle ? value.replace(PARTICLE_START, "") : value;
+}
+
+/** How an answer reads to the customer and the team: a city as "Santa Terezinha de Itaipu (PR)"; anything else as typed. */
+export function fieldDisplay(field: Pick<ArtworkField, "input">, value: string): string {
+  const city = field.input === "city" ? parseCityValue(value) : null;
+  return city ? `${city.name} (${city.uf})` : normalizeValue(value);
+}
+/** Every answer of a base, in field order ("TOM-1996 · Santa Terezinha de Itaipu (PR)"; a single surname reads "Silva"). */
+export const fieldsSummary = (base: PrintProject, values: Record<string, string>): string =>
+  artworkFields(base).map((f) => fieldDisplay(f, values[f.id] ?? "")).filter(Boolean).join(" · ");
+
+const SURNAME_HINT = "Escreva como é: “Silva”, “dos Santos”, “Costa e Silva”. Maiúsculas e minúsculas se ajustam ao estilo da estampa.";
+/**
+ * The page's words around a base's fields. A base of free names (the surname bases) keeps the surname wording; a base with a city or a plate
+ * speaks of the print in general.
+ */
+export function fieldsCopy(base: PrintProject) {
+  const fields = artworkFields(base);
+  const surname = fields.every((f) => !f.input);
+  return {
+    legend: surname ? "Escreva o sobrenome" : "Personalize a estampa",
+    exampleCta: surname ? "É só um exemplo. Escreva o seu sobrenome" : "É só um exemplo. Coloque os seus dados",
+    check: surname ? "Conferi a escrita do sobrenome" : "Conferi o que vai na estampa",
+    intro: (buying: boolean) => surname
+      ? buying ? "Monte a estampa com o sobrenome da sua família e compre na hora, na loja Use Origens." : "Monte a estampa com o sobrenome da sua família. A gente prepara e fala com você pelo WhatsApp ou e-mail."
+      : buying ? "Monte a estampa com os seus dados e compre na hora, na loja Use Origens." : "Monte a estampa com os seus dados. A gente prepara e fala com você pelo WhatsApp ou e-mail.",
+  };
+}
+/** How to fill a field, behind its "i". */
+export function fieldHint(field: Pick<ArtworkField, "input">): string {
+  if (field.input === "city") return "Escolha o estado e comece a digitar o nome da cidade. Toque na cidade certa na lista.";
+  if (field.input === "plate") return "3 letras e 4 números, como numa placa antiga: por exemplo, as suas iniciais e o ano em que você nasceu.";
+  return SURNAME_HINT;
 }
 /** Words, with particles kept with the next word ("dos Santos"), split into at most `maxLines` lines of balanced length. */
 function breakLines(text: string, maxLines: number) {
@@ -72,18 +121,28 @@ export function fieldEdits(base: PrintProject, values: Record<string, string>): 
   });
 }
 
-export function validateArtworkFields(base: PrintProject, templateId: string, input: unknown): { ok: true; artwork: RequestArtwork } | { ok: false; errors: FieldError[] } {
+/** `cityExists`: the server's check of a city answer against IBGE's list (brazil-cities-server); the browser checks only its shape. */
+export type ArtworkChecks = { cityExists?: (value: string) => boolean };
+
+export function validateArtworkFields(base: PrintProject, templateId: string, input: unknown, checks: ArtworkChecks = {}): { ok: true; artwork: RequestArtwork } | { ok: false; errors: FieldError[] } {
   const fields = artworkFields(base);
   if (!input || typeof input !== "object" || Array.isArray(input)) return { ok: false, errors: [{ key: "artwork", message: "A personalização da arte é inválida." }] };
   const raw = input as Record<string, unknown>;
   const values: Record<string, string> = {};
   const errors: FieldError[] = [];
   for (const field of fields) {
-    const value = typeof raw[field.id] === "string" ? normalizeValue(raw[field.id] as string) : "";
+    let value = typeof raw[field.id] === "string" ? normalizeValue(raw[field.id] as string) : "";
     const problem = problemWith(value, field.maxLength);
-    if (!value) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: escreva o ${field.label.toLowerCase()}` });
-    else if (problem) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: ${problem}` });
-    else if (!NAME.test(value)) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: use só letras, espaço, hífen ou apóstrofo` });
+    const key = `artwork.${field.id}`;
+    if (!value) errors.push({ key, message: field.input === "city" ? `${field.label}: escolha a cidade na lista` : field.input === "plate" ? `${field.label}: escreva as letras e os números` : `${field.label}: escreva o ${field.label.toLowerCase()}` });
+    else if (problem) errors.push({ key, message: `${field.label}: ${problem}` });
+    else if (field.input === "plate") {
+      const plate = plateValue(value);
+      if (plate) value = plate;
+      else errors.push({ key, message: `${field.label}: use 3 letras e 4 números, como ABC-1234` });
+    } else if (field.input === "city") {
+      if (!parseCityValue(value) || (checks.cityExists && !checks.cityExists(value))) errors.push({ key, message: `${field.label}: escolha a cidade na lista` });
+    } else if (!NAME.test(value)) errors.push({ key, message: `${field.label}: use só letras, espaço, hífen ou apóstrofo` });
     else if (slotLayers(base).some(({ slot }) => slot.field === field.id && !slotValue(slot, value))) errors.push({ key: `artwork.${field.id}`, message: `${field.label}: escreva o sobrenome depois de “${value}”` });
     values[field.id] = value;
   }
@@ -97,8 +156,8 @@ export function validateArtworkFields(base: PrintProject, templateId: string, in
 }
 
 /** The storefront sends `fields` for a base with slots and `layers` for a free text base; the base decides which one is accepted. */
-export function validateArtworkInput(base: PrintProject, templateId: string, input: ArtworkInput) {
-  return artworkFields(base).length ? validateArtworkFields(base, templateId, input.fields) : validateArtwork(base, templateId, input.layers);
+export function validateArtworkInput(base: PrintProject, templateId: string, input: ArtworkInput, checks: ArtworkChecks = {}) {
+  return artworkFields(base).length ? validateArtworkFields(base, templateId, input.fields, checks) : validateArtwork(base, templateId, input.layers);
 }
 
 /** Only the visible composition and fonts explicitly included in this base may reach a customer. */

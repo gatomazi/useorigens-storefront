@@ -18,6 +18,7 @@ describe("fontes Mont fornecidas", () => {
       { name: "Caveat", weight: 400 },
       { name: "Caveat Brush", weight: 400 },
       { name: "Montserrat SemiBold", weight: 600 },
+      { name: "Origens Placa", weight: 400 },
     ]);
     const hashes = [
       "fa08f98300eb0541983986eb5eb2ea823a231791b854dcc0a26bd87d247c4e1e",
@@ -29,6 +30,7 @@ describe("fontes Mont fornecidas", () => {
       "4e305d8addcf3a0d39d56ec4b637676fd6ef54663f5217908c4ea98fe55b6edc",
       "5e2e35101b2c847b68456a1a36d5048bd71407c2da7549ea119c88540bd5e465",
       "9d6d7ddc09b5f0f2eb570d8622cf8f8c9742fdcb7c1801cb76b37fa45866accf",
+      "7d7f608b75877a2ca44903bd80d155c437f51453bb7ba3cb8345c523617099b0",
     ];
     const preset = createPreset("peleia");
     const project = { ...preset, fonts, layers: preset.layers.map((layer, index) => ({ ...layer, fontId: fonts[index].id, weight: fonts[index].weight! })) };
@@ -36,7 +38,7 @@ describe("fontes Mont fornecidas", () => {
     expect(reopened).toEqual(project);
     reopened.fonts.forEach((font, index) => {
       const bytes = Buffer.from(font.dataUrl.split(",")[1], "base64");
-      expect(bytes.subarray(0, 4).toString("hex")).toBe(font.name.startsWith("Mont ") ? "4f54544f" : "00010000"); // OTF (Mont) ou TTF (Google Fonts)
+      expect(bytes.subarray(0, 4).toString("hex")).toBe(font.name.startsWith("Mont ") ? "4f54544f" : "00010000"); // OTF (Mont) ou TTF (Google Fonts e Origens Placa)
       expect(createHash("sha256").update(bytes).digest("hex")).toBe(hashes[index]);
     });
     expect(() => parseProject({ ...project, fonts: [{ ...fonts[0], weight: 901 }] })).toThrow();

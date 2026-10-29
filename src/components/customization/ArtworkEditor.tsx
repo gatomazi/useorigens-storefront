@@ -1,9 +1,10 @@
 "use client";
 
-import { artworkFields, artworkFonts, editableTexts, type ArtworkEdit } from "@/lib/customization/artwork";
+import { artworkFields, artworkFonts, editableTexts, fieldHint, fieldsCopy, type ArtworkEdit, type ArtworkField } from "@/lib/customization/artwork";
 import type { PrintProject } from "@/lib/print-studio/model";
 import { fontFamilyId, groupFontOptions, preferredFontVariant } from "@/lib/print-studio/font-options";
 import type { ReactNode } from "react";
+import { CityField } from "./CityField";
 import { InfoTip } from "./InfoTip";
 import styles from "./ArtworkEditor.module.css";
 
@@ -47,20 +48,24 @@ export function ArtworkEditor({ base, edits, onChange, errors, uid }: { base: Pr
   );
 }
 
-/**
- * A base with slots: one input per answer (e.g. the family name); texts, fonts, colours and positions stay as designed. `compact` (the
- * full-screen preview) keeps only the inputs; `children` follow them (e.g. the button that opens that preview).
- */
-const FIELD_HINT = "Escreva como é: “Silva”, “dos Santos”, “Costa e Silva”. Maiúsculas e minúsculas se ajustam ao estilo da estampa.";
+/** A plate as it is typed: capitals, the hyphen after the 3 letters, at most "ABC-1234" (the server checks letters and digits). */
+const typedPlate = (raw: string) => {
+  const chars = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 7);
+  return chars.length > 3 ? `${chars.slice(0, 3)}-${chars.slice(3)}` : chars;
+};
 
 /**
- * The fields of a base with text slots (e.g. only the surname). How to write it sits behind an "i" (and is the field's description for screen
- * readers); the counter shows only near the limit. With a single field the legend already names it, so its label is for screen readers only.
- * `compact`: the full-screen view, where the legend is hidden and the label shows.
+ * The fields of a base with text slots: the surname, or a plate and a city. How to fill each sits behind an "i" (and is the field's description
+ * for screen readers); a free text's counter shows only near the limit. With a single field the legend already names it, so its label is for
+ * screen readers only and the legend carries the "i". `compact`: the full-screen view, where the legend is hidden and the labels show.
+ * `children` follow the fields (e.g. the button that opens that view).
  */
-export function ArtworkFields({ base, values, onChange, errors, uid, legend = "Coloque o nome da sua família", compact = false, children }: { base: PrintProject; values: Record<string, string>; onChange: (values: Record<string, string>) => void; errors: Record<string, string>; uid: string; legend?: ReactNode; compact?: boolean; children?: ReactNode }) {
+export function ArtworkFields({ base, values, onChange, errors, uid, legend, compact = false, children }: { base: PrintProject; values: Record<string, string>; onChange: (values: Record<string, string>) => void; errors: Record<string, string>; uid: string; legend?: ReactNode; compact?: boolean; children?: ReactNode }) {
   const fields = artworkFields(base);
-  const tip = <InfoTip label="Como escrever">{FIELD_HINT}</InfoTip>;
+  const single = fields.length === 1;
+  const tipFor = (field: ArtworkField) => <InfoTip label={field.input === "city" ? "Como escolher" : "Como escrever"}>{fieldHint(field)}</InfoTip>;
+  const tip = single ? tipFor(fields[0]) : null;
+  legend ??= fieldsCopy(base).legend;
   return (
     <fieldset className={compact ? styles.compactFields : styles.fields}>
       <legend className={compact ? "sr-only" : "t-h3"}>{legend}{!compact && tip}</legend>
@@ -70,14 +75,26 @@ export function ArtworkFields({ base, values, onChange, errors, uid, legend = "C
         const error = errors[`artwork.${field.id}`];
         const value = values[field.id] ?? "";
         const count = [...value].length;
+        const set = (next: string) => onChange({ ...values, [field.id]: next });
+        const help = (
+          <div className={styles.help} id={`${id}-help`}>
+            {error ? <span className={styles.error} role="alert">{error}</span> : <span className="sr-only">{fieldHint(field)}</span>}
+            {!field.input && count >= field.maxLength - 5 && <span className={`ml-auto ${count > field.maxLength ? styles.error : ""}`}>{count}/{field.maxLength}</span>}
+          </div>
+        );
+        if (field.input === "city") return (
+          <div key={field.id} className={styles.textGroup}>
+            <CityField id={id} label={field.label} tip={single ? compact && tip : tipFor(field)} value={value} onChange={set} error={error} describedBy={`${id}-help`} />
+            {help}
+          </div>
+        );
         return (
           <div key={field.id} className={styles.textGroup}>
-            <div className={!compact && fields.length === 1 ? "sr-only" : "flex items-center"}><label className="t-label" htmlFor={id}>{field.label}</label>{compact && tip}</div>
-            <input id={id} value={value} onChange={(e) => onChange({ ...values, [field.id]: e.target.value })} maxLength={field.maxLength} autoComplete="family-name" autoCapitalize="words" spellCheck={false} placeholder={`Ex.: ${field.example}`} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />
-            <div className={styles.help} id={`${id}-help`}>
-              {error ? <span className={styles.error} role="alert">{error}</span> : <span className="sr-only">{FIELD_HINT}</span>}
-              {count >= field.maxLength - 5 && <span className={`ml-auto ${count > field.maxLength ? styles.error : ""}`}>{count}/{field.maxLength}</span>}
-            </div>
+            <div className={!compact && single ? "sr-only" : "flex items-center"}><label className="t-label" htmlFor={id}>{field.label}</label>{single ? compact && tip : tipFor(field)}</div>
+            {field.input === "plate"
+              ? <input id={id} value={value} onChange={(e) => set(typedPlate(e.target.value))} maxLength={8} autoComplete="off" autoCorrect="off" autoCapitalize="characters" spellCheck={false} placeholder={`Ex.: ${field.example}`} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />
+              : <input id={id} value={value} onChange={(e) => set(e.target.value)} maxLength={field.maxLength} autoComplete="family-name" autoCapitalize="words" spellCheck={false} placeholder={`Ex.: ${field.example}`} className={styles.textarea} aria-invalid={Boolean(error)} aria-describedby={`${id}-help`} />}
+            {help}
           </div>
         );
       })}
