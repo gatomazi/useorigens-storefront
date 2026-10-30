@@ -107,8 +107,10 @@ function AnchorPicker({ anchors, current }: { anchors: { anchor: string; label: 
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pageDefaultSort, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement, regional = false,
+  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pageDefaultSort, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement, regional = false, ground,
 }: {
+  /** The colour of the ground behind the section (the page's or the home's own "Fundo"; absent = the region's), for the glass's readability. */
+  ground?: string;
   /**
    * One of Sul's sections on a region that follows Sul ("Imagens e produtos"): only what the region may have of its own (the picture, the opening's
    * products, the states' covers, the grid's blocks); texts, layout and products' sources stay Sul's.
@@ -194,7 +196,7 @@ export function SectionEditorForm({
     focal: { mobile: focM, desktop: focD },
     overlay: overlayKind === "preset" ? { preset: preset as "none" } : { color: ovColor as `#${string}`, opacity: ovOpacity },
   };
-  const issues = hasVisual && !(section.template === "campaign" && !hasImage && fillKind === "none") ? readability(liveAppearance, tone, hasImage, heroTextColors(section)) : [];
+  const issues = hasVisual && !(section.template === "campaign" && !hasImage && fillKind === "none") ? readability(liveAppearance, tone, hasImage, heroTextColors(section), section.template === "product-carousel" && section.layout?.glass === true ? (ground ?? "token:ground") : undefined) : [];
 
   const cur = section.source;
   return (
@@ -325,6 +327,7 @@ export function SectionEditorForm({
           customizers={customizers}
           checkpoints={variantNow === "checkpoints"}
           accumulate={section.accumulate === true}
+          seal={section.sealCollections === true}
         />
       )}
 
@@ -458,6 +461,11 @@ export function SectionEditorForm({
             <div><label className="a-label" htmlFor="period_to">Encerra em (inclusive)</label><input id="period_to" name="period_to" type="date" defaultValue={section.period?.closesAt ?? ""} className="a-input" /></div>
             <div><label className="a-label" htmlFor="period_label">Rótulo enquanto fechada</label><input id="period_label" name="period_label" defaultValue={section.period?.label ?? ""} className="a-input" maxLength={40} placeholder="Semana 2" /></div>
           </div>
+          <label className="flex items-center gap-2 font-bold">
+            <input type="checkbox" name="period_seal" defaultChecked={section.sealCollections === true} data-testid="period-seal" />
+            Fechar a página da coleção até o dia de abrir
+          </label>
+          <p className="a-muted -mt-2 text-[0.8125rem]">Ligado: até o “Abre em”, quem abrir o endereço da coleção vê só um cadeado com o dia. A coleção também sai da busca e do mapa do site. Use só em coleção criada para a oferta (Black Week 01…), nunca em coleção do dia a dia, como Seu Lugar ou Natal.</p>
         </fieldset>
       )}
 

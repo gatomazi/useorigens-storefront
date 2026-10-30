@@ -3,7 +3,7 @@
  * and the opening's scheduled texts. Pure rules, shared by the storefront and the tests. Days are YYYY-MM-DD in Brasília time, both ends included,
  * compared as strings (the format sorts like the calendar).
  */
-import type { GridTile } from "./schema";
+import type { GridTile, ScopeDoc, Section } from "./schema";
 
 /** "locked": before its first day; "current": the week running now; "open": running too, but not the latest (a block without an end); "ended": after its last day. */
 export type CheckpointState = "open" | "current" | "locked" | "ended";
@@ -50,6 +50,31 @@ export function periodLabel(p: Period): string | null {
   if (p.opensAt) return `a partir de ${dayMonth(p.opensAt)}`;
   if (p.closesAt) return `até ${dayMonth(p.closesAt)}`;
   return null;
+}
+
+/**
+ * The collections the calendar keeps closed on `today`, only from sections the owner marked "Fechar as páginas das coleções" (`sealCollections`, never
+ * inferred from the days): the destination of a checkpoint that has not opened yet, or the source of a product section whose period has not started,
+ * in the home (the theme in use and the kept ones: a kept Black theme already seals its weeks) and in every live page. Each collection opens on the
+ * EARLIEST day a sealed section opens it. Keys are `store:collectionId`; the value is the day it opens. Until then the site keeps it out of reach: its
+ * page shows only a padlock, its API, the sitemap and the search leave it out (the offer is a surprise).
+ */
+export function collectionLocks(doc: ScopeDoc | undefined, today: string): Map<string, string> {
+  if (!doc) return new Map();
+  const earliest = new Map<string, string>();
+  const note = (key: string, day: string) => {
+    const seen = earliest.get(key);
+    if (!seen || day < seen) earliest.set(key, day);
+  };
+  const sections: Section[] = [...(doc.home?.sections ?? []), ...Object.values(doc.homeThemes ?? {}).flatMap((t) => t?.sections ?? []), ...(doc.pages ?? []).filter((p) => !p.archived).flatMap((p) => p.sections)];
+  for (const s of sections) {
+    if (s.sealCollections !== true || s.active === false) continue;
+    if (s.template === "image-grid" && s.variant === "checkpoints") {
+      for (const t of s.tiles ?? []) if (t.opensAt && (t.dest.kind === "collection-page" || t.dest.kind === "ink-collection")) note(`${t.dest.store}:${t.dest.collectionId}`, t.opensAt);
+    }
+    if (s.template === "product-carousel" && s.period?.opensAt && s.source?.kind === "ink-category") note(`${s.source.store}:${s.source.collectionId}`, s.period.opensAt);
+  }
+  return new Map([...earliest].filter(([, day]) => today < day));
 }
 
 /** Whole days from `today` to `day` (both YYYY-MM-DD). */

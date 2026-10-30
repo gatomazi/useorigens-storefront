@@ -18,7 +18,8 @@ import { normalizeText } from "../geo/text";
 import { getRegionHome } from "../home";
 import { launchedRegions } from "../regions/launched";
 import { siteConfigHomeEnabled } from "../site-config/flag";
-import { customizerHref, pageHref, PAGE_KIND_LABEL } from "../site-config/pages";
+import { customizerHref, landingCollection, pageHref, PAGE_KIND_LABEL } from "../site-config/pages";
+import { collectionLocks, todayInBrasilia } from "../site-config/checkpoints";
 import { HUB_PAGE_SLUG, personalizationCards, personalizationHubHref } from "../customization/hub";
 import { readPublished } from "../site-config/published";
 import type { PublishedBundle, ScopeDoc, Source as CarouselSource } from "../site-config/schema";
@@ -44,6 +45,8 @@ export type GlobalIndexInputs = {
   garmentIndex: GarmentIndex;
   /** The region's PUBLISHED document, only when the CMS-driven storefront is on (otherwise nothing editorial is public). */
   doc?: ScopeDoc;
+  /** The day the calendar's locks are read for (YYYY-MM-DD, Brasília); absent = today. */
+  today?: string;
   media?: PublishedBundle["media"];
   collections: readonly CollectionRecord[];
   /** Store whose public collection pages the `collections` link to (the region's store under the effective commerce mode). */
@@ -137,9 +140,13 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
   docs.push(...merchDocs(region, catalog.merch(region), input.cityCollection));
 
   const doc = input.doc;
+  // The collections the Black calendar keeps closed today (their pages show only a padlock): never offered by the search before their day.
+  const locks = collectionLocks(doc, input.today ?? todayInBrasilia());
+  const lockedRef = (ref: { store: string; collectionId: number } | null) => Boolean(ref && locks.has(`${ref.store}:${ref.collectionId}`));
   if (doc && doc.scope === region) {
     for (const page of doc.pages ?? []) {
       if (page.archived) continue;
+      if (page.kind === "categoryLanding" && lockedRef(landingCollection(page))) continue;
       const og = page.seo.ogImage ? input.media?.[page.seo.ogImage.assetId] : undefined;
       docs.push({
         key: `page:${page.kind}:${page.slug}`, kind: "page", region, title: page.title, subtitle: page.seo.description ?? PAGE_KIND_LABEL[page.kind],
@@ -187,6 +194,7 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
   const store = input.collectionStore ?? REGIONS[region].storeKey;
   for (const c of input.collections) {
     if (!c.isAvailable || c.matchedCount < MIN_USABLE_PRODUCTS) continue;
+    if (lockedRef({ store, collectionId: c.id })) continue;
     const ours = input.doc ? collectionPageSlug(input.doc, store, c.id) : null;
     const url = ours ? collectionPagePath(region, ours) : collectionUrl(store, c.slug);
     if (!url) continue;
@@ -271,7 +279,8 @@ export function globalSearchIndex(): Built {
   const cms = siteConfigHomeEnabled() ? readPublished() : null;
   const published = cms && cms.source === "published" ? cms : null;
   const collectionsKey = regions.map((r) => `${storeForRegion(r)}:${getStoreCollections(storeForRegion(r))?.syncedAt ?? "-"}`).join("|");
-  const key = [catalog.syncedAt, garmentIndexMtimeMs(), published?.checksum ?? (cms ? "seed" : "off"), collectionsKey, mtime(umaPencaSnapshotPath()), regions.join(",")].join("#");
+  // The day too: a collection the Black calendar opens today must reach the search without waiting for a publish or a sync.
+  const key = [catalog.syncedAt, garmentIndexMtimeMs(), published?.checksum ?? (cms ? "seed" : "off"), collectionsKey, mtime(umaPencaSnapshotPath()), regions.join(","), todayInBrasilia()].join("#");
   if (built && built.key === key) return built;
 
   const started = performance.now();

@@ -4,7 +4,7 @@ import type { CityFamilyEntry, Catalog } from "@/lib/catalog/repository";
 import { DESIGN_FAMILIES } from "@/lib/catalog/families";
 import type { CityDesignBinding } from "@/lib/catalog/types";
 import { localitiesOfRegion } from "@/lib/geo/localities";
-import type { RegionSlug } from "@/lib/geo/regions";
+import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { placeSearchCopy } from "@/lib/search/copy";
 import { prepareGlobalDocs, searchGlobal, type GlobalDoc } from "@/lib/search/global";
 import { buildGlobalDocs, cityCollectionIds, clusterPieces } from "@/lib/search/global-index";
@@ -162,6 +162,16 @@ describe("global search: editorial", () => {
     const r = searchGlobal(index({ collections: [collection(1, "Inverno Gaucho", true), collection(2, "SUL - RS", false)] }), "sul", "inverno gaucho");
     expect(r.groups[0].items[0]).toMatchObject({ kind: "page", tag: "Coleção", external: true, href: "https://www.usesul.com.br/usesul/collections/inverno-gaucho" });
     expect(searchGlobal(index({ collections: [collection(2, "SUL - RS", false)] }), "sul", "sul rs").groups.find((g) => g.group === "editorial")).toBeUndefined();
+  });
+
+  test("a collection the Black calendar keeps sealed is not offered before its day, and is from it", () => {
+    const store = REGIONS.sul.storeKey;
+    const tile = { id: "w2", title: "Semana 2", dest: { kind: "collection-page" as const, store, collectionId: 7 }, opensAt: "2026-11-09" };
+    const strip = { ...structuredClone(seed.docs.sul.home!.sections[1]), id: "custom-cp", template: "image-grid" as const, variant: "checkpoints" as const, active: true, tiles: [tile], sealCollections: true as const };
+    const doc = { ...sulDoc([]), home: { sections: [...seed.docs.sul.home!.sections, strip] } } as ScopeDoc;
+    const docsOn = (today: string) => buildGlobalDocs({ region: "sul", catalog: sulCatalog, garmentIndex, doc, collections: [collection(7, "Black Week 02", true)], umaPencaArticles: 0, today });
+    expect(docsOn("2026-11-08").some((d) => d.key === "col:7")).toBe(false);
+    expect(docsOn("2026-11-09").some((d) => d.key === "col:7")).toBe(true);
   });
 
   test("8–9. a live hotpage is found; an archived one is not", () => {

@@ -177,7 +177,7 @@ export async function preflight(deps: Pick<PublishDeps, "releases" | "media">, d
   if (target.kind === "page") {
     const page = composed.pages!.find((p) => p.id === target.id)!;
     const asHome = pageAsHomeDoc(composed, page);
-    return [...problems, ...collectionProblems(asHome), ...readabilityProblems(asHome), ...pageGroundProblems(page), ...linkProblems(composed, page.sections)];
+    return [...problems, ...collectionProblems(asHome), ...readabilityProblems(asHome, page.backdrop?.color), ...pageGroundProblems(page), ...linkProblems(composed, page.sections)];
   }
   const model = composed.customizers!.find((m) => m.id === target.id)!;
   return [...problems, ...customizerProblems(composed, model)];

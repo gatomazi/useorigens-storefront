@@ -131,7 +131,7 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
               // The page's hero may give way to an active live banner or checkpoints strip, which then opens the page.
               const liveOpens = locked && (!s.active || page.sections.some(opensPage));
               const custom = s.id.startsWith("custom-") && !locked;
-              const readable = sectionReadability(s);
+              const readable = sectionReadability(s, page.backdrop?.color);
               const label = s.title?.replace(/\n/g, " ") ?? s.anchor;
               return { id: s.id, label, movable: !locked, dimmed: !s.active, cells: (
                 <>
