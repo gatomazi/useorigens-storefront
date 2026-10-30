@@ -50,7 +50,7 @@ const NAME = "block font-display font-extrabold uppercase leading-[0.95] trackin
 /** Every card: opaque (the ground's pattern never runs under a word), 12px corners, the same border weight in every state. */
 const SHELL = "rounded-xl border-2";
 
-/** The marker of the week running now (still: the card itself breathes, `.cp-pulse`). */
+/** The marker of the week running now (still: the card and its button breathe, `.cp-pulse` / `.cp-pulse-sm`). */
 const Dot = () => <span aria-hidden="true" className="h-2 w-2 rounded-full" style={{ background: HIGHLIGHT }} />;
 
 /**
@@ -132,7 +132,8 @@ export function WeeklyCheckpoints({ anchor, headingId, title, subtitle, items }:
               return (
                 <li key={i}>
                   <Card href={href} external={it.external} current className={`flex h-full flex-col bg-[var(--card-fill)] p-5 ${SHELL}`} style={{ borderColor: HIGHLIGHT }}>
-                    <span className="flex items-center justify-between gap-3">
+                    {/* "Esta semana" in the campaign's yellow, like the card's edge and its button. */}
+                    <span className="flex items-center justify-between gap-3" style={{ color: HIGHLIGHT }}>
                       <Status it={it} />
                       <Dot />
                     </span>
@@ -140,7 +141,7 @@ export function WeeklyCheckpoints({ anchor, headingId, title, subtitle, items }:
                     {it.caption && <span className="mt-1.5 block max-w-[34ch] text-[0.875rem] leading-snug text-ink-soft">{it.caption}</span>}
                     {href && (
                       <span className="mt-auto block pt-4">
-                        <span className="inline-flex h-10 items-center gap-2 rounded-md px-3.5 pt-px text-[0.75rem] font-bold uppercase tracking-[0.06em] transition-[filter] duration-200 group-hover:brightness-110" style={{ background: HIGHLIGHT, color: NEAR_BLACK }}>
+                        <span className="cp-pulse-sm inline-flex h-10 items-center gap-2 rounded-md px-3.5 pt-px text-[0.75rem] font-bold uppercase tracking-[0.06em] transition-[filter] duration-200 group-hover:brightness-110" style={{ background: HIGHLIGHT, color: NEAR_BLACK }}>
                           {it.cta}
                           <Arrow />
                         </span>
