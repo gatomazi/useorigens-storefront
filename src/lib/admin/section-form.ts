@@ -383,6 +383,8 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     patch.period = isCheckpointDay(opensAt) || isCheckpointDay(closesAt)
       ? { ...(isCheckpointDay(opensAt) ? { opensAt } : {}), ...(isCheckpointDay(closesAt) ? { closesAt } : {}), ...(label ? { label } : {}) }
       : undefined;
+    // Sealing its collection only means something with a first day (before it, the collection's page is a padlock).
+    patch.sealCollections = patch.period?.opensAt && f.get("period_seal") !== null ? true : undefined;
   }
   if (section.template === "hero" && f.get("hero_sched_present") !== null) patch.heroSchedule = parseHeroSchedule(f).entries;
   if (f.get("variant_present") !== null) {
@@ -394,6 +396,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
   if (section.template === "image-grid" && f.get("grid_present") !== null) {
     const variant = "variant" in patch ? patch.variant : section.variant;
     patch.accumulate = variant === "checkpoints" && f.get("checkpoints_accumulate") !== null ? true : undefined;
+    patch.sealCollections = variant === "checkpoints" && f.get("checkpoints_seal") !== null ? true : undefined;
   }
   return patch;
 }

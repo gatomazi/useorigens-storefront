@@ -65,7 +65,7 @@ const ASPECT_CLASS: Record<GridLayout["aspect"], string> = { square: "aspect-squ
  * rows post as `tile_<i>_*` in their current order plus `tile_count`, parsed by `parseGridTiles` (src/lib/admin/section-form.ts).
  */
 export function GridTilesEditor({
-  scope, tiles, layout, media, thumbOf, collections, pages, anchors, customizers = [], checkpoints = false, accumulate = false,
+  scope, tiles, layout, media, thumbOf, collections, pages, anchors, customizers = [], checkpoints = false, accumulate = false, seal = false,
 }: {
   scope: string;
   tiles: GridTile[];
@@ -82,6 +82,8 @@ export function GridTilesEditor({
   checkpoints?: boolean;
   /** Checkpoints: the offers accumulate (CMS `accumulate`). */
   accumulate?: boolean;
+  /** Checkpoints: the blocks' collections stay sealed until their day (CMS `sealCollections`). */
+  seal?: boolean;
 }) {
   const nextKey = useRef(tiles.length);
   const [rows, setRows] = useState<Row[]>(() => tiles.map((t, i) => toRow(t, i, scope)));
@@ -112,6 +114,11 @@ export function GridTilesEditor({
             Ofertas acumulam (a semana anterior continua valendo)
           </label>
           <p className="a-muted -mt-2 text-[0.8125rem]">Ligado: depois do último dia, a semana aparece como “Valendo · 02–07/11”, com o link, e só deixa de ser a semana atual. Desligado: aparece como “Encerrada”, sem link.</p>
+          <label className="flex items-center gap-2 font-bold">
+            <input type="checkbox" name="checkpoints_seal" defaultChecked={seal} data-testid="checkpoints-seal" />
+            Fechar as páginas das coleções até o dia de abrir
+          </label>
+          <p className="a-muted -mt-2 text-[0.8125rem]">Ligado: até o dia de cada semana, quem abrir o endereço da coleção do bloco vê só um cadeado com o dia. A coleção também sai da busca e do mapa do site. Use só com coleções criadas para a oferta (Black Week 01…), nunca com coleções do dia a dia, como Seu Lugar ou Natal.</p>
         </>
       )}
       {!checkpoints && (

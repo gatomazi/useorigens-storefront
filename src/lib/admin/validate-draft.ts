@@ -147,7 +147,8 @@ export function sectionTone(section: Section): "light" | "dark" | null {
   return null;
 }
 
-export function sectionReadability(section: Section): ReadabilityIssue[] {
+/** `ground`: the colour of the page (or home) ground behind the section ("Fundo da página"/"Fundo da home"); absent = the region's own light ground. */
+export function sectionReadability(section: Section, ground?: string): ReadabilityIssue[] {
   if (section.template === "campaign" && section.variant === "split") {
     // The split campaign draws its picture on the other half and picks its text by its panel's colour (white on a dark one, ink on a light one), so
     // only that colour is judged, against the text it really gets. No colour: the region's own, under white text.
@@ -161,7 +162,9 @@ export function sectionReadability(section: Section): ReadabilityIssue[] {
   const hasImage = Boolean(image?.mobile || image?.desktop);
   // The campaign keeps its own dark surface (with product crops) when it has neither image nor fill, so only judge what is configured.
   if (section.template === "campaign" && !hasImage && section.appearance.fill.kind === "none") return [];
-  return readability(section.appearance, tone, hasImage, heroTextColors(section));
+  // A carousel whose colour is glass shows the page's ground through it: judged on the mix, not on the colour.
+  const glassOver = section.template === "product-carousel" && section.layout?.glass === true ? (ground ?? "token:ground") : undefined;
+  return readability(section.appearance, tone, hasImage, heroTextColors(section), glassOver);
 }
 
 /** Blocking readability problems of a page's own ground (its text over its colour); warnings stay in the editor. */
@@ -170,9 +173,9 @@ export function pageGroundProblems(page: Page): string[] {
 }
 
 /** Blocking readability problems of the ACTIVE sections (warnings are shown in the editor but never stop a publish). */
-export function readabilityProblems(doc: ScopeDoc): string[] {
+export function readabilityProblems(doc: ScopeDoc, groundColor: string | undefined = doc.home?.backdrop?.color): string[] {
   const ground = doc.home?.backdrop ? groundReadability(doc.home.backdrop).filter((i) => i.level === "blocking").map((i) => `Fundo da home: ${i.message}`) : [];
-  return [...ground, ...(doc.home?.sections ?? []).filter((s) => s.active).flatMap((s) => sectionReadability(s).filter((i) => i.level === "blocking").map((i) => `"${s.title ?? s.id}": ${i.message}`))];
+  return [...ground, ...(doc.home?.sections ?? []).filter((s) => s.active).flatMap((s) => sectionReadability(s, groundColor).filter((i) => i.level === "blocking").map((i) => `"${s.title ?? s.id}": ${i.message}`))];
 }
 
 /** Why a personalization model cannot be published (empty = it can): its collection must be real, in the region's own store and, when internal, enabled. */

@@ -18,7 +18,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ regi
   const { region, slug } = await params;
   if (!isRegionSlug(region) || !isRegionLaunched(region)) return Response.json({ error: "unknown region" }, { status: 404 });
   const found = findCollectionLanding(region, slug);
-  if (!found) return Response.json({ error: "unknown collection" }, { status: 404 });
+  // A collection the Black calendar keeps closed answers like one that does not exist: nothing of the offer before its day.
+  if (!found || found.locked) return Response.json({ error: "unknown collection" }, { status: 404 });
   const query = parseCollectionQuery(new URL(request.url).searchParams, pagedGridDefaultSort(found.region, found.bundle, found.page));
   const { items, facets } = runCollectionQuery(pagedGridItems(found.region, found.bundle, found.page, "collection"), query, productSalesUnits(found.region));
   return Response.json(

@@ -100,3 +100,9 @@ export function plainCollectionLanding(page: Page, hasPicture: (appearance: Appe
   if (!hero || hero.subtitle?.trim() || hero.cta || hasPicture(hero.appearance)) return false;
   return active.some((s) => s.layout?.display === "paged" && s.source?.kind === "ink-category");
 }
+
+/** The collection a landing is the page of: its paged grid's (or, failing that, its first product section's) INK collection. */
+export function landingCollection(page: Page): { store: string; collectionId: number } | null {
+  const grid = page.sections.find((s) => s.layout?.display === "paged" && s.source?.kind === "ink-category") ?? page.sections.find((s) => s.source?.kind === "ink-category");
+  return grid?.source?.kind === "ink-category" ? { store: grid.source.store, collectionId: grid.source.collectionId } : null;
+}

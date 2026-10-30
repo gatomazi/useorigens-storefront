@@ -3,7 +3,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { PublicPage } from "@/components/pages/PublicPage";
 import { landingPageHref, pagedGridPageCount, pageMetadata, resolveCollectionLanding } from "@/lib/pages/public";
 
-export const revalidate = 3600;
+export const revalidate = 60;
 
 export function generateStaticParams() {
   return [];
@@ -19,7 +19,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const n = pageNumber(pagina);
   if (!n || n < 2) return {};
   try {
-    const { region: r, page, bundle } = resolveCollectionLanding(region, slug);
+    const { region: r, page, bundle, locked } = resolveCollectionLanding(region, slug);
+    if (locked) return { title: "Em breve", robots: { index: false, follow: false } };
     return pageMetadata(r, page, bundle, n);
   } catch {
     return {};
@@ -31,7 +32,9 @@ export default async function Page({ params }: Params) {
   const { region, slug, pagina } = await params;
   const n = pageNumber(pagina);
   if (!n) notFound();
-  const { region: r, bundle, page, compact } = resolveCollectionLanding(region, slug);
+  const { region: r, bundle, page, compact, locked } = resolveCollectionLanding(region, slug);
+  // A collection the Black calendar keeps closed has no page 2 either (its first page shows the padlock).
+  if (locked) notFound();
   if (n === 1) permanentRedirect(landingPageHref(r, page, 1));
   if (n > pagedGridPageCount(r, bundle, page)) notFound();
   return <PublicPage region={r} bundle={bundle} page={page} pageNumber={n} compactHero={compact} />;

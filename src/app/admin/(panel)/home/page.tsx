@@ -120,7 +120,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           rows={sections.map((s: Section) => {
               const status = sourceStatus(s, ws.doc);
               const locked = s.template === "hero" || s.template === "footer";
-              const readable = sectionReadability(s);
+              const readable = sectionReadability(s, ws.doc.home?.backdrop?.color);
               const custom = s.id.startsWith("custom-");
               return { id: s.id, label: s.title?.replace(/\n/g, " ") ?? typeLabel(s), movable: !locked, dimmed: !s.active, cells: (
                 <>

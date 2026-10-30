@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { parseGridTiles, parseHeroSchedule, parseSectionForm } from "@/lib/admin/section-form";
-import { checkpointStates, dayMonth, periodLabel, periodState, todayInBrasilia } from "@/lib/site-config/checkpoints";
+import { bundleCollectionLocks, checkpointStates, collectionLocks, dayMonth, periodLabel, periodState, todayInBrasilia } from "@/lib/site-config/checkpoints";
+import { landingCollection } from "@/lib/site-config/pages";
 import { followedDoc } from "@/lib/site-config/follow";
 import { validateScopeDoc, validateSection, type GridTile, type ScopeDoc, type Section } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
@@ -126,6 +127,18 @@ describe("a product section with a period (the weeks' shelves on the calendar pa
     expect(parseSectionForm(form({ period_present: "1", period_from: "2026-11-09", period_to: "2026-11-15", period_label: "Semana 2" }), s).period).toEqual({ opensAt: "2026-11-09", closesAt: "2026-11-15", label: "Semana 2" });
     expect(parseSectionForm(form({ period_present: "1", period_from: "", period_to: "", period_label: "Semana 2" }), s).period).toBeUndefined();
   });
+  test("given the seal, when parsed and validated, then it needs a first day; on the checkpoints, the composition", () => {
+    const s = shelf(undefined);
+    expect(parseSectionForm(form({ period_present: "1", period_from: "2026-11-09", period_seal: "on" }), s).sealCollections).toBe(true);
+    expect(parseSectionForm(form({ period_present: "1", period_from: "", period_to: "2026-11-15", period_seal: "on" }), s).sealCollections).toBeUndefined();
+    expect(parseSectionForm(form({ period_present: "1", period_from: "2026-11-09" }), s).sealCollections).toBeUndefined();
+    expect(parseSectionForm(form({ grid_present: "1", checkpoints_seal: "on" }), checkpoints()).sealCollections).toBe(true);
+    expect(parseSectionForm(form({ grid_present: "1", checkpoints_seal: "on" }), checkpoints({ variant: undefined })).sealCollections).toBeUndefined();
+    expect(validateSection({ ...shelf({ opensAt: "2026-11-09" }), sealCollections: true }).ok).toBe(true);
+    expect(validateSection({ ...checkpoints(), sealCollections: true }).ok).toBe(true);
+    expect(validateSection({ ...shelf(undefined), sealCollections: true }).ok).toBe(false);
+    expect(validateSection({ ...checkpoints(), sealCollections: false as unknown as true }).ok).toBe(false);
+  });
 });
 
 describe("the opening's scheduled texts", () => {
@@ -172,5 +185,66 @@ describe("offers that accumulate (the owner's final call: the previous week is n
     expect(validateSection(checkpoints({ variant: undefined, tiles: plain, accumulate: true })).ok).toBe(false);
     expect(parseSectionForm(form({ grid_present: "1", variant_present: "1", variant: "checkpoints", checkpoints_accumulate: "on" }), checkpoints()).accumulate).toBe(true);
     expect(parseSectionForm(form({ grid_present: "1", variant_present: "1", variant: "checkpoints" }), checkpoints({ accumulate: true })).accumulate).toBeUndefined();
+  });
+});
+
+describe("collections the calendar keeps closed", () => {
+  const S = "use-sul" as const;
+  const dest = (id: number) => ({ kind: "collection-page" as const, store: S, collectionId: id });
+  const strip = (seal = true): Section => ({ ...checkpoints({ tiles: [week(1, "2026-11-02", { dest: dest(155244) }), week(2, "2026-11-09", { dest: dest(155245) }), week(3, "2026-11-16", { dest: dest(155249) })] }), ...(seal ? { sealCollections: true as const } : {}) });
+  const shelf = (id: number, opensAt: string): Section => ({
+    id: `custom-s${id}`, anchor: `s${id}`, headingId: `s${id}-title`, template: "product-carousel", active: true, title: "Ofertas", analyticsSource: "homeCollection",
+    layout: { variant: "standard", tone: "light", surface: "plain" }, source: { kind: "ink-category", store: S, collectionId: id, limit: 8, order: "category" },
+    appearance: { fill: { kind: "none" }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } }, period: { opensAt }, sealCollections: true,
+  });
+  const docWith = (homeSections: Section[], kept: Section[] = [], pageSections: Section[] = []): ScopeDoc => {
+    const doc = structuredClone(seed.docs.sul);
+    const home = [...doc.home!.sections];
+    home.splice(1, 0, ...homeSections);
+    return { ...doc, home: { sections: home }, ...(kept.length ? { homeThemes: { black: { sections: [...doc.home!.sections.slice(0, 1), ...kept, ...doc.home!.sections.slice(-1)] } } } : {}), ...(pageSections.length ? { pages: [{ ...structuredClone(doc.pages?.[0] ?? {}), id: "pg-cal", kind: "hotpage", slug: "calendario-da-black", title: "Calendário", seo: { indexable: false }, version: 1, sections: pageSections } as never] } : {}) };
+  };
+
+  test("given the strip, when the days pass, then each week's collection is closed until its own day and open from it", () => {
+    const doc = docWith([strip()]);
+    expect([...collectionLocks(doc, "2026-11-01")]).toEqual([[`${S}:155244`, "2026-11-02"], [`${S}:155245`, "2026-11-09"], [`${S}:155249`, "2026-11-16"]]);
+    expect([...collectionLocks(doc, "2026-11-09").keys()]).toEqual([`${S}:155249`]);
+    expect(collectionLocks(doc, "2026-11-16").size).toBe(0);
+  });
+
+  test("given a kept theme and a page, when they name the collections, then they lock them too; the earliest day anywhere opens it", () => {
+    const kept = docWith([], [strip()]);
+    expect(collectionLocks(kept, "2026-11-01").has(`${S}:155245`)).toBe(true);
+    const page = docWith([], [], [shelf(155259, "2026-11-23")]);
+    expect(collectionLocks(page, "2026-11-22").get(`${S}:155259`)).toBe("2026-11-23");
+    // The same collection opened earlier elsewhere (a shelf from 02/11) is open from 02/11.
+    const both = docWith([strip()], [], [shelf(155245, "2026-11-02")]);
+    expect(collectionLocks(both, "2026-11-03").has(`${S}:155245`)).toBe(false);
+    expect(collectionLocks(undefined, "2026-11-01").size).toBe(0);
+  });
+
+  test("given a calendar NOT marked to seal (the draft pointing at Seu Lugar or Natal), when its days are ahead, then no collection closes", () => {
+    const everyday = checkpoints({ tiles: [week(1, "2026-11-16", { dest: dest(154424) }), week(2, "2026-11-23", { dest: dest(152078) })] });
+    expect(collectionLocks(docWith([everyday]), "2026-11-01").size).toBe(0);
+    // Sealed but inactive: nothing either.
+    expect(collectionLocks(docWith([{ ...strip(), active: false }]), "2026-11-01").size).toBe(0);
+    // A sealed shelf whose period has no first day seals nothing (its form never stores it either).
+    expect(collectionLocks(docWith([], [], [{ ...shelf(155259, "2026-11-23"), period: { closesAt: "2026-11-30" } }]), "2026-11-01").size).toBe(0);
+  });
+
+  test("given Sul's kept Black theme sealing a week, when Norte (no seal of its own) is read, then the same store's collection is sealed there too", () => {
+    const sul = docWith([], [strip()]);
+    const norte = structuredClone(seed.docs.norte) as ScopeDoc;
+    expect(collectionLocks(norte, "2026-10-31").size).toBe(0);
+    const all = bundleCollectionLocks([sul, norte, undefined], "2026-10-31");
+    expect(all.get(`${S}:155245`)).toBe("2026-11-09");
+    // The earliest day of any region opens it.
+    const early = { ...norte, pages: [{ ...structuredClone(seed.docs.sul.pages?.[0] ?? {}), id: "pg-n", kind: "hotpage", slug: "cal", title: "Cal", seo: { indexable: false }, version: 1, sections: [shelf(155245, "2026-11-02")] } as never] } as ScopeDoc;
+    expect(bundleCollectionLocks([sul, early], "2026-10-31").get(`${S}:155245`)).toBe("2026-11-02");
+  });
+
+  test("given a landing, when its collection is read, then it is its paged grid's", () => {
+    const landing = { sections: [{ template: "page-hero" }, { template: "product-carousel", layout: { display: "paged" }, source: { kind: "ink-category", store: S, collectionId: 155245 } }] } as never;
+    expect(landingCollection(landing)).toEqual({ store: S, collectionId: 155245 });
+    expect(landingCollection({ sections: [{ template: "page-hero" }] } as never)).toBeNull();
   });
 });

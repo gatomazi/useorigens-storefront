@@ -58,7 +58,7 @@ export default async function PageSectionEditor({ params, searchParams }: { para
           <SectionEditorForm
             section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveSection} notes={[...(structured?.notes ?? []), ...liveNotes]}
             stateCovers={stateCovers} page={page.id} pages={pageOptions(ws.doc, published)} customizers={customizers} anchors={page.sections.map((s) => ({ anchor: s.anchor, label: s.title?.replace(/\n/g, " ") ?? s.anchor }))}
-            collectionMembers={collectionOrderMembers(section, ws.doc)}
+            collectionMembers={collectionOrderMembers(section, ws.doc)} ground={page.backdrop?.color}
             collectionArrangement={collectionOrderArrangement(section, ws.doc)}
             pageKind={page.kind}
             pageDefaultSort={page.defaultSort}

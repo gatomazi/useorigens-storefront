@@ -8,8 +8,9 @@ import { storeForRegion } from "../catalog/commerce-mode";
 import type { CollectionRecord } from "../catalog/collections";
 import { getCatalog } from "../catalog/repository";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
-import { livePage, liveCustomizer, newCollectionLanding, pageHref, plainCollectionLanding } from "../site-config/pages";
+import { landingCollection, livePage, liveCustomizer, newCollectionLanding, pageHref, plainCollectionLanding } from "../site-config/pages";
 import { hasImage, resolveBackground } from "../site-config/resolve";
+import { bundleCollectionLocks, todayInBrasilia } from "../site-config/checkpoints";
 import type { Customizer, Page, PageKind, PublishedBundle } from "../site-config/schema";
 import type { CollectionPageLookup, InkCategorySource } from "../site-config/sources";
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
@@ -48,7 +49,7 @@ export function collectionLanding(collection: CollectionRecord, store: CommerceS
  * What `/<region>/colecoes/<slug>` shows: the published parent-category landing with that address or, when there is none, the page of the region's
  * collection with that slug (a collection the region can use right now). Anything else is a 404.
  */
-export function resolveCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page; automatic: boolean; compact: boolean } {
+export function resolveCollectionLanding(regionParam: string, slug: string): CollectionLanding {
   const found = findCollectionLanding(regionParam, slug);
   if (!found) notFound();
   return found;
@@ -59,15 +60,27 @@ export function resolveCollectionLanding(regionParam: string, slug: string): { r
  * from the collection (no landing of the owner's at that address). `compact` = the short header: the automatic page, and an owner's landing whose hero
  * is still just the title (`plainCollectionLanding`).
  */
-export function findCollectionLanding(regionParam: string, slug: string): { region: RegionSlug; bundle: PublishedBundle; page: Page; automatic: boolean; compact: boolean } | null {
+export function findCollectionLanding(regionParam: string, slug: string, today: string = todayInBrasilia()): CollectionLanding | null {
   const found = publishedFor(regionParam);
   if (!found) return null;
   const doc = found.bundle.docs[found.region];
+  // Every region's calendar: a collection sealed by Sul's (even in a theme kept for later) stays sealed in a region that follows it.
+  const locks = bundleCollectionLocks(Object.values(found.bundle.docs), today);
   const page = livePage(doc, "categoryLanding", slug);
-  if (page) return { ...found, page, automatic: false, compact: plainCollectionLanding(page, (a) => hasImage(resolveBackground(a, found.bundle.media))) };
+  if (page) return { ...found, page, automatic: false, compact: plainCollectionLanding(page, (a) => hasImage(resolveBackground(a, found.bundle.media))), locked: lockOf(locks, landingCollection(page)) };
   const collection = collectionForPage(found.region, doc, slug);
-  return collection ? { ...found, page: collectionLanding(collection, storeForRegion(found.region)), automatic: true, compact: true } : null;
+  if (!collection) return null;
+  const store = storeForRegion(found.region);
+  return { ...found, page: collectionLanding(collection, store), automatic: true, compact: true, locked: lockOf(locks, { store, collectionId: collection.id }) };
 }
+
+/**
+ * A collection page as the public reaches it. `locked`: the day the Black calendar opens its collection (`collectionLocks`), null when it is open —
+ * until then the page shows only a padlock and nothing of the offer (its API answers 404, the sitemap and the search leave it out).
+ */
+export type CollectionLanding = { region: RegionSlug; bundle: PublishedBundle; page: Page; automatic: boolean; compact: boolean; locked: string | null };
+
+const lockOf = (locks: Map<string, string>, ref: { store: string; collectionId: number } | null): string | null => (ref ? locks.get(`${ref.store}:${ref.collectionId}`) ?? null : null);
 
 /** The page's paged grid, if it has one, with the lookup of its collection as the region shows it (same arrangement as the page itself). */
 function pagedGrid(region: RegionSlug, bundle: PublishedBundle, page: Page, sort?: ProductSort): { source: InkCategorySource; lookup: CollectionPageLookup } | null {

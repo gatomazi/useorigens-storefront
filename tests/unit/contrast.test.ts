@@ -38,3 +38,14 @@ describe("readability", () => {
     expect(readability(base({ kind: "none" }, { preset: "regional-wash" }), "light", true)).toEqual([]);
   });
 });
+
+describe("a section's colour as glass", () => {
+  const gold: Appearance = { fill: { kind: "gradient", from: "#f1d47e", to: "#c99a2e", angle: 135 }, focal: { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" } };
+  test("given the Black Week's gold glass on the #111 ground, when white text is judged, then it reads; the solid gold would block", () => {
+    expect(readability(gold, "dark", false).some((i) => i.level === "blocking")).toBe(true);
+    expect(readability(gold, "dark", false, undefined, "#111111")).toEqual([]);
+  });
+  test("given the same glass on the light ground, when white text is judged, then it blocks (the glass shows the light ground)", () => {
+    expect(readability(gold, "dark", false, undefined, "token:ground").some((i) => i.level === "blocking")).toBe(true);
+  });
+});

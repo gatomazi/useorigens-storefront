@@ -6,6 +6,8 @@ import { launchedRegions } from "@/lib/regions/launched";
 import { SITE_URL } from "@/lib/site";
 import { siteConfigHomeEnabled, homeBundle } from "@/lib/site-config/flag";
 import { pageHref } from "@/lib/site-config/pages";
+import { landingCollection } from "@/lib/site-config/pages";
+import { bundleCollectionLocks, todayInBrasilia } from "@/lib/site-config/checkpoints";
 
 // Read at request time, never prebuilt: the catalog snapshot lives on the runtime Volume and does not exist at `next build`, so a prerendered
 // sitemap would freeze an empty list (same reason no region page is prebuilt, see src/app/[region]/layout.tsx).
@@ -44,7 +46,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     }
 
     // Published, not archived, and indexable: a page is noindex until the owner turns indexing on, so it never belongs here before that.
+    // A collection page the Black calendar keeps closed is left out until its day.
+    const locks = bundleCollectionLocks(Object.values(cmsBundle?.docs ?? {}), todayInBrasilia());
     for (const page of cmsBundle?.docs[region]?.pages ?? []) {
+      const ref = page.kind === "categoryLanding" ? landingCollection(page) : null;
+      if (ref && locks.has(`${ref.store}:${ref.collectionId}`)) continue;
       if (!page.archived && page.seo.indexable) entries.push(entry(pageHref(region, page)));
     }
   }

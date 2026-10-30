@@ -315,6 +315,12 @@ export type Section = {
   period?: { opensAt?: string; closesAt?: string; label?: string };
   /** "Checkpoints semanais" only: the offers accumulate, so a week past its end stays valid ("Valendo · 02–07/11", with its link) instead of "Encerrada". */
   accumulate?: true;
+  /**
+   * "Checkpoints semanais" and product sections with a period only: the collections they open stay sealed until their day (a tile's destination, the
+   * section's source): their page shows only a padlock, their API answers 404, the sitemap and the search leave them out (`collectionLocks`). Opt-in,
+   * never inferred from the days: a calendar pointing at an everyday collection (Seu Lugar, Natal) must not close it. Absent = the pages as always.
+   */
+  sealCollections?: true;
   /** Hero "feature" only: the colours of the reading half (`HERO_COLOR_KEYS`); absent (or a key absent) = the theme's own. */
   heroColors?: HeroColors;
   /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. `dest` sends the link to a page instead of this section. */
@@ -956,6 +962,9 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     }
   }
   if (v.accumulate !== undefined && (v.template !== "image-grid" || v.variant !== "checkpoints" || v.accumulate !== true)) c.fail(`${path}.accumulate`, "the checkpoints composition only: true or absent");
+  if (v.sealCollections !== undefined && (v.sealCollections !== true || !((v.template === "image-grid" && v.variant === "checkpoints") || (v.template === "product-carousel" && v.period !== undefined)))) {
+    c.fail(`${path}.sealCollections`, "the checkpoints composition or a product section with a period only: true or absent");
+  }
   if (v.period !== undefined) {
     const p = v.period;
     if (v.template !== "product-carousel" || !isRecord(p) || (p.opensAt === undefined && p.closesAt === undefined)) c.fail(`${path}.period`, "product sections only: { opensAt?, closesAt? }, at least one");

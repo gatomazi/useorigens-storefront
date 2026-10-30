@@ -25,12 +25,26 @@ function fillColors(fill: Fill): string[] {
 
 export type ReadabilityIssue = { level: "blocking" | "warning"; message: string };
 
-/** `own`: the exact colours the owner gave the section's text (the hero's "Cores do lado do texto"), measured instead of the tone's white or black. */
-export function readability(appearance: Appearance, tone: "light" | "dark", hasImage: boolean, own?: Color[]): ReadabilityIssue[] {
+/** How much of the section's colour the glass shows over the page's ground (`SectionBackdrop`: the fill at 30% opacity over a blur). */
+export const GLASS_FILL_OPACITY = 0.3;
+
+/** `a` at `alpha` over `b` (both #rrggbb). */
+function over(a: string, b: string, alpha: number): string {
+  const ch = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  return `#${[0, 1, 2].map((i) => Math.round(ch(a, i) * alpha + ch(b, i) * (1 - alpha)).toString(16).padStart(2, "0")).join("")}`;
+}
+
+/**
+ * `own`: the exact colours the owner gave the section's text (the hero's "Cores do lado do texto"), measured instead of the tone's white or black.
+ * `glassOver`: the section's colour is glass ("Cor de fundo como vidro") over a page ground of this colour, so the text sits on the mix of the two, not
+ * on the colour itself (the Black Week's gold glass on the #111 ground reads under white text; the solid gold would not).
+ */
+export function readability(appearance: Appearance, tone: "light" | "dark", hasImage: boolean, own?: Color[], glassOver?: string): ReadabilityIssue[] {
   const texts = own && own.length > 0 ? own.map(hexOf) : [tone === "dark" ? "#ffffff" : "#000000"];
   const issues: ReadabilityIssue[] = [];
   if (!hasImage) {
-    const worst = Math.min(...fillColors(appearance.fill).flatMap((c) => texts.map((text) => contrastRatio(text, c))));
+    const behind = glassOver && appearance.fill.kind !== "none" ? fillColors(appearance.fill).map((c) => over(c, hexOf(glassOver as Color), GLASS_FILL_OPACITY)) : fillColors(appearance.fill);
+    const worst = Math.min(...behind.flatMap((c) => texts.map((text) => contrastRatio(text, c))));
     if (worst < 3) issues.push({ level: "blocking", message: `O texto ${own?.length ? "nas cores escolhidas" : tone === "dark" ? "claro" : "escuro"} quase não se lê sobre este fundo (contraste ${worst.toFixed(1)}:1; o mínimo aceito é 3:1).` });
     else if (worst < 4.5) issues.push({ level: "warning", message: `Contraste ${worst.toFixed(1)}:1: legível para títulos, fraco para textos pequenos (o ideal é 4,5:1).` });
     return issues;
