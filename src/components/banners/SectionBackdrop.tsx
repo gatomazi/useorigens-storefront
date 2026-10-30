@@ -68,8 +68,8 @@ export function SectionBackdrop({ bg, priority = false, nativeFill = { kind: "no
     if (glass) {
       return (
         <>
-          <div aria-hidden="true" className="absolute inset-0 -z-10 [-webkit-backdrop-filter:blur(14px)_saturate(1.25)] [backdrop-filter:blur(14px)_saturate(1.25)]" />
-          <div aria-hidden="true" className={`absolute inset-0 -z-10 opacity-[0.88] shadow-[inset_0_1px_0_rgb(255_255_255/0.55),inset_0_-1px_0_rgb(255_255_255/0.25)] ${base.className}`} style={base.style} />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 [-webkit-backdrop-filter:blur(10px)_saturate(1.3)] [backdrop-filter:blur(10px)_saturate(1.3)]" />
+          <div aria-hidden="true" className={`absolute inset-0 -z-10 opacity-[0.3] shadow-[inset_0_1px_0_rgb(255_255_255/0.55),inset_0_-1px_0_rgb(255_255_255/0.25)] ${base.className}`} style={base.style} />
         </>
       );
     }
