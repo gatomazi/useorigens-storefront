@@ -36,11 +36,12 @@ export function LockedShelf({ anchor, heading, subtitle, state, period, daysLeft
         {subtitle && <p className="t-body mt-2.5 max-w-[60ch] text-ink-soft">{subtitle}</p>}
       </div>
       <div className="relative">
-        {/* The shelf it will be: dark card shapes with a shirt each, gold and grey, that the glass turns into soft glows (nothing real, so nothing to unblur). */}
-        <ul aria-hidden="true" className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:gap-4">
+        {/* The shelf it will be: card shapes with a shirt each that the glass turns into soft glows (nothing real, so nothing to unblur). Dark cards
+            with gold and grey shirts under the smoked glass; light cards with gold and black shirts under the gold one, so the gold stays bright. */}
+        <ul aria-hidden="true" className={`grid grid-cols-2 gap-3 md:grid-cols-4 lg:gap-4 ${accent ? "rounded-xl bg-[#f6eedb] p-3 lg:p-4" : ""}`}>
           {Array.from({ length: cards }, (_, i) => (
-            <li key={i} className={`overflow-hidden rounded-lg border border-[var(--line)] bg-[var(--card-fill)] ${i >= 2 ? "hidden md:block" : ""}`}>
-              <span className="flex aspect-[800/820] items-center justify-center bg-[#1c1c1c]" style={{ color: i % 2 ? "#5a5a5a" : HIGHLIGHT }}>
+            <li key={i} className={`overflow-hidden rounded-lg border ${accent ? "border-black/10 bg-[#f6eedb]" : "border-[var(--line)] bg-[var(--card-fill)]"} ${i >= 2 ? "hidden md:block" : ""}`}>
+              <span className="flex aspect-[800/820] items-center justify-center" style={accent ? { background: "#efe4c6", color: i % 2 ? "#1d1d1d" : "#b8862a" } : { background: "#1c1c1c", color: i % 2 ? "#5a5a5a" : HIGHLIGHT }}>
                 <Shirt />
               </span>
               <span className="block space-y-2 p-3">
@@ -50,13 +51,13 @@ export function LockedShelf({ anchor, heading, subtitle, state, period, daysLeft
             </li>
           ))}
         </ul>
-        {/* The glass: the ground's colour, translucent and blurred, over the whole shelf, with the lock in the middle. */}
+        {/* The glass, translucent and blurred over the whole shelf, with the lock in the middle: smoked (the ground's colour) or, with the section's
+            own colour, gold glass (that colour as a translucent layer over the blur, a light edge catching the light). */}
         <div
-          className={`absolute inset-0 flex items-center justify-center rounded-xl border p-5 text-center [-webkit-backdrop-filter:blur(18px)] [backdrop-filter:blur(18px)] ${accent ? "on-light border-transparent" : "border-white/10"}`}
-          style={accent ? { background: accent, color: "#111" } : { background: "color-mix(in srgb, var(--plate-solid, #111) 45%, transparent)" }}
+          className={`absolute inset-0 flex items-center justify-center overflow-hidden rounded-xl border p-5 text-center [-webkit-backdrop-filter:blur(16px)_saturate(1.2)] [backdrop-filter:blur(16px)_saturate(1.2)] ${accent ? "on-light border-white/50 shadow-[inset_0_1px_0_rgb(255_255_255/0.6)]" : "border-white/10"}`}
+          style={accent ? { color: "#111" } : { background: "color-mix(in srgb, var(--plate-solid, #111) 45%, transparent)" }}
         >
-          {/* On the accent, a soft veil keeps the shirts behind it barely visible, like frosted gold. */}
-          {accent && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-xl opacity-90" style={{ background: accent }} />}
+          {accent && <span aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-60" style={{ background: accent }} />}
           <div className="relative max-w-sm">
             <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full" style={accent ? { background: "#111", color: HIGHLIGHT } : locked ? { background: HIGHLIGHT, color: "#111" } : { border: "2px solid var(--line)" }}>
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
