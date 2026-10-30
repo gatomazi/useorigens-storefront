@@ -608,6 +608,17 @@ a:hover > .photo img,
 .ground-solid:not(:hover) {
   background-color: var(--plate-solid, transparent);
 }
+/* "Checkpoints semanais" (components/home/WeeklyCheckpoints.tsx): the week running now breathes, a yellow ring that grows from the card's edge and
+   fades. Only for whoever has not asked the system for less motion. */
+@keyframes cp-pulse {
+  0% { box-shadow: 0 0 0 0 rgb(226 182 74 / 0.5); }
+  70%, 100% { box-shadow: 0 0 0 10px rgb(226 182 74 / 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cp-pulse {
+    animation: cp-pulse 2.6s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+  }
+}
 .own-surface {
   --card-fill: transparent;
   --plate-bg: transparent;

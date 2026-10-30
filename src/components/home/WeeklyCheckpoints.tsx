@@ -50,21 +50,19 @@ const NAME = "block font-display font-extrabold uppercase leading-[0.95] trackin
 /** Every card: opaque (the ground's pattern never runs under a word), 12px corners, the same border weight in every state. */
 const SHELL = "rounded-xl border-2";
 
-function Pulse() {
-  return (
-    <span aria-hidden="true" className="relative flex h-2 w-2">
-      <span className="absolute inset-0 rounded-full opacity-60 motion-safe:animate-ping" style={{ background: HIGHLIGHT }} />
-      <span className="relative h-2 w-2 rounded-full" style={{ background: HIGHLIGHT }} />
-    </span>
-  );
-}
+/** The marker of the week running now (still: the card itself breathes, `.cp-pulse`). */
+const Dot = () => <span aria-hidden="true" className="h-2 w-2 rounded-full" style={{ background: HIGHLIGHT }} />;
 
-/** A card that leads somewhere (`href`) or a plain block (a week that cannot be opened yet). */
+/**
+ * A card that leads somewhere (`href`) or a plain block (a week that cannot be opened yet). The week running now breathes: a soft yellow ring that
+ * grows and fades (`.cp-pulse`, globals.css; still for whoever asks the system for less motion).
+ */
 function Card({ href, external, current, className, style, children }: { href: string | null; external: boolean; current: boolean; className: string; style?: CSSProperties; children: ReactNode }) {
   const aria = current ? { "aria-current": "step" as const } : {};
-  if (!href) return <div className={className} style={style} {...aria}>{children}</div>;
+  const shell = current ? `${className} cp-pulse` : className;
+  if (!href) return <div className={shell} style={style} {...aria}>{children}</div>;
   return (
-    <a href={href} {...(external ? { rel: "noopener" } : {})} {...aria} className={`group ${className} transition-[transform,border-color,filter] duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4`} style={style}>
+    <a href={href} {...(external ? { rel: "noopener" } : {})} {...aria} className={`group ${shell} transition-[transform,border-color,filter] duration-200 ease-out hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4`} style={style}>
       {children}
     </a>
   );
@@ -136,7 +134,7 @@ export function WeeklyCheckpoints({ anchor, headingId, title, subtitle, items }:
                   <Card href={href} external={it.external} current className={`flex h-full flex-col bg-[var(--card-fill)] p-5 ${SHELL}`} style={{ borderColor: HIGHLIGHT }}>
                     <span className="flex items-center justify-between gap-3">
                       <Status it={it} />
-                      <Pulse />
+                      <Dot />
                     </span>
                     <span className={`${NAME} mt-3 text-[clamp(1.5rem,2.2vw,1.875rem)]`}>{it.label}</span>
                     {it.caption && <span className="mt-1.5 block max-w-[34ch] text-[0.875rem] leading-snug text-ink-soft">{it.caption}</span>}
