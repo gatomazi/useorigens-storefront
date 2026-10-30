@@ -55,7 +55,7 @@ function RowForm({ action, rev, scope, id, extra, children, danger = false, labe
   );
 }
 
-export default async function AdminHome({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string }> }) {
+export default async function AdminHome({ searchParams }: { searchParams: Promise<{ ok?: string; err?: string; "tema-sul"?: string }> }) {
   const actor = await requireAdmin();
   const scope = await currentScope(actor);
   const store = storeOf(scope);
@@ -86,7 +86,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
       </div>
       <Flash ok={sp.ok} err={sp.err} />
       <FollowCard actor={actor} scope={scope} part="home" doc={ws.doc} baseDoc={ws.baseDoc} rev={rev} to="/admin/home" />
-      <RegionalSectionsList scope={scope} doc={ws.doc} />
+      <RegionalSectionsList scope={scope} doc={ws.doc} asked={sp["tema-sul"]} />
       <FollowFold following={followsPart(ws.doc, "home")} scope={scope}>
       {/* Only the sections of the theme being edited: each theme has its own (add, edit and order them here, for that theme alone). */}
       <HomeThemeCard region={scope} doc={ws.doc} editing={ws.editingTheme} active={ws.activeTheme} live={ws.liveTheme} rev={ws.record?.rev ?? null} readOnly={!canEdit(actor, scope)} to="/admin/home" />

@@ -13,7 +13,7 @@ import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { heroTextColors, readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
 import { PRODUCT_CARD_IMAGE, sectionImageSizes, sizeHintText, STATE_COVER } from "@/lib/admin/image-sizes";
-import { DEFAULT_BUY_LABEL, HERO_CARDS, MAX_BUY_LABEL, MAX_FEATURED, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type ProductDisplay, type Section } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, HERO_CARDS, MAX_BUY_LABEL, MAX_FEATURED, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type HomeThemeName, type ProductDisplay, type Section } from "@/lib/site-config/schema";
 import { customizerCardFieldDefaults } from "@/lib/admin/section-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 import { PRODUCT_SORTS, PRODUCT_SORT_LABEL, type ProductSort } from "@/lib/catalog/product-sort";
@@ -107,7 +107,7 @@ function AnchorPicker({ anchors, current }: { anchors: { anchor: string; label: 
 }
 
 export function SectionEditorForm({
-  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pageDefaultSort, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement, regional = false, ground,
+  section, rev, scope, media, collections, action, notes = [], featured, stateCovers, page, pageKind, pageDefaultSort, pages = [], customizers = [], anchors = [], collectionMembers, collectionArrangement, regional = false, regionalTheme, ground,
 }: {
   /** The colour of the ground behind the section (the page's or the home's own "Fundo"; absent = the region's), for the glass's readability. */
   ground?: string;
@@ -116,6 +116,8 @@ export function SectionEditorForm({
    * products, the states' covers, the grid's blocks); texts, layout and products' sources stay Sul's.
    */
   regional?: boolean;
+  /** In the regional mode, one of Sul's themes other than the one on its store: the pictures and products are saved for that theme. */
+  regionalTheme?: HomeThemeName;
   /** Collection carousels: the saved collection's products in INK's order, for the order list (absent when it does not resolve). */
   collectionMembers?: OrderMember[];
   /** How this region arranges the saved collection now (`arrangementOf`): it belongs to the collection, every section built on it shares it. */
@@ -205,6 +207,7 @@ export function SectionEditorForm({
       <input type="hidden" name="scope" value={scope} />
       <input type="hidden" name="id" value={section.id} />
       {page && <><input type="hidden" name="page" value={page} /><input type="hidden" name="page_scope" value="1" /></>}
+      {regional && regionalTheme && <input type="hidden" name="sul_theme" value={regionalTheme} />}
       {regional && <p className="a-muted text-[0.875rem]">Textos, ordem, layout e coleções desta seção vêm da Sul. Aqui ficam só as imagens e os produtos desta região.</p>}
 
       {!regional && (

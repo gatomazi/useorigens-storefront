@@ -2,11 +2,11 @@ import { describe, expect, test } from "vitest";
 import { defaultAppearance } from "@/lib/admin/draft-ops";
 import { type RegionSlug } from "@/lib/geo/regions";
 import { validateFollow, withFollowPart } from "@/lib/site-config/follow-schema";
-import { followedDestination, followedDoc, withFollowing, withRegionName } from "@/lib/site-config/follow";
+import { followedDestination, followedDoc, sulInTheme, sulThemes, withFollowing, withRegionName } from "@/lib/site-config/follow";
 import { newPage } from "@/lib/site-config/pages";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
 import { buildSeedBundle } from "@/lib/site-config/seed";
-import { validateScopeDoc, type Customizer, type Destination, type Section } from "@/lib/site-config/schema";
+import { homeThemeOf, validateScopeDoc, type Customizer, type Destination, type Section } from "@/lib/site-config/schema";
 
 const seed = () => buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null });
 const doc = (region: RegionSlug = "sul") => structuredClone(seed().docs[region]);
@@ -285,6 +285,38 @@ describe("Seguir a Sul: imagens e produtos da região", () => {
     out = followedDoc(norte, sul, true).home!.sections[0];
     expect(out.appearance.image).toEqual({ mobile: img("norte-dia-a-dia") });
     expect(validateScopeDoc({ ...norte, regional: [...norte.regional, { sectionId: hero.id, theme: "natal", appearance: { focal } }] }).ok).toBe(false);
+  });
+
+  test("as imagens e os produtos de outro tema da Sul ficam prontos antes da data: a Black com a Sul no Natal", () => {
+    const sul = sulWithStructure(); // Sul has Natal in use
+    const hero = sul.home!.sections[0];
+    hero.title = "Natal é estar junto.";
+    const black = structuredClone(sul.home!.sections);
+    black[0] = { ...black[0], title: "A origem entra na Black.", featured: [{ store: "use-sul", productId: "3789949", image: img("bf-01-pelotas") }] };
+    sul.homeThemes = { black: { sections: black } };
+    expect(sulThemes(sul)).toEqual(["natal", "black"]);
+    const norte = doc("norte");
+    norte.follow = ["home"];
+    norte.regional = [
+      { sectionId: hero.id, theme: "natal", featured: [{ store: "use-sul", productId: "4999459" }] },
+      { sectionId: hero.id, theme: "black", featured: [{ store: "use-sul", productId: "4961290", image: img("bf-norte-01-macapa") }] },
+    ];
+    expect(validateScopeDoc(norte)).toMatchObject({ ok: true });
+    // On the store, Natal goes on with the region's Natal products.
+    const live = followedDoc(norte, sul, true);
+    expect(live.home!.sections[0].title).toBe("Natal é estar junto.");
+    expect(live.home!.sections[0].featured).toEqual([{ store: "use-sul", productId: "4999459" }]);
+    // The panel and the preview with ?tema-sul=black: the Black opening with the region's Black banners, as on the day Sul puts it on.
+    const ahead = followedDoc(norte, sulInTheme(sul, "black"), true);
+    expect(ahead.homeTheme).toBe("black");
+    expect(ahead.home!.sections[0].title).toBe("A origem entra na Black.");
+    expect(ahead.home!.sections[0].featured).toEqual([{ store: "use-sul", productId: "4961290", image: img("bf-norte-01-macapa") }]);
+    // Sul itself is untouched; a theme Sul never set up (or anything else) is Sul as it is.
+    expect(homeThemeOf(sul)).toBe("natal");
+    expect(sulInTheme(sul, "natal")).toBe(sul);
+    expect(sulInTheme(sul, "editorial")).toBe(sul);
+    expect(sulInTheme(sul, "x")).toBe(sul);
+    expect(sulInTheme(sul, undefined)).toBe(sul);
   });
 
   test("sem imagem na região = a seção fica sem a foto da Sul", () => {

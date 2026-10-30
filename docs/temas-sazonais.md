@@ -79,6 +79,9 @@ cores da Black (sem ele, a página usa as cores do tema que está na loja).
 1. Home → Tema da home → **Criar e editar o tema Black Friday**. Revise a abertura e clique em "Ver prévia".
 2. O mesmo para o **Natal**. Quando as fotos chegarem: seção 1 → Produtos em destaque → um banner por produto.
 3. Volte a editar o tema em uso ("Editar o tema Editorial"). Criar ou editar um tema não muda a loja.
+4. Norte e Centro-Oeste, quando seguem a home da Sul: em cada região, Home → **Imagens e produtos** → **Tema da Sul: Black Friday**
+   (ou Natal) → Editar a abertura, com os produtos e os banners da região. Depois, publique a região. Enquanto a Sul estiver com outro tema
+   no ar, nada muda na loja. No dia em que a Sul publicar o tema, a abertura da região já entra com os produtos e os banners dela.
 
 ## No dia
 
