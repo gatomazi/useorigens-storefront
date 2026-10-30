@@ -28,6 +28,22 @@ function cover(shirt: [number, number, number], print: [number, number, number] 
   return px;
 }
 
+/** A 64×64 cover worn by a person (our city designs since 30/10/2026): a scene around, chin and neck at the top centre, the shirt below. */
+function worn(shirt: [number, number, number], scene: [number, number, number] = [90, 140, 200]): Uint8Array {
+  const size = 64;
+  const px = new Uint8Array(size * size * 3);
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const neck = y < 13 && x >= 22 && x < 42;
+      const shirtArea = y >= 13 && x >= 6 && x < 58;
+      const print = y >= 22 && y < 34 && x >= 22 && x < 42;
+      const c = print ? [245, 245, 240] : neck ? [196, 140, 110] : shirtArea ? shirt : scene;
+      px.set(c, (y * size + x) * 3);
+    }
+  }
+  return px;
+}
+
 describe("classifyCoverPixels", () => {
   test("a black mockup (rendered dark grey) is Preta, not the dark Verde nor Marinho", () => {
     expect(classifyCoverPixels(cover([28, 28, 28]), 32, 32, TEE_COLORS)).toMatchObject({ color: "Preta", confident: true });
@@ -43,6 +59,11 @@ describe("classifyCoverPixels", () => {
     const filled = cover([34, 67, 53]).map((v, i) => (i % 3 === 0 ? 34 : i % 3 === 1 ? 67 : 53));
     filled.set([250, 250, 250, 250, 250, 250], (16 * 32 + 16) * 3);
     expect(classifyCoverPixels(filled, 32, 32, TEE_COLORS)?.confident ?? false).toBe(false);
+  });
+  test("a shirt worn by a person, on a scene instead of the grey backdrop, is judged on the torso", () => {
+    expect(classifyCoverPixels(worn([28, 28, 28]), 64, 64, TEE_COLORS)).toMatchObject({ color: "Preta", confident: true });
+    expect(classifyCoverPixels(worn([18, 26, 47], [200, 170, 120]), 64, 64, TEE_COLORS)).toMatchObject({ color: "Marinho", confident: true });
+    expect(classifyCoverPixels(worn([32, 62, 50], [35, 70, 40]), 64, 64, TEE_COLORS)).toMatchObject({ color: "Verde", confident: true });
   });
   test("two colors with the same hex are never a confident answer", () => {
     const colors = [{ name: "Branca", hex: "ffffff" }, { name: "Off White", hex: "ffffff" }, { name: "Preta", hex: "000000" }];
