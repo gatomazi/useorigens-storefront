@@ -16,6 +16,7 @@ import { validateSearch } from "./search-schema";
 import { validateNavigation, validateTheme, validateNeutralTheme } from "./navigation-schema";
 import { validateInkTheme } from "./ink-theme-schema";
 import { validatePodio } from "./podio-schema";
+import { validateEmAlta } from "./em-alta-schema";
 import { validateStatePage } from "./state-page-schema";
 import { validateFollow } from "./follow-schema";
 import { validatePromotions } from "./promotions-schema";
@@ -187,7 +188,8 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // And the assistant: an invalid one means no chat, and the INK keeps its own "Ajuda?" and WhatsApp.
   // And "Monte seu kit": an invalid one means the post-add modal as INK draws it.
   // And "Seguir a Sul": an invalid one means the region shows its own content, as before the switch existed.
-  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "assistant", "inkTheme", "postAddKit", "follow"] as const) {
+  // And "Em alta": an invalid one means every part off (no sales signal, no INK order read for it).
+  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "emAlta", "mundo", "statePage", "topBar", "assistant", "inkTheme", "postAddKit", "follow"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
@@ -197,6 +199,7 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
       : key === "carouselEnd" ? validateCarouselEnd(candidate[key], scope, `${scope}.carouselEnd`)
       : key === "search" ? validateSearch(candidate[key], scope, `${scope}.search`)
       : key === "podio" ? validatePodio(candidate[key], scope, `${scope}.podio`)
+      : key === "emAlta" ? validateEmAlta(candidate[key], scope, `${scope}.emAlta`)
       : key === "mundo" ? validateMundo(candidate[key], scope, `${scope}.mundo`)
       : key === "statePage" ? validateStatePage(candidate[key], scope, `${scope}.statePage`)
       : key === "topBar" ? validateTopBar(candidate[key], scope, `${scope}.topBar`)

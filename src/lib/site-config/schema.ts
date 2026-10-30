@@ -14,6 +14,7 @@ import { validateSearch, type SearchConfig } from "./search-schema";
 import { validateNavigation, validateTheme, validateNeutralTheme, type NavigationConfig, type ThemeConfig } from "./navigation-schema";
 import { validateInkTheme, type InkThemeConfig } from "./ink-theme-schema";
 import { validatePodio, type PodioConfig } from "./podio-schema";
+import { validateEmAlta, type EmAltaConfig } from "./em-alta-schema";
 import { validateTopBar, type TopBarConfig } from "./top-bar-schema";
 import { validatePostAddKit, type PostAddKitConfig } from "./post-add-kit-schema";
 import { validateAssistant, type AssistantConfig } from "./assistant-schema";
@@ -574,6 +575,11 @@ export type ScopeDoc = {
   mundo?: MundoConfig;
   /** REGION only: "O Pódio" switched off (home teaser, state pages and the daily calculation, `podio-schema.ts`). Absent = on. Published with the region. */
   podio?: PodioConfig;
+  /**
+   * REGION only: "Em alta", sales signals from the region's real paid INK orders (`em-alta-schema.ts`): the badge on the cards, the lines on a product page
+   * and the "Alguém de MG comprou" notice, each on its own. Absent = all off (no INK order is read for it). Published with the region.
+   */
+  emAlta?: EmAltaConfig;
   /**
    * REGION only: "Faixa do topo", the strip above the header of the storefront and of the INK pages (`top-bar-schema.ts`): scheduled messages and the
    * INK production time. Absent or no live message = the storefront's default strip and the INK's own. Published with the region.
@@ -1542,6 +1548,10 @@ export function validateScopeDoc(input: unknown): ValidationResult<ScopeDoc> {
   }
   if (input.podio !== undefined) {
     const r = validatePodio(input.podio, sc, "doc.podio");
+    if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
+  }
+  if (input.emAlta !== undefined) {
+    const r = validateEmAlta(input.emAlta, sc, "doc.emAlta");
     if (!r.ok) r.errors.forEach((e) => c.errors.push(e));
   }
   if (input.topBar !== undefined) {

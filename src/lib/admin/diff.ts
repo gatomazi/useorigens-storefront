@@ -2,6 +2,7 @@ import { effectiveMenu, menuPositionOf, type MenuPosition } from "../site-config
 import { NAV_DESTINATION_LABEL, THEME_COLOR_KEYS, THEME_COLOR_LABEL, type NavBlockConfig } from "../site-config/navigation";
 import { HEADER_ACTIONS, HEADER_ACTION_LABEL, headerActionsOf } from "../site-config/navigation-schema";
 import { podioEnabledIn } from "../site-config/podio-schema";
+import { EM_ALTA_PARTS, emAltaOf, type EmAltaPart } from "../site-config/em-alta-schema";
 import { INK_PRESET_LABEL, INK_SURFACE_LABEL, inkIncentiveText, inkThemeOf, INK_THEME_SURFACES, paletteOf } from "../site-config/ink-theme";
 import { STATE_PAGE_SECTIONS, STATE_PAGE_SECTION_LABELS, statePageShows } from "../site-config/state-page-schema";
 import { FOLLOW_PARTS, FOLLOW_PART_LABELS, followsPart } from "../site-config/follow-schema";
@@ -15,7 +16,7 @@ import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "assistant" | "podio" | "ink-theme" | "post-add-kit" | "follow"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "assistant" | "podio" | "em-alta" | "ink-theme" | "post-add-kit" | "follow"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
@@ -77,7 +78,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft), ...followChanges(published, draft), ...regionalChanges(published, draft, sulSection));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...emAltaChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft), ...followChanges(published, draft), ...regionalChanges(published, draft, sulSection));
   return changes;
 }
 
@@ -373,6 +374,19 @@ function podioChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   const now = podioEnabledIn(draft);
   if (was === now) return [];
   return [{ kind: "podio", sectionId: "podio", text: now ? "O Pódio volta para a home e as páginas de estado, e o cálculo diário desta região volta a rodar" : "O Pódio sai da home e das páginas de estado, e o cálculo diário desta região para" }];
+}
+
+const EM_ALTA_TEXT: Record<EmAltaPart, [on: string, off: string]> = {
+  cards: ["o selo \"Em alta\" / \"+50 vendidos\" entra nos cards", "o selo sai dos cards"],
+  pdp: ["as linhas de vendas entram abaixo do título da página do produto", "as linhas de vendas saem da página do produto"],
+  toast: ["o aviso \"Alguém de MG comprou\" entra no canto da tela", "o aviso de compra recente sai"],
+};
+
+/** "Em alta": each part switched on or off. Pure. */
+function emAltaChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const was = emAltaOf(published);
+  const now = emAltaOf(draft);
+  return EM_ALTA_PARTS.filter((part) => was[part] !== now[part]).map((part) => ({ kind: "em-alta" as const, sectionId: `em-alta:${part}`, text: `Em alta: ${EM_ALTA_TEXT[part][now[part] ? 0 : 1]}` }));
 }
 
 /** "Tema da INK": each surface switched on/off and each preset changed. Pure. */

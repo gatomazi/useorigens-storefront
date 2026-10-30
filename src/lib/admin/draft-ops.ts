@@ -17,6 +17,7 @@ import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-sc
 import type { PromotionsConfig } from "../site-config/promotions-schema";
 import type { TopBarConfig } from "../site-config/top-bar-schema";
 import type { PostAddKitConfig } from "../site-config/post-add-kit-schema";
+import { emAltaAnyOn, validateEmAlta, type EmAltaConfig } from "../site-config/em-alta-schema";
 import type { AssistantConfig } from "../site-config/assistant-schema";
 import type { CardsConfig } from "../site-config/cards-schema";
 import type { CarouselEndConfig } from "../site-config/carousel-end-schema";
@@ -136,6 +137,7 @@ export type DraftOp =
   | { type: "set-mundo"; modo: MundoModo | null }
   /** REGION only: switches "O Pódio" on or off (home teaser, state pages and the daily calculation); on removes the setting (the default). */
   | { type: "set-podio"; enabled: boolean }
+  | { type: "set-em-alta"; emAlta: EmAltaConfig }
   /** Norte / Centro-Oeste: follow Sul in one part, or go back to the region's own ("Seguir a Sul"; the own content is never touched). */
   | { type: "set-follow"; part: FollowPart; on: boolean }
   /** Norte / Centro-Oeste: the region's own pictures and products over one of Sul's sections (replaces that section's entry; `null` = back to Sul's). */
@@ -380,6 +382,15 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     if (doc.scope === "global") return fail("the pódio belongs to a region");
     const next: ScopeDoc = { ...doc, podio: { enabled: false } };
     if (op.enabled) delete next.podio;
+    return { ok: true, doc: next };
+  }
+  if (op.type === "set-em-alta") {
+    if (doc.scope === "global") return fail("\"Em alta\" belongs to a region");
+    const check = validateEmAlta(op.emAlta, doc.scope);
+    if (!check.ok) return { ok: false, errors: check.errors };
+    // Everything off = no key (the default): the document says nothing it does not need to.
+    const next: ScopeDoc = { ...doc, emAlta: { cards: op.emAlta.cards, pdp: op.emAlta.pdp, toast: op.emAlta.toast } };
+    if (!emAltaAnyOn(op.emAlta)) delete next.emAlta;
     return { ok: true, doc: next };
   }
   if (op.type === "set-ink-theme") {

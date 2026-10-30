@@ -21,12 +21,25 @@ export async function fetchStorePaidOrders(
   range: { beginDate: string; endDate: string },
   options: { maxRequests?: number } = {},
 ): Promise<{ orders: PodioOrder[]; requests: number }> {
+  return fetchStorePaidOrdersAs(storeKey, range, parseInkOrder, options);
+}
+
+/**
+ * The same paging and the same guarantees, each order reduced by `parse` (which must drop everything personal it does not need, and return null for
+ * anything it cannot read: one unreadable order fails the whole fetch).
+ */
+export async function fetchStorePaidOrdersAs<T extends { orderId: string }>(
+  storeKey: CommerceStoreKey,
+  range: { beginDate: string; endDate: string },
+  parse: (raw: unknown) => T | null,
+  options: { maxRequests?: number } = {},
+): Promise<{ orders: T[]; requests: number }> {
   const token = tokenFor(storeKey);
   if (!token) throw new InkApiError(`missing credential for ${storeKey}`, 0);
   const budget: RequestBudget = { max: options.maxRequests ?? 120, used: 0 };
 
   for (let attempt = 0; ; attempt++) {
-    const byId = new Map<string, PodioOrder>();
+    const byId = new Map<string, T>();
     let expected = 0;
     let totalPages = 1;
     for (let page = 1; page <= totalPages; page++) {
@@ -41,7 +54,7 @@ export async function fetchStorePaidOrders(
         expected = body.total_count;
       }
       for (const raw of body.orders) {
-        const order = parseInkOrder(raw);
+        const order = parse(raw);
         if (!order) throw new InkApiError(`unreadable order on page ${page} of ${storeKey}`, 200);
         byId.set(order.orderId, order);
       }
