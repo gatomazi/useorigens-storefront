@@ -550,7 +550,7 @@ function CarouselSection({
   const toneClass = tone === "dark" ? "text-white" : "";
   return (
     <section id={s.anchor} className={["relative isolate overflow-hidden own-surface", surfaceClass, toneClass, onLight].filter(Boolean).join(" ")}>
-      {(hasImage(bg) || !isSameFill(bg.fill, NATIVE_FILL[surface])) && <SectionBackdrop bg={bg} priority={priority} nativeFill={NATIVE_FILL[surface]} />}
+      {(hasImage(bg) || !isSameFill(bg.fill, NATIVE_FILL[surface])) && <SectionBackdrop bg={bg} priority={priority} nativeFill={NATIVE_FILL[surface]} glass={s.layout.glass === true} />}
       <div className="wrap py-14 lg:py-24">{carousel}</div>
     </section>
   );

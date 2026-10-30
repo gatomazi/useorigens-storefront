@@ -61,7 +61,8 @@ Três peças, todas com dias no horário de Brasília, **os dois dias inclusive*
    - depois: o vidro com "Oferta encerrada" (se a vitrine não tiver dia de encerramento, ela continua aberta: ofertas que acumulam).
 
    Quando abre a vitrine com o último dia de abertura (a Black Week), as vitrines com período invertem a ordem: a mais nova primeiro. Uma cor de
-   fundo na vitrine (o dourado da Black Week) também tinge o vidro enquanto ela está fechada, e os cards ganham fundo claro sobre a cor.
+   fundo na vitrine (o dourado da Black Week) também tinge o vidro enquanto ela está fechada, e os cards ganham fundo claro sobre a cor. Com
+   **"Cor de fundo como vidro"** (no editor da vitrine), essa cor fica translúcida sobre um desfoque do fundo da página, com o pattern.
 3. **Hotpage sem topo.** A faixa de checkpoints pode abrir a página no lugar do topo: oculte o topo e a faixa vira o título da página.
 4. **Textos programados da abertura.** No editor da abertura ("Um produto em destaque"), cada período troca o título (vazio = o de sempre), o
    texto e, se houver botão, coloca o botão no lugar da busca. A busca continua no topo da loja. Um período não pode encostar em outro. Fora de

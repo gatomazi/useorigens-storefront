@@ -173,7 +173,8 @@ export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
  */
 export type ProductTags = { discount?: true; text?: string; onSale?: true };
 export const MAX_TAG_TEXT = 24;
-export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string; buyStyle?: CardBuyStyle; tags?: ProductTags };
+/** `glass`: the section's colour as frosted glass (translucent over a blur of the page's ground, its pattern included), not a solid band. */
+export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string; buyStyle?: CardBuyStyle; tags?: ProductTags; glass?: true };
 export { DEFAULT_BUY_LABEL, MAX_BUY_LABEL };
 /** Cards of a product section: a carousel scrolls through at most 24; a grid lays out up to 48 (every product an INK collection keeps for showcases),
  * and a paged grid shows up to 48 per page. */
@@ -861,6 +862,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       if (l.display !== undefined && (v.template !== "product-carousel" || !(PRODUCT_DISPLAYS as readonly unknown[]).includes(l.display))) c.fail(`${path}.layout.display`, `product sections only: ${PRODUCT_DISPLAYS.join(" | ")}`);
       if (l.buyLabel !== undefined && (v.template !== "product-carousel" || !isStr(l.buyLabel, MAX_BUY_LABEL) || l.buyLabel.trim() !== l.buyLabel)) c.fail(`${path}.layout.buyLabel`, `product sections only: 1..${MAX_BUY_LABEL} chars, no leading or trailing spaces`);
       if (l.buyStyle !== undefined && (l.buyLabel === undefined || !(CARD_BUY_STYLES as readonly unknown[]).includes(l.buyStyle))) c.fail(`${path}.layout.buyStyle`, `with a buyLabel only: ${CARD_BUY_STYLES.join(" | ")}`);
+      if (l.glass !== undefined && l.glass !== true) c.fail(`${path}.layout.glass`, "true or absent");
       if (l.tags !== undefined) {
         const t = l.tags;
         const ok =

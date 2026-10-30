@@ -304,7 +304,9 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
       const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text, ...(f.get("tags_on_sale") !== null ? { onSale: true as const } : {}) } : {}) };
       tags = next.discount || next.text ? next : undefined;
     }
-    patch.layout = { variant, tone, surface, ...(display === "grid" || display === "paged" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(buyStyle ? { buyStyle } : {}), ...(tags ? { tags } : {}) };
+    // The section's colour as glass: posted with the layout (a form without the block keeps what is saved).
+    const glass = f.get("layout_surface") === null ? section.layout?.glass : f.get("layout_glass") !== null ? true : undefined;
+    patch.layout = { variant, tone, surface, ...(display === "grid" || display === "paged" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(buyStyle ? { buyStyle } : {}), ...(tags ? { tags } : {}), ...(glass ? { glass } : {}) };
   }
   if (section.template === "page-hero") {
     patch.cta = parseCta(f);

@@ -57,13 +57,22 @@ export function isSameFill(a: Fill, b: Fill): boolean {
 }
 
 /** A section's background layer, or `null` when there is nothing to draw (no image and a fill that is the page's own). */
-export function SectionBackdrop({ bg, priority = false, nativeFill = { kind: "none" } }: { bg: ResolvedBackground; priority?: boolean; nativeFill?: Fill }): ReactNode {
+export function SectionBackdrop({ bg, priority = false, nativeFill = { kind: "none" }, glass = false }: { bg: ResolvedBackground; priority?: boolean; nativeFill?: Fill; /** The fill as frosted glass over the page's ground (CMS `layout.glass`). */ glass?: boolean }): ReactNode {
   const { mobile, desktop } = bg.images;
   const base = fillProps(bg.fill);
 
   if (!mobile && !desktop) {
     // No image: the fill, unless the section already paints exactly that itself.
     if (bg.fill.kind === "none" || isSameFill(bg.fill, nativeFill)) return null;
+    // Glass: a blur of what is behind (the page's ground and its pattern), the fill over it, translucent, and a light edge catching the light.
+    if (glass) {
+      return (
+        <>
+          <div aria-hidden="true" className="absolute inset-0 -z-10 [-webkit-backdrop-filter:blur(14px)_saturate(1.25)] [backdrop-filter:blur(14px)_saturate(1.25)]" />
+          <div aria-hidden="true" className={`absolute inset-0 -z-10 opacity-[0.88] shadow-[inset_0_1px_0_rgb(255_255_255/0.55),inset_0_-1px_0_rgb(255_255_255/0.25)] ${base.className}`} style={base.style} />
+        </>
+      );
+    }
     return <div aria-hidden="true" className={`absolute inset-0 -z-10 ${base.className}`} style={base.style} />;
   }
 
