@@ -38,6 +38,7 @@ export default async function EditSection({ params, searchParams }: { params: Pr
     resolveFeatured(scope, refs as never).map((sl) => ({
       value: `${sl.ref.store}:${sl.ref.productId}`, ok: sl.ok, reason: sl.reason, familyName: sl.card?.familyName, cityName: sl.card?.cityName, uf: sl.card?.uf, price: sl.card?.price, imageUrl: sl.imageUrl, buyUrl: sl.buyUrl,
       ...(sl.ref.image ? { image: { assetId: sl.ref.image.assetId, alt: sl.ref.image.alt } } : {}),
+      ...(sl.ref.opens ? { opens: sl.ref.opens } : {}),
       // The products marked on its banner, each resolved like a position (a mark that can no longer be shown is flagged, never dropped here).
       ...(sl.ref.pins?.length ? { pins: resolveFeatured(scope, sl.ref.pins).map((p, k) => ({ value: `${p.ref.store}:${p.ref.productId}`, x: sl.ref.pins![k].x, y: sl.ref.pins![k].y, ok: p.ok, reason: p.reason, familyName: p.card?.familyName, cityName: p.card?.cityName, uf: p.card?.uf, imageUrl: p.imageUrl })) } : {}),
     }));

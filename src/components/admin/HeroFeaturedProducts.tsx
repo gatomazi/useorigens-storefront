@@ -21,6 +21,8 @@ export type FeaturedSlotView = {
   image?: { assetId: string; alt: string };
   /** "feature" opening, with a banner only: the products marked on it ("compre o look"), where they sit in % of the picture. */
   pins?: PinView[];
+  /** "feature" opening, a banner without marks only: what the banner opens ("city-journey" = the "Sua cidade" journey; absent = the product). */
+  opens?: "city-journey";
 };
 
 /** A product marked on a banner, as the server resolved it (or as just chosen). */
@@ -105,6 +107,7 @@ export function HeroFeaturedProducts({
       set(`featured_image_${i + 1}`, next[i]?.image?.assetId ?? "");
       set(`featured_alt_${i + 1}`, next[i]?.image?.alt ?? "");
       set(`featured_pins_${i + 1}`, next[i]?.image && next[i]?.pins?.length ? JSON.stringify(next[i]!.pins!.map((p) => ({ p: p.value, x: p.x, y: p.y }))) : "");
+      set(`featured_opens_${i + 1}`, next[i]?.opens ?? "");
     }
     form.requestSubmit();
   };
@@ -148,6 +151,7 @@ export function HeroFeaturedProducts({
           {feature && <input type="hidden" name={`featured_image_${i + 1}`} defaultValue={slots[i]?.image?.assetId ?? ""} />}
           {feature && <input type="hidden" name={`featured_alt_${i + 1}`} defaultValue={slots[i]?.image?.alt ?? ""} />}
           {feature && <input type="hidden" name={`featured_pins_${i + 1}`} defaultValue={slots[i]?.image && slots[i]?.pins?.length ? JSON.stringify(slots[i]!.pins!.map((p) => ({ p: p.value, x: p.x, y: p.y }))) : ""} />}
+          {feature && <input type="hidden" name={`featured_opens_${i + 1}`} defaultValue={slots[i]?.opens ?? ""} />}
         </span>
       ))}
       {feature ? (
@@ -211,6 +215,26 @@ export function HeroFeaturedProducts({
                     <div>
                       <label className="a-label" htmlFor={`featured-alt-${i}`}>Descrição do banner (opcional; vazio = decorativo)</label>
                       <input id={`featured-alt-${i}`} className="a-input" maxLength={200} value={slot.image.alt} onChange={(e) => setImage(i, { assetId: slot.image!.assetId, alt: e.target.value }, false)} onBlur={() => submit(slots)} />
+                    </div>
+                  )}
+                  {slot.image && !slot.pins?.length && (
+                    <div>
+                      <label className="a-label" htmlFor={`featured-opens-${i}`}>O banner leva para</label>
+                      <select
+                        id={`featured-opens-${i}`}
+                        className="a-select"
+                        value={slot.opens ?? ""}
+                        onChange={(e) => submit(slots.map((s, k) => (k === i && s ? { ...s, opens: e.target.value === "city-journey" ? ("city-journey" as const) : undefined } : s)))}
+                        data-testid={`featured-opens-${i + 1}`}
+                      >
+                        <option value="">A página do produto</option>
+                        <option value="city-journey">A compra guiada “Sua cidade” (cidade → modelo → peça)</option>
+                      </select>
+                      <p className="a-muted mt-1 text-[0.8125rem]">
+                        {slot.opens === "city-journey"
+                          ? "Quem clica no banner abre a mesma tela do “Sua cidade” do menu e escolhe a própria cidade. A faixa do produto, se aparecer, continua levando ao produto."
+                          : "Quem clica no banner vai para a página do produto desta posição."}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -281,7 +305,7 @@ export function HeroFeaturedProducts({
                                   return;
                                 }
                                 const next = [...slots];
-                                next[i] = { ...fromCandidate(c), ...(slots[i]?.image ? { image: slots[i]!.image } : {}), ...(slots[i]?.pins ? { pins: slots[i]!.pins } : {}) };
+                                next[i] = { ...fromCandidate(c), ...(slots[i]?.image ? { image: slots[i]!.image } : {}), ...(slots[i]?.pins ? { pins: slots[i]!.pins } : {}), ...(slots[i]?.opens ? { opens: slots[i]!.opens } : {}) };
                                 setOpenSlot(null);
                                 submit(next);
                               }}>{already ? (forPin ? "Já marcado nesta foto" : "Já escolhido") : forPin ? "Marcar este" : "Usar aqui"}</button></div>

@@ -14,7 +14,7 @@ import type { CommerceStoreKey, RegionSlug } from "./geo/regions";
 import { normalizeText } from "./geo/text";
 import { HERO_FAMILIES } from "./editorial/sul";
 import type { HeroFamilyCard } from "./home";
-import { HERO_CARDS, MAX_FEATURED, type FeaturedProductRef, type MediaRef } from "./site-config/schema";
+import { HERO_CARDS, MAX_FEATURED, type FeaturedBannerOpens, type FeaturedProductRef, type MediaRef } from "./site-config/schema";
 
 /**
  * The products the hero shows as cards, configured per region in the CMS as stable references (store + INK product id). Everything shown
@@ -81,7 +81,8 @@ export type HeroSlidePin = { card: HeroFamilyCard; x: number; y: number };
  * One product of the "feature" opening as the public draws it: the card and, when the owner gave it one, its own banner. `pins`: the products marked
  * on that banner that can be shown (an ineligible one is left out, like an ineligible card); absent or empty = the product bar, as before.
  */
-export type HeroSlide = { card: HeroFamilyCard; image?: MediaRef; pins?: HeroSlidePin[] };
+/** `opens`: the banner opens the "Sua cidade" journey instead of the product (CMS `FeaturedProductRef.opens`; a banner without marks only). */
+export type HeroSlide = { card: HeroFamilyCard; image?: MediaRef; pins?: HeroSlidePin[]; opens?: FeaturedBannerOpens };
 
 /**
  * The products the public hero draws, each with its banner. `featured === undefined` (never customised): Sul keeps its three original cards
@@ -92,7 +93,8 @@ export function heroSlides(region: RegionSlug, featured: readonly FeaturedProduc
   return resolveFeatured(region, featured).flatMap((s) => {
     if (!s.card) return [];
     const pins = s.ref.image && s.ref.pins ? resolveFeatured(region, s.ref.pins).flatMap((p, j) => (p.card ? [{ card: p.card, x: s.ref.pins![j].x, y: s.ref.pins![j].y }] : [])) : [];
-    return [{ card: s.card, ...(s.ref.image ? { image: s.ref.image } : {}), ...(pins.length > 0 ? { pins } : {}) }];
+    const opens = s.ref.image && pins.length === 0 ? s.ref.opens : undefined;
+    return [{ card: s.card, ...(s.ref.image ? { image: s.ref.image } : {}), ...(pins.length > 0 ? { pins } : {}), ...(opens ? { opens } : {}) }];
   });
 }
 

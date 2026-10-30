@@ -164,6 +164,35 @@ describe("products marked on a hero picture (compre o look)", () => {
   });
 });
 
+describe("a banner that opens the \"Sua cidade\" journey", () => {
+  const image = { assetId: "upload:cidade", alt: "", decorative: true };
+  const hero = () => structuredClone(buildSeedBundle({ metaPixelId: null, ga4MeasurementId: null }).docs.sul.home!.sections.find((s) => s.template === "hero")!);
+  const fd = (entries: Record<string, string>) => { const f = new FormData(); for (const [k, v] of Object.entries(entries)) f.set(k, v); return f; };
+
+  test("given the editor's choice, when parsed, then a banner without marks keeps it; without a banner or with marks, the product as always", () => {
+    const base = { featured_1: "use-sul:9001", featured_image_1: "upload:cidade", featured_alt_1: "" };
+    expect(parseFeaturedFields(fd({ ...base, featured_opens_1: "city-journey" })).refs[0].opens).toBe("city-journey");
+    expect(parseFeaturedFields(fd({ ...base, featured_opens_1: "" })).refs[0]).not.toHaveProperty("opens");
+    expect(parseFeaturedFields(fd({ ...base, featured_opens_1: "outra-coisa" })).refs[0]).not.toHaveProperty("opens");
+    expect(parseFeaturedFields(fd({ featured_1: "use-sul:9001", featured_opens_1: "city-journey" })).refs[0]).not.toHaveProperty("opens");
+    expect(parseFeaturedFields(fd({ ...base, featured_opens_1: "city-journey", featured_pins_1: JSON.stringify([{ p: "use-sul:9001", x: 1, y: 1 }]) })).refs[0]).not.toHaveProperty("opens");
+  });
+
+  test("given the choice, when validated, then it needs the banner and no marks", () => {
+    const withOpens = (ref: Record<string, unknown>) => ({ ...hero(), variant: "feature" as const, featured: [{ store: "use-sul" as const, productId: "9001", ...ref }] });
+    expect(validateSection(withOpens({ image, opens: "city-journey" }) as never).ok).toBe(true);
+    expect(validateSection(withOpens({ opens: "city-journey" }) as never).ok).toBe(false);
+    expect(validateSection(withOpens({ image, opens: "produto" }) as never).ok).toBe(false);
+    expect(validateSection(withOpens({ image, opens: "city-journey", pins: [{ store: "use-sul", productId: "9001", x: 1, y: 1 }] }) as never).ok).toBe(false);
+  });
+
+  test("given the choice, when the slides are built, then the slide carries it with its banner, and never without one", () => {
+    const [banner, bare] = mod.heroSlides("sul", [{ store: "use-sul", productId: "9001", image, opens: "city-journey" }, { store: "use-sul", productId: "9501", opens: "city-journey" }], []);
+    expect(banner.opens).toBe("city-journey");
+    expect(bare.opens).toBeUndefined();
+  });
+});
+
 describe("hero product search", () => {
   test("given a query, when searched in Norte, then only eligible Norte products match by city, UF, style or id, and the other stores never appear", () => {
     expect(mod.searchFeaturedCandidates("norte", "belem").results.map((r) => r.productId).sort()).toEqual(["7001", "7002"]);

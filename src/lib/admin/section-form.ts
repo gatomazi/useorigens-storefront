@@ -400,7 +400,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
 
 /**
  * The hero's featured-product fields: `featured_1..MAX_FEATURED` hold "store:productId" (or nothing), and, for the "feature" opening, `featured_image_N` /
- * `featured_alt_N` that product's banner (an empty alt = decorative). Returns the references in slot order (empty slots closed up: the products are a
+ * `featured_alt_N` that product's banner (an empty alt = decorative) and `featured_opens_N` what that banner opens ("city-journey" or nothing). Returns the references in slot order (empty slots closed up: the products are a
  * list, not fixed holes) and the malformed values, which are refused instead of silently dropped.
  */
 export function parseFeaturedFields(f: Fields): { refs: FeaturedProductRef[]; invalid: string[] } {
@@ -422,7 +422,9 @@ export function parseFeaturedFields(f: Fields): { refs: FeaturedProductRef[]; in
       invalid.push(`marcas da posição ${slot}`);
       continue;
     }
-    refs.push({ store: m[1] as CommerceStoreKey, productId: m[2], ...(assetId ? { image: { assetId, alt, decorative: alt === "" } } : {}), ...(pins.length > 0 ? { pins } : {}) });
+    // What the banner opens (`featured_opens_N`): only a banner without marks has a click of its own; anything else = the product.
+    const opens = assetId && pins.length === 0 && str(f, `featured_opens_${slot}`) === "city-journey" ? ("city-journey" as const) : undefined;
+    refs.push({ store: m[1] as CommerceStoreKey, productId: m[2], ...(assetId ? { image: { assetId, alt, decorative: alt === "" } } : {}), ...(pins.length > 0 ? { pins } : {}), ...(opens ? { opens } : {}) });
   }
   return { refs, invalid };
 }

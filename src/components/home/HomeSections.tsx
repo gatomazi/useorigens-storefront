@@ -117,7 +117,7 @@ export function HomeSections({
                 statesAnchor={statesAnchor}
                 panelColor={panelColor}
                 panelImage={feature ? splitFigure(bg) : null}
-                slides={feature ? heroSlides(region, s.featured, home.heroFamilies).map((sl) => ({ product: sl.card, image: mediaFigure(sl.image, media), ...(sl.pins ? { pins: sl.pins } : {}) })) : undefined}
+                slides={feature ? heroSlides(region, s.featured, home.heroFamilies).map((sl) => ({ product: sl.card, image: mediaFigure(sl.image, media), ...(sl.pins ? { pins: sl.pins } : {}), ...(sl.opens ? { opens: sl.opens } : {}) })) : undefined}
                 rotation={feature ? s.featuredRotation : undefined}
                 hideBar={feature && s.hideFeaturedBar === true}
                 colors={s.heroColors}
