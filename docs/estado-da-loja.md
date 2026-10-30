@@ -113,7 +113,7 @@ As três regiões respondem 200 e estão no sitemap. Na verificação de produç
 
 **Página da cidade** (`/sul/sc/florianopolis`) [prod]
 - No topo: trilha "Sul / Santa Catarina / Florianópolis", título grande, "Santa Catarina · Grande Florianópolis" e "Compartilhar".
-- "Estilos": abas por peça (Camiseta clássica · 8, Algodão Peruano · 7, …), "Guia de medidas" e os cards dos 8 estilos, cada um com favoritar e compartilhar.
+- "Estilos": abas por peça (Camiseta clássica · 8, Algodão Peruano · 7, …), "Guia de medidas" e um card por estilo que a cidade tem (hoje 8 em Florianópolis; a Pin entra quando os produtos dela sincronizarem), cada um com favoritar e compartilhar.
 - Depois: "Busque outra cidade", "Fala de Florianópolis" e "Mais de Grande Florianópolis".
 - O card abre direto a página do produto na INK, por exemplo `https://www.usesul.com.br/usesul/product/feito-em-florianopolis`.
 
@@ -222,7 +222,8 @@ O proxy não passa pelas rotas `/api`, então elas não têm a trava de catálog
 
 **Classificação dos produtos** (`src/lib/catalog/parse.ts`, `indexer.ts`)
 - O nome do produto decide a cidade e a família: `<título> | <Família> [UF]` ou `Feito em <Cidade> [- UF]`. O que não casa vira **merch**, ou seja, produto avulso. Nada é adivinhado.
-- São 8 famílias de estampa: Ponto de Origem, Feito em, Coordenadas, Legado, Território, Tipografia, Traço e Gentílico. Algumas têm variantes, como regional, personalizado, localidade ou centro.
+- São 9 famílias de estampa, nesta ordem: Ponto de Origem, Feito em, Coordenadas, Legado, Território, Tipografia, Traço, Gentílico e Pin (`families.ts`). Algumas têm variantes, como regional, personalizado, localidade ou centro. Uma cidade pode ter só parte delas: nada no site supõe um número fixo.
+- Pin (modelo 9, 30/10/2026): o nome da cidade com um pin, sem mapa. Nome na INK `<Cidade> | Pin <UF>` (no DF, a RA: `SCIA | Pin DF`), categorias internas `ZZ - SU|CO|NO - PIN` e `ZZ - SU|CO|NO - PIN - <UF>`. Criada direto na loja única pelo migrador (modelo `pin`).
 - Ranking: a variante principal vem primeiro, depois a prioridade da loja, depois o id da INK.
 
 **Peças** (`garment-index.json`)

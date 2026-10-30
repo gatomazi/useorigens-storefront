@@ -11,7 +11,7 @@
  */
 import type { RegionSlug } from "../geo/regions";
 import type { ThemeConfig } from "./navigation-schema";
-import { homeThemeOf, type Appearance, type CollectionRef, type GridTile, type HeroColors, type HomeThemeName, type KeptHomeTheme, type ScopeDoc, type Section } from "./schema";
+import { homeThemeOf, MAX_CITY_STYLES, type Appearance, type CollectionRef, type GridTile, type HeroColors, type HomeThemeName, type KeptHomeTheme, type ScopeDoc, type Section } from "./schema";
 import { structuredDefaults, uniqueAnchor } from "./structured";
 
 export const HOME_THEME_LABEL: Record<HomeThemeName, string> = { original: "Original", editorial: "Editorial", black: "Black Friday", natal: "Natal" };
@@ -62,9 +62,9 @@ export function editorialSeed(region: RegionSlug, sections: readonly Section[], 
     {
       ...styles,
       active: true,
-      // Every style of the example city by name, one card at a time (all eight models without eight cards on screen).
+      // Every style of the example city by name, one card at a time (all the models without one card per model on screen).
       variant: "list",
-      count: 8,
+      count: MAX_CITY_STYLES,
       title: "Sua cidade, do seu jeito.",
       subtitle: "O mapa, o nome ou as coordenadas. O exemplo aqui é {city}; ao abrir a sua, você vê só os estilos que existem para ela.",
       appearance: plain(),

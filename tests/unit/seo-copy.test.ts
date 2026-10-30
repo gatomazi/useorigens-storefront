@@ -72,14 +72,15 @@ describe("city copy", () => {
     expect(text).toBe("Camisetas de Bagé, no Rio Grande do Sul: 3 estilos disponíveis, como Ponto de Origem, Coordenadas e Traço. Veja os estilos e escolha o seu na loja.");
   });
 
-  test("given eight styles, when the description is built, then it shows three and counts the rest", () => {
-    expect(cityDescription(bage, ALL_FAMILY_NAMES)).toContain("8 estilos disponíveis, como Ponto de Origem, Feito em, Coordenadas e mais 5");
+  test("given every style, when the description is built, then it shows three and counts the rest", () => {
+    const n = ALL_FAMILY_NAMES.length;
+    expect(cityDescription(bage, ALL_FAMILY_NAMES)).toContain(`${n} estilos disponíveis, como Ponto de Origem, Feito em, Coordenadas e mais ${n - 3}`);
   });
 
-  test("given one style, when the description is built, then it says '1 estilo' and never claims eight", () => {
+  test("given one style, when the description is built, then it says '1 estilo' and never claims more", () => {
     const text = cityDescription(bage, ["Traço"]);
     expect(text).toBe("Camisetas de Bagé, no Rio Grande do Sul: 1 estilo disponível, Traço. Veja o estilo e escolha na loja.");
-    expect(text).not.toContain("8");
+    expect(text).not.toMatch(/\d+ estilos/);
   });
 
   test("given no style, when the description is built, then it claims no style", () => {
@@ -94,8 +95,8 @@ describe("city copy", () => {
     expect(intro).not.toMatch(/gentílico de|orgulho|gaúch|bageense|frete grátis|personaliz/i);
   });
 
-  test("given one to eight styles, when the intro is built, then it stays a short paragraph", () => {
-    for (let n = 1; n <= 8; n += 1) {
+  test("given one style up to every style, when the intro is built, then it stays a short paragraph", () => {
+    for (let n = 1; n <= ALL_FAMILY_NAMES.length; n += 1) {
       const count = words(cityIntro(bage, "sul", ALL_FAMILY_NAMES.slice(0, n)) ?? "");
       expect(count, `${n} styles`).toBeGreaterThanOrEqual(35);
       expect(count, `${n} styles`).toBeLessThanOrEqual(80);

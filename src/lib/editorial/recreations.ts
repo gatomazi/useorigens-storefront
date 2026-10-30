@@ -2,7 +2,7 @@ import type { MerchProduct } from "../catalog/types";
 
 /**
  * Curated recreations/redesigns: real INK merch products that redesign a work, an icon or a reference with a
- * regional accent — a parallel editorial trail, never mixed with the eight city design families.
+ * regional accent — a parallel editorial trail, never mixed with the city design families.
  *
  * This is the ONLY human curation for this section (docs/content/sul-recriations-audit.md has the full audit of
  * 28 products; these six are its "A — releitura forte" group, the ones that read as a real collection even

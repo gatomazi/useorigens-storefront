@@ -1,5 +1,6 @@
 import "server-only";
 import { DESIGN_FAMILIES } from "../catalog/families";
+import { MAX_CITY_STYLES } from "../site-config/schema";
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import { getRegionHome } from "../home";
 import { storeForRegion } from "../catalog/commerce-mode";
@@ -11,6 +12,17 @@ import { storeForRegion } from "../catalog/commerce-mode";
  */
 export type StructuredStatus = { ok: boolean; summary: string; notes: string[] };
 
+const NUMBER_WORDS: Readonly<Record<string, number>> = { dois: 2, tres: 3, quatro: 4, cinco: 5, seis: 6, sete: 7, oito: 8, nove: 9, dez: 10 };
+
+/** The number of styles a heading promises ("Sua cidade, de 8 jeitos.", "nove estilos"), or null when it states none. */
+function promisedCount(title: string): number | null {
+  const digits = /\b(\d{1,2})\b/.exec(title);
+  if (digits) return Number(digits[1]);
+  const words = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().match(/[a-z]+/g) ?? [];
+  const word = words.find((w) => w in NUMBER_WORDS);
+  return word ? NUMBER_WORDS[word] : null;
+}
+
 export function cityStylesStatus(region: RegionSlug, configured?: { title?: string; count?: number }): StructuredStatus {
   const home = getRegionHome(region);
   const own = storeForRegion(region);
@@ -19,11 +31,15 @@ export function cityStylesStatus(region: RegionSlug, configured?: { title?: stri
   const entries = showcase.families.filter((f) => f.primary.commerceStoreKey === own);
   const have = new Set(entries.map((e) => e.family.id));
   const missing = DESIGN_FAMILIES.filter((f) => !have.has(f.id)).map((f) => f.name);
-  const shown = Math.min(entries.length, configured?.count ?? 8);
+  const shown = Math.min(entries.length, configured?.count ?? MAX_CITY_STYLES);
   if (entries.length === 0) return { ok: false, summary: `Cidade de exemplo: ${showcase.city.name} · sem estilos disponíveis`, notes: ["Nenhum estilo real disponível para a cidade de exemplo: a seção não aparece na loja."] };
   const notes = [`Cidade de exemplo: ${showcase.city.name}. Estilos reais disponíveis: ${entries.length} de ${DESIGN_FAMILIES.length} (${entries.map((e) => e.family.name).join(", ")}).`];
   if (missing.length > 0) notes.push(`Sem produto desta loja para: ${missing.join(", ")}. Esses estilos não são mostrados.`);
-  if (configured?.title && /\b8\b|oito/i.test(configured.title) && entries.length < 8) notes.push(`O título fala em 8, mas hoje só há ${entries.length} estilos reais: ajuste o título para não prometer o que não existe.`);
+  // A heading that states a number must match what the section shows: fewer promises what does not exist, more hides a new style.
+  const promised = configured?.title ? promisedCount(configured.title) : null;
+  if (promised !== null && promised !== shown) {
+    notes.push(`O título fala em ${promised}, mas a seção mostra ${shown} ${shown === 1 ? "estilo real" : "estilos reais"}: ajuste o título${shown < entries.length ? " ou a quantidade de estilos" : ""} para bater com o que a loja mostra.`);
+  }
   return { ok: true, summary: `${shown} estilo(s) serão mostrados (${entries.length} disponíveis)`, notes };
 }
 

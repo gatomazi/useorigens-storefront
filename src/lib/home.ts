@@ -54,7 +54,7 @@ export type RegionHome = {
   states: StateCard[];
   /** "Da Nossa Terra": real regional-identity products, balanced across the three states. */
   terra: CarouselItem[];
-  /** Redesigns/recreations: an editorial trail parallel to the eight city families, never mixed with them. */
+  /** Redesigns/recreations: an editorial trail parallel to the city families, never mixed with them. */
   recreations: CarouselItem[];
   /** "Feito Para Você": the real "Lenda" line — who wears it, never a city/map personalization. */
   feitoParaVoce: CarouselItem[];

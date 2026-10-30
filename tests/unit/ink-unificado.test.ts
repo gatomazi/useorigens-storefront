@@ -1,7 +1,7 @@
 import path from "node:path";
 import { describe, expect, test } from "vitest";
 import { parseProductName } from "@/lib/catalog/parse";
-import { chaveMigracaoDoVinculo, lugarDaChaveMigracao } from "@/lib/catalog/unificado/chave";
+import { chaveMigracaoDoVinculo, lugarDaChaveMigracao, MODELO_PARA_FAMILIA } from "@/lib/catalog/unificado/chave";
 import { assertForaDaProducao } from "@/lib/catalog/unificado/destino";
 import { lerEstadoMigracao } from "@/lib/catalog/unificado/estado-migracao";
 import type { ProdutoBruto } from "@/lib/catalog/unificado/produto-bruto";
@@ -82,6 +82,10 @@ describe("chave de identidade", () => {
     expect(chaveMigracaoDoVinculo(base)).toEqual({ ok: true, chave: "origem/MS/anastacio" });
     expect(chaveMigracaoDoVinculo({ ...base, designVariant: "localidade" })).toMatchObject({ ok: false });
     expect(chaveMigracaoDoVinculo({ ...base, localityLabel: "Distrito X" })).toMatchObject({ ok: false });
+  });
+  test("given o modelo 9 (pin) do migrador, then a chave e a família se correspondem nos dois sentidos", () => {
+    expect(MODELO_PARA_FAMILIA.pin).toBe("pin");
+    expect(chaveMigracaoDoVinculo({ cityId: "4106902", designFamily: "pin", designVariant: "base" })).toEqual({ ok: true, chave: "pin/PR/curitiba" });
   });
 });
 

@@ -1,5 +1,7 @@
 import type { Page } from "@playwright/test";
+import { DESIGN_FAMILIES } from "../../src/lib/catalog/families";
 import { expect, test } from "./fixtures";
+import { classicFamilies, oracleAvailable } from "./garment-oracle";
 
 /**
  * The hero field is a trigger: it opens the search sheet (full screen on phones), where the real input lives. Every navigation in this
@@ -361,13 +363,16 @@ test.describe("V2 regressions and regional rules", () => {
     await expect(sc.getByRole("link", { name: /Santa Catarina \| Clean/ })).toHaveAttribute("href", /usesul\.com\.br/);
   });
 
-  test("given the styles grid, when read, then the eight families lead with the three commercial ones and every card is the same size", async ({ page }) => {
+  test("given the styles grid, when read, then the city's families lead with the three commercial ones and every card is the same size", async ({ page }) => {
     await page.goto("/sul/sc/florianopolis");
     const grid = page.locator('section[aria-labelledby="styles-title"] ul').first();
     const cards = grid.locator("> li");
-    await expect(cards).toHaveCount(8);
+    await expect(cards.first()).toBeVisible();
     const names = await cards.locator("h3").allTextContents();
-    expect(names).toEqual(["Ponto de Origem", "Feito em", "Coordenadas", "Legado", "Território", "Tipografia", "Traço", "Gentílico"]);
+    // No fixed count (ADR 0001: a city may have fewer families): only families that exist, in the commercial order of families.ts.
+    expect(names).toEqual(DESIGN_FAMILIES.map((f) => f.name).filter((name) => names.includes(name)));
+    expect(names.slice(0, 3)).toEqual(["Ponto de Origem", "Feito em", "Coordenadas"]);
+    if (oracleAvailable) expect(names).toEqual(classicFamilies("4205407").map((f) => f.name));
     // No card is bigger than another: same column span, same image box.
     const boxes = await cards.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().width)));
     expect(new Set(boxes).size, `all card widths equal, got ${boxes.join(",")}`).toBe(1);
@@ -387,7 +392,7 @@ test.describe("V2 regressions and regional rules", () => {
     expect(overflow).toBe(0);
   });
 
-  test("given the home, when 'Redesenhos do Sul' is shown, then it is a separate editorial trail of real products, never mixed with the eight base families", async ({ page }) => {
+  test("given the home, when 'Redesenhos do Sul' is shown, then it is a separate editorial trail of real products, never mixed with the base families", async ({ page }) => {
     await page.goto("/sul");
     const section = page.locator("#redesenhos");
     await expect(section.getByRole("heading", { name: "Redesenhos do Sul" })).toBeVisible();
@@ -400,9 +405,9 @@ test.describe("V2 regressions and regional rules", () => {
       // Intl.NumberFormat("pt-BR") uses a non-breaking space after "R$", not a regular one.
       await expect(item.getByText(/^R\$\s*\d/)).toBeVisible();
     }
-    // None of the eight base family names appear as a card title here (it is a parallel trail, not a ninth family).
+    // None of the base family names appear as a card title here (it is a parallel trail, not another family).
     const titles = await items.locator("h3").allTextContents();
-    for (const base of ["Ponto de Origem", "Feito em", "Coordenadas", "Legado", "Território", "Tipografia", "Traço", "Gentílico"]) {
+    for (const base of DESIGN_FAMILIES.map((f) => f.name)) {
       expect(titles).not.toContain(base);
     }
   });
@@ -447,7 +452,7 @@ test.describe("V2 regressions and regional rules", () => {
     expect(cta.y).toBeGreaterThan(price.y);
   });
 
-  test("given the home, when read, then the official section order is Hero, 8 estilos, Da Nossa Terra, Estados, Redesenhos, Feito Para Você, Fala daqui, DDD, Campanha", async ({ page }) => {
+  test("given the home, when read, then the official section order is Hero, Estilos, Da Nossa Terra, Estados, Redesenhos, Feito Para Você, Fala daqui, DDD, Campanha", async ({ page }) => {
     await page.goto("/sul");
     // "Cidades para começar" stays removed (CLAUDE_HOME_SECTION_ORDER_FINAL.md): search resolves city discovery.
     await expect(page.getByRole("heading", { name: "Cidades para começar" })).toHaveCount(0);

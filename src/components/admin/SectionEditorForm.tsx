@@ -13,7 +13,7 @@ import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { heroTextColors, readability } from "@/lib/admin/contrast";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
 import { PRODUCT_CARD_IMAGE, sectionImageSizes, sizeHintText, STATE_COVER } from "@/lib/admin/image-sizes";
-import { DEFAULT_BUY_LABEL, HERO_CARDS, MAX_BUY_LABEL, MAX_FEATURED, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type HomeThemeName, type ProductDisplay, type Section } from "@/lib/site-config/schema";
+import { DEFAULT_BUY_LABEL, HERO_CARDS, MAX_BUY_LABEL, MAX_CITY_STYLES, MAX_FEATURED, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type HomeThemeName, type ProductDisplay, type Section } from "@/lib/site-config/schema";
 import { customizerCardFieldDefaults } from "@/lib/admin/section-form";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 import { PRODUCT_SORTS, PRODUCT_SORT_LABEL, type ProductSort } from "@/lib/catalog/product-sort";
@@ -278,8 +278,8 @@ export function SectionEditorForm({
         {section.template === "city-styles" && (
           <div className="max-w-[12rem]">
             <label className="a-label" htmlFor="count">Quantos estilos mostrar</label>
-            <input id="count" name="count" type="number" min={1} max={8} defaultValue={section.count ?? 8} className="a-input" />
-            <p className="a-muted mt-1 text-[0.8125rem]">Até 8. Só aparecem os que existem de verdade para a cidade de exemplo.</p>
+            <input id="count" name="count" type="number" min={1} max={MAX_CITY_STYLES} defaultValue={section.count ?? MAX_CITY_STYLES} className="a-input" />
+            <p className="a-muted mt-1 text-[0.8125rem]">Até {MAX_CITY_STYLES}. Só aparecem os que existem de verdade para a cidade de exemplo.</p>
           </div>
         )}
         {notes.length > 0 && (

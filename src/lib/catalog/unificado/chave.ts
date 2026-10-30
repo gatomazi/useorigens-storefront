@@ -34,6 +34,8 @@ export const MODELO_PARA_FAMILIA: Readonly<Record<string, DesignFamilyId>> = {
   traco: "traco",
   gentilicos: "gentilico",
   feito_em: "feito-em",
+  // Modelo 9: criado direto na loja única para as três regiões (orgulhoregional migracao-config.mjs, `pin`).
+  pin: "pin",
 };
 const FAMILIA_PARA_MODELO = new Map(Object.entries(MODELO_PARA_FAMILIA).map(([m, f]) => [f, m]));
 

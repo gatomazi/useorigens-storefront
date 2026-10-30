@@ -57,7 +57,7 @@ function RegionStructuredData({ region }: { region: RegionSlug }) {
 
 /**
  * Home section order (CLAUDE_HOME_LENDA_ORDER_VIEW_ALL.md — do not reorganize without another review):
- * Hero → 8 estilos → Da Nossa Terra → Estados → Redesenhos → Feito Para Você → Fala daqui → DDD → Campanha.
+ * Hero → Estilos → Da Nossa Terra → Estados → Redesenhos → Feito Para Você → Fala daqui → DDD → Campanha.
  * "Cidades para começar" stays removed: search already resolves city discovery.
  */
 export default async function RegionHome({ params }: { params: Promise<{ region: string }> }) {
@@ -129,7 +129,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
       <PodioTeaser region={region} leaders={getPodiumLeaders(region, home.states.map((s) => s.uf))} />
 
       {/*
-        Editorial complementar: a parallel trail, never mixed with the eight city families nor with Da Nossa
+        Editorial complementar: a parallel trail, never mixed with the city families nor with Da Nossa
         Terra above. Bigger, more editorial cards (poster frame); real INK products, curated in editorial/recreations.ts.
         "Ver todos" points to the real store collection "Do Nosso Jeito", verified to hold this same line
         (editorial/collections.ts) — the closest real match; the home's own name stays "Redesenhos do Sul".
