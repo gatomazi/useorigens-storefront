@@ -10,7 +10,7 @@ import { getCatalog } from "../catalog/repository";
 import { arrangementOf, enabledInternalIds } from "../site-config/collections-enabled";
 import { landingCollection, livePage, liveCustomizer, newCollectionLanding, pageHref, plainCollectionLanding } from "../site-config/pages";
 import { hasImage, resolveBackground } from "../site-config/resolve";
-import { collectionLocks, todayInBrasilia } from "../site-config/checkpoints";
+import { bundleCollectionLocks, todayInBrasilia } from "../site-config/checkpoints";
 import type { Customizer, Page, PageKind, PublishedBundle } from "../site-config/schema";
 import type { CollectionPageLookup, InkCategorySource } from "../site-config/sources";
 import type { CarouselItem } from "@/components/catalog/ProductCarousel";
@@ -64,7 +64,8 @@ export function findCollectionLanding(regionParam: string, slug: string, today: 
   const found = publishedFor(regionParam);
   if (!found) return null;
   const doc = found.bundle.docs[found.region];
-  const locks = collectionLocks(doc, today);
+  // Every region's calendar: a collection sealed by Sul's (even in a theme kept for later) stays sealed in a region that follows it.
+  const locks = bundleCollectionLocks(Object.values(found.bundle.docs), today);
   const page = livePage(doc, "categoryLanding", slug);
   if (page) return { ...found, page, automatic: false, compact: plainCollectionLanding(page, (a) => hasImage(resolveBackground(a, found.bundle.media))), locked: lockOf(locks, landingCollection(page)) };
   const collection = collectionForPage(found.region, doc, slug);

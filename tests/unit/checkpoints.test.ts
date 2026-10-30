@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { parseGridTiles, parseHeroSchedule, parseSectionForm } from "@/lib/admin/section-form";
-import { checkpointStates, collectionLocks, dayMonth, periodLabel, periodState, todayInBrasilia } from "@/lib/site-config/checkpoints";
+import { bundleCollectionLocks, checkpointStates, collectionLocks, dayMonth, periodLabel, periodState, todayInBrasilia } from "@/lib/site-config/checkpoints";
 import { landingCollection } from "@/lib/site-config/pages";
 import { followedDoc } from "@/lib/site-config/follow";
 import { validateScopeDoc, validateSection, type GridTile, type ScopeDoc, type Section } from "@/lib/site-config/schema";
@@ -229,6 +229,17 @@ describe("collections the calendar keeps closed", () => {
     expect(collectionLocks(docWith([{ ...strip(), active: false }]), "2026-11-01").size).toBe(0);
     // A sealed shelf whose period has no first day seals nothing (its form never stores it either).
     expect(collectionLocks(docWith([], [], [{ ...shelf(155259, "2026-11-23"), period: { closesAt: "2026-11-30" } }]), "2026-11-01").size).toBe(0);
+  });
+
+  test("given Sul's kept Black theme sealing a week, when Norte (no seal of its own) is read, then the same store's collection is sealed there too", () => {
+    const sul = docWith([], [strip()]);
+    const norte = structuredClone(seed.docs.norte) as ScopeDoc;
+    expect(collectionLocks(norte, "2026-10-31").size).toBe(0);
+    const all = bundleCollectionLocks([sul, norte, undefined], "2026-10-31");
+    expect(all.get(`${S}:155245`)).toBe("2026-11-09");
+    // The earliest day of any region opens it.
+    const early = { ...norte, pages: [{ ...structuredClone(seed.docs.sul.pages?.[0] ?? {}), id: "pg-n", kind: "hotpage", slug: "cal", title: "Cal", seo: { indexable: false }, version: 1, sections: [shelf(155245, "2026-11-02")] } as never] } as ScopeDoc;
+    expect(bundleCollectionLocks([sul, early], "2026-10-31").get(`${S}:155245`)).toBe("2026-11-02");
   });
 
   test("given a landing, when its collection is read, then it is its paged grid's", () => {

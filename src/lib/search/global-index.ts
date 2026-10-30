@@ -19,7 +19,7 @@ import { getRegionHome } from "../home";
 import { launchedRegions } from "../regions/launched";
 import { siteConfigHomeEnabled } from "../site-config/flag";
 import { customizerHref, landingCollection, pageHref, PAGE_KIND_LABEL } from "../site-config/pages";
-import { collectionLocks, todayInBrasilia } from "../site-config/checkpoints";
+import { bundleCollectionLocks, collectionLocks, todayInBrasilia } from "../site-config/checkpoints";
 import { HUB_PAGE_SLUG, personalizationCards, personalizationHubHref } from "../customization/hub";
 import { readPublished } from "../site-config/published";
 import type { PublishedBundle, ScopeDoc, Source as CarouselSource } from "../site-config/schema";
@@ -47,6 +47,8 @@ export type GlobalIndexInputs = {
   doc?: ScopeDoc;
   /** The day the calendar's locks are read for (YYYY-MM-DD, Brasília); absent = today. */
   today?: string;
+  /** The collections sealed today across every region (`bundleCollectionLocks`); absent = only this region's document's. */
+  locks?: Map<string, string>;
   media?: PublishedBundle["media"];
   collections: readonly CollectionRecord[];
   /** Store whose public collection pages the `collections` link to (the region's store under the effective commerce mode). */
@@ -141,7 +143,7 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
 
   const doc = input.doc;
   // The collections the Black calendar keeps closed today (their pages show only a padlock): never offered by the search before their day.
-  const locks = collectionLocks(doc, input.today ?? todayInBrasilia());
+  const locks = input.locks ?? collectionLocks(doc, input.today ?? todayInBrasilia());
   const lockedRef = (ref: { store: string; collectionId: number } | null) => Boolean(ref && locks.has(`${ref.store}:${ref.collectionId}`));
   if (doc && doc.scope === region) {
     for (const page of doc.pages ?? []) {
@@ -290,6 +292,8 @@ export function globalSearchIndex(): Built {
   const byRegion = new Map<RegionSlug, PreparedGlobalDoc[]>();
   const byKind: Record<string, number> = {};
   let approxBytes = 0;
+  // The calendar's sealed collections across every region (a region following Sul inherits Sul's seals), computed once for the whole index.
+  const locks = bundleCollectionLocks(Object.values(bundle?.docs ?? {}), todayInBrasilia());
   for (const region of regions) {
     const doc = bundle?.docs[region];
     const collectionStore = storeForRegion(region);
@@ -303,7 +307,7 @@ export function globalSearchIndex(): Built {
     };
     const docs = buildGlobalDocs({
       region, catalog, garmentIndex, doc, media: bundle?.media, collections: store ? collectionsForRegion(region, (s) => catalog.productsOfStore(s)) : [], collectionStore, carouselItems,
-      umaPencaArticles: umaPenca.filter((a) => isArticleOfRegion(a, region)).length, cityCollection: cityCollectionIds(store?.collections ?? []),
+      umaPencaArticles: umaPenca.filter((a) => isArticleOfRegion(a, region)).length, cityCollection: cityCollectionIds(store?.collections ?? []), locks,
     });
     for (const d of docs) {
       byKind[d.kind] = (byKind[d.kind] ?? 0) + 1;

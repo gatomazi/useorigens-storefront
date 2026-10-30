@@ -77,5 +77,21 @@ export function collectionLocks(doc: ScopeDoc | undefined, today: string): Map<s
   return new Map([...earliest].filter(([, day]) => today < day));
 }
 
+/**
+ * The locks of every region's document at once (the published bundle's `docs`), each collection on its earliest day. The keys name the INK store, so a
+ * collection Sul seals is sealed wherever that store's collection is served: Norte and Centro-Oeste follow Sul's home and pages but not its KEPT themes
+ * (the Black theme waiting for 01/11), and under the single store their collection pages are the same collections.
+ */
+export function bundleCollectionLocks(docs: Iterable<ScopeDoc | undefined>, today: string): Map<string, string> {
+  const all = new Map<string, string>();
+  for (const doc of docs) {
+    for (const [key, day] of collectionLocks(doc, today)) {
+      const seen = all.get(key);
+      if (!seen || day < seen) all.set(key, day);
+    }
+  }
+  return all;
+}
+
 /** Whole days from `today` to `day` (both YYYY-MM-DD). */
 export const daysBetween = (today: string, day: string): number => Math.round((Date.parse(`${day}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000);
