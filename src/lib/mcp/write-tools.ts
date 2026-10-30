@@ -1,8 +1,8 @@
 import type { CommerceStoreKey } from "../geo/regions";
 import { WRITE_SCOPE } from "./auth/oauth";
 import type { McpGrant } from "./auth/resource";
-import { changeHash, CHANGE_CODE, CHANGE_TTL_MS, newChangeCode, buildExchangePlan, buildOrderItemEditPlan, buildProductPlan, categoriesOf, checkProductChangeInput, nextCategories, nextTags } from "./changes";
-import type { ChangePlan, ExchangeInput, ItemWish, ProductChangeInput, ProductPlan } from "./changes";
+import { changeHash, CHANGE_CODE, CHANGE_TTL_MS, newChangeCode, buildCategoryPlan, buildExchangePlan, buildOrderItemEditPlan, buildProductPlan, categoriesOf, checkProductChangeInput, nextCategories, nextTags } from "./changes";
+import type { CategoryChangeInput, CategoryPlan, ChangePlan, ExchangeInput, ItemWish, ProductChangeInput, ProductPlan } from "./changes";
 import type { ChangeRecord, ChangeStore } from "./change-store";
 import { McpToolError } from "./errors";
 import type { McpExchange } from "./exchanges-model";
@@ -28,6 +28,7 @@ export type WriteDeps = {
   order: (store: CommerceStoreKey, orderId: string, budget: Budget) => Promise<McpOrder>;
   categoriesLive: (store: CommerceStoreKey, productIds: readonly string[], budget: Budget) => Promise<LiveCategory[]>;
   patchProduct: (store: CommerceStoreKey, productId: string, body: ProductPatchBody, key: string, budget: Budget) => Promise<PatchedProduct>;
+  patchCollectionVisibility: (store: CommerceStoreKey, collectionId: number, visible: boolean, key: string, budget: Budget) => Promise<{ id: number; visible: boolean | null }>;
   patchOrderItems: (store: CommerceStoreKey, orderId: string, items: readonly OrderItemSwap[], key: string, budget: Budget) => Promise<unknown>;
   createExchange: (store: CommerceStoreKey, body: ExchangeBody, key: string, budget: Budget) => Promise<McpExchange>;
   storeExchanges: (store: CommerceStoreKey, q: ExchangeQuery, budget: Budget) => Promise<{ exchanges: McpExchange[]; unreadable: number; fetchedAt: Date }>;
@@ -127,6 +128,16 @@ function requireWrite(deps: AllDeps, grant: McpGrant, store: CommerceStoreKey): 
 
 /** What the owner reads in a preview (the bodies sent to INK stay in the stored plan). */
 function planView(plan: ChangePlan) {
+  if (plan.kind === "category") {
+    return clean({
+      kind: plan.kind,
+      store: plan.store,
+      visible: plan.visible,
+      categories: plan.items.map((i) => ({ category_id: i.category_id, name: i.name, slug: i.slug, before: i.before, after: i.after })),
+      unchanged: plan.unchanged,
+      warnings: plan.warnings,
+    });
+  }
   if (plan.kind === "product") {
     return clean({
       kind: plan.kind,
@@ -174,6 +185,14 @@ export async function previewProductChangesTool(deps: AllDeps, grant: McpGrant, 
   for (const id of checked.ids) products.push(await deps.write.product(input.store, id, budget));
   const categories = checked.touchesCategories ? await deps.write.categoriesLive(input.store, checked.ids, budget) : null;
   const plan = buildProductPlan(input.store, input, products, categories);
+  return savePreview(deps, grant, plan, deps.now(), plan.items.length === 0);
+}
+
+/** Shows or hides collections at INK (`is_available`): the store's categories are read live, so a name, slug or id is resolved against INK of now. */
+export async function previewCategoryVisibilityTool(deps: AllDeps, grant: McpGrant, input: CategoryChangeInput & { store: CommerceStoreKey }): Promise<ToolResult> {
+  requireWrite(deps, grant, input.store);
+  const categories = await deps.write.categoriesLive(input.store, [], deps.newBudget());
+  const plan = buildCategoryPlan(input.store, input, categories);
   return savePreview(deps, grant, plan, deps.now(), plan.items.length === 0);
 }
 
@@ -243,9 +262,31 @@ async function applyProducts(deps: AllDeps, plan: ProductPlan, key: string, budg
   return out;
 }
 
+async function applyCategories(deps: AllDeps, plan: CategoryPlan, key: string, budget: Budget): Promise<Outcome[]> {
+  const out: Outcome[] = [];
+  let stopped: string | null = null;
+  for (const item of plan.items) {
+    const target = `categoria ${item.category_id} (${item.name})`;
+    if (stopped) {
+      out.push({ target, outcome: "not_sent", message: stopped });
+      continue;
+    }
+    try {
+      const ink = await deps.write.patchCollectionVisibility(plan.store, item.category_id, plan.visible, `${key}:c${item.category_id}`, budget);
+      out.push({ target, outcome: "applied", before: item.before, after: item.after, ink });
+    } catch (err) {
+      const o = outcomeOf(err);
+      out.push({ target, ...o, before: item.before, after: item.after });
+      if (o.outcome === "not_sent") stopped = o.message ?? "tempo esgotado";
+    }
+  }
+  return out;
+}
+
 async function applyPlan(deps: AllDeps, plan: ChangePlan, key: string): Promise<Outcome[]> {
   const budget = deps.write.newWriteBudget();
   if (plan.kind === "product") return applyProducts(deps, plan, key, budget);
+  if (plan.kind === "category") return applyCategories(deps, plan, key, budget);
   const target = `pedido ${plan.order_id}`;
   try {
     if (plan.kind === "order_items") {

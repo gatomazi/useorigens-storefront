@@ -23,6 +23,10 @@ export function fakeWrite(over: Partial<WriteDeps> = {}): WriteDeps & { sent: { 
       sent.push({ op: "patchProduct", store, target: productId, body, key });
       return { id: productId, name: null, price: body.price ?? null, visibleInStore: body.visible_in_store ?? null, approvalStatus: "approved" };
     },
+    patchCollectionVisibility: async (store, collectionId, visible, key) => {
+      sent.push({ op: "patchCollectionVisibility", store, target: String(collectionId), body: { is_available: visible }, key });
+      return { id: collectionId, visible };
+    },
     patchOrderItems: async (store, orderId, items, key) => {
       sent.push({ op: "patchOrderItems", store, target: orderId, body: items, key });
       return { orderId };

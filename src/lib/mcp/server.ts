@@ -16,7 +16,7 @@ import { memoryChangeStore, type ChangeStore } from "./change-store";
 import { McpToolError } from "./errors";
 import { EXCHANGE_REASONS } from "./exchanges-model";
 import { forgetStoreCache, MCP_STORES, newBudget, storeOrder, storeOrders, storeProduct } from "./ink-live";
-import { createExchange, patchOrderItems, patchProduct, storeCategoriesLive, storeExchange, storeExchanges } from "./ink-write";
+import { createExchange, patchCollectionVisibility, patchOrderItems, patchProduct, storeCategoriesLive, storeExchange, storeExchanges } from "./ink-write";
 import { PAYMENT_STATUS_FILTERS } from "./orders-model";
 import { loadPromotions } from "./promotions-source";
 import { RANK_DIMENSIONS, RANK_METRICS } from "./sales";
@@ -123,6 +123,7 @@ export function realDeps(): writeTools.AllDeps {
       order: async (s, id, b) => (await storeOrder(s, id, b, true)).order,
       categoriesLive: storeCategoriesLive,
       patchProduct,
+      patchCollectionVisibility,
       patchOrderItems,
       createExchange,
       storeExchanges,
@@ -172,7 +173,7 @@ export function createUseOrigensMcpServer(grant: McpGrant, deps: writeTools.AllD
           ? `Dados da loja Use Origens na Reserva INK (store ${deps.stores[0]}): a loja única, que vende as estampas de Sul, Norte e Centro-Oeste. As antigas lojas Norte e Centro-Oeste não fazem parte deste conector. `
           : "Dados das lojas Use Origens na Reserva INK (Sul, Norte, Centro-Oeste). ") +
         (canWrite
-          ? "Leitura e, nesta conexão, alteração de produtos, itens de pedido e trocas pelas ferramentas origens_preview_* + origens_confirm_change. "
+          ? "Leitura e, nesta conexão, alteração de produtos, da visibilidade de categorias, de itens de pedido e trocas pelas ferramentas origens_preview_* + origens_confirm_change. "
           : "Somente leitura. ") +
         "Comece por origens_capabilities se não souber o que existe. " +
         "Ao responder sobre vendas, informe sempre período, critério de data (pedidos criados no período com pagamento aprovado), fonte, cobertura e atualização (meta). " +
@@ -371,6 +372,24 @@ export function createUseOrigensMcpServer(grant: McpGrant, deps: writeTools.AllD
 
   if (grant.scopes.includes(WRITE_SCOPE)) {
     const PREVIEW = { ...READ_ONLY, openWorldHint: true } as const;
+    server.registerTool(
+      "origens_preview_category_visibility",
+      {
+        title: "Prévia: mostrar ou ocultar categorias",
+        description:
+          "PRÉVIA (não altera nada) de mostrar ou ocultar até 10 categorias (coleções) de uma loja na INK: visible=false deixa a categoria interna (some da loja da INK e da busca; os produtos continuam à venda), visible=true a torna pública. " +
+          "Só a visibilidade muda: os produtos da categoria nunca são tocados. Lê as categorias da INK agora e devolve o antes → depois e um confirmation_code de 10 minutos. Para aplicar: mostre ao dono e, com o OK dele, origens_confirm_change.",
+        inputSchema: {
+          store: STORE,
+          categories: z.array(z.string().min(1).max(80)).min(1).max(10).describe("Categorias por id, slug ou nome (origens_list_categories)."),
+          visible: z.boolean().describe("true = pública (aparece na loja INK); false = interna (oculta)."),
+        },
+        outputSchema: OUTPUT,
+        annotations: PREVIEW,
+      },
+      run("origens_preview_category_visibility", grant, deps, log, (d, a: Parameters<typeof writeTools.previewCategoryVisibilityTool>[2]) => writeTools.previewCategoryVisibilityTool(d, grant, a)),
+    );
+
     server.registerTool(
       "origens_preview_product_changes",
       {

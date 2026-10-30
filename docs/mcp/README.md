@@ -66,6 +66,7 @@ Com escrita autorizada (seção 9), aparecem mais cinco:
 | Ferramenta | O que faz |
 | --- | --- |
 | `origens_preview_product_changes` | **Prévia** de até 25 produtos: preço, preço promocional (definir ou encerrar), publicar/ocultar, nome (um produto), descrição, tags e categorias (incluir/remover) |
+| `origens_preview_category_visibility` | **Prévia** de mostrar ou ocultar até 10 categorias na INK (`is_available`): interna some da loja da INK; os produtos não são tocados. Exige a migração `0012_mcp_change_category` e o escopo `store.categories.write` na chave de escrita |
 | `origens_preview_order_item_edit` | **Prévia** da troca de tamanho, cor ou produto de um item antes da fábrica (`items_editable`), no próprio pedido |
 | `origens_preview_exchange` | **Prévia** de uma troca na INK (`exchangeable`) |
 | `origens_confirm_change` | **Aplica** uma prévia pelo código. É a única ferramenta com `destructiveHint: true` |

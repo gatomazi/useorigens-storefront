@@ -181,7 +181,7 @@ const accessText = (w: WriteAccess): string =>
     ? "Somente leitura. Nenhuma ferramenta altera a INK ou a Use Origens."
     : w.stores.length === 0
       ? "Leitura. Esta conexão tem permissão de alteração, mas nenhuma loja tem credencial de escrita da INK neste servidor: as prévias de alteração respondem MISSING_CREDENTIAL."
-      : `Leitura e alteração. Esta conexão pode alterar produtos (preço, preço promocional, publicar/ocultar, nome, descrição, tags e categorias), itens de pedido antes da fábrica e abrir trocas nas lojas ${w.stores.join(", ")}: sempre prévia → aprovação explícita do dono → origens_confirm_change.`;
+      : `Leitura e alteração. Esta conexão pode alterar produtos (preço, preço promocional, publicar/ocultar, nome, descrição, tags e categorias), mostrar ou ocultar categorias, alterar itens de pedido antes da fábrica e abrir trocas nas lojas ${w.stores.join(", ")}: sempre prévia → aprovação explícita do dono → origens_confirm_change.`;
 
 export async function capabilities(deps: ToolDeps, write: WriteAccess = { allowed: false, stores: [] }): Promise<ToolResult> {
   const now = deps.now();
@@ -232,7 +232,7 @@ export async function capabilities(deps: ToolDeps, write: WriteAccess = { allowe
       },
       tools: ["origens_capabilities", "origens_search_products", "origens_get_product", "origens_list_categories", "origens_promotions", "origens_sales_summary", "origens_sales_ranking", "origens_list_orders", "origens_get_order", "origens_list_exchanges", "origens_get_exchange", "origens_catalog_status"],
       write_tools: {
-        tools: ["origens_preview_product_changes", "origens_preview_order_item_edit", "origens_preview_exchange", "origens_confirm_change", "origens_change_status"],
+        tools: ["origens_preview_product_changes", "origens_preview_category_visibility", "origens_preview_order_item_edit", "origens_preview_exchange", "origens_confirm_change", "origens_change_status"],
         enabled: write.allowed,
         stores_with_write_credential: write.allowed ? write.stores : undefined,
         available: "Só em conexões com escrita (chave de API do dono, ou OAuth com \"Também permitir alterações na INK\" marcado) e nas lojas com credencial de escrita.",

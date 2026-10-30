@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
 
 const dir = path.join(path.dirname(fileURLToPath(import.meta.url)), "migrations");
-const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications", "0011_customization_products"];
+const versions = ["0001_init", "0002_auth_sync", "0003_release_delete", "0004_customization_requests", "0005_customization_contact_workflow", "0006_mcp_oauth", "0007_mcp_changes", "0008_admin_password", "0009_assistant_questions", "0010_partner_applications", "0011_customization_products", "0012_mcp_change_category"];
 const read = (v, kind) => readFileSync(path.join(dir, `${v}.${kind}.sql`), "utf8");
 const up = versions.map((v) => read(v, "up")).join("\n");
 const down = versions.slice().reverse().map((v) => read(v, "down")).join("\n");
@@ -172,7 +172,8 @@ await accepts("audit for a product link", `insert into audit_log (actor,action) 
   const change = (hash, extra = {}) => db.query(`insert into mcp_change (code_hash, subject, client_id, kind, store, plan, status, applied_at, expires_at) values ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, now() + interval '10 minutes')`, [hash, ULID_A, C, extra.kind ?? "product", extra.store ?? "use-sul", extra.plan ?? '{"kind":"product"}', extra.status ?? "pending", extra.appliedAt ?? null]);
   try { await change("7".repeat(64)); ok("a pending change stored under the code's hash"); } catch (e) { bad("pending change", e.message); }
   try { await change("chg_plain"); bad("change code in clear", "was accepted"); } catch { ok("a change stored under the code itself is rejected"); }
-  try { await change("8".repeat(64), { kind: "refund" }); bad("unknown change kind", "was accepted"); } catch { ok("a change kind outside product/order_items/exchange is rejected"); }
+  try { await change("8".repeat(64), { kind: "refund" }); bad("unknown change kind", "was accepted"); } catch { ok("a change kind outside product/order_items/exchange/category is rejected"); }
+  try { await change("b".repeat(64), { kind: "category", plan: '{"kind":"category"}' }); ok("a category change (show or hide a collection) is stored (0012)"); } catch (e) { bad("category change", e.message); }
   try { await change("9".repeat(64), { status: "applied" }); bad("applied without time", "was accepted"); } catch { ok("an applied change without applied_at is rejected"); }
   try { await change("a".repeat(64), { plan: "[]" }); bad("plan not an object", "was accepted"); } catch { ok("a plan that is not an object is rejected"); }
   await accepts("audit for a confirmed MCP change", `insert into audit_log (actor,action) values ('system','mcp.write')`);
