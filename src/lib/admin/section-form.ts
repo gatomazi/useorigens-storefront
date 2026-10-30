@@ -332,6 +332,8 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     patch.customizerCard = undefined;
     patch.cta = undefined;
   }
+  // The checkpoints strip's button ("Ver calendário da Black"), posted only while that composition is chosen.
+  if (section.template === "image-grid" && f.get("cta_kind") !== null) patch.cta = parseCta(f);
   if (section.template === "campaign") {
     patch.fallback = str(f, "fallback") === "fill" ? "fill" : "crops";
     // No button configured = the original "Encontrar minha cidade" search; a label without a destination is dropped, never a dead link.

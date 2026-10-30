@@ -330,7 +330,8 @@ export function HomeSections({
               }));
               // On a page whose hero gives way (hidden), the strip opens it: its title is the page's heading.
               const opening = Boolean(page) && !sections.some((x) => x.template === "page-hero") && sections[0]?.id === s.id;
-              return <WeeklyCheckpoints key={s.id} anchor={s.anchor} headingId={s.headingId} title={s.title} subtitle={s.subtitle} items={items} opening={opening} />;
+              const stripHref = s.cta ? destinationHref(s.cta.dest, links, region) : null;
+              return <WeeklyCheckpoints key={s.id} anchor={s.anchor} headingId={s.headingId} title={s.title} subtitle={s.subtitle} items={items} opening={opening} {...(s.cta && stripHref ? { cta: { label: s.cta.label, href: stripHref } } : {})} />;
             }
             const tiles = gridTiles(s, media, links, region, categories);
             if (tiles.length === 0) return null;

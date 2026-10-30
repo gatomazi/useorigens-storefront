@@ -51,6 +51,7 @@ Três peças, todas com dias no horário de Brasília, **os dois dias inclusive*
    - depois de encerrar: "Encerrada · 02–07/11", sem link (uma oferta encerrada nunca aparece como ativa);
    - entre duas semanas (por exemplo, 08/11), nenhuma fica ativa.
 
+   A faixa pode ter um **botão** ao lado do título (por exemplo "Ver calendário da Black", levando para a hotpage do calendário).
    O bloco marcado como **Destaque** (a Black Week) vem em amarelo. Com **"Ofertas acumulam"** ligado, a semana que passou continua valendo
    ("Valendo · 02–07/11", com o link) e só deixa de ser a semana atual. Desligado, ela aparece como "Encerrada".
 2. **Vitrines com período.** Em qualquer vitrine de produtos, em **Período da oferta**, preencha o primeiro e o último dia e o **rótulo enquanto

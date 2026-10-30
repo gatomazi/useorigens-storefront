@@ -399,14 +399,15 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
-      {!regional && (section.template === "campaign" || section.template === "page-hero") && (
+      {!regional && (section.template === "campaign" || section.template === "page-hero" || (section.template === "image-grid" && variantNow === "checkpoints")) && (
         <fieldset className="space-y-4">
           <legend className="a-h2 mb-3">Botão</legend>
+          {section.template === "image-grid" && <p className="a-muted text-[0.8125rem]">Ao lado do título da faixa, como o “Ver todos” das vitrines: por exemplo “Ver calendário da Black”, levando para a hotpage do calendário.</p>}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="a-label" htmlFor="cta_kind">Destino</label>
               <select id="cta_kind" name="cta_kind" className="a-select" value={ctaKind} onChange={(e) => setCtaKind(e.target.value as typeof ctaKind)}>
-                <option value="none">Busca de cidade (padrão)</option>
+                <option value="none">{section.template === "image-grid" ? "Sem botão" : "Busca de cidade (padrão)"}</option>
                 <option value="collection-page">Página de uma coleção (no site)</option>
                 <option value="route">Página desta região (endereço)</option>
                 <option value="page">Hotpage ou categoria-pai publicada</option>

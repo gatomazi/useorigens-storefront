@@ -85,12 +85,13 @@ function Card({ href, external, current, className, style, children }: { href: s
  * Phones keep it short: the current and the evidence weeks as cards, every other week as one line. From 1024px, all side by side. Server-rendered:
  * the lock turns when the page is regenerated after Brasília midnight.
  */
-export function WeeklyCheckpoints({ anchor, headingId, title, subtitle, items, opening = false }: { anchor: string; headingId: string; title: string; subtitle?: string; items: CheckpointView[]; /** It opens the page (the page hero hidden): its title is the page's h1, in the display face, under the opening's yellow rule. */ opening?: boolean }) {
+export function WeeklyCheckpoints({ anchor, headingId, title, subtitle, items, opening = false, cta }: { anchor: string; headingId: string; title: string; subtitle?: string; items: CheckpointView[]; /** It opens the page (the page hero hidden): its title is the page's h1, in the display face, under the opening's yellow rule. */ opening?: boolean; /** The strip's own button ("Ver calendário da Black"), beside its title like a shelf's "Ver todos". */ cta?: { label: string; href: string } }) {
   const running = items.find((it) => it.state === "current");
   const cols = { "--cp-cols": items.map((it) => (it.highlight ? "1.3fr" : "1fr")).join(" "), "--cp-n": `repeat(${items.length}, minmax(0, 1fr))` } as CSSProperties;
   return (
     <section id={anchor} aria-labelledby={headingId} className={`wrap ${opening ? "pb-12 pt-10 lg:pb-20 lg:pt-16" : "py-12 lg:py-20"}`} data-testid="checkpoints">
-      <div className="ground-plate mb-7 w-fit max-w-3xl lg:mb-9">
+      <div className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-4 lg:mb-9">
+      <div className="ground-plate w-fit max-w-3xl">
         {opening ? (
           <>
             <span aria-hidden="true" className="mb-4 block h-[3px] w-12" style={{ background: HIGHLIGHT }} />
@@ -100,6 +101,13 @@ export function WeeklyCheckpoints({ anchor, headingId, title, subtitle, items, o
           <h2 id={headingId} className="t-h2 [text-wrap:balance]">{title}</h2>
         )}
         {subtitle && <p className={`t-body max-w-[60ch] text-ink-soft ${opening ? "mt-4" : "mt-2.5"}`}>{subtitle}</p>}
+      </div>
+      {cta && (
+        <a href={cta.href} className="ground-solid group inline-flex h-11 shrink-0 items-center gap-2 border-2 border-[var(--line)] px-4 text-[0.8125rem] font-bold uppercase tracking-[0.04em] transition-colors hover:border-current focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 sm:h-12">
+          {cta.label}
+          <Arrow />
+        </a>
+      )}
       </div>
       <div style={cols}>
         <p className="sr-only">{running ? `Em oferta agora: ${running.label}${running.period ? `, ${running.period}` : ""}.` : "Nenhuma semana em oferta hoje."}</p>
