@@ -401,8 +401,8 @@ export function trackAssistant(event: AssistantEvent, params: AssistantParams & 
 
 export type CityJourneyEvent = "origens_sua_cidade_open" | "origens_sua_cidade_state" | "origens_sua_cidade_model" | "origens_sua_cidade_piece" | "origens_sua_cidade_error";
 export type CityJourneyParams = {
-  /** Where the journey was opened: the desktop header's menu, the phone menu, or the home's "Encontre aqui a sua cidade". */
-  entry_point?: "header" | "menu" | "home";
+  /** Where the journey was opened: the desktop header's menu, the phone menu, the home's "Encontre aqui a sua cidade", or a banner of the opening. */
+  entry_point?: "header" | "menu" | "home" | "hero";
   city_slug?: string;
   uf?: string;
   family?: string;

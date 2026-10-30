@@ -12,7 +12,8 @@ import { DEFAULT_BUY_LABEL, type CardBuy } from "@/lib/site-config/cards-schema"
 import { CardButton, CardCall, CardFab } from "@/components/catalog/CardButton";
 import { CARD_PRICE } from "@/components/catalog/ProductCard";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
-import type { Color, FeaturedRotation, HeroColorKey, HeroColors } from "@/lib/site-config/schema";
+import type { Color, FeaturedBannerOpens, FeaturedRotation, HeroColorKey, HeroColors } from "@/lib/site-config/schema";
+import { CityJourneyBanner } from "@/components/city-journey/CityJourney";
 import { cssColor } from "@/components/banners/SectionBackdrop";
 import { HEX_COLOR, relativeLuminance } from "@/lib/site-config/color";
 import { HeroSlides } from "./HeroSlides";
@@ -78,7 +79,7 @@ export function RegionHero({
   /** "feature" only: the section's picture (CMS), a banner in the product's place (the product's bar stays over it when there is one). */
   panelImage?: BannerAsset | null;
   /** "feature" only: the products it goes through, each with its own banner (null = the section's picture); absent = the first of `trio`. */
-  slides?: { product: HeroFamilyCard; image: BannerAsset | null; pins?: HeroSlidePin[] }[];
+  slides?: { product: HeroFamilyCard; image: BannerAsset | null; pins?: HeroSlidePin[]; opens?: FeaturedBannerOpens }[];
   /** "feature" only: how it goes through `slides` (CMS `featuredRotation`); absent = always the first. */
   rotation?: FeaturedRotation;
   /** "feature" only: no product bar under a product's banner (CMS `hideFeaturedBar`); the banner itself leads to the product. */
@@ -192,7 +193,7 @@ function FeatureHero({
 }: {
   region: RegionSlug;
   cityCount: number;
-  slides: { product: HeroFamilyCard; image: BannerAsset | null; pins?: HeroSlidePin[] }[];
+  slides: { product: HeroFamilyCard; image: BannerAsset | null; pins?: HeroSlidePin[]; opens?: FeaturedBannerOpens }[];
   rotation?: FeaturedRotation;
   hideBar: boolean;
   cta?: { label: string; href: string };
@@ -214,10 +215,10 @@ function FeatureHero({
   const panel = several ? (
     <HeroSlides mode={rotation} labels={slides.map((sl) => [sl.product.familyName, placeOf(sl.product)].filter(Boolean).join(", "))}>
       {/* A drawn product is not known on the server, so no picture is loaded first; a sliding one, only the first. */}
-      {slides.map((sl, i) => <FeaturePanel key={sl.product.familyId} product={sl.product} image={sl.image ?? panelImage} pins={sl.image ? sl.pins : undefined} hideBar={hideBar} color={panelColor} call={call} priority={rotation === "slide" && i === 0} />)}
+      {slides.map((sl, i) => <FeaturePanel key={sl.product.familyId} product={sl.product} image={sl.image ?? panelImage} pins={sl.image ? sl.pins : undefined} journey={Boolean(sl.image) && sl.opens === "city-journey"} hideBar={hideBar} color={panelColor} call={call} priority={rotation === "slide" && i === 0} />)}
     </HeroSlides>
   ) : (
-    (product || panelImage) && <FeaturePanel product={product} image={slides[0]?.image ?? panelImage} pins={slides[0]?.image ? slides[0].pins : undefined} hideBar={hideBar} color={panelColor} call={call} priority />
+    (product || panelImage) && <FeaturePanel product={product} image={slides[0]?.image ?? panelImage} pins={slides[0]?.image ? slides[0].pins : undefined} journey={Boolean(slides[0]?.image) && slides[0]?.opens === "city-journey"} hideBar={hideBar} color={panelColor} call={call} priority />
   );
   return (
     <section aria-labelledby="hero-title" className="relative isolate border-y border-line">
@@ -288,9 +289,10 @@ function inkOn(color: Color): string {
 /**
  * The product half of the "feature" opening, for one product: its banner (the owner's picture, its own crop and framing per screen) with the product's
  * bar under it, or the product's photo on the tint (a compact row below 1024px); a banner alone when there is no product. `priority`: its picture is
- * the first thing the page loads (false for a product that may not be the one shown).
+ * the first thing the page loads (false for a product that may not be the one shown). `journey`: the banner opens the "Sua cidade" journey (CMS
+ * `opens`) instead of the product: the half is then two targets, the banner (a button) and the product's bar (a link), never one inside the other.
  */
-function FeaturePanel({ product, image, pins, hideBar = false, color, call, priority }: { product: HeroFamilyCard | undefined; image: BannerAsset | null; pins?: HeroSlidePin[]; hideBar?: boolean; color?: string; call: string; priority: boolean }) {
+function FeaturePanel({ product, image, pins, journey = false, hideBar = false, color, call, priority }: { product: HeroFamilyCard | undefined; image: BannerAsset | null; pins?: HeroSlidePin[]; journey?: boolean; hideBar?: boolean; color?: string; call: string; priority: boolean }) {
   if (image && pins && pins.length > 0) {
     // "Compre o look": the products marked on the picture, each behind its "+"; no product bar, and the picture itself is not a link.
     const views = pins.map(({ card, x, y }) => ({ id: card.familyId, x, y, name: card.familyName, place: placeOf(card), price: card.price, ...(card.listPrice ? { listPrice: card.listPrice } : {}), imageUrl: card.imageUrl, href: card.href }));
@@ -300,6 +302,18 @@ function FeaturePanel({ product, image, pins, hideBar = false, color, call, prio
           <BannerBackground asset={image} priority={priority} sizes="(min-width: 1024px) 50vw, 100vw" alt={image.alt} />
           <HeroPins pins={views} width={image.desktop.width} height={image.desktop.height} focal={image.focal} focalDesktop={image.focalDesktop} call={call} />
         </span>
+      </HeroPanel>
+    );
+  }
+  if (image && journey) {
+    // The banner opens the journey (the visitor's own city, not this product's); the product's bar, when shown, is still the way to the product.
+    const bar = product && !hideBar ? <FeatureBar product={product} image call={call} /> : null;
+    return (
+      <HeroPanel color={color}>
+        <CityJourneyBanner label={image.alt ? `${image.alt}. Encontre a sua cidade` : "Encontre a sua cidade"} className="relative block min-h-[20rem] w-full flex-1 sm:min-h-[24rem] lg:min-h-0">
+          <BannerBackground asset={image} priority={priority} sizes="(min-width: 1024px) 50vw, 100vw" alt="" />
+        </CityJourneyBanner>
+        {bar && <Link href={product!.href} className="group relative block">{bar}</Link>}
       </HeroPanel>
     );
   }
@@ -324,40 +338,45 @@ function FeaturePanel({ product, image, pins, hideBar = false, color, call, prio
       {product && image && hideBar && (
         <span className="sr-only">{[product.familyName, placeOf(product), call].filter(Boolean).join(", ")}</span>
       )}
-      {product && !(image && hideBar) && (
-        <span
-          className={`flex flex-wrap ${image ? "items-center" : "items-end"} justify-between gap-x-6 gap-y-2 ${
-            image ? "border-t px-[var(--gutter)]" : "min-w-0 flex-1 py-4 pl-4 pr-[var(--gutter)] lg:flex-none lg:border-t lg:pl-14"
-          } border-[rgb(var(--region-primary-rgb)/0.18)] py-4 lg:bg-[rgb(var(--region-primary-rgb)/0.07)] ${image ? "bg-[rgb(var(--region-primary-rgb)/0.07)]" : ""} ${ALIGN_END} lg:pl-14 lg:py-5`}
-        >
-          <span className="flex min-w-0 items-center gap-3 lg:gap-4">
-            {/* Under a banner (a photo of the shirt worn, a landscape) the product itself is not in sight: its mockup, small, beside its name. */}
-            {image && (
-              <span className="block w-12 shrink-0 overflow-hidden rounded-md lg:w-14">
-                <ProductPhoto src={product.imageUrl} alt="" sizes="3.5rem" priority={false} className="photo-contain" />
-              </span>
-            )}
-            <span className="min-w-0">
-              <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
-              {placeOf(product) && (
-                <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
-                  {placeOf(product)}
-                </span>
-              )}
-            </span>
-          </span>
-          <span className="flex items-baseline gap-4">
-            {product.price && <span className={CARD_PRICE}><PriceText price={product.price} listPrice={product.listPrice} /></span>}
-            <span className="inline-flex min-h-6 items-center gap-1 whitespace-nowrap text-[0.9375rem] font-semibold underline decoration-region-accent decoration-2 underline-offset-4 transition-colors group-hover:decoration-current">
-              {call}
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </span>
-          </span>
-        </span>
-      )}
+      {product && !(image && hideBar) && <FeatureBar product={product} image={Boolean(image)} call={call} />}
     </HeroPanel>
+  );
+}
+
+/** The product's bar of the "feature" opening: its name, place, price and call; under a banner, its mockup beside the name. */
+function FeatureBar({ product, image, call }: { product: HeroFamilyCard; image: boolean; call: string }) {
+  return (
+    <span
+      className={`flex flex-wrap ${image ? "items-center" : "items-end"} justify-between gap-x-6 gap-y-2 ${
+        image ? "border-t px-[var(--gutter)]" : "min-w-0 flex-1 py-4 pl-4 pr-[var(--gutter)] lg:flex-none lg:border-t lg:pl-14"
+      } border-[rgb(var(--region-primary-rgb)/0.18)] py-4 lg:bg-[rgb(var(--region-primary-rgb)/0.07)] ${image ? "bg-[rgb(var(--region-primary-rgb)/0.07)]" : ""} ${ALIGN_END} lg:pl-14 lg:py-5`}
+    >
+      <span className="flex min-w-0 items-center gap-3 lg:gap-4">
+        {/* Under a banner (a photo of the shirt worn, a landscape) the product itself is not in sight: its mockup, small, beside its name. */}
+        {image && (
+          <span className="block w-12 shrink-0 overflow-hidden rounded-md lg:w-14">
+            <ProductPhoto src={product.imageUrl} alt="" sizes="3.5rem" priority={false} className="photo-contain" />
+          </span>
+        )}
+        <span className="min-w-0">
+          <span className="block text-[1.0625rem] font-semibold leading-tight lg:text-[1.1875rem]">{product.familyName}</span>
+          {placeOf(product) && (
+            <span className="mt-1 block font-[family-name:var(--font-serif-stack)] text-[0.95rem] font-medium leading-[1.15] text-ink-mute [overflow-wrap:anywhere]">
+              {placeOf(product)}
+            </span>
+          )}
+        </span>
+      </span>
+      <span className="flex items-baseline gap-4">
+        {product.price && <span className={CARD_PRICE}><PriceText price={product.price} listPrice={product.listPrice} /></span>}
+        <span className="inline-flex min-h-6 items-center gap-1 whitespace-nowrap text-[0.9375rem] font-semibold underline decoration-region-accent decoration-2 underline-offset-4 transition-colors group-hover:decoration-current">
+          {call}
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </span>
+      </span>
+    </span>
   );
 }
 
@@ -366,7 +385,8 @@ function FeaturePanel({ product, image, pins, hideBar = false, color, call, prio
  * `row`: the product without a picture, a single row below 1024px (thumbnail beside its bar) and the column of the large photo from there.
  */
 function HeroPanel({ href, color, row = false, children }: { href?: string; color?: string; row?: boolean; children: ReactNode }) {
-  const className = `group relative isolate flex min-h-full flex-1 ${row ? "flex-row items-center lg:flex-col lg:items-stretch" : "flex-col"} text-ink ${color ? "" : "bg-[rgb(var(--region-primary-rgb)/0.13)]"}`;
+  // `group` only on the link: a plain block holds targets of its own (the journey's banner, the product's bar), each answering its own pointer.
+  const className = `${href ? "group " : ""}relative isolate flex min-h-full flex-1 ${row ? "flex-row items-center lg:flex-col lg:items-stretch" : "flex-col"} text-ink ${color ? "" : "bg-[rgb(var(--region-primary-rgb)/0.13)]"}`;
   const style = color ? { background: color } : undefined;
   if (!href) return <div className={className} style={style}>{children}</div>;
   return (

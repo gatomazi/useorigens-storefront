@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from "react";
 import { PriceText } from "@/components/catalog/PriceText";
 import { CARD_FOOT, CARD_INFO, CARD_NAME, CARD_PRICE, cardFrame } from "@/components/catalog/ProductCard";
 import { GlobalSearch, SearchIcon } from "@/components/search/GlobalSearch";
@@ -24,7 +24,7 @@ import { prepareCities, searchCities, type SearchCity } from "@/lib/search/rank"
  * platform), drawn in the header's colours on top and the page's ground below, at every width.
  *
  * ONE journey per page, mounted in the header (`CityJourney`); every way into it is a `CityJourneyTrigger` (the header menu's word, the phone
- * menu's box, the home's "Encontre aqui a sua cidade") that opens that same dialog, so a place chosen from any of them is the place every other
+ * menu's box, the home's "Encontre aqui a sua cidade") or a `CityJourneyBanner` (a banner of the opening) that opens that same dialog, so a place chosen from any of them is the place every other
  * one reopens on, and the dialog never sits inside the phone menu's own.
  *
  * Data: one request per place (`/api/cidades/<region>/<uf>/<slug>`, src/lib/catalog/city-journey.ts) and, for a state, the region's index of
@@ -321,7 +321,22 @@ function StatePlaces({ region, uf, heading, onPick }: { region: RegionSlug; uf: 
   );
 }
 
-/** The page's one journey (the header mounts it): it opens when any `CityJourneyTrigger` asks for it. */
+/**
+ * A banner of the opening that opens the journey (CMS `FeaturedProductRef.opens`): the whole picture is one button, named by `label` (the banner
+ * itself says nothing a screen reader can read). Drawn by the caller (`className`); a quiet answer to the pointer over it, like the product's half.
+ */
+export function CityJourneyBanner({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
+  const open = (event: React.MouseEvent<HTMLButtonElement>) =>
+    window.dispatchEvent(new CustomEvent<OpenDetail>(OPEN_EVENT, { detail: { entry: "hero", opener: event.currentTarget } }));
+  return (
+    <button type="button" onClick={open} aria-haspopup="dialog" aria-label={label} className={`group/banner cursor-pointer text-left ${className ?? ""}`} data-testid="hero-sua-cidade">
+      {children}
+      <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover/banner:bg-black/[0.04] group-active/banner:bg-black/[0.08]" />
+    </button>
+  );
+}
+
+/** The page's one journey (the header mounts it): it opens when any `CityJourneyTrigger` or `CityJourneyBanner` asks for it. */
 export function CityJourney({ region, picks = [], finishIn }: {
   region: RegionSlug;
   /** Shortcuts under the field (src/lib/catalog/city-journey.ts `journeyPicks`). */

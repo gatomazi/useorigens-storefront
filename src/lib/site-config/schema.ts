@@ -135,8 +135,13 @@ export const MAX_HERO_PINS = 4;
 /**
  * `pins` (with `image` only): the products marked on that picture. The "feature" opening then draws a "+" over each one, which opens its card, and no
  * product bar under the picture; the reference's own product is still the one the slide is named after.
+ * `opens` (with `image` and no `pins` only): what the banner itself opens. "city-journey" = the "Sua cidade" guided purchase (the same dialog as the
+ * header's "Sua cidade": the place, its designs, the piece) instead of the product's page; the product bar, when shown, still leads to the product.
+ * Absent = the product, as always.
  */
-export type FeaturedProductRef = { store: CommerceStoreKey; productId: string; image?: MediaRef; pins?: HeroPin[] };
+export type FeaturedProductRef = { store: CommerceStoreKey; productId: string; image?: MediaRef; pins?: HeroPin[]; opens?: FeaturedBannerOpens };
+export const FEATURED_BANNER_OPENS = ["city-journey"] as const;
+export type FeaturedBannerOpens = (typeof FEATURED_BANNER_OPENS)[number];
 /** The products a hero keeps: the "feature" opening shows them one at a time (`featuredRotation`); the three-card hero, the first `HERO_CARDS`. */
 export const MAX_FEATURED = 8;
 export const HERO_CARDS = 3;
@@ -909,7 +914,10 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       const seen = new Set<string>();
       v.featured.forEach((ref, i) => {
         if (!isRecord(ref) || typeof ref.store !== "string" || !STORES.includes(ref.store) || typeof ref.productId !== "string" || !/^\d{1,20}$/.test(ref.productId)) return c.fail(`${path}.featured[${i}]`, "must be { store, productId (numeric INK id), image? }");
-        for (const key of Object.keys(ref)) if (key !== "store" && key !== "productId" && key !== "image" && key !== "pins") c.fail(`${path}.featured[${i}].${key}`, "unknown field");
+        for (const key of Object.keys(ref)) if (key !== "store" && key !== "productId" && key !== "image" && key !== "pins" && key !== "opens") c.fail(`${path}.featured[${i}].${key}`, "unknown field");
+        if (ref.opens !== undefined && (!(FEATURED_BANNER_OPENS as readonly unknown[]).includes(ref.opens) || ref.image === undefined || ref.pins !== undefined)) {
+          c.fail(`${path}.featured[${i}].opens`, `with an image and no marked products only: ${FEATURED_BANNER_OPENS.join(" | ")}`);
+        }
         if (ref.image !== undefined) checkMediaRef(c, `${path}.featured[${i}].image`, ref.image);
         if (ref.pins !== undefined) {
           const pins = ref.pins;
