@@ -282,6 +282,11 @@ export type Section = {
   featured?: FeaturedProductRef[];
   /** Hero "feature" only: how it goes through `featured` (`FEATURED_ROTATIONS`); absent = always the first. */
   featuredRotation?: FeaturedRotation;
+  /**
+   * Hero "feature" only: no product bar (mockup, name, place, price, call) under a product's banner; the whole banner leads to the product. A product
+   * without a banner keeps its bar (it is the only place its name and price show). Absent = the bar, as always.
+   */
+  hideFeaturedBar?: true;
   /** Hero "feature" only: the colours of the reading half (`HERO_COLOR_KEYS`); absent (or a key absent) = the theme's own. */
   heroColors?: HeroColors;
   /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. `dest` sends the link to a page instead of this section. */
@@ -889,6 +894,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       else checkColor(c, `${path}.heroColors.${key}`, color);
     }
   }
+  if (v.hideFeaturedBar !== undefined && (v.template !== "hero" || v.hideFeaturedBar !== true)) c.fail(`${path}.hideFeaturedBar`, "hero only: true or absent");
   if (v.featuredRotation !== undefined && (v.template !== "hero" || !(FEATURED_ROTATIONS as readonly unknown[]).includes(v.featuredRotation))) c.fail(`${path}.featuredRotation`, `hero only: ${FEATURED_ROTATIONS.join(" | ")}`);
   if (v.nav !== undefined) {
     if (v.template === "hero" || v.template === "footer" || v.template === "page-hero" || !isRecord(v.nav) || !isStr(v.nav.label, 24)) c.fail(`${path}.nav`, "not for the hero or footer; label 1..24 characters");

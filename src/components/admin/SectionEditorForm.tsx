@@ -341,6 +341,7 @@ export function SectionEditorForm({
           media={media}
           thumbOf={(assetId) => previewSrc(byId.get(assetId))}
           rotation={section.featuredRotation}
+          barHidden={section.hideFeaturedBar === true}
         />
       )}
 

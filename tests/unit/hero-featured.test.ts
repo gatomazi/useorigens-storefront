@@ -237,6 +237,10 @@ describe("the hero's featured references in the document", () => {
     expect(validateSection({ ...sul[0], featuredRotation: "slide" }).ok).toBe(true);
     expect(validateSection({ ...sul[0], featuredRotation: "shuffle" } as never).ok).toBe(false);
     expect(validateSection({ ...sul[1], featuredRotation: "random" }).ok).toBe(false);
+    // The product bar under the banners can be switched off, on the hero only, and only as `true`.
+    expect(validateSection({ ...sul[0], hideFeaturedBar: true }).ok).toBe(true);
+    expect(validateSection({ ...sul[0], hideFeaturedBar: false } as never).ok).toBe(false);
+    expect(validateSection({ ...sul[1], hideFeaturedBar: true }).ok).toBe(false);
   });
 
   test("given colours of the text side, when validated, then theme tokens and exact colours pass on the hero only; an unknown element or colour is refused", () => {

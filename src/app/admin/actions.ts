@@ -249,7 +249,10 @@ export async function saveSection(fd: FormData) {
       if (badPins.length > 0) back(`/admin/home/${id}`, { err: badPins.map((p) => `Produto ${p.ref.productId} não pode ser marcado na foto: ${p.reason}.`) });
       patch.featured = refs;
       // The "feature" opening only: how it goes through the products (absent = always the first).
-      patch.featuredRotation = ("variant" in patch ? patch.variant : section.variant) === "feature" ? parseFeaturedRotation(fd) : section.featuredRotation;
+      const feature = ("variant" in patch ? patch.variant : section.variant) === "feature";
+      patch.featuredRotation = feature ? parseFeaturedRotation(fd) : section.featuredRotation;
+      // The "feature" opening only: the product bar under each banner, shown unless the owner switched it off.
+      patch.hideFeaturedBar = feature ? (fd.get("featured_bar_off") !== null ? true : undefined) : section.hideFeaturedBar;
     } else if (mode === "seed") patch.featured = legacyFeaturedRefs(scope);
     else if (mode === "reset" && scope === "sul") patch.featured = undefined;
   }

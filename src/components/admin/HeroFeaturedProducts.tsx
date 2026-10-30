@@ -61,7 +61,7 @@ function SlotCard({ slot }: { slot: FeaturedSlotView }) {
 }
 
 export function HeroFeaturedProducts({
-  scope, regionName, mode, initial, eligible, search, feature = false, max = 3, media = [], thumbOf, rotation,
+  scope, regionName, mode, initial, eligible, search, feature = false, max = 3, media = [], thumbOf, rotation, barHidden = false,
 }: {
   scope: string;
   regionName: string;
@@ -77,6 +77,8 @@ export function HeroFeaturedProducts({
   media?: MediaOption[];
   thumbOf?: (assetId: string) => string | undefined;
   rotation?: FeaturedRotation;
+  /** "feature" only: the product bar under the banners is switched off (CMS `hideFeaturedBar`). */
+  barHidden?: boolean;
 }) {
   const modeRef = useRef<HTMLInputElement>(null);
   // The three-card hero keeps its three fixed positions; the "feature" opening lists the products chosen, plus one empty position to add another.
@@ -166,6 +168,15 @@ export function HeroFeaturedProducts({
           </div>
           {rotation && filled < 2 && <p className="a-flash ok text-[0.875rem]">Com um produto só, a abertura mostra sempre esse. Escolha mais produtos para alternar.</p>}
         </fieldset>
+      )}
+      {feature && (
+        <div data-testid="featured-bar">
+          <label className="flex items-center gap-2 font-bold">
+            <input type="checkbox" name="featured_bar_off" defaultChecked={barHidden} onChange={(e) => e.currentTarget.form?.requestSubmit()} data-testid="featured-bar-off" />
+            Esconder a faixa do produto embaixo do banner
+          </label>
+          <p className="a-muted mt-1 text-[0.8125rem]">A faixa com a miniatura, o nome, o preço e “Comprar”. Escondida, o banner inteiro leva ao produto. Um produto sem banner mantém a faixa, porque é ali que o nome e o preço aparecem.</p>
+        </div>
       )}
       {eligible === 0 && <p className="a-flash err text-[0.875rem]">Nenhum produto elegível no catálogo da loja {regionName} neste ambiente (sincronize o catálogo em Coleções). O título, o texto e a imagem do hero continuam editáveis, e o hero sai sem cards.</p>}
       {!feature && eligible > 0 && filled < 3 && <p className="a-flash ok text-[0.875rem]">{filled === 0 ? "Nenhum card escolhido: o hero sai sem cards." : `${filled} de 3 cards escolhidos: ${filled === 1 ? "o card aparece sozinho" : "os dois cards se ajustam à grade"}.`} Preencha as três posições para a apresentação completa.</p>}

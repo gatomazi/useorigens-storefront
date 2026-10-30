@@ -55,6 +55,7 @@ export function RegionHero({
   panelImage,
   slides,
   rotation,
+  hideBar = false,
   colors,
 }: {
   region: RegionSlug;
@@ -79,6 +80,8 @@ export function RegionHero({
   slides?: { product: HeroFamilyCard; image: BannerAsset | null; pins?: HeroSlidePin[] }[];
   /** "feature" only: how it goes through `slides` (CMS `featuredRotation`); absent = always the first. */
   rotation?: FeaturedRotation;
+  /** "feature" only: no product bar under a product's banner (CMS `hideFeaturedBar`); the banner itself leads to the product. */
+  hideBar?: boolean;
   /** "feature" only: the colours of the reading half (CMS `heroColors`); absent = the theme's own. */
   colors?: HeroColors;
 }) {
@@ -91,7 +94,7 @@ export function RegionHero({
   ) : null;
   const { tone, ink, captionClass, captionStyle, field } = heroTone(colors);
   const classicLines = copy.title.split("\n");
-  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} slides={slides ?? trio.slice(0, 1).map((product) => ({ product, image: null }))} rotation={rotation} colors={colors} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} panelImage={panelImage ?? null} />;
+  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} slides={slides ?? trio.slice(0, 1).map((product) => ({ product, image: null }))} rotation={rotation} hideBar={hideBar} colors={colors} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} panelImage={panelImage ?? null} />;
   return (
     <section aria-labelledby="hero-title" className="relative isolate">
       {backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />}
@@ -182,12 +185,13 @@ const ALIGN_END = "lg:pr-[max(var(--gutter),calc(100%-var(--content-max)/2+var(-
  * the reading area alone.
  */
 function FeatureHero({
-  region, cityCount, slides, rotation, colors, copy, backdrop, buy, statesLink, panelColor, panelImage,
+  region, cityCount, slides, rotation, hideBar, colors, copy, backdrop, buy, statesLink, panelColor, panelImage,
 }: {
   region: RegionSlug;
   cityCount: number;
   slides: { product: HeroFamilyCard; image: BannerAsset | null; pins?: HeroSlidePin[] }[];
   rotation?: FeaturedRotation;
+  hideBar: boolean;
   colors?: HeroColors;
   copy: { title: string; body: string };
   backdrop: ReactNode;
@@ -206,10 +210,10 @@ function FeatureHero({
   const panel = several ? (
     <HeroSlides mode={rotation} labels={slides.map((sl) => [sl.product.familyName, placeOf(sl.product)].filter(Boolean).join(", "))}>
       {/* A drawn product is not known on the server, so no picture is loaded first; a sliding one, only the first. */}
-      {slides.map((sl, i) => <FeaturePanel key={sl.product.familyId} product={sl.product} image={sl.image ?? panelImage} pins={sl.image ? sl.pins : undefined} color={panelColor} call={call} priority={rotation === "slide" && i === 0} />)}
+      {slides.map((sl, i) => <FeaturePanel key={sl.product.familyId} product={sl.product} image={sl.image ?? panelImage} pins={sl.image ? sl.pins : undefined} hideBar={hideBar} color={panelColor} call={call} priority={rotation === "slide" && i === 0} />)}
     </HeroSlides>
   ) : (
-    (product || panelImage) && <FeaturePanel product={product} image={slides[0]?.image ?? panelImage} pins={slides[0]?.image ? slides[0].pins : undefined} color={panelColor} call={call} priority />
+    (product || panelImage) && <FeaturePanel product={product} image={slides[0]?.image ?? panelImage} pins={slides[0]?.image ? slides[0].pins : undefined} hideBar={hideBar} color={panelColor} call={call} priority />
   );
   return (
     <section aria-labelledby="hero-title" className="relative isolate border-y border-line">
@@ -274,7 +278,7 @@ function inkOn(color: Color): string {
  * bar under it, or the product's photo on the tint (a compact row below 1024px); a banner alone when there is no product. `priority`: its picture is
  * the first thing the page loads (false for a product that may not be the one shown).
  */
-function FeaturePanel({ product, image, pins, color, call, priority }: { product: HeroFamilyCard | undefined; image: BannerAsset | null; pins?: HeroSlidePin[]; color?: string; call: string; priority: boolean }) {
+function FeaturePanel({ product, image, pins, hideBar = false, color, call, priority }: { product: HeroFamilyCard | undefined; image: BannerAsset | null; pins?: HeroSlidePin[]; hideBar?: boolean; color?: string; call: string; priority: boolean }) {
   if (image && pins && pins.length > 0) {
     // "Compre o look": the products marked on the picture, each behind its "+"; no product bar, and the picture itself is not a link.
     const views = pins.map(({ card, x, y }) => ({ id: card.familyId, x, y, name: card.familyName, place: placeOf(card), price: card.price, ...(card.listPrice ? { listPrice: card.listPrice } : {}), imageUrl: card.imageUrl, href: card.href }));
@@ -304,7 +308,11 @@ function FeaturePanel({ product, image, pins, color, call, priority }: { product
           </span>
         )
       )}
-      {product && (
+      {/* The bar switched off (only under a banner): its name and price stay for screen readers, the banner is the link. */}
+      {product && image && hideBar && (
+        <span className="sr-only">{[product.familyName, placeOf(product), call].filter(Boolean).join(", ")}</span>
+      )}
+      {product && !(image && hideBar) && (
         <span
           className={`flex flex-wrap ${image ? "items-center" : "items-end"} justify-between gap-x-6 gap-y-2 ${
             image ? "border-t px-[var(--gutter)]" : "min-w-0 flex-1 py-4 pl-4 pr-[var(--gutter)] lg:flex-none lg:border-t lg:pl-14"
