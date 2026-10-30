@@ -56,7 +56,7 @@ export type ProductJob = {
 };
 
 export type NewProductJob = Pick<ProductJob, "dedupeKey" | "region" | "customizerId" | "customizerSlug" | "name" | "artLabel" | "fields" | "templateId" | "lightTemplateId" | "garment" | "productTypeId" | "price">;
-export type ProductJobPatch = Partial<Pick<ProductJob, "status" | "inkProductId" | "inkUrl" | "inkImageUrl" | "error" | "attempts" | "inkCreatedAt" | "readyAt" | "leaseUntil">>;
+export type ProductJobPatch = Partial<Pick<ProductJob, "status" | "inkProductId" | "inkUrl" | "inkImageUrl" | "error" | "attempts" | "inkCreatedAt" | "readyAt" | "leaseUntil" | "price">>;
 export type ProductJobFilter = { region?: RegionSlug; status?: ProductStatus };
 
 export interface ProductJobStore {

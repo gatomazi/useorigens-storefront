@@ -139,6 +139,13 @@ export default async function CustomizerEditor({ params, searchParams }: { param
                 <div><label className="a-label" htmlFor="direct_price">Preço da camiseta (R$)</label><input id="direct_price" name="direct_price" className="a-input" inputMode="decimal" placeholder="109,90" defaultValue={(model.directPurchase?.price ?? "109.90").replace(".", ",")} /></div>
                 <div><label className="a-label" htmlFor="direct_kids_price">Preço da Camiseta Infantil (R$)</label><input id="direct_kids_price" name="direct_kids_price" className="a-input" inputMode="decimal" placeholder="obrigatório com versão infantil" defaultValue={model.directPurchase?.kidsPrice?.replace(".", ",") ?? ""} /></div>
               </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div><label className="a-label" htmlFor="direct_promo_price">Preço promocional da camiseta (R$)</label><input id="direct_promo_price" name="direct_promo_price" className="a-input" inputMode="decimal" placeholder="opcional, termina em ,90" defaultValue={model.directPurchase?.promoPrice?.replace(".", ",") ?? ""} /></div>
+                <div><label className="a-label" htmlFor="direct_kids_promo_price">Preço promocional da Camiseta Infantil (R$)</label><input id="direct_kids_promo_price" name="direct_kids_promo_price" className="a-input" inputMode="decimal" placeholder="opcional, termina em ,90" defaultValue={model.directPurchase?.kidsPromoPrice?.replace(".", ",") ?? ""} /></div>
+                <div><label className="a-label" htmlFor="direct_promo_starts">Promo começa</label><input id="direct_promo_starts" name="direct_promo_starts" type="datetime-local" className="a-input" defaultValue={model.directPurchase?.promoStartsAt ?? ""} /></div>
+                <div><label className="a-label" htmlFor="direct_promo_ends">Promo termina</label><input id="direct_promo_ends" name="direct_promo_ends" type="datetime-local" className="a-input" defaultValue={model.directPurchase?.promoEndsAt ?? ""} /></div>
+              </div>
+              <p className="a-muted text-[0.8125rem]">Hora de Brasília. Dentro da janela, o produto criado (ou reaproveitado) vai para a INK com o preço promocional e o card mostra o preço normal riscado. Sem início, a promoção já vale; sem fim, não acaba. Todo preço promocional termina em ,90 e fica abaixo do normal.</p>
               <div>
                 <label className="a-label" htmlFor="direct_collection">Categoria na INK</label>
                 <select id="direct_collection" name="direct_collection" className="a-select" defaultValue={inkCategory ? String(inkCategory) : ""}>

@@ -22,6 +22,8 @@ export interface InkProductClient {
   /** Whether a category is still there: INK refuses a product with an unknown one. */
   collectionExists(id: number): Promise<boolean>;
   getProduct(id: string): Promise<InkProductView>;
+  /** PATCH de um produto que já existe (preço e `promotional_price`, null tira a promoção). */
+  updateProduct(id: string, body: Record<string, unknown>): Promise<void>;
 }
 
 const view = (p: Record<string, unknown> | undefined): InkProductView => ({
@@ -37,9 +39,9 @@ const view = (p: Record<string, unknown> | undefined): InkProductView => ({
 export function realInkProductClient(token: string, base: string, fetchImpl: typeof fetch = fetch): InkProductClient {
   const types = new Map<number, { at: number; areas: PrintArea[] }>();
   const categories = new Map<number, { at: number; exists: boolean }>();
-  async function call(method: "GET" | "POST", route: string, body?: unknown, idempotencyKey?: string): Promise<Record<string, unknown>> {
+  async function call(method: "GET" | "POST" | "PATCH", route: string, body?: unknown, idempotencyKey?: string): Promise<Record<string, unknown>> {
     const headers: Record<string, string> = { Authorization: `Bearer ${token}` };
-    if (body !== undefined) Object.assign(headers, { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey ?? "" });
+    if (body !== undefined) Object.assign(headers, { "Content-Type": "application/json" }, idempotencyKey === undefined ? {} : { "Idempotency-Key": idempotencyKey });
     let res: Response;
     try {
       res = await fetchImpl(base + route, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(120_000) });
@@ -73,6 +75,9 @@ export function realInkProductClient(token: string, base: string, fetchImpl: typ
     async getProduct(id) {
       const data = await call("GET", `/v1/stores/products/${encodeURIComponent(id)}`);
       return view((data.product as Record<string, unknown>) ?? data);
+    },
+    async updateProduct(id, body) {
+      await call("PATCH", `/v1/stores/products/${encodeURIComponent(id)}`, body);
     },
     async collectionExists(id) {
       const cached = categories.get(id);
@@ -125,5 +130,6 @@ export function fakeInkProductClient({ createMs = 30_000, photoMs = 20_000 }: { 
     async collectionExists() {
       return true;
     },
+    async updateProduct() {},
   };
 }

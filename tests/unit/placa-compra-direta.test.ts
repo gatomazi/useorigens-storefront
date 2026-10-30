@@ -7,7 +7,7 @@ import type { ProductJobStore } from "@/lib/customization/ink-products";
 import type { PrintProject } from "@/lib/print-studio/model";
 import type { Customizer } from "@/lib/site-config/schema";
 
-const state = vi.hoisted(() => ({ model: null as Customizer | null, base: null as PrintProject | null, products: null as ProductJobStore | null }));
+const state = vi.hoisted(() => ({ model: null as Customizer | null, base: null as PrintProject | null, products: null as ProductJobStore | null, updates: [] as { id: string; body: Record<string, unknown> }[] }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-forwarded-for": "127.0.0.9" }) }));
 vi.mock("@/lib/admin/auth/rate-limit", () => ({ allow: () => true }));
 vi.mock("@/lib/pages/public", () => ({ publishedFor: (region: string) => region === "sul" ? { region: "sul", bundle: { docs: { sul: { customizers: [state.model] } } } } : null }));
@@ -19,7 +19,7 @@ vi.mock("@/lib/customization/artwork-server", async () => {
 });
 vi.mock("@/lib/customization/products-server", async () => ({
   productStoreOrNull: () => state.products,
-  inkProductClientFor: () => (({ live: false }) as object),
+  inkProductClientFor: () => ({ live: false, updateProduct: async (id: string, body: Record<string, unknown>) => { state.updates.push({ id, body }); } }),
   startProductJob: () => undefined,
   missingProductTable: () => false,
 }));
@@ -47,7 +47,7 @@ describe("direct purchase of the plate", () => {
     state.base = BASE;
     state.model = { id: "cz-placa", slug: "placa", name: "Placa da sua cidade", source: { store: "use-sul", collectionId: 1 }, fields: [], studioArts: [{ label: "Placa", versions: [{ templateId: TEMPLATE }] }], directPurchase: { enabled: true, price: "109.90" }, previewMode: "mockupWithTextSummary", active: true, version: 1 };
   });
-  beforeEach(() => { state.products = fileProductJobStore(path.join(dir, `products-${Math.random()}.json`)); });
+  beforeEach(() => { state.products = fileProductJobStore(path.join(dir, `products-${Math.random()}.json`)); state.updates = []; });
   afterAll(() => rm(dir, { recursive: true, force: true }));
 
   test("queues the product with the canonical answers and a readable name", async () => {
@@ -64,5 +64,27 @@ describe("direct purchase of the plate", () => {
   test("a city outside IBGE's list is refused on the server", async () => {
     expect(await buy({ cidade: "Cidade Inventada/PR", placa: "TOM-1996" })).toMatchObject({ ok: false, errors: [{ key: "artwork.cidade" }] });
     expect((await state.products!.list({}, 10, 0)).total).toBe(0);
+  });
+
+  test("the same plate again, after a promo started: the product already at INK gets the promo by PATCH, never a second product", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date("2026-10-30T15:00:00Z"));
+      state.model = { ...state.model!, directPurchase: { enabled: true, price: "109.90", promoPrice: "89.90", promoStartsAt: "2026-11-01T00:00", promoEndsAt: "2026-12-01T00:00" } };
+      await buy({ cidade: "Belém/PA", placa: "BEL-1616" });
+      const [job] = (await state.products!.list({}, 10, 0)).rows;
+      await state.products!.update(job.id, { status: "ready", inkProductId: "5143876" });
+      expect(state.updates).toEqual([]);
+      vi.setSystemTime(new Date("2026-11-15T15:00:00Z"));
+      expect(await buy({ cidade: "Belém/PA", placa: "BEL-1616" })).toMatchObject({ ok: true, items: [{ status: "ready" }] });
+      expect(state.updates).toEqual([{ id: "5143876", body: { price: "109.90", promotional_price: "89.90" } }]);
+      vi.setSystemTime(new Date("2026-12-02T15:00:00Z"));
+      await buy({ cidade: "Belém/PA", placa: "BEL-1616" });
+      expect(state.updates[1]).toEqual({ id: "5143876", body: { price: "109.90", promotional_price: null } });
+      expect((await state.products!.list({}, 10, 0)).total).toBe(1);
+    } finally {
+      vi.useRealTimers();
+      state.model = { ...state.model!, directPurchase: { enabled: true, price: "109.90" } };
+    }
   });
 });

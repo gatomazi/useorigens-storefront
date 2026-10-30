@@ -14,6 +14,7 @@ import { safeInkUrl, type ProductJob, type ProductJobStore } from "./ink-product
 import { inkPhotoOrPlaceholder } from "./product-status";
 import { fileProductJobStore, pgProductJobStore } from "./product-store";
 import { runProductJob, type WorkerDeps } from "./product-worker";
+import { directPrices } from "./promo";
 
 const g = globalThis as unknown as { __uoProductStore?: ProductJobStore; __uoFakeInk?: InkProductClient };
 
@@ -73,8 +74,12 @@ export async function renderJobArts(job: ProductJob): Promise<{ darkInk: Buffer;
  */
 export function describeJob(job: ProductJob) {
   const found = publishedFor(job.region);
-  const category = found?.bundle.docs[found.region]?.customizers?.find((m) => m.id === job.customizerId)?.directPurchase?.inkCollectionId;
+  const direct = found?.bundle.docs[found.region]?.customizers?.find((m) => m.id === job.customizerId)?.directPurchase;
+  const category = direct?.inkCollectionId;
+  // A promoção vale pelo momento da criação; só quando o preço normal do job é o do modelo (o promocional é sempre relativo a ele).
+  const now = direct ? directPrices(direct, job.garment, new Date()) : null;
   return {
+    promotionalPrice: now && now.price === job.price ? now.promotionalPrice : null,
     description: "Estampa personalizada, montada na página de personalização da Use Origens.",
     tags: ["personalizado", `personalizado-${job.customizerSlug}`.slice(0, 40)],
     collections: category ? [category] : [],

@@ -41,7 +41,7 @@ function oneAtATime<T>(task: () => Promise<T>): Promise<T> {
  * product until the link and the photo are there or the photo wait is over. The Idempotency-Key is the job id, forever the same. A transient failure
  * keeps the job for a later try after a growing pause; a 409 "indeterminate" goes to `check`; an error never overwrites a job that reached INK.
  */
-export async function runProductJob(id: string, deps: WorkerDeps, describe: (job: ProductJob) => { description: string; tags: string[]; collections: number[] }): Promise<void> {
+export async function runProductJob(id: string, deps: WorkerDeps, describe: (job: ProductJob) => { description: string; tags: string[]; collections: number[]; promotionalPrice?: string | null }): Promise<void> {
   const held = await oneAtATime(async (): Promise<ProductJob | null> => {
     const job = await deps.store.claim(id, LEASE_MS, deps.now());
     if (!job || job.inkProductId) return job;
@@ -49,12 +49,12 @@ export async function runProductJob(id: string, deps: WorkerDeps, describe: (job
       const { darkInk, lightInk } = await deps.render(job);
       const creating = (await deps.store.update(id, { status: "creating", leaseUntil: new Date(deps.now().getTime() + LEASE_MS).toISOString() }, { onlyIf: BEFORE_INK })) ?? job;
       const arts = inkArts(await deps.client.printableAreas(creating.productTypeId), darkInk, lightInk);
-      const { description, tags, collections: wanted } = describe(creating);
+      const { description, tags, collections: wanted, promotionalPrice } = describe(creating);
       // A category deleted at INK would refuse the product: it is left out, and the job says so.
       const collections: number[] = [];
       for (const c of wanted) if (await deps.client.collectionExists(c)) collections.push(c);
       const missing = wanted.filter((c) => !collections.includes(c));
-      const made = await deps.client.createProduct({ product_type_id: creating.productTypeId, name: creating.name, description, price: creating.price, visible_in_store: false, tags, ...(collections.length ? { collections } : {}), arts }, creating.id);
+      const made = await deps.client.createProduct({ product_type_id: creating.productTypeId, name: creating.name, description, price: creating.price, ...(promotionalPrice ? { promotional_price: promotionalPrice } : {}), visible_in_store: false, tags, ...(collections.length ? { collections } : {}), arts }, creating.id);
       if (!/^\d{1,20}$/.test(made.id)) throw new Error("a INK não devolveu o id do produto");
       const note = missing.length ? `criado sem a categoria ${missing.join(", ")}, que não existe na INK` : null;
       return deps.store.update(id, { status: "photos", inkProductId: made.id, inkUrl: safeInkUrl(made.url), inkImageUrl: made.imageUrl, inkCreatedAt: deps.now().toISOString(), error: note }, { onlyIf: BEFORE_INK });

@@ -65,7 +65,7 @@ describe("names that go to the team first", () => {
 
 type Script = { create?: (n: number) => InkProductView | Error; get?: (n: number) => InkProductView | Error; areas?: PrintArea[]; deletedCategories?: number[] };
 function scriptedInk(script: Script) {
-  const calls = { create: [] as { body: Record<string, unknown>; key: string }[], get: 0 };
+  const calls = { create: [] as { body: Record<string, unknown>; key: string }[], get: 0, update: [] as { id: string; body: Record<string, unknown> }[] };
   const client: InkProductClient = {
     live: false,
     printableAreas: async () => script.areas ?? areas,
@@ -75,6 +75,9 @@ function scriptedInk(script: Script) {
       const r = script.create ? script.create(calls.create.length) : { id: "5143876", url: "https://loja.useorigens.com.br/useorigens/product/silva", imageUrl: null };
       if (r instanceof Error) throw r;
       return r;
+    },
+    async updateProduct(id, body) {
+      calls.update.push({ id, body });
     },
     async getProduct(id) {
       calls.get++;
