@@ -31,6 +31,7 @@ const NAV_ABBREVIATIONS: Record<DesignFamilyId, readonly string[]> = {
   tipografia: ["TIPOG"],
   traco: ["TRACO"],
   gentilico: ["GENTILICO"],
+  pin: ["PIN"],
 };
 
 /** The prefix of the navigation collections of each store (only the Sul store has them today). */

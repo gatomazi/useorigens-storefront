@@ -4,7 +4,7 @@ import { diffDocs } from "@/lib/admin/diff";
 import { EDITORIAL_PALETTE, editorialSeed, NATAL_CUSTOMIZER_SLUG, withHomeTheme, type EditorialCollections } from "@/lib/site-config/home-themes";
 import { homeThemeCssVars, resolveTheme } from "@/lib/site-config/navigation";
 import { sanitizeBundle } from "@/lib/site-config/sanitize";
-import { validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
+import { MAX_CITY_STYLES, validateScopeDoc, type ScopeDoc } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 
 /** The two themes of a region's home: "original" (the store's look) and "editorial", each with its own sections, swapped without losing anything. */
@@ -33,8 +33,8 @@ describe("switching the home theme", () => {
     const t = doc.home!.sections;
     expect(t[0]).toMatchObject({ template: "hero", variant: "feature" });
     expect(t.map((s) => s.template).slice(0, 6)).toEqual(["hero", "states", "city-styles", "image-grid", "campaign", "product-carousel"]);
-    // The styles as a list of names with one card beside it: every model of the example city (up to eight).
-    expect(t[2]).toMatchObject({ variant: "list", count: 8 });
+    // The styles as a list of names with one card beside it: every model of the example city (up to one per family).
+    expect(t[2]).toMatchObject({ variant: "list", count: MAX_CITY_STYLES });
     expect(t.at(-1)!.template).toBe("footer");
     // The curated showcases the editorial composition already covers come along switched off, never deleted.
     expect(t.filter((s) => s.source?.kind === "editorial-module").every((s) => !s.active)).toBe(true);

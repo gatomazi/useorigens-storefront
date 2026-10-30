@@ -39,6 +39,7 @@ const NAV = [
   collection(2, "SUL - P. ORIGEM - SC", "sul-p-origem-sc", 0),
   collection(3, "SUL - ORIGEM - SC", "sul-origem-sc"),
   collection(4, "SUL - COORD. - SC", "sul-coord-sc", 2),
+  collection(5, "SUL - PIN - SC", "sul-pin-sc"),
 ];
 
 describe("styleCollectionHref", () => {
@@ -48,6 +49,11 @@ describe("styleCollectionHref", () => {
 
   test("given an empty 'P. ORIGEM' and a filled 'ORIGEM', then Ponto de Origem links to the filled one", () => {
     expect(styleCollectionHref("use-sul", "SC", "ponto-de-origem", NAV)).toBe("https://www.usesul.com.br/usesul/collections/sul-origem-sc");
+  });
+
+  test("given the Pin navigation collection ('PIN' token), then Pin links to it; without one, Pin has no link", () => {
+    expect(styleCollectionHref("use-sul", "SC", "pin", NAV)).toBe("https://www.usesul.com.br/usesul/collections/sul-pin-sc");
+    expect(styleCollectionHref("use-sul", "PR", "pin", NAV)).toBeNull();
   });
 
   test("given too few products, another UF, or a store without that naming, then there is no link", () => {

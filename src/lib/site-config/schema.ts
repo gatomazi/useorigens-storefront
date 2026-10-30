@@ -21,6 +21,7 @@ import { validateStatePage, type StatePageConfig } from "./state-page-schema";
 import { validateFollow, type FollowPart } from "./follow-schema";
 import { validatePromotions, type PromotionsConfig } from "./promotions-schema";
 import { REGIONS, REGION_SLUGS, regionMayUseStore, type CommerceStoreKey, type RegionSlug } from "../geo/regions";
+import { DESIGN_FAMILIES } from "../catalog/families";
 import { isProductSort, type ProductSort } from "../catalog/product-sort";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS, type ArticleKind } from "../umapenca/types";
 
@@ -145,6 +146,8 @@ export type FeaturedBannerOpens = (typeof FEATURED_BANNER_OPENS)[number];
 /** The products a hero keeps: the "feature" opening shows them one at a time (`featuredRotation`); the three-card hero, the first `HERO_CARDS`. */
 export const MAX_FEATURED = 8;
 export const HERO_CARDS = 3;
+/** City styles: at most one card per design family (the default when a section sets no `count`). Follows families.ts, never a fixed number. */
+export const MAX_CITY_STYLES = DESIGN_FAMILIES.length;
 /**
  * How the "feature" opening goes through its products: "random" = one drawn at each visit; "slide" = they pass sideways by themselves (with dots, a
  * pause and swipe). Absent = always the first one (what the opening did before the choice existed).
@@ -266,8 +269,8 @@ export const MAX_GRID_TILES = 12;
  *                         `featuredRotation`), each with its own banner, instead of three small cards;
  *   states "strip"        a band of one entry per state (UF, name, number of places and the call), each entry one link, instead of the cover cards;
  *   city-styles "split"   the heading in a column of its own beside the style cards;
- *   city-styles "list"    the heading in a column of its own, the styles' names in a list and ONE card beside it, the style chosen (all eight
- *                         within reach without eight cards on screen);
+ *   city-styles "list"    the heading in a column of its own, the styles' names in a list and ONE card beside it, the style chosen (every
+ *                         style within reach without one card per style on screen);
  *   campaign "split"      the picture (or real shirts) on one half and the text on a colour of its own on the other, edge to edge.
  */
 export const SECTION_VARIANTS = { hero: ["feature"], states: ["strip"], "city-styles": ["split", "list"], campaign: ["split"], "image-grid": ["checkpoints"] } as const satisfies Partial<Record<TemplateKey, readonly string[]>>;
@@ -291,7 +294,7 @@ export type Section = {
   analyticsSource?: CarouselSourceKey;
   /** Campaign only: what shows when no background image is published. */
   fallback?: "crops" | "fill";
-  /** City styles only: how many of the city's style cards to show (1..8; fewer when the region's catalog has fewer real ones). */
+  /** City styles only: how many of the city's style cards to show (1..MAX_CITY_STYLES; fewer when the region's catalog has fewer real ones). */
   count?: number;
   /**
    * Hero only: the (up to three) products shown as cards next to the headline, by stable reference (store + INK product id, never a copy of
@@ -1072,7 +1075,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     if (!v.grid) c.fail(`${path}.grid`, "required for an image grid");
   }
   if (v.variant !== undefined && !variantsOf(v.template as TemplateKey).includes(v.variant as string)) c.fail(`${path}.variant`, "not a composition of this template");
-  if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > 8)) c.fail(`${path}.count`, "city styles only, an integer 1..8");
+  if (v.count !== undefined && (v.template !== "city-styles" || typeof v.count !== "number" || !Number.isInteger(v.count) || v.count < 1 || v.count > MAX_CITY_STYLES)) c.fail(`${path}.count`, `city styles only, an integer 1..${MAX_CITY_STYLES}`);
   if (v.template === "page-hero" && !v.title) c.fail(`${path}.title`, "required for a page hero");
   if (v.template === "product-carousel") {
     if (!v.layout) c.fail(`${path}.layout`, "required for product-carousel");

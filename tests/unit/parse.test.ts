@@ -40,6 +40,13 @@ describe("parseProductName", () => {
     expect(parsed).toMatchObject({ variant: "personalizado", uf: "RS" });
   });
 
+  test("given Pin names (model 9), when parsed, then they are the Pin family with the city as title and the UF after the label", () => {
+    expect(cityDesign("Curitiba | Pin PR")).toMatchObject({ family: "pin", variant: "base", title: "Curitiba", uf: "PR" });
+    expect(cityDesign("Conquista D'Oeste | Pin MT")).toMatchObject({ family: "pin", variant: "base", title: "Conquista D'Oeste", uf: "MT" });
+    expect(cityDesign("SCIA | Pin DF")).toMatchObject({ family: "pin", variant: "base", title: "SCIA", uf: "DF" });
+    expect(cityDesign("Sol Nascente/Pôr do Sol | Pin DF")).toMatchObject({ family: "pin", title: "Sol Nascente/Pôr do Sol", uf: "DF" });
+  });
+
   test("given Essencia, when parsed, then it is kept as unclassified and never assigned to a family", () => {
     expect(parseProductName("Curitibaninha Paranaense | Essencia PR").kind).toBe("unclassified");
   });
@@ -91,6 +98,14 @@ describe("resolveCity", () => {
   test("given a locality with no resolvable parent, when resolved, then it is not found and never invented as a city", () => {
     const parsed = cityDesign("Votouro | Origem Localidade RS");
     expect(resolveCity(parsed, product("Votouro | Origem Localidade RS"))).toMatchObject({ ok: false, reason: "city-not-found" });
+  });
+
+  test("given Pin products in the single store (scoped to the name's UF), when resolved, then city and DF administrative regions bind like any family", () => {
+    const resolve = (name: string, uf: string) => resolveCity(cityDesign(name), product(name), [uf]);
+    expect(resolve("Curitiba | Pin PR", "PR")).toMatchObject({ ok: true, city: { name: "Curitiba", uf: "PR" } });
+    expect(resolve("Conquista D'Oeste | Pin MT", "MT")).toMatchObject({ ok: true, city: { uf: "MT" } });
+    expect(resolve("SCIA | Pin DF", "DF")).toMatchObject({ ok: true, city: { name: "Brasília" }, localityLabel: "SCIA", localityId: expect.any(String) });
+    expect(resolve("Sol Nascente/Pôr do Sol | Pin DF", "DF")).toMatchObject({ ok: true, city: { name: "Brasília" }, localityId: expect.any(String) });
   });
 
   test("given a Federal District administrative region, when resolved, then it is a locality of Brasília", () => {

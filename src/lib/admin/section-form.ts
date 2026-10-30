@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { isCheckpointDay, MAX_HERO_SCHEDULE, type HeroScheduleEntry, FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, MAX_LIVE_EXAMPLES, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
+import { isCheckpointDay, MAX_HERO_SCHEDULE, type HeroScheduleEntry, FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, MAX_LIVE_EXAMPLES, MAX_CITY_STYLES, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
 import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, TILE_VEILS, type TileFormat, type TileVeil, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { REGION_SLUGS, STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
@@ -374,7 +374,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     const examples = str(f, "live_examples").split(/\r?\n/).map((line) => line.trim()).filter(Boolean).slice(0, MAX_LIVE_EXAMPLES).map((line) => line.slice(0, 160));
     patch.live = { customizerId: str(f, "live_customizer"), button: str(f, "live_button").slice(0, 32) || "Personalizar a minha", examples };
   }
-  if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", 8)), 1, 8);
+  if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", MAX_CITY_STYLES)), 1, MAX_CITY_STYLES);
   // A product section's period (the Black Month calendar): both days optional, the label shown while it is locked. Nothing set = no period.
   if (section.template === "product-carousel" && f.get("period_present") !== null) {
     const opensAt = str(f, "period_from");

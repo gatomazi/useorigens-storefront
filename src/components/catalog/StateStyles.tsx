@@ -9,7 +9,7 @@ import type { StateStyle } from "@/lib/editorial/state-styles";
 import { ProductCarousel } from "./ProductCarousel";
 
 /**
- * "Escolha o estilo" on a state page: one carousel, switched by a row of style buttons (never eight stacked carousels). The first style is
+ * "Escolha o estilo" on a state page: one carousel, switched by a row of style buttons (never one stacked carousel per style). The first style is
  * selected on load; the other rows are already in the page, so switching is instant and nothing is fetched. The carousel shows a few of the
  * state's places, so a quiet "Encontre aqui" under it opens the search for the visitor's own. `stateOf` = "do Paraná", "de Santa Catarina".
  */

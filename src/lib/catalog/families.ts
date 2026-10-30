@@ -6,7 +6,8 @@ export type DesignFamilyId =
   | "traco"
   | "territorio"
   | "feito-em"
-  | "gentilico";
+  | "gentilico"
+  | "pin";
 
 export type DesignFamily = {
   id: DesignFamilyId;
@@ -19,9 +20,10 @@ export type DesignFamily = {
 };
 
 /**
- * The eight conceptual city design families, in storefront order. Order is commercial, not artificial size:
+ * The conceptual city design families, in storefront order. Order is commercial, not artificial size:
  * Ponto de Origem, Feito em and Coordenadas lead because they sell best; the rest follow at the same card size
  * (CLAUDE_STYLE_MODELS_LAYOUT_REFINEMENT.md — priority is communicated by order, never by a bigger card).
+ * Pin (model 9, October 2026) goes last. A city may have only some of them (ADR 0001): never assume a fixed count.
  */
 export const DESIGN_FAMILIES: readonly DesignFamily[] = [
   { id: "ponto-de-origem", name: "Ponto de Origem", description: "Sua cidade marcada no mapa do estado.", sortOrder: 1, inkLabel: "origem" },
@@ -32,6 +34,7 @@ export const DESIGN_FAMILIES: readonly DesignFamily[] = [
   { id: "tipografia", name: "Tipografia", description: "O nome da cidade como protagonista.", sortOrder: 6, inkLabel: "tipografia" },
   { id: "traco", name: "Traço", description: "Contorno do estado em linha minimalista.", sortOrder: 7, inkLabel: "traco" },
   { id: "gentilico", name: "Gentílico", description: "O jeito de chamar quem é dali.", sortOrder: 8, inkLabel: "gentilico" },
+  { id: "pin", name: "Pin", description: "O nome da cidade, marcado com um pin.", sortOrder: 9, inkLabel: "pin" },
 ];
 
 const byId = new Map(DESIGN_FAMILIES.map((f) => [f.id, f]));

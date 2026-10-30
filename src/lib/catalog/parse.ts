@@ -56,7 +56,7 @@ export function parseProductName(name: string): ParsedName {
   const uf = pipe.groups.uf ?? embeddedUf;
 
   if (!family) {
-    // Labels like "Essencia" look like a family but are not one of the eight: keep, never guess.
+    // Labels like "Essencia" look like a family but are not one of the families: keep, never guess.
     const isLabelLike = words.length >= 1 && /^[a-z]+$/.test(words[0]) && uf !== null;
     return isLabelLike ? { kind: "unclassified", label: words.join(" "), uf, title } : { kind: "other" };
   }

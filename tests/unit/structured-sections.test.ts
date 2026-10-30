@@ -2,7 +2,7 @@ import { describe, expect, test } from "vitest";
 import { applyOp } from "@/lib/admin/draft-ops";
 import { parseSectionForm } from "@/lib/admin/section-form";
 import { sectionReadability } from "@/lib/admin/validate-draft";
-import { validateScopeDoc, validateSection, type ScopeDoc, type Section } from "@/lib/site-config/schema";
+import { MAX_CITY_STYLES, validateScopeDoc, validateSection, type ScopeDoc, type Section } from "@/lib/site-config/schema";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 import { STRUCTURED_TEMPLATES, structuredDefaults } from "@/lib/site-config/structured";
 
@@ -87,12 +87,13 @@ describe("editing the structured sections", () => {
     expect(cleared.cta).toBeUndefined();
   });
 
-  test("given city styles, when the count is saved, then it is clamped to 1..8 and a count on another template is rejected by the schema", () => {
+  test("given city styles, when the count is saved, then it is clamped to 1..MAX_CITY_STYLES (one per family) and a count on another template is rejected by the schema", () => {
     const doc = applyOp(bareHome("norte"), { type: "add-structured", template: "city-styles" }, ctx) as { ok: true; doc: ScopeDoc };
     const styles = doc.doc.home!.sections.find((s) => s.template === "city-styles")!;
-    expect(parseSectionForm(form({ count: "30" }), styles).count).toBe(8);
+    expect(parseSectionForm(form({ count: "30" }), styles).count).toBe(MAX_CITY_STYLES);
     expect(parseSectionForm(form({ count: "0" }), styles).count).toBe(1);
-    expect(validateSection({ ...styles, count: 9 }).ok).toBe(false);
+    expect(validateSection({ ...styles, count: MAX_CITY_STYLES }).ok).toBe(true);
+    expect(validateSection({ ...styles, count: MAX_CITY_STYLES + 1 }).ok).toBe(false);
     expect(validateSection({ ...styles, template: "states", count: 3 }).ok).toBe(false);
   });
 

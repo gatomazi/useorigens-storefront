@@ -35,7 +35,7 @@ import { WeeklyCheckpoints, type CheckpointView } from "./WeeklyCheckpoints";
 import { customizerFigure, firstImageSectionId, focalToCss, hasImage, mediaFigure, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
 import { cardBuy, cardButtonOf, type CardBuy } from "@/lib/site-config/cards-schema";
 import { carouselEndOf, carouselEndText, type CarouselEndConfig } from "@/lib/site-config/carousel-end-schema";
-import { DEFAULT_TILE_CTA, type Color, type Fill, type MediaRef, type Page, type PublishedBundle, type Section } from "@/lib/site-config/schema";
+import { DEFAULT_TILE_CTA, MAX_CITY_STYLES, type Color, type Fill, type MediaRef, type Page, type PublishedBundle, type Section } from "@/lib/site-config/schema";
 import { Pagination } from "@/components/catalog/Pagination";
 import { numberPt } from "@/lib/format";
 import { collectionFacets } from "@/lib/search/collection-filter";
@@ -130,7 +130,7 @@ export function HomeSections({
             // Only the styles that really exist for the example city (never padded); the configured count is a ceiling.
             // Also only products of THIS region's own INK store, whatever the catalog holds (never a foreign product).
             const ownStore = storeForRegion(region);
-            const entries = showcase.families.filter((f) => f.primary.commerceStoreKey === ownStore).slice(0, s.count ?? 8);
+            const entries = showcase.families.filter((f) => f.primary.commerceStoreKey === ownStore).slice(0, s.count ?? MAX_CITY_STYLES);
             if (entries.length === 0) return null;
             const split = s.variant === "split" || s.variant === "list";
             const content = split ? (

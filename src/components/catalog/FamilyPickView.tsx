@@ -12,7 +12,7 @@ const REST_MS = 140;
 
 /**
  * The home's "list" composition of the city styles (CMS `variant: "list"`): every style of the example city by NAME, and ONE card beside the list,
- * the style chosen. All the styles within reach without eight cards on screen; every style gets the same card when chosen (the order is still the
+ * the style chosen. All the styles within reach without one card per style on screen; every style gets the same card when chosen (the order is still the
  * commercial one, families.ts).
  *
  * Tabs, as the city page's garment rail (CityGarmentTabs): the names are tabs, each card a tab panel. A click, a tap, the keyboard (arrows, Home,

@@ -15,8 +15,8 @@ const STOPWORDS = new Set([
   "eu", "tu", "me", "mi", "meu", "minha", "the", "of", "is", "it", "you", "all", "need",
   // print/piece words: "Pocket", "Club", "Edition", "P&B" never say what the design is about
   "pocket", "club", "edition", "pb", "p", "b", "colored", "clean", "minimal", "essencia", "dizeres", "lenda", "treino", "regional",
-  // the eight city families (a city product is ALWAYS one of them: they say nothing about affinity)
-  "origem", "coordenadas", "legado", "traco", "territorio", "tipografia", "gentilico", "feito", "personalizado", "personalizada", "localidade",
+  // the city families (a city product is ALWAYS one of them: they say nothing about affinity)
+  "origem", "coordenadas", "legado", "traco", "territorio", "tipografia", "gentilico", "pin", "feito", "personalizado", "personalizada", "localidade",
 ]);
 
 /**

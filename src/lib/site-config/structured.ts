@@ -5,7 +5,7 @@
  * offers into Norte or Centro-Oeste.
  */
 import { REGIONS, type RegionSlug } from "../geo/regions";
-import type { Appearance, Section } from "./schema";
+import { MAX_CITY_STYLES, type Appearance, type Section } from "./schema";
 
 export const STRUCTURED_TEMPLATES = ["city-styles", "states", "campaign", "image-grid"] as const;
 /** Components of a page only (the region's "Personalize a sua"): never offered on the home, whose schema refuses them. */
@@ -65,7 +65,7 @@ export function structuredDefaults(template: StructuredTemplate, region: RegionS
       // "8 jeitos" is promised only where it is real today (Sul); the other regions start neutral until the catalog justifies a number.
       title: region === "sul" ? "Sua cidade, de 8 jeitos." : "Sua cidade, do seu jeito.",
       subtitle: "Do mapa às coordenadas: escolha a estampa que mais combina com o seu lugar. O exemplo aqui é {city} — ao abrir a sua, você vê só os estilos que existem para ela.",
-      count: 8, appearance: noImage(),
+      count: MAX_CITY_STYLES, appearance: noImage(),
     };
   }
   if (template === "states") {

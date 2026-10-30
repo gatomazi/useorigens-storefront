@@ -4,7 +4,7 @@ import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { FamilyGridView } from "./FamilyGridView";
 
 /**
- * The families that really exist for a city (1 to 8), as one consistent collection: every card the same size,
+ * The families that really exist for a city (one card per family, never a fixed number), as one consistent collection: every card the same size,
  * in commercial order (families.ts) — never a bigger "featured" card (CLAUDE_STYLE_MODELS_LAYOUT_REFINEMENT.md).
  * Used on the home (one city's example), on a city's own page (the classic piece) and on a design's page ("Outros estilos"),
  * all with `directToInk` (see family-card.ts for the exact rule). A Server Component: it verifies the purchase URLs and builds the
