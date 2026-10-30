@@ -56,7 +56,8 @@ export function SearchDialog({
           type="button"
           onClick={open}
           aria-haspopup="dialog"
-          className="group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper sm:min-h-[4.5rem] sm:px-5"
+          // `on-light`: the field is white wherever it sits, so its prompt keeps the dark muted ink even on a dark ground (the Black's opening).
+          className="on-light group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper sm:min-h-[4.5rem] sm:px-5"
           style={tone ? { borderColor: tone.frame } : undefined}
         >
           <SearchIcon className="h-6 w-6 shrink-0" />

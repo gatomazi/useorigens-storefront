@@ -40,19 +40,39 @@ transparente.
 A chamada da personalização só entra se o modelo `natal-em-familia` estiver ativo. A vitrine só entra se a coleção Natal
 estiver na loja. Nenhuma das duas entra repetida se a home já tiver uma.
 
-### Checkpoints semanais (Black Month)
+### Calendário da Black (Black Month)
 
-Uma oferta por semana, com cadeados. Na Home do tema Black: **Adicionar seção → Grade de imagens**. Depois, no editor da seção,
-**Composição → Checkpoints semanais**. Para que ela tome o lugar de "Comece pelo seu estado", oculte a seção de estados e mova a nova para logo
-abaixo da abertura.
+Três peças, todas com dias no horário de Brasília, **os dois dias inclusive**. A loja vira em até um minuto depois da meia-noite.
 
-- **Um bloco por semana:** nome ("Semana 1"), o que entra em promoção (a legenda), **Abre em** (a data), a chamada ("Ver ofertas") e para onde leva.
-  Como cada semana tem várias coleções, leve o bloco para uma hotpage da semana, com as coleções dela, ou para uma coleção que junte as peças.
-- **Antes da data:** a loja mostra só o nome, um cadeado e "Abre 16/11". A oferta e o link ficam escondidos, como surpresa.
-- **A partir da data:** à meia-noite de Brasília (até uma hora depois, pelo cache da loja), o bloco abre e continua aberto até o fim. A semana
-  em curso ganha "Esta semana".
-- **Destaque:** marque no bloco da semana da Black Friday. Ele fica em amarelo e um pouco mais largo no desktop.
-- **Prévia:** para conferir como a seção estará num dia, abra a prévia com `&data=2026-11-16`.
+1. **Checkpoints semanais.** Uma Grade de imagens com a composição "Checkpoints semanais", na home e na hotpage do calendário. Cada bloco tem
+   **Abre em** e **Encerra em**:
+   - antes de abrir: o nome, o cadeado e o período ("16–22/11"); a oferta e o link não aparecem;
+   - durante: "Esta semana · 09–15/11", com o que está em promoção e o botão;
+   - depois de encerrar: "Encerrada · 02–07/11", sem link (uma oferta encerrada nunca aparece como ativa);
+   - entre duas semanas (por exemplo, 08/11), nenhuma fica ativa.
+
+   A faixa pode ter um **botão** ao lado do título (por exemplo "Ver calendário da Black", levando para a hotpage do calendário).
+   O bloco marcado como **Destaque** (a Black Week) vem em amarelo. Com **"Ofertas acumulam"** ligado, a semana que passou continua valendo
+   ("Valendo · 02–07/11", com o link) e só deixa de ser a semana atual. Desligado, ela aparece como "Encerrada".
+2. **Vitrines com período.** Em qualquer vitrine de produtos, em **Período da oferta**, preencha o primeiro e o último dia e o **rótulo enquanto
+   fechada** ("Semana 2"):
+   - antes de abrir: um vidro com o cadeado e a contagem, sobre cards genéricos. Nem o título (que diz a oferta) nem os produtos vão para a
+     página;
+   - durante: a vitrine normal, com "Ver ofertas" para a coleção;
+   - depois: o vidro com "Oferta encerrada" (se a vitrine não tiver dia de encerramento, ela continua aberta: ofertas que acumulam).
+
+   Quando abre a vitrine com o último dia de abertura (a Black Week), as vitrines com período invertem a ordem: a mais nova primeiro. Uma cor de
+   fundo na vitrine (o dourado da Black Week) também tinge o vidro enquanto ela está fechada, e os cards ganham fundo claro sobre a cor. Com
+   **"Cor de fundo como vidro"** (no editor da vitrine), essa cor fica translúcida sobre um desfoque do fundo da página, com o pattern.
+3. **Hotpage sem topo.** A faixa de checkpoints pode abrir a página no lugar do topo: oculte o topo e a faixa vira o título da página.
+4. **Textos programados da abertura.** No editor da abertura ("Um produto em destaque"), cada período troca o título (vazio = o de sempre), o
+   texto e, se houver botão, coloca o botão no lugar da busca. A busca continua no topo da loja. Um período não pode encostar em outro. Fora de
+   todos, valem o título e o subtítulo da abertura, por isso eles precisam valer o mês todo: sem preço e sem promessa de prazo.
+
+**Prévia de um dia futuro:** `&data=2026-11-08` na prévia, que vale para a home e para as páginas. Numa página, `&tema=black` mostra o topo e as
+cores da Black (sem ele, a página usa as cores do tema que está na loja).
+
+**Descontos na INK:** precisam começar e acabar nos mesmos dias. A loja só mostra o calendário.
 
 ## Deixar pronto (agora)
 

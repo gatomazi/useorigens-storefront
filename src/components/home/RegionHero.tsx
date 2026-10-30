@@ -56,6 +56,7 @@ export function RegionHero({
   slides,
   rotation,
   hideBar = false,
+  cta,
   colors,
 }: {
   region: RegionSlug;
@@ -82,6 +83,8 @@ export function RegionHero({
   rotation?: FeaturedRotation;
   /** "feature" only: no product bar under a product's banner (CMS `hideFeaturedBar`); the banner itself leads to the product. */
   hideBar?: boolean;
+  /** "feature" only: today's scheduled button (CMS `heroSchedule`), in the search field's place. */
+  cta?: { label: string; href: string };
   /** "feature" only: the colours of the reading half (CMS `heroColors`); absent = the theme's own. */
   colors?: HeroColors;
 }) {
@@ -94,7 +97,7 @@ export function RegionHero({
   ) : null;
   const { tone, ink, captionClass, captionStyle, field } = heroTone(colors);
   const classicLines = copy.title.split("\n");
-  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} slides={slides ?? trio.slice(0, 1).map((product) => ({ product, image: null }))} rotation={rotation} hideBar={hideBar} colors={colors} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} panelImage={panelImage ?? null} />;
+  if (variant === "feature") return <FeatureHero region={region} cityCount={cityCount} slides={slides ?? trio.slice(0, 1).map((product) => ({ product, image: null }))} rotation={rotation} hideBar={hideBar} cta={cta} colors={colors} copy={copy} backdrop={backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />} buy={buy} statesLink={statesLink} panelColor={panelColor} panelImage={panelImage ?? null} />;
   return (
     <section aria-labelledby="hero-title" className="relative isolate">
       {backdrop !== undefined ? backdrop : background && <RegionalPhotoSection asset={background} priority />}
@@ -185,13 +188,14 @@ const ALIGN_END = "lg:pr-[max(var(--gutter),calc(100%-var(--content-max)/2+var(-
  * the reading area alone.
  */
 function FeatureHero({
-  region, cityCount, slides, rotation, hideBar, colors, copy, backdrop, buy, statesLink, panelColor, panelImage,
+  region, cityCount, slides, rotation, hideBar, cta, colors, copy, backdrop, buy, statesLink, panelColor, panelImage,
 }: {
   region: RegionSlug;
   cityCount: number;
   slides: { product: HeroFamilyCard; image: BannerAsset | null; pins?: HeroSlidePin[] }[];
   rotation?: FeaturedRotation;
   hideBar: boolean;
+  cta?: { label: string; href: string };
   colors?: HeroColors;
   copy: { title: string; body: string };
   backdrop: ReactNode;
@@ -234,7 +238,15 @@ function FeatureHero({
             </h1>
             {copy.body && <p className="t-body mt-4 max-w-md text-ink-soft lg:mt-6" style={ink("text")}>{copy.body}</p>}
             <div className="mt-6 max-w-xl lg:mt-8">
-              <SearchDialog region={region} variant="hero" arrow tone={field} />
+              {cta ? (
+                // Today's button of the calendar ("Ver calendário da Black"), in the search field's colours; the header keeps the search.
+                <a href={cta.href} className="group inline-flex min-h-[3.25rem] items-center gap-2.5 px-7 text-[0.9375rem] font-bold uppercase tracking-[0.04em] transition-[filter] duration-200 hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4" style={field ? { background: field.frame, color: field.arrow } : { background: "var(--ink)", color: "#fff" }}>
+                  {cta.label}
+                  <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                </a>
+              ) : (
+                <SearchDialog region={region} variant="hero" arrow tone={field} />
+              )}
             </div>
             <p className={`t-caption regional-caption mt-3 ${captionClass}`} style={captionStyle}>
               {numberPt.format(cityCount)} cidades do {r.name} em camiseta.{statesLink && " "}

@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { isCheckpointDay, FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, MAX_LIVE_EXAMPLES, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
+import { isCheckpointDay, MAX_HERO_SCHEDULE, type HeroScheduleEntry, FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, MAX_LIVE_EXAMPLES, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
 import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, TILE_VEILS, type TileFormat, type TileVeil, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { REGION_SLUGS, STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
@@ -93,6 +93,33 @@ function parseCta(f: Fields): Section["cta"] | undefined {
   return dest ? { label: str(f, "cta_label") || "Ver todos", dest } : undefined;
 }
 
+/**
+ * The opening's scheduled texts (`hero_sched_<i>_*`, in the editor's order): a period (from/to) with a title, a text and a button, each optional but
+ * not all three. Rows without both days are skipped; malformed or overlapping ones come back as problems (the save is refused, nothing is half-read).
+ */
+export function parseHeroSchedule(f: Fields): { entries: HeroScheduleEntry[] | undefined; problems: string[] } {
+  const entries: HeroScheduleEntry[] = [];
+  const problems: string[] = [];
+  const rows = clamp(Math.round(num(f, "hero_sched_count", 0)), 0, MAX_HERO_SCHEDULE);
+  for (let i = 0; i < rows; i++) {
+    const at = (k: string) => `hero_sched_${i}_${k}`;
+    const from = str(f, at("from"));
+    const to = str(f, at("to")) || from;
+    const title = str(f, at("title")).replace(/\r\n/g, "\n").slice(0, 120);
+    const subtitle = str(f, at("subtitle")).slice(0, 300);
+    const label = str(f, at("cta_label")).slice(0, 32);
+    if (!from && !title && !subtitle && !label) continue;
+    const n = entries.length + 1;
+    if (!isCheckpointDay(from) || !isCheckpointDay(to) || to < from) { problems.push(`Texto programado ${n}: escolha o primeiro e o último dia (o último não pode vir antes).`); continue; }
+    const dest = label ? parseDest(f, `hero_sched_${i}_cta`) : null;
+    if (label && !dest) { problems.push(`Texto programado ${n}: escolha para onde o botão leva.`); continue; }
+    if (!title && !subtitle && !dest) { problems.push(`Texto programado ${n}: escreva um título, um texto ou um botão.`); continue; }
+    if (entries.some((e) => !(to < e.from || from > e.to))) { problems.push(`Texto programado ${n}: o período encosta em outro texto programado.`); continue; }
+    entries.push({ from, to, ...(title ? { title } : {}), ...(subtitle ? { subtitle } : {}), ...(dest ? { cta: { label, dest } } : {}) });
+  }
+  return { entries: entries.length > 0 ? entries.sort((a, b) => (a.from < b.from ? -1 : 1)) : undefined, problems };
+}
+
 /** A tile colour from the form: a theme token or `#rrggbb`; anything else = none (the region's colour). */
 function parseTileColor(value: string): Color | undefined {
   if (value === "token:region-primary" || value === "token:ground" || value === "token:near-black") return value;
@@ -141,6 +168,10 @@ export function parseGridTiles(f: Fields): { tiles: GridTile[]; problems: string
     const opensAt = str(f, `tile_${i}_opens`);
     if (opensAt && !isCheckpointDay(opensAt)) problems.push(`Bloco ${n} ("${label}"): a data de abertura não é válida.`);
     else if (opensAt) tile.opensAt = opensAt;
+    const closesAt = str(f, `tile_${i}_closes`);
+    if (closesAt && !isCheckpointDay(closesAt)) problems.push(`Bloco ${n} ("${label}"): a data de encerramento não é válida.`);
+    else if (closesAt && tile.opensAt && closesAt < tile.opensAt) problems.push(`Bloco ${n} ("${label}"): o encerramento vem antes da abertura.`);
+    else if (closesAt) tile.closesAt = closesAt;
     if (f.get(`tile_${i}_highlight`) !== null) tile.highlight = true;
     // A veil behind the text: only where text sits on a picture (never the product card, whose text is on a plain colour).
     const veil = str(f, `tile_${i}_veil`);
@@ -273,7 +304,9 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
       const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text, ...(f.get("tags_on_sale") !== null ? { onSale: true as const } : {}) } : {}) };
       tags = next.discount || next.text ? next : undefined;
     }
-    patch.layout = { variant, tone, surface, ...(display === "grid" || display === "paged" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(buyStyle ? { buyStyle } : {}), ...(tags ? { tags } : {}) };
+    // The section's colour as glass: posted with the layout (a form without the block keeps what is saved).
+    const glass = f.get("layout_surface") === null ? section.layout?.glass : f.get("layout_glass") !== null ? true : undefined;
+    patch.layout = { variant, tone, surface, ...(display === "grid" || display === "paged" ? { display } : {}), ...(buyLabel ? { buyLabel } : {}), ...(buyStyle ? { buyStyle } : {}), ...(tags ? { tags } : {}), ...(glass ? { glass } : {}) };
   }
   if (section.template === "page-hero") {
     patch.cta = parseCta(f);
@@ -299,6 +332,8 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     patch.customizerCard = undefined;
     patch.cta = undefined;
   }
+  // The checkpoints strip's button ("Ver calendário da Black"), posted only while that composition is chosen.
+  if (section.template === "image-grid" && f.get("cta_kind") !== null) patch.cta = parseCta(f);
   if (section.template === "campaign") {
     patch.fallback = str(f, "fallback") === "fill" ? "fill" : "crops";
     // No button configured = the original "Encontrar minha cidade" search; a label without a destination is dropped, never a dead link.
@@ -340,10 +375,25 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     patch.live = { customizerId: str(f, "live_customizer"), button: str(f, "live_button").slice(0, 32) || "Personalizar a minha", examples };
   }
   if (section.template === "city-styles" && f.get("count") !== null) patch.count = clamp(Math.round(num(f, "count", 8)), 1, 8);
+  // A product section's period (the Black Month calendar): both days optional, the label shown while it is locked. Nothing set = no period.
+  if (section.template === "product-carousel" && f.get("period_present") !== null) {
+    const opensAt = str(f, "period_from");
+    const closesAt = str(f, "period_to");
+    const label = str(f, "period_label").slice(0, 40);
+    patch.period = isCheckpointDay(opensAt) || isCheckpointDay(closesAt)
+      ? { ...(isCheckpointDay(opensAt) ? { opensAt } : {}), ...(isCheckpointDay(closesAt) ? { closesAt } : {}), ...(label ? { label } : {}) }
+      : undefined;
+  }
+  if (section.template === "hero" && f.get("hero_sched_present") !== null) patch.heroSchedule = parseHeroSchedule(f).entries;
   if (f.get("variant_present") !== null) {
     // The composition: one of the template's own, or the original ("" / anything else: never stored).
     const posted = str(f, "variant");
     patch.variant = variantsOf(section.template).includes(posted) ? (posted as Section["variant"]) : undefined;
+  }
+  // The checkpoints' offers accumulate (posted with the blocks; only in that composition).
+  if (section.template === "image-grid" && f.get("grid_present") !== null) {
+    const variant = "variant" in patch ? patch.variant : section.variant;
+    patch.accumulate = variant === "checkpoints" && f.get("checkpoints_accumulate") !== null ? true : undefined;
   }
   return patch;
 }

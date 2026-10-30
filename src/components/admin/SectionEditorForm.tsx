@@ -5,6 +5,7 @@ import { FOLLOW_SOURCE, REGION_TOKEN } from "@/lib/site-config/follow-schema";
 import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
 import { CollectionOrder, type OrderMember } from "@/components/admin/CollectionOrder";
+import { HeroScheduleEditor } from "@/components/admin/HeroScheduleEditor";
 import { GridTilesEditor } from "@/components/admin/GridTilesEditor";
 import { HeroColorsEditor } from "@/components/admin/HeroColorsEditor";
 import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
@@ -323,7 +324,12 @@ export function SectionEditorForm({
           anchors={anchors.filter((x) => x.anchor !== section.anchor)}
           customizers={customizers}
           checkpoints={variantNow === "checkpoints"}
+          accumulate={section.accumulate === true}
         />
+      )}
+
+      {!regional && section.template === "hero" && section.variant === "feature" && (
+        <HeroScheduleEditor scope={scope} entries={section.heroSchedule ?? []} pages={pages} collections={pageEntries} anchors={anchors.filter((x) => x.anchor !== section.anchor)} />
       )}
 
       {!regional && section.template === "hero" && <HeroColorsEditor colors={section.heroColors} feature={section.variant === "feature"} sectionGround={fillKind === "solid" && choice === "custom" ? solid : undefined} />}
@@ -393,14 +399,15 @@ export function SectionEditorForm({
         </fieldset>
       )}
 
-      {!regional && (section.template === "campaign" || section.template === "page-hero") && (
+      {!regional && (section.template === "campaign" || section.template === "page-hero" || (section.template === "image-grid" && variantNow === "checkpoints")) && (
         <fieldset className="space-y-4">
           <legend className="a-h2 mb-3">Botão</legend>
+          {section.template === "image-grid" && <p className="a-muted text-[0.8125rem]">Ao lado do título da faixa, como o “Ver todos” das vitrines: por exemplo “Ver calendário da Black”, levando para a hotpage do calendário.</p>}
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="a-label" htmlFor="cta_kind">Destino</label>
               <select id="cta_kind" name="cta_kind" className="a-select" value={ctaKind} onChange={(e) => setCtaKind(e.target.value as typeof ctaKind)}>
-                <option value="none">Busca de cidade (padrão)</option>
+                <option value="none">{section.template === "image-grid" ? "Sem botão" : "Busca de cidade (padrão)"}</option>
                 <option value="collection-page">Página de uma coleção (no site)</option>
                 <option value="route">Página desta região (endereço)</option>
                 <option value="page">Hotpage ou categoria-pai publicada</option>
@@ -438,6 +445,19 @@ export function SectionEditorForm({
           {ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
           {ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho (dentro de /{scope})</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : `/${scope}`} className="a-input" placeholder={`/${scope}/pa`} /><p className="a-muted mt-1 text-[0.8125rem]">Ex.: <code>/{scope}</code> ou a página de um estado. Um caminho de outra região é recusado.</p></div>}
           {ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usenorte.com.br/" /></div>}
+        </fieldset>
+      )}
+
+      {!regional && isCarousel && (
+        <fieldset className="space-y-3" data-testid="period">
+          <legend className="a-h2 mb-2">Período da oferta (opcional)</legend>
+          <input type="hidden" name="period_present" value="1" />
+          <p className="a-muted max-w-3xl text-[0.875rem]">Para o calendário da Black: fora do período, a vitrine fica atrás de um vidro com o cadeado. Antes de abrir, a loja não mostra nenhum produto nem o título (que diz qual é a oferta), só o rótulo abaixo e o período. Depois de encerrar, mostra “Oferta encerrada”. Dias no horário de Brasília, os dois inclusive. Sem datas, a vitrine aparece sempre.</p>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div><label className="a-label" htmlFor="period_from">Abre em</label><input id="period_from" name="period_from" type="date" defaultValue={section.period?.opensAt ?? ""} className="a-input" /></div>
+            <div><label className="a-label" htmlFor="period_to">Encerra em (inclusive)</label><input id="period_to" name="period_to" type="date" defaultValue={section.period?.closesAt ?? ""} className="a-input" /></div>
+            <div><label className="a-label" htmlFor="period_label">Rótulo enquanto fechada</label><input id="period_label" name="period_label" defaultValue={section.period?.label ?? ""} className="a-input" maxLength={40} placeholder="Semana 2" /></div>
+          </div>
         </fieldset>
       )}
 
@@ -575,6 +595,7 @@ export function SectionEditorForm({
               <div><label className="a-label" htmlFor="layout_surface">Superfície</label><select id="layout_surface" name="layout_surface" className="a-select" defaultValue={section.layout?.surface ?? "plain"}><option value="plain">Fundo da página</option><option value="paper">Papel</option><option value="region-primary">Verde regional</option></select></div>
               <div><label className="a-label" htmlFor="layout_tone">Cor do texto</label><select id="layout_tone" name="layout_tone" className="a-select" value={tone} onChange={(e) => setTone(e.target.value as "light" | "dark")}><option value="light">Escuro (para fundos claros)</option><option value="dark">Claro (para fundos escuros)</option></select></div>
             </div>
+            <label className="flex items-start gap-2"><input type="checkbox" name="layout_glass" defaultChecked={section.layout?.glass === true} className="mt-1" /><span><span className="block font-bold">Cor de fundo como vidro</span><span className="a-muted block text-[0.8125rem]">A cor de fundo da seção fica translúcida, sobre um desfoque do fundo da página (com o pattern, se houver), em vez de uma faixa sólida. Use com uma cor de fundo definida em Aparência.</span></span></label>
             <div className="space-y-2 border border-black/20 p-3">
               <input type="hidden" name="layout_buy_present" value="1" />
               <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="layout_buy" checked={buyOn} onChange={(e) => setBuyOn(e.target.checked)} /> Botão de compra em cada card de produto</label>

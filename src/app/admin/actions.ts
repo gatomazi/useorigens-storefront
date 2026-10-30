@@ -37,7 +37,7 @@ import { DEFAULT_CAROUSEL_END_LABEL, MAX_CAROUSEL_END_LABEL } from "@/lib/site-c
 import { hasHomeTheme, HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
 import { editorialCollections } from "@/lib/catalog/editorial-collections";
 import { sourceProblem } from "@/lib/admin/validate-draft";
-import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseFeaturedRotation, parseGridTiles, parseSectionForm } from "@/lib/admin/section-form";
+import { parseCollectionArrangement, parseCollectionRef, parseFeaturedFields, parseFeaturedRotation, parseGridTiles, parseHeroSchedule, parseSectionForm } from "@/lib/admin/section-form";
 import { parseCustomizerForm, parseOrigin } from "@/lib/admin/customizer-form";
 import { parsePageBackdrop } from "@/lib/admin/page-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
@@ -255,6 +255,10 @@ export async function saveSection(fd: FormData) {
       patch.hideFeaturedBar = feature ? (fd.get("featured_bar_off") !== null ? true : undefined) : section.hideFeaturedBar;
     } else if (mode === "seed") patch.featured = legacyFeaturedRefs(scope);
     else if (mode === "reset" && scope === "sul") patch.featured = undefined;
+  }
+  if (section.template === "hero" && fd.get("hero_sched_present") !== null) {
+    const { problems } = parseHeroSchedule(fd);
+    if (problems.length > 0) back(`/admin/home/${id}`, { err: problems });
   }
   if (section.template === "image-grid") {
     const { problems } = parseGridTiles(fd);
