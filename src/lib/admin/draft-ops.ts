@@ -24,12 +24,12 @@ import type { MundoModo } from "../site-config/mundo-schema";
 import type { InkThemeConfig } from "../site-config/ink-theme-schema";
 import { withStatePageSection, type StatePageSection } from "../site-config/state-page-schema";
 import { withFollowPart, type FollowPart } from "../site-config/follow-schema";
-import { isUmaPencaSource, validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, MENU_HIGHLIGHT_KEYS, type Appearance, type CollectionHighlight, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig, type RegionalSection } from "../site-config/schema";
+import { isUmaPencaSource, opensPage, validateCustomizer, validatePage, validateScopeDoc, validateSection, homeThemeOf, MENU_HIGHLIGHT_KEYS, type Appearance, type CollectionHighlight, type CollectionNote, type CollectionRef, type HomeThemeName, type StateSubcategories, type Customizer, type CustomizerSource, type Destination, type Page, type PageBackdrop, type PageKind, type PageSeo, type ProductDisplay, type Section, type ScopeDoc, type Source, type TrackingConfig, type RegionalSection } from "../site-config/schema";
 import { HOME_THEME_LABEL, hasHomeTheme, isSeasonalTheme, newEditorialTheme, seasonalTheme, swapHomeTheme, type EditorialCollections } from "../site-config/home-themes";
 import type { RegionSlug } from "../geo/regions";
 import type { ProductSort } from "../catalog/product-sort";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "featuredRotation" | "hideFeaturedBar" | "heroColors" | "nav" | "customizerCard" | "live" | "tiles" | "grid" | "variant" | "regions">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "featuredRotation" | "hideFeaturedBar" | "heroSchedule" | "period" | "accumulate" | "heroColors" | "nav" | "customizerCard" | "live" | "tiles" | "grid" | "variant" | "regions">;
 
 export type DraftOp =
   /** `display: "grid"` creates the section already as a product grid (absent = a carousel). */
@@ -487,8 +487,8 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       return withSections(op.ids.map((id) => byId.get(id)!));
     }
     case "set-active": {
-      // A page's hero may give way to a live banner (the page's schema checks that one stays active).
-      const heroGivesWay = ctx.mode === "page" && next[index].template === "page-hero" && next.some((s) => s.template === "personalization-live" && s.active);
+      // A page's hero may give way to a live banner or a checkpoints strip (the page's schema checks that one stays active).
+      const heroGivesWay = ctx.mode === "page" && next[index].template === "page-hero" && next.some(opensPage);
       if (isLocked(next[index]) && !op.active && !heroGivesWay) return fail("the hero and the footer cannot be hidden");
       next[index].active = op.active;
       return withSections(next, op.id);

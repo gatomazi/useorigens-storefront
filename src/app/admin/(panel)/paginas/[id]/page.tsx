@@ -20,7 +20,7 @@ import { loadWorkspace } from "@/lib/admin/workspace";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
 import { PAGE_KIND_LABEL, pageAsHomeDoc, pageHref } from "@/lib/site-config/pages";
-import type { Section } from "@/lib/site-config/schema";
+import { opensPage, type Section } from "@/lib/site-config/schema";
 import { PAGE_ONLY_MODELS, STRUCTURED_MODELS } from "@/lib/site-config/structured";
 import { PRODUCT_SORTS, PRODUCT_SORT_LABEL } from "@/lib/catalog/product-sort";
 
@@ -128,8 +128,8 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
           rows={page.sections.map((s) => {
               const status = sourceStatus(s, ws.doc);
               const locked = s.template === "page-hero";
-              // The page's hero may give way to an active live banner, which then opens the page.
-              const liveOpens = locked && (!s.active || page.sections.some((x) => x.template === "personalization-live" && x.active));
+              // The page's hero may give way to an active live banner or checkpoints strip, which then opens the page.
+              const liveOpens = locked && (!s.active || page.sections.some(opensPage));
               const custom = s.id.startsWith("custom-") && !locked;
               const readable = sectionReadability(s);
               const label = s.title?.replace(/\n/g, " ") ?? s.anchor;

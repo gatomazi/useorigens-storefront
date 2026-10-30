@@ -5,7 +5,9 @@ import { HUB_PAGE_SLUG, personalizationHubHref } from "@/lib/customization/hub";
 import { isRegionSlug } from "@/lib/geo/regions";
 import { pageMetadata, resolvePage } from "@/lib/pages/public";
 
-export const revalidate = 3600;
+// One minute (it was an hour): the Black Month calendar opens and closes its weeks at Brasília midnight (src/lib/site-config/checkpoints.ts), and
+// an ended offer must not keep showing as active. Regenerating a page at most once a minute is cheap.
+export const revalidate = 60;
 
 // Rendered on first request, then cached (ISR) and invalidated by the publish of the page; a new URL never needs a rebuild.
 export function generateStaticParams() {

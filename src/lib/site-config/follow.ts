@@ -110,6 +110,11 @@ function followedSections(sections: readonly Section[], ctx: Adapt, regional: re
       else delete s.nav.dest;
     }
     if (s.tiles) s.tiles = s.tiles.map((t) => ({ ...t, dest: followedDestination(t.dest, ctx) ?? home }));
+    // The opening's scheduled buttons: adapted like any button; one with no equivalent in the region is left out (its texts stay).
+    if (s.heroSchedule) s.heroSchedule = s.heroSchedule.map(({ cta, ...e }) => {
+      const dest = cta ? followedDestination(cta.dest, ctx) : undefined;
+      return cta && dest ? { ...e, cta: { ...cta, dest } } : e;
+    });
     if (s.stateCovers) s.stateCovers = Object.fromEntries(Object.entries(s.stateCovers).filter(([uf]) => REGIONS[ctx.to].ufs.includes(uf)));
     if (s.customizerCard) {
       const model = activeModel(ctx, s.customizerCard.customizerId);
