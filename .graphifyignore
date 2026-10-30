@@ -1,0 +1,8 @@
+# Fora do grafo: skills de terceiros, saídas e capturas de tela
+.claude/
+.impeccable/
+output/
+public/
+docs/screenshots/
+*.png
+*.jpg

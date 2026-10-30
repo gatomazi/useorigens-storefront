@@ -70,3 +70,6 @@ next-env.d.ts
 
 # rodada de curadoria do "Meu Pequeno Mundo": base do IBGE, rascunhos, cache de páginas (scripts/mundo-curadoria)
 /.mundo-curadoria/
+
+# graphify (grafo local do código)
+/graphify-out/
