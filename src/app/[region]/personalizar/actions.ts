@@ -15,6 +15,8 @@ import type { PrintProject } from "@/lib/print-studio/model";
 import { isTerminal, PRODUCT_TYPE, productJobKey, productName, publicJob, type PublicProductJob } from "@/lib/customization/ink-products";
 import { inkProductClientFor, missingProductTable, productStoreOrNull, startProductJob } from "@/lib/customization/products-server";
 import { needsReview } from "@/lib/customization/review-words";
+import { directPrices } from "@/lib/customization/promo";
+import { syncReusedPrice } from "@/lib/customization/promo-sync";
 
 export type SubmitResult =
   | { ok: true; reference: string; shortReference: string; summary: SummaryLine[]; channels: string[]; duplicate: boolean; expiresAt: string; modelVersion: number }
@@ -147,7 +149,8 @@ export async function startProductsAction(input: { region: string; slug: string;
     items.push({ pick, fields, shown: Object.fromEntries(kinds.map((f) => [f.id, fieldDisplay(f, fields[f.id] ?? "")])), reviewed, printed: checked.artwork.layers.map((l) => l.text) });
   }
   if (items.some(({ reviewed }) => needsReview(reviewed))) return fail("Este texto passa pela nossa equipe antes de virar camiseta. Deixe o seu contato e a gente manda o link.", true);
-  const prices = items.map(({ pick }) => ((pick.version.garment ?? "camiseta") === "infantil" ? direct.kidsPrice : direct.price));
+  const now = new Date();
+  const prices = items.map(({ pick }) => directPrices(direct, pick.version.garment ?? "camiseta", now));
   if (prices.some((p) => !p)) return fail("A criação automática não está disponível para esta versão.", true);
 
   try {
@@ -157,12 +160,14 @@ export async function startProductsAction(input: { region: string; slug: string;
       const garment = pick.version.garment ?? "camiseta";
       const lightTemplateId = pick.version.lightTemplateId ?? null;
       const artLabel = choiceLabel({ ...pick, light: false, templateId: pick.version.templateId });
-      let { job } = await store.findOrCreate({
+      const made = await store.findOrCreate({
         dedupeKey: productJobKey({ region: found.region, templateId: pick.version.templateId, lightTemplateId, garment, printed }),
         region: found.region, customizerId: model.id, customizerSlug: model.slug,
         name: productName(shown, model.name, artLabel), artLabel, fields,
-        templateId: pick.version.templateId, lightTemplateId, garment, productTypeId: PRODUCT_TYPE[garment], price: prices[i]!,
+        templateId: pick.version.templateId, lightTemplateId, garment, productTypeId: PRODUCT_TYPE[garment], price: prices[i]!.price,
       });
+      // Reaproveitado: o preço e a promoção de agora (PATCH na INK se ele já existe lá); ver promo-sync.ts.
+      let job = made.created ? made.job : await syncReusedPrice(store, client, made.job, prices[i]!);
       // A job that failed before INK held anything is tried again for the next customer; one that needs a check stays with the team.
       if (job.status === "failed" && !job.inkProductId) job = (await store.update(job.id, { status: "queued", attempts: 0, error: null })) ?? job;
       if (!isTerminal(job.status)) startProductJob(job.id, found.region);

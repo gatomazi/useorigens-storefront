@@ -1,7 +1,8 @@
 import type { RegionSlug } from "../geo/regions";
 import { customizerHref, HUB_PAGE_SLUG } from "../site-config/pages";
-import { isUmaPencaSource, type PublishedBundle, type ScopeDoc } from "../site-config/schema";
+import { isUmaPencaSource, type DirectPurchase, type PublishedBundle, type ScopeDoc } from "../site-config/schema";
 import type { CreateYourOwnCard } from "../umapenca/customizer-cards";
+import { brl, directPrices } from "./promo";
 
 /** The region's page with every personalized print: `/<region>/personalizar`. */
 export const personalizationHubHref = (region: RegionSlug): string => `/${region}/personalizar`;
@@ -16,9 +17,16 @@ export { HUB_PAGE_SLUG };
  * The cards of the personalization page: the region's PUBLISHED, active models with the art editor (the surname, the plate…), in the CMS order.
  * Pure. Same rules as the "Crie a sua" cards (src/lib/umapenca/customizer-cards.ts): a model without a mockup, whose image is not in the bundle,
  * or of another region is left out — never a broken card. Uma Penca models stay on "Outros artigos"; the old text-only request forms are not
- * listed. With direct purchase on, the card shows the shirt price.
+ * listed. With direct purchase on, the card shows the shirt price (inside the promo window, the promo price and the regular one struck through).
  */
-export function personalizationCards(doc: ScopeDoc | undefined, media: PublishedBundle["media"], region: RegionSlug): CreateYourOwnCard[] {
+/** O preço da camiseta no card; dentro da janela da promoção, o promocional e o normal (riscado). */
+function cardPrice(direct: DirectPurchase, now: Date): Pick<CreateYourOwnCard, "price" | "fullPrice"> {
+  const p = directPrices(direct, "camiseta", now);
+  if (!p) return {};
+  return p.promotionalPrice ? { price: brl(p.promotionalPrice), fullPrice: brl(p.price) } : { price: brl(p.price) };
+}
+
+export function personalizationCards(doc: ScopeDoc | undefined, media: PublishedBundle["media"], region: RegionSlug, now: Date = new Date()): CreateYourOwnCard[] {
   if (!doc || doc.scope !== region) return [];
   return (doc.customizers ?? []).flatMap((model) => {
     if (!model.active || !model.pageMockup || isUmaPencaSource(model.source) || !model.studioArts?.length) return [];
@@ -32,7 +40,7 @@ export function personalizationCards(doc: ScopeDoc | undefined, media: Published
         href: customizerHref(region, model),
         title: model.name,
         ...(model.description ? { description: model.description } : {}),
-        ...(direct ? { price: `R$ ${direct.price.replace(".", ",")}` } : {}),
+        ...(direct ? cardPrice(direct, now) : {}),
         image: { src: info.src, width: info.width, height: info.height, ...(info.variants ? { variants: info.variants } : {}), alt: ref.decorative ? "" : ref.alt || model.name },
       },
     ];

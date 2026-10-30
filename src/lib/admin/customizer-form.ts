@@ -3,7 +3,7 @@
  * shape of the contract (the schema validates it again when the op is applied and when the model is published).
  */
 import type { CommerceStoreKey } from "../geo/regions";
-import { MAX_ART_VERSIONS, MAX_CUSTOM_FIELDS, MAX_STUDIO_ARTS, STUDIO_TEMPLATE_ID, customizerProductLabel, isUmaPencaSource, type CustomField, type Customizer, type LineGroup, type MediaRef, type StudioArt } from "../site-config/schema";
+import { MAX_ART_VERSIONS, MAX_CUSTOM_FIELDS, MAX_STUDIO_ARTS, PROMO_DATE, STUDIO_TEMPLATE_ID, customizerProductLabel, isUmaPencaSource, type CustomField, type Customizer, type LineGroup, type MediaRef, type StudioArt } from "../site-config/schema";
 import { ARTICLE_KINDS, type ArticleKind } from "../umapenca/types";
 
 type Fields = { get(name: string): FormDataEntryValue | null };
@@ -124,7 +124,28 @@ export function parseCustomizerForm(f: Fields, current: Customizer, region: { st
     if (enabled && !arts.length) errors.push("A compra direta precisa das artes do estúdio.");
     if (enabled && !price) errors.push("Informe o preço da camiseta para ligar a compra direta.");
     if (enabled && kids && !kidsPrice) errors.push("Informe o preço da Camiseta Infantil: uma versão é infantil.");
-    patch.directPurchase = price || enabled ? { enabled, price: price ?? "109.90", ...(kidsPrice ? { kidsPrice } : {}), ...(inkCollectionId ? { inkCollectionId } : {}) } : undefined;
+    // Promoção: opcional; cada preço promocional abaixo do normal e terminando em ,90 (regra do dono); datas em hora de Brasília.
+    const promoPrice = inkPrice(str(f, "direct_promo_price"));
+    const kidsPromoPrice = inkPrice(str(f, "direct_kids_promo_price"));
+    const promoStartsAt = str(f, "direct_promo_starts");
+    const promoEndsAt = str(f, "direct_promo_ends");
+    const promoCheck = (raw: string, promo: string | null, regular: string | null, label: string) => {
+      if (!raw) return;
+      if (!promo) errors.push(`${label} inválido: use o formato 89,90.`);
+      else if (!promo.endsWith(".90")) errors.push(`${label} precisa terminar em ,90.`);
+      else if (!regular) errors.push(`${label} precisa do preço normal da peça.`);
+      else if (Number(promo) >= Number(regular)) errors.push(`${label} precisa ser menor que o preço normal.`);
+    };
+    promoCheck(str(f, "direct_promo_price"), promoPrice, price, "Preço promocional da camiseta");
+    promoCheck(str(f, "direct_kids_promo_price"), kidsPromoPrice, kidsPrice, "Preço promocional da Camiseta Infantil");
+    if (promoStartsAt && !PROMO_DATE.test(promoStartsAt)) errors.push("Data de início da promoção inválida.");
+    if (promoEndsAt && !PROMO_DATE.test(promoEndsAt)) errors.push("Data de fim da promoção inválida.");
+    if (promoStartsAt && promoEndsAt && promoStartsAt >= promoEndsAt) errors.push("A promoção precisa terminar depois de começar.");
+    const promo = {
+      ...(promoPrice ? { promoPrice } : {}), ...(kidsPromoPrice ? { kidsPromoPrice } : {}),
+      ...(promoStartsAt ? { promoStartsAt } : {}), ...(promoEndsAt ? { promoEndsAt } : {}),
+    };
+    patch.directPurchase = price || enabled ? { enabled, price: price ?? "109.90", ...(kidsPrice ? { kidsPrice } : {}), ...(inkCollectionId ? { inkCollectionId } : {}), ...promo } : undefined;
   }
 
   // Fields: a JSON list maintained by the editor's add/remove rows. Keys are stable once a field exists; a new row gets one from its label.

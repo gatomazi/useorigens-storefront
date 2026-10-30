@@ -446,7 +446,17 @@ export type StudioGarment = (typeof STUDIO_GARMENTS)[number];
 export type StudioArtVersion = { label?: string; templateId: string; lightTemplateId?: string; garment?: StudioGarment };
 /** Prices of the products created at INK, as INK takes them ("109.90"); `kidsPrice` is required when a version is on the Camiseta Infantil. */
 /** `inkCollectionId`: the INK category (usually a hidden one) every product of the model is created in, so the team finds them in INK's panel. */
-export type DirectPurchase = { enabled: boolean; price: string; kidsPrice?: string; inkCollectionId?: number };
+/**
+ * Promoção (Black Month, aprovada pelo dono em 30/10/2026): `promoPrice`/`kidsPromoPrice` vão para a INK como `promotional_price` enquanto agora
+ * estiver na janela `promoStartsAt`..`promoEndsAt` ("2026-11-01T00:00", hora de Brasília; início incluso, fim excluso; sem início = já vale,
+ * sem fim = não acaba). Regra do dono: todo preço promocional termina em ,90.
+ */
+export type DirectPurchase = {
+  enabled: boolean; price: string; kidsPrice?: string; inkCollectionId?: number;
+  promoPrice?: string; kidsPromoPrice?: string; promoStartsAt?: string; promoEndsAt?: string;
+};
+/** Data e hora local de Brasília, como o campo datetime-local do painel envia. */
+export const PROMO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
 /**
  * The live banner of a personalization model (template "personalization-live"): the section's title and text beside the model's fields and its
@@ -1072,6 +1082,21 @@ function checkTextField(c: Collector, path: string, f: unknown, keyPattern = /^[
   for (const [name, max] of [["placeholder", 80], ["helperText", 200], ["defaultValue", 120]] as const) if (f[name] !== undefined && (typeof f[name] !== "string" || (f[name] as string).length > max)) c.fail(`${path}.${name}`, `≤ ${max} chars`);
 }
 
+/** A promoção da compra direta: cada preço promocional abaixo do seu preço normal e terminando em ,90; a janela, quando completa, em ordem. */
+function checkDirectPromo(c: Collector, path: string, d: Record<string, unknown>): void {
+  const promo = (key: "promoPrice" | "kidsPromoPrice", regular: unknown) => {
+    const p = d[key];
+    if (p === undefined) return;
+    if (typeof p !== "string" || !PRICE.test(p) || !p.endsWith(".90")) return c.fail(`${path}.${key}`, "a price ending in .90, like \"89.90\"");
+    if (typeof regular !== "string") return c.fail(`${path}.${key}`, "needs its regular price");
+    if (Number(p) >= Number(regular)) c.fail(`${path}.${key}`, "must be lower than the regular price");
+  };
+  promo("promoPrice", d.price);
+  promo("kidsPromoPrice", d.kidsPrice);
+  for (const key of ["promoStartsAt", "promoEndsAt"] as const) if (d[key] !== undefined && (typeof d[key] !== "string" || !PROMO_DATE.test(d[key] as string) || Number.isNaN(Date.parse(`${d[key]}:00-03:00`)))) c.fail(`${path}.${key}`, "a São Paulo date like \"2026-11-01T00:00\"");
+  if (typeof d.promoStartsAt === "string" && typeof d.promoEndsAt === "string" && d.promoStartsAt >= d.promoEndsAt) c.fail(`${path}.promoEndsAt`, "must be after promoStartsAt");
+}
+
 function checkCustomizer(c: Collector, path: string, v: unknown): void {
   if (!isRecord(v)) return c.fail(path, "must be an object");
   if (typeof v.id !== "string" || !ID.test(v.id)) c.fail(`${path}.id`, "invalid id");
@@ -1094,6 +1119,7 @@ function checkCustomizer(c: Collector, path: string, v: unknown): void {
     else {
       if (d.kidsPrice !== undefined && (typeof d.kidsPrice !== "string" || !PRICE.test(d.kidsPrice))) c.fail(`${path}.directPurchase.kidsPrice`, "a price like \"96.00\"");
       if (d.inkCollectionId !== undefined && (typeof d.inkCollectionId !== "number" || !Number.isInteger(d.inkCollectionId) || d.inkCollectionId <= 0)) c.fail(`${path}.directPurchase.inkCollectionId`, "a positive INK category id");
+      checkDirectPromo(c, `${path}.directPurchase`, d);
       const kids = Array.isArray(v.studioArts) && v.studioArts.some((a) => isRecord(a) && Array.isArray(a.versions) && a.versions.some((x) => isRecord(x) && x.garment === "infantil"));
       if (d.enabled && !Array.isArray(v.studioArts)) c.fail(`${path}.directPurchase`, "direct purchase needs studio arts");
       if (d.enabled && kids && d.kidsPrice === undefined) c.fail(`${path}.directPurchase.kidsPrice`, "required when a version is on the Camiseta Infantil");

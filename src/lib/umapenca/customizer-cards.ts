@@ -8,6 +8,8 @@ export type CreateYourOwnCard = {
   description?: string;
   /** The shirt price when the model sells it on the spot ("R$ 109,90"); the personalization page shows it. */
   price?: string;
+  /** Na promoção, o preço normal, mostrado riscado antes de `price` (o promocional). */
+  fullPrice?: string;
   image: { src: string; width: number; height: number; variants?: { w: number; src: string }[]; alt: string };
 };
 
