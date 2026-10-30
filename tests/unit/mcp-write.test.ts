@@ -5,7 +5,7 @@ import type { CatalogSnapshot } from "@/lib/catalog/types";
 import { buildCategoryIndex } from "@/lib/mcp/categories";
 import { buildCatalogContext } from "@/lib/mcp/classify";
 import { buildProductIndex } from "@/lib/mcp/catalog-index";
-import { CHANGE_TTL_MS, buildExchangePlan, buildOrderItemEditPlan, buildProductPlan, changeHash, checkProductChangeInput, nextCategories, nextTags, pickVariant } from "@/lib/mcp/changes";
+import { CHANGE_TTL_MS, buildCategoryPlan, buildExchangePlan, buildOrderItemEditPlan, buildProductPlan, changeHash, checkProductChangeInput, nextCategories, nextTags, pickVariant } from "@/lib/mcp/changes";
 import { McpToolError } from "@/lib/mcp/errors";
 import { parseExchange } from "@/lib/mcp/exchanges-model";
 import type { Budget, InkLiveProduct } from "@/lib/mcp/ink-live";
@@ -119,6 +119,21 @@ describe("product changes (pure)", () => {
   });
 });
 
+describe("category visibility (pure)", () => {
+  test("a plan names each category by id, slug or name, skips one already so, and refuses what is unknown, ambiguous or too many", () => {
+    const plan = buildCategoryPlan("use-sul", { categories: ["1", "novidades", "ZZ - SU - SC"], visible: false }, CATEGORIES);
+    expect(plan.items.map((i) => [i.category_id, i.before.visibility, i.after.visibility])).toEqual([[1, "public", "internal"], [2, "public", "internal"]]);
+    expect(plan.unchanged).toEqual([{ category_id: 3, name: "ZZ - SU - SC" }]);
+    expect(plan.warnings.join(" ")).toContain("Biblioteca");
+    expect(() => buildCategoryPlan("use-sul", { categories: ["Inexistente"], visible: false }, CATEGORIES)).toThrow(McpToolError);
+    expect(() => buildCategoryPlan("use-sul", { categories: [], visible: true }, CATEGORIES)).toThrow(McpToolError);
+    expect(() => buildCategoryPlan("use-sul", { categories: Array.from({ length: 11 }, (_, i) => String(i)), visible: true }, CATEGORIES)).toThrow(McpToolError);
+    expect(() => buildCategoryPlan("use-sul", { categories: ["Território"], visible: false }, [...CATEGORIES, cat(9, "Território", [])])).toThrow(/use o id/);
+    // The same category named twice is one change.
+    expect(buildCategoryPlan("use-sul", { categories: ["1", "territorio"], visible: false }, CATEGORIES).items).toHaveLength(1);
+  });
+});
+
 describe("order items and exchanges (pure)", () => {
   test("a variant by size alone keeps model and color; ambiguity and unavailability are errors that list the options", () => {
     expect(pickVariant(PRODUCTS["101"], { model: "Camiseta", color: "Preta", size: "M" }, { size: "g" }).id).toBe("12");
@@ -221,12 +236,12 @@ const out = (r: unknown) => (r as { structuredContent: tools.ToolResult }).struc
 const errorOf = (r: unknown) => JSON.parse((r as { content: { text: string }[] }).content[0].text).error as { code: string; message: string };
 
 describe("confirmed changes through MCP", () => {
-  test("a read-only grant sees no write tool; a write grant sees five more, only the confirmation is destructive", async () => {
+  test("a read-only grant sees no write tool; a write grant sees six more, only the confirmation is destructive", async () => {
     const read = await (await connect(deps().all, READ_GRANT)).listTools();
     expect(read.tools.some((t) => t.name.includes("preview") || t.name.includes("confirm"))).toBe(false);
     const write = await (await connect(deps().all)).listTools();
     const extra = write.tools.filter((t) => !read.tools.some((r) => r.name === t.name));
-    expect(extra.map((t) => t.name).sort()).toEqual(["origens_change_status", "origens_confirm_change", "origens_preview_exchange", "origens_preview_order_item_edit", "origens_preview_product_changes"]);
+    expect(extra.map((t) => t.name).sort()).toEqual(["origens_change_status", "origens_confirm_change", "origens_preview_category_visibility", "origens_preview_exchange", "origens_preview_order_item_edit", "origens_preview_product_changes"]);
     for (const t of write.tools) expect(t.annotations?.destructiveHint).toBe(t.name === "origens_confirm_change");
   });
 
@@ -244,6 +259,20 @@ describe("confirmed changes through MCP", () => {
     expect(writeCaps.data.access).toMatch(/^Leitura e alteração/);
     expect(writeCaps.data.access).toContain("use-sul");
     expect(writeCaps.data.write_tools).toMatchObject({ enabled: true, stores_with_write_credential: ["use-sul"] });
+  });
+
+  test("hiding a category: the preview changes nothing; confirm sends only is_available, once per category", async () => {
+    const { all, write } = deps();
+    const client = await connect(all);
+    const preview = out(await client.callTool({ name: "origens_preview_category_visibility", arguments: { store: "use-sul", categories: ["Território", "Novidades", "3"], visible: false } }));
+    expect(write.sent).toEqual([]);
+    expect(preview.data.preview).toMatchObject({ kind: "category", visible: false, unchanged: [{ category_id: 3 }] });
+    const done = out(await client.callTool({ name: "origens_confirm_change", arguments: { confirmation_code: preview.data.confirmation_code } }));
+    expect(done.data).toMatchObject({ status: "applied", applied: 2, total: 2 });
+    expect(write.sent.map((x) => [x.op, x.target, x.body])).toEqual([["patchCollectionVisibility", "1", { is_available: false }], ["patchCollectionVisibility", "2", { is_available: false }]]);
+    // Nothing to do = no code.
+    const noop = out(await client.callTool({ name: "origens_preview_category_visibility", arguments: { store: "use-sul", categories: ["3"], visible: false } }));
+    expect(noop.data.confirmation_code).toBeNull();
   });
 
   test("ending a sale through MCP sends promotional_price: null to INK, and nothing else", async () => {

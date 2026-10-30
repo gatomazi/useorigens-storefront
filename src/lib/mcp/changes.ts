@@ -363,4 +363,32 @@ export function buildExchangePlan(order: McpOrder, products: ReadonlyMap<string,
   };
 }
 
-export type ChangePlan = ProductPlan | OrderItemEditPlan | ExchangePlan;
+// ── Categories (show or hide a collection at INK) ───────────────────────────────────────────────────────────────────
+
+export const MAX_CATEGORIES_PER_CHANGE = 10;
+export type CategoryChangeInput = { categories: string[]; visible: boolean };
+export type CategoryPlanItem = { category_id: number; name: string; slug: string; before: { visibility: LiveCategory["visibility"] }; after: { visibility: LiveCategory["visibility"] } };
+/** Only the visibility (`is_available`) is ever sent: never the product list, which INK would replace whole (at most 100 ids). */
+export type CategoryPlan = { kind: "category"; store: CommerceStoreKey; visible: boolean; items: CategoryPlanItem[]; unchanged: { category_id: number; name: string }[]; warnings: string[] };
+
+/** Which collections change visibility: each named by id, slug or name among the store's categories read live; one already so is "unchanged". */
+export function buildCategoryPlan(store: CommerceStoreKey, input: CategoryChangeInput, categories: readonly LiveCategory[]): CategoryPlan {
+  const refs = [...new Set(input.categories.map((c) => c.trim()).filter(Boolean))];
+  if (refs.length === 0 || refs.length > MAX_CATEGORIES_PER_CHANGE) throw invalid(`Informe de 1 a ${MAX_CATEGORIES_PER_CHANGE} categorias por alteração.`);
+  if (typeof input.visible !== "boolean") throw invalid("visible: true para mostrar a categoria na loja da INK, false para ocultá-la (vira interna).");
+  const found = refs.map((r) => resolveLiveCategory(categories, r));
+  const unique = found.filter((c, i) => found.findIndex((x) => x.id === c.id) === i);
+  const target: LiveCategory["visibility"] = input.visible ? "public" : "internal";
+  const items: CategoryPlanItem[] = [];
+  const unchanged: CategoryPlan["unchanged"] = [];
+  for (const c of unique) {
+    if (c.visibility === target) unchanged.push({ category_id: c.id, name: c.name });
+    else items.push({ category_id: c.id, name: c.name, slug: c.slug, before: { visibility: c.visibility }, after: { visibility: target } });
+  }
+  const warnings = items.length === 0 ? [] : input.visible
+    ? ["Pública: a categoria passa a aparecer na loja da INK (página da coleção e busca) e na busca do site por nome de coleção."]
+    : ["Interna: a categoria some da loja da INK (página da coleção e busca). Os produtos continuam à venda. No site, uma coleção interna só aparece depois de habilitada na Biblioteca do painel (Coleções); sincronize as coleções para o site saber."];
+  return { kind: "category", store, visible: input.visible, items, unchanged, warnings };
+}
+
+export type ChangePlan = ProductPlan | OrderItemEditPlan | ExchangePlan | CategoryPlan;

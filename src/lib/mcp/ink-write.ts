@@ -11,9 +11,11 @@ import { parseExchange, type McpExchange } from "./exchanges-model";
  *   PATCH /v1/stores/products/{id}   — name, description, price, promotional_price (null ends the sale), visible_in_store, tags, collections
  *                                      (the product's whole set);
  *   PATCH /v1/stores/orders/{id}     — swap items before the factory (same price), `items_editable`;
- *   POST  /v1/stores/exchanges       — open an exchange, `exchangeable`.
+ *   POST  /v1/stores/exchanges       — open an exchange, `exchangeable`;
+ *   PATCH /v1/stores/collections/{id} — ONLY `is_available` (show or hide a collection), `store.categories.write`.
  * Category membership is changed on the PRODUCT (its `collections`), never with PATCH /collections/{id}: that one replaces the whole list
- * of a category and accepts at most 100 ids, so on a large category it would silently drop thousands of products.
+ * of a category and accepts at most 100 ids, so on a large category it would silently drop thousands of products. The collection route is
+ * used for its visibility alone: the body never carries `product_ids` or `kit_ids`.
  */
 const COLLECTIONS_MAX_BYTES = 40 * 1024 * 1024;
 const MAX_COLLECTION_PAGES = 10;
@@ -57,6 +59,13 @@ export async function patchProduct(store: CommerceStoreKey, productId: string, b
   const p = res.product ?? {};
   const s = (v: unknown) => (typeof v === "string" ? v : null);
   return { id: String(p.id ?? productId), name: s(p.name), price: s(p.price), visibleInStore: typeof p.visible_in_store === "boolean" ? p.visible_in_store : null, approvalStatus: s(p.approval_status) };
+}
+
+/** Shows (`is_available: true`) or hides a collection at INK. The body is exactly `{ is_available }`: membership is never sent from here. */
+export async function patchCollectionVisibility(store: CommerceStoreKey, collectionId: number, visible: boolean, idempotencyKey: string, budget: Budget): Promise<{ id: number; visible: boolean | null }> {
+  const res = (await inkCall(store, `/v1/stores/collections/${encodeURIComponent(String(collectionId))}`, budget, { method: "PATCH", body: { is_available: visible }, idempotencyKey })) as { collection?: Record<string, unknown> };
+  const c = res.collection ?? {};
+  return { id: typeof c.id === "number" ? c.id : collectionId, visible: typeof c.is_available === "boolean" ? c.is_available : null };
 }
 
 export type OrderItemSwap = { id: number; product_v2_id: number; product_variant_id: number };
