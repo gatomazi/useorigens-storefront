@@ -29,7 +29,7 @@ import { HOME_THEME_LABEL, hasHomeTheme, isSeasonalTheme, newEditorialTheme, sea
 import type { RegionSlug } from "../geo/regions";
 import type { ProductSort } from "../catalog/product-sort";
 
-export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "featuredRotation" | "heroColors" | "nav" | "customizerCard" | "live" | "tiles" | "grid" | "variant" | "regions">;
+export type Editable = Pick<Section, "title" | "subtitle" | "cta" | "layout" | "source" | "fallback" | "appearance" | "count" | "stateCovers" | "featured" | "featuredRotation" | "hideFeaturedBar" | "heroColors" | "nav" | "customizerCard" | "live" | "tiles" | "grid" | "variant" | "regions">;
 
 export type DraftOp =
   /** `display: "grid"` creates the section already as a product grid (absent = a carousel). */
