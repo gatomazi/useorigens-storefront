@@ -578,6 +578,21 @@ a:hover > .photo img,
   --ink-mute: rgb(255 255 255 / 0.72);
   --line: rgb(255 255 255 / 0.3);
 }
+/*
+ * A dialog opened from inside such a ground (the opening's search, "Sua cidade", the sheets) is a light surface of its own: back to dark text, cards on
+ * their own surface and no glass plate. Every dialog of the store over a page's content is light; the dark mobile menu lives in the header, outside.
+ */
+.page-dark dialog {
+  color: var(--ink);
+  --ink-soft: #33332f;
+  --ink-mute: #56564f;
+  --line: rgb(0 0 0 / 0.22);
+  --card-fill: transparent;
+  --plate-bg: transparent;
+  --plate-blur: none;
+  --plate-pad: 0px;
+  --plate-solid: transparent;
+}
 .on-light {
   color: var(--ink);
   --ink-soft: #33332f;
