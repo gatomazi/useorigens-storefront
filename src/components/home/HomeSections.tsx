@@ -29,7 +29,8 @@ import { heroCards, heroSlides } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
-import { checkpointStates, todayInBrasilia } from "@/lib/site-config/checkpoints";
+import { checkpointStates, daysBetween, periodLabel, periodState, todayInBrasilia } from "@/lib/site-config/checkpoints";
+import { LockedShelf } from "./LockedShelf";
 import { WeeklyCheckpoints, type CheckpointView } from "./WeeklyCheckpoints";
 import { customizerFigure, firstImageSectionId, focalToCss, hasImage, mediaFigure, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
 import { cardBuy, cardButtonOf, type CardBuy } from "@/lib/site-config/cards-schema";
@@ -96,6 +97,11 @@ export function HomeSections({
             // The "feature" opening: the colour paints the product half, and a picture takes the product's place there as a banner.
             const feature = s.variant === "feature";
             const panelColor = feature && bg.fill.kind !== "none" ? cssColor(bg.fill.kind === "solid" ? bg.fill.color : bg.fill.from) : undefined;
+            // The opening's texts of today (the Black Month calendar), when an entry covers it: its title (else the section's), text and button.
+            const entry = s.heroSchedule?.find((e) => e.from <= today && today <= e.to);
+            const heroTitle = entry?.title ?? s.title;
+            const heroText = entry?.subtitle ?? s.subtitle;
+            const ctaHref = entry?.cta ? destinationHref(entry.cta.dest, links, region) : null;
             return (
               <RegionHero
                 key={s.id}
@@ -103,9 +109,10 @@ export function HomeSections({
                 cityCount={home.cityCount}
                 trio={heroCards(region, s.featured, home.heroFamilies)}
                 config={{}}
-                copy={s.title && s.subtitle ? { title: s.title, body: s.subtitle } : undefined}
+                copy={heroTitle && heroText ? { title: heroTitle, body: heroText } : undefined}
                 backdrop={feature ? null : <SectionBackdrop bg={bg} priority={priorityId === s.id} />}
                 variant={feature ? "feature" : undefined}
+                cta={feature && entry?.cta && ctaHref ? { label: entry.cta.label, href: ctaHref } : undefined}
                 buy={cardButton}
                 statesAnchor={statesAnchor}
                 panelColor={panelColor}
@@ -232,6 +239,20 @@ export function HomeSections({
           }
 
           case "product-carousel": {
+            // Outside its period (the Black Month calendar), the shelf stays behind glass: nothing of the offer is sent before or after it.
+            const when = s.period ? periodState(s.period, today) : "running";
+            if (s.period && when !== "running") {
+              return (
+                <LockedShelf
+                  key={s.id}
+                  anchor={s.anchor}
+                  heading={when === "locked" ? s.period.label ?? "Oferta surpresa" : s.title ?? s.period.label ?? "Oferta encerrada"}
+                  state={when}
+                  period={periodLabel(s.period)}
+                  {...(when === "locked" && s.period.opensAt ? { daysLeft: daysBetween(today, s.period.opensAt) } : {})}
+                />
+              );
+            }
             const source = s.source;
             const manual = source?.kind === "ink-category" && arrangementOf(doc, source.store, source.collectionId, source)?.productIds?.length;
             const configuredSort = manual ? "collection" : source?.sort ?? page?.defaultSort ?? "collection";
@@ -295,11 +316,12 @@ export function HomeSections({
                 label: t.label,
                 ...(t.caption ? { caption: t.caption } : {}),
                 cta: t.cta ?? "Ver ofertas",
-                // A locked week never carries its link (the offer is a surprise until its day).
-                href: states[i] === "locked" ? null : destinationHref(t.dest, links, region),
+                // A locked week never carries its link (the offer is a surprise until its day), an ended one no longer does.
+                href: states[i] === "locked" || states[i] === "ended" ? null : destinationHref(t.dest, links, region),
                 external: t.dest.kind === "external" || t.dest.kind === "ink-collection",
                 ...(t.opensAt ? { opensAt: t.opensAt } : {}),
-                ...(states[i] === "locked" && t.opensAt ? { daysLeft: Math.round((Date.parse(`${t.opensAt}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000) } : {}),
+                ...(t.closesAt && periodLabel(t) ? { period: periodLabel(t)! } : {}),
+                ...(states[i] === "locked" && t.opensAt ? { daysLeft: daysBetween(today, t.opensAt) } : {}),
                 highlight: t.highlight === true,
                 state: states[i],
               }));

@@ -5,6 +5,7 @@ import { FOLLOW_SOURCE, REGION_TOKEN } from "@/lib/site-config/follow-schema";
 import { useMemo, useState } from "react";
 import { CollectionCombobox, type ComboEntry } from "@/components/admin/CollectionCombobox";
 import { CollectionOrder, type OrderMember } from "@/components/admin/CollectionOrder";
+import { HeroScheduleEditor } from "@/components/admin/HeroScheduleEditor";
 import { GridTilesEditor } from "@/components/admin/GridTilesEditor";
 import { HeroColorsEditor } from "@/components/admin/HeroColorsEditor";
 import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
@@ -326,6 +327,10 @@ export function SectionEditorForm({
         />
       )}
 
+      {!regional && section.template === "hero" && section.variant === "feature" && (
+        <HeroScheduleEditor scope={scope} entries={section.heroSchedule ?? []} pages={pages} collections={pageEntries} anchors={anchors.filter((x) => x.anchor !== section.anchor)} />
+      )}
+
       {!regional && section.template === "hero" && <HeroColorsEditor colors={section.heroColors} feature={section.variant === "feature"} sectionGround={fillKind === "solid" && choice === "custom" ? solid : undefined} />}
 
       {section.template === "hero" && featured && (
@@ -438,6 +443,19 @@ export function SectionEditorForm({
           {ctaKind === "anchor" && <AnchorPicker anchors={anchors} current={section.cta?.dest.kind === "anchor" ? section.cta.dest.anchor : ""} />}
           {ctaKind === "route" && <div><label className="a-label" htmlFor="cta_route">Caminho (dentro de /{scope})</label><input id="cta_route" name="cta_route" defaultValue={section.cta?.dest.kind === "route" ? section.cta.dest.path : `/${scope}`} className="a-input" placeholder={`/${scope}/pa`} /><p className="a-muted mt-1 text-[0.8125rem]">Ex.: <code>/{scope}</code> ou a página de um estado. Um caminho de outra região é recusado.</p></div>}
           {ctaKind === "external" && <div><label className="a-label" htmlFor="cta_url">URL (https, hosts Use Sul/Norte/Centro)</label><input id="cta_url" name="cta_url" defaultValue={section.cta?.dest.kind === "external" ? section.cta.dest.url : ""} className="a-input" placeholder="https://www.usenorte.com.br/" /></div>}
+        </fieldset>
+      )}
+
+      {!regional && isCarousel && (
+        <fieldset className="space-y-3" data-testid="period">
+          <legend className="a-h2 mb-2">Período da oferta (opcional)</legend>
+          <input type="hidden" name="period_present" value="1" />
+          <p className="a-muted max-w-3xl text-[0.875rem]">Para o calendário da Black: fora do período, a vitrine fica atrás de um vidro com o cadeado. Antes de abrir, a loja não mostra nenhum produto nem o título (que diz qual é a oferta), só o rótulo abaixo e o período. Depois de encerrar, mostra “Oferta encerrada”. Dias no horário de Brasília, os dois inclusive. Sem datas, a vitrine aparece sempre.</p>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div><label className="a-label" htmlFor="period_from">Abre em</label><input id="period_from" name="period_from" type="date" defaultValue={section.period?.opensAt ?? ""} className="a-input" /></div>
+            <div><label className="a-label" htmlFor="period_to">Encerra em (inclusive)</label><input id="period_to" name="period_to" type="date" defaultValue={section.period?.closesAt ?? ""} className="a-input" /></div>
+            <div><label className="a-label" htmlFor="period_label">Rótulo enquanto fechada</label><input id="period_label" name="period_label" defaultValue={section.period?.label ?? ""} className="a-input" maxLength={40} placeholder="Semana 2" /></div>
+          </div>
         </fieldset>
       )}
 

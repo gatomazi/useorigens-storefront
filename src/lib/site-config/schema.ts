@@ -220,9 +220,14 @@ export type GridTile = {
    * block is a padlock with the date and nothing else (no name of the offer, no link); from it on it stays open. Absent = open from the start.
    */
   opensAt?: string;
+  /** "Checkpoints" only: the last day of the block's offer (included, Brasília). After it the block says "Encerrada", without its link. Absent = for good. */
+  closesAt?: string;
   /** "Checkpoints" only: the block in evidence (the week of Black Friday itself), drawn in the campaign's yellow. */
   highlight?: boolean;
 };
+/** One period of the opening's texts (`Section.heroSchedule`). */
+export type HeroScheduleEntry = { from: string; to: string; title?: string; subtitle?: string; cta?: { label: string; dest: Destination } };
+export const MAX_HERO_SCHEDULE = 12;
 /** A day in Brasília time, YYYY-MM-DD (a checkpoint's `opensAt`). */
 export const CHECKPOINT_DAY = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 /** A real calendar day (no 31/11: the date read back is the same). */
@@ -287,6 +292,18 @@ export type Section = {
    * without a banner keeps its bar (it is the only place its name and price show). Absent = the bar, as always.
    */
   hideFeaturedBar?: true;
+  /**
+   * Hero only: the opening's texts by period (the Black Month calendar: the eve, each week, the day between two weeks). On a day inside an entry, its
+   * title (absent = the section's), its text and its button replace the section's; with a button, the button takes the search field's place (the
+   * header keeps the search). Days in Brasília time, both ends included; entries never overlap. Outside every entry, the section's own texts.
+   */
+  heroSchedule?: HeroScheduleEntry[];
+  /**
+   * Product sections only: the period of the offer they show (Brasília, both ends included). Before it, a frosted panel with the padlock and the day it
+   * opens over placeholder cards (no product is sent: the offer is a surprise), headed by `label` ("Semana 2") instead of the title, which names the
+   * offer; after it, the same panel saying it ended; in it, the section as always.
+   */
+  period?: { opensAt?: string; closesAt?: string; label?: string };
   /** Hero "feature" only: the colours of the reading half (`HERO_COLOR_KEYS`); absent (or a key absent) = the theme's own. */
   heroColors?: HeroColors;
   /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. `dest` sends the link to a page instead of this section. */
@@ -895,6 +912,37 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     }
   }
   if (v.hideFeaturedBar !== undefined && (v.template !== "hero" || v.hideFeaturedBar !== true)) c.fail(`${path}.hideFeaturedBar`, "hero only: true or absent");
+  if (v.heroSchedule !== undefined) {
+    if (v.template !== "hero" || !Array.isArray(v.heroSchedule) || v.heroSchedule.length > MAX_HERO_SCHEDULE) c.fail(`${path}.heroSchedule`, `hero only, 0..${MAX_HERO_SCHEDULE} entries`);
+    else {
+      const ranges: [string, string][] = [];
+      v.heroSchedule.forEach((e, i) => {
+        const at = `${path}.heroSchedule[${i}]`;
+        if (!isRecord(e)) return c.fail(at, "must be an object");
+        const from = e.from, to = e.to;
+        if (!isCheckpointDay(from) || !isCheckpointDay(to) || to < from) return c.fail(at, "from/to: days YYYY-MM-DD, to on or after from");
+        if (e.title !== undefined && !isStr(e.title, 120)) c.fail(`${at}.title`, "1..120 chars");
+        if (e.subtitle !== undefined && !isStr(e.subtitle, 300)) c.fail(`${at}.subtitle`, "1..300 chars");
+        if (e.cta !== undefined) {
+          if (!isRecord(e.cta) || !isStr(e.cta.label, 32)) c.fail(`${at}.cta.label`, "1..32 chars");
+          else checkDestination(c, `${at}.cta.dest`, e.cta.dest);
+        }
+        if (e.title === undefined && e.subtitle === undefined && e.cta === undefined) c.fail(at, "a title, a text or a button");
+        if (ranges.some(([f, t]) => !(to < f || from > t))) c.fail(at, "overlaps another entry");
+        ranges.push([from, to]);
+      });
+    }
+  }
+  if (v.period !== undefined) {
+    const p = v.period;
+    if (v.template !== "product-carousel" || !isRecord(p) || (p.opensAt === undefined && p.closesAt === undefined)) c.fail(`${path}.period`, "product sections only: { opensAt?, closesAt? }, at least one");
+    else {
+      if (p.opensAt !== undefined && !isCheckpointDay(p.opensAt)) c.fail(`${path}.period.opensAt`, "a day, YYYY-MM-DD");
+      if (p.closesAt !== undefined && !isCheckpointDay(p.closesAt)) c.fail(`${path}.period.closesAt`, "a day, YYYY-MM-DD");
+      if (isCheckpointDay(p.opensAt) && isCheckpointDay(p.closesAt) && p.closesAt < p.opensAt) c.fail(`${path}.period.closesAt`, "on or after opensAt");
+      if (p.label !== undefined && !isStr(p.label, 40)) c.fail(`${path}.period.label`, "1..40 chars");
+    }
+  }
   if (v.featuredRotation !== undefined && (v.template !== "hero" || !(FEATURED_ROTATIONS as readonly unknown[]).includes(v.featuredRotation))) c.fail(`${path}.featuredRotation`, `hero only: ${FEATURED_ROTATIONS.join(" | ")}`);
   if (v.nav !== undefined) {
     if (v.template === "hero" || v.template === "footer" || v.template === "page-hero" || !isRecord(v.nav) || !isStr(v.nav.label, 24)) c.fail(`${path}.nav`, "not for the hero or footer; label 1..24 characters");
@@ -961,9 +1009,11 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       if (t.tone !== undefined && (!styled || (t.tone !== "light" && t.tone !== "dark"))) c.fail(`${at}.tone`, "product or banner tiles only: light | dark");
       if (t.veil !== undefined && (t.format === "product" || !(TILE_VEILS as readonly unknown[]).includes(t.veil))) c.fail(`${at}.veil`, `banner or classic tiles only: ${TILE_VEILS.join(" | ")}`);
       if (t.cta !== undefined && (!isStr(t.cta, MAX_TILE_CTA) || t.cta.trim() !== t.cta)) c.fail(`${at}.cta`, `1..${MAX_TILE_CTA} chars, no leading or trailing spaces`);
-      if (t.opensAt !== undefined || t.highlight !== undefined) {
+      if (t.opensAt !== undefined || t.closesAt !== undefined || t.highlight !== undefined) {
         if (v.variant !== "checkpoints") c.fail(`${at}.opensAt`, "the checkpoints composition only");
         if (t.opensAt !== undefined && !isCheckpointDay(t.opensAt)) c.fail(`${at}.opensAt`, "a day, YYYY-MM-DD");
+        if (t.closesAt !== undefined && !isCheckpointDay(t.closesAt)) c.fail(`${at}.closesAt`, "a day, YYYY-MM-DD");
+        if (isCheckpointDay(t.opensAt) && isCheckpointDay(t.closesAt) && t.closesAt < t.opensAt) c.fail(`${at}.closesAt`, "on or after opensAt");
         if (t.highlight !== undefined && t.highlight !== true) c.fail(`${at}.highlight`, "true or absent");
       }
       // A product tile shows a shirt OF its destination: only a collection has one.

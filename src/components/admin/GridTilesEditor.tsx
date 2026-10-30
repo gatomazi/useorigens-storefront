@@ -12,10 +12,10 @@ type Row = {
   /** "" = the classic tile. */
   format: "" | TileFormat; color: string; tone: "" | "light" | "dark"; veil: "" | "soft" | "strong"; cta: string; imageMobile: string; alt: string; fmx: number; fmy: number; fdx: number; fdy: number;
   /** Checkpoints: the day it opens (YYYY-MM-DD, "" = open from the start) and whether it is the block in evidence. */
-  opensAt: string; highlight: boolean;
+  opensAt: string; closesAt: string; highlight: boolean;
 };
 
-const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "", customizer: "", format: "", color: "", tone: "", veil: "", cta: "", imageMobile: "", alt: "", fmx: 50, fmy: 50, fdx: 50, fdy: 50, opensAt: "", highlight: false });
+const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "", customizer: "", format: "", color: "", tone: "", veil: "", cta: "", imageMobile: "", alt: "", fmx: 50, fmy: 50, fdx: 50, fdy: 50, opensAt: "", closesAt: "", highlight: false });
 
 /** The card colours offered first (the theme's own, then a few warm grounds that sit well with the region's palette); any #rrggbb is accepted too. */
 const COLOR_CHOICES = [
@@ -53,6 +53,7 @@ function toRow(t: GridTile, key: number, scope: string): Row {
     fdx: t.focal?.desktop.x ?? 50,
     fdy: t.focal?.desktop.y ?? 50,
     opensAt: t.opensAt ?? "",
+    closesAt: t.closesAt ?? "",
     highlight: t.highlight === true,
   };
 }
@@ -139,7 +140,7 @@ export function GridTilesEditor({
         <legend className="a-h2 mb-3">Blocos</legend>
         <input type="hidden" name="tile_count" value={rows.length} />
         {checkpoints ? (
-          <p className="a-muted text-[0.875rem]">Um bloco por semana, na ordem da lista (de {MIN_GRID_TILES} a {MAX_GRID_TILES}). Antes da data de abertura, a loja mostra só o nome do bloco (“Semana 3”), um cadeado e “Abre 16/11”: a legenda, a chamada e o link aparecem a partir do dia, à meia-noite de Brasília (até uma hora depois, pelo cache da loja). Na legenda, diga o que entra em promoção. Para conferir um dia antes dele chegar, abra a prévia com <code>&amp;data=2026-11-16</code>.</p>
+          <p className="a-muted text-[0.875rem]">Um bloco por semana, na ordem da lista (de {MIN_GRID_TILES} a {MAX_GRID_TILES}). Cada bloco vale do dia em que abre até o dia em que encerra, os dois inclusive, no horário de Brasília (a loja vira em até um minuto depois da meia-noite). Antes de abrir, a loja mostra só o nome do bloco (“Semana 3”), um cadeado e o período (“16–22/11”): a legenda, a chamada e o link aparecem a partir do dia. Depois de encerrar, o bloco diz “Encerrada” e perde o link. Na legenda, diga o que entra em promoção. Para conferir um dia antes dele chegar, abra a prévia com <code>&amp;data=2026-11-16</code>.</p>
         ) : (
           <p className="a-muted text-[0.875rem]">De {MIN_GRID_TILES} a {MAX_GRID_TILES} blocos, na ordem da lista. As imagens vêm de Mídia (envie lá as fotos de cada peça ou coleção). Sem imagem, o bloco vira uma placa na cor da região.</p>
         )}
@@ -172,8 +173,9 @@ export function GridTilesEditor({
                       <div><label className="a-label" htmlFor={id("caption")}>{checkpoints ? "O que entra em promoção (opcional)" : "Legenda (opcional)"}</label><input id={id("caption")} name={id("caption")} value={r.caption} onChange={(e) => patch(r.key, { caption: e.target.value })} className="a-input" maxLength={80} placeholder={checkpoints ? "Kids, Canecas e Fala Daqui" : "Do mapa às coordenadas"} /></div>
                     </div>
                     {checkpoints && (
-                      <div className="grid gap-3 md:grid-cols-3">
+                      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
                         <div><label className="a-label" htmlFor={id("opens")}>Abre em</label><input id={id("opens")} name={id("opens")} type="date" value={r.opensAt} onChange={(e) => patch(r.key, { opensAt: e.target.value })} className="a-input" /></div>
+                        <div><label className="a-label" htmlFor={id("closes")}>Encerra em (inclusive)</label><input id={id("closes")} name={id("closes")} type="date" value={r.closesAt} min={r.opensAt || undefined} onChange={(e) => patch(r.key, { closesAt: e.target.value })} className="a-input" /></div>
                         <div><label className="a-label" htmlFor={id("cta")}>Chamada</label><input id={id("cta")} name={id("cta")} value={r.cta} onChange={(e) => patch(r.key, { cta: e.target.value })} className="a-input" maxLength={MAX_TILE_CTA} placeholder="Ver ofertas" /></div>
                         <label className="flex items-center gap-2 self-end pb-2 font-bold"><input type="checkbox" name={id("highlight")} checked={r.highlight} onChange={(e) => patch(r.key, { highlight: e.target.checked })} /> Destaque (a semana da Black)</label>
                       </div>

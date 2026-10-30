@@ -27,7 +27,9 @@ import { organization, webSite } from "@/lib/seo/jsonld";
 import { pageOpenGraph } from "@/lib/seo/open-graph";
 import { INSTAGRAM_URLS, SITE_URL } from "@/lib/site";
 
-export const revalidate = 3600;
+// One minute (it was an hour): the Black Month calendar opens and closes its weeks at Brasília midnight (src/lib/site-config/checkpoints.ts), and
+// an ended offer must not keep showing as active. Regenerating a page at most once a minute is cheap.
+export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: Promise<{ region: string }> }): Promise<Metadata> {
   const { region } = await params;
