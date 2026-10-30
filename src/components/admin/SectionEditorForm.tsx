@@ -53,6 +53,10 @@ const VARIANT_CHOICES: Partial<Record<Section["template"], readonly (readonly [s
     ["", "Bloco escuro", "O texto sobre a foto (com véu) ou sobre a cor, com recortes de camisetas quando não há foto."],
     ["split", "Dividida", "A foto de um lado (ou recortes de camisetas reais) e o texto sobre a cor do outro, de ponta a ponta. A cor do fundo pinta o lado do texto; sem cor, usa a da região."],
   ],
+  "image-grid": [
+    ["", "Grade", "Blocos com imagem e nome, cada um levando a uma coleção, página ou categoria."],
+    ["checkpoints", "Checkpoints semanais", "Uma oferta por semana: cada bloco abre num dia (antes disso, só um cadeado com a data, sem revelar a oferta nem o link) e continua aberto depois. O bloco da semana em curso ganha “Esta semana”; o marcado como destaque vem em amarelo."],
+  ],
 };
 
 export const previewSrc = (m: MediaOption | undefined) => (m ? (m.kind === "banner" ? m.src.replace(/\.[a-z]+$/i, "-640.webp") : m.src) : undefined);
@@ -143,6 +147,8 @@ export function SectionEditorForm({
 
   const [tone, setTone] = useState<"light" | "dark">(isCarousel ? section.layout?.tone ?? "light" : section.template === "campaign" ? "dark" : section.template === "page-hero" ? section.layout?.tone ?? "dark" : "light");
   const [fillKind, setFillKind] = useState<"none" | "solid" | "gradient">(a.fill.kind);
+  // The composition being chosen (the grid shows the checkpoint fields only in "Checkpoints semanais", before it is saved).
+  const [variantNow, setVariantNow] = useState<string>(section.variant ?? "");
   const initialChoice = a.fill.kind === "solid" ? (a.fill.color.startsWith("token:") ? a.fill.color : "custom") : "token:ground";
   const [choice, setChoice] = useState<string>(initialChoice);
   const [solid, setSolid] = useState<string>(a.fill.kind === "solid" && !a.fill.color.startsWith("token:") ? a.fill.color : "#4d543d");
@@ -234,7 +240,7 @@ export function SectionEditorForm({
             <div className="flex flex-wrap gap-3">
               {VARIANT_CHOICES[section.template]!.map(([value, label, help]) => (
                 <label key={value || "original"} className="flex max-w-xs cursor-pointer gap-2 border border-black/20 p-3 has-[:checked]:border-black has-[:checked]:bg-white">
-                  <input type="radio" name="variant" value={value} defaultChecked={(section.variant ?? "") === value} className="mt-1" data-testid={`variant-${value || "original"}`} />
+                  <input type="radio" name="variant" value={value} defaultChecked={(section.variant ?? "") === value} onChange={() => setVariantNow(value)} className="mt-1" data-testid={`variant-${value || "original"}`} />
                   <span><span className="block font-bold">{label}</span><span className="a-muted block text-[0.8125rem]">{help}</span></span>
                 </label>
               ))}
@@ -316,6 +322,7 @@ export function SectionEditorForm({
           pages={pages}
           anchors={anchors.filter((x) => x.anchor !== section.anchor)}
           customizers={customizers}
+          checkpoints={variantNow === "checkpoints"}
         />
       )}
 

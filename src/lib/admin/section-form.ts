@@ -3,7 +3,7 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, MAX_LIVE_EXAMPLES, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
+import { isCheckpointDay, FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, MAX_LIVE_EXAMPLES, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
 import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, TILE_VEILS, type TileFormat, type TileVeil, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { REGION_SLUGS, STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
@@ -137,6 +137,11 @@ export function parseGridTiles(f: Fields): { tiles: GridTile[]; problems: string
     }
     const cta = str(f, `tile_${i}_cta`).slice(0, MAX_TILE_CTA).trim();
     if (cta) tile.cta = cta;
+    // Checkpoints: the day the block opens (the browser's date field posts YYYY-MM-DD) and the block in evidence. Only posted in that composition.
+    const opensAt = str(f, `tile_${i}_opens`);
+    if (opensAt && !isCheckpointDay(opensAt)) problems.push(`Bloco ${n} ("${label}"): a data de abertura não é válida.`);
+    else if (opensAt) tile.opensAt = opensAt;
+    if (f.get(`tile_${i}_highlight`) !== null) tile.highlight = true;
     // A veil behind the text: only where text sits on a picture (never the product card, whose text is on a plain colour).
     const veil = str(f, `tile_${i}_veil`);
     if (format !== "product" && (TILE_VEILS as readonly string[]).includes(veil)) tile.veil = veil as TileVeil;

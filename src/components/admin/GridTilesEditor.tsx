@@ -11,9 +11,11 @@ type Row = {
   key: number; label: string; caption: string; image: string; kind: DestKind; collection: string; page: string; route: string; url: string; anchor: string; customizer: string;
   /** "" = the classic tile. */
   format: "" | TileFormat; color: string; tone: "" | "light" | "dark"; veil: "" | "soft" | "strong"; cta: string; imageMobile: string; alt: string; fmx: number; fmy: number; fdx: number; fdy: number;
+  /** Checkpoints: the day it opens (YYYY-MM-DD, "" = open from the start) and whether it is the block in evidence. */
+  opensAt: string; highlight: boolean;
 };
 
-const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "", customizer: "", format: "", color: "", tone: "", veil: "", cta: "", imageMobile: "", alt: "", fmx: 50, fmy: 50, fdx: 50, fdy: 50 });
+const emptyRow = (key: number, scope: string): Row => ({ key, label: "", caption: "", image: "", kind: "collection-page", collection: "", page: "", route: `/${scope}`, url: "", anchor: "", customizer: "", format: "", color: "", tone: "", veil: "", cta: "", imageMobile: "", alt: "", fmx: 50, fmy: 50, fdx: 50, fdy: 50, opensAt: "", highlight: false });
 
 /** The card colours offered first (the theme's own, then a few warm grounds that sit well with the region's palette); any #rrggbb is accepted too. */
 const COLOR_CHOICES = [
@@ -50,6 +52,8 @@ function toRow(t: GridTile, key: number, scope: string): Row {
     fmy: t.focal?.mobile.y ?? 50,
     fdx: t.focal?.desktop.x ?? 50,
     fdy: t.focal?.desktop.y ?? 50,
+    opensAt: t.opensAt ?? "",
+    highlight: t.highlight === true,
   };
 }
 
@@ -60,7 +64,7 @@ const ASPECT_CLASS: Record<GridLayout["aspect"], string> = { square: "aspect-squ
  * rows post as `tile_<i>_*` in their current order plus `tile_count`, parsed by `parseGridTiles` (src/lib/admin/section-form.ts).
  */
 export function GridTilesEditor({
-  scope, tiles, layout, media, thumbOf, collections, pages, anchors, customizers = [],
+  scope, tiles, layout, media, thumbOf, collections, pages, anchors, customizers = [], checkpoints = false,
 }: {
   scope: string;
   tiles: GridTile[];
@@ -73,6 +77,8 @@ export function GridTilesEditor({
   anchors: { anchor: string; label: string }[];
   /** The region's personalisation models ("Localidade", "Canecas"…), for a tile that opens one. */
   customizers?: { id: string; name: string; active: boolean }[];
+  /** "Checkpoints semanais": each block has the day it opens and may be the one in evidence; no picture, format or grid layout. */
+  checkpoints?: boolean;
 }) {
   const nextKey = useRef(tiles.length);
   const [rows, setRows] = useState<Row[]>(() => tiles.map((t, i) => toRow(t, i, scope)));
@@ -95,6 +101,8 @@ export function GridTilesEditor({
 
   return (
     <>
+      {checkpoints && <input type="hidden" name="grid_present" value="1" />}
+      {!checkpoints && (
       <fieldset className="space-y-4">
         <legend className="a-h2 mb-3">Layout da grade</legend>
         <input type="hidden" name="grid_present" value="1" />
@@ -125,11 +133,16 @@ export function GridTilesEditor({
         </div>
         <p className="a-muted text-[0.8125rem]">No celular, a grade mostra sempre dois blocos lado a lado.</p>
       </fieldset>
+      )}
 
       <fieldset className="space-y-4">
         <legend className="a-h2 mb-3">Blocos</legend>
         <input type="hidden" name="tile_count" value={rows.length} />
-        <p className="a-muted text-[0.875rem]">De {MIN_GRID_TILES} a {MAX_GRID_TILES} blocos, na ordem da lista. As imagens vêm de Mídia (envie lá as fotos de cada peça ou coleção). Sem imagem, o bloco vira uma placa na cor da região.</p>
+        {checkpoints ? (
+          <p className="a-muted text-[0.875rem]">Um bloco por semana, na ordem da lista (de {MIN_GRID_TILES} a {MAX_GRID_TILES}). Antes da data de abertura, a loja mostra só o nome do bloco (“Semana 3”), um cadeado e “Abre 16/11”: a legenda, a chamada e o link aparecem a partir do dia, à meia-noite de Brasília (até uma hora depois, pelo cache da loja). Na legenda, diga o que entra em promoção. Para conferir um dia antes dele chegar, abra a prévia com <code>&amp;data=2026-11-16</code>.</p>
+        ) : (
+          <p className="a-muted text-[0.875rem]">De {MIN_GRID_TILES} a {MAX_GRID_TILES} blocos, na ordem da lista. As imagens vêm de Mídia (envie lá as fotos de cada peça ou coleção). Sem imagem, o bloco vira uma placa na cor da região.</p>
+        )}
         <ol className="space-y-4">
           {rows.map((r, i) => {
             const id = (field: string) => `tile_${i}_${field}`;
@@ -144,18 +157,28 @@ export function GridTilesEditor({
                     <button type="button" className="a-btn ghost sm" onClick={() => remove(r.key)} disabled={rows.length <= MIN_GRID_TILES} aria-label={`Remover o bloco ${i + 1}`}>Remover</button>
                   </div>
                 </div>
-                <div className="mt-3 grid gap-4 md:grid-cols-[7rem_1fr]">
+                <div className={`mt-3 grid gap-4 ${checkpoints ? "" : "md:grid-cols-[7rem_1fr]"}`}>
+                  {!checkpoints && (
                   <div className={`relative w-28 overflow-hidden border border-black/20 ${thumb ? "bg-neutral-200" : "bg-[#4d543d]"} ${ASPECT_CLASS[aspect]}`} aria-hidden>
                     {thumb && (
                       // eslint-disable-next-line @next/next/no-img-element -- an admin thumbnail of the chosen media
                       <img src={thumb} alt="" className="absolute inset-0 h-full w-full object-cover" />
                     )}
                   </div>
+                  )}
                   <div className="space-y-3">
                     <div className="grid gap-3 md:grid-cols-2">
-                      <div><label className="a-label" htmlFor={id("label")}>Nome</label><input id={id("label")} name={id("label")} value={r.label} onChange={(e) => patch(r.key, { label: e.target.value })} className="a-input" maxLength={40} placeholder="Camisetas" required /></div>
-                      <div><label className="a-label" htmlFor={id("caption")}>Legenda (opcional)</label><input id={id("caption")} name={id("caption")} value={r.caption} onChange={(e) => patch(r.key, { caption: e.target.value })} className="a-input" maxLength={80} placeholder="Do mapa às coordenadas" /></div>
+                      <div><label className="a-label" htmlFor={id("label")}>Nome</label><input id={id("label")} name={id("label")} value={r.label} onChange={(e) => patch(r.key, { label: e.target.value })} className="a-input" maxLength={40} placeholder={checkpoints ? "Semana 1" : "Camisetas"} required /></div>
+                      <div><label className="a-label" htmlFor={id("caption")}>{checkpoints ? "O que entra em promoção (opcional)" : "Legenda (opcional)"}</label><input id={id("caption")} name={id("caption")} value={r.caption} onChange={(e) => patch(r.key, { caption: e.target.value })} className="a-input" maxLength={80} placeholder={checkpoints ? "Kids, Canecas e Fala Daqui" : "Do mapa às coordenadas"} /></div>
                     </div>
+                    {checkpoints && (
+                      <div className="grid gap-3 md:grid-cols-3">
+                        <div><label className="a-label" htmlFor={id("opens")}>Abre em</label><input id={id("opens")} name={id("opens")} type="date" value={r.opensAt} onChange={(e) => patch(r.key, { opensAt: e.target.value })} className="a-input" /></div>
+                        <div><label className="a-label" htmlFor={id("cta")}>Chamada</label><input id={id("cta")} name={id("cta")} value={r.cta} onChange={(e) => patch(r.key, { cta: e.target.value })} className="a-input" maxLength={MAX_TILE_CTA} placeholder="Ver ofertas" /></div>
+                        <label className="flex items-center gap-2 self-end pb-2 font-bold"><input type="checkbox" name={id("highlight")} checked={r.highlight} onChange={(e) => patch(r.key, { highlight: e.target.checked })} /> Destaque (a semana da Black)</label>
+                      </div>
+                    )}
+                    {!checkpoints && (<>
                     <div className="grid gap-3 md:grid-cols-2">
                       <div>
                         <label className="a-label" htmlFor={id("format")}>Formato do card</label>
@@ -253,6 +276,7 @@ export function GridTilesEditor({
                         <p className="a-muted text-[0.8125rem]">O nome e a chamada ficam na parte de baixo da imagem, sobre um véu. Enquadre a imagem para que a estampa ou o detalhe importante fique na parte de cima.</p>
                       </>
                     )}
+                    </>)}
                     <div className="grid gap-3 md:grid-cols-2">
                       <div>
                         <label className="a-label" htmlFor={id("kind")}>Leva para</label>
