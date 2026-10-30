@@ -298,6 +298,7 @@ export function HomeSections({
                 href: states[i] === "locked" ? null : destinationHref(t.dest, links, region),
                 external: t.dest.kind === "external" || t.dest.kind === "ink-collection",
                 ...(t.opensAt ? { opensAt: t.opensAt } : {}),
+                ...(states[i] === "locked" && t.opensAt ? { daysLeft: Math.round((Date.parse(`${t.opensAt}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000) } : {}),
                 highlight: t.highlight === true,
                 state: states[i],
               }));
