@@ -38,11 +38,11 @@ const Arrow = ({ className = "h-4 w-4" }: { className?: string }) => (
 
 /**
  * The line with the padlock: the period of a locked week ("02–07/11"; "Abre 02/11" when it has no end), "Esta semana · 09–15/11", "Encerrada ·
- * 02–07/11", or "Valendo" for an earlier week without an end (its offer still holds).
+ * 02–07/11", or "Valendo · 02–07/11" for an earlier week whose offer still holds (no end, or offers that accumulate).
  */
 function Status({ it }: { it: CheckpointView }) {
   const with_ = (word: string) => (it.period ? `${word} · ${it.period}` : word);
-  const text = it.state === "locked" ? it.period ?? `Abre ${it.opensAt ? dayMonth(it.opensAt) : "em breve"}` : it.state === "current" ? with_("Esta semana") : it.state === "ended" ? with_("Encerrada") : it.period ?? "Valendo";
+  const text = it.state === "locked" ? it.period ?? `Abre ${it.opensAt ? dayMonth(it.opensAt) : "em breve"}` : it.state === "current" ? with_("Esta semana") : it.state === "ended" ? with_("Encerrada") : with_("Valendo");
   return (
     <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-[0.6875rem] font-bold uppercase tabular-nums tracking-[0.1em]">
       <Padlock open={it.state === "current" || it.state === "open"} />
@@ -85,14 +85,21 @@ function Card({ href, external, current, className, style, children }: { href: s
  * Phones keep it short: the current and the evidence weeks as cards, every other week as one line. From 1024px, all side by side. Server-rendered:
  * the lock turns when the page is regenerated after Brasília midnight.
  */
-export function WeeklyCheckpoints({ anchor, headingId, title, subtitle, items }: { anchor: string; headingId: string; title: string; subtitle?: string; items: CheckpointView[] }) {
+export function WeeklyCheckpoints({ anchor, headingId, title, subtitle, items, opening = false }: { anchor: string; headingId: string; title: string; subtitle?: string; items: CheckpointView[]; /** It opens the page (the page hero hidden): its title is the page's h1, in the display face, under the opening's yellow rule. */ opening?: boolean }) {
   const running = items.find((it) => it.state === "current");
   const cols = { "--cp-cols": items.map((it) => (it.highlight ? "1.3fr" : "1fr")).join(" "), "--cp-n": `repeat(${items.length}, minmax(0, 1fr))` } as CSSProperties;
   return (
-    <section id={anchor} aria-labelledby={headingId} className="wrap py-12 lg:py-20" data-testid="checkpoints">
-      <div className="ground-plate mb-7 w-fit max-w-2xl lg:mb-9">
-        <h2 id={headingId} className="t-h2 [text-wrap:balance]">{title}</h2>
-        {subtitle && <p className="t-body mt-2.5 max-w-[60ch] text-ink-soft">{subtitle}</p>}
+    <section id={anchor} aria-labelledby={headingId} className={`wrap ${opening ? "pb-12 pt-10 lg:pb-20 lg:pt-16" : "py-12 lg:py-20"}`} data-testid="checkpoints">
+      <div className="ground-plate mb-7 w-fit max-w-3xl lg:mb-9">
+        {opening ? (
+          <>
+            <span aria-hidden="true" className="mb-4 block h-[3px] w-12" style={{ background: HIGHLIGHT }} />
+            <h1 id={headingId} className="font-display text-[clamp(2.5rem,6vw,4.75rem)] font-extrabold uppercase leading-[0.92] tracking-[0.004em] [text-wrap:balance]">{title}</h1>
+          </>
+        ) : (
+          <h2 id={headingId} className="t-h2 [text-wrap:balance]">{title}</h2>
+        )}
+        {subtitle && <p className={`t-body max-w-[60ch] text-ink-soft ${opening ? "mt-4" : "mt-2.5"}`}>{subtitle}</p>}
       </div>
       <div style={cols}>
         <p className="sr-only">{running ? `Em oferta agora: ${running.label}${running.period ? `, ${running.period}` : ""}.` : "Nenhuma semana em oferta hoje."}</p>

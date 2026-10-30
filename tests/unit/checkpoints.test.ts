@@ -157,3 +157,20 @@ describe("the opening's scheduled texts", () => {
     expect(followedDoc(norte, sul, true).home!.sections[0].heroSchedule![0].cta!.dest).toEqual({ kind: "route", path: "/norte/busca" });
   });
 });
+
+describe("offers that accumulate (the owner's final call: the previous week is not switched off)", () => {
+  const CAL = [week(1, "2026-11-02", { closesAt: "2026-11-07" }), week(2, "2026-11-09", { closesAt: "2026-11-15" }), week(3, "2026-11-16", { closesAt: "2026-11-22" }), week(4, "2026-11-23", { closesAt: "2026-11-30", highlight: true })];
+  test("given accumulating offers, when a week is past its end, then it stays valid (open) and only the week in its period is current", () => {
+    expect(checkpointStates(CAL, "2026-11-08", true)).toEqual(["open", "locked", "locked", "locked"]);
+    expect(checkpointStates(CAL, "2026-11-10", true)).toEqual(["open", "current", "locked", "locked"]);
+    expect(checkpointStates(CAL, "2026-11-24", true)).toEqual(["open", "open", "open", "current"]);
+    expect(checkpointStates(CAL, "2026-11-24")).toEqual(["ended", "ended", "ended", "current"]); // without it, as before
+  });
+  test("given the composition, when validated or posted, then the option holds only on checkpoints", () => {
+    expect(validateSection(checkpoints({ accumulate: true })).ok).toBe(true);
+    const plain = [{ label: "A", dest: { kind: "route" as const, path: "/sul/busca" } }, { label: "B", dest: { kind: "route" as const, path: "/sul/busca" } }];
+    expect(validateSection(checkpoints({ variant: undefined, tiles: plain, accumulate: true })).ok).toBe(false);
+    expect(parseSectionForm(form({ grid_present: "1", variant_present: "1", variant: "checkpoints", checkpoints_accumulate: "on" }), checkpoints()).accumulate).toBe(true);
+    expect(parseSectionForm(form({ grid_present: "1", variant_present: "1", variant: "checkpoints" }), checkpoints({ accumulate: true })).accumulate).toBeUndefined();
+  });
+});

@@ -324,6 +324,7 @@ export function SectionEditorForm({
           anchors={anchors.filter((x) => x.anchor !== section.anchor)}
           customizers={customizers}
           checkpoints={variantNow === "checkpoints"}
+          accumulate={section.accumulate === true}
         />
       )}
 

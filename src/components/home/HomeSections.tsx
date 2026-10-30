@@ -29,7 +29,7 @@ import { heroCards, heroSlides } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
-import { checkpointStates, daysBetween, periodLabel, periodState, todayInBrasilia } from "@/lib/site-config/checkpoints";
+import { checkpointStates, dayMonth, daysBetween, periodLabel, periodState, todayInBrasilia } from "@/lib/site-config/checkpoints";
 import { LockedShelf } from "./LockedShelf";
 import { WeeklyCheckpoints, type CheckpointView } from "./WeeklyCheckpoints";
 import { customizerFigure, firstImageSectionId, focalToCss, hasImage, mediaFigure, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
@@ -90,7 +90,7 @@ export function HomeSections({
 
   const rendered = (
     <>
-      {sections.map((s, index) => {
+      {byCalendar(sections, today).map((s, index) => {
         const bg = resolveBackground(s.appearance, media);
         switch (s.template) {
           case "hero": {
@@ -245,10 +245,13 @@ export function HomeSections({
               return (
                 <LockedShelf
                   key={s.id}
+                  // The section's own colour (the Black Week's yellow) tints its glass: the special week looks special while it waits.
+                  accent={bg.fill.kind === "solid" ? cssColor(bg.fill.color) : bg.fill.kind === "gradient" ? `linear-gradient(${bg.fill.angle}deg, ${cssColor(bg.fill.from)}, ${cssColor(bg.fill.to)})` : undefined}
                   anchor={s.anchor}
                   heading={when === "locked" ? s.period.label ?? "Oferta surpresa" : s.title ?? s.period.label ?? "Oferta encerrada"}
                   state={when}
-                  period={periodLabel(s.period)}
+                  // A shelf that only opens (its offer then stays, accumulating) reads "Abre 16/11"; one with an end, its whole period.
+                  period={when === "locked" && s.period.opensAt && !s.period.closesAt ? `Abre ${dayMonth(s.period.opensAt)}` : periodLabel(s.period)}
                   {...(when === "locked" && s.period.opensAt ? { daysLeft: daysBetween(today, s.period.opensAt) } : {})}
                 />
               );
@@ -311,7 +314,7 @@ export function HomeSections({
           case "image-grid": {
             if (!s.title || !s.grid) return null;
             if (s.variant === "checkpoints") {
-              const states = checkpointStates(s.tiles ?? [], today);
+              const states = checkpointStates(s.tiles ?? [], today, s.accumulate === true);
               const items = (s.tiles ?? []).map((t, i): CheckpointView => ({
                 label: t.label,
                 ...(t.caption ? { caption: t.caption } : {}),
@@ -325,7 +328,9 @@ export function HomeSections({
                 highlight: t.highlight === true,
                 state: states[i],
               }));
-              return <WeeklyCheckpoints key={s.id} anchor={s.anchor} headingId={s.headingId} title={s.title} subtitle={s.subtitle} items={items} />;
+              // On a page whose hero gives way (hidden), the strip opens it: its title is the page's heading.
+              const opening = Boolean(page) && !sections.some((x) => x.template === "page-hero") && sections[0]?.id === s.id;
+              return <WeeklyCheckpoints key={s.id} anchor={s.anchor} headingId={s.headingId} title={s.title} subtitle={s.subtitle} items={items} opening={opening} />;
             }
             const tiles = gridTiles(s, media, links, region, categories);
             if (tiles.length === 0) return null;
@@ -520,7 +525,9 @@ function CarouselSection({
       sourceSection={SOURCES[s.analyticsSource]}
       buy={buy}
       tags={s.layout.tags}
-      solidCards={hasImage(bg)}
+      // Solid cards over a picture, and over a colour of the section's own on a dark ground (the Black Week's yellow): names and places keep their
+      // contrast on the card's light surface instead of sitting on the colour.
+      solidCards={hasImage(bg) || (pageTone === "dark" && bg.fill.kind !== "none")}
       eager={eager}
     />
   );
@@ -597,6 +604,21 @@ function gridTiles(s: Section, media: PublishedBundle["media"], links: Collectio
 
 /** A collection card's colour as CSS (the region's colour when none). */
 const tileColor = (color: Color | undefined): string => cssColor(color ?? "token:region-primary");
+
+/**
+ * The Black calendar's last week first: once the product section with the latest opening day runs (the Black Week), the product sections with a
+ * period swap places in reverse, the newest on top; every other section keeps its place. Before that, the calendar's order.
+ */
+function byCalendar(sections: Section[], today: string): Section[] {
+  const at = sections.flatMap((s, i) => (s.template === "product-carousel" && s.period?.opensAt ? [i] : []));
+  if (at.length < 2) return sections;
+  const last = at.reduce((a, b) => (sections[b].period!.opensAt! > sections[a].period!.opensAt! ? b : a));
+  if (periodState(sections[last].period!, today) !== "running") return sections;
+  const newestFirst = [...at].sort((a, b) => (sections[b].period!.opensAt! < sections[a].period!.opensAt! ? -1 : 1));
+  const out = [...sections];
+  at.forEach((pos, k) => { out[pos] = sections[newestFirst[k]]; });
+  return out;
+}
 
 /** The split campaign's figure: the section's picture, each screen with its own crop and framing (null: no picture, the shirts stand in). */
 function splitFigure(bg: ReturnType<typeof resolveBackground>): BannerAsset | null {

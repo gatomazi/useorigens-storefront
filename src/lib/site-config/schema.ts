@@ -225,6 +225,14 @@ export type GridTile = {
   /** "Checkpoints" only: the block in evidence (the week of Black Friday itself), drawn in the campaign's yellow. */
   highlight?: boolean;
 };
+/**
+ * A section that may open a page in the page hero's place (the hero hidden): an active live banner, or an active "Checkpoints semanais" strip (the
+ * Black calendar page, whose padlocks are the top). Its title becomes the page's heading.
+ */
+export const opensPage = (s: unknown): boolean =>
+  typeof s === "object" && s !== null && (s as { active?: unknown }).active === true &&
+  ((s as { template?: unknown }).template === "personalization-live" || ((s as { template?: unknown }).template === "image-grid" && (s as { variant?: unknown }).variant === "checkpoints"));
+
 /** One period of the opening's texts (`Section.heroSchedule`). */
 export type HeroScheduleEntry = { from: string; to: string; title?: string; subtitle?: string; cta?: { label: string; dest: Destination } };
 export const MAX_HERO_SCHEDULE = 12;
@@ -304,6 +312,8 @@ export type Section = {
    * offer; after it, the same panel saying it ended; in it, the section as always.
    */
   period?: { opensAt?: string; closesAt?: string; label?: string };
+  /** "Checkpoints semanais" only: the offers accumulate, so a week past its end stays valid ("Valendo · 02–07/11", with its link) instead of "Encerrada". */
+  accumulate?: true;
   /** Hero "feature" only: the colours of the reading half (`HERO_COLOR_KEYS`); absent (or a key absent) = the theme's own. */
   heroColors?: HeroColors;
   /** Show this section in the storefront header menu, under this label (the "apelido"). Not for the hero or the footer. `dest` sends the link to a page instead of this section. */
@@ -933,6 +943,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       });
     }
   }
+  if (v.accumulate !== undefined && (v.template !== "image-grid" || v.variant !== "checkpoints" || v.accumulate !== true)) c.fail(`${path}.accumulate`, "the checkpoints composition only: true or absent");
   if (v.period !== undefined) {
     const p = v.period;
     if (v.template !== "product-carousel" || !isRecord(p) || (p.opensAt === undefined && p.closesAt === undefined)) c.fail(`${path}.period`, "product sections only: { opensAt?, closesAt? }, at least one");
@@ -1091,10 +1102,11 @@ function checkPage(c: Collector, path: string, v: unknown): void {
     if (i === 0 && s.template !== "page-hero") c.fail(`${path}.sections[0]`, "the first section must be the page hero");
     if (i > 0 && s.template === "page-hero") c.fail(`${path}.sections[${i}]`, "the page hero appears once, first");
   });
-  // The page hero opens every page; it may stay hidden only while a live banner opens the page instead (its title becomes the page's heading).
+  // The page hero opens every page; it may stay hidden only while a live banner or a checkpoints strip opens the page instead (its title becomes the
+  // page's heading).
   const hero = sections[0];
-  if (isRecord(hero) && hero.template === "page-hero" && hero.active === false && !sections.some((s) => isRecord(s) && s.template === "personalization-live" && s.active === true)) {
-    c.fail(`${path}.sections[0]`, "the page hero may be hidden only when an active live banner opens the page");
+  if (isRecord(hero) && hero.template === "page-hero" && hero.active === false && !sections.some(opensPage)) {
+    c.fail(`${path}.sections[0]`, "the page hero may be hidden only when an active live banner or checkpoints strip opens the page");
   }
   // The page numbers live in a parent-category landing's address (`/colecoes/<slug>/2`): one paged grid, there only.
   const paged = sections.filter((s) => isRecord(s) && isRecord(s.layout) && s.layout.display === "paged").length;

@@ -60,7 +60,10 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
   const page = pageId ? effective.docs[scope].pages?.find((p) => p.id === pageId) : undefined;
   const model = customizerId ? effective.docs[scope].customizers?.find((m) => m.id === customizerId) : undefined;
   // The colours, the theme and the header of the document as the store shows it: following Sul's home in Natal brings its chrome, with the region's palette.
-  const shown = effective.docs[scope] ?? doc;
+  // A page with ?tema=: the chrome (palette, header, menu) of THAT theme, as the store will dress every page once the theme is put on it and
+  // published (the page itself is composed over what is published, whose chrome is the theme on the store today).
+  const composed = effective.docs[scope] ?? doc;
+  const shown = pageId && tema ? { ...composed, ...(doc.theme ? { theme: doc.theme } : {}), ...(doc.homeTheme ? { homeTheme: doc.homeTheme } : {}), ...(doc.navigation ? { navigation: doc.navigation } : {}) } : composed;
   const palette = resolveTheme(scope, shown, usingPublished ? global.baseDoc : global.doc);
   const cssVars = { ...themeCssVars(palette.configured, palette.effective), ...homeThemeCssVars(shown, palette.effective) };
   const label = `${usingPublished ? "Pré-visualização · publicado" : `Pré-visualização · rascunho${ws.record ? ` rev ${ws.record.rev}` : " (sem alterações)"}`} · tema ${HOME_THEME_LABEL[homeThemeOf(shown)]}`;

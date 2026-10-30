@@ -25,16 +25,18 @@ export function periodState(p: Period, today: string): PeriodState {
 
 /**
  * Each block's state on `today`. Among the running ones, the one that opened last is "current" (the week running now); a block without a day is open
- * from the start and is current only while no dated block runs. Between two periods (07/11 ended, 09/11 not yet open) no block is current.
+ * from the start and is current only while no dated block runs. Between two periods (07/11 ended, 09/11 not yet open) no block is current. With
+ * `accumulate`, a week past its end stays "open" (its offer still holds) instead of "ended".
  */
-export function checkpointStates(tiles: readonly Pick<GridTile, "opensAt" | "closesAt">[], today: string): CheckpointState[] {
+export function checkpointStates(tiles: readonly Pick<GridTile, "opensAt" | "closesAt">[], today: string, accumulate = false): CheckpointState[] {
   const states = tiles.map((t) => periodState(t, today));
   let current = -1;
   tiles.forEach((t, i) => {
     if (states[i] !== "running") return;
     if (current < 0 || (t.opensAt ?? "") >= (tiles[current].opensAt ?? "")) current = i;
   });
-  return tiles.map((_, i) => (i === current ? "current" : states[i] === "running" ? "open" : states[i]));
+  // Offers that accumulate (CMS `accumulate`): a week past its end keeps its offer ("Valendo"), it is only no longer the current one.
+  return tiles.map((_, i) => (i === current ? "current" : states[i] === "running" || (accumulate && states[i] === "ended") ? "open" : states[i]));
 }
 
 /** "2026-11-16" → "16/11". */

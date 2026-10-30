@@ -386,6 +386,11 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     const posted = str(f, "variant");
     patch.variant = variantsOf(section.template).includes(posted) ? (posted as Section["variant"]) : undefined;
   }
+  // The checkpoints' offers accumulate (posted with the blocks; only in that composition).
+  if (section.template === "image-grid" && f.get("grid_present") !== null) {
+    const variant = "variant" in patch ? patch.variant : section.variant;
+    patch.accumulate = variant === "checkpoints" && f.get("checkpoints_accumulate") !== null ? true : undefined;
+  }
   return patch;
 }
 

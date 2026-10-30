@@ -51,18 +51,24 @@ Três peças, todas com dias no horário de Brasília, **os dois dias inclusive*
    - depois de encerrar: "Encerrada · 02–07/11", sem link (uma oferta encerrada nunca aparece como ativa);
    - entre duas semanas (por exemplo, 08/11), nenhuma fica ativa.
 
-   O bloco marcado como **Destaque** (a Black Week) vem em amarelo.
+   O bloco marcado como **Destaque** (a Black Week) vem em amarelo. Com **"Ofertas acumulam"** ligado, a semana que passou continua valendo
+   ("Valendo · 02–07/11", com o link) e só deixa de ser a semana atual. Desligado, ela aparece como "Encerrada".
 2. **Vitrines com período.** Em qualquer vitrine de produtos, em **Período da oferta**, preencha o primeiro e o último dia e o **rótulo enquanto
    fechada** ("Semana 2"):
    - antes de abrir: um vidro com o cadeado e a contagem, sobre cards genéricos. Nem o título (que diz a oferta) nem os produtos vão para a
      página;
    - durante: a vitrine normal, com "Ver ofertas" para a coleção;
-   - depois: o vidro com "Oferta encerrada".
-3. **Textos programados da abertura.** No editor da abertura ("Um produto em destaque"), cada período troca o título (vazio = o de sempre), o
+   - depois: o vidro com "Oferta encerrada" (se a vitrine não tiver dia de encerramento, ela continua aberta: ofertas que acumulam).
+
+   Quando abre a vitrine com o último dia de abertura (a Black Week), as vitrines com período invertem a ordem: a mais nova primeiro. Uma cor de
+   fundo na vitrine (o dourado da Black Week) também tinge o vidro enquanto ela está fechada, e os cards ganham fundo claro sobre a cor.
+3. **Hotpage sem topo.** A faixa de checkpoints pode abrir a página no lugar do topo: oculte o topo e a faixa vira o título da página.
+4. **Textos programados da abertura.** No editor da abertura ("Um produto em destaque"), cada período troca o título (vazio = o de sempre), o
    texto e, se houver botão, coloca o botão no lugar da busca. A busca continua no topo da loja. Um período não pode encostar em outro. Fora de
    todos, valem o título e o subtítulo da abertura, por isso eles precisam valer o mês todo: sem preço e sem promessa de prazo.
 
-**Prévia de um dia futuro:** `&data=2026-11-08` na prévia, que vale para a home e para as páginas.
+**Prévia de um dia futuro:** `&data=2026-11-08` na prévia, que vale para a home e para as páginas. Numa página, `&tema=black` mostra o topo e as
+cores da Black (sem ele, a página usa as cores do tema que está na loja).
 
 **Descontos na INK:** precisam começar e acabar nos mesmos dias. A loja só mostra o calendário.
 

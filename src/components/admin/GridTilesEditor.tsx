@@ -65,7 +65,7 @@ const ASPECT_CLASS: Record<GridLayout["aspect"], string> = { square: "aspect-squ
  * rows post as `tile_<i>_*` in their current order plus `tile_count`, parsed by `parseGridTiles` (src/lib/admin/section-form.ts).
  */
 export function GridTilesEditor({
-  scope, tiles, layout, media, thumbOf, collections, pages, anchors, customizers = [], checkpoints = false,
+  scope, tiles, layout, media, thumbOf, collections, pages, anchors, customizers = [], checkpoints = false, accumulate = false,
 }: {
   scope: string;
   tiles: GridTile[];
@@ -80,6 +80,8 @@ export function GridTilesEditor({
   customizers?: { id: string; name: string; active: boolean }[];
   /** "Checkpoints semanais": each block has the day it opens and may be the one in evidence; no picture, format or grid layout. */
   checkpoints?: boolean;
+  /** Checkpoints: the offers accumulate (CMS `accumulate`). */
+  accumulate?: boolean;
 }) {
   const nextKey = useRef(tiles.length);
   const [rows, setRows] = useState<Row[]>(() => tiles.map((t, i) => toRow(t, i, scope)));
@@ -102,7 +104,16 @@ export function GridTilesEditor({
 
   return (
     <>
-      {checkpoints && <input type="hidden" name="grid_present" value="1" />}
+      {checkpoints && (
+        <>
+          <input type="hidden" name="grid_present" value="1" />
+          <label className="flex items-center gap-2 font-bold">
+            <input type="checkbox" name="checkpoints_accumulate" defaultChecked={accumulate} data-testid="checkpoints-accumulate" />
+            Ofertas acumulam (a semana anterior continua valendo)
+          </label>
+          <p className="a-muted -mt-2 text-[0.8125rem]">Ligado: depois do último dia, a semana aparece como “Valendo · 02–07/11”, com o link, e só deixa de ser a semana atual. Desligado: aparece como “Encerrada”, sem link.</p>
+        </>
+      )}
       {!checkpoints && (
       <fieldset className="space-y-4">
         <legend className="a-h2 mb-3">Layout da grade</legend>

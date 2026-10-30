@@ -14,7 +14,7 @@ function Shirt() {
   );
 }
 
-export function LockedShelf({ anchor, heading, subtitle, state, period, daysLeft, cards = 4 }: {
+export function LockedShelf({ anchor, heading, subtitle, state, period, daysLeft, cards = 4, accent }: {
   anchor: string;
   heading: string;
   subtitle?: string;
@@ -23,6 +23,8 @@ export function LockedShelf({ anchor, heading, subtitle, state, period, daysLeft
   period: string | null;
   daysLeft?: number;
   cards?: number;
+  /** The section's own colour (a CSS colour or gradient: the Black Week's yellow). The glass takes it, with near-black text and a black padlock. */
+  accent?: string;
 }) {
   const locked = state === "locked";
   const headingId = `${anchor}-title`;
@@ -49,19 +51,24 @@ export function LockedShelf({ anchor, heading, subtitle, state, period, daysLeft
           ))}
         </ul>
         {/* The glass: the ground's colour, translucent and blurred, over the whole shelf, with the lock in the middle. */}
-        <div className="absolute inset-0 flex items-center justify-center rounded-xl border border-white/10 p-5 text-center [-webkit-backdrop-filter:blur(18px)] [backdrop-filter:blur(18px)]" style={{ background: "color-mix(in srgb, var(--plate-solid, #111) 45%, transparent)" }}>
-          <div className="max-w-sm">
-            <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full" style={locked ? { background: HIGHLIGHT, color: "#111" } : { border: "2px solid var(--line)" }}>
+        <div
+          className={`absolute inset-0 flex items-center justify-center rounded-xl border p-5 text-center [-webkit-backdrop-filter:blur(18px)] [backdrop-filter:blur(18px)] ${accent ? "on-light border-transparent" : "border-white/10"}`}
+          style={accent ? { background: accent, color: "#111" } : { background: "color-mix(in srgb, var(--plate-solid, #111) 45%, transparent)" }}
+        >
+          {/* On the accent, a soft veil keeps the shirts behind it barely visible, like frosted gold. */}
+          {accent && <span aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-xl opacity-90" style={{ background: accent }} />}
+          <div className="relative max-w-sm">
+            <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full" style={accent ? { background: "#111", color: HIGHLIGHT } : locked ? { background: HIGHLIGHT, color: "#111" } : { border: "2px solid var(--line)" }}>
               <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
                 <path d="M8 10.5V7a4 4 0 0 1 8 0v3.5" />
               </svg>
             </span>
-            <p className="text-[0.75rem] font-bold uppercase tabular-nums tracking-[0.12em]" style={locked ? { color: HIGHLIGHT } : undefined}>
+            <p className="text-[0.75rem] font-bold uppercase tabular-nums tracking-[0.12em]" style={locked && !accent ? { color: HIGHLIGHT } : undefined}>
               {locked ? period ?? "Em breve" : `Encerrada${period ? ` · ${period}` : ""}`}
             </p>
             <p className="mt-2 font-display text-[clamp(1.6rem,3vw,2.25rem)] font-extrabold uppercase leading-[0.95]">{locked ? "Oferta surpresa" : "Oferta encerrada"}</p>
-            <p className="mt-2 text-[0.9375rem] text-ink-soft">{locked ? (countdown ? `${countdown}. O cadeado abre à meia-noite.` : "O cadeado abre à meia-noite.") : "Veja no calendário a oferta desta semana."}</p>
+            <p className={`mt-2 text-[0.9375rem] ${accent ? "" : "text-ink-soft"}`}>{locked ? (countdown ? `${countdown}. O cadeado abre à meia-noite.` : "O cadeado abre à meia-noite.") : "Veja no calendário a oferta desta semana."}</p>
           </div>
         </div>
       </div>
