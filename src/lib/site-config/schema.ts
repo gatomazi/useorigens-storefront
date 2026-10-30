@@ -215,7 +215,18 @@ export type GridTile = {
    * white text and light under dark text, so it reads over a busy photo. "soft" / "strong"; absent = none (the gradient at the foot alone, as before).
    */
   veil?: TileVeil;
+  /**
+   * "Checkpoints" composition only (a campaign that opens one offer a week): the day the block unlocks, YYYY-MM-DD in Brasília time. Before it the
+   * block is a padlock with the date and nothing else (no name of the offer, no link); from it on it stays open. Absent = open from the start.
+   */
+  opensAt?: string;
+  /** "Checkpoints" only: the block in evidence (the week of Black Friday itself), drawn in the campaign's yellow. */
+  highlight?: boolean;
 };
+/** A day in Brasília time, YYYY-MM-DD (a checkpoint's `opensAt`). */
+export const CHECKPOINT_DAY = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+/** A real calendar day (no 31/11: the date read back is the same). */
+export const isCheckpointDay = (v: unknown): v is string => typeof v === "string" && CHECKPOINT_DAY.test(v) && new Date(`${v}T12:00:00Z`).toISOString().slice(0, 10) === v;
 export const TILE_FORMATS = ["product", "banner"] as const;
 export const TILE_VEILS = ["soft", "strong"] as const;
 export type TileVeil = (typeof TILE_VEILS)[number];
@@ -240,7 +251,7 @@ export const MAX_GRID_TILES = 12;
  *                         within reach without eight cards on screen);
  *   campaign "split"      the picture (or real shirts) on one half and the text on a colour of its own on the other, edge to edge.
  */
-export const SECTION_VARIANTS = { hero: ["feature"], states: ["strip"], "city-styles": ["split", "list"], campaign: ["split"] } as const satisfies Partial<Record<TemplateKey, readonly string[]>>;
+export const SECTION_VARIANTS = { hero: ["feature"], states: ["strip"], "city-styles": ["split", "list"], campaign: ["split"], "image-grid": ["checkpoints"] } as const satisfies Partial<Record<TemplateKey, readonly string[]>>;
 export type SectionVariant = (typeof SECTION_VARIANTS)[keyof typeof SECTION_VARIANTS][number];
 export const variantsOf = (template: TemplateKey): readonly string[] => (SECTION_VARIANTS as Partial<Record<TemplateKey, readonly string[]>>)[template] ?? [];
 
@@ -944,6 +955,11 @@ function checkSection(c: Collector, path: string, v: unknown): void {
       if (t.tone !== undefined && (!styled || (t.tone !== "light" && t.tone !== "dark"))) c.fail(`${at}.tone`, "product or banner tiles only: light | dark");
       if (t.veil !== undefined && (t.format === "product" || !(TILE_VEILS as readonly unknown[]).includes(t.veil))) c.fail(`${at}.veil`, `banner or classic tiles only: ${TILE_VEILS.join(" | ")}`);
       if (t.cta !== undefined && (!isStr(t.cta, MAX_TILE_CTA) || t.cta.trim() !== t.cta)) c.fail(`${at}.cta`, `1..${MAX_TILE_CTA} chars, no leading or trailing spaces`);
+      if (t.opensAt !== undefined || t.highlight !== undefined) {
+        if (v.variant !== "checkpoints") c.fail(`${at}.opensAt`, "the checkpoints composition only");
+        if (t.opensAt !== undefined && !isCheckpointDay(t.opensAt)) c.fail(`${at}.opensAt`, "a day, YYYY-MM-DD");
+        if (t.highlight !== undefined && t.highlight !== true) c.fail(`${at}.highlight`, "true or absent");
+      }
       // A product tile shows a shirt OF its destination: only a collection has one.
       if (t.format === "product" && isRecord(t.dest) && t.dest.kind !== "collection-page" && t.dest.kind !== "ink-collection") c.fail(`${at}.dest`, "a product tile leads to a collection (its shirt comes from it)");
     });
@@ -1298,7 +1314,8 @@ function checkRegional(c: Collector, path: string, v: unknown, sc: Scope): void 
       ...(template === "hero" ? { variant: "feature", featured: e.featured ?? [], ...(e.featuredRotation !== undefined ? { featuredRotation: e.featuredRotation } : {}) } : {}),
       ...(template === "states" ? { stateCovers: e.stateCovers } : {}),
       // The blocks are checked as a grid's (the title and the layout are Sul's, or the entry's own `grid`, checked above).
-      ...(template === "image-grid" ? { title: "regional", tiles: e.tiles, grid: { columns: 4, aspect: "portrait", labels: "below" } } : {}),
+      // A region's own checkpoints (opening days, the block in evidence) are checked as such.
+      ...(template === "image-grid" ? { title: "regional", tiles: e.tiles, grid: { columns: 4, aspect: "portrait", labels: "below" }, ...(Array.isArray(e.tiles) && e.tiles.some((t) => isRecord(t) && (t.opensAt !== undefined || t.highlight !== undefined)) ? { variant: "checkpoints" } : {}) } : {}),
       appearance: { fill: { kind: "none" }, focal: look.focal ?? { mobile: { x: 50, y: 50 }, desktop: { x: 50, y: 50 } }, overlay: { preset: "none" }, ...(look.image !== undefined ? { image: look.image } : {}) },
     };
     checkSection(c, at, section);

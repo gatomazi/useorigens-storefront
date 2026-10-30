@@ -40,6 +40,20 @@ transparente.
 A chamada da personalização só entra se o modelo `natal-em-familia` estiver ativo. A vitrine só entra se a coleção Natal
 estiver na loja. Nenhuma das duas entra repetida se a home já tiver uma.
 
+### Checkpoints semanais (Black Month)
+
+Uma oferta por semana, com cadeados. Na Home do tema Black: **Adicionar seção → Grade de imagens**. Depois, no editor da seção,
+**Composição → Checkpoints semanais**. Para que ela tome o lugar de "Comece pelo seu estado", oculte a seção de estados e mova a nova para logo
+abaixo da abertura.
+
+- **Um bloco por semana:** nome ("Semana 1"), o que entra em promoção (a legenda), **Abre em** (a data), a chamada ("Ver ofertas") e para onde leva.
+  Como cada semana tem várias coleções, leve o bloco para uma hotpage da semana, com as coleções dela, ou para uma coleção que junte as peças.
+- **Antes da data:** a loja mostra só o nome, um cadeado e "Abre 16/11". A oferta e o link ficam escondidos, como surpresa.
+- **A partir da data:** à meia-noite de Brasília (até uma hora depois, pelo cache da loja), o bloco abre e continua aberto até o fim. A semana
+  em curso ganha "Esta semana".
+- **Destaque:** marque no bloco da semana da Black Friday. Ele fica em amarelo e um pouco mais largo no desktop.
+- **Prévia:** para conferir como a seção estará num dia, abra a prévia com `&data=2026-11-16`.
+
 ## Deixar pronto (agora)
 
 1. Home → Tema da home → **Criar e editar o tema Black Friday**. Revise a abertura e clique em "Ver prévia".

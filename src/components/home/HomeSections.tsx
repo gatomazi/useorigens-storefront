@@ -29,6 +29,8 @@ import { heroCards, heroSlides } from "@/lib/hero-featured";
 import type { RegionHome } from "@/lib/home";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { storeForRegion } from "@/lib/catalog/commerce-mode";
+import { checkpointStates, todayInBrasilia } from "@/lib/site-config/checkpoints";
+import { WeeklyCheckpoints, type CheckpointView } from "./WeeklyCheckpoints";
 import { customizerFigure, firstImageSectionId, focalToCss, hasImage, mediaFigure, renderableSections, resolveBackground, resolveCustomizerCard, resolveStateCovers } from "@/lib/site-config/resolve";
 import { cardBuy, cardButtonOf, type CardBuy } from "@/lib/site-config/cards-schema";
 import { carouselEndOf, carouselEndText, type CarouselEndConfig } from "@/lib/site-config/carousel-end-schema";
@@ -60,8 +62,8 @@ const NATIVE_FILL: Record<"paper" | "plain" | "region-primary", Fill> = {
 export type Paging = { page: number; hrefOf?: (page: number) => string };
 
 export function HomeSections({
-  region, home, bundle, categories, collectionPage, links, umapenca, page, paging, compactHero = false,
-}: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging; /** The automatic collection page: short header, product count next to the title. */ compactHero?: boolean }) {
+  region, home, bundle, categories, collectionPage, links, umapenca, page, paging, compactHero = false, today = todayInBrasilia(),
+}: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging; /** The automatic collection page: short header, product count next to the title. */ compactHero?: boolean; /** The day the weekly checkpoints are drawn for (YYYY-MM-DD, Brasília); the panel's preview may pick another. */ today?: string }) {
   const doc = bundle.docs[region];
   // The store-wide buy button (Aparência, global): on every product card, unless a section set a text of its own.
   const cardButton = cardButtonOf(bundle);
@@ -286,6 +288,22 @@ export function HomeSections({
 
           case "image-grid": {
             if (!s.title || !s.grid) return null;
+            if (s.variant === "checkpoints") {
+              const states = checkpointStates(s.tiles ?? [], today);
+              const items = (s.tiles ?? []).map((t, i): CheckpointView => ({
+                label: t.label,
+                ...(t.caption ? { caption: t.caption } : {}),
+                cta: t.cta ?? "Ver ofertas",
+                // A locked week never carries its link (the offer is a surprise until its day).
+                href: states[i] === "locked" ? null : destinationHref(t.dest, links, region),
+                external: t.dest.kind === "external" || t.dest.kind === "ink-collection",
+                ...(t.opensAt ? { opensAt: t.opensAt } : {}),
+                ...(states[i] === "locked" && t.opensAt ? { daysLeft: Math.round((Date.parse(`${t.opensAt}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86_400_000) } : {}),
+                highlight: t.highlight === true,
+                state: states[i],
+              }));
+              return <WeeklyCheckpoints key={s.id} anchor={s.anchor} headingId={s.headingId} title={s.title} subtitle={s.subtitle} items={items} />;
+            }
             const tiles = gridTiles(s, media, links, region, categories);
             if (tiles.length === 0) return null;
             const visual = hasImage(bg) || bg.fill.kind !== "none";

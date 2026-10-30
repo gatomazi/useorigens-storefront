@@ -17,7 +17,7 @@ import { canFollowSul, seedFromEnv } from "@/lib/site-config/published";
 import { withFollowing } from "@/lib/site-config/follow";
 import { HOME_THEME_LABEL, withHomeTheme } from "@/lib/site-config/home-themes";
 import { homeThemeCssVars, resolveTheme, themeCssVars } from "@/lib/site-config/navigation";
-import { hasEditorialChrome, HOME_THEMES, homeThemeOf, type HomeThemeName } from "@/lib/site-config/schema";
+import { hasEditorialChrome, isCheckpointDay, HOME_THEMES, homeThemeOf, type HomeThemeName } from "@/lib/site-config/schema";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Pré-visualização · Use Origens", robots: { index: false, follow: false } };
@@ -27,10 +27,12 @@ export const metadata: Metadata = { title: "Pré-visualização · Use Origens",
  * sandbox). It goes through the very same tolerant reader the storefront uses (`sanitizeBundle`), so what shows here is what the storefront
  * would show, including sections dropped for being invalid and the parts a region follows from Sul. Read-only: it writes nothing and fires no tracking.
  */
-export default async function AdminPreview({ searchParams }: { searchParams: Promise<{ source?: string; page?: string; customizer?: string; tema?: string }> }) {
+export default async function AdminPreview({ searchParams }: { searchParams: Promise<{ source?: string; page?: string; customizer?: string; tema?: string; data?: string }> }) {
   const actor = await requireAdmin();
   const scope = await currentScope(actor);
-  const { source, page: pageParam, customizer: customizerParam, tema } = await searchParams;
+  const { source, page: pageParam, customizer: customizerParam, tema, data } = await searchParams;
+  // ?data=2026-11-16: the weekly checkpoints as they will be on that day (none = today).
+  const today = isCheckpointDay(data) ? data : undefined;
   const pageId = pageParam && /^[A-Za-z0-9_-]{1,40}$/.test(pageParam) ? pageParam : null;
   const customizerId = customizerParam && /^[A-Za-z0-9_-]{1,40}$/.test(customizerParam) ? customizerParam : null;
   const ws = await loadWorkspace(scope);
@@ -67,9 +69,9 @@ export default async function AdminPreview({ searchParams }: { searchParams: Pro
       {customizerId ? (
         model ? <CustomizerPageView region={scope} model={model} bundle={effective} preview /> : <p className="wrap py-14">Este modelo tem um problema de configuração e não pode ser desenhado (corrija os avisos no editor).</p>
       ) : pageId ? (
-        page ? <HomeSections region={scope} home={home} bundle={effective} page={page} {...categoryProps((store) => catalog.productsOfStore(store), effective.docs[scope])} /> : <p className="wrap py-14">Esta página tem um problema de configuração e não pode ser desenhada (corrija os avisos no editor).</p>
+        page ? <HomeSections region={scope} home={home} bundle={effective} page={page} today={today} {...categoryProps((store) => catalog.productsOfStore(store), effective.docs[scope])} /> : <p className="wrap py-14">Esta página tem um problema de configuração e não pode ser desenhada (corrija os avisos no editor).</p>
       ) : (
-        <HomeSections region={scope} home={home} bundle={effective} {...categoryProps((store) => catalog.productsOfStore(store), effective.docs[scope])} />
+        <HomeSections region={scope} home={home} bundle={effective} today={today} {...categoryProps((store) => catalog.productsOfStore(store), effective.docs[scope])} />
       )}
     </PreviewShell>
   );
