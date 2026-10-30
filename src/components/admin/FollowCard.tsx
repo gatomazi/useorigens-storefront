@@ -11,8 +11,8 @@ import { getCatalog } from "@/lib/catalog/repository";
 import { campaignLeadsNowhere, destinationHref } from "@/lib/site-config/sources";
 import { canFollowSul } from "@/lib/site-config/published";
 import { FOLLOW_SOURCE, REGION_TOKEN, followsPart, type FollowPart } from "@/lib/site-config/follow-schema";
-import type { ScopeDoc, Section } from "@/lib/site-config/schema";
-import { followedDoc, regionalOf } from "@/lib/site-config/follow";
+import type { HomeThemeName, ScopeDoc, Section } from "@/lib/site-config/schema";
+import { followedDoc, regionalOf, sulInTheme, sulThemes } from "@/lib/site-config/follow";
 import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
 import { homeThemeOf } from "@/lib/site-config/schema";
 
@@ -130,25 +130,45 @@ function regionGap(s: Section, sulActive: boolean, props: ReturnType<typeof cate
   return null;
 }
 
+/** Where "Imagens e produtos" of one of Sul's home themes lives: the theme on Sul's store needs no `?tema-sul=`. */
+export const regionalHref = (path: string, theme: HomeThemeName, live: HomeThemeName, hash = "") => `${path}${theme === live ? "" : `?tema-sul=${theme}`}${hash}`;
+
 /**
  * On a region that follows Sul's home: Sul's sections as this region shows them, each with a link to its own pictures and products (`regional`). The
- * structure stays Sul's; the banners and the products are the region's when it chooses them.
+ * structure stays Sul's; the banners and the products are the region's when it chooses them. `asked` (`?tema-sul=`): one of Sul's other themes, to set
+ * this region's pictures and products for it before Sul puts it on its store.
  */
-export async function RegionalSectionsList({ scope, doc }: { scope: RegionSlug; doc: ScopeDoc }) {
+export async function RegionalSectionsList({ scope, doc, asked }: { scope: RegionSlug; doc: ScopeDoc; asked?: string }) {
   if (scope === FOLLOW_SOURCE || !followsPart(doc, "home")) return null;
   const sul = await loadWorkspace(FOLLOW_SOURCE);
-  const followed = followedDoc(doc, sul.baseDoc, true);
+  const live = homeThemeOf(sul.baseDoc);
+  const source = sulInTheme(sul.baseDoc, asked);
+  const theme = homeThemeOf(source);
+  const followed = followedDoc(doc, source, true);
   const sections = (followed.home?.sections ?? []).filter((s) => s.template !== "footer");
-  const own = new Set(regionalOf(doc, sul.baseDoc).map((e) => e.sectionId));
+  const own = new Set(regionalOf(doc, source).map((e) => e.sectionId));
   const catalog = getCatalog();
   const props = categoryProps((store) => catalog.productsOfStore(store), followed);
-  const sulActive = new Set((sul.baseDoc.home?.sections ?? []).filter((s) => s.active).map((s) => s.id));
-  const theme = homeThemeOf(sul.baseDoc);
+  const sulActive = new Set((source.home?.sections ?? []).filter((s) => s.active).map((s) => s.id));
+  const themes = sulThemes(sul.baseDoc);
   return (
     <section id="imagens-regiao" className="a-card scroll-mt-4 overflow-x-auto" aria-labelledby="imagens-regiao-titulo" data-testid="regional-sections">
       <div className="p-4">
         <h2 id="imagens-regiao-titulo" className="a-h2">Imagens e produtos do {scopeName(scope)} <span className="a-muted">· tema {HOME_THEME_LABEL[theme]}</span></h2>
-        <p className="a-muted mt-1 text-[0.875rem]">A estrutura é a da Sul publicada. Em cada seção, você pode trocar a foto (e, na abertura, os produtos e os banners de cada um) pelas do {scopeName(scope)}. O que não trocar segue a Sul. Cada tema da home da Sul (Original, Black Friday, Natal…) tem as próprias imagens e produtos do {scopeName(scope)}: quando a Sul troca de tema, esta lista passa a ser a do tema novo.</p>
+        <p className="a-muted mt-1 text-[0.875rem]">A estrutura é a da Sul publicada. Em cada seção, você pode trocar a foto (e, na abertura, os produtos e os banners de cada um) pelas do {scopeName(scope)}. O que não trocar segue a Sul. Cada tema da home da Sul (Original, Black Friday, Natal…) tem as próprias imagens e produtos do {scopeName(scope)}: quando a Sul troca de tema, a loja passa a usar as do tema novo. Para deixar as de outro tema prontas antes da data, escolha o tema abaixo.</p>
+        {themes.length > 1 && (
+          <nav aria-label="Tema da Sul" className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="a-label !mb-0">Tema da Sul</span>
+            {themes.map((t) => (
+              <Link key={t} href={regionalHref("/admin/home", t, live, "#imagens-regiao")} aria-current={t === theme ? "true" : undefined} className={`a-btn sm ${t === theme ? "" : "ghost"}`}>
+                {HOME_THEME_LABEL[t]}{t === live ? " · no ar" : ""}
+              </Link>
+            ))}
+          </nav>
+        )}
+        {theme !== live && (
+          <p className="a-flash ok mt-3 text-[0.875rem]" data-testid="regional-ahead">A Sul está com o tema {HOME_THEME_LABEL[live]} no ar. O que você trocar aqui fica guardado para o tema {HOME_THEME_LABEL[theme]} e aparece no {scopeName(scope)} quando a Sul publicar esse tema. Publique o {scopeName(scope)} antes disso.</p>
+        )}
       </div>
       <table className="a-table a-stack">
         <thead><tr><th scope="col">Seção da Sul</th><th scope="col">Imagens e produtos</th><th scope="col"><span className="sr-only">Editar</span></th></tr></thead>
@@ -163,7 +183,7 @@ export async function RegionalSectionsList({ scope, doc }: { scope: RegionSlug; 
                 {gap && <p className="mt-1 text-[0.8125rem]" data-testid="regional-gap"><span className="a-badge warn mr-1">Fora do {scopeName(scope)}</span>{gap}</p>}
               </td>
               <td data-label="Imagens e produtos">{own.has(s.id) ? <span className="a-badge ok">Próprias do {scopeName(scope)}</span> : <span className="a-badge">As da Sul</span>}</td>
-              <td className="text-right"><Link href={`/admin/home/regional/${s.id}`} className="a-btn sm ghost">Editar</Link></td>
+              <td className="text-right"><Link href={regionalHref(`/admin/home/regional/${s.id}`, theme, live)} className="a-btn sm ghost">Editar</Link></td>
             </tr>
             );
           })}

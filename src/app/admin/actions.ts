@@ -43,7 +43,7 @@ import { parsePageBackdrop } from "@/lib/admin/page-form";
 import type { PublishTarget } from "@/lib/admin/publishing";
 import { nextStatuses, productLinkFor, REQUEST_STATUSES, type RequestStatus } from "@/lib/customization/requests";
 import type { CollectionRef, PageKind, RegionalSection, Section } from "@/lib/site-config/schema";
-import { followedDoc } from "@/lib/site-config/follow";
+import { followedDoc, sulInTheme } from "@/lib/site-config/follow";
 import { legacyFeaturedRefs, resolveFeatured, searchFeaturedCandidates, type FeaturedCandidate } from "@/lib/hero-featured";
 import { buildRegionSeed } from "@/lib/admin/region-seed";
 import { PAGE_ONLY_STRUCTURED, STRUCTURED_TEMPLATES, type StructuredTemplate } from "@/lib/site-config/structured";
@@ -499,13 +499,17 @@ export async function setFollowAction(fd: FormData) {
 
 /**
  * One of Sul's sections as the region shows it while following Sul's home: `own` = with the region's pictures and products, else exactly Sul's (adapted).
- * Read from Sul's PUBLISHED document, the one the store follows.
+ * Read from Sul's PUBLISHED document, the one the store follows, in the theme it has in use or in `asked` (one it keeps: set up ahead of its date).
  */
-async function followedSection(scope: RegionSlug, id: string, own: boolean): Promise<{ section: Section | undefined; theme: HomeThemeName }> {
+async function followedSection(scope: RegionSlug, id: string, own: boolean, asked?: string): Promise<{ section: Section | undefined; theme: HomeThemeName }> {
   const [ws, sul] = await Promise.all([loadWorkspace(scope), loadWorkspace(FOLLOW_SOURCE)]);
   const doc = { ...ws.doc, follow: ["home" as const], ...(own ? {} : { regional: undefined }) };
-  return { section: followedDoc(doc, sul.baseDoc, true).home?.sections.find((s) => s.id === id), theme: homeThemeOf(sul.baseDoc) };
+  const source = sulInTheme(sul.baseDoc, asked);
+  return { section: followedDoc(doc, source, true).home?.sections.find((s) => s.id === id), theme: homeThemeOf(source) };
 }
+
+/** `?tema-sul=` of a regional screen, when it is not Sul's theme in use (`sul_theme` of the form). */
+const sulThemeQuery = (fd: FormData) => (text(fd, "sul_theme") ? `?tema-sul=${encodeURIComponent(text(fd, "sul_theme"))}` : "");
 
 /**
  * "Imagens e produtos" of one of Sul's sections in a region that follows Sul's home. Only what differs from Sul's is kept, so a picture or a product the
@@ -514,9 +518,10 @@ async function followedSection(scope: RegionSlug, id: string, own: boolean): Pro
 export async function saveRegionalSection(fd: FormData) {
   const { scope } = await editScope(fd);
   const id = text(fd, "id");
-  const to = `/admin/home/regional/${id}`;
+  const asked = text(fd, "sul_theme") || undefined;
+  const to = `/admin/home/regional/${id}${sulThemeQuery(fd)}`;
   if (scope === FOLLOW_SOURCE) back("/admin/home", { err: ["A Sul edita as próprias seções direto."] });
-  const [{ section: base, theme }, { section: current }] = await Promise.all([followedSection(scope, id, false), followedSection(scope, id, true)]);
+  const [{ section: base, theme }, { section: current }] = await Promise.all([followedSection(scope, id, false, asked), followedSection(scope, id, true, asked)]);
   if (!base || !current) back("/admin/home", { err: ["Essa seção não está mais na home publicada da Sul."] });
   const patch = parseSectionForm(fd, current);
   // "Nothing" is one value whatever its spelling (absent, [] or {}): an untouched empty list must not pin "no products" over a later list of Sul's.
@@ -551,11 +556,11 @@ export async function saveRegionalSection(fd: FormData) {
   return run(fd, { type: "set-regional", sectionId: id, theme, entry: own ? entry : null }, own ? "Rascunho salvo: imagens e produtos desta região. Publique para valer na loja." : "Rascunho salvo: esta seção usa as imagens e os produtos da Sul.", to);
 }
 
-/** Back to Sul's pictures and products in one of Sul's sections. */
+/** Back to Sul's pictures and products in one of Sul's sections (in Sul's theme in use, or in the one the screen was set up for). */
 export async function clearRegionalSection(fd: FormData) {
   const id = text(fd, "id");
-  const theme = homeThemeOf((await loadWorkspace(FOLLOW_SOURCE)).baseDoc);
-  return run(fd, { type: "set-regional", sectionId: id, theme, entry: null }, "Rascunho salvo: esta seção volta a usar as imagens e os produtos da Sul. Publique para valer na loja.", `/admin/home/regional/${id}`);
+  const theme = homeThemeOf(sulInTheme((await loadWorkspace(FOLLOW_SOURCE)).baseDoc, text(fd, "sul_theme") || undefined));
+  return run(fd, { type: "set-regional", sectionId: id, theme, entry: null }, "Rascunho salvo: esta seção volta a usar as imagens e os produtos da Sul. Publique para valer na loja.", `/admin/home/regional/${id}${sulThemeQuery(fd)}`);
 }
 
 /** "Página do estado": shows or hides a section that is not built from collections ("Destaques", "Escolha o estilo", "Regiões e cidades"). */

@@ -8,9 +8,10 @@ const MOBILE_WIDTH = 375;
 
 /**
  * Real previews: iframes of /admin/preview (the storefront's own components), at 375 px and at a 1280 px desktop scaled to fit. `version`
- * changes after every save, so the frames reload with the new draft; `anchor` scrolls them to the section being edited.
+ * changes after every save, so the frames reload with the new draft; `anchor` scrolls them to the section being edited. `sulTheme`: a region that
+ * follows Sul's home, shown as it will be once Sul puts that theme on its store.
  */
-export function PreviewFrame({ version, anchor, source = "draft", height = 760, page, customizer }: { version: string | number; anchor?: string; source?: "draft" | "published"; height?: number; page?: string; customizer?: string }) {
+export function PreviewFrame({ version, anchor, source = "draft", height = 760, page, customizer, sulTheme }: { version: string | number; anchor?: string; source?: "draft" | "published"; height?: number; page?: string; customizer?: string; sulTheme?: string }) {
   const [mode, setMode] = useState<Mode>("both");
   const wrap = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(900);
@@ -23,7 +24,7 @@ export function PreviewFrame({ version, anchor, source = "draft", height = 760, 
     return () => ro.disconnect();
   }, []);
 
-  const src = `/admin/preview?source=${source}&v=${version}${page ? `&page=${encodeURIComponent(page)}` : ""}${customizer ? `&customizer=${encodeURIComponent(customizer)}` : ""}${anchor ? `#${anchor}` : ""}`;
+  const src = `/admin/preview?source=${source}&v=${version}${page ? `&page=${encodeURIComponent(page)}` : ""}${customizer ? `&customizer=${encodeURIComponent(customizer)}` : ""}${sulTheme ? `&tema-sul=${encodeURIComponent(sulTheme)}` : ""}${anchor ? `#${anchor}` : ""}`;
   const desktopShare = mode === "both" ? Math.max(0, width - MOBILE_WIDTH - 24) : width;
   const scale = Math.min(1, desktopShare / DESKTOP_WIDTH);
 

@@ -20,8 +20,9 @@
 import { REGIONS, REGION_SLUGS, STATE_NAMES, type RegionSlug } from "../geo/regions";
 import { effectiveMenu } from "./collection-menu";
 import { FOLLOW_SOURCE, REGION_TOKEN, followsPart } from "./follow-schema";
+import { hasHomeTheme, swapHomeTheme } from "./home-themes";
 import { defaultStatesBlockLabel } from "./navigation";
-import { homeThemeOf, PAGE_SEGMENT, type CollectionRef, type Customizer, type Destination, type Page, type PublishedBundle, type RegionalSection, type ScopeDoc, type Section } from "./schema";
+import { HOME_THEMES, homeThemeOf, PAGE_SEGMENT, type CollectionRef, type Customizer, type Destination, type HomeThemeName, type Page, type PublishedBundle, type RegionalSection, type ScopeDoc, type Section } from "./schema";
 
 export { REGION_TOKEN };
 
@@ -68,6 +69,18 @@ export function followedDestination(d: Destination, ctx: Adapt): Destination | u
   if (second === "personalizar" && segments[2] && !ctx.customizers.some((m) => m.slug === segments[2] && m.active)) return undefined;
   segments[0] = ctx.to;
   return { kind: "route", path: `/${segments.join("/")}${url.search}${url.hash}` };
+}
+
+/** The home themes Sul has (the one in use first, then the ones it keeps): a following region can set its own pictures and products for each. */
+export const sulThemes = (sul: ScopeDoc): HomeThemeName[] => [homeThemeOf(sul), ...HOME_THEMES.filter((t) => t !== homeThemeOf(sul) && hasHomeTheme(sul, t))];
+
+/**
+ * Sul's document with `asked` in use, as a region that follows it will show it once Sul puts that theme on its store: the panel sets the region's
+ * pictures and products of a theme ahead of time ("Imagens e produtos" of the Black while Sul is on Natal). Anything else is Sul as it is.
+ */
+export function sulInTheme(sul: ScopeDoc, asked: string | undefined): ScopeDoc {
+  const theme = HOME_THEMES.find((t) => t === asked);
+  return (theme && swapHomeTheme(sul, theme)) || sul;
 }
 
 /** The region's own pictures and products for the home theme Sul has in use (each theme keeps its own: `RegionalSection.theme`). */

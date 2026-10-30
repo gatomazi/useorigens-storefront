@@ -15,26 +15,31 @@ import { currentScope, scopeName, storeOf } from "@/lib/admin/scope";
 import { toComboEntries } from "@/lib/admin/combo";
 import { libraryEntries } from "@/lib/catalog/collection-source";
 import { enabledInternalIds } from "@/lib/site-config/collections-enabled";
-import { followedDoc, regionalOf } from "@/lib/site-config/follow";
+import { followedDoc, regionalOf, sulInTheme } from "@/lib/site-config/follow";
+import { regionalHref } from "@/components/admin/FollowCard";
 import { HOME_THEME_LABEL } from "@/lib/site-config/home-themes";
 import { homeThemeOf } from "@/lib/site-config/schema";
 import { FOLLOW_SOURCE } from "@/lib/site-config/follow-schema";
 
 /**
  * "Imagens e produtos" of one of Sul's sections, in a region that follows Sul's home: the section as the region shows it (Sul's structure, the region's
- * own pictures and products when it has them), edited with the section editor in its regional mode. Only the region's draft is written.
+ * own pictures and products when it has them), edited with the section editor in its regional mode. Only the region's draft is written. `?tema-sul=`:
+ * the section in another of Sul's themes (the Black while Sul is on Natal), so the region's pictures and products wait ready for that theme.
  */
-export default async function RegionalSection({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
+export default async function RegionalSection({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string; "tema-sul"?: string }> }) {
   const actor = await requireAdmin();
   const scope = await currentScope(actor);
   if (scope === FOLLOW_SOURCE) notFound();
   const store = storeOf(scope);
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   const [ws, sul] = await Promise.all([loadWorkspace(scope), loadWorkspace(FOLLOW_SOURCE)]);
-  const section = followedDoc({ ...ws.doc, follow: ["home"] }, sul.baseDoc, true).home?.sections.find((s) => s.id === id);
+  const live = homeThemeOf(sul.baseDoc);
+  const source = sulInTheme(sul.baseDoc, sp["tema-sul"]);
+  const section = followedDoc({ ...ws.doc, follow: ["home"] }, source, true).home?.sections.find((s) => s.id === id);
   if (!section) notFound();
-  const theme = homeThemeOf(sul.baseDoc);
-  const own = regionalOf(ws.doc, sul.baseDoc).some((e) => e.sectionId === id);
+  const theme = homeThemeOf(source);
+  const ahead = theme !== live ? theme : undefined;
+  const own = regionalOf(ws.doc, source).some((e) => e.sectionId === id);
 
   const media = await listMedia();
   const slotViews = (refs: FeaturedProductRef[]): FeaturedSlotView[] =>
@@ -51,29 +56,31 @@ export default async function RegionalSection({ params, searchParams }: { params
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/admin/home#imagens-regiao" className="a-link text-[0.875rem]">← Home</Link>
+        <Link href={regionalHref("/admin/home", theme, live, "#imagens-regiao")} className="a-link text-[0.875rem]">← Home</Link>
         <h1 className="a-h1 mt-2">{section.title?.replace(/\n/g, " ") ?? section.anchor} <span className="a-muted">· imagens e produtos do {scopeName(scope)}</span></h1>
         <p className="mt-2 flex flex-wrap items-center gap-2">
           <span className="a-badge">{section.template}</span>
           {own ? <span className="a-badge ok">Próprias do {scopeName(scope)}</span> : <span className="a-badge">As da Sul</span>}
           <span className="a-badge" title="Cada tema da home da Sul tem as próprias imagens e produtos desta região">Tema {HOME_THEME_LABEL[theme]}</span>
         </p>
+        {ahead && <p className="a-flash ok mt-3 text-[0.875rem]" data-testid="regional-ahead">A Sul está com o tema {HOME_THEME_LABEL[live]} no ar. O que você salvar aqui vale para o tema {HOME_THEME_LABEL[ahead]} e aparece no {scopeName(scope)} quando a Sul publicar esse tema. Publique o {scopeName(scope)} antes disso.</p>}
       </div>
       <Flash ok={sp.ok} err={sp.err} />
       <div className="grid gap-6 2xl:grid-cols-[minmax(0,34rem)_1fr]">
         <section className="a-card space-y-5 p-5" aria-label="Imagens e produtos da região">
-          <SectionEditorForm regional section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveRegionalSection} featured={featured} stateCovers={stateCovers} />
+          <SectionEditorForm regional regionalTheme={ahead} section={section} rev={ws.record?.rev ?? null} scope={scope} media={media} collections={entries} action={saveRegionalSection} featured={featured} stateCovers={stateCovers} />
           {own && (
             <form action={clearRegionalSection} className="border-t border-black/15 pt-4">
               <input type="hidden" name="rev" value={ws.record?.rev ?? "null"} />
               <input type="hidden" name="scope" value={scope} />
               <input type="hidden" name="id" value={id} />
+              {ahead && <input type="hidden" name="sul_theme" value={ahead} />}
               <button type="submit" className="a-btn sm ghost">Voltar a usar as imagens e os produtos da Sul</button>
             </form>
           )}
         </section>
         <section className="a-card p-5 2xl:sticky 2xl:top-4 2xl:self-start" aria-label="Pré-visualização">
-          <PreviewFrame version={ws.record?.rev ?? 0} anchor={section.template === "hero" ? undefined : section.anchor} height={760} />
+          <PreviewFrame version={ws.record?.rev ?? 0} anchor={section.template === "hero" ? undefined : section.anchor} height={760} sulTheme={ahead} />
         </section>
       </div>
     </div>
