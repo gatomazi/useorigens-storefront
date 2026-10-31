@@ -29,6 +29,7 @@ Nomes apenas. Segredos entram direto no painel do Railway, **nunca** no chat, no
 | `ADMIN_OWNER_PASSWORD_HASH` | não | hash scrypt da senha de reserva do owner (seção 6a); nunca a senha em si |
 | `BUCKET_ENDPOINT`, `BUCKET_NAME`, `BUCKET_ACCESS_KEY_ID`, `BUCKET_SECRET_ACCESS_KEY`, `BUCKET_REGION` | para enviar imagens | referências às variáveis do bucket |
 | `BUCKET_ADDRESSING` | não | `path` só se o bucket for antigo |
+| `TROCA_FOTOS_BUCKET_ENDPOINT`, `TROCA_FOTOS_BUCKET_NAME`, `TROCA_FOTOS_BUCKET_ACCESS_KEY_ID`, `TROCA_FOTOS_BUCKET_SECRET_ACCESS_KEY`, `TROCA_FOTOS_BUCKET_REGION` | para `/troca-foto/*` | bucket das artes do cadastro (não o do CMS): fotos de troca da INK, em `trocas/`; sem elas todo link é 404 |
 | `SITE_CONFIG_HOME` | **`off`** | vira `on` só no passo 9 do rollout |
 
 `ADMIN_DEV_MODE` não deve existir em produção (é ignorada).

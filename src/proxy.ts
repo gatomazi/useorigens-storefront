@@ -70,6 +70,8 @@ export function proxy(request: NextRequest) {
 
   // CMS images (`/media/<sha256>/<width>.webp`, served only if published) are not storefront pages: never behind the catalog gate.
   if (pathname.startsWith("/media/")) return NextResponse.next();
+  // Photos for INK exchanges (`/troca-foto/<id>.<ext>`, src/lib/media/troca-fotos.ts): same, never behind the catalog gate.
+  if (pathname.startsWith("/troca-foto/")) return NextResponse.next();
   // OAuth discovery of the MCP connector (docs/mcp/README.md): not a storefront page either; the route handlers decide host and existence.
   if (pathname.startsWith("/.well-known/")) return NextResponse.next();
 
