@@ -106,7 +106,9 @@ export function Campaign({
 /**
  * The split campaign: the picture (or two crops of real shirts) fills one half, the text sits on a colour of its own on the other, and both halves run
  * to the edges of the window; only the text keeps to a reading width. Phones: the picture on top, a wide band, then the text. The one action is the
- * configured button (a real destination) or the city search; nothing else in the block looks clickable.
+ * configured button (a real destination) or the city search. With a button, the picture leads to the same destination (a tap on the photo of the
+ * surname section opens its page): a second way for the pointer only, out of the tab order and hidden from screen readers, so the button stays the
+ * one named link. Without one (the search), the picture is not a link.
  */
 function SplitCampaign({
   region, crops, copy, anchor, headingId, cta, split,
@@ -120,21 +122,33 @@ function SplitCampaign({
   split: NonNullable<Parameters<typeof Campaign>[0]["split"]>;
 }) {
   const light = split.panelTone === "light";
+  const figureClass = "relative aspect-[16/10] overflow-hidden bg-[#141414] sm:aspect-[16/8] lg:aspect-auto lg:min-h-[36rem]";
+  const figure = (
+    <>
+      {split.figure ? (
+        <BannerBackground asset={split.figure} sizes="(min-width: 1024px) 50vw, 100vw" alt={split.figure.alt} />
+      ) : (
+        <div className="absolute inset-0 grid grid-cols-2" aria-hidden="true">
+          {crops.map((crop) => (
+            <span key={crop.family} className="relative block overflow-hidden">
+              <Image src={crop.imageUrl} alt="" fill sizes="(min-width: 1024px) 25vw, 50vw" quality={80} className={`origin-[50%_50%] object-cover ${crop.family === "feito-em" ? "scale-[1.2]" : "scale-[1.7]"}`} />
+            </span>
+          ))}
+        </div>
+      )}
+    </>
+  );
   return (
     <section id={anchor} aria-labelledby={headingId} className="grid lg:grid-cols-2">
-      <div className="relative aspect-[16/10] overflow-hidden bg-[#141414] sm:aspect-[16/8] lg:aspect-auto lg:min-h-[36rem]">
-        {split.figure ? (
-          <BannerBackground asset={split.figure} sizes="(min-width: 1024px) 50vw, 100vw" alt={split.figure.alt} />
-        ) : (
-          <div className="absolute inset-0 grid grid-cols-2" aria-hidden="true">
-            {crops.map((crop) => (
-              <span key={crop.family} className="relative block overflow-hidden">
-                <Image src={crop.imageUrl} alt="" fill sizes="(min-width: 1024px) 25vw, 50vw" quality={80} className={`origin-[50%_50%] object-cover ${crop.family === "feito-em" ? "scale-[1.2]" : "scale-[1.7]"}`} />
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      {cta ? (
+        <a href={cta.href} tabIndex={-1} aria-hidden="true" className={`group block ${figureClass}`} data-testid="campaign-figure-link">
+          {figure}
+          {/* A quiet answer to the pointer over the photo, like the opening's banners. */}
+          <span className="pointer-events-none absolute inset-0 bg-black/0 transition-colors group-hover:bg-black/[0.06] group-active:bg-black/10" />
+        </a>
+      ) : (
+        <div className={figureClass}>{figure}</div>
+      )}
       <div className={`relative isolate flex items-center ${light ? "text-white" : "text-ink"}`}>
         {split.panel ?? <div aria-hidden="true" className="absolute inset-0 -z-10 bg-region-primary" />}
         <div className="w-full px-[var(--gutter)] py-12 sm:py-14 lg:max-w-[40rem] lg:px-14 lg:py-20 xl:px-20">
