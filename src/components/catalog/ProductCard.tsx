@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { trackGoToInk, trackGoToUmaPenca } from "@/lib/analytics/track";
-import type { ProductTags } from "@/lib/site-config/schema";
+import { TAG_COLORS, type ProductTags, type TagColor } from "@/lib/site-config/schema";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { CardButton, CardCall, CardFab } from "./CardButton";
@@ -82,19 +82,20 @@ export const CARD_PRICE = "text-base font-semibold leading-tight tabular-nums md
 const PRICE = CARD_PRICE;
 
 /** A notch smaller on phones, so a discount and a short own tag share one line instead of stacking over the print. */
-const TAG = "px-1.5 py-0.5 text-[0.625rem] font-bold uppercase leading-[1.15] tracking-[0.04em] text-white sm:px-2 sm:py-1 sm:text-[0.6875rem] sm:tracking-[0.08em]";
+const TAG = "px-1.5 py-0.5 text-[0.625rem] font-bold uppercase leading-[1.15] tracking-[0.04em] sm:px-2 sm:py-1 sm:text-[0.6875rem] sm:tracking-[0.08em]";
 
 /**
- * The section's tags over the top-left corner of the picture (`layout.tags`): the "% OFF" of a product on promotion first, in the region's colour,
+ * The section's tags over the top-left corner of the picture (`layout.tags`): the "% OFF" of a product on promotion first, in the region's colour
+ * (or a season's colour, `TAG_COLORS`),
  * then the section's own text in ink, the same family as the "Personalizável" tag. Inside the card's link, so a screen reader hears them with
  * the product; never zoomed with the photo.
  */
-export function CardTags({ discount, text }: { discount?: number; text?: string }) {
+export function CardTags({ discount, text, color }: { discount?: number; text?: string; color?: TagColor }) {
   if (!discount && !text) return null;
   return (
     <span className="pointer-events-none absolute left-2 top-2 z-[1] flex max-w-[calc(100%-1rem)] flex-wrap items-start gap-1">
-      {discount !== undefined && <span className={`${TAG} bg-region-primary`}>{discount}% OFF</span>}
-      {text && <span className={`${TAG} bg-ink`}>{text}</span>}
+      {discount !== undefined && (color ? <span className={TAG} style={{ backgroundColor: TAG_COLORS[color].background, color: TAG_COLORS[color].text }}>{discount}% OFF</span> : <span className={`${TAG} bg-region-primary text-white`}>{discount}% OFF</span>)}
+      {text && <span className={`${TAG} bg-ink text-white`}>{text}</span>}
     </span>
   );
 }
@@ -157,7 +158,7 @@ export function ProductCardLink({ item, poster, dark, sizes, priority, sourceSec
       >
         {buy?.style === "fab" && <CardFab label={buy.label} />}
       </ProductPhoto>
-      <CardTags discount={tags?.discount ? item.discount : undefined} text={tags?.onSale && !item.listPrice ? undefined : tags?.text} />
+      <CardTags discount={tags?.discount ? item.discount : undefined} text={tags?.onSale && !item.listPrice ? undefined : tags?.text} color={tags?.color} />
       <div className={INFO}>
         {item.eyebrow && <p className="mb-1 font-display text-[1.6rem] font-extrabold leading-none">{item.eyebrow}</p>}
         <h3 className={NAME}>{item.name}</h3>

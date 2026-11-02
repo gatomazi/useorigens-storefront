@@ -177,9 +177,12 @@ export type ProductDisplay = (typeof PRODUCT_DISPLAYS)[number];
  * Tags drawn on the product pictures of a section (product sections only; absent = none). `discount`: "18% OFF" on every product INK (or Uma Penca)
  * has on promotion right now, worked out from the two prices the store sent, never typed. `text`: the section's own tag on every product card
  * ("Black Friday", "Lançamento"), the same for all of them; with `onSale`, only on the cards of products on promotion (a "Black Friday" tag never
- * sits on a full price).
+ * sits on a full price). `color`: the "% OFF" in a season's colour (`TAG_COLORS`) instead of the region's.
  */
-export type ProductTags = { discount?: true; text?: string; onSale?: true };
+export type ProductTags = { discount?: true; text?: string; onSale?: true; color?: TagColor };
+/** The seasons' colours behind the "% OFF" (the Black and Natal openings' highlights, home-themes.ts), each with the text that reads on it. */
+export const TAG_COLORS = { gold: { background: "#e2b64a", text: "#111111" }, red: { background: "#a8322d", text: "#ffffff" } } as const;
+export type TagColor = keyof typeof TAG_COLORS;
 export const MAX_TAG_TEXT = 24;
 /** `glass`: the section's colour as frosted glass (translucent over a blur of the page's ground, its pattern included), not a solid band. */
 export type CarouselLayout = { variant: "standard" | "poster"; tone: "light" | "dark"; surface: "paper" | "plain" | "region-primary"; display?: ProductDisplay; buyLabel?: string; buyStyle?: CardBuyStyle; tags?: ProductTags; glass?: true };
@@ -892,12 +895,13 @@ function checkSection(c: Collector, path: string, v: unknown): void {
         const ok =
           v.template === "product-carousel" &&
           isRecord(t) &&
-          Object.keys(t).every((k) => k === "discount" || k === "text" || k === "onSale") &&
+          Object.keys(t).every((k) => k === "discount" || k === "text" || k === "onSale" || k === "color") &&
+          (t.color === undefined || (typeof t.color === "string" && Object.hasOwn(TAG_COLORS, t.color))) &&
           (t.discount === undefined || t.discount === true) &&
           (t.onSale === undefined || (t.onSale === true && t.text !== undefined)) &&
           (t.text === undefined || (isStr(t.text, MAX_TAG_TEXT) && t.text.trim() === t.text)) &&
           (t.discount === true || t.text !== undefined);
-        if (!ok) c.fail(`${path}.layout.tags`, `product sections only: { discount?: true, text?: 1..${MAX_TAG_TEXT} chars, onSale?: true (with text) }, at least one`);
+        if (!ok) c.fail(`${path}.layout.tags`, `product sections only: { discount?: true, text?: 1..${MAX_TAG_TEXT} chars, onSale?: true (with text), color?: ${Object.keys(TAG_COLORS).join(" | ")} }, at least one`);
       }
     }
   }
