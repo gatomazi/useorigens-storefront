@@ -631,6 +631,14 @@ export function SectionEditorForm({
               <input type="hidden" name="tags_present" value="1" />
               <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="tags_discount" defaultChecked={Boolean(section.layout?.tags?.discount)} /> Desconto (“18% OFF”) nos produtos em promoção</label>
               <p className="a-muted text-[0.8125rem]">Calculado com os dois preços que a INK (ou a Uma Penca) envia, arredondado como a própria loja mostra. Só aparece nos produtos com promoção valendo, depois de sincronizar o catálogo; sem promoção, nenhuma etiqueta.</p>
+              <label className="block max-w-xs">
+                <span className="a-label">Cor do desconto</span>
+                <select name="tags_color" defaultValue={section.layout?.tags?.color ?? ""} className="a-input">
+                  <option value="">Cor da região</option>
+                  <option value="gold">Amarelo da Black (texto preto)</option>
+                  <option value="red">Vermelho do Natal (texto branco)</option>
+                </select>
+              </label>
               <label className="flex items-center gap-2 font-bold"><input type="checkbox" name="tags_custom" checked={tagOn} onChange={(e) => setTagOn(e.target.checked)} /> Etiqueta própria nos cards desta seção</label>
               {tagOn && (
                 <div className="max-w-xs">

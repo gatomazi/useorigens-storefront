@@ -3,13 +3,16 @@
  * without a browser. Nothing from the form is trusted: each value is parsed into the closed vocabulary of the contract and the result still
  * goes through `validateSection` in `applyOp`.
  */
-import { isCheckpointDay, MAX_HERO_SCHEDULE, type HeroScheduleEntry, FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, MAX_LIVE_EXAMPLES, MAX_CITY_STYLES, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
+import { TAG_COLORS, type TagColor, isCheckpointDay, MAX_HERO_SCHEDULE, type HeroScheduleEntry, FEATURED_ROTATIONS, HERO_COLOR_KEYS, MAX_FEATURED, MAX_HERO_PINS, MAX_LIVE_EXAMPLES, MAX_CITY_STYLES, variantsOf, type HeroColors, type HeroPin, type FeaturedProductRef, type FeaturedRotation } from "../site-config/schema";
 import { DEFAULT_BUY_LABEL, EDITORIAL_MODULE_KEYS, GRID_ASPECTS, GRID_COLUMNS, GRID_LABELS, MAX_GRID_TILES, MIN_GRID_TILES, MAX_ARRANGED_IDS, MAX_TILE_CTA, TILE_FORMATS, TILE_VEILS, type TileFormat, type TileVeil, MAX_BUY_LABEL, MAX_TAG_TEXT, MIN_SECTION_PRODUCTS, maxSectionProducts, OVERLAY_PRESETS, type Appearance, type Color, type CommerceStoreKey, type CollectionRef, type Destination, type Fill, type GridLayout, type GridTile, type Overlay, type ProductDisplay, type ProductTags, type Section, type Source } from "./contract";
 import { REGION_SLUGS, STATE_NAMES } from "../geo/regions";
 import type { Editable } from "./draft-ops";
 import { postedBuyStyle } from "../site-config/cards-schema";
 import { ARTICLE_KINDS } from "../umapenca/types";
 import { isProductSort } from "../catalog/product-sort";
+
+/** The "% OFF" colour posted by the editor: a season's colour, or nothing (the region's). */
+const tagColor = (v: string): TagColor | undefined => (Object.hasOwn(TAG_COLORS, v) ? (v as TagColor) : undefined);
 
 type Fields = { get(name: string): FormDataEntryValue | null };
 
@@ -301,7 +304,7 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     let tags: ProductTags | undefined = section.layout?.tags;
     if (f.get("tags_present") !== null) {
       const text = f.get("tags_custom") !== null ? str(f, "tags_text").slice(0, MAX_TAG_TEXT).trim() : "";
-      const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text, ...(f.get("tags_on_sale") !== null ? { onSale: true as const } : {}) } : {}) };
+      const next: ProductTags = { ...(f.get("tags_discount") !== null ? { discount: true as const } : {}), ...(text ? { text, ...(f.get("tags_on_sale") !== null ? { onSale: true as const } : {}) } : {}), ...(tagColor(str(f, "tags_color")) ? { color: tagColor(str(f, "tags_color"))! } : {}) };
       tags = next.discount || next.text ? next : undefined;
     }
     // The section's colour as glass: posted with the layout (a form without the block keeps what is saved).

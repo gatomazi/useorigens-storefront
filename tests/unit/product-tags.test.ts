@@ -39,11 +39,13 @@ describe("section tags (layout.tags)", () => {
     expect(validateSection(withTags({ text: "Black Friday" })).ok).toBe(true);
     expect(validateSection(withTags({ discount: true, text: "Lançamento" })).ok).toBe(true);
     expect(validateSection(withTags({ text: "Black Friday", onSale: true })).ok).toBe(true);
+    expect(validateSection(withTags({ discount: true, color: "gold" })).ok).toBe(true);
+    expect(validateSection(withTags({ discount: true, color: "red" })).ok).toBe(true);
     expect(terra().layout!.tags).toBeUndefined();
   });
 
   test("given an empty, long, padded or unknown tag, or tags outside a product section, when validated, then they are rejected", () => {
-    for (const bad of [{}, { discount: false }, { text: "" }, { text: "x".repeat(25) }, { text: " BF" }, { color: "red", text: "BF" }, { discount: true, onSale: true }, { text: "BF", onSale: false }, "BF"]) expect(validateSection(withTags(bad)).ok, JSON.stringify(bad)).toBe(false);
+    for (const bad of [{}, { discount: false }, { text: "" }, { text: "x".repeat(25) }, { text: " BF" }, { color: "blue", text: "BF" }, { discount: true, color: true }, { discount: true, color: "toString" }, { discount: true, onSale: true }, { text: "BF", onSale: false }, "BF"]) expect(validateSection(withTags(bad)).ok, JSON.stringify(bad)).toBe(false);
     const hero = seed().home!.sections.find((s) => s.template === "hero")!;
     expect(validateSection({ ...hero, layout: { variant: "standard", tone: "dark", surface: "region-primary", tags: { discount: true } } }).ok).toBe(false);
   });
@@ -59,6 +61,8 @@ describe("section tags (layout.tags)", () => {
   test("given the own tag only on products on promotion, when parsed, then it is stored with the text; without a text it is not", () => {
     expect(parseSectionForm(form(layoutForm({ tags_present: "1", tags_custom: "on", tags_text: "Black Friday", tags_on_sale: "on" })), terra()).layout!.tags).toEqual({ text: "Black Friday", onSale: true });
     expect(parseSectionForm(form(layoutForm({ tags_present: "1", tags_discount: "on", tags_on_sale: "on" })), terra()).layout!.tags).toEqual({ discount: true });
+    expect(parseSectionForm(form(layoutForm({ tags_present: "1", tags_discount: "on", tags_color: "red" })), terra()).layout!.tags).toEqual({ discount: true, color: "red" });
+    expect(parseSectionForm(form(layoutForm({ tags_present: "1", tags_discount: "on", tags_color: "toString" })), terra()).layout!.tags).toEqual({ discount: true });
   });
 
   test("given both boxes unticked, or the own tag ticked with no text, then no tag is stored; a form without the block keeps the saved tags", () => {
