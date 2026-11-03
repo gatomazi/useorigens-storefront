@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { filterByCity, stateCounts } from "@/lib/umapenca/city-filter";
-import { articleCity } from "@/lib/umapenca/region";
+import { articleCity, articlesOfPlace } from "@/lib/umapenca/region";
 
 describe("Uma Penca article city, from the title", () => {
   test("the place's own spelling, its UF and the title without the UF suffix", () => {
@@ -43,5 +43,22 @@ describe("\"Outros artigos\" city filter", () => {
     expect(ids(filterByCity(items, "cur", "SC"))).toEqual(["cb"]);
     expect(ids(filterByCity(items, "  ", null))).toEqual(ids(items));
     expect(stateCounts(items, ["PR", "SC", "RS", "XX"])).toEqual([{ uf: "PR", count: 1 }, { uf: "SC", count: 1 }, { uf: "RS", count: 3 }]);
+  });
+});
+
+describe("a city page's \"Outros artigos\"", () => {
+  const a = (title: string, region: "sul" | "norte" | null, uf: string | null) => ({ title, region, uf });
+  const articles = [
+    a("Caneca Lá de Curitiba | PR", "sul", "PR"),
+    a("Ecobag Lá de curitiba", "sul", "PR"),
+    a("Caneca Lá de Curitibanos", "sul", "SC"),
+    a("Caneca Lá de Palmas | TO", "norte", "TO"),
+    a("Caneca Lá do Paraná – PR", "sul", "PR"),
+    a("Caneca Use Origens", null, null),
+  ];
+  test("only the articles that name exactly this place: same name, UF and region; never a generic one, a state or a neighbour", () => {
+    expect(articlesOfPlace(articles, { name: "Curitiba", uf: "PR", regionSlug: "sul" }).map((x) => x.title)).toEqual(["Caneca Lá de Curitiba | PR", "Ecobag Lá de curitiba"]);
+    expect(articlesOfPlace(articles, { name: "Palmas", uf: "PR", regionSlug: "sul" })).toEqual([]);
+    expect(articlesOfPlace(articles, { name: "Palmas", uf: "TO", regionSlug: "norte" }).map((x) => x.title)).toEqual(["Caneca Lá de Palmas | TO"]);
   });
 });

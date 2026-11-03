@@ -3,7 +3,7 @@
 import { CardButton, CardCall, CardFab } from "@/components/catalog/CardButton";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { ProductPhoto } from "@/components/catalog/ProductPhoto";
-import { SOURCES } from "@/lib/analytics/sources";
+import { SOURCES, type TrackingSource } from "@/lib/analytics/sources";
 import { trackGoToUmaPenca } from "@/lib/analytics/track";
 import { formatPrice } from "@/lib/format";
 import type { UmaPencaArticle } from "@/lib/umapenca/types";
@@ -13,7 +13,23 @@ import type { UmaPencaArticle } from "@/lib/umapenca/types";
  * card is a plain same-tab `<a>` to the verified Uma Penca product page (like every INK purchase link on the site), firing
  * GoToPenca (Meta) and `go_to_umapenca` (GA4) on the real click. Merch photos carry their own backgrounds, hence the 4:5 poster frame.
  */
-export function ArticleCard({ article, region, sizes, priority = false, hoverImageUrl, buy }: { article: UmaPencaArticle; region: string; sizes: string; priority?: boolean; hoverImageUrl?: string; buy?: CardBuy }) {
+export function ArticleCard({
+  article,
+  region,
+  sizes,
+  priority = false,
+  hoverImageUrl,
+  buy,
+  sourceSection = SOURCES.outrosArtigos,
+}: {
+  article: UmaPencaArticle;
+  region: string;
+  sizes: string;
+  priority?: boolean;
+  hoverImageUrl?: string;
+  buy?: CardBuy;
+  sourceSection?: TrackingSource;
+}) {
   const current = article.salePrice ?? article.price;
   const price = formatPrice(current);
   const fullPrice = article.salePrice !== null ? formatPrice(article.price) : null;
@@ -39,7 +55,7 @@ export function ArticleCard({ article, region, sizes, priority = false, hoverIma
           productName: article.title,
           kind: article.kind,
           region,
-          sourceSection: SOURCES.outrosArtigos,
+          sourceSection,
           destinationUrl: article.url,
           ...(current !== null ? { value: current } : {}),
         })

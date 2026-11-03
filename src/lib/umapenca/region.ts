@@ -73,3 +73,16 @@ export function articleCity(title: string): { name: string; uf: string | null; l
   const official = citiesByName(named.name, ufs)[0]?.name ?? administrativeRegionByLabel(named.name)?.name ?? named.name;
   return { name: official, uf: place.uf, label: named.label };
 }
+
+/**
+ * The articles that name exactly this place (a city page's "Outros artigos"): same region, same UF, same name (accent- and case-insensitive).
+ * An article whose UF is not certain (a name repeated inside the region) names no single place, so it is never shown on one.
+ */
+export function articlesOfPlace<T extends { title: string; region?: RegionSlug | null; uf?: string | null }>(articles: readonly T[], place: { name: string; uf: string; regionSlug: RegionSlug }): T[] {
+  const key = normalizeText(place.name);
+  return articles.filter((article) => {
+    if ((article.region ?? null) !== place.regionSlug) return false;
+    const city = articleCity(article.title);
+    return city !== null && (article.uf ?? city.uf) === place.uf && normalizeText(city.name) === key;
+  });
+}
