@@ -55,7 +55,7 @@ export function ArticleCard({ article, region, sizes, priority = false, hoverIma
         </h3>
         {price && buy?.style !== "link" && priceLine}
       </div>
-      <p className="t-caption mt-1">{ARTICLE_KIND_LABELS[article.kind].singular} · na loja Uma Penca</p>
+      <p className="t-caption mt-1">{ARTICLE_KIND_LABELS[article.kind].singular} · compra à parte, na Uma Penca</p>
       {buy?.style === "link" && <CardCall label={buy.label} className="mt-2" price={price ? priceLine : undefined} />}
       {buy?.style === "button" && <CardButton label={buy.label} className="mt-auto" />}
     </a>

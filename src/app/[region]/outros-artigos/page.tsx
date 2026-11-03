@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ArticleCard } from "@/components/umapenca/ArticleCard";
+import { ArticleShelf } from "@/components/umapenca/ArticleShelf";
 import { CreateYourOwnCard } from "@/components/umapenca/CreateYourOwnCard";
-import { isRegionSlug } from "@/lib/geo/regions";
+import { isRegionSlug, REGIONS } from "@/lib/geo/regions";
 import { publishedFor } from "@/lib/pages/public";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { createYourOwnCards } from "@/lib/umapenca/customizer-cards";
 import { umaPencaHoverPhotos } from "@/lib/umapenca/hover";
-import { isArticleOfRegion } from "@/lib/umapenca/region";
+import { articleCity, isArticleOfRegion } from "@/lib/umapenca/region";
 import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 import { storeCardButton } from "@/lib/site-config/cards";
@@ -36,7 +36,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  * "Outros artigos": canecas and ecobags from the Uma Penca feed (src/lib/umapenca). Each region shows the articles whose title names
  * one of its places ("Caneca Lá de Palmas | TO" only in the Norte), plus the generic ones that name none (region.ts). Each kind opens with the region's published Uma Penca personalization models ("Crie a sua", leading
  * to /personalizar/<slug>), then the feed's articles (each opening the Uma Penca product page). A kind with neither is left out,
- * and with nothing at all the page is a 404, so no link ever lands on an empty shelf.
+ * and with nothing at all the page is a 404, so no link ever lands on an empty shelf. A kind with more than a page of articles gets the city
+ * filter (ArticleShelf); the city of each one is read from its title (`articleCity`). The articles are a separate purchase from the shirts (another
+ * store, cart, shipping and payment): the header says so before anything else.
  */
 export default async function OutrosArtigosPage({ params }: Props) {
   const { region } = await params;
@@ -57,7 +59,14 @@ export default async function OutrosArtigosPage({ params }: Props) {
     <div className="wrap py-10 lg:py-16">
       <header className="max-w-[60ch]">
         <h1 className="t-h1">Outros artigos</h1>
-        <p className="t-body mt-3">Canecas e ecobags com as nossas estampas. A compra é feita na loja da Uma Penca.</p>
+        <p className="t-body mt-3">Canecas e ecobags com as nossas estampas.</p>
+        <aside aria-label="Compra separada das camisetas" className="mt-5 border-l-4 border-region-accent bg-paper px-4 py-3" data-testid="separate-purchase-notice">
+          <p className="t-small font-bold">Compra separada das camisetas</p>
+          <p className="t-small mt-1 text-ink-soft">
+            Canecas e ecobags são vendidas e entregues pela Uma Penca, nossa parceira. Carrinho, frete e pagamento são separados da loja de camisetas: se quiser os
+            dois, faça um pedido em cada loja.
+          </p>
+        </aside>
         {groups.length > 1 && (
           <nav aria-label="Tipos de artigo" className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
             {groups.map(({ kind }) => (
@@ -74,18 +83,24 @@ export default async function OutrosArtigosPage({ params }: Props) {
           <h2 id={`${kind}-title`} className="mb-6 text-[1.5rem] font-extrabold tracking-tight lg:mb-10 lg:text-[1.875rem]">
             {ARTICLE_KIND_LABELS[kind].plural}
           </h2>
-          <ul className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-4">
-            {cards.map((card, i) => (
+          <ArticleShelf
+            items={articles.map((article) => {
+              const city = articleCity(article.title);
+              // Only what a card needs travels to the browser: the shelf has a thousand of them.
+              return { article: { ...article, description: "", additionalImageUrls: [] }, city: city?.name ?? null, uf: article.uf ?? city?.uf ?? null, ...(hover[article.id] ? { hover: hover[article.id] } : {}) };
+            })}
+            labels={ARTICLE_KIND_LABELS[kind]}
+            ufs={REGIONS[region].ufs}
+            region={region}
+            sizes={SIZES}
+            buy={buy}
+            priority={groupIndex === 0 && cards.length < 2}
+            leading={cards.map((card, i) => (
               <li key={card.id} data-create-your-own>
                 <CreateYourOwnCard card={card} sizes={SIZES} priority={groupIndex === 0 && i < 2} />
               </li>
             ))}
-            {articles.map((article, i) => (
-              <li key={article.id}>
-                <ArticleCard article={article} region={region} sizes={SIZES} hoverImageUrl={hover[article.id]} priority={groupIndex === 0 && cards.length + i < 2} buy={buy} />
-              </li>
-            ))}
-          </ul>
+          />
         </section>
       ))}
     </div>

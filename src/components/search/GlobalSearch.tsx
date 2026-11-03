@@ -10,7 +10,7 @@ import { fetchResults } from "@/lib/search/fetch-results";
 import type { GlobalGroup, GlobalResult, GlobalSearchResponse } from "@/lib/search/global";
 import { SOURCES } from "@/lib/analytics/sources";
 import { carryCampaign } from "@/lib/analytics/campaign";
-import { trackGoToInk, trackSearch, trackSelectCity } from "@/lib/analytics/track";
+import { trackGoToInk, trackGoToUmaPenca, trackSearch, trackSelectCity } from "@/lib/analytics/track";
 
 type Props = {
   region: RegionSlug;
@@ -164,6 +164,10 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
     if (r.inkProductId) {
       trackGoToInk({ productId: r.inkProductId, sourceSection: SOURCES.search, productName: r.title, destinationUrl: r.href, ...(r.minPrice !== undefined ? { value: r.minPrice } : {}) });
     }
+    // A city's caneca opens its Uma Penca product page: GoToPenca (Meta) / go_to_umapenca (GA4), like the "Outros artigos" cards.
+    if (r.umaPenca) {
+      trackGoToUmaPenca({ productId: r.umaPenca.id, productName: r.title, kind: r.umaPenca.kind, region: r.region, sourceSection: SOURCES.search, destinationUrl: r.href, ...(r.minPrice !== undefined ? { value: r.minPrice } : {}) });
+    }
     onNavigate?.();
     if (r.external) window.location.assign(carryCampaign(r.href));
     else router.push(r.href);
@@ -223,7 +227,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
             <span className="min-w-0 break-words text-[1.125rem] font-extrabold leading-tight tracking-tight sm:text-[1.3125rem]">{r.title}</span>
             <span className={`min-w-0 text-[0.875rem] leading-snug ${isActive ? "text-white/85" : muted}`}>
               {/* The group heading already says "Estampas"; the type is spelled out where it is not (editorial kinds, other regions). */}
-              {(row.other || r.kind === "page") && <span className="font-semibold">{r.tag} · </span>}
+              {(row.other || r.kind === "page" || r.umaPenca) && <span className="font-semibold">{r.tag} · </span>}
               {r.subtitle}
               {regionNote}
               {r.external && <span className="sr-only"> (abre a loja)</span>}

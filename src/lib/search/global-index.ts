@@ -25,7 +25,8 @@ import { readPublished } from "../site-config/published";
 import type { PublishedBundle, ScopeDoc, Source as CarouselSource } from "../site-config/schema";
 import { collectionPagePath, collectionUrl, resolveSource, type EditorialItems, type SourceResult } from "../site-config/sources";
 import { umaPencaLookup } from "../umapenca/carousel";
-import { isArticleOfRegion } from "../umapenca/region";
+import { articleCity, isArticleOfRegion } from "../umapenca/region";
+import { ARTICLE_KIND_LABELS, type UmaPencaArticle } from "../umapenca/types";
 import { readUmaPencaSnapshot, umaPencaSnapshotPath } from "../umapenca/snapshot";
 import { prepareGlobalDocs, type GlobalDoc, type PreparedGlobalDoc } from "./global";
 
@@ -36,7 +37,8 @@ import { prepareGlobalDocs, type GlobalDoc, type PreparedGlobalDoc } from "./glo
  *    `product_cluster_id` (the same association the city page's garment tabs use) — the 9 pieces of a design are never 9 results;
  *  - editorial: published, live pages (hotpages, category landings), active personalization models, the home's own carousels (an anchor on
  *    the home, only when the carousel really renders), public INK collections with a verified public page, and "Outros artigos".
- *  - merchandise designs ("Made in …", "| Essência" lines, expressions): one result per `product_cluster_id` (see `merchDocs`).
+ *  - merchandise designs ("Made in …", "| Essência" lines, expressions): one result per `product_cluster_id` (see `merchDocs`);
+ *  - the cities' canecas from Uma Penca: one result per article that names a place of the region (see `umaPencaDocs`).
  * Only LAUNCHED regions are indexed.
  */
 export type GlobalIndexInputs = {
@@ -56,6 +58,8 @@ export type GlobalIndexInputs = {
   /** Resolves a home carousel's source the way the home does, so a carousel that renders nothing is never a result. */
   carouselItems?: (source: CarouselSource) => number;
   umaPencaArticles: number;
+  /** The region's Uma Penca articles that name a city (one result each, see `umaPencaDocs`). */
+  umaPencaCityArticles?: readonly UmaPencaArticle[];
   /** Ids of the products in the cities' collection ("Seu Lugar", `cityCollectionIds`): a merchandise design with a piece there is a city design. */
   cityCollection?: ReadonlySet<string>;
 };
@@ -184,6 +188,8 @@ export function buildGlobalDocs(input: GlobalIndexInputs): GlobalDoc[] {
     }
   }
 
+  docs.push(...umaPencaDocs(region, input.umaPencaCityArticles ?? []));
+
   if (input.umaPencaArticles > 0) {
     docs.push({
       key: "page:outros-artigos", kind: "page", region, title: "Outros artigos", subtitle: "Canecas e ecobags", href: `/${region}/outros-artigos`,
@@ -253,6 +259,31 @@ export function merchDocs(region: RegionSlug, products: readonly MerchProduct[],
   return docs;
 }
 
+/**
+ * The city's caneca (or any Uma Penca article that names a place): ONE result per article, among the designs, opening the Uma Penca product page.
+ * Searchable by the city and the kind ("curitiba", "caneca curitiba"), but the bare city is never one of its `names`: the place and the shirts
+ * come first, the caneca right after them (rank after the merchandise). Never a city-collection design: the "Estampas de cidade na busca" switch
+ * does not hide it. The subtitle says it is a separate purchase.
+ */
+export function umaPencaDocs(region: RegionSlug, articles: readonly UmaPencaArticle[]): GlobalDoc[] {
+  const docs: GlobalDoc[] = [];
+  for (const article of articles) {
+    const city = articleCity(article.title);
+    if (!city) continue;
+    const price = article.salePrice ?? article.price;
+    const label = ARTICLE_KIND_LABELS[article.kind];
+    const uf = article.uf ?? city.uf;
+    docs.push({
+      key: `penca:${article.id}`, kind: "design", region, title: city.label,
+      subtitle: [price !== null ? formatPrice(price) : null, "compra à parte, na Uma Penca"].filter(Boolean).join(" · "),
+      href: article.url, external: true, image: article.imageUrl, umaPenca: { id: article.id, kind: article.kind }, ...(price !== null ? { minPrice: price } : {}),
+      tag: label.singular, city: city.name, ...(uf ? { uf } : {}),
+      rank: 10, names: [city.label], strong: [city.name, label.singular, label.plural], weak: uf ? [uf, STATE_NAMES[uf] ?? ""] : [],
+    });
+  }
+  return docs;
+}
+
 export type GlobalIndexStats = { regions: RegionSlug[]; documents: number; byKind: Record<string, number>; approxBytes: number; buildMs: number; builtAt: string };
 type Built = { key: string; byRegion: Map<RegionSlug, PreparedGlobalDoc[]>; stats: GlobalIndexStats };
 let built: Built | null = null;
@@ -307,7 +338,7 @@ export function globalSearchIndex(): Built {
     };
     const docs = buildGlobalDocs({
       region, catalog, garmentIndex, doc, media: bundle?.media, collections: store ? collectionsForRegion(region, (s) => catalog.productsOfStore(s)) : [], collectionStore, carouselItems,
-      umaPencaArticles: umaPenca.filter((a) => isArticleOfRegion(a, region)).length, cityCollection: cityCollectionIds(store?.collections ?? []), locks,
+      umaPencaArticles: umaPenca.filter((a) => isArticleOfRegion(a, region)).length, umaPencaCityArticles: umaPenca.filter((a) => a.region === region), cityCollection: cityCollectionIds(store?.collections ?? []), locks,
     });
     for (const d of docs) {
       byKind[d.kind] = (byKind[d.kind] ?? 0) + 1;

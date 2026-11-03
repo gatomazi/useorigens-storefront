@@ -13,6 +13,7 @@ import { buildSeedBundle } from "@/lib/site-config/seed";
 import { applyOp } from "@/lib/admin/draft-ops";
 import { diffDocs } from "@/lib/admin/diff";
 import { searchShowsDesigns, validateSearch } from "@/lib/site-config/search-schema";
+import type { UmaPencaArticle } from "@/lib/umapenca/types";
 import { indexOf, tuple } from "./garment-index-fixture";
 
 const place = (region: RegionSlug, name: string, uf: string) => {
@@ -288,5 +289,36 @@ describe("global search: merchandise designs", () => {
   test("without a cluster each product is its own result (never grouped by name); 'essência' and 'made in' are found in the region itself", () => {
     expect(titles(searchGlobal(idx(), "sul", "essência"), "designs").sort()).toEqual(["Catarinense | Essência", "Paranaense | Essência"]);
     expect(titles(searchGlobal(idx(), "sul", "made in"), "designs")).toEqual(["Made in Santa Catarina"]);
+  });
+});
+
+describe("global search: the city's caneca (Uma Penca)", () => {
+  const caneca = (id: string, title: string, uf: string, price = 72.9): UmaPencaArticle => ({
+    id, kind: "caneca", title, description: "", url: `https://artigos.useorigens.com.br/caneca/${id}.html`, imageUrl: `https://umapenca.imgix.net/${id}/a.jpg`,
+    additionalImageUrls: [], price, salePrice: null, color: null, region: "sul", uf,
+  });
+  const idx = (hideCityDesigns = false) => {
+    const docs = buildGlobalDocs({
+      region: "sul", catalog: sulCatalog, garmentIndex, doc: sulDoc([]), collections: [], umaPencaArticles: 2,
+      umaPencaCityArticles: [caneca("1", "Caneca Lá de Bagé | RS", "RS"), caneca("2", "Caneca Lá de Tijucas", "SC")],
+    });
+    return { search: (q: string) => searchGlobal(new Map([["sul", prepareGlobalDocs(docs)]]), "sul", q, hideCityDesigns) };
+  };
+
+  test("found by the city, after the place and the shirts, opening the Uma Penca page; the subtitle says it is a separate purchase", () => {
+    const r = idx().search("bagé");
+    expect(r.groups.map((g) => g.group)).toEqual(["places", "designs"]);
+    expect(titles(r, "designs")).toEqual(["Bagé · Traço", "Caneca Lá de Bagé"]);
+    expect(r.groups[1].items[1]).toMatchObject({
+      href: "https://artigos.useorigens.com.br/caneca/1.html", external: true, tag: "Caneca", umaPenca: { id: "1", kind: "caneca" },
+      subtitle: expect.stringMatching(/^R\$\s72,90 · compra à parte, na Uma Penca$/),
+    });
+    expect(r.groups[1].items[1]).not.toHaveProperty("inkProductId");
+  });
+
+  test("the \"Estampas de cidade na busca\" switch hides the city's shirts, never its caneca; \"caneca\" + city finds it", () => {
+    expect(titles(idx(true).search("bagé"), "designs")).toEqual(["Caneca Lá de Bagé"]);
+    expect(titles(idx().search("caneca tijucas"), "designs")).toEqual(["Caneca Lá de Tijucas"]);
+    expect(titles(idx().search("caneca bage"), "designs")).toEqual(["Caneca Lá de Bagé"]);
   });
 });
