@@ -10,7 +10,7 @@ import { fetchResults } from "@/lib/search/fetch-results";
 import type { GlobalGroup, GlobalResult, GlobalSearchResponse } from "@/lib/search/global";
 import { SOURCES } from "@/lib/analytics/sources";
 import { carryCampaign } from "@/lib/analytics/campaign";
-import { trackGoToInk, trackSearch, trackSelectCity } from "@/lib/analytics/track";
+import { trackGoToInk, trackGoToUmaPenca, trackSearch, trackSelectCity } from "@/lib/analytics/track";
 
 type Props = {
   region: RegionSlug;
@@ -163,6 +163,10 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
     // A merchandise design opens its INK product page: the same GoToInk (Meta) / select_item + go_to_ink (GA4) as any INK product link.
     if (r.inkProductId) {
       trackGoToInk({ productId: r.inkProductId, sourceSection: SOURCES.search, productName: r.title, destinationUrl: r.href, ...(r.minPrice !== undefined ? { value: r.minPrice } : {}) });
+    }
+    // A city's caneca opens its Uma Penca product page: GoToPenca (Meta) / go_to_umapenca (GA4), like the "Outros artigos" cards.
+    if (r.umaPenca) {
+      trackGoToUmaPenca({ productId: r.umaPenca.id, productName: r.title, kind: r.umaPenca.kind, region: r.region, sourceSection: SOURCES.search, destinationUrl: r.href, ...(r.minPrice !== undefined ? { value: r.minPrice } : {}) });
     }
     onNavigate?.();
     if (r.external) window.location.assign(carryCampaign(r.href));

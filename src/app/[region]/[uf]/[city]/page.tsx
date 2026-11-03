@@ -33,6 +33,10 @@ import { ShareButton } from "@/components/share/ShareButton";
 import { SizeGuideButton } from "@/components/catalog/SizeGuide";
 import { CLASSIC_GARMENT_TYPE_ID } from "@/lib/catalog/garments";
 import { storeCardButton } from "@/lib/site-config/cards";
+import { ArticleCard } from "@/components/umapenca/ArticleCard";
+import { umaPencaHoverPhotos } from "@/lib/umapenca/hover";
+import { articlesOfPlace } from "@/lib/umapenca/region";
+import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 
 export const revalidate = 3600;
 
@@ -104,6 +108,10 @@ export default async function CityPage({ params }: { params: Params }) {
 
   // The canonical city URL (never the current one: `?peca=` and anything else the visitor carries stays out).
   const share = pageShare(base, cityTitle(city));
+
+  // "Outros artigos de <cidade>": the Uma Penca articles (canecas, ecobags…) that name exactly this place. None, no section.
+  const articles = articlesOfPlace(readUmaPencaSnapshot()?.articles ?? [], city);
+  const articleHover = articles.length > 0 ? umaPencaHoverPhotos() : {};
 
   const intro = cityIntro(city, city.regionSlug, families.map((entry) => entry.family.name));
 
@@ -188,6 +196,36 @@ export default async function CityPage({ params }: { params: Params }) {
           )
         ) : (
           <p className="t-body max-w-xl">Ainda não temos camisetas de {city.name} na loja. Volte em breve ou escolha outra cidade da região.</p>
+        )}
+        {/* "Outros artigos de <cidade>": right under the designs, above the search for another city. */}
+        {articles.length > 0 && (
+          <div aria-labelledby="articles-title" role="region" className="mt-12 lg:mt-16" data-testid="city-articles">
+            <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+              <div>
+                <h2 id="articles-title" className="text-[1.5rem] font-extrabold tracking-tight lg:text-[1.875rem]">
+                  Outros artigos de {city.name}
+                </h2>
+                <p className="t-small mt-1 text-ink-soft">Vendidos e entregues pela Uma Penca, nossa parceira: compra separada das camisetas.</p>
+              </div>
+              <Link href={`/${region}/outros-artigos`} className="link-line t-small font-semibold">
+                Ver todos os outros artigos
+              </Link>
+            </div>
+            <ul className="mt-6 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 lg:grid-cols-4">
+              {articles.map((article) => (
+                <li key={article.id}>
+                  <ArticleCard
+                    article={article}
+                    region={region}
+                    sizes="(min-width: 1024px) 25vw, 50vw"
+                    hoverImageUrl={articleHover[article.id]}
+                    buy={buy ?? { label: "Comprar", style: "button" }}
+                    sourceSection={SOURCES.cityArticles}
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         {/* Right where the products end, since the header icon alone goes unnoticed once a place is chosen. It opens the search sheet
             instead of searching inline: this low on a phone, the keyboard would cover the results. */}

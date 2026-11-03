@@ -1,5 +1,6 @@
 import { normalizeText } from "../geo/text";
 import type { RegionSlug } from "../geo/regions";
+import type { ArticleKind } from "../umapenca/types";
 
 /**
  * The storefront's global search: places, designs and editorial pages in ONE ranked list, grouped by kind (docs/storefront/global-search-round.md).
@@ -34,6 +35,8 @@ export type GlobalDoc = {
   minPrice?: number;
   /** Merchandise design only: the INK product the result opens (GoToInk on click, like every other INK product link of the storefront). */
   inkProductId?: string;
+  /** An Uma Penca article (a city's caneca): the product the result opens, measured as GoToPenca — never GoToInk, it is not an INK product. */
+  umaPenca?: { id: string; kind: ArticleKind };
   /**
    * A design of the cities' collection ("Seu Lugar"): every place × family design, and a merchandise design with a piece in that collection. The
    * store can leave these out (Aparência → "Estampas de cidade na busca"): a city's own page lists them, the search keeps the other designs.
