@@ -60,7 +60,7 @@ export default async function RegionLayout({ children, params }: { children: Rea
       {/* The cart lives in the store that sells (commerce-mode.ts): the region's own in multi-store, the single store's otherwise. */}
       <CartRefCapture region={cartRegionFor(region)} />
       <CampaignCarry region={regionCarryFor(region)} />
-      <div data-region={region} style={{ ...regionThemeStyle(region), ...cssVars, ...(cssVars["--ground"] ? { background: "var(--ground)" } : {}), ...(cssVars["--ink"] ? { color: "var(--ink)" } : {}) }} className="relative">
+      <div data-region={region} data-home-theme={homeTheme ?? "original"} style={{ ...regionThemeStyle(region), ...cssVars, ...(cssVars["--ground"] ? { background: "var(--ground)" } : {}), ...(cssVars["--ink"] ? { color: "var(--ink)" } : {}) }} className="relative">
         {commercePlan().simulation && (
           // Local preview only (COMMERCE_SIMULATION=on): never rendered in production, where a simulation snapshot is refused.
           <p role="note" className="bg-[#fde68a] px-4 py-2 text-center text-[0.8125rem] font-semibold text-black">

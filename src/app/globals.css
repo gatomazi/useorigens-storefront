@@ -148,6 +148,19 @@ body {
   font-size: 0.9375rem;
   line-height: 1.45;
 }
+/* The charged price of a product on promotion (PriceText). Under the Black theme it becomes the campaign's yellow chip, so "de/por" is
+   more than a strikethrough; elsewhere it only gains weight. */
+.price-sale {
+  font-weight: 700;
+}
+[data-home-theme="black"] .price-sale {
+  display: inline-block;
+  padding: 0.08em 0.4em;
+  background: #e2b64a;
+  color: #111111;
+  font-weight: 800;
+  line-height: 1.25;
+}
 .t-caption {
   font-size: 0.8125rem;
   line-height: 1.4;
