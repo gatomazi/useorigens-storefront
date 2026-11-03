@@ -42,8 +42,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  */
 export default async function OutrosArtigosPage({ params }: Props) {
   const { region } = await params;
-  // The store-wide buy button (Aparência, global): on the articles' cards too.
-  const buy = storeCardButton();
+  // The store-wide buy button (Aparência, global): on the articles' cards too. Without one, still "Comprar": the card leaves the store for
+  // Uma Penca, and a bare photo and price left people unsure the card was where to buy.
+  const buy = storeCardButton() ?? { label: "Comprar", style: "button" as const };
   if (!isRegionSlug(region) || !isRegionLaunched(region)) notFound();
   const articles = (readUmaPencaSnapshot()?.articles ?? []).filter((a) => isArticleOfRegion(a, region));
   const hover = umaPencaHoverPhotos();

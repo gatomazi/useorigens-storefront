@@ -227,7 +227,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
             <span className="min-w-0 break-words text-[1.125rem] font-extrabold leading-tight tracking-tight sm:text-[1.3125rem]">{r.title}</span>
             <span className={`min-w-0 text-[0.875rem] leading-snug ${isActive ? "text-white/85" : muted}`}>
               {/* The group heading already says "Estampas"; the type is spelled out where it is not (editorial kinds, other regions). */}
-              {(row.other || r.kind === "page" || r.umaPenca) && <span className="font-semibold">{r.tag} · </span>}
+              {(row.other || r.kind === "page") && <span className="font-semibold">{r.tag} · </span>}
               {r.subtitle}
               {regionNote}
               {r.external && <span className="sr-only"> (abre a loja)</span>}

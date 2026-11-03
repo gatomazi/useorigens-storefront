@@ -305,20 +305,21 @@ describe("global search: the city's caneca (Uma Penca)", () => {
     return { search: (q: string) => searchGlobal(new Map([["sul", prepareGlobalDocs(docs)]]), "sul", q, hideCityDesigns) };
   };
 
-  test("found by the city, after the place and the shirts, opening the Uma Penca page; the subtitle says it is a separate purchase", () => {
+  test("one more design of the city: typing the city finds it, after its first designs, opening the Uma Penca page; the subtitle says it is a separate purchase", () => {
     const r = idx().search("bagé");
     expect(r.groups.map((g) => g.group)).toEqual(["places", "designs"]);
-    expect(titles(r, "designs")).toEqual(["Bagé · Traço", "Caneca Lá de Bagé"]);
-    expect(r.groups[1].items[1]).toMatchObject({
+    expect(titles(r, "designs")).toEqual(["Bagé · Caneca", "Bagé · Traço"]);
+    expect(titles(idx().search("tijucas"), "designs")).toEqual(["Tijucas · Ponto de Origem", "Tijucas do Sul · Ponto de Origem", "Tijucas · Caneca", "Tijucas · Traço"]);
+    expect(r.groups[1].items[0]).toMatchObject({
       href: "https://artigos.useorigens.com.br/caneca/1.html", external: true, tag: "Caneca", umaPenca: { id: "1", kind: "caneca" },
       subtitle: expect.stringMatching(/^R\$\s72,90 · compra à parte, na Uma Penca$/),
     });
-    expect(r.groups[1].items[1]).not.toHaveProperty("inkProductId");
+    expect(r.groups[1].items[0]).not.toHaveProperty("inkProductId");
   });
 
   test("the \"Estampas de cidade na busca\" switch hides the city's shirts, never its caneca; \"caneca\" + city finds it", () => {
-    expect(titles(idx(true).search("bagé"), "designs")).toEqual(["Caneca Lá de Bagé"]);
-    expect(titles(idx().search("caneca tijucas"), "designs")).toEqual(["Caneca Lá de Tijucas"]);
-    expect(titles(idx().search("caneca bage"), "designs")).toEqual(["Caneca Lá de Bagé"]);
+    expect(titles(idx(true).search("bagé"), "designs")).toEqual(["Bagé · Caneca"]);
+    expect(titles(idx().search("caneca tijucas"), "designs")).toEqual(["Tijucas · Caneca"]);
+    expect(titles(idx().search("caneca bage"), "designs")).toEqual(["Bagé · Caneca"]);
   });
 });

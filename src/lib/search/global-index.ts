@@ -260,10 +260,10 @@ export function merchDocs(region: RegionSlug, products: readonly MerchProduct[],
 }
 
 /**
- * The city's caneca (or any Uma Penca article that names a place): ONE result per article, among the designs, opening the Uma Penca product page.
- * Searchable by the city and the kind ("curitiba", "caneca curitiba"), but the bare city is never one of its `names`: the place and the shirts
- * come first, the caneca right after them (rank after the merchandise). Never a city-collection design: the "Estampas de cidade na busca" switch
- * does not hide it. The subtitle says it is a separate purchase.
+ * The city's caneca (or any Uma Penca article that names a place), as one more design of the city: "Curitiba · Caneca", next to "Curitiba ·
+ * Ponto de Origem". Typing the city finds it like any of its designs (its names are the city + the kind, both ways), ranked right after the
+ * city's first two designs, so it is among the shown ones; it opens the Uma Penca product page. Never a city-collection design: the "Estampas de
+ * cidade na busca" switch does not hide it. The subtitle says it is a separate purchase.
  */
 export function umaPencaDocs(region: RegionSlug, articles: readonly UmaPencaArticle[]): GlobalDoc[] {
   const docs: GlobalDoc[] = [];
@@ -274,11 +274,11 @@ export function umaPencaDocs(region: RegionSlug, articles: readonly UmaPencaArti
     const label = ARTICLE_KIND_LABELS[article.kind];
     const uf = article.uf ?? city.uf;
     docs.push({
-      key: `penca:${article.id}`, kind: "design", region, title: city.label,
+      key: `penca:${article.id}`, kind: "design", region, title: `${city.name} · ${label.singular}`,
       subtitle: [price !== null ? formatPrice(price) : null, "compra à parte, na Uma Penca"].filter(Boolean).join(" · "),
       href: article.url, external: true, image: article.imageUrl, umaPenca: { id: article.id, kind: article.kind }, ...(price !== null ? { minPrice: price } : {}),
       tag: label.singular, city: city.name, ...(uf ? { uf } : {}),
-      rank: 10, names: [city.label], strong: [city.name, label.singular, label.plural], weak: uf ? [uf, STATE_NAMES[uf] ?? ""] : [],
+      rank: 2.5, names: [`${city.name} ${label.singular}`, `${label.singular} ${city.name}`, city.label], strong: [city.name, label.singular, label.plural], weak: uf ? [uf, STATE_NAMES[uf] ?? ""] : [],
     });
   }
   return docs;

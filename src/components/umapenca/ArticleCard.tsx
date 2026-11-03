@@ -6,7 +6,7 @@ import { ProductPhoto } from "@/components/catalog/ProductPhoto";
 import { SOURCES } from "@/lib/analytics/sources";
 import { trackGoToUmaPenca } from "@/lib/analytics/track";
 import { formatPrice } from "@/lib/format";
-import { ARTICLE_KIND_LABELS, type UmaPencaArticle } from "@/lib/umapenca/types";
+import type { UmaPencaArticle } from "@/lib/umapenca/types";
 
 /**
  * One Uma Penca article (caneca, ecobag). Same card rhythm as FamilyCard — photo, accent rule, name, price — but the whole
@@ -55,7 +55,6 @@ export function ArticleCard({ article, region, sizes, priority = false, hoverIma
         </h3>
         {price && buy?.style !== "link" && priceLine}
       </div>
-      <p className="t-caption mt-1">{ARTICLE_KIND_LABELS[article.kind].singular} · compra à parte, na Uma Penca</p>
       {buy?.style === "link" && <CardCall label={buy.label} className="mt-2" price={price ? priceLine : undefined} />}
       {buy?.style === "button" && <CardButton label={buy.label} className="mt-auto" />}
     </a>
