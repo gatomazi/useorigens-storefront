@@ -87,7 +87,7 @@ export function OfferPopupEditor({ region, config, promotions, inkError, now, re
             {OFFER_POPUP_TEXTS.map((key) => (
               <div key={key}>
                 <label className="a-label" htmlFor={`offer_${key}`}>{OFFER_TEXT_LABEL[key]}</label>
-                <input id={`offer_${key}`} name={key} className="a-input" value={texts[key]} maxLength={OFFER_POPUP_LIMITS[key]} placeholder={placeholder(key)} disabled={readOnly} onChange={(e) => setTexts((t) => ({ ...t, [key]: e.target.value }))} data-testid={`offer-${key}`} />
+                <input id={`offer_${key}`} name={key} className="a-input" value={texts[key]} maxLength={OFFER_POPUP_LIMITS[key]} placeholder={placeholder(key)} disabled={readOnly} onChange={(e) => setTexts((t) => ({ ...t, [key]: e.target.value }))} data-testid={`offer-field-${key}`} />
                 <p className="a-muted mt-1 text-[0.8125rem]">
                   {texts[key].length}/{OFFER_POPUP_LIMITS[key]}. Vazio: usa o texto padrão (em cinza){key === "title" ? ", que acompanha a maior faixa da promoção" : ""}.
                 </p>
@@ -95,7 +95,7 @@ export function OfferPopupEditor({ region, config, promotions, inkError, now, re
             ))}
             <div>
               <label className="a-label" htmlFor="offer_ctaHref">Link do botão (opcional)</label>
-              <input id="offer_ctaHref" name="ctaHref" className="a-input" value={href} maxLength={OFFER_HREF_MAX + 40} placeholder={`/${region}/colecoes/…`} disabled={readOnly} onChange={(e) => setHref(e.target.value)} data-testid="offer-ctaHref" />
+              <input id="offer_ctaHref" name="ctaHref" className="a-input" value={href} maxLength={OFFER_HREF_MAX + 40} placeholder={`/${region}/colecoes/…`} disabled={readOnly} onChange={(e) => setHref(e.target.value)} data-testid="offer-field-ctaHref" />
               <p className="a-muted mt-1 text-[0.8125rem]">Um endereço deste site, como /{region}/colecoes/mais-vendidas. Vazio: o botão só fecha o popup e a pessoa continua na página.</p>
             </div>
             <p className="a-muted text-[0.8125rem]">Embaixo dos botões vem sempre uma linha pequena com como o desconto entra (“Cole o cupom no carrinho: vale a partir de 3 peças.”).</p>

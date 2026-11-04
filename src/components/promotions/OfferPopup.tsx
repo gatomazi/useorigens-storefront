@@ -118,13 +118,14 @@ export function OfferPopup({ region, offer, theme = FALLBACK_THEME, mode = "live
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
           </button>
 
-          <div className="shrink-0 bg-[var(--offer-bg)] px-5 pb-5 pt-5 pr-14 text-[var(--offer-fg)] @2xl:flex @2xl:w-[44%] @2xl:flex-col @2xl:justify-center @2xl:px-9 @2xl:py-12">
+          <div className="shrink-0 bg-[var(--offer-bg)] px-5 pb-5 pt-5 pr-14 text-[var(--offer-fg)] [@media(max-height:700px)]:pb-3.5 [@media(max-height:700px)]:pt-3.5 @2xl:flex @2xl:w-[44%] @2xl:flex-col @2xl:justify-center @2xl:px-9 @2xl:py-12">
             <p className="text-[0.75rem] font-bold uppercase tracking-[0.14em]">{offer.eyebrow}</p>
-            <h2 id={headingId} className="mt-2 font-display text-[2rem] font-extrabold uppercase leading-[0.92] tracking-[0.005em] [overflow-wrap:anywhere] @2xl:mt-4 @2xl:text-[3.25rem]">{offer.title}</h2>
-            <p className="mt-2 text-[0.9375rem] leading-snug @2xl:mt-5 @2xl:text-[1.0625rem]">{offer.lead}</p>
+            <h2 id={headingId} className="mt-2 font-display text-[2rem] [@media(max-height:700px)]:text-[1.625rem] font-extrabold uppercase leading-[0.92] tracking-[0.005em] [overflow-wrap:anywhere] @2xl:mt-4 @2xl:text-[3.25rem]">{offer.title}</h2>
+            {/* Short phones (iPhone SE): the sheet keeps the essentials; the tiers already say "quanto mais peças, maior o desconto". */}
+            <p className="mt-2 text-[0.9375rem] leading-snug [@media(max-height:700px)]:hidden @2xl:mt-5 @2xl:block @2xl:text-[1.0625rem]">{offer.lead}</p>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-5 @2xl:px-8 @2xl:pb-7 @2xl:pt-16">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-5 [@media(max-height:700px)]:pb-2 [@media(max-height:700px)]:pt-4 @2xl:px-8 @2xl:pb-7 @2xl:pt-16">
             <ol className="grid gap-2" style={{ gridTemplateColumns: `repeat(${cards.length}, minmax(0, 1fr))` }} aria-label="Descontos por quantidade" data-testid="offer-tiers">
               {cards.map((t) => {
                 const top = t === best && offer.tiers.length > 1;
