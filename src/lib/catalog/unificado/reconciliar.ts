@@ -12,6 +12,9 @@ import { inkPricing } from "../../ink/normalize";
 /** O preço que a INK cobra agora (o promocional, durante uma promoção) e o cheio só nessa hora: a mesma regra do sync de produção. */
 const precoDoBruto = (p: ProdutoBruto) => inkPricing({ price: p.price, promotional_price: p.promotionalPrice });
 /** Para os itens montados aqui e na loja única: `listPrice` só aparece durante uma promoção, como no sync de produção. */
+// Herdar do modelo do cluster não pode levar o preço de promoção dele.
+const semPreco = <T extends { price?: unknown; listPrice?: unknown }>({ price: _p, listPrice: _l, ...resto }: T) => resto;
+
 export const precoDaInk = (p: ProdutoBruto): { price: number | null; listPrice?: number } => {
   const { price, listPrice } = precoDoBruto(p);
   return listPrice !== null ? { price, listPrice } : { price };
@@ -105,7 +108,7 @@ export function classificarPorIndexador(
           produto: m.produto,
           tipo: "desenho",
           viaCluster: cluster,
-          vinculo: { ...modelo, inkProductId: m.produto.id, slug: m.produto.slug, storeProductUrl: m.produto.url ?? "", imageUrl: m.produto.image ?? "", price: m.produto.price === null ? null : Number(m.produto.price), productClusterId: cluster },
+          vinculo: { ...semPreco(modelo), inkProductId: m.produto.id, slug: m.produto.slug, storeProductUrl: m.produto.url ?? "", imageUrl: m.produto.image ?? "", ...precoDaInk(m.produto), productClusterId: cluster },
         });
       } else if (chaves.size > 1) {
         m.motivoExclusao = `${m.motivoExclusao}; cluster ${cluster} com desenhos divergentes (${[...chaves].join(" ≠ ")})`;
@@ -252,7 +255,7 @@ export function classificarDesenhosSul(sul: Map<string, ProdutoSul>, estado: Est
         slug: s.produto.slug,
         storeProductUrl: s.produto.url ?? "",
         imageUrl: s.produto.image ?? "",
-        price: s.produto.price === null ? null : Number(s.produto.price),
+        ...precoDaInk(s.produto),
         syncedAt: "",
         totalSalesCount: s.produto.sales,
       };
