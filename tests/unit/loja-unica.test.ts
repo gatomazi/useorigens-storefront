@@ -355,3 +355,11 @@ describe("syncLojaUnica — o sync real da loja única", () => {
     expect(await syncColecoesLojaUnica({ deps: { fetchCollections: async () => ({ membros: [], paginas: [pagina] }) } })).toMatchObject({ ok: true, changed: false });
   });
 });
+
+describe("montarLojaUnica — promoção em produto migrado", () => {
+  test("then a migrated base resolved by the migration state keeps INK's promotional price", () => {
+    const belemPublicado = { ...belem, visible: true, status: "published", price: "114.9", promotionalPrice: "94.9" };
+    const r = montarLojaUnica(classificar([curitiba, belemPublicado]), { modo: "producao", syncedAt: "t", fonte: FONTE });
+    expect(r.catalogo.stores["use-sul"]!.bindings.find((b) => b.inkProductId === belem.id)).toMatchObject({ price: 94.9, listPrice: 114.9 });
+  });
+});
