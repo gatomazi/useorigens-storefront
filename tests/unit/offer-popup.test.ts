@@ -67,10 +67,11 @@ describe("Popup da oferta: what it shows", () => {
     const p = offerPopupPayload("sul", on, promo, NOW, THEME);
     expect(p).toEqual({
       v: 1, region: "sul", theme: THEME,
-      offer: { id: 601, code: "POPTESTE", auto: false, kind: "value", tiers: promo.tiers, eyebrow: OFFER_POPUP_DEFAULTS.eyebrow, title: "Até R$ 85 OFF no seu pedido", lead: OFFER_POPUP_DEFAULTS.lead, cta: OFFER_POPUP_DEFAULTS.cta },
+      offer: { id: 601, code: "POPTESTE", auto: false, kind: "value", tiers: promo.tiers, eyebrow: OFFER_POPUP_DEFAULTS.eyebrow, title: "Até R$ 85 OFF no seu pedido", lead: OFFER_POPUP_DEFAULTS.lead, cta: OFFER_POPUP_DEFAULTS.cta, delaySeconds: 8 },
     });
     const own = offerPopupPayload("sul", { ...on, title: "Black: leve mais", ctaHref: "/sul/colecoes/black" }, { ...promo, expiresAt: "2026-11-30T23:59:00-03:00" }, NOW);
     expect(own.offer).toMatchObject({ title: "Black: leve mais", ctaHref: "/sul/colecoes/black", endsAt: "2026-12-01T02:59:00.000Z" });
+    expect(offerPopupPayload("sul", { ...on, delaySeconds: 20 }, promo, NOW).offer?.delaySeconds).toBe(20);
   });
 
   test("nothing opens without a live promotion behind the choice", () => {
@@ -99,6 +100,9 @@ describe("Popup da oferta: what it shows", () => {
     expect(parseOfferPopupPayload({ ...wire, offer: { ...wire.offer, endsAt: "2026-11-01T00:00:00Z" } }, "sul", NOW)).toBeNull();
     expect(parseOfferPopupPayload({ ...wire, offer: { ...wire.offer, ctaHref: "//evil.com" } }, "sul", NOW)?.offer.ctaHref).toBeUndefined();
     expect(parseOfferPopupPayload({ ...wire, theme: { primary: "red", onPrimary: "#fff" } }, "sul", NOW)?.theme).toBeUndefined();
+    // The delay: an older server (none) or an odd value opens at the default.
+    expect(parseOfferPopupPayload({ ...wire, offer: { ...wire.offer, delaySeconds: 20 } }, "sul", NOW)?.offer.delaySeconds).toBe(20);
+    for (const delaySeconds of [undefined, 0, 9999, "20"]) expect(parseOfferPopupPayload({ ...wire, offer: { ...wire.offer, delaySeconds } }, "sul", NOW)?.offer.delaySeconds).toBe(8);
   });
 });
 
@@ -123,7 +127,7 @@ describe("Popup da oferta: when it opens", () => {
 });
 
 describe("Popup da oferta: the panel's form", () => {
-  const input = (over: Partial<OfferPopupFormInput> = {}): OfferPopupFormInput => ({ enabled: true, promotionId: "601", promotionCode: "", eyebrow: "", title: "", lead: "", cta: "", ctaHref: "", ...over });
+  const input = (over: Partial<OfferPopupFormInput> = {}): OfferPopupFormInput => ({ enabled: true, promotionId: "601", promotionCode: "", eyebrow: "", title: "", lead: "", cta: "", ctaHref: "", delaySeconds: "", ...over });
 
   test("given INK confirms the promotion, then its code is INK's and the defaults are not stored", () => {
     const r = offerPopupFromForm(input({ promotionCode: "FORJADO", cta: OFFER_POPUP_DEFAULTS.cta, lead: "  Leve   mais  " }), { kind: "found", promotion: promo }, NOW);
@@ -146,6 +150,17 @@ describe("Popup da oferta: the panel's form", () => {
     expect(r.ok && r.value.ctaHref).toBe("/sul/colecoes/x");
     expect(offerPopupFromForm(input({ ctaHref: "https://outra.com/x" }), { kind: "found", promotion: promo }, NOW).ok).toBe(false);
   });
+
+  test("the delay: whole seconds in range; empty or the default is not stored", () => {
+    const delay = (v: string) => offerPopupFromForm(input({ delaySeconds: v }), { kind: "found", promotion: promo }, NOW);
+    expect(delay(" 15 ")).toMatchObject({ ok: true, value: { delaySeconds: 15 } });
+    for (const v of ["", "8"]) {
+      const r = delay(v);
+      expect(r.ok && "delaySeconds" in r.value).toBe(false);
+      expect(r.ok).toBe(true);
+    }
+    for (const v of ["1", "121", "4.5", "dez", "-3"]) expect(delay(v).ok).toBe(false);
+  });
 });
 
 describe("Popup da oferta: draft, publish list and tolerant read", () => {
@@ -156,9 +171,12 @@ describe("Popup da oferta: draft, publish list and tolerant read", () => {
     if (!r.ok) return;
     expect(validateScopeDoc(r.doc).ok).toBe(true);
     const list = (a: ScopeDoc, b: ScopeDoc) => diffDocs(a, b).filter((c) => c.kind === "offer-popup").map((c) => c.text);
-    expect(list(sul, r.doc)).toEqual(["Popup da oferta: ligado, com a promoção POPTESTE (abre na loja depois de alguns segundos, 1 vez a cada 7 dias)", "Popup da oferta: nenhuma promoção → promoção POPTESTE"]);
+    expect(list(sul, r.doc)).toEqual(["Popup da oferta: ligado, com a promoção POPTESTE (abre na loja depois de 8 segundos, 1 vez a cada 7 dias)", "Popup da oferta: nenhuma promoção → promoção POPTESTE"]);
     const edited = applyOp(r.doc, { type: "set-offer-popup", offerPopup: { ...on, enabled: false, title: "Leve mais", ctaHref: "/sul/colecoes/x" } }, ctx);
     expect(edited.ok && list(r.doc, edited.doc)).toEqual(["Popup da oferta: desligado (o popup deixa de abrir)", "Popup da oferta: textos editados", "Popup da oferta: o botão leva a /sul/colecoes/x"]);
+    const later = applyOp(r.doc, { type: "set-offer-popup", offerPopup: { ...on, delaySeconds: 20 } }, ctx);
+    expect(later.ok && list(r.doc, later.doc)).toEqual(["Popup da oferta: abre depois de 8 → 20 segundos"]);
+    expect(applyOp(r.doc, { type: "set-offer-popup", offerPopup: { ...on, delaySeconds: 1 } }, ctx).ok).toBe(false);
     expect(applyOp(structuredClone(seed().docs.global), { type: "set-offer-popup", offerPopup: { enabled: false } }, ctx).ok).toBe(false);
     expect(applyOp(sul, { type: "set-offer-popup", offerPopup: { enabled: true } }, ctx).ok).toBe(false);
   });

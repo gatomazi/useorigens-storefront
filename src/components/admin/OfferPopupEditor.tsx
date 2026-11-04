@@ -6,7 +6,7 @@ import { OFFER_TEXT_LABEL } from "@/lib/admin/offer-popup-form";
 import { REGIONS, type RegionSlug } from "@/lib/geo/regions";
 import { kitTiersSummary, type InkProgressivePromotion } from "@/lib/ink/progressive-promotions";
 import { MAX_OFFER_CARDS, offerDefaultTitle, offerUnsupportedReason, type OfferTheme, type PublicOffer } from "@/lib/site-config/offer-popup";
-import { OFFER_HREF_MAX, OFFER_POPUP_DEFAULTS, OFFER_POPUP_LIMITS, OFFER_POPUP_TEXTS, type OfferPopupConfig, type OfferPopupText } from "@/lib/site-config/offer-popup-schema";
+import { OFFER_DELAY_DEFAULT_S, OFFER_DELAY_MAX_S, OFFER_DELAY_MIN_S, OFFER_HREF_MAX, OFFER_POPUP_DEFAULTS, OFFER_POPUP_LIMITS, OFFER_POPUP_TEXTS, type OfferPopupConfig, type OfferPopupText } from "@/lib/site-config/offer-popup-schema";
 import { formatBrasilia } from "@/lib/site-config/promotions";
 
 export function OfferPopupEditor({ region, config, promotions, inkError, now, readOnly, action, rev, theme }: { region: RegionSlug; config?: OfferPopupConfig; promotions: InkProgressivePromotion[] | null; inkError: string | null; now: number; readOnly: boolean; action: (fd: FormData) => Promise<void>; rev: string; theme: OfferTheme }) {
@@ -14,6 +14,8 @@ export function OfferPopupEditor({ region, config, promotions, inkError, now, re
   const [chosen, setChosen] = useState<number | null>(config?.promotionId ?? null);
   const [texts, setTexts] = useState<Record<OfferPopupText, string>>({ eyebrow: config?.eyebrow ?? "", title: config?.title ?? "", lead: config?.lead ?? "", cta: config?.cta ?? "" });
   const [href, setHref] = useState(config?.ctaHref ?? "");
+  const [delay, setDelay] = useState(config?.delaySeconds !== undefined ? String(config.delaySeconds) : "");
+  const delayShown = /^\d{1,3}$/.test(delay.trim()) ? Number(delay.trim()) : OFFER_DELAY_DEFAULT_S;
 
   const list = promotions ?? [];
   const picked = list.find((p) => p.id === chosen) ?? null;
@@ -23,7 +25,7 @@ export function OfferPopupEditor({ region, config, promotions, inkError, now, re
   const placeholder = (key: OfferPopupText) => (key === "title" && picked && picked.tiers.length > 0 ? offerDefaultTitle(picked.kind, picked.tiers) : OFFER_POPUP_DEFAULTS[key]);
   const shown = (key: OfferPopupText) => texts[key].trim() || placeholder(key);
   const preview: PublicOffer | null = picked && picked.tiers.length > 0
-    ? { id: picked.id, code: picked.code, auto: picked.applyAutomatically, kind: picked.kind, tiers: picked.tiers, eyebrow: shown("eyebrow"), title: shown("title"), lead: shown("lead"), cta: shown("cta"), ...(href.trim() ? { ctaHref: href.trim() } : {}) }
+    ? { id: picked.id, code: picked.code, auto: picked.applyAutomatically, kind: picked.kind, tiers: picked.tiers, eyebrow: shown("eyebrow"), title: shown("title"), lead: shown("lead"), cta: shown("cta"), delaySeconds: delayShown, ...(href.trim() ? { ctaHref: href.trim() } : {}) }
     : null;
 
   return (
@@ -42,11 +44,19 @@ export function OfferPopupEditor({ region, config, promotions, inkError, now, re
               <span>
                 <strong>Abrir o popup da oferta na loja</strong>
                 <span className="a-muted block text-[0.8125rem]">
-                  Depois de 8 segundos ou de rolar metade da página, uma vez a cada 7 dias em cada navegador. No celular abre como uma folha embaixo; no
-                  computador, no meio da tela. Desligado: nenhum popup abre.
+                  Depois de {delayShown} {delayShown === 1 ? "segundo" : "segundos"} na loja, uma vez a cada 7 dias em cada navegador. No celular abre como uma
+                  folha embaixo; no computador, no meio da tela. Desligado: nenhum popup abre.
                 </span>
               </span>
             </label>
+            <div>
+              <label className="a-label" htmlFor="offer_delaySeconds">Abrir depois de (segundos)</label>
+              <input id="offer_delaySeconds" name="delaySeconds" type="number" inputMode="numeric" min={OFFER_DELAY_MIN_S} max={OFFER_DELAY_MAX_S} step={1} className="a-input max-w-[8rem]" value={delay} placeholder={String(OFFER_DELAY_DEFAULT_S)} disabled={readOnly} onChange={(e) => setDelay(e.target.value)} data-testid="offer-field-delaySeconds" />
+              <p className="a-muted mt-1 text-[0.8125rem]">
+                De {OFFER_DELAY_MIN_S} a {OFFER_DELAY_MAX_S}. Conta desde que a pessoa entra na loja (trocar de página não zera). Se nessa hora houver um menu, a busca
+                ou outra janela aberta, espera fechar. Vazio: {OFFER_DELAY_DEFAULT_S}.
+              </p>
+            </div>
           </fieldset>
 
           <fieldset className="a-card space-y-3 p-5" data-testid="offer-promotions">

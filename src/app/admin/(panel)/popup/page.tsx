@@ -43,8 +43,8 @@ export default async function OfferPopupPage({ searchParams }: { searchParams: P
       <div>
         <h1 className="a-h1">Popup da oferta <span className="a-muted">· {scopeName(scope)}</span></h1>
         <p className="a-muted mt-2 max-w-3xl">
-          Um popup na loja (site) com uma promoção progressiva da INK: as faixas (3 peças, 4 peças…), o cupom para copiar e um botão. Abre depois de
-          8 segundos ou quando a pessoa rola metade da página, <strong>uma vez a cada 7 dias</strong> em cada navegador (uma promoção nova conta como nova),
+          Um popup na loja (site) com uma promoção progressiva da INK: as faixas (3 peças, 4 peças…), o cupom para copiar e um botão. Abre depois dos
+          segundos que você escolher, <strong>uma vez a cada 7 dias</strong> em cada navegador (uma promoção nova conta como nova),
           nunca por cima do menu, da busca ou de outra janela, e não abre no Estúdio, em Minhas Estampas, em Seja parceiro nem em Privacidade. Quem aplica o
           desconto continua sendo a INK, no carrinho. O botão de cupons continua onde está. Salvar guarda um <strong>rascunho</strong>: a loja só muda depois de
           publicar em <em>Publicar</em>.

@@ -4,9 +4,9 @@
  */
 import type { KitInkCheck } from "./post-add-kit-form";
 import { offerUnsupportedReason } from "../site-config/offer-popup";
-import { offerHrefOk, offerPromotionIdOk, OFFER_CODE, OFFER_HREF_MAX, OFFER_POPUP_DEFAULTS, OFFER_POPUP_LIMITS, OFFER_POPUP_TEXTS, type OfferPopupConfig, type OfferPopupText } from "../site-config/offer-popup-schema";
+import { offerHrefOk, offerPromotionIdOk, OFFER_CODE, OFFER_DELAY_DEFAULT_S, OFFER_DELAY_MAX_S, OFFER_DELAY_MIN_S, OFFER_HREF_MAX, OFFER_POPUP_DEFAULTS, OFFER_POPUP_LIMITS, OFFER_POPUP_TEXTS, type OfferPopupConfig, type OfferPopupText } from "../site-config/offer-popup-schema";
 
-export type OfferPopupFormInput = { enabled: boolean; promotionId: string; promotionCode: string; ctaHref: string } & Record<OfferPopupText, string>;
+export type OfferPopupFormInput = { enabled: boolean; promotionId: string; promotionCode: string; ctaHref: string; delaySeconds: string } & Record<OfferPopupText, string>;
 
 export const OFFER_TEXT_LABEL: Record<OfferPopupText, string> = { eyebrow: "Chamada", title: "Título", lead: "Texto de apoio", cta: "Botão" };
 
@@ -61,6 +61,13 @@ export function offerPopupFromForm(input: OfferPopupFormInput, check: KitInkChec
     if (href.length > OFFER_HREF_MAX) errors.push(`Link do botão: no máximo ${OFFER_HREF_MAX} caracteres.`);
     else if (!offerHrefOk(href)) errors.push("Link do botão: use um endereço deste site, começando com / (por exemplo /sul/colecoes/mais-vendidas).");
     else value.ctaHref = href;
+  }
+  // Empty or the default: kept absent, so a future change of the default reaches it.
+  const delay = input.delaySeconds.trim();
+  if (delay !== "") {
+    const n = /^\d{1,3}$/.test(delay) ? Number(delay) : NaN;
+    if (!(n >= OFFER_DELAY_MIN_S && n <= OFFER_DELAY_MAX_S)) errors.push(`Abrir depois de: um número inteiro de segundos, de ${OFFER_DELAY_MIN_S} a ${OFFER_DELAY_MAX_S}.`);
+    else if (n !== OFFER_DELAY_DEFAULT_S) value.delaySeconds = n;
   }
   return errors.length === 0 ? { ok: true, value } : { ok: false, errors };
 }

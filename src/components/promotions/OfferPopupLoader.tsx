@@ -3,12 +3,12 @@
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { offerAllowedPath, offerDue, offerSeenKey, offerSeenValue, parseOfferPopupPayload, OFFER_DELAY_MS, OFFER_MIN_MS, OFFER_RETRY_MS, OFFER_SCROLL_RATIO, type OfferTheme, type PublicOffer } from "@/lib/site-config/offer-popup";
+import { offerAllowedPath, offerDue, offerSeenKey, offerSeenValue, parseOfferPopupPayload, OFFER_RETRY_MS, type OfferTheme, type PublicOffer } from "@/lib/site-config/offer-popup";
 import { isTypingTarget } from "./attention";
 
 /**
- * Loads the region's "Popup da oferta" AFTER the page is ready (idle) and opens it once it is due: OFFER_DELAY_MS into the visit, or earlier once the visitor
- * scrolled past half the page. Then the browser keeps that it was shown and it stays quiet for 7 days (a different promotion counts as new).
+ * Loads the region's "Popup da oferta" AFTER the page is ready (idle) and opens it once it is due: the panel's N seconds into the visit (counted from the
+ * first page load, so moving between pages does not restart it). Then the browser keeps that it was shown and it stays quiet for 7 days (a different promotion counts as new).
  *
  * It never opens over something else: a menu, the search, the coupon panel or any dialog, nor while the visitor types; it waits and tries again. Nor on the
  * pages where the visitor is creating or managing something (offer-popup.ts `offerAllowedPath`). Fail-open by construction: an error, a timeout, an invalid
@@ -83,10 +83,9 @@ export function OfferPopupLoader({ region }: { region: string }) {
     };
   }, [region]);
 
-  // 2. When it is due: the delay, or half the page scrolled (not before OFFER_MIN_MS). A busy page postpones it; a quiet page opens it.
+  // 2. When it is due: N seconds into the visit. A busy page postpones it; a quiet page opens it.
   useEffect(() => {
     if (!data || done.current) return;
-    const started = performance.now();
     let timer: ReturnType<typeof setTimeout> | null = null;
     let stopped = false;
     const attempt = () => {
@@ -102,19 +101,12 @@ export function OfferPopupLoader({ region }: { region: string }) {
       if (timer) clearTimeout(timer);
       timer = setTimeout(attempt, ms);
     };
-    const onScroll = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      if (max <= 0 || window.scrollY / max < OFFER_SCROLL_RATIO) return;
-      window.removeEventListener("scroll", onScroll);
-      schedule(Math.max(0, OFFER_MIN_MS - (performance.now() - started)));
-    };
     const cleanup = () => {
       stopped = true;
       if (timer) clearTimeout(timer);
-      window.removeEventListener("scroll", onScroll);
     };
-    schedule(OFFER_DELAY_MS);
-    window.addEventListener("scroll", onScroll, { passive: true });
+    // performance.now() counts from the page load: the idle wait and the request are part of the N seconds, not added to them.
+    schedule(Math.max(0, data.offer.delaySeconds * 1000 - performance.now()));
     return cleanup;
   }, [data, region]);
 

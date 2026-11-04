@@ -25,7 +25,8 @@ com mais faixas, o popup mostra as 3 primeiras e a maior (o título fala da maio
 
 ## Quando abre
 
-- 8 s depois de entrar, ou antes, quando a pessoa rola metade da página (nunca antes de 2,5 s).
+- **N segundos depois de entrar**, N escolhido no painel (2 a 120; vazio = 8). Conta desde o carregamento da primeira página: trocar de página não
+  zera, e a espera da requisição faz parte dos N segundos. Rolar a página não adianta nada.
 - **Uma vez a cada 7 dias** por navegador e por região (`localStorage` `origens:offer-popup:<região>`, guardado quando abre). Uma promoção diferente
   conta como nova e abre de novo.
 - Nunca por cima de menu, busca, painel de cupons ou qualquer diálogo, nem com a pessoa digitando ou com a aba escondida: espera e tenta a cada 3 s.
@@ -38,13 +39,13 @@ estava. Animação curta de entrada, desligada com `prefers-reduced-motion`.
 
 ## Painel: `/admin/popup` ("Popup da oferta", em Marketing)
 
-- **No ar**: liga/desliga (desligar guarda a escolha).
+- **No ar**: liga/desliga (desligar guarda a escolha) e **Abrir depois de (segundos)**.
 - **Promoção progressiva da INK**: lista lida ao vivo; as que não podem mostram o motivo. Ligar exige uma promoção que a INK confirma no salvar.
 - **Textos** (opcionais): chamada (40), título (60; vazio = "Até R$ X OFF no seu pedido", da maior faixa), texto de apoio (160), botão (30).
 - **Link do botão** (opcional): um endereço deste site (`/sul/colecoes/…`; um endereço completo de useorigens.com.br vira o caminho). Vazio = o botão só
   fecha o popup.
 - Prévia no celular e no computador (o mesmo componente da loja).
-- "Publicar" lista: ligado/desligado, promoção A → B, textos editados, link do botão.
+- "Publicar" lista: ligado/desligado, promoção A → B, textos editados, link do botão, segundos A → B.
 
 Leitura tolerante: um `offerPopup` inválido no `published.json` é descartado com diagnóstico (sem popup), nunca a região.
 
@@ -59,7 +60,7 @@ Pública, só leitura, sem cookies. `404` para região desconhecida ou não lan�
     "id": 73095, "code": "BLACKMONTH", "auto": false, "kind": "value",
     "tiers": [{ "items": 3, "discount": 25 }, { "items": 4, "discount": 50 }, { "items": 5, "discount": 75 }, { "items": 6, "discount": 100 }],
     "eyebrow": "Leve mais, pague menos", "title": "Até R$ 100 OFF no seu pedido", "lead": "Quanto mais peças você leva, maior o desconto.",
-    "cta": "Escolher minhas peças"
+    "cta": "Escolher minhas peças", "delaySeconds": 8
   },
   "theme": { "primary": "#4d543d", "onPrimary": "#ffffff" }
 }
@@ -71,5 +72,5 @@ Pública, só leitura, sem cookies. `404` para região desconhecida ou não lan�
 
 ## Testes
 
-`tests/unit/offer-popup.test.ts`: contrato, payload, leitura no navegador, regra dos 7 dias, páginas onde não abre, formulário do painel, lista do
+`tests/unit/offer-popup.test.ts`: contrato, payload, leitura no navegador, segundos, regra dos 7 dias, páginas onde não abre, formulário do painel, lista do
 Publicar e leitura tolerante.

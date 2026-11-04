@@ -7,7 +7,7 @@
  */
 import { kitDiscountLabel, kitPromotionLive, kitUnsupportedReason, type InkProgressivePromotion, type KitDiscountKind, type KitTier } from "../ink/progressive-promotions";
 import { HEX_COLOR } from "./color";
-import { offerHrefOk, OFFER_CODE, OFFER_POPUP_DEFAULTS, type OfferPopupConfig, type OfferPopupText } from "./offer-popup-schema";
+import { offerDelayOk, offerHrefOk, OFFER_CODE, OFFER_DELAY_DEFAULT_S, OFFER_POPUP_DEFAULTS, type OfferPopupConfig, type OfferPopupText } from "./offer-popup-schema";
 
 export * from "./offer-popup-schema";
 
@@ -31,6 +31,8 @@ export type PublicOffer = {
   lead: string;
   cta: string;
   ctaHref?: string;
+  /** Seconds into the visit before it opens (the panel's choice, or the default). */
+  delaySeconds: number;
 };
 export type PublicOfferPopup = { v: 1; region: string; offer: PublicOffer | null; theme?: OfferTheme };
 
@@ -78,7 +80,7 @@ export function offerUnsupportedReason(p: InkProgressivePromotion, now: number =
 /** The payload of a region at `now`, from its published choice and the promotion INK returned for it (null = none, or INK could not say). */
 export function offerPopupPayload(region: string, config: OfferPopupConfig | undefined, promotion: InkProgressivePromotion | null, now: number, theme?: OfferTheme): PublicOfferPopup {
   if (!config?.enabled || config.promotionId === undefined || !promotion || promotion.id !== config.promotionId || !kitPromotionLive(promotion, now) || offerUnsupportedReason(promotion, now)) return { v: 1, region, offer: null };
-  const offer: PublicOffer = { id: promotion.id, code: promotion.code, auto: promotion.applyAutomatically, kind: promotion.kind, tiers: promotion.tiers, ...offerTexts(config, promotion.kind, promotion.tiers) };
+  const offer: PublicOffer = { id: promotion.id, code: promotion.code, auto: promotion.applyAutomatically, kind: promotion.kind, tiers: promotion.tiers, ...offerTexts(config, promotion.kind, promotion.tiers), delaySeconds: config.delaySeconds ?? OFFER_DELAY_DEFAULT_S };
   if (config.ctaHref) offer.ctaHref = config.ctaHref;
   if (promotion.expiresAt) offer.endsAt = new Date(promotion.expiresAt).toISOString();
   return theme ? { v: 1, region, offer, theme } : { v: 1, region, offer };
@@ -104,7 +106,9 @@ export function parseOfferPopupPayload(raw: unknown, region: string, now: number
   }
   if (!text(o.eyebrow, 40) || !text(o.title, 60) || !text(o.lead, 160) || !text(o.cta, 30)) return null;
   if (o.endsAt !== undefined && (typeof o.endsAt !== "string" || !Number.isFinite(Date.parse(o.endsAt)) || Date.parse(o.endsAt) <= now)) return null;
-  const offer: PublicOffer = { id: o.id, code: o.code, auto: o.auto === true, kind: o.kind, tiers, eyebrow: o.eyebrow, title: o.title, lead: o.lead, cta: o.cta };
+  // An answer without it (an older server) or with an odd value opens at the default.
+  const delaySeconds = offerDelayOk(o.delaySeconds) ? o.delaySeconds : OFFER_DELAY_DEFAULT_S;
+  const offer: PublicOffer = { id: o.id, code: o.code, auto: o.auto === true, kind: o.kind, tiers, eyebrow: o.eyebrow, title: o.title, lead: o.lead, cta: o.cta, delaySeconds };
   if (typeof o.ctaHref === "string" && offerHrefOk(o.ctaHref)) offer.ctaHref = o.ctaHref;
   if (typeof o.endsAt === "string") offer.endsAt = o.endsAt;
   const theme = isRecord(raw.theme) && typeof raw.theme.primary === "string" && HEX_COLOR.test(raw.theme.primary) && typeof raw.theme.onPrimary === "string" && HEX_COLOR.test(raw.theme.onPrimary) ? { primary: raw.theme.primary, onPrimary: raw.theme.onPrimary } : undefined;
@@ -113,11 +117,6 @@ export function parseOfferPopupPayload(raw: unknown, region: string, now: number
 
 // ── When it opens ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** Opens this long into the visit… */
-export const OFFER_DELAY_MS = 8000;
-/** …or earlier, once the visitor scrolled past this share of the page (never before OFFER_MIN_MS). */
-export const OFFER_SCROLL_RATIO = 0.5;
-export const OFFER_MIN_MS = 2500;
 /** Something of the page is busy (a menu, the search, a dialog, typing) when it is due: tried again after this. */
 export const OFFER_RETRY_MS = 3000;
 /** Shown once, then quiet for this long in this browser (owner's choice: once every 7 days). A different promotion counts as new. */
