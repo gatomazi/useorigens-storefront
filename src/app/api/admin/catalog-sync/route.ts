@@ -28,6 +28,8 @@ import { after } from "next/server";
 import { adminSyncToken, allowFixtureSync } from "@/lib/config/env";
 import { promoteSnapshot, type SyncResult } from "@/lib/catalog/sync-service";
 import { runCatalogSyncJob } from "@/lib/catalog/sync-runner";
+import { commercePlan } from "@/lib/catalog/commerce-mode";
+import { beginLojaUnicaJob, currentLojaUnicaJob, LojaUnicaJobRunningError, runLojaUnicaJob } from "@/lib/catalog/unificado/sync-loja-unica-job";
 import { beginSyncJob, currentSyncJob, finishSyncJobFailure, finishSyncJobSuccess, SyncAlreadyRunningError } from "@/lib/catalog/sync-job";
 import type { CatalogSnapshot } from "@/lib/catalog/types";
 import type { CommerceStoreKey } from "@/lib/geo/regions";
@@ -53,6 +55,9 @@ function revalidateCatalogPages(): void {
   revalidatePath("/[region]", "layout");
   for (const region of REGION_SLUGS) revalidatePath(`/api/cidades/${region}`);
 }
+
+/** Single-store mode: the site serves loja-unica/, so the sync callers mean is the single store's ("Sincronizar catálogo da loja única"). */
+const lojaUnicaAtiva = () => commercePlan().effective === "single-store";
 
 export async function POST(request: Request) {
   const expected = adminSyncToken();
@@ -106,6 +111,18 @@ export async function POST(request: Request) {
     }
   }
 
+  if (lojaUnicaAtiva() && !fixtureSnapshot && storeKeys.length === 0) {
+    let unica: ReturnType<typeof beginLojaUnicaJob>;
+    try {
+      unica = beginLojaUnicaJob();
+    } catch (err) {
+      if (err instanceof LojaUnicaJobRunningError) return Response.json({ error: "a sync is already running", startedAt: (currentLojaUnicaJob() as { startedAt?: string }).startedAt }, { status: 409 });
+      throw err;
+    }
+    after(() => runLojaUnicaJob(unica, { onChanged: revalidateCatalogPages }));
+    return Response.json({ status: "accepted", lojaUnica: true, startedAt: unica.startedAt, checkStatusWith: "GET this same URL, authenticated" }, { status: 202 });
+  }
+
   let running: ReturnType<typeof beginSyncJob>;
   try {
     running = beginSyncJob(storeKeys);
@@ -156,5 +173,5 @@ export async function GET(request: Request) {
   if (!isAuthorized(request, expected)) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
-  return Response.json(currentSyncJob());
+  return Response.json(lojaUnicaAtiva() ? currentLojaUnicaJob() : currentSyncJob());
 }
