@@ -5,8 +5,11 @@ import { SITE_URL } from "../site";
 import { collectionUrl } from "./sources";
 import { readPublished } from "./published";
 import { effectiveNavbarGroups } from "./navbar-groups";
-import { DEFAULT_CATEGORIES_BLOCK_LABEL } from "./navigation";
-import { MAX_NAVBAR_GROUP, type CollectionRef, type ScopeDoc } from "./schema";
+import { regionChrome } from "./chrome";
+import { homeBundle, siteConfigHomeEnabled } from "./flag";
+import { hasStatesSection } from "./nav";
+import { DEFAULT_CATEGORIES_BLOCK_LABEL, headerBarItems, JOURNEY_HASH, regionPath, type NavBlockData, type NavItemData } from "./navigation";
+import { MAX_NAVBAR_GROUP, type CollectionRef, type MenuHighlightColors, type ScopeDoc } from "./schema";
 import { REGIONS, STATE_NAMES, type RegionSlug } from "../geo/regions";
 import { storeForRegion } from "../catalog/commerce-mode";
 
@@ -22,12 +25,59 @@ import { storeForRegion } from "../catalog/commerce-mode";
 export type NavbarEntry = { id: number; title: string; slug: string; url: string; order: number };
 export type NavbarState = { uf: string; name: string; path: string };
 /** `moreLabel` only once the region has its collection menu: the name the owner gave "Categorias" (Navegação), for the Worker's dropdown. */
-export type NavbarConfig = { v: 2; region: RegionSlug; states: NavbarState[]; top: NavbarEntry[]; more: NavbarEntry[]; moreLabel?: string };
+export type NavbarConfig = { v: 2; region: RegionSlug; states: NavbarState[]; top: NavbarEntry[]; more: NavbarEntry[]; moreLabel?: string; site?: NavbarSite };
+
+/** One link of the site's own menus, with an absolute address on the site (`url`) and what the site draws with it. */
+export type NavbarSiteLink = { label: string; url: string; badge?: string; detail?: string; highlight?: MenuHighlightColors };
+/**
+ * The site's header exactly as the storefront draws it (`SiteChrome`), so the INK header can be the same instead of a second list kept by hand:
+ * "Sua cidade" (`journey`, a link that opens the journey on arrival), "Estados" (`states`, and `statesMore` = "Ver estados" when the home has the chooser),
+ * "Categorias" (`categoriesLabel` + `categories`, the bar's collections included, with their descriptions), the bar's links (`bar`, the highlighted ones
+ * with their colours) and, for the phone menu, the menu's blocks in the order and with the titles the CMS published (`blocks`).
+ * Added beside `top`/`more` on purpose: a Worker that does not know `site` keeps drawing its own layout from those, untouched.
+ */
+export type NavbarSite = {
+  journey: { label: string; menuLabel: string; url: string };
+  states: NavbarSiteLink[];
+  statesMore?: string;
+  categoriesLabel: string;
+  categories: NavbarSiteLink[];
+  bar: NavbarSiteLink[];
+  blocks: { kind: NavBlockData["kind"]; label: string; items: NavbarSiteLink[] }[];
+};
 
 export function publicNavbar(region: RegionSlug): NavbarConfig {
   const doc = readPublished().bundle.docs[region];
   const states = REGIONS[region].ufs.map((uf) => ({ uf, name: STATE_NAMES[uf], path: `/${region}/${uf.toLowerCase()}` }));
-  return doc?.collections?.menu ? menuNavbar(region, doc, states) : legacyNavbar(region, doc, states);
+  const base = doc?.collections?.menu ? menuNavbar(region, doc, states) : legacyNavbar(region, doc, states);
+  return { ...base, site: siteNavbar(region) };
+}
+
+const siteOrigin = () => SITE_URL.replace(/\/$/, "");
+/** A path of the site becomes its full address; anything else (already absolute) stays as it is. */
+const siteAddress = (href: string): string => (href.startsWith("/") ? `${siteOrigin()}${href}` : href);
+const siteLink = (item: NavItemData): NavbarSiteLink => ({
+  label: item.label,
+  url: siteAddress(item.href),
+  ...(item.badge ? { badge: item.badge } : {}),
+  ...(item.detail ? { detail: item.detail } : {}),
+  ...(item.highlight ? { highlight: item.highlight } : {}),
+});
+
+/** The site's header, from the same resolution the storefront header uses (`regionChrome`), as full addresses on the site. */
+function siteNavbar(region: RegionSlug): NavbarSite {
+  const { navigation } = regionChrome(region);
+  // The document the site header reads for "Ver estados" (SiteChrome's headerDoc): none while the config-driven home is off.
+  const doc = siteConfigHomeEnabled() ? homeBundle().docs[region] : undefined;
+  return {
+    journey: { label: "Sua cidade", menuLabel: "Encontre aqui a sua cidade", url: siteAddress(`${regionPath(region)}${JOURNEY_HASH}`) },
+    states: navigation.states.map(siteLink),
+    ...(navigation.states.length > 0 && hasStatesSection(doc) ? { statesMore: siteAddress(`${regionPath(region)}#estados`) } : {}),
+    categoriesLabel: navigation.categoriesLabel,
+    categories: navigation.categories.map(siteLink),
+    bar: headerBarItems(navigation).map(siteLink),
+    blocks: navigation.blocks.map((b) => ({ kind: b.kind, label: b.label, items: b.items.map(siteLink) })),
+  };
 }
 
 /**

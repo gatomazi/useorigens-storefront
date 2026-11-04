@@ -197,6 +197,8 @@ export function themeProblems(scope: Scope, doc: Pick<ScopeDoc, "theme">, global
 // ── Navigation resolution ─────────────────────────────────────────────────────────────────────────────────────
 
 export const regionPath = (region: RegionSlug): string => `/${region}`;
+/** The address mark that opens the "Sua cidade" journey on arrival (`/sul#sua-cidade`): how a link from outside the page (the INK header) reaches it. */
+export const JOURNEY_HASH = "#sua-cidade";
 export const statePath = (region: RegionSlug, uf: string): string => `/${region}/${uf.toLowerCase()}`;
 
 export type NavItemData = {
@@ -304,6 +306,17 @@ export function assembleNavigation(region: RegionSlug, config: NavigationConfig 
     states: shown("states", data.states),
     regions: shown("regions", data.regions),
   };
+}
+
+/**
+ * The links of the header's bar, in order: the home's links, then the collections the owner put on the bar. The home's own "Estados" link goes when the
+ * "Estados" dropdown is there (it already leads to the home's state chooser), and a destination is listed once. The site header and the INK header (the
+ * Worker, through `/api/navbar`) both draw this list.
+ */
+export function headerBarItems(navigation: Pick<ResolvedNavigation, "primary" | "collections" | "states">): NavItemData[] {
+  return [...navigation.primary, ...navigation.collections]
+    .filter((item) => !(navigation.states.length > 0 && item.href.endsWith("#estados")))
+    .filter((item, i, all) => all.findIndex((o) => o.href === item.href) === i);
 }
 
 export const resolveNavigation = (input: NavigationInput): ResolvedNavigation => assembleNavigation(input.region, input.doc?.navigation, navData(input));
