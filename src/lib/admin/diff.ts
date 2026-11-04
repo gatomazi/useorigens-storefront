@@ -9,7 +9,7 @@ import { REGIONS } from "../geo/regions";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
 import { kitTexts } from "../site-config/post-add-kit-schema";
-import type { OfferPopupConfig } from "../site-config/offer-popup-schema";
+import { OFFER_DELAY_DEFAULT_S, type OfferPopupConfig } from "../site-config/offer-popup-schema";
 import { assistantLabel, assistantTopics, type AssistantAnswer } from "../site-config/assistant-schema";
 import { HOME_THEMES, homeThemeOf, type CollectionHighlight, type HomeThemeName, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
 import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
@@ -335,18 +335,21 @@ function postAddKitChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
 }
 
 const offerName = (doc: ScopeDoc) => (doc.offerPopup?.promotionCode ? `promoção ${doc.offerPopup.promotionCode}` : doc.offerPopup?.promotionId !== undefined ? `promoção #${doc.offerPopup.promotionId}` : "nenhuma promoção");
+const offerDelay = (c: OfferPopupConfig | undefined) => c?.delaySeconds ?? OFFER_DELAY_DEFAULT_S;
 const offerOwnTexts = (c: OfferPopupConfig | undefined) => json([c?.eyebrow, c?.title, c?.lead, c?.cta]);
 
-/** "Popup da oferta": the switch, the chosen INK promotion, the texts and the button's link. Pure. */
+/** "Popup da oferta": the switch, the chosen INK promotion, the texts, the button's link and the delay. Pure. */
 function offerPopupChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   const was = published.offerPopup;
   const now = draft.offerPopup;
   if (!was && !now) return [];
   const out: Change[] = [];
   const push = (sectionId: string, text: string) => out.push({ kind: "offer-popup", sectionId: `offer-popup:${sectionId}`, text: `Popup da oferta: ${text}` });
-  if ((was?.enabled ?? false) !== (now?.enabled ?? false)) push("enabled", now?.enabled ? `ligado, com a ${offerName(draft)} (abre na loja depois de alguns segundos, 1 vez a cada 7 dias)` : "desligado (o popup deixa de abrir)");
+  if ((was?.enabled ?? false) !== (now?.enabled ?? false)) push("enabled", now?.enabled ? `ligado, com a ${offerName(draft)} (abre na loja depois de ${offerDelay(now)} segundos, 1 vez a cada 7 dias)` : "desligado (o popup deixa de abrir)");
   if (was?.promotionId !== now?.promotionId) push("promotion", `${offerName(published)} → ${offerName(draft)}`);
   if (now && offerOwnTexts(was) !== offerOwnTexts(now)) push("texts", "textos editados");
+  // Turning it on already says when it opens.
+  if (now && offerDelay(was) !== offerDelay(now) && !(now.enabled && !was?.enabled)) push("delay", `abre depois de ${offerDelay(was)} → ${offerDelay(now)} segundos`);
   if (now && (was?.ctaHref ?? "") !== (now.ctaHref ?? "")) push("link", now.ctaHref ? `o botão leva a ${now.ctaHref}` : "o botão só fecha o popup");
   return out;
 }

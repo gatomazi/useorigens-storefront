@@ -1077,7 +1077,7 @@ export async function saveOfferPopupAction(fd: FormData) {
     }
   }
   const parsed = offerPopupFromForm(
-    { enabled: fd.get("enabled") === "on", promotionId: text(fd, "promotionId"), promotionCode: text(fd, "promotionCode"), eyebrow: text(fd, "eyebrow"), title: text(fd, "title"), lead: text(fd, "lead"), cta: text(fd, "cta"), ctaHref: text(fd, "ctaHref") },
+    { enabled: fd.get("enabled") === "on", promotionId: text(fd, "promotionId"), promotionCode: text(fd, "promotionCode"), eyebrow: text(fd, "eyebrow"), title: text(fd, "title"), lead: text(fd, "lead"), cta: text(fd, "cta"), ctaHref: text(fd, "ctaHref"), delaySeconds: text(fd, "delaySeconds") },
     check,
   );
   if (!parsed.ok) back(here, { err: parsed.errors });
