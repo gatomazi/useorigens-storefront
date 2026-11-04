@@ -13,6 +13,7 @@ import { CLASSIC_GARMENT_TYPE_ID } from "@/lib/catalog/garments";
 import { formatPrice } from "@/lib/format";
 import { allAdministrativeRegions } from "@/lib/geo/administrative-regions";
 import { STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
+import { JOURNEY_HASH } from "@/lib/site-config/navigation";
 import { guideCityQuery } from "@/lib/guide/dismiss";
 import type { GlobalResult } from "@/lib/search/global";
 import { prepareCities, searchCities, type SearchCity } from "@/lib/search/rank";
@@ -403,6 +404,19 @@ export function CityJourney({ region, picks = [], finishIn }: {
     };
     window.addEventListener(OPEN_EVENT, onOpen);
     return () => window.removeEventListener(OPEN_EVENT, onOpen);
+  }, []);
+
+  // `#sua-cidade`: a link from outside the page (the header the Worker draws on the INK pages) opens the journey on arrival. The mark leaves the address
+  // right away, so a reload or "back" does not open it again.
+  useEffect(() => {
+    const fromHash = () => {
+      if (window.location.hash !== JOURNEY_HASH || dialog.current?.open) return;
+      window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+      latestOpen.current({ entry: "ink", opener: null });
+    };
+    fromHash();
+    window.addEventListener("hashchange", fromHash);
+    return () => window.removeEventListener("hashchange", fromHash);
   }, []);
 
   // A native listener, not JSX `onClose`: a close done by the platform (Escape) must always reach the state, or the next tap would not reopen it.

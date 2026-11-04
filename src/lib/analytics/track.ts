@@ -408,8 +408,9 @@ export function trackAssistant(event: AssistantEvent, params: AssistantParams & 
 
 export type CityJourneyEvent = "origens_sua_cidade_open" | "origens_sua_cidade_state" | "origens_sua_cidade_model" | "origens_sua_cidade_piece" | "origens_sua_cidade_error";
 export type CityJourneyParams = {
-  /** Where the journey was opened: the desktop header's menu, the phone menu, the home's "Encontre aqui a sua cidade", or a banner of the opening. */
-  entry_point?: "header" | "menu" | "home" | "hero";
+  /** Where the journey was opened: the desktop header's menu, the phone menu, the home's "Encontre aqui a sua cidade", a banner of the opening, or the
+   *  "Sua cidade" of the header the Worker draws on the INK pages (a link to `#sua-cidade`). */
+  entry_point?: "header" | "menu" | "home" | "hero" | "ink";
   city_slug?: string;
   uf?: string;
   family?: string;

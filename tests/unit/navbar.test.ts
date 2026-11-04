@@ -260,6 +260,29 @@ describe("what the storefront and the Worker read", () => {
       expect(navbar).toEqual(plain.navbar);
     });
 
+    test("given the site's header, when the Worker reads the menu, then `site` is that header with full addresses: Sua cidade, Estados, Categorias and the bar", async () => {
+      vi.stubEnv("SITE_CONFIG_HOME", "on");
+      const menu = { top: [ref(4), ref(1)], hidden: [ref(6)], added: [] };
+      const { navbar, siteUrl } = await setup({ menu, highlights: [{ ...ref(1), background: "#b3261e", text: "#ffffff" }] }, seven);
+      const site = navbar.site!;
+      expect(site.journey).toEqual({ label: "Sua cidade", menuLabel: "Encontre aqui a sua cidade", url: `${siteUrl}/sul#sua-cidade` });
+      expect(site.states.map((s) => [s.badge, s.label, s.url])).toEqual([["PR", "Paraná", `${siteUrl}/sul/pr`], ["SC", "Santa Catarina", `${siteUrl}/sul/sc`], ["RS", "Rio Grande do Sul", `${siteUrl}/sul/rs`]]);
+      expect(site.categoriesLabel).toBe("Categorias");
+      // Categorias as the site lists it: the bar's collections included (the Worker's `more` leaves them out), pages of the site.
+      expect(labels(site.categories)).toEqual(["Feito Para Você", "Novidades", "Seu Lugar", "Do Nosso Jeito", "Fala Daqui", "Lançamento de Verão"]);
+      expect(site.categories[0].url).toBe(`${siteUrl}/sul/colecoes/feito-para-voce`);
+      // The bar: the home's links, then the collections on it, the highlighted one with its colours (the home's "Estados" link leaves for the dropdown).
+      const bar = site.bar.slice(-2);
+      expect(bar).toEqual([{ label: "Feito Para Você", url: `${siteUrl}/sul/colecoes/feito-para-voce` }, { label: "Novidades", url: `${siteUrl}/sul/colecoes/novidades`, highlight: { background: "#b3261e", text: "#ffffff" } }]);
+      expect(site.bar.some((l) => l.url.endsWith("#estados"))).toBe(false);
+      expect(site.bar.every((l) => l.url.startsWith(`${siteUrl}/sul`))).toBe(true);
+      // The phone menu: the blocks in the CMS order, every one with something in it.
+      expect(site.blocks.map((b) => b.kind)).toEqual(expect.arrayContaining(["categories", "states"]));
+      expect(site.blocks.every((b) => b.items.length > 0)).toBe(true);
+      // `top`/`more` are untouched by it.
+      expect(titles(navbar.top)).toEqual(["Feito Para Você", "Novidades"]);
+    });
+
     test("given a renamed Categorias block, when the Worker reads the menu, then it gets that name", async () => {
       const { navbar } = await setup({ menu: empty }, seven, { navigation: { categoriesBlock: { label: "Coleções", visible: true, order: 15 } } });
       expect(navbar.moreLabel).toBe("Coleções");
@@ -270,7 +293,9 @@ describe("what the storefront and the Worker read", () => {
 
   describe("a document from before the menu (what production has today)", () => {
     test("given the older groups, when the Worker reads them, then it gets EXACTLY what it always did: those lists, INK links, no label", async () => {
-      const { navbar } = await setup({ navbarGroups: { top: [ref(1), ref(7), ref(2)], more: [ref(3)] } }, seven);
+      // `site` (the site's own header) is added beside them; a Worker that does not know it reads the rest exactly as before.
+      const { navbar: full } = await setup({ navbarGroups: { top: [ref(1), ref(7), ref(2)], more: [ref(3)] } }, seven);
+      const navbar = { ...full, site: undefined };
       expect(navbar).toEqual({
         v: 2, region: "sul",
         states: [{ uf: "PR", name: "Paraná", path: "/sul/pr" }, { uf: "SC", name: "Santa Catarina", path: "/sul/sc" }, { uf: "RS", name: "Rio Grande do Sul", path: "/sul/rs" }],
@@ -280,6 +305,7 @@ describe("what the storefront and the Worker read", () => {
           { id: 2, title: "Do Nosso Jeito", slug: "do-nosso-jeito", url: "https://www.usesul.com.br/usesul/collections/do-nosso-jeito", order: 3 },
         ],
         more: [{ id: 3, title: "Seu Lugar", slug: "seu-lugar", url: "https://www.usesul.com.br/usesul/collections/seu-lugar", order: 1 }],
+        site: undefined,
       });
     });
 

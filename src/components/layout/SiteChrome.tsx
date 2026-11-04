@@ -8,7 +8,7 @@ import { INSTAGRAM_URLS, LEGACY_STORE_URLS } from "@/lib/site";
 import { homeBundle, siteConfigHomeEnabled } from "@/lib/site-config/flag";
 import { regionChrome } from "@/lib/site-config/chrome";
 import { hasStatesSection } from "@/lib/site-config/nav";
-import { regionPath } from "@/lib/site-config/navigation";
+import { headerBarItems, regionPath } from "@/lib/site-config/navigation";
 import { headerActionsOf, type HeaderAction, type HeaderActionStyle } from "@/lib/site-config/navigation-schema";
 
 /** Another region: this site's own page once that region is publicly launched, otherwise the legacy INK store it has always linked to. */
@@ -71,10 +71,8 @@ export function Header({ region, headerActions }: { region: RegionSlug; headerAc
   // The home's links first, then the collections the owner put on the bar: when the row is too short for all of them, the last ones step out (they are
   // all in "Categorias" anyway).
   const states = navigation.states;
-  // The "Estados" dropdown already leads to the home's state chooser ("Ver estados"): the home's own "Estados" link would say it twice.
-  const items = [...navigation.primary, ...navigation.collections]
-    .filter((item) => !(states.length > 0 && item.href.endsWith("#estados")))
-    .filter((item, i, all) => all.findIndex((o) => o.href === item.href) === i);
+  // The "Estados" dropdown already leads to the home's state chooser ("Ver estados"): the home's own "Estados" link would say it twice (headerBarItems).
+  const items = headerBarItems(navigation);
   const categories = navigation.categories;
   const others = navigation.regions;
   // Long lists read down the columns, never one endless column. Collections with descriptions take more room: two columns from five entries.
