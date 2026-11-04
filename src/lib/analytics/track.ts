@@ -313,6 +313,13 @@ export function trackPromo(event: PromoEvent, params: { region: string; promoId?
   sendGtag("event", event, { region: params.region, surface: "storefront", ...(params.promoId ? { promo_id: params.promoId } : {}) });
 }
 
+/** The "Popup da oferta" (GA4 only): shown, code copied, main button, closed. `promo_code` is the INK promotion's code (low cardinality). */
+export type OfferPopupEvent = "offer_popup_view" | "offer_popup_copy" | "offer_popup_cta" | "offer_popup_close";
+export function trackOfferPopup(event: OfferPopupEvent, params: { region: string; promoCode: string }): void {
+  if (!gtagReady()) return;
+  sendGtag("event", event, { region: params.region, surface: "storefront", promo_code: params.promoCode });
+}
+
 /**
  * A click inside the "Pódio" (GA4 only — no Meta event; its contract stays the events above). Low-cardinality dimensions only: region, UF,
  * which ranking, the podium position and where the block was (home teaser or state page). Measures interest in the block; it NEVER feeds
