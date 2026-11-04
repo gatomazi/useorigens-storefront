@@ -21,6 +21,7 @@ import { validateFollow } from "./follow-schema";
 import { validatePromotions } from "./promotions-schema";
 import { validateTopBar } from "./top-bar-schema";
 import { validatePostAddKit } from "./post-add-kit-schema";
+import { validateOfferPopup } from "./offer-popup-schema";
 import { validateAssistant } from "./assistant-schema";
 import { parseMediaInfo, SCOPES, validateCustomizer, validatePage, validatePageBackdrop, validateScopeDoc, validateSection, type Customizer, type MediaAssetInfo, type Page, type PageBackdrop, type PublishedBundle, type Scope, type ScopeDoc, type Section } from "./schema";
 
@@ -186,8 +187,9 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
   // And the top strip: an invalid one means the storefront's default strip and the INK's own on its pages.
   // And the assistant: an invalid one means no chat, and the INK keeps its own "Ajuda?" and WhatsApp.
   // And "Monte seu kit": an invalid one means the post-add modal as INK draws it.
+  // And "Popup da oferta": an invalid one means no popup.
   // And "Seguir a Sul": an invalid one means the region shows its own content, as before the switch existed.
-  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "assistant", "inkTheme", "postAddKit", "follow"] as const) {
+  for (const key of ["navigation", "theme", "neutralTheme", "promotions", "cards", "carouselEnd", "search", "podio", "mundo", "statePage", "topBar", "assistant", "inkTheme", "postAddKit", "offerPopup", "follow"] as const) {
     if (candidate[key] === undefined) continue;
     const r =
       key === "navigation" ? validateNavigation(candidate[key], scope, `${scope}.navigation`)
@@ -203,6 +205,7 @@ function sanitizeDoc(scope: Scope, raw: unknown, fallback: ScopeDoc, media: Reco
       : key === "assistant" ? validateAssistant(candidate[key], scope, `${scope}.assistant`)
       : key === "inkTheme" ? validateInkTheme(candidate[key], scope, `${scope}.inkTheme`)
       : key === "postAddKit" ? validatePostAddKit(candidate[key], scope, `${scope}.postAddKit`)
+      : key === "offerPopup" ? validateOfferPopup(candidate[key], scope, `${scope}.offerPopup`)
       : key === "follow" ? validateFollow(candidate[key], scope, `${scope}.follow`)
       : validatePromotions(candidate[key], scope, `${scope}.promotions`);
     if (!r.ok) {

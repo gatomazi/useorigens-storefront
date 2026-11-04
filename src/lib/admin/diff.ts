@@ -9,13 +9,14 @@ import { REGIONS } from "../geo/regions";
 import type { PromotionItem } from "../site-config/promotions-schema";
 import type { TopBarMessage } from "../site-config/top-bar-schema";
 import { kitTexts } from "../site-config/post-add-kit-schema";
+import type { OfferPopupConfig } from "../site-config/offer-popup-schema";
 import { assistantLabel, assistantTopics, type AssistantAnswer } from "../site-config/assistant-schema";
 import { HOME_THEMES, homeThemeOf, type CollectionHighlight, type HomeThemeName, type CollectionRef, type ScopeDoc, type Section } from "../site-config/schema";
 import { HOME_THEME_LABEL, swapHomeTheme } from "../site-config/home-themes";
 import { CARD_BUY_STYLE_NAME } from "../site-config/cards-schema";
 
 /** Human-readable differences between the published document and the draft (section level). Pure; used by the publish screen. */
-export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "assistant" | "podio" | "ink-theme" | "post-add-kit" | "follow"; sectionId: string; text: string };
+export type Change = { kind: "added" | "removed" | "moved" | "activated" | "deactivated" | "edited" | "navbar-added" | "navbar-removed" | "navbar-moved" | "navigation" | "theme" | "promotions" | "top-bar" | "assistant" | "podio" | "ink-theme" | "post-add-kit" | "offer-popup" | "follow"; sectionId: string; text: string };
 
 const label = (s: Section) => s.title ?? s.anchor;
 const json = (v: unknown) => JSON.stringify(v ?? null);
@@ -77,7 +78,7 @@ export function diffDocs(published: ScopeDoc, draft: ScopeDoc, nameOf: Collectio
   // The collection menu is part of the document but not of any section: without this, changing only the menu would read "nothing to publish".
   changes.push(...menuChanges(published, draft, nameOf, isPublic), ...arrangementChanges(published, draft, nameOf), ...stateRowsChanges(published, draft, nameOf));
   // Same reason for the menu and the palette: they belong to the document, not to a section.
-  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft), ...followChanges(published, draft), ...regionalChanges(published, draft, sulSection));
+  changes.push(...navigationChanges(published, draft), ...themeChanges(sameTheme, draft), ...promotionChanges(published, draft), ...topBarChanges(published, draft), ...assistantChanges(published, draft), ...cardsChanges(published, draft), ...carouselEndChanges(published, draft), ...searchChanges(published, draft), ...mundoChanges(published, draft), ...podioChanges(published, draft), ...statePageChanges(published, draft), ...inkThemeChanges(published, draft), ...postAddKitChanges(published, draft), ...offerPopupChanges(published, draft), ...followChanges(published, draft), ...regionalChanges(published, draft, sulSection));
   return changes;
 }
 
@@ -330,6 +331,23 @@ function postAddKitChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
   if (was?.promotionId !== now?.promotionId) push("promotion", `${kitName(published)} → ${kitName(draft)}`);
   // Compared as the block shows them: a save that writes the default texts changes nothing on the page, so it lists nothing.
   if (now && json(kitTexts(was)) !== json(kitTexts(now))) push("texts", "textos editados");
+  return out;
+}
+
+const offerName = (doc: ScopeDoc) => (doc.offerPopup?.promotionCode ? `promoção ${doc.offerPopup.promotionCode}` : doc.offerPopup?.promotionId !== undefined ? `promoção #${doc.offerPopup.promotionId}` : "nenhuma promoção");
+const offerOwnTexts = (c: OfferPopupConfig | undefined) => json([c?.eyebrow, c?.title, c?.lead, c?.cta]);
+
+/** "Popup da oferta": the switch, the chosen INK promotion, the texts and the button's link. Pure. */
+function offerPopupChanges(published: ScopeDoc, draft: ScopeDoc): Change[] {
+  const was = published.offerPopup;
+  const now = draft.offerPopup;
+  if (!was && !now) return [];
+  const out: Change[] = [];
+  const push = (sectionId: string, text: string) => out.push({ kind: "offer-popup", sectionId: `offer-popup:${sectionId}`, text: `Popup da oferta: ${text}` });
+  if ((was?.enabled ?? false) !== (now?.enabled ?? false)) push("enabled", now?.enabled ? `ligado, com a ${offerName(draft)} (abre na loja depois de alguns segundos, 1 vez a cada 7 dias)` : "desligado (o popup deixa de abrir)");
+  if (was?.promotionId !== now?.promotionId) push("promotion", `${offerName(published)} → ${offerName(draft)}`);
+  if (now && offerOwnTexts(was) !== offerOwnTexts(now)) push("texts", "textos editados");
+  if (now && (was?.ctaHref ?? "") !== (now.ctaHref ?? "")) push("link", now.ctaHref ? `o botão leva a ${now.ctaHref}` : "o botão só fecha o popup");
   return out;
 }
 

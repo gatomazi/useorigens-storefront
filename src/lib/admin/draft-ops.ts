@@ -17,6 +17,7 @@ import type { NavigationConfig, ThemeConfig } from "../site-config/navigation-sc
 import type { PromotionsConfig } from "../site-config/promotions-schema";
 import type { TopBarConfig } from "../site-config/top-bar-schema";
 import type { PostAddKitConfig } from "../site-config/post-add-kit-schema";
+import type { OfferPopupConfig } from "../site-config/offer-popup-schema";
 import type { AssistantConfig } from "../site-config/assistant-schema";
 import type { CardsConfig } from "../site-config/cards-schema";
 import type { CarouselEndConfig } from "../site-config/carousel-end-schema";
@@ -125,6 +126,8 @@ export type DraftOp =
   | { type: "set-top-bar"; topBar: TopBarConfig }
   /** Replaces "Monte seu kit" of a region (switch, chosen INK promotion and texts). Strictly validated; the promotion itself is checked against INK on save. */
   | { type: "set-post-add-kit"; postAddKit: PostAddKitConfig }
+  /** Replaces "Popup da oferta" of a region (switch, chosen INK promotion, texts and link). Strictly validated; the promotion is checked against INK on save. */
+  | { type: "set-offer-popup"; offerPopup: OfferPopupConfig }
   /** Replaces the assistant of a region (switch, WhatsApp, opening line and answers). Strictly validated. */
   | { type: "set-assistant"; assistant: AssistantConfig }
   /** GLOBAL only: a buy button on every product card of the store (`cards.buyLabel`), or `null` to leave it to each section again. */
@@ -324,6 +327,12 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
   if (op.type === "set-post-add-kit") {
     if (doc.scope === "global") return fail("the post-add kit belongs to a region");
     const next: ScopeDoc = { ...doc, postAddKit: op.postAddKit };
+    const check = validateScopeDoc(next);
+    return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
+  }
+  if (op.type === "set-offer-popup") {
+    if (doc.scope === "global") return fail("the offer popup belongs to a region");
+    const next: ScopeDoc = { ...doc, offerPopup: op.offerPopup };
     const check = validateScopeDoc(next);
     return check.ok ? { ok: true, doc: next } : { ok: false, errors: check.errors };
   }

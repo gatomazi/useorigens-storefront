@@ -7,6 +7,7 @@ import { MetaPixel } from "@/components/analytics/MetaPixel";
 import { MicrosoftClarity } from "@/components/analytics/MicrosoftClarity";
 import { ConsentBanner } from "@/components/consent/ConsentBanner";
 import { PromoFab } from "@/components/promotions/PromoFab";
+import { OfferPopupLoader } from "@/components/promotions/OfferPopupLoader";
 import { AssistantFab } from "@/components/assistant/AssistantFab";
 import { ProductTracker } from "@/components/customization/ProductTracker";
 import { ConsentProvider } from "@/lib/consent/ConsentProvider";
@@ -81,6 +82,8 @@ export default async function RegionLayout({ children, params }: { children: Rea
       <ConsentBanner region={region} />
       {/* Coupons and promotions of THIS region (CMS, published only); renders nothing when there are none or anything fails. */}
       <PromoFab key={region} region={region} />
+      {/* The progressive offer of THIS region (CMS "Popup da oferta", published only): opens once every 7 days, never over a menu or a dialog. */}
+      <OfferPopupLoader key={`offer-${region}`} region={region} />
       {/* The help chat of THIS region ("Pergunte aqui" by default, CMS, published only): renders nothing when it is off or anything fails. */}
       {/* Outside the region wrapper (fixed, like the coupons): it gets the region's colours here, so its button wears the header's colour. */}
       <div className="contents" style={{ ...regionThemeStyle(region), ...cssVars }}>

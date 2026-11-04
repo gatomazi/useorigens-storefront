@@ -56,6 +56,7 @@ export function SidebarNav({ pendingRequests = 0, newPartners = 0, owner = false
         { href: "/admin/promocoes", label: "Cupons e promoções" },
         { href: "/admin/faixa", label: "Faixa do topo" },
         { href: "/admin/kit", label: "Monte seu kit" },
+        { href: "/admin/popup", label: "Popup da oferta" },
         { href: "/admin/tracking", label: "Tracking" },
       ],
     },
