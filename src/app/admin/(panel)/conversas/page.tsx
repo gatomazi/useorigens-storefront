@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { listConversations } from "@/lib/instagram/history-client";
-import { AUTHOR_LABEL, BOT_MODE_LABEL, channelLabel, filterConversations, formatWhen, type ConversationFilter } from "@/lib/instagram/history";
+import { AUTHOR_LABEL, BOT_MODE_LABEL, CHANNEL_FILTERS, channelLabel, filterConversations, formatWhen, isChannelFilter, type ConversationFilter } from "@/lib/instagram/history";
 
 const FILTERS: { value: ConversationFilter; label: string }[] = [
   { value: "todas", label: "Todas" },
@@ -11,13 +11,14 @@ const FILTERS: { value: ConversationFilter; label: string }[] = [
 ];
 
 /** What the Instagram webhook received and sent in the last days (comments, DMs, the DM bot), read from the webhook; nothing is stored here. */
-export default async function ConversationsPage({ searchParams }: { searchParams: Promise<{ f?: string; q?: string }> }) {
+export default async function ConversationsPage({ searchParams }: { searchParams: Promise<{ f?: string; q?: string; c?: string }> }) {
   await requireAdmin();
   const sp = await searchParams;
   const filter = (FILTERS.find((f) => f.value === sp.f)?.value ?? "todas") as ConversationFilter;
   const q = (sp.q ?? "").slice(0, 80);
+  const channel = isChannelFilter(sp.c) ? sp.c : "todos";
   const result = await listConversations();
-  const rows = result.ok ? filterConversations(result.data.conversations, filter, q) : [];
+  const rows = result.ok ? filterConversations(result.data.conversations, filter, q, channel) : [];
 
   return (
     <div className="space-y-6">
@@ -45,6 +46,12 @@ export default async function ConversationsPage({ searchParams }: { searchParams
       ) : (
         <>
           <form method="get" className="a-card flex flex-wrap items-end gap-4 p-5" aria-label="Filtros">
+            <div>
+              <label className="a-label" htmlFor="c">Canal</label>
+              <select id="c" name="c" className="a-select" defaultValue={channel}>
+                {CHANNEL_FILTERS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
+              </select>
+            </div>
             <div>
               <label className="a-label" htmlFor="f">Mostrar</label>
               <select id="f" name="f" className="a-select" defaultValue={filter}>
@@ -77,7 +84,7 @@ export default async function ConversationsPage({ searchParams }: { searchParams
                         {c.pausedUntil && <span className="a-badge bad" title={`Bot pausado até ${formatWhen(c.pausedUntil)}`}>Bot pausado</span>}
                       </span>
                     </td>
-                    <td className="text-right"><Link href={`/admin/conversas/${encodeURIComponent(c.userId)}`} className="a-btn sm ghost">Abrir</Link></td>
+                    <td className="text-right"><Link href={`/admin/conversas/${encodeURIComponent(c.userId)}${channel === "todos" ? "" : `?c=${channel}`}`} className="a-btn sm ghost">Abrir</Link></td>
                   </tr>
                 ))}
               </tbody>

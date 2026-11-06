@@ -130,9 +130,32 @@ export function parseConversation(v: unknown): Conversation | null {
 /** Narrow the list by what the team is looking for. */
 export type ConversationFilter = "todas" | "handoff" | "sombra" | "pausadas";
 
-export function filterConversations(list: ConversationSummary[], filter: ConversationFilter, query: string): ConversationSummary[] {
+/** Direct messages (Instagram DM, Messenger) or public comments (Instagram, Facebook). */
+export type ChannelFilter = "todos" | "dm" | "comentario";
+
+export const CHANNEL_FILTERS: { value: ChannelFilter; label: string }[] = [
+  { value: "todos", label: "DMs e comentários" },
+  { value: "dm", label: "Só DMs" },
+  { value: "comentario", label: "Só comentários" },
+];
+
+const CHANNEL_KIND: Record<string, Exclude<ChannelFilter, "todos">> = {
+  instagram_dm: "dm",
+  messenger: "dm",
+  instagram_comentario: "comentario",
+  facebook_comentario: "comentario",
+};
+
+export const isChannelFilter = (v: unknown): v is ChannelFilter => v === "todos" || v === "dm" || v === "comentario";
+export const channelMatches = (channel: string, filter: ChannelFilter) => filter === "todos" || CHANNEL_KIND[channel] === filter;
+
+/** One person's events in that kind of channel only (the conversation page's "Só DMs" / "Só comentários"). */
+export const filterEvents = (events: HistoryEvent[], filter: ChannelFilter) => events.filter((e) => channelMatches(e.channel, filter));
+
+export function filterConversations(list: ConversationSummary[], filter: ConversationFilter, query: string, channel: ChannelFilter = "todos"): ConversationSummary[] {
   const q = query.trim().toLowerCase().replace(/^@/, "");
   return list.filter((c) => {
+    if (channel !== "todos" && !c.channels.some((ch) => channelMatches(ch, channel))) return false;
     if (filter === "handoff" && c.handoffs === 0) return false;
     if (filter === "sombra" && c.shadow === 0) return false;
     if (filter === "pausadas" && !c.pausedUntil) return false;
