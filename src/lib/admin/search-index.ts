@@ -50,6 +50,7 @@ export const ADMIN_SEARCH_INDEX: readonly AdminSearchEntry[] = [
   { title: "Novo modelo de personalização", where: "Personalização", href: "/admin/personalizacao", anchor: "novo", keywords: ["criar modelo", "novo modelo"] },
   { title: "Seção de personalização na home", where: "Home", href: "/admin/home", anchor: "nova-secao-personalizacao", keywords: ["localidade", "personalizacao na home", "chamada para personalizar", "personalizar a minha", "secao de personalizacao"] },
   { title: "Solicitações", where: "Atendimento", href: "/admin/personalizacao/solicitacoes", keywords: ["pedidos de personalizacao", "solicitacao", "fila", "atendimento", "clientes"] },
+  { title: "Conversas do Instagram", where: "Atendimento", href: "/admin/conversas", keywords: ["instagram", "dm", "dms", "direct", "mensagens", "comentarios", "bot", "historico", "webhook", "sombra"] },
 
   // ── Marketing ──
   { title: "Cupons e promoções", where: "Marketing", href: "/admin/promocoes", keywords: ["cupom", "cupons", "promocao", "promocoes", "desconto", "ver cupons", "levemais"] },
