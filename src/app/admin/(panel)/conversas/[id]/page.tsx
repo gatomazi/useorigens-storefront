@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { reactivateBotAction } from "@/app/admin/instagram-actions";
+import { Flash } from "@/components/admin/Flash";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { getConversation } from "@/lib/instagram/history-client";
 import { AUTHOR_LABEL, channelLabel, formatWhen, kindLabel, type HistoryAuthor } from "@/lib/instagram/history";
@@ -14,15 +16,17 @@ const AUTHOR_RULE: Record<HistoryAuthor, React.CSSProperties> = {
 };
 
 /** One customer's messages in and out, oldest first, as the webhook recorded them. */
-export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ConversationPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ ok?: string; err?: string }> }) {
   await requireAdmin();
   const { id } = await params;
+  const sp = await searchParams;
   const result = await getConversation(decodeURIComponent(id));
   if (!result.ok && result.reason === "not-found") notFound();
 
   return (
     <div className="space-y-6">
       <p><Link href="/admin/conversas" className="a-link">← Conversas</Link></p>
+      <Flash ok={sp.ok} err={sp.err} />
       {!result.ok ? (
         <section className="a-card p-5" role="status">
           <p>{result.reason === "not-configured" ? "O histórico ainda não está ligado neste ambiente." : "Não foi possível ler o histórico do webhook agora."}</p>
@@ -32,7 +36,14 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
           <div>
             <h1 className="a-h1">{result.data.username ? `@${result.data.username}` : result.data.userId}</h1>
             <p className="a-muted mt-2 text-[0.875rem]">ID {result.data.userId}</p>
-            {result.data.pausedUntil && <p className="mt-3"><span className="a-badge bad">Bot pausado até {formatWhen(result.data.pausedUntil)}</span></p>}
+            {result.data.pausedUntil && (
+              <form action={reactivateBotAction} className="mt-3 flex flex-wrap items-center gap-3">
+                <span className="a-badge bad">Bot pausado até {formatWhen(result.data.pausedUntil)}</span>
+                <input type="hidden" name="userId" value={result.data.userId} />
+                <button type="submit" className="a-btn sm">Reativar bot</button>
+                <span className="a-muted text-[0.8125rem]">Ele volta a responder a próxima mensagem desta pessoa.</span>
+              </form>
+            )}
           </div>
           <ol className="space-y-3" aria-label="Mensagens">
             {result.data.events.map((e) => (

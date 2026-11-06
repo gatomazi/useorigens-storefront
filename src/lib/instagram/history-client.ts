@@ -22,11 +22,13 @@ function historyConfig(): { base: string; secret: string } | null {
   return { base, secret };
 }
 
-async function getJson(path: string): Promise<HistoryResult<unknown>> {
+async function getJson(path: string, init: { method?: "GET" | "POST"; actor?: string } = {}): Promise<HistoryResult<unknown>> {
   const config = historyConfig();
   if (!config) return { ok: false, reason: "not-configured" };
+  const headers: Record<string, string> = { "X-Api-Secret": config.secret };
+  if (init.actor) headers["X-Actor"] = init.actor.slice(0, 120);
   try {
-    const res = await fetch(`${config.base}${path}`, { headers: { "X-Api-Secret": config.secret }, cache: "no-store", signal: AbortSignal.timeout(8000) });
+    const res = await fetch(`${config.base}${path}`, { method: init.method ?? "GET", headers, cache: "no-store", signal: AbortSignal.timeout(8000) });
     if (res.status === 404) return { ok: false, reason: "not-found" };
     if (!res.ok) return { ok: false, reason: "unavailable" };
     return { ok: true, data: await res.json() };
@@ -48,4 +50,13 @@ export async function getConversation(userId: string): Promise<HistoryResult<Con
   if (!r.ok) return r;
   const conv = parseConversation(r.data);
   return conv ? { ok: true, data: conv } : { ok: false, reason: "unavailable" };
+}
+
+/** Lifts the DM bot's pause on one conversation (the team took over and is done, or the pause was a mistake). `actor` only goes to the webhook's history. */
+export async function reactivateBot(userId: string, actor: string): Promise<HistoryResult<{ wasPaused: boolean }>> {
+  if (!isUserId(userId)) return { ok: false, reason: "not-found" };
+  const r = await getJson(`/historico/conversas/${encodeURIComponent(userId)}/reativar`, { method: "POST", actor });
+  if (!r.ok) return r;
+  const wasPaused = typeof r.data === "object" && r.data !== null && (r.data as { reativado?: unknown }).reativado === true;
+  return { ok: true, data: { wasPaused } };
 }
