@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { filterConversations, isUserId, kindLabel, parseConversation, parseConversationList } from "@/lib/instagram/history";
+import { filterConversations, filterEvents, isChannelFilter, isUserId, kindLabel, parseConversation, parseConversationList } from "@/lib/instagram/history";
 
 const list = parseConversationList({
   retencao_dias: 10,
@@ -49,5 +49,26 @@ describe("the webhook history, as the panel reads it", () => {
     expect(ids("pausadas")).toEqual(["222"]);
     expect(ids("todas", "@MARIA")).toEqual(["111"]);
     expect(ids("todas", "pedido")).toEqual(["222"]);
+  });
+
+  test("channel filter: DMs (Instagram and Messenger) apart from comments (Instagram and Facebook)", () => {
+    const ids = (c: Parameters<typeof filterConversations>[3]) => filterConversations(list.conversations, "todas", "", c).map((x) => x.userId);
+    expect(ids("dm")).toEqual(["111"]);
+    expect(ids("comentario")).toEqual(["222"]);
+    expect(ids("todos")).toEqual(["111", "222"]);
+    expect(isChannelFilter("dm")).toBe(true);
+    expect(isChannelFilter("whatsapp")).toBe(false);
+
+    const conv = parseConversation({
+      usuario_id: "333",
+      eventos: [
+        { id: "1", canal: "instagram_comentario", usuario_id: "333", texto: "Curitiba ❤️" },
+        { id: "2", canal: "instagram_dm", usuario_id: "333", texto: "link" },
+        { id: "3", canal: "facebook_comentario", usuario_id: "333", texto: "Londrina" },
+        { id: "4", canal: "messenger", usuario_id: "333", texto: "oi" },
+      ],
+    });
+    expect(filterEvents(conv!.events, "dm").map((e) => e.id)).toEqual(["2", "4"]);
+    expect(filterEvents(conv!.events, "comentario").map((e) => e.id)).toEqual(["1", "3"]);
   });
 });
