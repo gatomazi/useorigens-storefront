@@ -57,6 +57,7 @@ export const KIND_LABEL: Record<string, string> = {
   resposta_bot: "Resposta do bot",
   handoff: "Passou para humano",
   ignorado: "Bot não respondeu",
+  reativado: "Bot reativado",
 };
 
 export const BOT_MODE_LABEL: Record<string, string> = { off: "desligado", shadow: "sombra (gera e não envia)", on: "ligado" };

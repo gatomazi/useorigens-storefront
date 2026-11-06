@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { filterConversations, isUserId, parseConversation, parseConversationList } from "@/lib/instagram/history";
+import { filterConversations, isUserId, kindLabel, parseConversation, parseConversationList } from "@/lib/instagram/history";
 
 const list = parseConversationList({
   retencao_dias: 10,
@@ -17,6 +17,11 @@ describe("the webhook history, as the panel reads it", () => {
     expect(list.conversations.map((c) => c.userId)).toEqual(["111", "222"]);
     expect(list.conversations[1]).toMatchObject({ username: null, handoffs: 1, pausedUntil: "2026-11-07T09:00:00-03:00" });
     expect(isUserId("../admin")).toBe(false);
+  });
+
+  test("a reactivation shows as such; an unknown kind shows as it came", () => {
+    expect(kindLabel("reativado")).toBe("Bot reativado");
+    expect(kindLabel("novo_tipo")).toBe("novo_tipo");
   });
 
   test("garbage never breaks the page", () => {
