@@ -48,6 +48,7 @@ export function SidebarNav({ pendingRequests = 0, newPartners = 0, owner = false
         { href: "/admin/assistente", label: "Assistente", active: (p) => p === "/admin/assistente" },
         { href: "/admin/assistente/perguntas", label: "Perguntas do assistente" },
         { href: "/admin/parceiros", label: "Parceiros", badge: { count: newPartners, testId: "new-partners", title: "Inscrições de parceiros no estado Nova", srLabel: "inscrições novas" } },
+        { href: "/admin/conversas", label: "Conversas do Instagram" },
       ],
     },
     {
