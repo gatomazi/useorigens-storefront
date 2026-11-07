@@ -36,7 +36,9 @@ export default async function ConversationPage({ params, searchParams }: { param
         <>
           <div>
             <h1 className="a-h1">{result.data.username ? `@${result.data.username}` : result.data.userId}</h1>
-            <p className="a-muted mt-2 text-[0.875rem]">ID {result.data.userId}</p>
+            <p className="a-muted mt-2 text-[0.875rem]">
+              {result.data.stores.length > 0 && <>Escreveu para <strong>{result.data.stores.join(", ")}</strong> · </>}ID {result.data.userId}
+            </p>
             {result.data.pausedUntil && (
               <form action={reactivateBotAction} className="mt-3 flex flex-wrap items-center gap-3">
                 <span className="a-badge bad">Bot pausado até {formatWhen(result.data.pausedUntil)}</span>

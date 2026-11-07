@@ -5,7 +5,7 @@ const list = parseConversationList({
   retencao_dias: 10,
   bot_dm_modo: "shadow",
   conversas: [
-    { usuario_id: "111", usuario: "maria", canais: ["instagram_dm"], ultima_em: "2026-11-06T10:00:00-03:00", ultimo_texto: "tem GG?", ultimo_autor: "cliente", total: 3, handoffs: 0, sombra: 1 },
+    { usuario_id: "111", usuario: "maria", canais: ["instagram_dm"], lojas: ["Use Centro"], ultima_em: "2026-11-06T10:00:00-03:00", ultimo_texto: "tem GG?", ultimo_autor: "cliente", total: 3, handoffs: 0, sombra: 1 },
     { usuario_id: "222", canais: ["instagram_comentario"], ultima_em: "2026-11-06T09:00:00-03:00", ultimo_texto: "meu pedido não chegou", ultimo_autor: "bot", total: 2, handoffs: 1, sombra: 0, pausado_ate: "2026-11-07T09:00:00-03:00" },
     { usuario_id: "../admin", ultimo_texto: "ignorado" },
   ],
@@ -17,6 +17,12 @@ describe("the webhook history, as the panel reads it", () => {
     expect(list.conversations.map((c) => c.userId)).toEqual(["111", "222"]);
     expect(list.conversations[1]).toMatchObject({ username: null, handoffs: 1, pausedUntil: "2026-11-07T09:00:00-03:00" });
     expect(isUserId("../admin")).toBe(false);
+  });
+
+  test("each conversation says which store account it came to (the webhook serves the three)", () => {
+    expect(list.conversations[0].stores).toEqual(["Use Centro"]);
+    expect(list.conversations[1].stores).toEqual([]);
+    expect(parseConversation({ usuario_id: "111", lojas: ["Use Sul", 3, ""] })?.stores).toEqual(["Use Sul"]);
   });
 
   test("a reactivation shows as such; an unknown kind shows as it came", () => {

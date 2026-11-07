@@ -68,12 +68,13 @@ export default async function ConversationsPage({ searchParams }: { searchParams
           <section className="a-card overflow-x-auto" aria-label="Conversas">
             <table className="a-table a-stack">
               <caption className="sr-only">Conversas do Instagram</caption>
-              <thead><tr><th scope="col">Cliente</th><th scope="col">Canais</th><th scope="col">Última mensagem</th><th scope="col">Quando</th><th scope="col">Situação</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
+              <thead><tr><th scope="col">Cliente</th><th scope="col">Loja</th><th scope="col">Canais</th><th scope="col">Última mensagem</th><th scope="col">Quando</th><th scope="col">Situação</th><th scope="col"><span className="sr-only">Ação</span></th></tr></thead>
               <tbody>
-                {rows.length === 0 && <tr><td colSpan={6} className="a-muted">{result.data.conversations.length === 0 ? "Nenhuma mensagem nos últimos dias." : "Nenhuma conversa com esses filtros."}</td></tr>}
+                {rows.length === 0 && <tr><td colSpan={7} className="a-muted">{result.data.conversations.length === 0 ? "Nenhuma mensagem nos últimos dias." : "Nenhuma conversa com esses filtros."}</td></tr>}
                 {rows.map((c) => (
                   <tr key={c.userId}>
                     <td data-label="Cliente" className="font-bold">{c.username ? `@${c.username}` : <span className="a-muted">{c.userId}</span>}</td>
+                    <td data-label="Loja" className="whitespace-nowrap">{c.stores.length > 0 ? c.stores.join(", ") : <span className="a-muted">—</span>}</td>
                     <td data-label="Canais"><span className="flex flex-wrap gap-1">{c.channels.map((ch) => <span key={ch} className="a-badge">{channelLabel(ch)}</span>)}</span></td>
                     <td data-label="Última mensagem" className="max-w-md"><span className="a-muted">{AUTHOR_LABEL[c.lastAuthor]}:</span> {c.lastText.length > 120 ? `${c.lastText.slice(0, 120)}…` : c.lastText || <span className="a-muted">—</span>}</td>
                     <td data-label="Quando" className="a-muted whitespace-nowrap">{formatWhen(c.lastAt)}</td>

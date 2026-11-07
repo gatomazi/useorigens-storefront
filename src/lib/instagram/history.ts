@@ -23,6 +23,8 @@ export type ConversationSummary = {
   userId: string;
   username: string | null;
   channels: string[];
+  /** Which store accounts (Use Sul, Use Centro, Use Norte) the person wrote to: the webhook serves all three. */
+  stores: string[];
   lastAt: string;
   lastText: string;
   lastAuthor: HistoryAuthor;
@@ -33,7 +35,7 @@ export type ConversationSummary = {
 };
 
 export type ConversationList = { retentionDays: number; botMode: string; conversations: ConversationSummary[] };
-export type Conversation = { userId: string; username: string | null; pausedUntil: string | null; events: HistoryEvent[] };
+export type Conversation = { userId: string; username: string | null; stores: string[]; pausedUntil: string | null; events: HistoryEvent[] };
 
 export const AUTHOR_LABEL: Record<HistoryAuthor, string> = {
   cliente: "Cliente",
@@ -75,6 +77,7 @@ const str = (v: unknown, max = 4000) => (typeof v === "string" ? v.slice(0, max)
 const optStr = (v: unknown, max = 200) => (typeof v === "string" && v.trim() ? v.slice(0, max) : null);
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v >= 0 ? Math.floor(v) : 0);
 const author = (v: unknown): HistoryAuthor => (typeof v === "string" && AUTHORS.includes(v) ? (v as HistoryAuthor) : "cliente");
+const strList = (v: unknown, max = 40) => (Array.isArray(v) ? v : []).map((x) => str(x, max)).filter(Boolean);
 const record = (v: unknown): Record<string, unknown> => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : {});
 
 export function parseEvent(v: unknown): HistoryEvent | null {
@@ -105,7 +108,8 @@ export function parseConversationList(v: unknown): ConversationList {
       return {
         userId,
         username: optStr(r.usuario, 60),
-        channels: (Array.isArray(r.canais) ? r.canais : []).map((x) => str(x, 40)).filter(Boolean),
+        channels: strList(r.canais),
+        stores: strList(r.lojas, 60),
         lastAt: str(r.ultima_em, 40),
         lastText: str(r.ultimo_texto, 300),
         lastAuthor: author(r.ultimo_autor),
@@ -124,7 +128,7 @@ export function parseConversation(v: unknown): Conversation | null {
   const userId = str(o.usuario_id, 64);
   if (!isUserId(userId)) return null;
   const events = (Array.isArray(o.eventos) ? o.eventos : []).map(parseEvent).filter((e): e is HistoryEvent => e !== null);
-  return { userId, username: optStr(o.usuario, 60), pausedUntil: optStr(o.pausado_ate, 40), events };
+  return { userId, username: optStr(o.usuario, 60), stores: strList(o.lojas, 60), pausedUntil: optStr(o.pausado_ate, 40), events };
 }
 
 /** Narrow the list by what the team is looking for. */
