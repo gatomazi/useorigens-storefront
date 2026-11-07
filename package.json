@@ -41,6 +41,7 @@
     "unificado:reconciliar": "node --conditions=react-server --import tsx scripts/ink-unificado-reconciliar.mts",
     "unificado:gerar": "node --max-old-space-size=8192 --conditions=react-server --import tsx scripts/ink-unificado-gerar.mts",
     "mockups:fila": "node --env-file=.env.local --conditions=react-server --import tsx scripts/ink-mockups-fila.mts",
+    "painel:massa": "node --env-file=.env.local --conditions=react-server --import tsx scripts/painel-massa.mts",
     "mundo:dados": "node --conditions=react-server --import tsx scripts/mini-world-export.mts",
     "mundo:prototipo": "node --import tsx scripts/mini-world-standalone.mts",
     "mundo:pacote": "bash scripts/mini-world-pacote.sh",
