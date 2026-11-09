@@ -211,3 +211,22 @@ test.describe("Sua cidade: place, design and piece on one screen", () => {
     expect((await page.request.get("/api/cidades/sul/SC/florianopolis")).status()).toBe(404);
   });
 });
+
+test.describe("Sua cidade: the ads' page", () => {
+  test("given /sul/sua-cidade, when the field is tapped, then the journey opens over the page and closing it stays on the page, reported as the landing entry", async ({ page }) => {
+    const track = await withTracking(page);
+    await page.goto("/sul/sua-cidade");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("camiseta");
+    await page.getByTestId("landing-sua-cidade").click();
+    const dialog = page.getByRole("dialog", { name: "Sua cidade" });
+    await expect(dialog).toBeVisible();
+    expect(track.ga("origens_sua_cidade_open")[0]?.[2]).toMatchObject({ entry_point: "landing" });
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    expect(new URL(page.url()).pathname).toBe("/sul/sua-cidade");
+  });
+
+  test("given another region, then the ads' page does not exist", async ({ request }) => {
+    expect((await request.get("/norte/sua-cidade")).status()).toBe(404);
+  });
+});

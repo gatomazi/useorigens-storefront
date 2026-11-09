@@ -116,8 +116,8 @@ function CheckIcon({ className }: { className: string }) {
  * A way into the page's journey: the word in the desktop header's menu (`nav`), the box under "Sua cidade" in the phone menu (`field`), or a quiet
  * link next to styles shown on an example city (`link`, the home's "Encontre aqui a sua cidade"). Each one only opens the journey of the header.
  */
-export function CityJourneyTrigger({ variant, label = "Encontre aqui a sua cidade" }: { variant: "nav" | "field" | "link"; label?: string }) {
-  const entry: Entry = variant === "nav" ? "header" : variant === "field" ? "menu" : "home";
+export function CityJourneyTrigger({ variant, label = "Encontre aqui a sua cidade" }: { variant: "nav" | "field" | "link" | "landing"; label?: string }) {
+  const entry: Entry = variant === "nav" ? "header" : variant === "field" ? "menu" : variant === "landing" ? "landing" : "home";
   const open = (event: React.MouseEvent<HTMLButtonElement>) =>
     window.dispatchEvent(new CustomEvent<OpenDetail>(OPEN_EVENT, { detail: { entry, opener: event.currentTarget } }));
   if (variant === "nav") {
@@ -128,14 +128,14 @@ export function CityJourneyTrigger({ variant, label = "Encontre aqui a sua cidad
       </button>
     );
   }
-  if (variant === "field") {
+  if (variant === "field" || variant === "landing") {
     return (
       <button
         type="button"
         onClick={open}
         aria-haspopup="dialog"
-        className="group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper"
-        data-testid="menu-sua-cidade"
+        className={`group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper${variant === "landing" ? " lg:min-h-20 lg:max-w-xl" : ""}`}
+        data-testid={variant === "landing" ? "landing-sua-cidade" : "menu-sua-cidade"}
       >
         <PinIcon className="h-6 w-6 shrink-0" />
         <span className="flex-1 text-[1.0625rem] font-medium text-ink-mute">Qual é a sua cidade?</span>
