@@ -92,6 +92,8 @@ export function ga4FromEnv(env: Env = process.env, fetchFn: typeof fetch = fetch
       headers: { Authorization: `Bearer ${await accessToken()}`, ...(init.body ? { "Content-Type": "application/json" } : {}) },
       body: init.body ? JSON.stringify(init.body) : undefined,
     });
+    // A revoked or rotated key: forget the cached token so the next call signs in again.
+    if (res.status === 401) token = null;
     if (res.status === 403) throw new McpToolError("FORBIDDEN", "A conta de serviço não tem acesso a esta propriedade do GA4. Adicione o e-mail dela como Leitor em Administrador → Gerenciamento de acesso à propriedade.");
     if (res.status === 400) throw new McpToolError("INVALID_INPUT", `O GA4 recusou a consulta: ${await googleMessage(res)}`);
     if (res.status === 429) throw new McpToolError("RATE_LIMITED", "O GA4 limitou as consultas (cota). Tente de novo em alguns minutos.");
