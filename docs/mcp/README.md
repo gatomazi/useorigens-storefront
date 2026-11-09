@@ -59,6 +59,8 @@ Alternativa ao fluxo acima, criada em 24/10/2026 quando o OAuth do conector paro
 | `origens_get_exchange` | Uma troca, com a descrição do problema | API INK |
 | `origens_catalog_status` | Último sync por loja, contagens e produtos sem classificação | Índice do site |
 
+**Google Analytics:** com `GA4_PROPERTY_ID` e `GA4_SERVICE_ACCOUNT_JSON_B64` no servidor, o conector ganha `analytics_capabilities` e `analytics_run_report` (leitura do GA4 da loja). Passo a passo e ressalvas em [ga4.md](ga4.md).
+
 Todas têm as anotações `readOnlyHint: true`, `destructiveHint: false` e `idempotentHint: true`: o cliente INK só faz GET em rotas fixas. Não existe ferramenta genérica de URL, SQL ou header.
 
 Com escrita autorizada (seção 9), aparecem mais cinco:
