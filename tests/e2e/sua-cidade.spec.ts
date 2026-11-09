@@ -211,3 +211,20 @@ test.describe("Sua cidade: place, design and piece on one screen", () => {
     expect((await page.request.get("/api/cidades/sul/SC/florianopolis")).status()).toBe(404);
   });
 });
+
+test.describe("Sua cidade: the ads' link", () => {
+  test("given /sul?abrir=cidade&utm_source=x, then the journey opens by itself with a normal search, the mark leaves the address but the campaign stays, and closing it stays on the page", async ({ page }) => {
+    const track = await withTracking(page);
+    await page.goto("/sul?abrir=cidade&utm_source=meta");
+    const dialog = page.getByRole("dialog", { name: "Sua cidade" });
+    await expect(dialog).toBeVisible();
+    await expect.poll(() => new URL(page.url()).search).toBe("?utm_source=meta");
+    await dialog.getByRole("combobox").fill("florianopolis");
+    // A normal search: the designs answer next to the places (from the header only places do).
+    await expect(dialog.getByRole("group").filter({ hasText: /estampa|design/i }).first()).toBeVisible();
+    expect(track.ga("origens_sua_cidade_open")[0]?.[2]).toMatchObject({ entry_point: "landing" });
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    expect(new URL(page.url()).pathname).toBe("/sul");
+  });
+});

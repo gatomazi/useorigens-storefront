@@ -16,6 +16,7 @@ import { STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { JOURNEY_HASH } from "@/lib/site-config/navigation";
 import { guideCityQuery } from "@/lib/guide/dismiss";
 import type { GlobalResult } from "@/lib/search/global";
+import { activeGa4 } from "@/lib/analytics/active-ids";
 import { prepareCities, searchCities, type SearchCity } from "@/lib/search/rank";
 
 /**
@@ -45,6 +46,9 @@ type Places = { status: "loading" } | { status: "error" } | { status: "ok"; list
 type OpenDetail = { entry: Entry; opener: HTMLElement | null };
 
 const OPEN_EVENT = "origens:sua-cidade";
+/** The ads' link: any page of the store with `?abrir=cidade` opens the journey. */
+const OPEN_PARAM = "abrir";
+const OPEN_CITY = "cidade";
 const STEPS: readonly { id: Step; label: string }[] = [
   { id: "city", label: "Cidade" },
   { id: "model", label: "Modelo" },
@@ -406,17 +410,37 @@ export function CityJourney({ region, picks = [], finishIn }: {
     return () => window.removeEventListener(OPEN_EVENT, onOpen);
   }, []);
 
-  // `#sua-cidade`: a link from outside the page (the header the Worker draws on the INK pages) opens the journey on arrival. The mark leaves the address
-  // right away, so a reload or "back" does not open it again.
+  // `#sua-cidade` (the header the Worker draws on the INK pages) or `?abrir=cidade` (the ads' link: a query survives the trackers that rewrite the end
+  // of a link): the journey opens on arrival. The mark leaves the address as it opens (the campaign's own parameters stay), so a reload or "back" does
+  // not open it again. The ads' link opens as a normal search and waits for the tracking to be up (never more than 1.5 s), or "open" would be lost.
   useEffect(() => {
-    const fromHash = () => {
-      if (window.location.hash !== JOURNEY_HASH || dialog.current?.open) return;
-      window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
-      latestOpen.current({ entry: "ink", opener: null });
+    let timer = 0;
+    const fromAddress = () => {
+      if (dialog.current?.open) return;
+      const url = new URL(window.location.href);
+      const fromAd = url.searchParams.get(OPEN_PARAM) === OPEN_CITY;
+      if (!fromAd && url.hash !== JOURNEY_HASH) return;
+      const entry: Entry = fromAd ? "landing" : "ink";
+      const started = Date.now();
+      const tryOpen = () => {
+        if (fromAd && !(typeof window.gtag === "function" && activeGa4()) && Date.now() - started <= 1500) {
+          timer = window.setTimeout(tryOpen, 100);
+          return;
+        }
+        // The mark leaves only now: the effect runs twice in development, and the first run's wait is cancelled.
+        url.searchParams.delete(OPEN_PARAM);
+        if (url.hash === JOURNEY_HASH) url.hash = "";
+        window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+        latestOpen.current({ entry, opener: null });
+      };
+      tryOpen();
     };
-    fromHash();
-    window.addEventListener("hashchange", fromHash);
-    return () => window.removeEventListener("hashchange", fromHash);
+    fromAddress();
+    window.addEventListener("hashchange", fromAddress);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("hashchange", fromAddress);
+    };
   }, []);
 
   // A native listener, not JSX `onClose`: a close done by the platform (Escape) must always reach the state, or the next tap would not reopen it.
@@ -604,7 +628,8 @@ export function CityJourney({ region, picks = [], finishIn }: {
             autoFocus
             boxed
             compact
-            placesOnly
+            // From the ads' link (`?abrir=cidade`) the field is a normal search: other designs and pages answer too, not only places.
+            placesOnly={entry.current !== "landing"}
             fieldLabel={withRegions ? "Digite sua cidade ou região" : "Digite o nome da sua cidade"}
             source={SOURCES.suaCidade}
             onPick={pickResult}
