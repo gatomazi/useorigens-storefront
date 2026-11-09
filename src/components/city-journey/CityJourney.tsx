@@ -46,6 +46,9 @@ type Places = { status: "loading" } | { status: "error" } | { status: "ok"; list
 type OpenDetail = { entry: Entry; opener: HTMLElement | null };
 
 const OPEN_EVENT = "origens:sua-cidade";
+/** The ads' link: any page of the store with `?abrir=cidade` opens the journey. */
+const OPEN_PARAM = "abrir";
+const OPEN_CITY = "cidade";
 const STEPS: readonly { id: Step; label: string }[] = [
   { id: "city", label: "Cidade" },
   { id: "model", label: "Modelo" },
@@ -117,8 +120,8 @@ function CheckIcon({ className }: { className: string }) {
  * A way into the page's journey: the word in the desktop header's menu (`nav`), the box under "Sua cidade" in the phone menu (`field`), or a quiet
  * link next to styles shown on an example city (`link`, the home's "Encontre aqui a sua cidade"). Each one only opens the journey of the header.
  */
-export function CityJourneyTrigger({ variant, label = "Encontre aqui a sua cidade" }: { variant: "nav" | "field" | "link" | "landing"; label?: string }) {
-  const entry: Entry = variant === "nav" ? "header" : variant === "field" ? "menu" : variant === "landing" ? "landing" : "home";
+export function CityJourneyTrigger({ variant, label = "Encontre aqui a sua cidade" }: { variant: "nav" | "field" | "link"; label?: string }) {
+  const entry: Entry = variant === "nav" ? "header" : variant === "field" ? "menu" : "home";
   const open = (event: React.MouseEvent<HTMLButtonElement>) =>
     window.dispatchEvent(new CustomEvent<OpenDetail>(OPEN_EVENT, { detail: { entry, opener: event.currentTarget } }));
   if (variant === "nav") {
@@ -129,14 +132,14 @@ export function CityJourneyTrigger({ variant, label = "Encontre aqui a sua cidad
       </button>
     );
   }
-  if (variant === "field" || variant === "landing") {
+  if (variant === "field") {
     return (
       <button
         type="button"
         onClick={open}
         aria-haspopup="dialog"
-        className={`group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper${variant === "landing" ? " lg:min-h-20 lg:max-w-xl" : ""}`}
-        data-testid={variant === "landing" ? "landing-sua-cidade" : "menu-sua-cidade"}
+        className="group flex min-h-16 w-full items-center gap-3 border-2 border-ink bg-white px-4 text-left text-ink transition-colors hover:border-region-primary hover:bg-paper"
+        data-testid="menu-sua-cidade"
       >
         <PinIcon className="h-6 w-6 shrink-0" />
         <span className="flex-1 text-[1.0625rem] font-medium text-ink-mute">Qual é a sua cidade?</span>
@@ -323,24 +326,6 @@ function StatePlaces({ region, uf, heading, onPick }: { region: RegionSlug; uf: 
   );
 }
 
-/** The ads' page: the journey opens by itself on arrival (the layout's one dialog), so the first thing the visitor sees is the field to type in. */
-export function CityJourneyAutoOpen() {
-  useEffect(() => {
-    // Not before the layout's journey listens, and, when the visitor already accepted the tracking, not before it is up (else "open" is lost);
-    // never later than 1.5 s, so a visitor without it still gets the field at once.
-    const detail: OpenDetail = { entry: "landing", opener: null };
-    const started = Date.now();
-    let timer = 0;
-    const tryOpen = () => {
-      if ((typeof window.gtag === "function" && activeGa4()) || Date.now() - started > 1500) window.dispatchEvent(new CustomEvent<OpenDetail>(OPEN_EVENT, { detail }));
-      else timer = window.setTimeout(tryOpen, 100);
-    };
-    timer = window.setTimeout(tryOpen, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-  return null;
-}
-
 /**
  * A banner of the opening that opens the journey (CMS `FeaturedProductRef.opens`): the whole picture is one button, named by `label` (the banner
  * itself says nothing a screen reader can read). Drawn by the caller (`className`); a quiet answer to the pointer over it, like the product's half.
@@ -425,17 +410,37 @@ export function CityJourney({ region, picks = [], finishIn }: {
     return () => window.removeEventListener(OPEN_EVENT, onOpen);
   }, []);
 
-  // `#sua-cidade`: a link from outside the page (the header the Worker draws on the INK pages) opens the journey on arrival. The mark leaves the address
-  // right away, so a reload or "back" does not open it again.
+  // `#sua-cidade` (the header the Worker draws on the INK pages) or `?abrir=cidade` (the ads' link: a query survives the trackers that rewrite the end
+  // of a link): the journey opens on arrival. The mark leaves the address as it opens (the campaign's own parameters stay), so a reload or "back" does
+  // not open it again. The ads' link opens as a normal search and waits for the tracking to be up (never more than 1.5 s), or "open" would be lost.
   useEffect(() => {
-    const fromHash = () => {
-      if (window.location.hash !== JOURNEY_HASH || dialog.current?.open) return;
-      window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
-      latestOpen.current({ entry: "ink", opener: null });
+    let timer = 0;
+    const fromAddress = () => {
+      if (dialog.current?.open) return;
+      const url = new URL(window.location.href);
+      const fromAd = url.searchParams.get(OPEN_PARAM) === OPEN_CITY;
+      if (!fromAd && url.hash !== JOURNEY_HASH) return;
+      const entry: Entry = fromAd ? "landing" : "ink";
+      const started = Date.now();
+      const tryOpen = () => {
+        if (fromAd && !(typeof window.gtag === "function" && activeGa4()) && Date.now() - started <= 1500) {
+          timer = window.setTimeout(tryOpen, 100);
+          return;
+        }
+        // The mark leaves only now: the effect runs twice in development, and the first run's wait is cancelled.
+        url.searchParams.delete(OPEN_PARAM);
+        if (url.hash === JOURNEY_HASH) url.hash = "";
+        window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+        latestOpen.current({ entry, opener: null });
+      };
+      tryOpen();
     };
-    fromHash();
-    window.addEventListener("hashchange", fromHash);
-    return () => window.removeEventListener("hashchange", fromHash);
+    fromAddress();
+    window.addEventListener("hashchange", fromAddress);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("hashchange", fromAddress);
+    };
   }, []);
 
   // A native listener, not JSX `onClose`: a close done by the platform (Escape) must always reach the state, or the next tap would not reopen it.
@@ -623,7 +628,7 @@ export function CityJourney({ region, picks = [], finishIn }: {
             autoFocus
             boxed
             compact
-            // From the ads' page the field is a normal search: other designs and pages answer too, not only places.
+            // From the ads' link (`?abrir=cidade`) the field is a normal search: other designs and pages answer too, not only places.
             placesOnly={entry.current !== "landing"}
             fieldLabel={withRegions ? "Digite sua cidade ou região" : "Digite o nome da sua cidade"}
             source={SOURCES.suaCidade}
