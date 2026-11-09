@@ -16,6 +16,7 @@ import { STATE_NAMES, type RegionSlug } from "@/lib/geo/regions";
 import { JOURNEY_HASH } from "@/lib/site-config/navigation";
 import { guideCityQuery } from "@/lib/guide/dismiss";
 import type { GlobalResult } from "@/lib/search/global";
+import { activeGa4 } from "@/lib/analytics/active-ids";
 import { prepareCities, searchCities, type SearchCity } from "@/lib/search/rank";
 
 /**
@@ -322,6 +323,24 @@ function StatePlaces({ region, uf, heading, onPick }: { region: RegionSlug; uf: 
   );
 }
 
+/** The ads' page: the journey opens by itself on arrival (the layout's one dialog), so the first thing the visitor sees is the field to type in. */
+export function CityJourneyAutoOpen() {
+  useEffect(() => {
+    // Not before the layout's journey listens, and, when the visitor already accepted the tracking, not before it is up (else "open" is lost);
+    // never later than 1.5 s, so a visitor without it still gets the field at once.
+    const detail: OpenDetail = { entry: "landing", opener: null };
+    const started = Date.now();
+    let timer = 0;
+    const tryOpen = () => {
+      if ((typeof window.gtag === "function" && activeGa4()) || Date.now() - started > 1500) window.dispatchEvent(new CustomEvent<OpenDetail>(OPEN_EVENT, { detail }));
+      else timer = window.setTimeout(tryOpen, 100);
+    };
+    timer = window.setTimeout(tryOpen, 0);
+    return () => window.clearTimeout(timer);
+  }, []);
+  return null;
+}
+
 /**
  * A banner of the opening that opens the journey (CMS `FeaturedProductRef.opens`): the whole picture is one button, named by `label` (the banner
  * itself says nothing a screen reader can read). Drawn by the caller (`className`); a quiet answer to the pointer over it, like the product's half.
@@ -604,7 +623,8 @@ export function CityJourney({ region, picks = [], finishIn }: {
             autoFocus
             boxed
             compact
-            placesOnly
+            // From the ads' page the field is a normal search: other designs and pages answer too, not only places.
+            placesOnly={entry.current !== "landing"}
             fieldLabel={withRegions ? "Digite sua cidade ou região" : "Digite o nome da sua cidade"}
             source={SOURCES.suaCidade}
             onPick={pickResult}

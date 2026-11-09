@@ -213,17 +213,20 @@ test.describe("Sua cidade: place, design and piece on one screen", () => {
 });
 
 test.describe("Sua cidade: the ads' page", () => {
-  test("given /sul/sua-cidade, when the field is tapped, then the journey opens over the page and closing it stays on the page, reported as the landing entry", async ({ page }) => {
+  test("given /sul/sua-cidade, then the journey is already open with a normal search in its field, and closing it stays on the page (the field there opens it again), reported as the landing entry", async ({ page }) => {
     const track = await withTracking(page);
     await page.goto("/sul/sua-cidade");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText("camiseta");
-    await page.getByTestId("landing-sua-cidade").click();
     const dialog = page.getByRole("dialog", { name: "Sua cidade" });
     await expect(dialog).toBeVisible();
+    await dialog.getByRole("combobox").fill("florianopolis");
+    // A normal search: the designs answer next to the places (inside the journey from the header only places do).
+    await expect(dialog.getByRole("group").filter({ hasText: /estampa|design/i }).first()).toBeVisible();
     expect(track.ga("origens_sua_cidade_open")[0]?.[2]).toMatchObject({ entry_point: "landing" });
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
     expect(new URL(page.url()).pathname).toBe("/sul/sua-cidade");
+    await page.getByTestId("landing-sua-cidade").click();
+    await expect(dialog).toBeVisible();
   });
 
   test("given another region, then the ads' page does not exist", async ({ request }) => {
