@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FamilyGrid } from "@/components/catalog/FamilyGrid";
 import { PdpGuide } from "@/components/catalog/PdpGuide";
+import { WrongCityNotice } from "@/components/city-journey/CityJourney";
+import { offerStripFor } from "@/lib/site-config/offer-strip-public";
 import { VariantPicker, type VariantOption } from "@/components/catalog/VariantPicker";
 import { SOURCES } from "@/lib/analytics/sources";
 import { purchaseUrl } from "@/lib/catalog/commerce";
@@ -80,6 +82,8 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
     ? { collections: guideCollections(region).collections, productSlug: inkProductSlug(purchaseUrl(primary)), othersAnchor: others.length > 0 ? "other-title" : null }
     : null;
 
+  const offer = await offerStripFor(region, uf);
+
   return (
     <>
       <JsonLd
@@ -115,6 +119,8 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
           familyId={family.id}
           productName={family.name}
           sourceSection={SOURCES.pdp}
+          offer={offer && <p className="t-caption mt-3 max-w-sm font-semibold text-ink" data-testid="offer-strip">{offer}</p>}
+          notice={<WrongCityNotice familyId={family.id} familyName={family.name} className="mt-4" />}
           intro={
             <>
               <h1 className="text-[2.25rem] font-extrabold leading-[1.02] tracking-tight [text-wrap:balance] sm:text-[3.25rem] lg:text-[4rem]">{family.name}</h1>
