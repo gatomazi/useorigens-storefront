@@ -13,10 +13,12 @@ describe("single-store catalog sync job (the panel's button)", () => {
     expect(lojaUnicaJobPercent(currentLojaUnicaJob())).toBeNull();
     const seen: (number | null)[] = [];
     const onChanged = vi.fn();
+    const rebuildRecommendations = vi.fn(async () => ({ ok: true as const, generatedAt: "2026-11-10T06:49:17.226Z", productsWithList: 9, bytes: 100, durationMs: 5 }));
     await runLojaUnicaJob(running, {
       onChanged,
       deps: {
         acquireLock: async () => held,
+        rebuildRecommendations,
         sync: async (opts) => {
           for (const page of [1, 2, 4]) {
             opts?.onProgress?.({ storeKey: "use-sul", page, totalPages: 4 });
@@ -27,7 +29,9 @@ describe("single-store catalog sync job (the panel's button)", () => {
       },
     });
     expect(seen).toEqual([25, 50, 99]);
-    expect(currentLojaUnicaJob()).toMatchObject({ status: "succeeded", result: { productCount: 10 } });
+    // The INK product page's "Você também pode gostar" follows the same click (it used to be rebuilt only by hand).
+    expect(rebuildRecommendations).toHaveBeenCalledTimes(1);
+    expect(currentLojaUnicaJob()).toMatchObject({ status: "succeeded", result: { productCount: 10 }, recommendations: { ok: true, productsWithList: 9 } });
     expect(onChanged).toHaveBeenCalledTimes(1);
     expect(held.release).toHaveBeenCalled();
   });
@@ -48,7 +52,9 @@ describe("single-store catalog sync job (the panel's button)", () => {
   test("given the sync refuses (last-known-good), then the job fails, the caches are left alone and the lock is released", async () => {
     const held = lock();
     const onChanged = vi.fn();
-    await runLojaUnicaJob(beginLojaUnicaJob(), { onChanged, deps: { acquireLock: async () => held, sync: async () => ({ ok: false, error: "queda suspeita" }) } });
+    const rebuildRecommendations = vi.fn();
+    await runLojaUnicaJob(beginLojaUnicaJob(), { onChanged, deps: { acquireLock: async () => held, sync: async () => ({ ok: false, error: "queda suspeita" }), rebuildRecommendations } });
+    expect(rebuildRecommendations).not.toHaveBeenCalled();
     expect(currentLojaUnicaJob()).toMatchObject({ status: "failed", error: "queda suspeita" });
     expect(onChanged).not.toHaveBeenCalled();
     expect(held.release).toHaveBeenCalled();
