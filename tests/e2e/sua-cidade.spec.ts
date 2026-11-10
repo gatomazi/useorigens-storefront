@@ -84,7 +84,7 @@ test.describe("Sua cidade: place, design and piece on one screen", () => {
     expect(goToInk).toHaveLength(1);
     expect(goToInk[0][2]).toMatchObject({ source_section: "sua_cidade", city: "Florianópolis", state: "SC", family: model!.familyId, garment_type: other.label, value: other.price });
     expect(track.meta("SelectCity")[0]?.[2]).toMatchObject({ city: "Florianópolis", state: "SC" });
-    expect(track.ga("select_city")[0]?.[2]).toMatchObject({ source: "sua_cidade" });
+    expect(track.ga("select_city")[0]?.[2]).toMatchObject({ source_section: "sua_cidade" });
     expect(track.ga("go_to_ink")[0]?.[2]).toMatchObject({ source_section: "sua_cidade", garment_type: other.label, product_name: `${model!.name} ${other.label}` });
     expect(track.ga("origens_sua_cidade_open")[0]?.[2]).toMatchObject({ entry_point: "header" });
     expect(track.ga("origens_sua_cidade_model")[0]?.[2]).toMatchObject({ family: model!.familyId, city_slug: "florianopolis", uf: "SC", model_count: data.models.length });
@@ -135,7 +135,7 @@ test.describe("Sua cidade: place, design and piece on one screen", () => {
     await places.first().click();
     await expect(journey.getByRole("heading", { level: 2 })).toHaveText("Tijucas");
     await expect(journey.getByTestId("journey-models").locator("[data-model]").first()).toBeVisible();
-    expect(track.ga("select_city").at(-1)?.[2]).toMatchObject({ city: "Tijucas", state: "SC", source: "sua_cidade" });
+    expect(track.ga("select_city").at(-1)?.[2]).toMatchObject({ city: "Tijucas", state: "SC", source_section: "sua_cidade" });
 
     // Back from the designs: the field again (the state's list was a way to the place, not a step of its own).
     await journey.getByTestId("journey-back").click();
@@ -226,5 +226,53 @@ test.describe("Sua cidade: the ads' link", () => {
     await page.keyboard.press("Escape");
     await expect(dialog).toBeHidden();
     expect(new URL(page.url()).pathname).toBe("/sul");
+  });
+});
+
+test.describe("Sua cidade: anúncio na home regional", () => {
+  test("given /sul?fbclid=x, then the journey opens once with entry_point auto_ads and a reload does not open it again", async ({ page }) => {
+    const track = await withTracking(page);
+    await page.goto("/sul?fbclid=IwAR0abc&utm_medium=paid_social");
+    const dialog = page.getByRole("dialog", { name: "Sua cidade" });
+    await expect(dialog).toBeVisible();
+    expect(track.ga("origens_sua_cidade_open")[0]?.[2]).toMatchObject({ entry_point: "auto_ads" });
+    // The campaign's own parameters stay in the address (their attribution matters).
+    expect(new URL(page.url()).search).toContain("fbclid=IwAR0abc");
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
+    await page.reload();
+    await page.waitForTimeout(2500);
+    await expect(page.getByRole("dialog", { name: "Sua cidade" })).toBeHidden();
+  });
+
+  test("given a page of a state (not the region's home) with fbclid, then the journey stays closed", async ({ page }) => {
+    await withTracking(page);
+    await page.goto("/sul/sc?fbclid=IwAR0abc");
+    await page.waitForTimeout(2500);
+    await expect(page.getByRole("dialog", { name: "Sua cidade" })).toBeHidden();
+  });
+});
+
+test.describe("Sua cidade: 'Não é a sua cidade?' na página da estampa", () => {
+  test("given a design page, then the offer line and the notice sit by the buy button, and the city chosen lands on the same model", async ({ page }) => {
+    const track = await withTracking(page);
+    const path = "/sul/sc/florianopolis";
+    const journey = await journeyOf(page, "sul/sc/florianopolis");
+    const model = journey.models[0];
+    await page.goto(`${path}/${model.familyId}`);
+    const notice = page.getByTestId("wrong-city");
+    await expect(notice).toBeVisible();
+    await page.getByTestId("wrong-city-open").click();
+    const dialog = page.getByRole("dialog", { name: "Sua cidade" });
+    await expect(dialog).toBeVisible();
+    expect(track.ga("origens_sua_cidade_open")[0]?.[2]).toMatchObject({ entry_point: "pdp_wrong_city" });
+    await dialog.getByRole("combobox").fill("tijucas");
+    await dialog.getByRole("option").first().click();
+    // Straight to the pieces of the same model when the other city has it; otherwise its list of models (never an error).
+    await expect(dialog.getByRole("heading").first()).toBeVisible();
+    const sameModel = await page.request.get("/api/cidades/sul/sc/tijucas").then((r) => r.json() as Promise<Journey>);
+    if (sameModel.models.some((m) => m.familyId === model.familyId)) {
+      await expect(dialog.getByTestId("journey-pieces")).toBeVisible({ timeout: 10_000 });
+    }
   });
 });

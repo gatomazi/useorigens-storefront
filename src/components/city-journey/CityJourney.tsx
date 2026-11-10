@@ -17,6 +17,7 @@ import { JOURNEY_HASH } from "@/lib/site-config/navigation";
 import { guideCityQuery } from "@/lib/guide/dismiss";
 import type { GlobalResult } from "@/lib/search/global";
 import { activeGa4 } from "@/lib/analytics/active-ids";
+import { rememberEntryPoint } from "@/lib/analytics/entry-point";
 import { prepareCities, searchCities, type SearchCity } from "@/lib/search/rank";
 
 /**
@@ -43,12 +44,15 @@ type Step = "city" | "model" | "piece";
 type Entry = NonNullable<CityJourneyParams["entry_point"]>;
 type Loaded = { status: "loading" } | { status: "error" } | { status: "ok"; data: CityJourneyData | null };
 type Places = { status: "loading" } | { status: "error" } | { status: "ok"; list: SearchCity[] };
-type OpenDetail = { entry: Entry; opener: HTMLElement | null };
+/** `family`: opened from a design page ("Não é a sua cidade?"), so the city chosen lands on the same model (when that city has it). */
+type OpenDetail = { entry: Entry; opener: HTMLElement | null; family?: { id: string; name: string } };
 
 const OPEN_EVENT = "origens:sua-cidade";
 /** The ads' link: any page of the store with `?abrir=cidade` opens the journey. */
 const OPEN_PARAM = "abrir";
 const OPEN_CITY = "cidade";
+/** Ads (Meta) arriving on a regional home on their own: the journey opens once per visit, never on a product page. */
+const AUTO_FLAG = "origens:auto_ads_opened";
 const STEPS: readonly { id: Step; label: string }[] = [
   { id: "city", label: "Cidade" },
   { id: "model", label: "Modelo" },
@@ -57,6 +61,27 @@ const STEPS: readonly { id: Step; label: string }[] = [
 const stepIndex = (step: Step) => STEPS.findIndex((s) => s.id === step);
 // The photos of step 2's cards: the stage reuses this exact request as its first picture, already in the browser's cache.
 const CARD_SIZES = "(min-width: 1280px) 17vw, (min-width: 1024px) 22vw, (min-width: 640px) 30vw, 46vw";
+
+/** The region's own home (`/sul`, with or without a closing slash): the only page an ad opens the journey on by itself. */
+function isRegionHome(pathname: string, region: RegionSlug): boolean {
+  return pathname.replace(/\/+$/, "") === `/${region}`;
+}
+// Opened once per visit: the campaign's parameters stay in the address (their attribution matters), so a reload or "back" must not open it again.
+function autoOpened(): boolean {
+  try {
+    return window.sessionStorage.getItem(AUTO_FLAG) === "1" || window.history.state?.autoAdsOpened === true;
+  } catch {
+    return window.history.state?.autoAdsOpened === true;
+  }
+}
+function markAutoOpened(): void {
+  try {
+    window.sessionStorage.setItem(AUTO_FLAG, "1");
+  } catch {
+    // No storage: the history entry's own mark below still stops a reload.
+  }
+  window.history.replaceState({ ...(window.history.state ?? {}), autoAdsOpened: true }, "");
+}
 
 // The places already asked for in this visit. A failure is never remembered: "Tentar de novo" asks again.
 const journeys = new Map<string, Promise<CityJourneyData | null>>();
@@ -113,6 +138,23 @@ function CheckIcon({ className }: { className: string }) {
     <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
       <path d="m5 12.5 4.5 4.5L19 7.5" />
     </svg>
+  );
+}
+
+/**
+ * The design page's "Não é a sua cidade?": a short line under the name and a button that opens the journey of the header, already told which model
+ * the page is about — the city chosen there goes straight to that model's pieces when it has it.
+ */
+export function WrongCityNotice({ familyId, familyName, className = "" }: { familyId: string; familyName: string; className?: string }) {
+  const open = (event: React.MouseEvent<HTMLButtonElement>) =>
+    window.dispatchEvent(new CustomEvent<OpenDetail>(OPEN_EVENT, { detail: { entry: "pdp_wrong_city", opener: event.currentTarget, family: { id: familyId, name: familyName } } }));
+  return (
+    <p className={`flex flex-wrap items-center gap-x-3 gap-y-2 ${className}`} data-testid="wrong-city">
+      <span className="t-body text-ink-soft">Não é a sua cidade?</span>
+      <button type="button" onClick={open} aria-haspopup="dialog" className="inline-flex min-h-11 items-center border-2 border-ink px-4 text-[0.9375rem] font-semibold transition-colors hover:bg-ink hover:text-ground" data-testid="wrong-city-open">
+        Encontre a sua
+      </button>
+    </p>
   );
 }
 
@@ -365,6 +407,8 @@ export function CityJourney({ region, picks = [], finishIn }: {
   const [pieceSlug, setPieceSlug] = useState<string | null>(null);
   const [visited, setVisited] = useState<string[]>([]);
   const [typing, setTyping] = useState(false);
+  // The model of the design page that opened the journey: the place chosen next lands on it (see `WrongCityNotice`).
+  const [wanted, setWanted] = useState<{ id: string; name: string } | null>(null);
 
   const data = loaded.status === "ok" ? loaded.data : null;
   const models = data?.models ?? [];
@@ -382,9 +426,11 @@ export function CityJourney({ region, picks = [], finishIn }: {
     }
     setStep(next);
   };
-  const openJourney = ({ entry: from, opener: by }: OpenDetail) => {
+  const openJourney = ({ entry: from, opener: by, family }: OpenDetail) => {
     entry.current = from;
     opener.current = by;
+    setWanted(family ?? null);
+    rememberEntryPoint(from);
     // A place already chosen in this visit opens on its designs (still loading or loaded): closing was not giving up on it. "Trocar cidade" is
     // right there. A place that failed or has no designs starts over at the field.
     const resume = place !== null && loaded.status !== "error" && !(loaded.status === "ok" && models.length === 0);
@@ -419,17 +465,21 @@ export function CityJourney({ region, picks = [], finishIn }: {
       if (dialog.current?.open) return;
       const url = new URL(window.location.href);
       const fromAd = url.searchParams.get(OPEN_PARAM) === OPEN_CITY;
-      if (!fromAd && url.hash !== JOURNEY_HASH) return;
-      const entry: Entry = fromAd ? "landing" : "ink";
+      // An ad arriving on the region's own home (never a product or any other page): `fbclid` or `utm_medium=paid_social`, once per visit. The
+      // explicit link (`?abrir=cidade`) wins when both are there, and it keeps opening a normal search.
+      const autoAds = !fromAd && isRegionHome(url.pathname, region) && (url.searchParams.has("fbclid") || url.searchParams.get("utm_medium") === "paid_social") && !autoOpened();
+      if (!fromAd && !autoAds && url.hash !== JOURNEY_HASH) return;
+      const entry: Entry = fromAd ? "landing" : autoAds ? "auto_ads" : "ink";
       const started = Date.now();
       const tryOpen = () => {
-        if (fromAd && !(typeof window.gtag === "function" && activeGa4()) && Date.now() - started <= 1500) {
+        if ((fromAd || autoAds) && !(typeof window.gtag === "function" && activeGa4()) && Date.now() - started <= 1500) {
           timer = window.setTimeout(tryOpen, 100);
           return;
         }
         // The mark leaves only now: the effect runs twice in development, and the first run's wait is cancelled.
         url.searchParams.delete(OPEN_PARAM);
         if (url.hash === JOURNEY_HASH) url.hash = "";
+        if (autoAds) markAutoOpened();
         window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
         latestOpen.current({ entry, opener: null });
       };
@@ -473,7 +523,18 @@ export function CityJourney({ region, picks = [], finishIn }: {
     setStep("model");
     fetchJourney(region, next).then(
       (found) => {
-        if (mine === ticket.current) setLoaded({ status: "ok", data: found });
+        if (mine !== ticket.current) return;
+        setLoaded({ status: "ok", data: found });
+        // Opened from a design page: this city's same model, straight to its pieces (a city without it keeps the list of its models).
+        const index = wanted ? (found?.models.findIndex((m) => m.familyId === wanted.id) ?? -1) : -1;
+        if (found && index >= 0) {
+          const same = found.models[index];
+          setModelId(same.familyId);
+          setPieceSlug(same.pieces[0].slug);
+          setVisited([same.pieces[0].slug]);
+          setStep("piece");
+          trackCityJourney("origens_sua_cidade_model", { region, entry_point: entry.current, city_slug: next.slug, uf: next.uf, family: same.familyId, position: index + 1, model_count: found.models.length, piece_count: same.pieces.length });
+        }
       },
       () => {
         if (mine !== ticket.current) return;
@@ -621,7 +682,17 @@ export function CityJourney({ region, picks = [], finishIn }: {
           Qual é a sua <span className={ACCENT}>cidade?</span>
         </h2>
         {/* Out of the way while typing: on a phone the keyboard takes half the screen, and the results need the rest. */}
-        {!typing && <p className="t-body mt-4 max-w-xl text-ink-soft">Escolha a cidade e veja os modelos dela lado a lado. Depois, é só escolher a peça.</p>}
+        {!typing && (
+          <p className="t-body mt-4 max-w-xl text-ink-soft">
+            {wanted ? (
+              <>
+                Escolha a cidade e abrimos a estampa <strong className="font-semibold text-ink">{wanted.name}</strong> dela, se tiver.
+              </>
+            ) : (
+              "Escolha a cidade e veja os modelos dela lado a lado. Depois, é só escolher a peça."
+            )}
+          </p>
+        )}
         <div className="mt-7 sm:mt-9">
           <GlobalSearch
             region={region}

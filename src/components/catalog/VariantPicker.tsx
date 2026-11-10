@@ -46,6 +46,8 @@ export function VariantPicker({
   productName,
   sourceSection = "pdp",
   after,
+  offer,
+  notice,
 }: {
   options: VariantOption[];
   alt: string;
@@ -61,6 +63,10 @@ export function VariantPicker({
   sourceSection?: string;
   /** Rendered under the purchase block (after the CTA and its notes): the guided help's invite. Never above price, versions or the CTA. */
   after?: React.ReactNode;
+  /** Under the CTA, in the same screen: the store's offer in one line (free shipping + the kit's tiers), only when the rule is live. */
+  offer?: React.ReactNode;
+  /** Under the offer: "Não é a sua cidade?" with the way back into the journey. */
+  notice?: React.ReactNode;
 }) {
   const [selectedId, setSelectedId] = useState(options[0].id);
   const selected = options.find((o) => o.id === selectedId) ?? options[0];
@@ -135,6 +141,8 @@ export function VariantPicker({
               </p>
             </div>
           )}
+          {offer}
+          {notice}
           <p className="t-caption mt-3 max-w-sm">Tamanho, cor, frete e pagamento você define na loja {storeName}.</p>
           {/* Sharing is secondary: after the purchase CTA, for the version selected now (its own INK product page). */}
           {selected.share && <ShareButton key={selected.id} share={selected.share} variant="inline" className="mt-2 -ml-0.5" />}
