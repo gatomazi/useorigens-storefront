@@ -1,3 +1,4 @@
+import type { Ga4Client } from "./analytics/client";
 import { familyById, type DesignFamilyId } from "../catalog/families";
 import { discountPercent } from "../format";
 import { localitiesOfRegion, localityById } from "../geo/localities";
@@ -39,11 +40,13 @@ export type ToolDeps = {
   storeOrders: (store: CommerceStoreKey, q: OrderQuery, budget: Budget) => Promise<StoreOrders>;
   storeOrder: (store: CommerceStoreKey, orderId: string, budget: Budget) => Promise<{ order: McpOrder; fetchedAt: Date }>;
   storeProduct: (store: CommerceStoreKey, productId: string, budget: Budget) => Promise<{ product: InkLiveProduct; fetchedAt: Date }>;
+  /** Google Analytics 4 (src/lib/mcp/analytics): null/absent when this server has no GA4 credentials. */
+  analytics?: Ga4Client | null;
 };
 
 export type Coverage = { status: "complete" | "partial" | "unavailable"; reason: string | null };
 export type Meta = {
-  source: "ink_api" | "use_origens_index" | "ink_api+use_origens_index" | "use_origens_panel" | "ink_api+use_origens_panel";
+  source: "ink_api" | "use_origens_index" | "ink_api+use_origens_index" | "use_origens_panel" | "ink_api+use_origens_panel" | "ga4_api";
   generated_at: string;
   data_as_of: string | null;
   period: ReturnType<typeof describePeriod> | null;
@@ -230,7 +233,8 @@ export async function capabilities(deps: ToolDeps, write: WriteAccess = { allowe
           "O painel descreve o cupom; a INK aplica. Status do painel (live, scheduled, ended, disabled) é o de agora. Uso = pedidos pagos do período com aquele promotion_code (sem diferenciar maiúsculas); promotion_discount = promotion_value informado pela INK. Pedido com cupom não prova que o cupom causou a venda.",
         on_sale: "Produto em promoção = preço promocional da INK abaixo do preço normal no último sync (list_price = preço normal; discount_percent truncado como na INK).",
       },
-      tools: ["origens_capabilities", "origens_search_products", "origens_get_product", "origens_list_categories", "origens_promotions", "origens_sales_summary", "origens_sales_ranking", "origens_list_orders", "origens_get_order", "origens_list_exchanges", "origens_get_exchange", "origens_catalog_status"],
+      tools: ["origens_capabilities", "origens_search_products", "origens_get_product", "origens_list_categories", "origens_promotions", "origens_sales_summary", "origens_sales_ranking", "origens_list_orders", "origens_get_order", "origens_list_exchanges", "origens_get_exchange", "origens_catalog_status", ...(deps.analytics ? ["analytics_capabilities", "analytics_run_report"] : [])],
+      ...(deps.analytics ? { analytics: { property_id: deps.analytics.propertyId, note: "Google Analytics 4 da Use Origens, só leitura, uma propriedade. Números são um piso (só quem aceitou cookies); nunca compare direto com vendas da INK." } } : {}),
       write_tools: {
         tools: ["origens_preview_product_changes", "origens_preview_category_visibility", "origens_preview_order_item_edit", "origens_preview_exchange", "origens_confirm_change", "origens_change_status"],
         enabled: write.allowed,
