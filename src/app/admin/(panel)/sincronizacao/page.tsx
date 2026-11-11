@@ -195,7 +195,7 @@ export default async function SyncScreen({ searchParams }: { searchParams: Promi
               ) : (
                 <p className="a-flash err mt-3">A loja única ainda não tem catálogo sincronizado neste ambiente.</p>
               )}
-              <p className="a-muted mt-2 text-[0.8125rem]">Atualiza sozinho todo dia às 03:30 (Brasília), junto com as peças.</p>
+              <p className="a-muted mt-2 text-[0.8125rem]">Atualiza sozinho todo dia às 03:30 (Brasília), junto com as peças e as sugestões “Você também pode gostar” da página do produto.</p>
               {!lu.hasToken && <p className="a-flash err mt-2">A variável <code>{lu.tokenEnv}</code> não está configurada neste ambiente.</p>}
               {lu.job.status === "running" && <SyncProgress percent={lojaUnicaJobPercent(lu.job)} label={lu.job.totalPages ? `Lendo produtos: página ${lu.job.page} de ${lu.job.totalPages}` : "Começando a leitura dos produtos"} />}
               {lu.job.status === "succeeded" && (
@@ -203,6 +203,9 @@ export default async function SyncScreen({ searchParams }: { searchParams: Promi
                   Concluída {ago(lu.job.finishedAt)}: {numberPt.format(lu.job.result.productCount)} produtos ({numberPt.format(lu.job.result.bindingCount)} estampas de cidade, {numberPt.format(lu.job.result.merchCount)} outros){lu.job.result.changed ? "" : ", sem mudança no catálogo"} · {lu.job.result.collections === null ? "coleções mantidas (leitura recusada)" : `${lu.job.result.collections} coleções`}.
                 </p>
               )}
+              {lu.job.status === "succeeded" && lu.job.recommendations && (lu.job.recommendations.ok
+                ? <p className="a-muted mt-2 text-[0.8125rem]">Sugestões “Você também pode gostar” da página do produto refeitas: {numberPt.format(lu.job.recommendations.productsWithList)} produtos com lista.</p>
+                : <p className="a-flash err mt-2 text-[0.875rem]">As sugestões “Você também pode gostar” não foram refeitas: {lu.job.recommendations.error}. A lista anterior continua no ar.</p>)}
               {lu.job.status === "failed" && <p className="a-flash err mt-3 text-[0.875rem]">A última sincronização da loja única falhou: {lu.job.error}. Os dados anteriores foram mantidos.</p>}
               {owner ? (
                 <form action={syncLojaUnicaAction} className="mt-4">

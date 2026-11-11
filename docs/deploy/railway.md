@@ -186,7 +186,7 @@ o preço cobrado agora em `price` e o preço cheio em `listPrice` (só enquanto 
 A vitrine só enxerga uma promoção depois de uma sincronização. **Sincronize quando uma promoção começar e quando
 terminar**: sem isso, a vitrine continua com o preço anterior (e, no fim da promoção, mostraria um desconto que a INK
 já não dá). As abas de peça das páginas de cidade (Oversized, Cropped…) vêm do índice de peças, que segue o sync próprio
-(`/api/admin/garments-sync`); as recomendações da PDP da INK, do `recommendations:build`.
+(`/api/admin/garments-sync`); as recomendações da PDP da INK ("Você também pode gostar") são refeitas logo depois do sync da loja única, no cron e no botão do painel (antes de 10/11/2026 dependiam de rodar `recommendations:build` à mão).
 
 ### Por que é assíncrona, não uma chamada HTTP síncrona
 
