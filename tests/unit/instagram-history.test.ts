@@ -31,7 +31,7 @@ describe("the webhook history, as the panel reads it", () => {
   });
 
   test("garbage never breaks the page", () => {
-    expect(parseConversationList(null)).toEqual({ retentionDays: 10, botMode: "off", conversations: [] });
+    expect(parseConversationList(null)).toEqual({ retentionDays: 3, botMode: "off", conversations: [] });
     expect(parseConversation({ usuario_id: 5 })).toBeNull();
   });
 
