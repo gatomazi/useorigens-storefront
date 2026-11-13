@@ -308,7 +308,7 @@ export function CustomizerForm({
   return (
     <div className="wrap py-6 lg:py-14">
       <div className="grid gap-6 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-12 lg:gap-y-8">
-        <header className="min-w-0 lg:col-span-7 lg:col-start-6 lg:row-start-1">
+        <header className={`min-w-0 lg:col-span-7 lg:col-start-6 lg:row-start-1 ${studio ? "order-1 lg:order-none" : ""}`}>
           <h1 className="t-h1" style={studio ? { fontSize: "clamp(2.25rem, 8vw, 7.5rem)" } : undefined}>{model.name}</h1>
           {model.description && <p className="t-body mt-3 max-w-xl text-ink-soft">{model.description}</p>}
           {studio ? (
@@ -320,7 +320,8 @@ export function CustomizerForm({
           )}
         </header>
 
-        <div className="min-w-0 lg:col-span-5 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+        {/* On a phone the surname field comes before the shirt preview (it sat ~1,300 px down, 1.5 screens below the fold); the "Ver como ficou" button under the field opens the preview. From lg up the grid places everything explicitly. */}
+        <div className={`min-w-0 lg:col-span-5 lg:col-start-1 lg:row-span-2 lg:row-start-1 ${studio ? "order-3 lg:order-none" : ""}`}>
           <div className="lg:sticky lg:top-24">
             {/* On a wide screen the preview, the hint and the colours stay pinned together, so the shirt is sized to the window height. */}
             {studio ? <div className="lg:max-w-[max(20rem,calc(100vh-28rem))]">{previewBlock(false)}</div> : <>
@@ -343,7 +344,7 @@ export function CustomizerForm({
           </div>
         </div>
 
-        <div className="min-w-0 lg:col-span-7 lg:col-start-6 lg:row-start-2">
+        <div className={`min-w-0 lg:col-span-7 lg:col-start-6 lg:row-start-2 ${studio ? "order-2 lg:order-none" : ""}`}>
           {phase === "done" && done ? (
             <div className="space-y-6" role="status" aria-live="polite" data-testid="customization-done">
               <div className="border-2 border-ink p-5">

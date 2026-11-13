@@ -127,6 +127,22 @@ test.describe("global search", () => {
     await expect(dialog.getByRole("link", { name: "Santa Catarina" })).toBeVisible();
   });
 
+  test("no results: the message comes before the \"Ver todos os produtos\" link, and the focused field has one border, not two", async ({ page }) => {
+    await page.goto("/sul");
+    const dialog = await openSearch(page);
+    const field = dialog.getByRole("combobox");
+    await field.fill("zzzxq");
+    const message = dialog.getByText("Não encontramos nada com esse nome.");
+    const seeAll = dialog.getByRole("link", { name: /Ver todos os produtos/ });
+    await expect(message).toBeVisible();
+    await expect(seeAll).toBeVisible();
+    const [m, l] = [await message.boundingBox(), await seeAll.boundingBox()];
+    expect(l!.y).toBeGreaterThan(m!.y);
+    // The focus box is the indicator; the underline inside it goes transparent (it keeps its 3px, so nothing shifts).
+    await expect(field).toHaveCSS("outline-style", "solid");
+    await expect(field).toHaveCSS("border-bottom-color", "rgba(0, 0, 0, 0)");
+  });
+
   test("17. the search endpoint failing never breaks the page: an error with a retry that works", async ({ page }) => {
     let fail = true;
     await page.route("**/api/busca?**", (route) => (fail ? route.fulfill({ status: 503, body: "" }) : route.fallback()));

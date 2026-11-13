@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { measurementRequiresConsent } from "@/lib/consent/policy";
 import { clarityProjectId } from "@/lib/config/public-env";
 import { PrivacyPreferencesLink } from "@/components/consent/PrivacyPreferencesLink";
+import { checkoutStoreFor } from "@/lib/catalog/commerce-mode";
 import { REGIONS, isRegionSlug } from "@/lib/geo/regions";
 import { isRegionLaunched } from "@/lib/regions/launched";
 import { PARTNER_RETENTION_DAYS } from "@/lib/partners/application";
@@ -142,7 +143,7 @@ export default async function PrivacyPolicyPage({ params }: { params: Promise<{ 
         <section>
           <h2 className="t-h3">Compra e dados na loja</h2>
           <p className="t-body mt-2 text-ink-soft">
-            Você escolhe a cidade e o estilo aqui e conclui a compra na loja Use {r.name}, onde ficam tamanho, cor,
+            Você escolhe a cidade e o estilo aqui e conclui a compra {checkoutStoreFor(region).finishIn}, onde ficam tamanho, cor,
             frete, pagamento e endereço. A loja tem a sua própria política de privacidade e os seus próprios cookies, e
             é ela que vale para tudo o que acontece lá.
           </p>

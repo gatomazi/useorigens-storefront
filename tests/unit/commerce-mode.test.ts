@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { commerceModeSetting } from "@/lib/config/env";
-import { cartRegionIn, commercePlan, regionsOfStoreIn, SINGLE_STORE_DEPENDENCIES, SINGLE_STORE_DIR, storeForRegionIn } from "@/lib/catalog/commerce-mode";
+import { cartRegionIn, checkoutStoreFor, commercePlan, regionsOfStoreIn, SINGLE_STORE_DEPENDENCIES, SINGLE_STORE_DIR, storeForRegionIn } from "@/lib/catalog/commerce-mode";
 import { purchaseUrl } from "@/lib/catalog/commerce";
 import { buildStoreIndex } from "@/lib/catalog/indexer";
 import { resolveProductDisplay } from "@/lib/catalog/lookup";
@@ -87,6 +87,23 @@ describe("região → loja de catálogo e de compra", () => {
     expect(REGION_SLUGS.map((r) => cartRegionIn("single-store", r))).toEqual(["sul", "sul", "sul"]);
     expect(regionsOfStoreIn("single-store", "use-sul")).toEqual(["sul", "norte", "centro-oeste"]);
     expect(regionsOfStoreIn("single-store", "use-norte")).toEqual([]);
+  });
+});
+
+describe("checkoutStoreFor: como o site fala da loja onde a compra termina", () => {
+  test("given multi-store, then each region names its own store", () => {
+    expect(checkoutStoreFor("sul").finishIn).toBe("na loja Use Sul");
+    expect(checkoutStoreFor("norte").finishIn).toBe("na loja Use Norte");
+    expect(checkoutStoreFor("centro-oeste").finishIn).toBe("na loja Use Centro-Oeste");
+  });
+  test("given the single store in the air, then every region says the same neutral thing, never \"Use Sul\"", () => {
+    process.env.COMMERCE_MODE = "single-store";
+    gravar(unificado(false), SINGLE_STORE_DIR);
+    expect(commercePlan().effective).toBe("single-store");
+    for (const region of REGION_SLUGS) {
+      expect(checkoutStoreFor(region).finishIn).toBe("na nossa loja online");
+      expect(checkoutStoreFor(region).linkLabel).toBe("Loja online");
+    }
   });
 });
 
