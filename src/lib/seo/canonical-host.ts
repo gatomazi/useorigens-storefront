@@ -25,3 +25,37 @@ export function isCanonicalHost(hostHeader: string | null | undefined, canonical
   }
   return name === canonical;
 }
+
+/**
+ * Paths the bare domain never redirects: machine endpoints (the API, OAuth/MCP discovery, the feeds under /api) and assets other systems embed by
+ * absolute URL, plus /admin (its own routing in src/lib/admin/routing.ts) and the password-protected /estampas editor. Only storefront PAGES move to www.
+ */
+const APEX_STAYS = [/^\/api(\/|$)/, /^\/\.well-known(\/|$)/, /^\/admin(\/|$)/, /^\/estampas(\/|$)/, /^\/media\//, /^\/troca-foto\//, /^\/_next\//];
+
+/**
+ * Where a request to the bare domain (`useorigens.com.br`) goes: the same path and query on the canonical `www` host, or null when it stays where it is.
+ * It moves only a GET/HEAD for a storefront page whose Host is EXACTLY the canonical host without `www.` — so nothing happens when the canonical URL has
+ * no `www.` (localhost, a temporary Railway address), for other subdomains, look-alike names, or POSTs (a form or a Server Action keeps working).
+ *
+ * The destination is built by plain concatenation onto the canonical ORIGIN, never with `new URL(path, base)`: a path such as `//evil.example` would
+ * otherwise become another host. It never uses anything the request says about itself except the path and query it asked for.
+ */
+export function apexRedirect(input: { hostHeader: string | null | undefined; pathname: string; search: string; method: string; canonicalSiteUrl: string }): string | null {
+  const { hostHeader, pathname, search, method, canonicalSiteUrl } = input;
+  if (method !== "GET" && method !== "HEAD") return null;
+  if (!hostHeader) return null;
+  const host = hostHeader.trim().toLowerCase();
+  if (!HOST_HEADER.test(host)) return null;
+  const name = host.replace(/:\d+$/, "").replace(/\.$/, "");
+
+  let canonical: URL;
+  try {
+    canonical = new URL(canonicalSiteUrl);
+  } catch {
+    return null;
+  }
+  const canonicalName = canonical.hostname.toLowerCase();
+  if (!canonicalName.startsWith("www.") || name !== canonicalName.slice(4)) return null;
+  if (APEX_STAYS.some((stays) => stays.test(pathname))) return null;
+  return `${canonical.origin}${pathname}${search}`;
+}
