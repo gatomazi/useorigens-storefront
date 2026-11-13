@@ -156,6 +156,14 @@ export function sectionReadability(section: Section, ground?: string): Readabili
     if (fill.kind === "none") return [];
     return readability(section.appearance, fillTone(fill) === "light" ? "dark" : "light", false);
   }
+  if (section.template === "states") {
+    // The state chooser: with neither colour nor picture its text follows its ground (paper, or the page's own: "Fundo da página"), nothing to judge;
+    // over a colour it takes the colour's own text, as the split campaign does; only over a picture the chosen tone counts (below).
+    const fill = section.appearance.fill;
+    const pictured = Boolean(section.appearance.image?.mobile || section.appearance.image?.desktop);
+    if (!pictured && fill.kind === "none") return [];
+    if (!pictured) return readability(section.appearance, fillTone(fill) === "light" ? "dark" : "light", false);
+  }
   const tone = sectionTone(section);
   if (!tone) return [];
   const image = section.appearance.image;

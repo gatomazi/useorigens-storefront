@@ -368,6 +368,12 @@ export function parseSectionForm(f: Fields, section: Section): Partial<Editable>
     }
     patch.stateCovers = Object.keys(covers).length > 0 ? covers : undefined;
   }
+  if (section.template === "states" && f.get("state_choice_present") !== null) {
+    // What a tap on a state does (absent = its page), and the band's ground when Aparência has neither colour nor picture: paper, or the page's own
+    // ground (its text then follows the page). The text tone counts only over a picture of Aparência: over a colour it follows the colour.
+    patch.stateAction = str(f, "state_action") === "finder" ? "finder" : undefined;
+    patch.layout = { variant: "standard", tone: str(f, "layout_tone") === "dark" ? "dark" : "light", surface: str(f, "state_surface") === "plain" ? "plain" : "paper" };
+  }
   if (section.template === "image-grid" && f.get("grid_present") !== null) {
     patch.grid = parseGridLayout(f, section.grid);
     patch.tiles = parseGridTiles(f).tiles; // the caller refuses the save when `parseGridTiles` reports problems

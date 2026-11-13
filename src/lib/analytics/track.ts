@@ -431,6 +431,27 @@ export function trackCityJourney(event: CityJourneyEvent, params: CityJourneyPar
   sendGtag("event", event, { ...rest, region, surface: "storefront", feature_version: "sua_cidade_v1" });
 }
 
+export type CityFinderEvent = "origens_minha_cidade_state" | "origens_minha_cidade_all_models" | "origens_minha_cidade_error";
+export type CityFinderParams = {
+  /** Where the questions were answered: the page (`/minha-cidade`) or the dialog the home's state chooser opens. */
+  entry_point?: "page" | "home_states";
+  uf?: string;
+  city_slug?: string;
+  /** How many places the chosen state offers, how many designs the chosen place offers. */
+  place_count?: number;
+  model_count?: number;
+};
+/**
+ * "Quero minha cidade" (src/components/city-finder/CityFinder.tsx), GA4 only (the page itself is GA4's page_view of `/minha-cidade`): a state chosen, "all the designs" (the place's own page)
+ * followed, a list failing to load. The place chosen is the usual `select_city` and a design card's click the usual GoToInk / select_item +
+ * go_to_ink, with source `minha_cidade`, so it can be compared with the "Sua cidade" journey (`trackCityJourney`).
+ */
+export function trackCityFinder(event: CityFinderEvent, params: CityFinderParams & { region: string }): void {
+  if (!gtagReady()) return;
+  const { region, ...rest } = params;
+  sendGtag("event", event, { ...rest, region, surface: "storefront", feature_version: "minha_cidade_v1" });
+}
+
 export type GuideEvent = "origens_guide_view" | "origens_guide_open" | "origens_guide_dismiss" | "origens_guide_city_select" | "origens_guide_results" | "origens_guide_product_click" | "origens_guide_error";
 export type GuideParams = {
   guide_path?: "city" | "prints" | "city_context" | "reopen";
