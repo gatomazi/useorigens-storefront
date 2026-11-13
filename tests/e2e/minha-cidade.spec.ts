@@ -103,12 +103,15 @@ test.describe("Quero minha cidade: state, place and its designs on one page", ()
 });
 
 test.describe("Quero minha cidade from the home's state chooser (panel: 'Escolher a cidade aqui')", () => {
-  test("given the chooser set to open the window, when a state is tapped, then the window opens on its places, a city shows its designs, and the state stays a link to its page", async ({ page }) => {
+  test("given the chooser set to open the window, when a state is tapped, then the window opens on its places, a city shows its designs, “Voltar ao início” at its foot closes it, and the state stays a link to its page", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     const track = await withTracking(page);
     await page.goto("/sul");
-    const sc = page.locator('#estados a[href="/sul/sc"], section a[href="/sul/sc"][aria-haspopup="dialog"]').first();
-    test.skip((await sc.getAttribute("aria-haspopup")) !== "dialog", "the local CMS does not set the state chooser to open the window");
+    await expect(page.locator("#estados")).toBeAttached();
+    const opensWindow = page.locator('#estados a[href="/sul/sc"][aria-haspopup="dialog"]');
+    test.skip((await opensWindow.count()) === 0, "the local CMS does not set the state chooser to open the window");
+    // The visible one: the cards composition has a link per screen size (the desktop one hidden on a phone).
+    const sc = opensWindow.filter({ visible: true }).first();
 
     await sc.click();
     const win = page.getByTestId("city-finder-dialog");
@@ -123,6 +126,16 @@ test.describe("Quero minha cidade from the home's state chooser (panel: 'Escolhe
     expect(track.ga("origens_minha_cidade_state")[0]?.[2]).toMatchObject({ uf: "SC", entry_point: "home_states" });
     expect(track.ga("select_city")[0]?.[2]).toMatchObject({ source: "minha_cidade" });
 
+    // "Voltar ao início" stays at the foot of the window, over the designs, and closes it like the X; the focus goes back to the state.
+    const back = win.getByTestId("city-finder-back");
+    await expect(back).toBeInViewport();
+    await back.click();
+    await expect(win).toBeHidden();
+    await expect(sc).toBeFocused();
+    await expect(page).toHaveURL(/\/sul$/);
+
+    await sc.click();
+    await expect(win).toBeVisible();
     await win.getByTestId("city-finder-close").click();
     await expect(win).toBeHidden();
     await expect(sc).toHaveAttribute("href", "/sul/sc");

@@ -5,7 +5,7 @@ import type { FinderState } from "@/lib/catalog/city-finder-shared";
 import type { RegionSlug } from "@/lib/geo/regions";
 import { trackCityFinder } from "@/lib/analytics/track";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
-import { FinderFlow, type FinderAnswer } from "./CityFinder";
+import { ArrowIcon, FinderFlow, type FinderAnswer } from "./CityFinder";
 import { CITY_FINDER_EVENT, type CityFinderOpen } from "./open";
 
 /**
@@ -64,6 +64,15 @@ export function CityFinderDialog({ region, states, buy }: { region: RegionSlug; 
       <div className="city-finder wrap finder-in-dialog">
         {/* "Trocar" on the state brings back the region's states, here in the window. */}
         <FinderFlow region={region} states={states} buy={buy} uf={answer.estado?.toUpperCase() ?? null} citySlug={answer.cidade} go={go} entry="home_states" quick={false} />
+      </div>
+      {/* The way back always in reach at the foot of the window, besides the X up top: it closes the window, the page stays where it was. */}
+      <div className="finder-dialog-foot">
+        <div className="wrap">
+          <button type="button" onClick={() => dialog.current?.close()} className="btn btn-ghost finder-dialog-back" data-testid="city-finder-back">
+            <ArrowIcon className="h-5 w-5" back />
+            Voltar ao início
+          </button>
+        </div>
       </div>
     </dialog>
   );
