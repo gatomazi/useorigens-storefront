@@ -143,6 +143,33 @@ test.describe("global search", () => {
     await expect(field).toHaveCSS("border-bottom-color", "rgba(0, 0, 0, 0)");
   });
 
+  test("a typo of a city offers \"Você quis dizer…\" and tapping it runs the search for that city", async ({ page }) => {
+    await page.goto("/sul");
+    const dialog = await openSearch(page);
+    const field = dialog.getByRole("combobox");
+    await field.fill("florianopolsi");
+    await expect(dialog.getByText("Não encontramos nada com esse nome.")).toBeVisible();
+    const suggestion = dialog.getByRole("button", { name: "Florianópolis" });
+    // (the same sentence also sits in the screen-reader status line, so the visible one is the first)
+    await expect(dialog.getByText(/Você quis dizer/).first()).toBeVisible();
+    await suggestion.click();
+    await expect(field).toHaveValue("Florianópolis");
+    await expect(dialog.getByText("Não encontramos nada com esse nome.")).toBeHidden();
+    await expect(dialog.getByRole("option").first()).toContainText("Florianópolis");
+  });
+
+  test("no suggestion when there is nothing close, or when the search found something", async ({ page }) => {
+    await page.goto("/sul");
+    const dialog = await openSearch(page);
+    const field = dialog.getByRole("combobox");
+    await field.fill("zzzxq");
+    await expect(dialog.getByText("Não encontramos nada com esse nome.")).toBeVisible();
+    await expect(dialog.getByText(/Você quis dizer/)).toHaveCount(0);
+    await field.fill("tijucas");
+    await expect(dialog.getByRole("option").first()).toBeVisible();
+    await expect(dialog.getByText(/Você quis dizer/)).toHaveCount(0);
+  });
+
   test("17. the search endpoint failing never breaks the page: an error with a retry that works", async ({ page }) => {
     let fail = true;
     await page.route("**/api/busca?**", (route) => (fail ? route.fulfill({ status: 503, body: "" }) : route.fallback()));
