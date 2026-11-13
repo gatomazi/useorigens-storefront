@@ -299,6 +299,14 @@ durante o staging, não para o endereço temporário do Railway — é exatament
 endereço temporário noindexado. Só quando o domínio definitivo estiver de fato servindo o tráfego é que os
 dois coincidem e o header some.
 
+**Domínio raiz (`useorigens.com.br`, sem `www`).** Quando `NEXT_PUBLIC_SITE_URL` é um endereço com `www.`, o `src/proxy.ts` também
+manda as **páginas** do domínio raiz para o `www`: `301` para o mesmo caminho e query, só para `GET`/`HEAD`, com `Cache-Control: public,
+max-age=86400` (um dia, não para sempre, para o redirect ser fácil de desfazer). Ficam fora e continuam respondendo no raiz: `/api/**`
+(inclui MCP, feeds e os gateways do Worker), `/.well-known/**`, `/admin/**` (roteamento próprio), `/estampas/**`, `/media/**`,
+`/troca-foto/**` e `/_next/**`. Um `POST` também não é redirecionado. O destino sai sempre do `NEXT_PUBLIC_SITE_URL`, nunca do `Host` da
+requisição. Sem `www.` no `NEXT_PUBLIC_SITE_URL` (localhost, endereço temporário do Railway) nada redireciona. A mesma regra pode ser
+feita no Cloudflare em vez do código: ver o corpo do PR do redirect.
+
 ## Health checks e monitoramento
 
 - **Liveness** — `GET /api/health`: sempre `200 {"status":"ok"}`, sem nenhuma leitura de disco ou chamada

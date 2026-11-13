@@ -24,7 +24,7 @@ import { adminConfig, adminHostOf } from "@/lib/admin/config";
 import { devAdminEnabled } from "@/lib/admin/dev-guard";
 import { decideRoute } from "@/lib/admin/routing";
 import { siteUrl } from "@/lib/config/env";
-import { isCanonicalHost } from "@/lib/seo/canonical-host";
+import { apexRedirect, isCanonicalHost } from "@/lib/seo/canonical-host";
 import { ENABLED_REGIONS } from "@/lib/site";
 
 function isCanonical(request: NextRequest): boolean {
@@ -43,6 +43,19 @@ export function proxy(request: NextRequest) {
   // Everything that is not /admin/** is the storefront and is not touched by this block. The Host header only decides which of these
   // cases applies; it is never treated as identity — every admin page, Server Action and route handler authenticates and authorises itself.
   const { pathname } = request.nextUrl;
+  // The bare domain (useorigens.com.br) is not a second storefront: its pages move to www (permanent redirect, GET/HEAD only, never the API/MCP/OAuth/feeds/admin).
+  // Before everything else, so no cookie, consent or favourites ever settle on the host that is not the canonical one. Cached for a day, not forever: a
+  // permanent redirect a browser holds on to would be hard to take back.
+  try {
+    const apex = apexRedirect({ hostHeader: request.headers.get("host"), pathname, search: request.nextUrl.search, method: request.method, canonicalSiteUrl: siteUrl() });
+    if (apex) {
+      const response = NextResponse.redirect(apex, 301);
+      response.headers.set("Cache-Control", "public, max-age=86400");
+      return response;
+    }
+  } catch {
+    // siteUrl() throws on a malformed NEXT_PUBLIC_SITE_URL: no redirect (the rest of this file already fails closed on that).
+  }
   // The password-protected editor has its own identity and must work without a catalog or an admin session.
   // Its page and every data/file endpoint authenticate independently; this only excludes it from the storefront gate.
   if (pathname === "/estampas" || pathname.startsWith("/estampas/")) {
