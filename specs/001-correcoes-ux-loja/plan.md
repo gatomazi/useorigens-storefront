@@ -61,10 +61,10 @@ O componente passa a receber `finishIn` (a frase pronta) no lugar de `storeName`
 
 **R9 · retirado.** O checkout fica como hoje (decisão do dono). O pedido de `autocomplete` e do teclado numérico no CEP vai para a INK.
 
-**R10 · Worker, módulo da PDP.**
-- Primeiro uma **sonda de leitura** (Playwright, sem escrever nada): versão do Turbo da INK, e se o botão já muda de estado durante o POST de 2 s.
-- Se a INK já mostra estado, R10 fica reduzido a bloquear toque duplo. Se não, o loader escuta `turbo:submit-start` e `turbo:submit-end` no formulário do produto: no início põe "Adicionando…" e `aria-busy`, ignora novo toque; no fim (ou erro) restaura o rótulo original.
-- Só escuta eventos, não intercepta o envio nem desabilita o botão antes do submit (isso poderia cancelar o envio).
+**R10 · Worker, `theme-ui.js`.** (Desenho revisto depois da sonda de leitura na PDP real, 13/11.)
+- A sonda mostrou que o formulário é Turbo e que o botão **já fica desabilitado** durante o envio (toque duplo já bloqueado pela INK); o rótulo vira só um spinner. A INK aceita `data-turbo-submits-with`.
+- Então o R10 vira: o loader põe `data-turbo-submits-with="Adicionando…"` em `#add-to-cart-desk` e `#add-to-cart-mob`. O Turbo troca o rótulo no envio e o devolve ao fim (sucesso ou erro). Sem escutar eventos, sem interceptar o envio.
+- Um atributo que a INK já tenha é respeitado; ao desligar o tema só os nossos saem.
 
 **R11 · `src/proxy.ts` + função pura em `lib/seo/canonical-host.ts`.**
 - `decideApexRedirect({ host, pathname, method })`: só se o host for exatamente o apex do `NEXT_PUBLIC_SITE_URL` (o domínio sem `www.`), método GET ou HEAD, e o caminho fora de `/api/**`, `/.well-known/**`, `/admin/**`, `/media/**`, `/troca-foto/**`, `/estampas/**` e `/_next/**`.
