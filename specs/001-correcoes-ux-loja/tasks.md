@@ -6,11 +6,11 @@ Regra de todas: ao fim de cada tarefa, rodar o build e os testes da área, ler o
 
 ## PR 1 · docs (`docs/analise-ux-loja`, worktree `useorigens-analise-ux`)
 
-- [ ] **T1. Relatório e capturas no repo** (R7, R12)
+- [x] **T1. Relatório e capturas no repo** (R7, R12)
   - How: copiar só as capturas citadas (E1 a E14) para `docs/screenshots/analise-ux-2026-11-13/`, reduzindo as de página inteira com `sharp`, e reescrever cada caminho do scratchpad como link relativo.
   - How: no relatório, retirar o #19 (o popup está em 25 s, não depende de cookies), marcar R9 como pedido à INK e acrescentar a lista "para o dono" (#2, #3, #4, #5 e #17 da INK, #9, #13, #14, #12, #15, texto do rodapé e do SEO).
   - Verify: nenhum caminho `/private/tmp` no arquivo; todo link relativo abre; PNGs somam menos de 6 MB.
-- [ ] **T2. Abrir o PR 1** (R12, R13)
+- [x] **T2. Abrir o PR 1** (R12, R13)
   - How: commit, push da branch e `gh pr create` com o corpo em pt-BR; atualizar a nota de memória da análise.
   - Verify: `gh pr view` mostra o PR aberto e os arquivos esperados.
 
