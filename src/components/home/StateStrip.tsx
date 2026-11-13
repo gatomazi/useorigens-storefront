@@ -22,6 +22,7 @@ export function StateStrip({
   headingId = "states-title",
   backdrop,
   className,
+  opensFinder = false,
 }: {
   region: RegionSlug;
   states: StateCard[];
@@ -31,6 +32,8 @@ export function StateStrip({
   headingId?: string;
   backdrop?: ReactNode;
   className?: string;
+  /** A tap opens the "Quero minha cidade" window on the state (CMS `stateAction: "finder"`); the entry stays a link to the state's page. */
+  opensFinder?: boolean;
 }) {
   return (
     <section id={anchor} aria-labelledby={headingId} className={["relative isolate border-y border-line", className].filter(Boolean).join(" ")}>
@@ -49,16 +52,17 @@ export function StateStrip({
               <TrackedStateLink
                 href={`/${region}/${state.uf.toLowerCase()}`}
                 params={{ state: state.uf, region, source: SOURCES.stateSelector }}
+                opensFinder={opensFinder}
                 className="group grid min-h-16 grid-cols-[3.25rem_minmax(0,1fr)] items-center gap-x-3 py-3 transition-colors hover:bg-black/[0.035] active:bg-black/[0.06] md:min-h-[5.5rem] md:grid-cols-[3.75rem_minmax(0,1fr)] md:px-5 md:py-4"
               >
                 {/* The region's accent when it reads on the page (theme), else its primary colour. */}
-                <span aria-hidden="true" className="font-display text-[2.25rem] font-extrabold uppercase leading-none tracking-[0.01em] text-[var(--region-accent-ink,var(--region-primary))] md:text-[2.75rem]">
+                <span aria-hidden="true" className="state-uf font-display text-[2.25rem] font-extrabold uppercase leading-none tracking-[0.01em] text-[var(--region-accent-ink,var(--region-primary))] md:text-[2.75rem]">
                   {state.uf}
                 </span>
                 <span className="min-w-0">
                   <span className="block text-[1.0625rem] font-bold leading-tight md:text-[1.125rem]">{state.name}</span>
                   <span className="mt-1 inline-flex items-center gap-1 text-[0.875rem] font-semibold leading-tight underline decoration-region-accent decoration-2 underline-offset-4 transition-colors group-hover:decoration-current">
-                    Ver {state.localityLabel}
+                    {opensFinder ? `Escolher entre ${state.localityLabel}` : `Ver ${state.localityLabel}`}
                     <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 12h14M13 6l6 6-6 6" />
                     </svg>

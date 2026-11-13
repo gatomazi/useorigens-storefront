@@ -97,10 +97,10 @@ describe("editing the structured sections", () => {
     expect(validateSection({ ...styles, template: "states", count: 3 }).ok).toBe(false);
   });
 
-  test("given states or city styles with a background, when judged for readability, then they are checked as dark-text sections", () => {
+  test("given the state chooser with a background colour, when judged for readability, then its text follows the colour (light on near-black), never blocked", () => {
     const states = structuredDefaults("states", "norte", "custom-s", new Set());
     states.appearance = { ...states.appearance, fill: { kind: "solid", color: "token:near-black" } };
-    expect(sectionReadability(states).some((i) => i.level === "blocking")).toBe(true);
+    expect(sectionReadability(states).some((i) => i.level === "blocking")).toBe(false);
     expect(sectionReadability(structuredDefaults("states", "norte", "custom-s", new Set()))).toEqual([]);
   });
 

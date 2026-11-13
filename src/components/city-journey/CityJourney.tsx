@@ -76,7 +76,7 @@ function fetchJourney(region: RegionSlug, place: JourneyPick): Promise<CityJourn
 
 // The region's places with designs (the compact index the city search has always used), asked for the first time a state is opened.
 const regionPlaces = new Map<RegionSlug, Promise<SearchCity[]>>();
-function fetchPlaces(region: RegionSlug): Promise<SearchCity[]> {
+export function fetchPlaces(region: RegionSlug): Promise<SearchCity[]> {
   const known = regionPlaces.get(region);
   if (known) return known;
   const request = fetch(`/api/cidades/${region}`).then(async (res) => {

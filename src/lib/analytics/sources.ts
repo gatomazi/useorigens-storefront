@@ -36,6 +36,9 @@ export const SOURCES = {
   /** The header menu's "Sua cidade" journey (src/components/city-journey/CityJourney.tsx): the place chosen there (select_city) and the piece it
    * opens in the store (GoToInk / select_item), all on one screen. */
   suaCidade: "sua_cidade",
+  /** "Quero minha cidade" (src/components/city-finder/CityFinder.tsx), the page that goes from the state to the place to its designs: kept apart
+   * from `suaCidade` so the two ways in can be compared before one of them goes. */
+  minhaCidade: "minha_cidade",
 
   // State selection: header "Regiões" dropdown, footer "Estados" column, and the home's own `#estados`
   // chooser (`StateCards`) are all the same conceptual action (picking a state from a state-picker UI), so

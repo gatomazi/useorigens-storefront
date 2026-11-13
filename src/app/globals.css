@@ -564,6 +564,225 @@ a:hover > .photo img,
   }
 }
 
+/* "Quero minha cidade" (components/city-finder/CityFinder.tsx): one column of questions that goes down as they are answered. An answered step folds
+   into one line; the next question opens under it with a rule above, and the designs open as the store's own grid. */
+.city-finder {
+  padding-top: clamp(2rem, 5vw, 4rem);
+  padding-bottom: clamp(3rem, 7vw, 6rem);
+}
+.finder-step {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  padding-top: clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 2px solid var(--ink);
+  animation: journey-in 420ms var(--ease-out) both;
+}
+.finder-step > :not(.finder-models-head, [data-testid="finder-cards"], .finder-all) {
+  max-width: 48rem;
+}
+.finder-question {
+  font-family: var(--font-body-stack);
+  font-weight: 800;
+  font-size: clamp(1.75rem, 4.4vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+}
+.finder-question:focus,
+.finder-models-title:focus {
+  outline: none;
+}
+.finder-answer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1.25rem;
+}
+.finder-answer .t-label {
+  flex-basis: 100%;
+}
+.finder-answer-value {
+  font-family: var(--font-display-stack);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  line-height: 1;
+  overflow-wrap: break-word;
+}
+.finder-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0 1rem;
+  border: 2px solid var(--ink);
+  background: #fff;
+  color: var(--ink);
+}
+.finder-field:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--region-primary) 35%, transparent);
+}
+.finder-field input {
+  flex: 1;
+  min-width: 0;
+  min-height: 3.25rem;
+  background: transparent;
+  font-size: 1.0625rem;
+  outline: none;
+}
+.finder-field input::placeholder {
+  color: var(--ink-mute);
+}
+.finder-results {
+  border: 2px solid var(--ink);
+  border-top-width: 0;
+  background: #fff;
+}
+.finder-results li + li {
+  border-top: 1px solid var(--line);
+}
+.finder-result {
+  display: flex;
+  width: 100%;
+  min-height: 3rem;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  line-height: 1.25;
+}
+.finder-result:hover,
+.finder-result:focus-visible {
+  background: var(--paper);
+}
+.finder-states {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+@media (min-width: 768px) {
+  .finder-states {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.finder-state {
+  display: grid;
+  align-content: start;
+  width: 100%;
+  min-height: 5.75rem;
+  padding: 0.6rem 0.75rem 0.65rem;
+  border: 2px solid var(--ink);
+  background: #fff;
+  text-align: left;
+  transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out);
+}
+.finder-state:hover,
+.finder-state:focus-visible {
+  background: var(--ink);
+  color: #fff;
+}
+.finder-state-uf {
+  font-family: var(--font-display-stack);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+}
+.finder-state-name {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.finder-state-count {
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-mute);
+}
+.finder-state:hover .finder-state-count,
+.finder-state:focus-visible .finder-state-count {
+  color: rgb(255 255 255 / 0.72);
+}
+/* A state's places, A to Z, in as many columns as the width allows: a few hundred names read like a directory, not a scroll of buttons. */
+.finder-places {
+  columns: 2 11rem;
+  column-gap: 1.5rem;
+}
+.finder-step > .finder-places {
+  max-width: none;
+}
+@media (min-width: 1024px) {
+  .finder-places {
+    columns: 4 12rem;
+  }
+}
+.finder-places li {
+  break-inside: avoid;
+}
+.finder-place {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+.finder-place:hover,
+.finder-place:focus-visible {
+  background: #fff;
+  font-weight: 600;
+}
+/* The state chooser (components/home/StateStrip.tsx, StateCards.tsx) on a dark ground ("Fundo da página" on a dark theme, or a dark colour of
+   Aparência): the UF letters, the state's outline (drawn in --ink, which a dark ground keeps black) and the name's olive when open or hovered take the
+   text's light colour; on paper inside such a page (`.on-light`) they keep their own colours. */
+.page-dark .state-uf:not(.on-light *),
+.page-dark .state-outline:not(.on-light *),
+.page-dark .state-name:not(.on-light *) {
+  color: inherit;
+}
+/* The window of the home's state chooser (components/city-finder/CityFinderDialog.tsx): a bar in the header's colours that stays on top while the
+   questions scroll under it, and the first question right under the bar (no rule above it). */
+.finder-dialog-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.75rem;
+  padding: 0 var(--gutter);
+  background: var(--nav-header-bg, var(--region-primary));
+  color: var(--nav-header-text, #fff);
+}
+.finder-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -0.5rem;
+}
+.city-finder.finder-in-dialog {
+  padding-top: 0.5rem;
+}
+.finder-in-dialog > .finder-step:first-child {
+  margin-top: 0;
+  border-top: 0;
+}
+.finder-models-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.finder-all {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
