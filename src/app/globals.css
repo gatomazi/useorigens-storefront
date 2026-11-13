@@ -733,13 +733,13 @@ a:hover > .photo img,
   background: #fff;
   font-weight: 600;
 }
-/* The state chooser's band (components/home/StateStrip.tsx) on a dark ground ("Fundo da página" on a dark theme, or a dark colour of Aparência): the
-   UF letters take the text's light colour, the region's olive would not read on black; on paper inside such a page they keep the region's colour. */
-.page-dark .state-uf {
+/* The state chooser (components/home/StateStrip.tsx, StateCards.tsx) on a dark ground ("Fundo da página" on a dark theme, or a dark colour of
+   Aparência): the UF letters, the state's outline (drawn in --ink, which a dark ground keeps black) and the name's olive when open or hovered take the
+   text's light colour; on paper inside such a page (`.on-light`) they keep their own colours. */
+.page-dark .state-uf:not(.on-light *),
+.page-dark .state-outline:not(.on-light *),
+.page-dark .state-name:not(.on-light *) {
   color: inherit;
-}
-.page-dark .on-light .state-uf {
-  color: var(--region-accent-ink, var(--region-primary));
 }
 /* The window of the home's state chooser (components/city-finder/CityFinderDialog.tsx): a bar in the header's colours that stays on top while the
    questions scroll under it, and the first question right under the bar (no rule above it). */

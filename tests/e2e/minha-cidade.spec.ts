@@ -120,6 +120,7 @@ test.describe("Quero minha cidade from the home's state chooser (panel: 'Escolhe
     await expect(win.getByTestId("finder-cards")).toBeVisible();
     await expect(win.getByTestId("finder-all-models")).toHaveAttribute("href", "/sul/sc/florianopolis");
     expect(track.ga("select_state")[0]?.[2]).toMatchObject({ state: "SC" });
+    expect(track.ga("origens_minha_cidade_state")[0]?.[2]).toMatchObject({ uf: "SC", entry_point: "home_states" });
     expect(track.ga("select_city")[0]?.[2]).toMatchObject({ source: "minha_cidade" });
 
     await win.getByTestId("city-finder-close").click();

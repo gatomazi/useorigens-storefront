@@ -113,10 +113,10 @@ export function StateCards({
                 <div className={`flex flex-1 flex-col border-t-[3px] border-region-accent pt-5 transition-colors hover:border-region-primary ${cover ? "-mt-[3px]" : ""}`}>
                   <TrackedStateLink href={`/${region}/${state.uf.toLowerCase()}`} params={{ state: state.uf, region, source: SOURCES.stateSelector }} opensFinder={opensFinder} className="group flex items-end justify-between gap-4">
                     <div>
-                      <h3 className="link-line inline text-[1.75rem] font-extrabold leading-tight tracking-tight transition-colors group-hover:text-region-primary">{state.name}</h3>
+                      <h3 className="state-name link-line inline text-[1.75rem] font-extrabold leading-tight tracking-tight transition-colors group-hover:text-region-primary">{state.name}</h3>
                       <p className="t-place mt-1 text-[1rem] text-ink-mute">{state.localityLabel}</p>
                     </div>
-                    <StateOutline uf={state.uf} className="h-20 w-24 shrink-0 text-ink" strokeWidth={1.75} />
+                    <StateOutline uf={state.uf} className="state-outline h-20 w-24 shrink-0 text-ink" strokeWidth={1.75} />
                   </TrackedStateLink>
                   <RegionChips region={region} uf={state.uf} shown={shown} more={more} title={state.administrativeRegionCount > 0 ? "Localidades" : "Regiões"} />
                   {state.line && <StateLine line={state.line} />}
@@ -137,7 +137,7 @@ export function StateCards({
             <details key={state.uf} name="estados-mobile" className="group border-b border-line">
               <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 py-4 [&::-webkit-details-marker]:hidden">
                 <span>
-                  <span className="block text-[1.1875rem] font-extrabold leading-tight tracking-tight transition-colors group-open:text-region-primary">{state.name}</span>
+                  <span className="state-name block text-[1.1875rem] font-extrabold leading-tight tracking-tight transition-colors group-open:text-region-primary">{state.name}</span>
                   <span className="t-place mt-0.5 block text-[0.9375rem] text-ink-mute">{state.localityLabel}</span>
                 </span>
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">

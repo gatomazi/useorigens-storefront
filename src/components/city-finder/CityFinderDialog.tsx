@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FinderState } from "@/lib/catalog/city-finder-shared";
 import type { RegionSlug } from "@/lib/geo/regions";
+import { trackCityFinder } from "@/lib/analytics/track";
 import type { CardBuy } from "@/lib/site-config/cards-schema";
 import { FinderFlow, type FinderAnswer } from "./CityFinder";
 import { CITY_FINDER_EVENT, type CityFinderOpen } from "./open";
@@ -24,13 +25,16 @@ export function CityFinderDialog({ region, states, buy }: { region: RegionSlug; 
     const onOpen = (event: Event) => {
       const { uf, opener: from } = (event as CustomEvent<CityFinderOpen>).detail;
       opener.current = from;
+      // The start of the home's funnel (the tap itself is also the chooser's usual select_state): the window, open on this state.
+      const chosen = states.find((s) => s.uf === uf.toUpperCase());
+      trackCityFinder("origens_minha_cidade_state", { region, entry_point: "home_states", uf: uf.toUpperCase(), ...(chosen ? { place_count: chosen.places } : {}) });
       setAnswer({ estado: uf.toLowerCase(), cidade: null });
       if (!dialog.current?.open) dialog.current?.showModal();
       dialog.current?.scrollTo({ top: 0 });
     };
     window.addEventListener(CITY_FINDER_EVENT, onOpen);
     return () => window.removeEventListener(CITY_FINDER_EVENT, onOpen);
-  }, []);
+  }, [region, states]);
 
   useEffect(() => {
     // A native listener: a close by the platform (Escape) must always give the focus back.
