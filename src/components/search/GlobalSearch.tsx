@@ -279,7 +279,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
           className={
             boxed
               ? "block min-h-16 w-full border-2 border-ink bg-white pl-13 pr-4 text-[1.125rem] font-semibold text-ink transition-colors placeholder:font-medium placeholder:text-ink-mute hover:border-region-primary sm:min-h-[4.5rem] sm:pl-15 sm:text-[1.1875rem]"
-              : "search-input block w-full border-0 border-b-[3px] border-ink bg-transparent px-0 pb-3 pt-2 text-[clamp(1.5rem,5.5vw,3.25rem)] font-extrabold leading-none tracking-tight text-ink outline-none transition-colors placeholder:text-[clamp(1.125rem,4.4vw,2.25rem)] placeholder:font-semibold placeholder:text-ink-mute focus:border-region-ink focus:outline-none"
+              : "search-input block w-full border-0 border-b-[3px] border-ink bg-transparent px-0 pb-3 pt-2 text-[clamp(1.5rem,5.5vw,3.25rem)] font-extrabold leading-none tracking-tight text-ink outline-none transition-colors placeholder:text-[clamp(1.125rem,4.4vw,2.25rem)] placeholder:font-semibold placeholder:text-ink-mute focus:outline-none"
           }
         />
       </div>
@@ -292,14 +292,6 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
           </div>
         ))}
       </div>
-
-      {!placesOnly && trimmed.length >= 2 && !failed && (current || !loading) && (
-        <p className="mt-5 px-3">
-          <Link href={`/${region}/busca?${new URLSearchParams({ q: trimmed })}`} onClick={() => onNavigate?.()} className="link-static inline-flex min-h-11 items-center font-semibold">
-            Ver todos os produtos para “{trimmed}” →
-          </Link>
-        </p>
-      )}
 
       {loading && !current && <p className={`mt-4 text-[0.9375rem] ${muted}`}>{copy.loading}</p>}
       {failed && (
@@ -339,6 +331,15 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
             ))}
           </ul>
         </div>
+      )}
+
+      {/* After the "nothing found" message, never before it: with no results the link is the last way out, not the answer. With results the two never show together. */}
+      {!placesOnly && trimmed.length >= 2 && !failed && (current || !loading) && (
+        <p className="mt-5 px-3">
+          <Link href={`/${region}/busca?${new URLSearchParams({ q: trimmed })}`} onClick={() => onNavigate?.()} className="link-static inline-flex min-h-11 items-center font-semibold">
+            Ver todos os produtos para “{trimmed}” →
+          </Link>
+        </p>
       )}
 
       <p className="sr-only" role="status" aria-live="polite">

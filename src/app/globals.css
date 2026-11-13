@@ -948,6 +948,8 @@ a:hover > .photo img,
 .search-input:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 8px;
+  /* With focus the box is the indicator; the 3px underline inside it would read as a second border. It keeps its space (no layout shift). */
+  border-bottom-color: transparent;
 }
 .photo-poster {
   aspect-ratio: 4 / 5;
