@@ -335,7 +335,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
 
       {/* After the "nothing found" message, never before it: with no results the link is the last way out, not the answer. With results the two never show together. */}
       {!placesOnly && trimmed.length >= 2 && !failed && (current || !loading) && (
-        <p className="mt-5 px-3">
+        <p className={showEmpty ? "mt-4" : "mt-5 px-3"}>
           <Link href={`/${region}/busca?${new URLSearchParams({ q: trimmed })}`} onClick={() => onNavigate?.()} className="link-static inline-flex min-h-11 items-center font-semibold">
             Ver todos os produtos para “{trimmed}” →
           </Link>
