@@ -189,6 +189,71 @@ body {
   background: #000;
   color: #fff;
 }
+/* The cookie bar (components/consent/ConsentBanner.tsx): frosted black glass, so the page behind it still shows; a fixed black like .on-ink (the
+   CMS palette must not repaint it). Without backdrop-filter, almost solid, so its white text keeps its contrast over any picture. */
+.consent-glass {
+  background: rgb(10 10 10 / 0.62);
+  color: #fff;
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 -6px 24px rgb(0 0 0 / 0.18);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .consent-glass {
+    background: rgb(10 10 10 / 0.94);
+  }
+}
+/* A second way forward next to the main one ("Trocar cidade", "Ver os outros modelos", the place's page): it reads as a control at a glance — a thin
+   frame, an arrow, a 44px target — without competing with the black button of the step. Plain underlined text was not seen as clickable. */
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 0.95rem;
+  border: 1.5px solid color-mix(in srgb, currentColor 32%, transparent);
+  background: rgb(255 255 255 / 0.55);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+.action-link:hover {
+  border-color: currentColor;
+  background: #fff;
+}
+.action-link svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+  transition: transform 200ms var(--ease-out);
+}
+.action-link:hover svg[data-dir="forward"] {
+  transform: translateX(2px);
+}
+.action-link:hover svg[data-dir="back"] {
+  transform: translateX(-2px);
+}
+/* Folded: a narrow tab on the left edge, read bottom to top, halfway up the screen. */
+.consent-tab {
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-left: 0;
+  box-shadow: 4px 0 16px rgb(0 0 0 / 0.2);
+}
+.consent-tab-button {
+  display: block;
+  min-width: 2.25rem;
+  min-height: 6.5rem;
+  padding: 0.75rem 0.45rem;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 /* "Faixa do topo": each message fades in when it takes its turn (components/layout/TopBarMessages.tsx). */
 .top-bar-in {
   animation: top-bar-in 320ms ease-out;
