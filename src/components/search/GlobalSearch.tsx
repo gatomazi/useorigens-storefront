@@ -306,6 +306,24 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
       {showEmpty && (
         <div className="mt-5">
           <p className="font-semibold">{copy.empty}</p>
+          {current?.suggestion && (
+            <p className="mt-1 text-[0.9375rem]">
+              {copy.didYouMean}{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery(current.suggestion!);
+                  setActive(0);
+                  onQueryChange?.(current.suggestion!);
+                  inputRef.current?.focus();
+                }}
+                className="link-static min-h-11 font-semibold"
+              >
+                {current.suggestion}
+              </button>
+              ?
+            </p>
+          )}
           <p className={`mt-1 text-[0.9375rem] ${muted}`}>{copy.emptyHint}</p>
           <ul className="mt-4 flex flex-wrap gap-2">
             {REGIONS[region].ufs.map((uf) => (
@@ -343,7 +361,7 @@ export function GlobalSearch({ region, autoFocus = false, onNavigate, source, st
       )}
 
       <p className="sr-only" role="status" aria-live="polite">
-        {trimmed.length === 0 ? "" : hasList ? `${rows.length} resultados. Use as setas para navegar.` : showEmpty ? "Nenhum resultado." : ""}
+        {trimmed.length === 0 ? "" : hasList ? `${rows.length} resultados. Use as setas para navegar.` : showEmpty ? `Nenhum resultado.${current?.suggestion ? ` ${copy.didYouMean} ${current.suggestion}?` : ""}` : ""}
       </p>
     </div>
   );

@@ -20,6 +20,8 @@ export type PlaceSearchCopy = {
   loading: string;
   failed: string;
   empty: string;
+  /** Before the suggested place when nothing matched a probable typo: "Você quis dizer Florianópolis?". */
+  didYouMean: string;
   emptyHint: string;
   /** Heading of the places group. */
   placesGroup: string;
@@ -39,6 +41,7 @@ export function placeSearchCopy(region: RegionSlug): PlaceSearchCopy {
     loading: "Buscando…",
     failed: "Não conseguimos buscar agora. Tente de novo em instantes.",
     empty: "Não encontramos nada com esse nome.",
+    didYouMean: "Você quis dizer",
     emptyHint: ra
       ? "Tente o nome de uma cidade, de uma região ou de uma estampa, ou escolha o estado."
       : "Tente o nome de uma cidade, de uma estampa ou de uma coleção, ou escolha o estado.",
