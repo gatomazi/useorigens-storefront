@@ -50,10 +50,30 @@ Regra de todas: ao fim de cada tarefa, rodar o build e os testes da área, ler o
 
 ## PR 5 · host sem www (`fix/host-sem-www`)
 
-- [ ] **T16. Inventário do apex** (R11) · How: procurar `useorigens.com.br` sem `www` no repo, no Worker, nas docs de MCP/OAuth/webhooks/Merchant/Meta e nas variáveis de ambiente; tabela no corpo do PR. · Verify: cada uso classificado (API, página, config externa).
-- [ ] **T17. `decideApexRedirect` + `proxy.ts`** (R11) · How: função pura em `lib/seo/canonical-host.ts`; só apex exato, GET/HEAD, fora de `/api`, `/.well-known`, `/admin`, `/media`, `/troca-foto`, `/estampas`, `/_next`; destino sempre do `siteUrl()`. · Verify: unit (apex, www, `/api`, POST, query) e `curl -I` com `Host:` forjado contra o servidor local.
-- [ ] **T18. Texto da regra do Cloudflare e PR 5** (R11, R13) · How: o PR traz também a regra equivalente para o Cloudflare e a pendência do painel da INK (busca que posta no apex). · Verify: **você valida local**; merge só com seu pedido.
+- [x] **T16. Inventário do apex** (R11) · How: procurar `useorigens.com.br` sem `www` no repo, no Worker, nas docs de MCP/OAuth/webhooks/Merchant/Meta e nas variáveis de ambiente; tabela no corpo do PR. · Verify: cada uso classificado (API, página, config externa).
+- [x] **T17. `decideApexRedirect` + `proxy.ts`** (R11) · How: função pura em `lib/seo/canonical-host.ts`; só apex exato, GET/HEAD, fora de `/api`, `/.well-known`, `/admin`, `/media`, `/troca-foto`, `/estampas`, `/_next`; destino sempre do `siteUrl()`. · Verify: unit (apex, www, `/api`, POST, query) e `curl -I` com `Host:` forjado contra o servidor local.
+- [x] **T18. Texto da regra do Cloudflare e PR 5** (R11, R13) · How: o PR traz também a regra equivalente para o Cloudflare e a pendência do painel da INK (busca que posta no apex). · Verify: **você valida local**; merge só com seu pedido.
 
 ## Fechamento
 
-- [ ] **T19.** Conferir cada R<n>: teste passando ou motivo escrito; listar o que ficou de fora.
+- [x] **T19.** Conferir cada R<n>: teste passando ou motivo escrito; listar o que ficou de fora. (Tabela abaixo; falta só a **validação local do dono** antes de qualquer merge.)
+
+## Conferência dos requisitos (T19)
+
+| Req | PR | Como foi verificado |
+|---|---|---|
+| R1 frase da loja | storefront #195 | unit nos dois modos (loja única nunca devolve "Use Sul"; frase do `VariantPicker` sem "na loja na nossa loja"). Sem captura: localmente só existe o modo regional |
+| R2 botão "Explorar estampas" | #195 | capturas 1440 e 390 antes/depois; unit e e2e verdes |
+| R3 mensagem antes do link | #195 | e2e (posição vertical) + capturas |
+| R4 borda única no foco | #195 | e2e (`outline` presente, sublinhado transparente) + capturas |
+| R5 campo do Natal acima da prévia | #195 | medição em 390 (1.010 px → 413 px, modelo local); 1440 idêntico (capturas de mesmo tamanho). **Sem teste automático**: não há modelo estável de Natal para a CI |
+| R6 "Você quis dizer…" | #196 (sobre o #195) | 16 unit (inclui tempo), 2 e2e, dados reais locais, capturas |
+| R7 popup da oferta | #194 | leitura do código + `GET /api/offer-popup/sul` (`delaySeconds: 25`); achado #19 retirado |
+| R8 barra × aviso de cookies | worker-lojas #58 | 6 testes DOM novos (provados contra a implementação desligada), 729 testes verdes, medição no navegador real (sobreposição 69 px → 0) |
+| R9 autocomplete no checkout | — | **retirado pelo dono**; vira pedido à INK |
+| R10 "Adicionando…" | worker-lojas #58 | sonda na PDP real (o toque duplo já era bloqueado; a INK aceita `data-turbo-submits-with`), testes DOM e linha do tempo real do botão |
+| R11 301 do host sem www | storefront #197 | 9 unit, `curl` com `Host` forjado (301, `/api` fica, POST fica) |
+| R12 relatório no repo | #194 | links relativos conferidos, capturas comprimidas (2,4 MB) |
+| R13 PRs em pt-BR, sem merge/deploy | todos | cinco PRs abertos, nada mergeado, nenhum release |
+
+**Ficou de fora (decisão do dono ou outro dono):** `autocomplete` no checkout, marketing pré-marcado (LGPD), endereço da loja no painel da INK, latência do servidor da INK, ordem dos controles da PDP da INK, home Black / faixa do topo / arte da oferta (painel), rótulo "COMPRAR" × "Escolher tamanho", `%OFF` de 10 px, textos do rodapé (`SiteChrome.tsx:297`) e do SEO (`seo/copy.ts:102`), `storefront` do Worker → `www`, endereço da busca no painel da INK, e o salto de layout intermitente da busca (#16, só se reproduzir).
