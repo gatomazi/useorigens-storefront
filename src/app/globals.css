@@ -767,6 +767,24 @@ a:hover > .photo img,
 .city-finder.finder-in-dialog {
   padding-top: 0.5rem;
 }
+/* Its foot: "Voltar ao início" stays at the bottom of the window while the questions scroll above it (full width on a phone, under the thumb). */
+.finder-dialog-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 2.5rem;
+  padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom));
+  background: var(--ground);
+  border-top: 1px solid var(--line);
+}
+.finder-dialog-back {
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .finder-dialog-back {
+    width: auto;
+  }
+}
 .finder-in-dialog > .finder-step:first-child {
   margin-top: 0;
   border-top: 0;

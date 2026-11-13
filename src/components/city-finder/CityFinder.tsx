@@ -74,7 +74,7 @@ function SearchIcon({ className }: { className: string }) {
   );
 }
 
-function ArrowIcon({ className, back = false }: { className: string; back?: boolean }) {
+export function ArrowIcon({ className, back = false }: { className: string; back?: boolean }) {
   return (
     <svg
       aria-hidden="true"
