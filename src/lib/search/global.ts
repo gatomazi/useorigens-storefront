@@ -1,4 +1,5 @@
 import { normalizeText } from "../geo/text";
+import { suggestPlace } from "./suggest";
 import type { RegionSlug } from "../geo/regions";
 import type { ArticleKind } from "../umapenca/types";
 
@@ -145,6 +146,8 @@ export type GlobalSearchResponse = {
   /** Clearly relevant results of OTHER launched regions (match class ≥ whole words), after the current region's. */
   others: GlobalResult[];
   total: number;
+  /** Only when nothing at all matched: the title of the place the visitor probably meant ("Florianópolis" for "florianopolsi"). A suggestion to tap, never results. */
+  suggestion?: string;
 };
 
 export const GROUP_LIMITS: Record<GlobalGroup, number> = { places: 6, designs: 6, editorial: 5 };
@@ -186,5 +189,6 @@ export function searchGlobal(byRegion: ReadonlyMap<RegionSlug, readonly Prepared
     for (const hit of rankGlobal(shown(docs), query)) if (Math.floor(hit.score / 10) >= OTHERS_MIN_CLASS && !ownKeys.has(hit.doc.key)) elsewhere.push(hit);
   }
   const others = elsewhere.sort(compareHits).slice(0, OTHERS_LIMIT).map((h) => toResult(h.doc));
-  return { query, region, groups, others, total: own.length };
+  const suggestion = own.length === 0 && others.length === 0 ? suggestPlace(byRegion.get(region) ?? [], query, (p) => GROUP_OF[p.doc.kind] === "places") : null;
+  return { query, region, groups, others, total: own.length, ...(suggestion ? { suggestion } : {}) };
 }
