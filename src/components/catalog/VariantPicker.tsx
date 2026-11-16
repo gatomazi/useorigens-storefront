@@ -38,7 +38,7 @@ export type VariantOption = {
 export function VariantPicker({
   options,
   alt,
-  storeName,
+  finishIn,
   intro,
   city,
   stateUf,
@@ -49,7 +49,8 @@ export function VariantPicker({
 }: {
   options: VariantOption[];
   alt: string;
-  storeName: string;
+  /** Where the purchase is finished, as a ready phrase (`checkoutStoreFor(region).finishIn`): "na nossa loja online" or "na loja Use Sul". */
+  finishIn: string;
   /** Title block: on desktop it sits at the top of the right column, on phones above the photo. */
   intro: React.ReactNode;
   /** GoToInk context — constant across every variant option, only the selected product id changes. */
@@ -135,7 +136,7 @@ export function VariantPicker({
               </p>
             </div>
           )}
-          <p className="t-caption mt-3 max-w-sm">Tamanho, cor, frete e pagamento você define na loja {storeName}.</p>
+          <p className="t-caption mt-3 max-w-sm">Tamanho, cor, frete e pagamento você define {finishIn}.</p>
           {/* Sharing is secondary: after the purchase CTA, for the version selected now (its own INK product page). */}
           {selected.share && <ShareButton key={selected.id} share={selected.share} variant="inline" className="mt-2 -ml-0.5" />}
         </div>

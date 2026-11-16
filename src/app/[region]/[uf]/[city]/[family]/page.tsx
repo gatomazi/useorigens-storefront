@@ -6,6 +6,7 @@ import { PdpGuide } from "@/components/catalog/PdpGuide";
 import { VariantPicker, type VariantOption } from "@/components/catalog/VariantPicker";
 import { SOURCES } from "@/lib/analytics/sources";
 import { purchaseUrl } from "@/lib/catalog/commerce";
+import { checkoutStoreFor } from "@/lib/catalog/commerce-mode";
 import { resolveCity, resolveCityProduct } from "@/lib/catalog/resolver";
 import { formatListPrice, formatPrice } from "@/lib/format";
 import { isRegionSlug } from "@/lib/geo/regions";
@@ -109,7 +110,7 @@ export default async function CityFamilyPage({ params }: { params: Params }) {
         <VariantPicker
           options={options}
           alt={`Camiseta ${family.name} de ${city.name}`}
-          storeName={`Use ${resolved.region.name}`}
+          finishIn={checkoutStoreFor(region).finishIn}
           city={city.name}
           stateUf={city.uf}
           familyId={family.id}
