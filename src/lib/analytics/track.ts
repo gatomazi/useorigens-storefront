@@ -17,6 +17,7 @@
 
 import { hasAnalyticsConsent } from "@/lib/consent/store";
 import { activeGa4, activeMetaPixel } from "./active-ids";
+import { visitEntryPoint } from "./entry-point";
 import type { CartItemsBucket, MirrorAgeBucket, OrigensEntryPoint } from "./origens-events";
 
 declare global {
@@ -58,6 +59,12 @@ function sendGtag(command: "event", name: string, params: Record<string, unknown
   } catch {
     // Same as sendFbq.
   }
+}
+
+/** The visit's `entry_point` (src/lib/analytics/entry-point.ts), for the funnel events that do not carry one of their own. */
+function visitEntry(): Record<string, string> {
+  const value = visitEntryPoint();
+  return value ? { entry_point: value } : {};
 }
 
 /** Search (Meta standard event) + `view_search_results` (GA4 recommended event) — the single conclusive
@@ -111,8 +118,9 @@ export function trackSelectCity(params: SelectCityParams): void {
       state: params.state,
       region: params.region,
       ...(params.cityId ? { city_id: params.cityId } : {}),
-      ...(params.source ? { source: params.source } : {}),
+      ...(params.source ? { source_section: params.source } : {}),
       ...(params.localityType ? { locality_type: params.localityType, locality_name: params.city } : {}),
+      ...visitEntry(),
     });
   }
 }
@@ -132,7 +140,7 @@ export function trackSelectState(params: SelectStateParams): void {
   sendGtag("event", "select_state", {
     state: params.state,
     region: params.region,
-    ...(params.source ? { source: params.source } : {}),
+    ...(params.source ? { source_section: params.source } : {}),
   });
 }
 
@@ -178,6 +186,7 @@ export function trackGoToInk(params: GoToInkParams): void {
   if (gtagReady()) {
     sendGtag("event", "select_item", {
       item_list_name: params.sourceSection,
+      ...visitEntry(),
       items: [
         {
           item_id: params.productId,
@@ -190,6 +199,7 @@ export function trackGoToInk(params: GoToInkParams): void {
     sendGtag("event", "go_to_ink", {
       product_id: params.productId,
       source_section: params.sourceSection,
+      ...visitEntry(),
       ...(params.productName ? { product_name: params.productName } : {}),
       ...(params.city ? { city: params.city } : {}),
       ...(params.state ? { state: params.state } : {}),
@@ -340,7 +350,7 @@ export function trackPodioClick(params: PodioClickParams): void {
     region: params.region,
     state: params.state,
     ranking_type: params.rankingType,
-    source: params.source,
+    source_section: params.source,
     ...(params.position !== undefined ? { position: params.position } : {}),
   });
 }
@@ -359,7 +369,7 @@ export function trackShare(params: ShareParams): void {
 /** "Guia de medidas" opened (GA4 only). Low-cardinality: the INK base garment the guide opened on and where the button was. */
 export function trackSizeGuideOpen(params: { garmentTypeId: number; source: string }): void {
   if (!gtagReady()) return;
-  sendGtag("event", "size_guide_open", { garment_type_id: params.garmentTypeId, source: params.source });
+  sendGtag("event", "size_guide_open", { garment_type_id: params.garmentTypeId, source_section: params.source });
 }
 
 // ── Meu Pequeno Mundo (GA4 custom events; docs/mundo/eventos.md) ─────────────────────────────────────────────────────────────────────
@@ -409,8 +419,9 @@ export function trackAssistant(event: AssistantEvent, params: AssistantParams & 
 export type CityJourneyEvent = "origens_sua_cidade_open" | "origens_sua_cidade_state" | "origens_sua_cidade_model" | "origens_sua_cidade_piece" | "origens_sua_cidade_error";
 export type CityJourneyParams = {
   /** Where the journey was opened: the desktop header's menu, the phone menu, the home's "Encontre aqui a sua cidade", a banner of the opening, or the
-   *  "Sua cidade" of the header the Worker draws on the INK pages (a link to `#sua-cidade`), or the ads' link, any page with `?abrir=cidade` (`landing`). */
-  entry_point?: "header" | "menu" | "home" | "hero" | "ink" | "landing";
+   *  "Sua cidade" of the header the Worker draws on the INK pages (a link to `#sua-cidade`), or the ads' link, any page with `?abrir=cidade` (`landing`), a regional home opened by an ad on its own (`auto_ads`: `fbclid` or
+   *  `utm_medium=paid_social`), or the design page's "Não é a sua cidade?" (`pdp_wrong_city`). */
+  entry_point?: "header" | "menu" | "home" | "hero" | "ink" | "landing" | "auto_ads" | "pdp_wrong_city";
   city_slug?: string;
   uf?: string;
   family?: string;

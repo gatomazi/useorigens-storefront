@@ -434,7 +434,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
     expect(searches).toHaveLength(1);
     expect(selects).toHaveLength(1);
     expect(searches[0][2]).toMatchObject({ search_term: expect.stringContaining("Tijucas") });
-    expect(selects[0][2]).toMatchObject({ city: "Tijucas", state: "SC", region: "sul", source: "hero_search" });
+    expect(selects[0][2]).toMatchObject({ city: "Tijucas", state: "SC", region: "sul", source_section: "hero_search" });
   });
 
   test("given a city clicked in the state page's mesoregion listing, when clicked, then exactly one select_city fires (source: state_mesoregion) and zero view_search_results", async ({ page }) => {
@@ -446,7 +446,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
     await page.waitForURL(/\/sul\/sc\/tijucas$/);
     const selects = gaCalls(calls, "select_city");
     expect(selects).toHaveLength(1);
-    expect(selects[0][2]).toMatchObject({ source: "state_mesoregion" });
+    expect(selects[0][2]).toMatchObject({ source_section: "state_mesoregion" });
     expect(gaCalls(calls, "view_search_results")).toEqual([]);
   });
 
@@ -468,7 +468,7 @@ test.describe("GA4 tracking: page_view, view_search_results, select_city, select
     await page.waitForURL(/\/sul\/rs$/);
     const selects = gaCalls(calls, "select_state");
     expect(selects).toHaveLength(1);
-    expect(selects[0][2]).toMatchObject({ state: "RS", region: "sul", source: "state_selector" });
+    expect(selects[0][2]).toMatchObject({ state: "RS", region: "sul", source_section: "state_selector" });
   });
 
   test("given the same state reached by direct URL, when the page loads, then zero select_state fires", async ({ page }) => {

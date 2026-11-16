@@ -124,8 +124,8 @@ describe("track.ts — gtag loaded (fbq absent)", () => {
   test("given a Federal District administrative region, when trackSelectCity runs, then GA4 also gets locality_type/locality_name and a plain city sends exactly what it always did", () => {
     trackSelectCity({ city: "Águas Claras", state: "DF", region: "centro-oeste", source: "search_dialog", localityType: "administrative_region" });
     trackSelectCity({ city: "Goiânia", state: "GO", region: "centro-oeste", source: "search_dialog" });
-    expect(calls[0]).toEqual(["event", "select_city", { city: "Águas Claras", state: "DF", region: "centro-oeste", source: "search_dialog", locality_type: "administrative_region", locality_name: "Águas Claras" }]);
-    expect(calls[1]).toEqual(["event", "select_city", { city: "Goiânia", state: "GO", region: "centro-oeste", source: "search_dialog" }]);
+    expect(calls[0]).toEqual(["event", "select_city", { city: "Águas Claras", state: "DF", region: "centro-oeste", source_section: "search_dialog", locality_type: "administrative_region", locality_name: "Águas Claras" }]);
+    expect(calls[1]).toEqual(["event", "select_city", { city: "Goiânia", state: "GO", region: "centro-oeste", source_section: "search_dialog" }]);
   });
 
   test("given an administrative region, when trackSelectCity runs with fbq loaded, then Meta's SelectCity contract is untouched", () => {
@@ -144,12 +144,12 @@ describe("track.ts — gtag loaded (fbq absent)", () => {
 
   test("given an explicit city choice with a source, when trackSelectCity runs, then select_city carries city/state/region/source", () => {
     trackSelectCity({ city: "Tijucas", state: "SC", region: "sul", source: "state_mesoregion" });
-    expect(calls).toEqual([["event", "select_city", { city: "Tijucas", state: "SC", region: "sul", source: "state_mesoregion" }]]);
+    expect(calls).toEqual([["event", "select_city", { city: "Tijucas", state: "SC", region: "sul", source_section: "state_mesoregion" }]]);
   });
 
   test("given an explicit state choice, when trackSelectState runs, then select_state fires with state/region/source — no Meta equivalent exists for this event", () => {
     trackSelectState({ state: "RS", region: "sul", source: "state_selector" });
-    expect(calls).toEqual([["event", "select_state", { state: "RS", region: "sul", source: "state_selector" }]]);
+    expect(calls).toEqual([["event", "select_state", { state: "RS", region: "sul", source_section: "state_selector" }]]);
   });
 
   test("given a real INK click, when trackGoToInk runs, then select_item fires before go_to_ink, sharing the same click", () => {

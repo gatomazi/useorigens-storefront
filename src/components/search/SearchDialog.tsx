@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import type { RegionSlug } from "@/lib/geo/regions";
+import { rememberEntryPoint } from "@/lib/analytics/entry-point";
 import { SOURCES } from "@/lib/analytics/sources";
 import { placeSearchCopy } from "@/lib/search/copy";
 import { TYPING_STILL } from "@/lib/search/typing-hint";
@@ -44,6 +45,7 @@ export function SearchDialog({
   const [isOpen, setIsOpen] = useState(false);
 
   const open = () => {
+    rememberEntryPoint(source ?? (variant === "hero" ? SOURCES.heroSearch : variant === "bar" ? SOURCES.headerSearchBar : SOURCES.searchDialog));
     setIsOpen(true);
     ref.current?.showModal();
   };

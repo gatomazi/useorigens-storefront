@@ -47,6 +47,27 @@ Os passos com evento próprio da loja não ganham um novo: a cidade escolhida no
 
 Buckets: `cart_items_bucket` = total de **peças** do snapshot (`0`, `1`, `2`, `3_5`, `6_plus`; as faixas de promoção da INK são por peça); `mirror_age_bucket` = `under_1m`, `1_5m`, `5_30m`. **Proibido** em qualquer evento: `cart_ref`, corpo do snapshot, ids de sessão/cliente, e-mail/nome, texto de busca, URL com query, `page_location`/`link_url` com token.
 
+### Ajustes de conversão e de rastreamento (rodada de 09/11/2026)
+
+Origem: relatório do GA4 de 26/10 a 08/11 (79% das sessões da Meta veem um produto, só 3,8% colocam no carrinho).
+
+**Parâmetro `source` trocado por `source_section` (corrige origens falsas).** O GA4 usa o parâmetro de evento `source` como origem da *sessão*: `header_search_bar`, `hero_search`, `search_dialog`, `state_selector` e `sua_cidade` apareciam em "Origem da sessão" (56, 33, 32, 32 e 17 sessões em 14 dias). Não eram UTMs em link interno (o código não tem nenhuma): era o parâmetro dos eventos `select_city`, `select_state`, `podio_click` e `size_guide_open`. Desde esta rodada os quatro mandam `source_section`, o mesmo nome que `go_to_ink` já usava. Sessões antigas continuam com a origem errada; relatórios que filtravam pelo parâmetro `source` desses eventos passam a usar `source_section`.
+
+**`entry_point` da visita** (`src/lib/analytics/entry-point.ts`). O primeiro clique na busca (campo do topo, hero, diálogo de busca ou a jornada "Sua cidade") grava o valor no `sessionStorage` e o primeiro vence. Ele passa a ir também em `select_city`, `select_item` e `go_to_ink`. Valores: `header_search_bar`, `hero_search`, `search_dialog`, … (busca) e os da jornada (`header`, `menu`, `home`, `hero`, `ink`, `landing`, `auto_ads`, `pdp_wrong_city`). Sem storage (janela privada) o evento sai sem o parâmetro. `view_item` não existe no storefront (vem da INK), então não leva.
+
+**Novos `entry_point` da jornada.** `auto_ads` = home regional (`/sul`, `/norte`, `/centro-oeste`) aberta por anúncio, com `fbclid` ou `utm_medium=paid_social`: a jornada abre sozinha, uma vez por visita (marca no `sessionStorage` e no estado do histórico, então recarregar ou voltar não reabre) e nunca em página de produto ou de estado; os parâmetros da campanha ficam na barra de endereço. `?abrir=cidade` continua sendo `landing` e vence quando os dois aparecem juntos. `pdp_wrong_city` = botão "Encontre a sua" do bloco "Não é a sua cidade?" da página da estampa: a jornada abre já sabendo o modelo da página e, se a cidade escolhida tiver o mesmo modelo, vai direto para as peças dele (dispara `origens_sua_cidade_model` com o `entry_point` da abertura).
+
+**Faixa de oferta na página da estampa** (`src/lib/offer-strip.ts`, `data-testid="offer-strip"`): "Frete grátis a partir de N peças · Leve X e ganhe R$ Y OFF (até R$ Z OFF em W)". Os números vêm da regra viva: o incentivo de frete grátis do Tema da INK (só se o dono confirmou e se o estado da página está na lista) e as faixas da promoção do "Monte seu kit" (INK, em cache de minutos). Sem regra viva ou INK fora do ar, a faixa não aparece.
+
+**Dimensões personalizadas a cadastrar no GA4** (Administrador → Definições personalizadas → Dimensões personalizadas, escopo *evento*; só coletam a partir do dia do cadastro): `family`, `garment_type`, `city_slug`, `model_count`, `piece_count`. `entry_point` já existe.
+
+**Fora do storefront (Worker `worker-lojas` / INK):**
+- `add_to_cart`, `begin_checkout` e `purchase` nascem na INK (GA4 nativo de `reserva.ink`); o storefront não os dispara. Levar `entry_point` até eles exige o Worker (por exemplo, repassar o valor guardado na ida para a INK) ou a medição entre domínios.
+- `cart_items_bucket` só aparece em `origens_go_to_cart_click` (vem do espelho do carrinho), sempre `0` hoje. No código os baldes são `0`, `1`, `2`, `3_5` e `6_plus`; o documento de ajustes pede `1`, `2`, `3`, `4+`: decidir o contrato antes de implementar no Worker.
+- `purchase` uma vez só, com `transaction_id` igual ao pedido da INK: conferência no DebugView, não mudança de código.
+
+**Só no painel do GA4:** domínio cruzado com `reserva.ink` e demais (Fluxos de dados → Configurar tag → Configurar seus domínios) e lista de referências indesejadas (`reserva.ink`, `usesul.com.br`, `usecentro.com.br`, `usenorte.com.br`, gateway de pagamento).
+
 ## Implementação por host (caminho único de despacho)
 
 - **Storefront** (`useorigens.com.br`): `src/lib/analytics/track.ts` → `window.gtag` do `GoogleAnalytics.tsx` (a mesma propriedade `G-8GYTEJ1F77`, `send_page_view:false`), atrás do **consentimento existente** (`hasAnalyticsConsent`); sem consentimento não sai nada (o `gtag.js` nem é carregado). `CartRefCapture` remove `cart_ref` **e** `origens_src`/`origens_p` numa só `history.replaceState` antes do GA carregar (o `page_view` é enviado manualmente com `page_location` já sem eles; `withoutCartRef` cobre GA e Meta). `sessionStorage` guarda só o token; o snapshot fica em memória.
