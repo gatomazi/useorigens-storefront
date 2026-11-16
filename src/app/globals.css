@@ -189,6 +189,71 @@ body {
   background: #000;
   color: #fff;
 }
+/* The cookie bar (components/consent/ConsentBanner.tsx): frosted black glass, so the page behind it still shows; a fixed black like .on-ink (the
+   CMS palette must not repaint it). Without backdrop-filter, almost solid, so its white text keeps its contrast over any picture. */
+.consent-glass {
+  background: rgb(10 10 10 / 0.62);
+  color: #fff;
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 -6px 24px rgb(0 0 0 / 0.18);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .consent-glass {
+    background: rgb(10 10 10 / 0.94);
+  }
+}
+/* A second way forward next to the main one ("Trocar cidade", "Ver os outros modelos", the place's page): it reads as a control at a glance — a thin
+   frame, an arrow, a 44px target — without competing with the black button of the step. Plain underlined text was not seen as clickable. */
+.action-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+  padding: 0 0.95rem;
+  border: 1.5px solid color-mix(in srgb, currentColor 32%, transparent);
+  background: rgb(255 255 255 / 0.55);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+.action-link:hover {
+  border-color: currentColor;
+  background: #fff;
+}
+.action-link svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: none;
+  transition: transform 200ms var(--ease-out);
+}
+.action-link:hover svg[data-dir="forward"] {
+  transform: translateX(2px);
+}
+.action-link:hover svg[data-dir="back"] {
+  transform: translateX(-2px);
+}
+/* Folded: a narrow tab on the left edge, read bottom to top, halfway up the screen. */
+.consent-tab {
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-left: 0;
+  box-shadow: 4px 0 16px rgb(0 0 0 / 0.2);
+}
+.consent-tab-button {
+  display: block;
+  min-width: 2.25rem;
+  min-height: 6.5rem;
+  padding: 0.75rem 0.45rem;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 /* "Faixa do topo": each message fades in when it takes its turn (components/layout/TopBarMessages.tsx). */
 .top-bar-in {
   animation: top-bar-in 320ms ease-out;
@@ -499,6 +564,243 @@ a:hover > .photo img,
   }
 }
 
+/* "Quero minha cidade" (components/city-finder/CityFinder.tsx): one column of questions that goes down as they are answered. An answered step folds
+   into one line; the next question opens under it with a rule above, and the designs open as the store's own grid. */
+.city-finder {
+  padding-top: clamp(2rem, 5vw, 4rem);
+  padding-bottom: clamp(3rem, 7vw, 6rem);
+}
+.finder-step {
+  margin-top: clamp(2rem, 4vw, 3rem);
+  padding-top: clamp(1.5rem, 3vw, 2.25rem);
+  border-top: 2px solid var(--ink);
+  animation: journey-in 420ms var(--ease-out) both;
+}
+.finder-step > :not(.finder-models-head, [data-testid="finder-cards"], .finder-all) {
+  max-width: 48rem;
+}
+.finder-question {
+  font-family: var(--font-body-stack);
+  font-weight: 800;
+  font-size: clamp(1.75rem, 4.4vw, 2.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+}
+.finder-question:focus,
+.finder-models-title:focus {
+  outline: none;
+}
+.finder-answer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 1.25rem;
+}
+.finder-answer .t-label {
+  flex-basis: 100%;
+}
+.finder-answer-value {
+  font-family: var(--font-display-stack);
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: clamp(1.75rem, 5vw, 2.75rem);
+  line-height: 1;
+  overflow-wrap: break-word;
+}
+.finder-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0 1rem;
+  border: 2px solid var(--ink);
+  background: #fff;
+  color: var(--ink);
+}
+.finder-field:focus-within {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--region-primary) 35%, transparent);
+}
+.finder-field input {
+  flex: 1;
+  min-width: 0;
+  min-height: 3.25rem;
+  background: transparent;
+  font-size: 1.0625rem;
+  outline: none;
+}
+.finder-field input::placeholder {
+  color: var(--ink-mute);
+}
+.finder-results {
+  border: 2px solid var(--ink);
+  border-top-width: 0;
+  background: #fff;
+}
+.finder-results li + li {
+  border-top: 1px solid var(--line);
+}
+.finder-result {
+  display: flex;
+  width: 100%;
+  min-height: 3rem;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  text-align: left;
+  line-height: 1.25;
+}
+.finder-result:hover,
+.finder-result:focus-visible {
+  background: var(--paper);
+}
+.finder-states {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+@media (min-width: 768px) {
+  .finder-states {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.finder-state {
+  display: grid;
+  align-content: start;
+  width: 100%;
+  min-height: 5.75rem;
+  padding: 0.6rem 0.75rem 0.65rem;
+  border: 2px solid var(--ink);
+  background: #fff;
+  text-align: left;
+  transition: background-color 160ms var(--ease-out), color 160ms var(--ease-out);
+}
+.finder-state:hover,
+.finder-state:focus-visible {
+  background: var(--ink);
+  color: #fff;
+}
+.finder-state-uf {
+  font-family: var(--font-display-stack);
+  font-weight: 800;
+  font-size: 2rem;
+  line-height: 1;
+}
+.finder-state-name {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.finder-state-count {
+  margin-top: 0.15rem;
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-mute);
+}
+.finder-state:hover .finder-state-count,
+.finder-state:focus-visible .finder-state-count {
+  color: rgb(255 255 255 / 0.72);
+}
+/* A state's places, A to Z, in as many columns as the width allows: a few hundred names read like a directory, not a scroll of buttons. */
+.finder-places {
+  columns: 2 11rem;
+  column-gap: 1.5rem;
+}
+.finder-step > .finder-places {
+  max-width: none;
+}
+@media (min-width: 1024px) {
+  .finder-places {
+    columns: 4 12rem;
+  }
+}
+.finder-places li {
+  break-inside: avoid;
+}
+.finder-place {
+  display: block;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+.finder-place:hover,
+.finder-place:focus-visible {
+  background: #fff;
+  font-weight: 600;
+}
+/* The state chooser (components/home/StateStrip.tsx, StateCards.tsx) on a dark ground ("Fundo da página" on a dark theme, or a dark colour of
+   Aparência): the UF letters, the state's outline (drawn in --ink, which a dark ground keeps black) and the name's olive when open or hovered take the
+   text's light colour; on paper inside such a page (`.on-light`) they keep their own colours. */
+.page-dark .state-uf:not(.on-light *),
+.page-dark .state-outline:not(.on-light *),
+.page-dark .state-name:not(.on-light *) {
+  color: inherit;
+}
+/* The window of the home's state chooser (components/city-finder/CityFinderDialog.tsx): a bar in the header's colours that stays on top while the
+   questions scroll under it, and the first question right under the bar (no rule above it). */
+.finder-dialog-bar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3.75rem;
+  padding: 0 var(--gutter);
+  background: var(--nav-header-bg, var(--region-primary));
+  color: var(--nav-header-text, #fff);
+}
+.finder-dialog-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -0.5rem;
+}
+.city-finder.finder-in-dialog {
+  padding-top: 0.5rem;
+}
+/* Its foot: "Voltar ao início" stays at the bottom of the window while the questions scroll above it (full width on a phone, under the thumb). */
+.finder-dialog-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin-top: 2.5rem;
+  padding: 0.75rem 0 calc(0.75rem + env(safe-area-inset-bottom));
+  background: var(--ground);
+  border-top: 1px solid var(--line);
+}
+.finder-dialog-back {
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .finder-dialog-back {
+    width: auto;
+  }
+}
+.finder-in-dialog > .finder-step:first-child {
+  margin-top: 0;
+  border-top: 0;
+}
+.finder-models-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.finder-all {
+  display: grid;
+  gap: 0.75rem;
+  justify-items: start;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -664,6 +966,8 @@ a:hover > .photo img,
 .search-input:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 8px;
+  /* With focus the box is the indicator; the 3px underline inside it would read as a second border. It keeps its space (no layout shift). */
+  border-bottom-color: transparent;
 }
 .photo-poster {
   aspect-ratio: 4 / 5;

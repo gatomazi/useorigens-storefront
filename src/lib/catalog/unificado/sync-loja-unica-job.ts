@@ -1,6 +1,7 @@
 import "server-only";
 import { acquireGarmentSyncLock } from "../garment-sync-state";
 import { syncLojaUnica, type LojaUnicaSyncResult } from "./sync-loja-unica";
+import { rebuildLojaUnicaRecommendations, type RecommendationsRebuild } from "../../recommendations/rebuild";
 
 /**
  * The single store's on-demand catalog sync ("Sincronizar catálogo da loja única" in the panel), in memory like `sync-job.ts` and for the same
@@ -11,7 +12,7 @@ import { syncLojaUnica, type LojaUnicaSyncResult } from "./sync-loja-unica";
 export type LojaUnicaJobState =
   | { status: "idle" }
   | { status: "running"; startedAt: string; page: number; totalPages: number | null }
-  | { status: "succeeded"; startedAt: string; finishedAt: string; result: Extract<LojaUnicaSyncResult, { ok: true }> }
+  | { status: "succeeded"; startedAt: string; finishedAt: string; result: Extract<LojaUnicaSyncResult, { ok: true }>; recommendations?: RecommendationsRebuild }
   | { status: "failed"; startedAt: string; finishedAt: string; error: string };
 
 let job: LojaUnicaJobState = { status: "idle" };
@@ -42,12 +43,12 @@ export function lojaUnicaJobPercent(state: LojaUnicaJobState): number | null {
   return Math.min(99, Math.floor((state.page / state.totalPages) * 100));
 }
 
-export type LojaUnicaJobDeps = { sync?: typeof syncLojaUnica; acquireLock?: typeof acquireGarmentSyncLock };
+export type LojaUnicaJobDeps = { sync?: typeof syncLojaUnica; acquireLock?: typeof acquireGarmentSyncLock; rebuildRecommendations?: typeof rebuildLojaUnicaRecommendations };
 
 /** The job body, run inside `after()` by the action that began it. Never throws: the outcome goes to the job state. `onChanged` invalidates caches. */
 export async function runLojaUnicaJob(running: Extract<LojaUnicaJobState, { status: "running" }>, opts: { onChanged: () => void; deps?: LojaUnicaJobDeps }): Promise<void> {
-  const finished = (rest: { result: Extract<LojaUnicaSyncResult, { ok: true }> } | { error: string }): void => {
-    job = { startedAt: running.startedAt, finishedAt: new Date().toISOString(), ...("result" in rest ? { status: "succeeded", result: rest.result } : { status: "failed", error: rest.error }) };
+  const finished = (rest: { result: Extract<LojaUnicaSyncResult, { ok: true }>; recommendations?: RecommendationsRebuild } | { error: string }): void => {
+    job = { startedAt: running.startedAt, finishedAt: new Date().toISOString(), ...("result" in rest ? { status: "succeeded", result: rest.result, recommendations: rest.recommendations } : { status: "failed", error: rest.error }) };
   };
   let lock: Awaited<ReturnType<typeof acquireGarmentSyncLock>> = null;
   try {
@@ -60,7 +61,9 @@ export async function runLojaUnicaJob(running: Extract<LojaUnicaJobState, { stat
     });
     if (!result.ok) return finished({ error: result.error });
     if (result.changed || result.collections !== null) opts.onChanged();
-    finished({ result });
+    // The button is how a promotion's start/end reaches the site the same day: the INK product page's recommendations follow (never throws).
+    const recommendations = await (opts.deps?.rebuildRecommendations ?? rebuildLojaUnicaRecommendations)();
+    finished({ result, recommendations });
   } catch (err) {
     finished({ error: err instanceof Error ? err.message : String(err) });
   } finally {

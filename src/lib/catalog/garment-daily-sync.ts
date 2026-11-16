@@ -11,6 +11,7 @@ import { runGarmentSync } from "./garment-sync-service";
 import { SINGLE_STORE_KEY, singleStoreDataDir } from "./commerce-mode";
 import { IDENTITY_FILE, syncLojaUnica, type LojaUnicaSyncResult } from "./unificado/sync-loja-unica";
 import { inkFeedUrl, refreshMerchantFeed, type MerchantRefresh } from "../merchant/generate";
+import { rebuildLojaUnicaRecommendations, type RecommendationsRebuild } from "../recommendations/rebuild";
 
 /**
  * Regional stores the daily job no longer reads: Use Norte and Use Centro-Oeste had their INK plans switched off after the single store went live
@@ -31,6 +32,8 @@ export type LojaUnicaDailyStep = {
   garments: { ok: boolean; error?: string; truncated?: boolean; newGarmentBindings?: number } | null;
   /** Google Merchant feed (covers of new products, then the feed). Reported only: it never makes the run unclean. */
   merchant?: MerchantRefresh;
+  /** "Você também pode gostar" on INK's product page, rebuilt from the files just written. Reported only, like `merchant`. */
+  recommendations?: RecommendationsRebuild;
 };
 
 export type DailyGarmentSyncResult =
@@ -77,9 +80,11 @@ async function syncLojaUnicaDaily(): Promise<LojaUnicaDailyStep> {
   } catch (err) {
     garments = { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
+  // After catalog, collections and pieces: the index reads all three.
+  const recommendations = await rebuildLojaUnicaRecommendations();
   // Skipped (and silent) until INK_GOOGLE_FEED_URL is configured.
   const merchant = inkFeedUrl() ? await refreshMerchantFeed() : undefined;
-  return { catalog, garments, ...(merchant ? { merchant } : {}) };
+  return { catalog, garments, recommendations, ...(merchant ? { merchant } : {}) };
 }
 
 /** One JSON line per event: Railway's log stream is the only history of these runs (nothing is persisted per run). */
@@ -134,7 +139,7 @@ export async function runDailyGarmentSync(options: DailyGarmentSyncOptions): Pro
     const lojaUnica = lojaUnicaStep ? await lojaUnicaStep() : undefined;
     if (lojaUnica) {
       if (lojaUnica.catalog.ok && lojaUnica.catalog.changed) options.onCatalogChanged();
-      log("loja-unica", { catalog: lojaUnica.catalog, garments: lojaUnica.garments, ...(lojaUnica.merchant ? { merchant: lojaUnica.merchant } : {}) });
+      log("loja-unica", { catalog: lojaUnica.catalog, garments: lojaUnica.garments, ...(lojaUnica.recommendations ? { recommendations: lojaUnica.recommendations } : {}), ...(lojaUnica.merchant ? { merchant: lojaUnica.merchant } : {}) });
     }
 
     const garmentRequests = garments.stores.reduce((sum, s) => sum + (s.ok ? s.metrics.requests : 0), 0);

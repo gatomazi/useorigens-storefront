@@ -101,7 +101,7 @@ function fetchJourney(region: RegionSlug, place: JourneyPick): Promise<CityJourn
 
 // The region's places with designs (the compact index the city search has always used), asked for the first time a state is opened.
 const regionPlaces = new Map<RegionSlug, Promise<SearchCity[]>>();
-function fetchPlaces(region: RegionSlug): Promise<SearchCity[]> {
+export function fetchPlaces(region: RegionSlug): Promise<SearchCity[]> {
   const known = regionPlaces.get(region);
   if (known) return known;
   const request = fetch(`/api/cidades/${region}`).then(async (res) => {
@@ -118,7 +118,7 @@ const ACCENT = "text-[var(--region-accent-ink,var(--region-primary))]";
 
 function ArrowIcon({ className, back = false }: { className: string; back?: boolean }) {
   return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" viewBox="0 0 24 24" className={className} data-dir={back ? "back" : "forward"} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <path d={back ? "M19 12H5M11 6l-6 6 6 6" : "M5 12h14M13 6l6 6-6 6"} />
     </svg>
   );
@@ -606,8 +606,9 @@ export function CityJourney({ region, picks = [], finishIn }: {
   const placeLink = (className: string) =>
     data && (
       <p className={className}>
-        <Link href={data.place.page} onClick={close} className="link-static inline-flex min-h-11 items-center font-semibold">
+        <Link href={data.place.page} onClick={close} className="action-link">
           Ver a página de {data.place.name}
+          <ArrowIcon className="h-4 w-4" />
         </Link>
       </p>
     );
@@ -758,7 +759,8 @@ export function CityJourney({ region, picks = [], finishIn }: {
             </h2>
             <p className="t-place mt-2 text-ink-soft">{data?.place.subtitle ?? STATE_NAMES[place.uf] ?? place.uf}</p>
           </div>
-          <button type="button" onClick={() => goTo("city")} className="link-static inline-flex min-h-11 items-center font-semibold xl:mt-2">
+          <button type="button" onClick={() => goTo("city")} className="action-link shrink-0 xl:mt-2" data-testid="journey-change-city">
+            <ArrowIcon className="h-4 w-4" back />
             Trocar cidade
           </button>
         </div>
@@ -779,8 +781,9 @@ export function CityJourney({ region, picks = [], finishIn }: {
               <button type="button" onClick={retry} className="btn btn-ghost">
                 Tentar de novo
               </button>
-              <Link href={placePage} onClick={close} className="link-static inline-flex min-h-11 items-center font-semibold">
+              <Link href={placePage} onClick={close} className="action-link">
                 Abrir a página de {place.name}
+                <ArrowIcon className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -876,13 +879,15 @@ export function CityJourney({ region, picks = [], finishIn }: {
           <p className="t-small text-ink-soft">Este modelo está disponível em {piece.label.toLowerCase()}.</p>
         )}
         <p className="t-small mt-4 text-ink-soft lg:hidden">{model.description}</p>
-        <div className="mt-4 flex flex-col items-start gap-1 lg:mt-6">
+        <div className="mt-4 flex flex-col items-start gap-2 lg:mt-6">
           {model.versions > 0 && (
-            <Link href={model.page} onClick={close} className="link-static inline-flex min-h-11 items-center font-semibold">
+            <Link href={model.page} onClick={close} className="action-link">
               {model.versions === 1 ? "Ver mais 1 versão deste modelo" : `Ver mais ${model.versions} versões deste modelo`}
+              <ArrowIcon className="h-4 w-4" />
             </Link>
           )}
-          <button type="button" onClick={() => goTo("model")} className="link-static inline-flex min-h-11 items-center font-semibold">
+          <button type="button" onClick={() => goTo("model")} className="action-link">
+            <ArrowIcon className="h-4 w-4" back />
             Ver os outros modelos de {data.place.name}
           </button>
         </div>

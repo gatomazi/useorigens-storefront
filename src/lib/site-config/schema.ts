@@ -349,6 +349,12 @@ export type Section = {
    * none. The images are resolved into the published media table like any section image.
    */
   stateCovers?: Record<string, MediaRef>;
+  /**
+   * State chooser only: what a tap on a state does. Absent = opens the state's page (as always); "finder" = the "Quero minha cidade" window opens on
+   * the page, on that state's places, and goes on to the chosen place's designs (src/components/city-finder/CityFinderDialog.tsx). The state's link
+   * stays a real link (a new tab, the crawlers).
+   */
+  stateAction?: "finder";
   /** Image grid only: the tiles, in order (MIN_GRID_TILES..MAX_GRID_TILES). */
   tiles?: GridTile[];
   /** Image grid only. */
@@ -1026,6 +1032,7 @@ function checkSection(c: Collector, path: string, v: unknown): void {
     if (v.template === "hero" || v.template === "footer" || v.template === "page-hero") c.fail(`${path}.regions`, "the opening and the footer show in every region");
     else if (!Array.isArray(v.regions) || v.regions.length === 0 || v.regions.some((r) => !(REGION_SLUGS as readonly unknown[]).includes(r)) || new Set(v.regions).size !== v.regions.length) c.fail(`${path}.regions`, "one or more regions, each at most once");
   }
+  if (v.stateAction !== undefined && (v.template !== "states" || v.stateAction !== "finder")) c.fail(`${path}.stateAction`, "state chooser only: \"finder\" or absent");
   if (v.stateCovers !== undefined) {
     if (v.template !== "states" || !isRecord(v.stateCovers) || Object.keys(v.stateCovers).length > 27) c.fail(`${path}.stateCovers`, "state chooser only, at most one cover per state");
     else for (const [uf, ref] of Object.entries(v.stateCovers)) {

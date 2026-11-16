@@ -11,6 +11,7 @@ import { HeroColorsEditor } from "@/components/admin/HeroColorsEditor";
 import { HeroFeaturedProducts, type FeaturedSlotView } from "@/components/admin/HeroFeaturedProducts";
 import type { FeaturedCandidate } from "@/lib/hero-featured";
 import { heroTextColors, readability } from "@/lib/admin/contrast";
+import { fillTone } from "@/lib/site-config/color";
 import { suggestedNavLabel } from "@/lib/site-config/nav";
 import { PRODUCT_CARD_IMAGE, sectionImageSizes, sizeHintText, STATE_COVER } from "@/lib/admin/image-sizes";
 import { DEFAULT_BUY_LABEL, HERO_CARDS, MAX_BUY_LABEL, MAX_CITY_STYLES, MAX_FEATURED, MAX_TAG_TEXT, maxSectionProducts, MIN_SECTION_PRODUCTS, type Appearance, type HomeThemeName, type ProductDisplay, type Section } from "@/lib/site-config/schema";
@@ -150,7 +151,7 @@ export function SectionEditorForm({
   const isCarousel = section.template === "product-carousel";
   const hasVisual = isCarousel || section.template === "hero" || section.template === "page-hero" || section.template === "campaign" || section.template === "city-styles" || section.template === "states" || section.template === "image-grid" || section.template === "personalization-live";
 
-  const [tone, setTone] = useState<"light" | "dark">(isCarousel ? section.layout?.tone ?? "light" : section.template === "campaign" ? "dark" : section.template === "page-hero" ? section.layout?.tone ?? "dark" : "light");
+  const [tone, setTone] = useState<"light" | "dark">(isCarousel ? section.layout?.tone ?? "light" : section.template === "campaign" ? "dark" : section.template === "page-hero" ? section.layout?.tone ?? "dark" : section.template === "states" ? section.layout?.tone ?? "light" : "light");
   const [fillKind, setFillKind] = useState<"none" | "solid" | "gradient">(a.fill.kind);
   // The composition being chosen (the grid shows the checkpoint fields only in "Checkpoints semanais", before it is saved).
   const [variantNow, setVariantNow] = useState<string>(section.variant ?? "");
@@ -198,7 +199,9 @@ export function SectionEditorForm({
     focal: { mobile: focM, desktop: focD },
     overlay: overlayKind === "preset" ? { preset: preset as "none" } : { color: ovColor as `#${string}`, opacity: ovOpacity },
   };
-  const issues = hasVisual && !(section.template === "campaign" && !hasImage && fillKind === "none") ? readability(liveAppearance, tone, hasImage, heroTextColors(section), section.template === "product-carousel" && section.layout?.glass === true ? (ground ?? "token:ground") : undefined) : [];
+  // The state chooser judges as it renders (validate-draft.ts `sectionReadability`): nothing without colour or picture, a colour with its own text.
+  const statesIssues = section.template === "states" && !hasImage ? (fillKind === "none" ? [] : readability(liveAppearance, fillTone(liveAppearance.fill) === "light" ? "dark" : "light", false)) : null;
+  const issues = statesIssues ?? (hasVisual && !(section.template === "campaign" && !hasImage && fillKind === "none") ? readability(liveAppearance, tone, hasImage, heroTextColors(section), section.template === "product-carousel" && section.layout?.glass === true ? (ground ?? "token:ground") : undefined) : []);
 
   const cur = section.source;
   return (
@@ -289,6 +292,38 @@ export function SectionEditorForm({
           </div>
         )}
       </fieldset>
+      )}
+
+      {!regional && section.template === "states" && (
+        <fieldset className="space-y-4">
+          <legend className="a-h2 mb-3">Ao tocar num estado</legend>
+          <input type="hidden" name="state_choice_present" value="1" />
+          <label className="flex items-start gap-2">
+            <input type="radio" name="state_action" value="page" defaultChecked={section.stateAction !== "finder"} className="mt-1" />
+            <span><span className="block font-bold">Abrir a página do estado</span><span className="a-muted block text-[0.8125rem]">Como sempre: a página com as cidades, as regiões e os destaques do estado.</span></span>
+          </label>
+          <label className="flex items-start gap-2">
+            <input type="radio" name="state_action" value="finder" defaultChecked={section.stateAction === "finder"} className="mt-1" />
+            <span><span className="block font-bold">Escolher a cidade aqui (Quero minha cidade)</span><span className="a-muted block text-[0.8125rem]">Abre uma janela por cima da página, já nas cidades do estado tocado; escolhida a cidade, aparecem os modelos dela, com o caminho para a página da cidade. Quem abrir o estado em outra aba continua indo para a página do estado.</span></span>
+          </label>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="a-label" htmlFor="state_surface">Fundo, sem cor nem imagem em Aparência</label>
+              <select id="state_surface" name="state_surface" className="a-select" defaultValue={section.layout?.surface === "plain" ? "plain" : "paper"}>
+                <option value="paper">Papel (claro)</option>
+                <option value="plain">Fundo da página (no tema escuro, texto claro)</option>
+              </select>
+            </div>
+            <div>
+              <label className="a-label" htmlFor="layout_tone">Cor do texto sobre uma imagem de Aparência</label>
+              <select id="layout_tone" name="layout_tone" className="a-select" value={tone} onChange={(e) => setTone(e.target.value as "light" | "dark")}>
+                <option value="light">Escuro (para imagens claras)</option>
+                <option value="dark">Claro (para imagens escuras)</option>
+              </select>
+            </div>
+          </div>
+          <p className="a-muted text-[0.8125rem]">Com uma cor em Aparência, o texto se ajusta sozinho: claro sobre cor escura, escuro sobre cor clara.</p>
+        </fieldset>
       )}
 
       {section.template === "states" && stateCovers && (

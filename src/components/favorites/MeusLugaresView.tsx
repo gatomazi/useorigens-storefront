@@ -131,7 +131,7 @@ export function MeusLugaresView({ region, storeLabels = {} }: { region: RegionSl
         <h1 className="t-h2">Minhas Estampas</h1>
         <p className="t-body mt-3 max-w-xl text-ink-soft">Toque no coração de uma estampa para guardá-la aqui e montar sua seleção. As camisetas que você personalizar também aparecem aqui.</p>
         <p className="mt-6">
-          <Link href={`/${region}`} className="link-line text-[0.9375rem] font-semibold">
+          <Link href={`/${region}`} className="btn">
             Explorar estampas
           </Link>
         </p>

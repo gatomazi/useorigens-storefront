@@ -9,14 +9,10 @@
 import { performance } from "node:perf_hooks";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
-import { readSnapshotSync, snapshotPath } from "../src/lib/catalog/snapshot-file";
-import { collectionsPath, readCollectionsFile } from "../src/lib/catalog/collections-file";
-import { garmentIndexPath, readGarmentIndexSync } from "../src/lib/catalog/garment-index-file";
 import { SINGLE_STORE_KEY, singleStoreDataDir } from "../src/lib/catalog/commerce-mode";
-import { readPublished } from "../src/lib/site-config/published";
 import type { CommerceStoreKey } from "../src/lib/geo/regions";
-import { buildRecommendationsIndex, lookupRecommendations, serializeIndex, type StoreBuildInput } from "../src/lib/recommendations/build";
-import { featuredCollectionIds } from "../src/lib/recommendations/cms";
+import { buildRecommendationsIndex, lookupRecommendations, serializeIndex } from "../src/lib/recommendations/build";
+import { readRecommendationInputs } from "../src/lib/recommendations/rebuild";
 import { recommendationsIndexPath, writeAndPromote } from "../src/lib/recommendations/index-file";
 import { writeAudit } from "../src/lib/recommendations/audit";
 
@@ -33,37 +29,13 @@ const dataDir = lojaUnica ? singleStoreDataDir() : undefined;
 const wanted = (lojaUnica ? [SINGLE_STORE_KEY] : (value("--stores")?.split(",") ?? ["use-sul", "use-norte", "use-centro"])) as CommerceStoreKey[];
 
 const t0 = performance.now();
-const { snapshot } = readSnapshotSync(dataDir ? snapshotPath(dataDir) : undefined);
-if (lojaUnica && (snapshot.source?.mode !== "single-store" || snapshot.source.simulation)) {
+const { inputs, skipped, singleStore, cms } = readRecommendationInputs(wanted, dataDir);
+if (lojaUnica && (singleStore?.mode !== "single-store" || singleStore.simulation)) {
   console.error("refusing --loja-unica: the snapshot there is not a production single-store snapshot (a simulation would recommend hidden products)");
   process.exit(1);
 }
-const { snapshot: collections } = readCollectionsFile(dataDir ? collectionsPath(dataDir) : undefined);
-const { index: garments } = readGarmentIndexSync(dataDir ? garmentIndexPath(dataDir) : undefined);
-const published = readPublished();
-const bundle = published.source === "published" ? published.bundle : null;
+for (const store of skipped) console.warn(`${store}: no catalog snapshot, skipped`);
 const tRead = performance.now();
-
-const inputs: StoreBuildInput[] = [];
-for (const store of wanted) {
-  const index = snapshot.stores[store];
-  if (!index) {
-    console.warn(`${store}: no catalog snapshot, skipped`);
-    continue;
-  }
-  const storeCollections = collections.stores[store];
-  const garmentClusters: Record<string, string[]> = {};
-  for (const [cluster, tuples] of Object.entries(garments.stores[store]?.clusters ?? {})) garmentClusters[cluster] = tuples.map((t) => t[1]);
-  inputs.push({
-    store,
-    syncedAt: [index.syncedAt, storeCollections?.syncedAt ?? ""].sort().at(-1)!,
-    bindings: index.bindings,
-    merch: index.merch,
-    collections: storeCollections?.collections ?? [],
-    featuredCollectionIds: featuredCollectionIds(bundle, store),
-    garmentClusters,
-  });
-}
 
 const result = buildRecommendationsIndex(inputs, { debug: Boolean(auditDir) });
 const text = serializeIndex(result.index);
@@ -83,7 +55,7 @@ for (let round = 0; round < 5; round++) for (const [region, id] of sample) found
 const lookupUs = ((performance.now() - tl0) * 1000) / Math.max(1, sample.length * 5);
 
 console.log(JSON.stringify({
-  inputs: { catalog: Object.fromEntries(inputs.map((i) => [i.store, { bindings: i.bindings.length, merch: i.merch.length, collections: i.collections.length, featuredCollections: i.featuredCollectionIds?.size ?? 0, garmentClusters: Object.keys(i.garmentClusters ?? {}).length }])), cms: published.source },
+  inputs: { catalog: Object.fromEntries(inputs.map((i) => [i.store, { bindings: i.bindings.length, merch: i.merch.length, collections: i.collections.length, featuredCollections: i.featuredCollectionIds?.size ?? 0, garmentClusters: Object.keys(i.garmentClusters ?? {}).length }])), cms },
   stats: result.stats,
   bytes: Buffer.byteLength(text),
   generatedAt: result.index.generatedAt,

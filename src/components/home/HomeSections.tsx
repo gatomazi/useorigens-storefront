@@ -16,6 +16,7 @@ import { RegionHero } from "@/components/home/RegionHero";
 import { Fragment } from "react";
 import { StateCards } from "@/components/home/StateCards";
 import { StateStrip } from "@/components/home/StateStrip";
+import { CityFinderDialog } from "@/components/city-finder/CityFinderDialog";
 import { cssColor } from "@/components/banners/SectionBackdrop";
 import { colorTone, fillTone } from "@/lib/site-config/color";
 import type { BannerAsset } from "@/lib/editorial/banners";
@@ -186,11 +187,17 @@ export function HomeSections({
             const states = home.states.filter((st) => st.cityCount > 0);
             if (states.length === 0) return null;
             const visual = hasImage(bg) || bg.fill.kind !== "none";
-            const backdrop = visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : darkPage ? paperLayer : undefined;
+            // The band's ground, chosen in the panel: a colour or picture of Aparência (text by the colour, or by the tone chosen for a picture);
+            // without one, paper (dark text, as always) or the page's own ground, whose text it then follows (light on a dark home theme).
+            const lightText = visual && (hasImage(bg) ? s.layout?.tone === "dark" : fillTone(bg.fill) === "light");
+            const ownGround = !visual && s.layout?.surface === "plain";
+            const backdrop = visual ? <SectionBackdrop bg={bg} priority={priorityId === s.id} /> : darkPage && !ownGround ? paperLayer : undefined;
+            const surfaceClass = lightText ? "page-dark own-surface" : darkPage && !ownGround ? onLightSurface : undefined;
+            const opensFinder = s.stateAction === "finder";
             return (
               <Fragment key={s.id}>
                 {s.variant === "strip" ? (
-                  <StateStrip region={region} states={states} title={s.title ?? "Escolha o seu estado"} subtitle={s.subtitle} anchor={s.anchor} headingId={s.headingId} backdrop={backdrop} className={darkPage ? onLightSurface : undefined} />
+                  <StateStrip region={region} states={states} title={s.title ?? "Escolha o seu estado"} subtitle={s.subtitle} anchor={s.anchor} headingId={s.headingId} backdrop={backdrop} className={surfaceClass} opensFinder={opensFinder} />
                 ) : (
                 <StateCards
                   region={region}
@@ -200,10 +207,13 @@ export function HomeSections({
                   anchor={s.anchor}
                   headingId={s.headingId}
                   backdrop={backdrop}
-                  className={darkPage ? onLightSurface : undefined}
+                  className={surfaceClass}
                   covers={resolveStateCovers(s, media)}
+                  opensFinder={opensFinder}
                 />
                 )}
+                {/* The window a state opens, one per page; its states are the chooser's own, with the same counts. */}
+                {opensFinder && <CityFinderDialog region={region} states={states.map((st) => ({ uf: st.uf, name: st.name, region, places: st.cityCount + st.administrativeRegionCount }))} buy={cardButton} />}
                 {/* "Meu Pequeno Mundo" right after the state chooser, on the home only, when its entries are on (src/lib/mundo/flag.ts). */}
                 {!page && mundoEntradasAtivas() && <MundoBlocoHome region={region} />}
                 {/* "Quem está no pódio?" follows the state chooser on the home only (never on a hotpage), unless the region switched it off — docs/storefront/podio.md. */}

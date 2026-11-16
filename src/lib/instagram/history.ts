@@ -1,6 +1,6 @@
 /**
  * The message history kept by the Instagram webhook (repository instagram-webhook-go, `history.go`): what came in from customers and what
- * went out (public replies, DMs with links, the DM bot, the team typing by hand). The webhook keeps 10 days and deletes the rest; the panel
+ * went out (public replies, DMs with links, the DM bot, the team typing by hand). The webhook keeps 3 days and deletes the rest; the panel
  * only reads it. Everything here is pure: parsing of the webhook's JSON (never trusted as-is) and the labels the pages show.
  */
 
@@ -120,7 +120,7 @@ export function parseConversationList(v: unknown): ConversationList {
       };
     })
     .filter((c): c is ConversationSummary => c !== null);
-  return { retentionDays: num(o.retencao_dias) || 10, botMode: str(o.bot_dm_modo, 20) || "off", conversations };
+  return { retentionDays: num(o.retencao_dias) || 3, botMode: str(o.bot_dm_modo, 20) || "off", conversations };
 }
 
 export function parseConversation(v: unknown): Conversation | null {

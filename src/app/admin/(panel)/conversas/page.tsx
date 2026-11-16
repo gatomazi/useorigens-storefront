@@ -26,7 +26,7 @@ export default async function ConversationsPage({ searchParams }: { searchParams
         <h1 className="a-h1">Conversas do Instagram</h1>
         <p className="a-muted mt-3 max-w-3xl">
           O que entrou (comentários e DMs) e o que saiu (respostas públicas, DMs com link, bot de DMs e respostas da equipe). O webhook guarda{" "}
-          {result.ok ? result.data.retentionDays : 10} dias e apaga o resto sozinho; o painel só lê.
+          {result.ok ? result.data.retentionDays : 3} dias e apaga o resto sozinho; o painel só lê.
         </p>
         {result.ok && (
           <p className="mt-3 text-[0.875rem]">

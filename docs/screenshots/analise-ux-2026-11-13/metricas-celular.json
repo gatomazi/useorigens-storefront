@@ -1,0 +1,1092 @@
+{
+ "report": {
+  "busca-floripa": [
+   "Florianópolis Santa Catarina · Grande Florianópolis",
+   "Ver todos os produtos para “floripa” →"
+  ],
+  "busca-typo": [
+   "Ver todos os produtos para “florianopolsi” →",
+   "Paraná",
+   "Santa Catarina",
+   "Rio Grande do Sul"
+  ],
+  "busca-vazio": [
+   "Ver todos os produtos para “zzzxq” →",
+   "Paraná",
+   "Santa Catarina",
+   "Rio Grande do Sul"
+  ],
+  "busca-termo-generico": [
+   "Ver todos os produtos para “camiseta preta” →",
+   "Paraná",
+   "Santa Catarina",
+   "Rio Grande do Sul"
+  ],
+  "05-sua-cidade-abrir": {
+   "url": "https://www.useorigens.com.br/sul",
+   "title": "Camisetas do Sul e da Sua Cidade | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 7500,
+   "overflowX": false,
+   "h1": [
+    "A ORIGEM ENTRA NA BLACK."
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "dialog",
+     "label": "Sua cidade",
+     "x": 0,
+     "y": 0,
+     "w": 390,
+     "h": 844
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 10,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    },
+    {
+     "label": "Ponto de Origem",
+     "x": 16,
+     "y": 6039,
+     "w": 133,
+     "h": 40
+    },
+    {
+     "label": "Feito em",
+     "x": 157,
+     "y": 6039,
+     "w": 82,
+     "h": 40
+    },
+    {
+     "label": "Coordenadas",
+     "x": 248,
+     "y": 6039,
+     "w": 113,
+     "h": 40
+    },
+    {
+     "label": "Legado",
+     "x": 368,
+     "y": 6039,
+     "w": 73,
+     "h": 40
+    },
+    {
+     "label": "Território",
+     "x": 450,
+     "y": 6039,
+     "w": 88,
+     "h": 40
+    },
+    {
+     "label": "Tipografia",
+     "x": 546,
+     "y": 6039,
+     "w": 91,
+     "h": 40
+    },
+    {
+     "label": "Traço",
+     "x": 645,
+     "y": 6039,
+     "w": 64,
+     "h": 40
+    }
+   ],
+   "tinyText": 38,
+   "tinySample": [
+    "10px \"15\"",
+    "10px \"% OFF\"",
+    "10px \"Black Friday\"",
+    "10px \"15\"",
+    "10px \"% OFF\""
+   ],
+   "imgs": 37,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul",
+   "lcpMs": 328,
+   "cls": 0,
+   "dcl": 449,
+   "load": 1052,
+   "wallMs": 4736
+  },
+  "06-estado-sc": {
+   "url": "https://www.useorigens.com.br/sul/sc",
+   "title": "Camisetas Catarinenses e de Cidades de SC | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 7912,
+   "overflowX": false,
+   "h1": [
+    "SANTA CATARINA"
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 2,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    },
+    {
+     "label": "Sul",
+     "x": 16,
+     "y": 111,
+     "w": 18,
+     "h": 17
+    }
+   ],
+   "tinyText": 0,
+   "tinySample": [],
+   "imgs": 211,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul/sc",
+   "lcpMs": 1176,
+   "cls": 0,
+   "dcl": 509,
+   "load": 1636,
+   "wallMs": 4963
+  },
+  "07-cidade-floripa": {
+   "url": "https://www.useorigens.com.br/sul/sc/florianopolis",
+   "title": "Camisetas de Florianópolis, SC | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 5091,
+   "overflowX": false,
+   "h1": [
+    "FLORIANÓPOLIS"
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 14,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    },
+    {
+     "label": "Sul",
+     "x": 16,
+     "y": 111,
+     "w": 18,
+     "h": 17
+    },
+    {
+     "label": "Santa Catarina",
+     "x": 46,
+     "y": 111,
+     "w": 86,
+     "h": 17
+    },
+    {
+     "label": "Camiseta clássica 9",
+     "x": 16,
+     "y": 426,
+     "w": 154,
+     "h": 40
+    },
+    {
+     "label": "Algodão Peruano 8",
+     "x": 178,
+     "y": 426,
+     "w": 149,
+     "h": 40
+    },
+    {
+     "label": "Oversized 8",
+     "x": 335,
+     "y": 426,
+     "w": 104,
+     "h": 40
+    },
+    {
+     "label": "Regata 8",
+     "x": 448,
+     "y": 426,
+     "w": 85,
+     "h": 40
+    },
+    {
+     "label": "Cropped 8",
+     "x": 540,
+     "y": 426,
+     "w": 97,
+     "h": 40
+    }
+   ],
+   "tinyText": 18,
+   "tinySample": [
+    "10px \"16\"",
+    "10px \"% OFF\"",
+    "10px \"16\"",
+    "10px \"% OFF\"",
+    "10px \"16\""
+   ],
+   "imgs": 16,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul/sc/florianopolis",
+   "lcpMs": 688,
+   "cls": 0,
+   "dcl": 300,
+   "load": 653,
+   "wallMs": 4225
+  },
+  "08-estampa": {
+   "url": "https://www.useorigens.com.br/sul/sc/florianopolis/feito-em",
+   "title": "Feito em de Florianópolis, SC | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 3342,
+   "overflowX": false,
+   "h1": [
+    "Feito em"
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 4,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    },
+    {
+     "label": "Sul",
+     "x": 16,
+     "y": 111,
+     "w": 18,
+     "h": 17
+    },
+    {
+     "label": "Santa Catarina",
+     "x": 46,
+     "y": 111,
+     "w": 86,
+     "h": 17
+    },
+    {
+     "label": "Florianópolis",
+     "x": 145,
+     "y": 111,
+     "w": 76,
+     "h": 17
+    }
+   ],
+   "tinyText": 16,
+   "tinySample": [
+    "10px \"16\"",
+    "10px \"% OFF\"",
+    "10px \"16\"",
+    "10px \"% OFF\"",
+    "10px \"16\""
+   ],
+   "imgs": 11,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul/sc/florianopolis/feito-em",
+   "lcpMs": 932,
+   "cls": 0,
+   "dcl": 426,
+   "load": 804,
+   "wallMs": 3855
+  },
+  "09-colecao": {
+   "url": "https://www.useorigens.com.br/sul/colecoes/da-nossa-terra",
+   "title": "Da Nossa Terra · Use Origens Sul | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 5388,
+   "overflowX": false,
+   "h1": [
+    "DA NOSSA TERRA"
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 1,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    }
+   ],
+   "tinyText": 48,
+   "tinySample": [
+    "10px \"16\"",
+    "10px \"% OFF\"",
+    "10px \"16\"",
+    "10px \"% OFF\"",
+    "10px \"16\""
+   ],
+   "imgs": 26,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul/colecoes/da-nossa-terra",
+   "robots": "index, follow",
+   "lcpMs": 588,
+   "cls": 0,
+   "dcl": 496,
+   "load": 1028,
+   "wallMs": 3997
+  },
+  "10-busca-pagina": {
+   "url": "https://www.useorigens.com.br/sul/busca?q=floripa",
+   "title": "Busca por “floripa” | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 3029,
+   "overflowX": false,
+   "h1": [
+    "Buscar estampas"
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 1,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    }
+   ],
+   "tinyText": 0,
+   "tinySample": [],
+   "imgs": 11,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul/busca",
+   "robots": "noindex, follow",
+   "lcpMs": 484,
+   "cls": 0,
+   "dcl": 389,
+   "load": 477,
+   "wallMs": 3658
+  },
+  "11-meus-lugares": {
+   "url": "https://www.useorigens.com.br/sul/minhas-estampas",
+   "title": "Minhas Estampas | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 1224,
+   "overflowX": false,
+   "h1": [
+    "Minhas Estampas"
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 1,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    }
+   ],
+   "tinyText": 0,
+   "tinySample": [],
+   "imgs": 2,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul/minhas-estampas",
+   "robots": "noindex, follow",
+   "lcpMs": 544,
+   "cls": 0,
+   "dcl": 541,
+   "load": 580,
+   "wallMs": 3916
+  },
+  "12-outros-artigos": {
+   "url": "https://www.useorigens.com.br/sul/outros-artigos",
+   "title": "Outros artigos | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 6943,
+   "overflowX": false,
+   "h1": [
+    "OUTROS ARTIGOS"
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 1,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    }
+   ],
+   "tinyText": 1,
+   "tinySample": [
+    "11px \"Personalizável\""
+   ],
+   "imgs": 27,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul/outros-artigos",
+   "lcpMs": 496,
+   "cls": 0,
+   "dcl": 494,
+   "load": 1602,
+   "wallMs": 4477
+  },
+  "13-personalizar-natal": {
+   "url": "https://www.useorigens.com.br/sul/personalizar/natal-em-familia",
+   "title": "Natal em família · Personalização · Use Origens Sul | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 2528,
+   "overflowX": false,
+   "h1": [
+    "NATAL EM FAMÍLIA"
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 17,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    },
+    {
+     "label": "← Todas as estampas personalizáveis",
+     "x": 16,
+     "y": 113,
+     "w": 255,
+     "h": 20
+    },
+    {
+     "label": "peer sr-only",
+     "x": 15,
+     "y": 758,
+     "w": 1,
+     "h": 1
+    },
+    {
+     "label": "peer sr-only",
+     "x": 76,
+     "y": 758,
+     "w": 1,
+     "h": 1
+    },
+    {
+     "label": "peer sr-only",
+     "x": 137,
+     "y": 758,
+     "w": 1,
+     "h": 1
+    },
+    {
+     "label": "peer sr-only",
+     "x": 199,
+     "y": 758,
+     "w": 1,
+     "h": 1
+    },
+    {
+     "label": "peer sr-only",
+     "x": 260,
+     "y": 758,
+     "w": 1,
+     "h": 1
+    },
+    {
+     "label": "peer sr-only",
+     "x": 15,
+     "y": 819,
+     "w": 1,
+     "h": 1
+    }
+   ],
+   "tinyText": 0,
+   "tinySample": [],
+   "imgs": 8,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul/personalizar/natal-em-familia",
+   "robots": "noindex, follow",
+   "lcpMs": 680,
+   "cls": 0,
+   "dcl": 1187,
+   "load": 1188,
+   "wallMs": 4435
+  },
+  "14-seja-parceiro": {
+   "url": "https://www.useorigens.com.br/sul/seja-parceiro",
+   "title": "Seja parceiro | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 10446,
+   "overflowX": false,
+   "h1": [
+    "A SUA CIDADE COM O SEU NOME."
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 7,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    },
+    {
+     "label": "Como funciona",
+     "x": 16,
+     "y": 574,
+     "w": 110,
+     "h": 24
+    },
+    {
+     "label": "mt-1 h-4 w-4 shrink-0 accent-white",
+     "x": 30,
+     "y": 8179,
+     "w": 16,
+     "h": 16
+    },
+    {
+     "label": "mt-1 h-4 w-4 shrink-0 accent-white",
+     "x": 30,
+     "y": 8258,
+     "w": 16,
+     "h": 16
+    },
+    {
+     "label": "mt-1 h-4 w-4 shrink-0 accent-white",
+     "x": 30,
+     "y": 8338,
+     "w": 16,
+     "h": 16
+    },
+    {
+     "label": "_R_51bsnoebtb_-hp",
+     "x": -9999,
+     "y": 9323,
+     "w": 175,
+     "h": 24
+    },
+    {
+     "label": "mt-1 h-5 w-5 shrink-0 accent-[var(--colo",
+     "x": 16,
+     "y": 9231,
+     "w": 20,
+     "h": 20
+    }
+   ],
+   "tinyText": 0,
+   "tinySample": [],
+   "imgs": 7,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/sul/seja-parceiro",
+   "lcpMs": 564,
+   "cls": 0,
+   "dcl": 311,
+   "load": 565,
+   "wallMs": 3743
+  },
+  "15-404": {
+   "url": "https://www.useorigens.com.br/sul/sc/cidade-que-nao-existe",
+   "title": "Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 1582,
+   "overflowX": false,
+   "h1": [
+    "AINDA NÃO ENCONTRAMOS ESSA PÁGINA."
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 1,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    }
+   ],
+   "tinyText": 0,
+   "tinySample": [],
+   "imgs": 2,
+   "imgNoAlt": 0,
+   "robots": "noindex",
+   "lcpMs": 620,
+   "cls": 0,
+   "dcl": 446,
+   "load": 790,
+   "wallMs": 4068
+  },
+  "16-norte": {
+   "url": "https://www.useorigens.com.br/norte",
+   "title": "Camisetas do Norte e da Sua Cidade | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 4920,
+   "overflowX": false,
+   "h1": [
+    "A ORIGEM ENTRA NA BLACK."
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 10,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    },
+    {
+     "label": "Ponto de Origem",
+     "x": 16,
+     "y": 3282,
+     "w": 133,
+     "h": 40
+    },
+    {
+     "label": "Feito em",
+     "x": 157,
+     "y": 3282,
+     "w": 82,
+     "h": 40
+    },
+    {
+     "label": "Coordenadas",
+     "x": 248,
+     "y": 3282,
+     "w": 113,
+     "h": 40
+    },
+    {
+     "label": "Legado",
+     "x": 368,
+     "y": 3282,
+     "w": 73,
+     "h": 40
+    },
+    {
+     "label": "Território",
+     "x": 450,
+     "y": 3282,
+     "w": 88,
+     "h": 40
+    },
+    {
+     "label": "Tipografia",
+     "x": 546,
+     "y": 3282,
+     "w": 91,
+     "h": 40
+    },
+    {
+     "label": "Traço",
+     "x": 645,
+     "y": 3282,
+     "w": 64,
+     "h": 40
+    }
+   ],
+   "tinyText": 14,
+   "tinySample": [
+    "10px \"15\"",
+    "10px \"% OFF\"",
+    "10px \"Black Friday\"",
+    "10px \"15\"",
+    "10px \"% OFF\""
+   ],
+   "imgs": 26,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/norte",
+   "lcpMs": 612,
+   "cls": 0,
+   "dcl": 407,
+   "load": 793,
+   "wallMs": 3915
+  },
+  "17-centro-oeste": {
+   "url": "https://www.useorigens.com.br/centro-oeste",
+   "title": "Camisetas do Centro-Oeste e da Sua Cidade | Use Origens",
+   "docW": 390,
+   "clientW": 390,
+   "docH": 4769,
+   "overflowX": false,
+   "h1": [
+    "A ORIGEM ENTRA NA BLACK."
+   ],
+   "main": 1,
+   "fixed": [
+    {
+     "el": "button",
+     "label": "Cupons e ofertas: 1 cupom disponível",
+     "x": 16,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    },
+    {
+     "el": "button",
+     "label": "PERGUNTE AQUI",
+     "x": 326,
+     "y": 780,
+     "w": 48,
+     "h": 48
+    }
+   ],
+   "overlaps": [],
+   "tapSmall": 10,
+   "tapSample": [
+    {
+     "label": "Busque por lugar, tema ou coleção",
+     "x": 68,
+     "y": 42,
+     "w": 254,
+     "h": 40
+    },
+    {
+     "label": "Ponto de Origem",
+     "x": 16,
+     "y": 3263,
+     "w": 133,
+     "h": 40
+    },
+    {
+     "label": "Feito em",
+     "x": 157,
+     "y": 3263,
+     "w": 82,
+     "h": 40
+    },
+    {
+     "label": "Coordenadas",
+     "x": 248,
+     "y": 3263,
+     "w": 113,
+     "h": 40
+    },
+    {
+     "label": "Legado",
+     "x": 368,
+     "y": 3263,
+     "w": 73,
+     "h": 40
+    },
+    {
+     "label": "Território",
+     "x": 450,
+     "y": 3263,
+     "w": 88,
+     "h": 40
+    },
+    {
+     "label": "Tipografia",
+     "x": 546,
+     "y": 3263,
+     "w": 91,
+     "h": 40
+    },
+    {
+     "label": "Traço",
+     "x": 645,
+     "y": 3263,
+     "w": 64,
+     "h": 40
+    }
+   ],
+   "tinyText": 14,
+   "tinySample": [
+    "10px \"15\"",
+    "10px \"% OFF\"",
+    "10px \"Black Friday\"",
+    "10px \"15\"",
+    "10px \"% OFF\""
+   ],
+   "imgs": 26,
+   "imgNoAlt": 0,
+   "canonical": "https://www.useorigens.com.br/centro-oeste",
+   "lcpMs": 724,
+   "cls": 0,
+   "dcl": 533,
+   "load": 1169,
+   "wallMs": 4606
+  }
+ },
+ "consoleErrors": [
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: the server responded with a status of 404 ()",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED",
+  "Failed to load resource: net::ERR_FAILED"
+ ],
+ "failed": [
+  "https://www.useorigens.com.br/sul/busca?q=floripa&_rsc=wepQPCxkMdKJ7OOQ",
+  "https://www.useorigens.com.br/sul/busca?q=florianopolsi&_rsc=wepQPCxkMdKJ7OOQ",
+  "https://www.useorigens.com.br/sul/busca?q=zzzxq&_rsc=wepQPCxkMdKJ7OOQ"
+ ]
+}

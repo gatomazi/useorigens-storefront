@@ -248,7 +248,7 @@ O proxy não passa pelas rotas `/api`, então elas não têm a trava de catálog
 | Pódio | Cron **`podio-sync-cron`** às **04:00** (Brasília) |
 | Coleções | **Manual:** botão "Sincronizar coleções agora" ou CLI. O cron diário **não** atualiza as coleções regionais. Em loja única, o botão também regrava `loja-unica/collections-snapshot.json`, o arquivo que o site serve (o CLI `collections:sync` não); o cron diário o regrava junto com o catálogo da loja única |
 | Uma Penca | `umapenca:sync` ou rota admin; o painel diz "a cada 6 horas", mas o cron **(não confirmado)** |
-| Recomendações | `recommendations:build`, **manual**, sem agendamento |
+| Recomendações ("Você também pode gostar" na PDP da INK) | Refeitas **logo depois de cada sync da loja única**: o cron das 03:30 e o botão do painel (`src/lib/recommendations/rebuild.ts`). Até 10/11/2026 eram manuais e ficaram com preços e produtos antigos. `recommendations:build` continua para rodar à mão |
 
 **Invalidação:** depois de um sync ou de uma publicação, chamamos `revalidatePath('/[region]', 'layout')`.
 
@@ -345,7 +345,7 @@ O proxy não passa pelas rotas `/api`, então elas não têm a trava de catálog
 - **Espelho do carrinho:** o site pede ao Worker (`/__origens/cart-ref/<token>`) o resumo do carrinho. Timeout de 2 s, até 20 itens, válido por 30 min.
 - **Comprar minha lista:** o id da sessão é assinado com HMAC (`LIST_SESSION_SECRET`) e não fica guardado. A sessão dura 1 h.
 - **Cupons:** vêm do CMS, não da INK. "Copiar" só copia o código; o cupom é aplicado na INK.
-- **Recomendações:** índice construído a partir dos snapshots e do CMS publicado (`recommendations-index.json`). O build é manual.
+- **Recomendações:** índice construído a partir dos snapshots e do CMS publicado (`recommendations-index.json`). Na loja única, é refeito ao fim de cada sync (cron das 03:30 e botão do painel). Se a validação recusar, a lista anterior continua.
 - **Uma Penca:** feed XML de canecas e ecobags (`UMAPENCA_FEED_URL`), que alimenta `/outros-artigos` e o carrossel da home; os cards levam para umapenca.com.
 - **Pódio:** ranking de vendas a partir dos pedidos pagos da INK, sem dados pessoais. Desliga por região no painel (Home · Seções → O Pódio,
   depois Publicar), o que tira a exibição e para o cálculo diário daquela região; `PODIO_PUBLIC=off` desliga em todas.
