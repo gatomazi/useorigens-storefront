@@ -45,7 +45,7 @@ export type CarouselItem = {
 /** The reserved first card of a section: "personalize yours on this model". A link inside the region (never a checkout); the picture is a CMS upload. */
 export type LeadingCard = { href: string; title: string; description?: string; button: string; image: { src: string; width: number; height: number; variants?: { w: number; src: string }[]; alt: string } };
 
-function Arrow({ direction, disabled, onClick, dark }: { direction: "prev" | "next"; disabled: boolean; onClick: () => void; dark: boolean }) {
+export function Arrow({ direction, disabled, onClick, dark }: { direction: "prev" | "next"; disabled: boolean; onClick: () => void; dark: boolean }) {
   return (
     <button
       type="button"

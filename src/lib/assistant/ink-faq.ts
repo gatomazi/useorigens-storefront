@@ -3,18 +3,11 @@
  * public pages' markup: `main.main-faq > section.questions > details > summary span` (the question) and the `<p>` after it (the answer). Pure, so the
  * tests run on a saved copy. Used only by the panel's "Trazer da INK" (the owner reviews before saving): the chat never reads INK while answering.
  */
+import { decodeHtmlEntities as decode } from "../ink/html-text";
 import { ASSISTANT_ANSWER_MAX, ASSISTANT_QUESTION_MAX } from "../site-config/assistant-schema";
 
 export type InkFaqEntry = { question: string; answer: string; page: "faq" | "trocas" };
 
-const ENTITIES: Record<string, string> = { amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " ", "#39": "'" };
-const decode = (s: string) => s.replace(/&(#\d+|#x[0-9a-f]+|[a-z]+);/gi, (all, name: string) => {
-  const key = name.toLowerCase();
-  if (ENTITIES[key] !== undefined) return ENTITIES[key];
-  if (key.startsWith("#x")) return String.fromCodePoint(parseInt(key.slice(2), 16));
-  if (key.startsWith("#")) return String.fromCodePoint(Number(key.slice(1)));
-  return all;
-});
 // Text only: tags out, entities decoded, no `<`/`>` left (the assistant's answers refuse them), whitespace collapsed per paragraph.
 // A newline in the HTML source is only a space on the page (INK's own answers break words across source lines); only <br> breaks a line.
 const text = (html: string) => decode(html.replace(/\s+/g, " ").replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]*>/g, " ")).replace(/[<>]/g, "").split("\n").map((l) => l.replace(/\s+/g, " ").trim()).filter(Boolean).join("\n");
