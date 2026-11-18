@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { MouseEventHandler, ReactNode } from "react";
 import { trackGoToInk, trackGoToUmaPenca } from "@/lib/analytics/track";
 import { TAG_COLORS, type ProductTags, type TagColor } from "@/lib/site-config/schema";
 import type { CarouselItem, LeadingCard } from "./ProductCarousel";
@@ -18,7 +18,7 @@ import { PriceText } from "./PriceText";
  * Title, intro and the "Ver todos" button (outlined, quieter than the cards' own) of a product section, on one row with `children` (the carousel's arrows). `viewAllHref` is a real store
  * URL, verified live (never guessed — see editorial/collections.ts); if the title is too long to share the row, the link wraps to its own line underneath.
  */
-export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllHref, viewAllLabel, children }: { labelledBy: string; title: string; intro?: string; dark: boolean; viewAllHref?: string; viewAllLabel: string; children?: ReactNode }) {
+export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllHref, viewAllLabel, onViewAllClick, children }: { labelledBy: string; title: string; intro?: string; dark: boolean; viewAllHref?: string; viewAllLabel: string; /** Lets a section answer "Ver todos" itself (the reviews open a modal); the link stays a real one for a middle click and without JavaScript. */ onViewAllClick?: MouseEventHandler<HTMLAnchorElement>; children?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3 pb-6 sm:pb-8">
       <div className="ground-plate max-w-2xl">
@@ -34,6 +34,7 @@ export function ProductSectionHeading({ labelledBy, title, intro, dark, viewAllH
           // control, not as a line of text, and fills only under the pointer.
           <a
             href={viewAllHref}
+            onClick={onViewAllClick}
             className={`ground-solid group inline-flex h-11 items-center gap-2 border-2 px-4 text-[0.8125rem] font-bold uppercase tracking-[0.04em] transition-colors sm:h-12 ${dark ? "border-white/40 text-white hover:border-white hover:bg-white hover:text-ink" : "border-ink/25 text-ink hover:border-ink hover:bg-ink hover:text-white"}`}
           >
             {viewAllLabel}

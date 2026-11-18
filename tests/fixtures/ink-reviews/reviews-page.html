@@ -1,0 +1,176 @@
+<!-- Trimmed copy of INK's public reviews page (`<store>/reviews?sort=recents`), kept to the three blocks the storefront reads:
+     the summary (#rating), the photo gallery and the review cards (#store_reviews_items), plus the "Ver mais" frame.
+     Names, texts, photos and the store path are FICTIONAL; the markup (classes, nesting, the `click->` in data-action, unquoted `value=2`) is INK's.
+     Photo addresses have INK's shape: <thumb host>//v1/transform/w=320,fmt=webp/<signature>/<base64url of the original on the image host>. -->
+<html><body>
+<div id="reviews_header"><h1 class="text-gray-900">Avaliações da loja</h1></div>
+
+<div id="rating">
+  <div>
+    <p class="text-gray-900 font-normal text-2xl leading-9"> Avaliações
+</p>
+    <div class="flex flex-row gap-2 items-center">
+      <p class="text-gray-900 font-medium text-4xl leading-normal"> 4.9
+</p>
+      <svg aria-hidden="true" viewBox="0 0 22 20"><path d="M1 1"/></svg>
+      <p class="whitespace-nowrap text-gray-900 font-medium text-sm leading-normal"> <span class="text-gray-500"> (4.9) </span>
+        <span class="underline"> 1.151 avaliações </span>
+</p>
+    </div>
+  </div>
+  <div id="rating-bar-5" class="flex flex-row items-center justify-between">
+    <p class="text-sm font-medium text-gray-900 w-3"> 5
+</p>
+    <p class="flex flex-row text-sm font-medium text-gray-90 leading-none w-3 text-center gap-1"> 1148
+      <span class="hidden md:block"> avaliações </span>
+</p>
+  </div>
+</div>
+
+<div id="review_gallery">
+  <div class="relative w-fit"> <form class="relative w-fit" data-turbo="true" action="/loja-ficticia/store_review_images/1" accept-charset="UTF-8" method="get"> <button> <img data-action="click->ink-store--modal#show click->ink-store--reviews#hideReviewImageModalContent" src="https://gcp-mimis-blend.ink.rsvcloud.com//v1/transform/w=320,fmt=webp/SIGNATURE-A1/aHR0cHM6Ly9nY3AtaW1hZ2VzLm1hamVzdGljLmluay5yc3ZjbG91ZC5jb20vaW1hZ2VzL3Jldmlld19pbWFnZS9hYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhMS5qcGc" alt="Foto enviada na avaliação" loading="lazy" decoding="async" class="object-cover h-28 w-28 rounded-lg shadow"> </button> </form></div>
+  <div class="relative w-fit"> <form class="relative w-fit" data-turbo="true" action="/loja-ficticia/store_review_images/2" accept-charset="UTF-8" method="get"> <button> <img data-action="click->ink-store--modal#show" src="https://gcp-mimis-blend.ink.rsvcloud.com//v1/transform/w=320,fmt=webp/SIGNATURE-A2/aHR0cHM6Ly9nY3AtaW1hZ2VzLm1hamVzdGljLmluay5yc3ZjbG91ZC5jb20vaW1hZ2VzL3Jldmlld19pbWFnZS9hYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhMi5qcGVn" alt="Foto enviada na avaliação" loading="lazy" class="object-cover h-28 w-28 rounded-lg shadow"> </button> </form></div>
+  <!-- the same photo again (INK repeats each one: grid and modal) -->
+  <div class="relative w-fit"> <form class="relative w-fit" data-turbo="true" action="/loja-ficticia/store_review_images/1" accept-charset="UTF-8" method="get"> <button> <img data-action="click->ink-store--modal#show" src="https://gcp-mimis-blend.ink.rsvcloud.com//v1/transform/w=320,fmt=webp/SIGNATURE-A1/aHR0cHM6Ly9nY3AtaW1hZ2VzLm1hamVzdGljLmluay5yc3ZjbG91ZC5jb20vaW1hZ2VzL3Jldmlld19pbWFnZS9hYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhMS5qcGc" alt="Foto enviada na avaliação" loading="lazy" class="object-cover h-28 w-28 rounded-lg shadow"> </button> </form></div>
+  <!-- the original's address cannot be read (not base64 of an image URL): the thumbnail alone is kept -->
+  <div class="relative w-fit"> <button> <img src="https://gcp-mimis-blend.ink.rsvcloud.com//v1/transform/w=320,fmt=webp/SIGNATURE-A3/not-base64!!" alt="Foto enviada na avaliação" class="object-cover h-28 w-28"> </button></div>
+  <!-- the original points outside INK's image host: the thumbnail is kept, the original is not -->
+  <div class="relative w-fit"> <button> <img src="https://gcp-mimis-blend.ink.rsvcloud.com//v1/transform/w=320,fmt=webp/SIGNATURE-A4/aHR0cHM6Ly9ldmlsLmV4YW1wbGUvaW1hZ2VzL3Jldmlld19pbWFnZS94LmpwZw" alt="Foto enviada na avaliação" class="object-cover h-28 w-28"> </button></div>
+  <!-- a picture on another host is never taken -->
+  <div class="relative w-fit"> <button> <img src="https://evil.example/photo.jpg" alt="Foto enviada na avaliação" class="object-cover h-28 w-28"> </button></div>
+  <!-- not a review photo -->
+  <img src="https://gcp-mimis-blend.ink.rsvcloud.com//v1/transform/w=320,fmt=webp/SIGNATURE-LOGO/aHR0cHM6Ly9nY3AtaW1hZ2VzLm1hamVzdGljLmluay5yc3ZjbG91ZC5jb20vaW1hZ2VzL3Jldmlld19pbWFnZS9hYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhMS5qcGc" alt="Logo da loja">
+</div>
+
+<div id="store_reviews_items">
+  <form class="button_to" method="post" action="/loja-ficticia/reviews?class=hidden&amp;method=put"><button type="submit"></button></form>
+
+  <!-- 1. five stars, verified, two products, entities in the text -->
+  <div class="flex flex-col md:flex-row gap-2 md:gap-3">
+    <div class="flex flex-col gap-2 w-full md:max-w-72">
+      <div class="flex flex-row gap-1">
+        <span class="text-yellow-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg class="w-2 h-2" aria-hidden="true" viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+        <span class="text-yellow-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg class="w-2 h-2" aria-hidden="true" viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+        <span class="text-yellow-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg class="w-2 h-2" aria-hidden="true" viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+        <span class="text-yellow-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg class="w-2 h-2" aria-hidden="true" viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+        <span class="text-yellow-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg class="w-2 h-2" aria-hidden="true" viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+      </div>
+      <div>
+        <p class="text-gray-900 font-semibold leading-normal text-base">Ana Paula M. </p>
+        <p class="text-gray-500 leading-5 font-normal text-sm"> 17 de Novembro de 2026 </p>
+      </div>
+      <p class="text-gray-900 leading-normal font-normal text-sm flex flex-row items-center gap-1">
+        <span class="text-green-500"><svg width="14" height="15" viewBox="0 0 14 15"><path d="M1 1"/></svg></span>
+        Compra verificada
+      </p>
+      <p class="text-sm font-medium leading-5 text-gray-900"> Produtos comprados: <br></p>
+      <p class="text-gray-500 text-sm leading-5 font-normal">
+        <a href="https://loja.exemplo.com.br/loja-ficticia/product/cidade-a" class="underline" target="_blank">Cidade A | Minimal</a>,
+        <a href="https://loja.exemplo.com.br/loja-ficticia/product/cidade-b" class="underline" target="_blank">Cidade B | Tradição</a>
+      </p>
+    </div>
+    <div class="flex flex-col gap-4 md:max-w-4xl">
+      <p class="text-base text-gray-500 leading-6 font-normal">
+        Ótima qualidade &amp; caimento. Gostei d&#39;a estampa!
+        Chegou antes do prazo.
+      </p>
+      <div class="flex flex-row gap-2"></div>
+      <turbo-frame id="store-reviews-index-helpful-count-frame-1">
+        <div class="flex flex-row gap-4">
+          <p class="text-gray-500 font-medium text-sm leading-5"> Isso foi útil para você? </p>
+          <form class="button_to" method="post" action="/loja-ficticia/review_feedbacks/1?status=helpful"><button class="flex flex-row gap-2" type="submit"><p class="text-gray-900 text-xs font-medium leading-5"> 0</p></button></form>
+        </div>
+      </turbo-frame>
+    </div>
+  </div>
+  <hr class="border-spacing-y-0.5 border-gray-300 my-6">
+
+  <!-- 2. two stars (the rest empty), a photo inside the card -->
+  <div class="flex flex-col md:flex-row gap-2 md:gap-3">
+    <div class="flex flex-col gap-2 w-full md:max-w-72">
+      <div class="flex flex-row gap-1">
+        <span class="text-yellow-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+        <span class="text-yellow-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+        <span class="text-gray-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+        <span class="text-gray-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+        <span class="text-gray-300 [&amp;&gt;svg]:w-4 [&amp;&gt;svg]:h-4"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+      </div>
+      <div>
+        <p class="text-gray-900 font-semibold leading-normal text-base">Marta P. </p>
+        <p class="text-gray-500 leading-5 font-normal text-sm"> 03 de Setembro de 2026 </p>
+      </div>
+      <p class="text-gray-900 leading-normal font-normal text-sm flex flex-row items-center gap-1"><span class="text-green-500"><svg viewBox="0 0 14 15"><path d="M1 1"/></svg></span> Compra verificada </p>
+    </div>
+    <div class="flex flex-col gap-4 md:max-w-4xl">
+      <p class="text-base text-gray-500 leading-6 font-normal">Adorei, já usei ontem mesmo.</p>
+      <div class="flex flex-row gap-2">
+        <a data-turbo="true" data-action="click-&gt;ink-dashboard--modal#show" href="/loja-ficticia/store_review_images/2">
+          <img data-action="click->ink-store--modal#show click->ink-store--reviews#hideReviewImage" src="https://gcp-mimis-blend.ink.rsvcloud.com//v1/transform/w=320,fmt=webp/SIGNATURE-A2/aHR0cHM6Ly9nY3AtaW1hZ2VzLm1hamVzdGljLmluay5yc3ZjbG91ZC5jb20vaW1hZ2VzL3Jldmlld19pbWFnZS9hYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhYWFhMi5qcGVn" alt="Foto enviada na avaliação" loading="lazy" class="rounded-lg w-20 h-32 object-cover">
+        </a>
+      </div>
+    </div>
+  </div>
+  <hr class="border-spacing-y-0.5 border-gray-300 my-6">
+
+  <!-- 3. five stars, NO text (stars only): not a card -->
+  <div class="flex flex-col md:flex-row gap-2 md:gap-3">
+    <div class="flex flex-col gap-2 w-full md:max-w-72">
+      <div class="flex flex-row gap-1">
+        <span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+      </div>
+      <div>
+        <p class="text-gray-900 font-semibold leading-normal text-base">Carlos E. </p>
+        <p class="text-gray-500 leading-5 font-normal text-sm"> 01 de Setembro de 2026 </p>
+      </div>
+    </div>
+    <div class="flex flex-col gap-4 md:max-w-4xl">
+      <p class="text-base text-gray-500 leading-6 font-normal">
+      </p>
+    </div>
+  </div>
+  <hr class="border-spacing-y-0.5 border-gray-300 my-6">
+
+  <!-- 4. four stars, not verified, a line break in the text -->
+  <div class="flex flex-col md:flex-row gap-2 md:gap-3">
+    <div class="flex flex-col gap-2 w-full md:max-w-72">
+      <div class="flex flex-row gap-1">
+        <span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-gray-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+      </div>
+      <div>
+        <p class="text-gray-900 font-semibold leading-normal text-base">Beatriz S. </p>
+        <p class="text-gray-500 leading-5 font-normal text-sm"> 28 de Agosto de 2026 </p>
+      </div>
+    </div>
+    <div class="flex flex-col gap-4 md:max-w-4xl">
+      <p class="text-base text-gray-500 leading-6 font-normal">Tecido bom.<br>Só demorou um pouco.</p>
+    </div>
+  </div>
+  <hr class="border-spacing-y-0.5 border-gray-300 my-6">
+
+  <!-- 5. only four star spans: the rating cannot be read, so the card is dropped (never defaulted to 5) -->
+  <div class="flex flex-col md:flex-row gap-2 md:gap-3">
+    <div class="flex flex-col gap-2 w-full md:max-w-72">
+      <div class="flex flex-row gap-1">
+        <span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span><span class="text-yellow-300"><svg viewBox="0 0 22 20"><path d="M1 1"/></svg></span>
+      </div>
+      <div>
+        <p class="text-gray-900 font-semibold leading-normal text-base">Sem Nota R. </p>
+        <p class="text-gray-500 leading-5 font-normal text-sm"> 20 de Agosto de 2026 </p>
+      </div>
+    </div>
+    <div class="flex flex-col gap-4 md:max-w-4xl">
+      <p class="text-base text-gray-500 leading-6 font-normal">Texto de uma avaliação cuja nota não dá para ler.</p>
+    </div>
+  </div>
+
+  <turbo-frame id="store_reviews_pagination_wrapper">
+  <form action="/loja-ficticia/reviews" accept-charset="UTF-8" method="get">
+    <turbo-frame class="w-full" id="store_reviews_pagination">
+      <input type="hidden" name="sort" value=recents>
+      <input type="hidden" name="page" value=2>
+      <button class="w-fit bg-white border border-gray-200 rounded-full px-5 py-2.5"> Ver mais avaliações </button>
+    </turbo-frame>
+  </form>
+  </turbo-frame>
+</div>
+</body></html>

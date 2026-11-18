@@ -10,7 +10,9 @@ import { StateCards } from "@/components/home/StateCards";
 import { MundoBlocoHome } from "@/components/mundo/entrada/MundoEntradas";
 import { mundoEntradasAtivas } from "@/lib/mundo/flag";
 import { PodioTeaser } from "@/components/podio/PodioTeaser";
+import { ReviewsSection } from "@/components/reviews/ReviewsSection";
 import { getPodiumLeaders } from "@/lib/podio/server";
+import { homeReviews } from "@/lib/reviews/source";
 import { SOURCES } from "@/lib/analytics/sources";
 import { CityJourneyTrigger } from "@/components/city-journey/CityJourney";
 import { bannerFor, usableBannerAsset } from "@/lib/editorial/banners";
@@ -57,7 +59,8 @@ function RegionStructuredData({ region }: { region: RegionSlug }) {
 
 /**
  * Home section order (CLAUDE_HOME_LENDA_ORDER_VIEW_ALL.md — do not reorganize without another review):
- * Hero → Estilos → Da Nossa Terra → Estados → Redesenhos → Feito Para Você → Fala daqui → DDD → Campanha.
+ * Hero → Estilos → Da Nossa Terra → Estados → Redesenhos → Feito Para Você → Fala daqui → DDD → Avaliações → Campanha.
+ * "Avaliações" (Sul only, src/lib/reviews) was ADDED before the closing campaign; nothing above it moved.
  * "Cidades para começar" stays removed: search already resolves city discovery.
  */
 export default async function RegionHome({ params }: { params: Promise<{ region: string }> }) {
@@ -78,6 +81,9 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
       </>
     );
   }
+
+  // The store's real reviews, read from INK's public page through Next's data cache; null (nothing shown) when off, unreadable or too thin.
+  const reviews = await homeReviews(region);
 
   const { showcase } = home;
   const cityPath = showcase ? `/${region}/${showcase.city.uf.toLowerCase()}/${showcase.city.slug}` : null;
@@ -202,6 +208,8 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
           />
         </section>
       )}
+
+      {reviews && <ReviewsSection data={reviews} />}
 
       <Campaign region={region} crops={home.campaignCrops} config={bannerFor(region, "campaign")} />
     </>
