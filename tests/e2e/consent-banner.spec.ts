@@ -10,6 +10,8 @@ const overlaps = async (a: Locator, b: Locator) => {
   return x.x < y.x + y.width && y.x < x.x + x.width && x.y < y.y + y.height && y.y < x.y + x.height;
 };
 const PHONE = { width: 390, height: 664 };
+/** The journey's piece step (and its purchase bar) is off for now: `NEXT_PUBLIC_JOURNEY_PIECE_STEP=1` brings it back. */
+const PIECE_STEP = process.env.NEXT_PUBLIC_JOURNEY_PIECE_STEP === "1";
 
 async function openPiece(page: Page) {
   await page.getByRole("button", { name: "Abrir menu" }).click();
@@ -31,6 +33,7 @@ test.describe("Cookie bar: never on a way forward", () => {
   });
 
   test("given the 'Sua cidade' purchase bar on a city page, when it opens, then the bar folds into a tab that covers no control, and the tab brings the choices back", async ({ page }) => {
+    test.skip(!PIECE_STEP, "the journey's purchase bar is off (NEXT_PUBLIC_JOURNEY_PIECE_STEP)");
     await page.setViewportSize(PHONE);
     await page.goto("/sul/sc/florianopolis");
     const journey = await openPiece(page);

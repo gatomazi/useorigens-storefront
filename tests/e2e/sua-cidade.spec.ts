@@ -7,6 +7,9 @@ import { expect, normalizeFbq, normalizeGtag, test } from "./fixtures";
  * chosen. The expectations come from the place's own data (`/api/cidades/…`), never from a list written here, so the spec follows whatever the local
  * snapshot holds; the piece cases need the local garment index and skip without it.
  */
+/** The piece step (step 3) is off for now: `NEXT_PUBLIC_JOURNEY_PIECE_STEP=1` brings it back, and with it the cases below that exercise it. */
+const PIECE_STEP = process.env.NEXT_PUBLIC_JOURNEY_PIECE_STEP === "1";
+const PIECE_OFF = "the piece step is off (NEXT_PUBLIC_JOURNEY_PIECE_STEP)";
 type Piece = { slug: string; label: string; href: string; price: number };
 type Model = { familyId: string; name: string; pieces: Piece[] };
 type Journey = { place: { name: string; uf: string; slug: string }; models: Model[] };
@@ -44,6 +47,7 @@ const openFromHeader = async (page: Page) => {
 
 test.describe("Sua cidade: place, design and piece on one screen", () => {
   test("given the desktop header, when a city is typed, a design and another piece chosen, then the purchase bar opens that piece in the store, without a page change, reported once", async ({ page }) => {
+    test.skip(!PIECE_STEP, PIECE_OFF);
     await page.setViewportSize({ width: 1440, height: 900 });
     const data = await journeyOf(page, "sul/sc/florianopolis");
     const model = data.models.find((m) => m.pieces.length > 1);
@@ -93,6 +97,7 @@ test.describe("Sua cidade: place, design and piece on one screen", () => {
 
   for (const [width, height, label] of [[1440, 757, "a laptop (1440×900 window)"], [390, 664, "a phone (Safari's real viewport)"]] as const) {
     test(`given ${label}, when a design with all its pieces is open, then the pieces and the purchase button are on screen without scrolling`, async ({ page }) => {
+      test.skip(!PIECE_STEP, PIECE_OFF);
       await page.setViewportSize({ width, height });
       const data = await journeyOf(page, "sul/sc/florianopolis");
       const model = data.models.find((m) => m.pieces.length > 4);
@@ -116,6 +121,60 @@ test.describe("Sua cidade: place, design and piece on one screen", () => {
       expect(last.y + last.height).toBeLessThanOrEqual(bar.y + 1);
     });
   }
+
+  test("given the piece step off, when a design is chosen in step 2, then it is a link straight to the store's page of its main piece, reported once, with no third step and no purchase bar", async ({ page }) => {
+    test.skip(PIECE_STEP, "the piece step is on");
+    await page.setViewportSize({ width: 1440, height: 900 });
+    const data = await journeyOf(page, "sul/sc/florianopolis");
+    test.skip(data.models.length === 0, "local garment index not present");
+    const model = data.models[0];
+    const track = await withTracking(page);
+    await page.goto("/sul");
+
+    const journey = await openFromHeader(page);
+    // Two steps only: the city and the design.
+    await expect(journey.getByRole("list", { name: "Etapas" }).getByRole("listitem")).toHaveCount(2);
+    await expect(journey.getByText("ele abre na loja")).toBeVisible();
+    await journey.getByTestId("journey-picks").getByRole("button", { name: /Florianópolis/ }).click();
+    const links = journey.getByTestId("journey-models").getByTestId("journey-model-link");
+    await expect(links).toHaveCount(data.models.length);
+    // Each design is a plain link to its main piece (the first one: the classic tee), in the same tab like every card of the store.
+    expect(await links.evaluateAll((els) => els.map((el) => el.getAttribute("href")))).toEqual(data.models.map((m) => m.pieces[0].href));
+    await expect(links.first()).not.toHaveAttribute("target", /.+/);
+
+    await journey.locator(`[data-model="${model.familyId}"]`).click();
+    await expect(journey.getByTestId("journey-buy-bar")).toHaveCount(0);
+    await expect(journey.locator("[data-step=\"piece\"]")).toHaveCount(0);
+    await expect(page).toHaveURL(/\/sul$/);
+    const goToInk = track.meta("GoToInk");
+    expect(goToInk).toHaveLength(1);
+    expect(goToInk[0][2]).toMatchObject({ source_section: "sua_cidade", city: "Florianópolis", state: "SC", family: model.familyId, value: model.pieces[0].price });
+    expect(track.ga("go_to_ink")[0]?.[2]).toMatchObject({ source_section: "sua_cidade", product_name: model.name });
+    expect(track.ga("origens_sua_cidade_model")[0]?.[2]).toMatchObject({ family: model.familyId, city_slug: "florianopolis", uf: "SC", position: 1, model_count: data.models.length });
+    expect(track.ga("origens_sua_cidade_piece")).toHaveLength(0);
+  });
+
+  test("given the piece step off on a phone, when the menu's field opens the journey and a design is chosen, then it leads to the store and nothing overflows", async ({ page }) => {
+    test.skip(PIECE_STEP, "the piece step is on");
+    await page.setViewportSize({ width: 390, height: 844 });
+    const data = await journeyOf(page, "sul/sc/florianopolis");
+    test.skip(data.models.length === 0, "local garment index not present");
+    const track = await withTracking(page);
+    await page.goto("/sul");
+    await page.getByRole("button", { name: "Abrir menu" }).click();
+    await page.getByRole("dialog", { name: "Menu" }).getByRole("button", { name: "Qual é a sua cidade?" }).click();
+    const journey = page.getByRole("dialog", { name: "Sua cidade" });
+    await journey.getByTestId("journey-picks").getByRole("button", { name: /Florianópolis/ }).click();
+    const overflow = await page.evaluate(() => {
+      const scroller = document.querySelector("dialog[open] .overscroll-contain") as HTMLElement;
+      return { sideways: scroller.scrollWidth - scroller.clientWidth, page: document.documentElement.scrollWidth - window.innerWidth };
+    });
+    expect(overflow).toEqual({ sideways: 0, page: 0 });
+    await journey.getByTestId("journey-model-link").first().click();
+    expect(track.meta("GoToInk")).toHaveLength(1);
+    expect(track.ga("origens_sua_cidade_open")[0]?.[2]).toMatchObject({ entry_point: "menu" });
+    await expect(journey.getByTestId("journey-buy-bar")).toHaveCount(0);
+  });
 
   test("given a state chosen in the field, when it opens, then its places are listed here by region, a filter finds the city and its designs follow, without leaving", async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -166,6 +225,7 @@ test.describe("Sua cidade: place, design and piece on one screen", () => {
   });
 
   test("given a phone, when the menu's field opens the journey, then a shortcut, a design and the last piece lead to the store from the bar, nothing overflowing", async ({ page }) => {
+    test.skip(!PIECE_STEP, PIECE_OFF);
     await page.setViewportSize({ width: 390, height: 844 });
     const data = await journeyOf(page, "sul/sc/florianopolis");
     const model = data.models.find((m) => m.pieces.length > 2);
@@ -256,6 +316,8 @@ test.describe("Sua cidade: anúncio na home regional", () => {
 test.describe("Sua cidade: 'Não é a sua cidade?' na página da estampa", () => {
   test("given a design page, then the offer line and the notice sit by the buy button, and the city chosen lands on the same model", async ({ page }) => {
     const track = await withTracking(page);
+    // The store itself is never opened by the spec: a navigation to it is answered by an empty page.
+    await page.route((url) => !/^localhost(:\d+)?$/.test(url.host) && url.pathname.includes("/product/"), (route) => route.fulfill({ status: 200, contentType: "text/html", body: "<title>loja</title>" }));
     const path = "/sul/sc/florianopolis";
     const journey = await journeyOf(page, "sul/sc/florianopolis");
     const model = journey.models[0];
@@ -268,11 +330,16 @@ test.describe("Sua cidade: 'Não é a sua cidade?' na página da estampa", () =>
     expect(track.ga("origens_sua_cidade_open")[0]?.[2]).toMatchObject({ entry_point: "pdp_wrong_city" });
     await dialog.getByRole("combobox").fill("tijucas");
     await dialog.getByRole("option").first().click();
-    // Straight to the pieces of the same model when the other city has it; otherwise its list of models (never an error).
+    // The same model of the other city when it has it (its pieces, or with the piece step off the store's page of its main piece); otherwise its list of models (never an error).
     await expect(dialog.getByRole("heading").first()).toBeVisible();
     const sameModel = await page.request.get("/api/cidades/sul/sc/tijucas").then((r) => r.json() as Promise<Journey>);
-    if (sameModel.models.some((m) => m.familyId === model.familyId)) {
-      await expect(dialog.getByTestId("journey-pieces")).toBeVisible({ timeout: 10_000 });
+    const same = sameModel.models.find((m) => m.familyId === model.familyId);
+    if (same) {
+      if (PIECE_STEP) await expect(dialog.getByTestId("journey-pieces")).toBeVisible({ timeout: 10_000 });
+      else {
+        await page.waitForURL(same.pieces[0].href, { timeout: 15_000 });
+        expect(track.meta("GoToInk")).toHaveLength(1);
+      }
     }
   });
 });
