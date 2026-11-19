@@ -7,7 +7,7 @@ import { PageBackdropEditor } from "@/components/admin/PageBackdropEditor";
 import { listMedia } from "@/lib/admin/media";
 import { SectionOrderTable } from "@/components/admin/SectionOrderTable";
 import { StructuredModelCard } from "@/components/admin/StructuredModelCard";
-import { campaignStatus, imageGridStatus, cityStylesStatus, statesStatus } from "@/lib/admin/structured-status";
+import { campaignStatus, imageGridStatus, cityStylesStatus, reviewsStatus, statesStatus } from "@/lib/admin/structured-status";
 import { SINGLETON_TEMPLATES, STRUCTURED_MODELS } from "@/lib/site-config/structured";
 import { Flash } from "@/components/admin/Flash";
 import { RegionCopyPanel } from "@/components/admin/RegionCopyPanel";
@@ -28,7 +28,7 @@ import { isArticleOfRegion } from "@/lib/umapenca/region";
 import { readUmaPencaSnapshot } from "@/lib/umapenca/snapshot";
 import { ARTICLE_KIND_LABELS, ARTICLE_KINDS } from "@/lib/umapenca/types";
 
-const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens", footer: "Rodapé" };
+const TYPE_LABEL: Record<string, string> = { hero: "Hero", "city-styles": "Estilos da cidade", "product-carousel": "Carrossel de produtos", states: "Estados", campaign: "Campanha", "image-grid": "Grade de imagens", reviews: "Avaliações", footer: "Rodapé" };
 const typeLabel = (s: Section) => (s.template === "product-carousel" && s.layout?.display === "grid" ? "Grade de produtos" : TYPE_LABEL[s.template]);
 /** "Exibição" of a new product section (the same choice the section editor offers). */
 function DisplaySelect({ id }: { id: string }) {
@@ -252,7 +252,7 @@ export default async function AdminHome({ searchParams }: { searchParams: Promis
           {STRUCTURED_MODELS.map((model) => {
             const existing = sections.find((x) => x.template === model.template) ?? null;
             const single = SINGLETON_TEMPLATES.includes(model.template);
-            const status = model.template === "city-styles" ? cityStylesStatus(scope, existing ?? undefined) : model.template === "states" ? statesStatus(scope) : model.template === "image-grid" ? imageGridStatus() : campaignStatus(scope);
+            const status = model.template === "city-styles" ? cityStylesStatus(scope, existing ?? undefined) : model.template === "states" ? statesStatus(scope) : model.template === "image-grid" ? imageGridStatus() : model.template === "reviews" ? reviewsStatus() : campaignStatus(scope);
             const addForm = single && existing ? null : (
               <form action={addStructuredSection}>
                 <input type="hidden" name="rev" value={rev ?? "null"} />

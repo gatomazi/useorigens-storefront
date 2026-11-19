@@ -1,20 +1,30 @@
 # Avaliações na home da Sul (runbook)
 
-Bloco "Quem usa, recomenda!" (fotos de clientes) e "O que nossos clientes dizem" (avaliações com texto) na home `/sul`,
-logo antes da campanha de fechamento. Mesma ideia do bloco que a Graxa injeta na loja INK, aqui feito direto na vitrine.
+Bloco "Quem usa, recomenda!" (fotos de clientes) e "O que nossos clientes dizem" (avaliações com texto) nas homes das três lojas
+(Sul, Norte e Centro-Oeste), **seção do painel** ("Avaliações de clientes") que se move, se oculta e se edita. Mesma ideia do bloco
+que a Graxa injeta na loja INK, aqui feito direto na vitrine.
 
-## Em qual home ele aparece
+## Como ele entra na home
 
-Há duas homes no mesmo `src/app/[region]/page.tsx`, e **a produção roda a configurável** (`SITE_CONFIG_HOME=on`; sem
-`published.json` no Volume ela sai da seed, `src/lib/site-config/seed.ts`). O bloco aparece nas duas:
+A produção roda a **home configurável** (`SITE_CONFIG_HOME=on`) com o documento publicado pelo painel
+(`/app/data/generated/site-config/published.json`; sem ele a home sai da seed, `src/lib/site-config/seed.ts`). Ao procurar esse arquivo, a base
+é `data/generated`, **não** `data/generated/loja-unica` (esta só guarda o snapshot do catálogo). Há ainda uma home fixa (flag desligada), que
+também mostra o bloco.
 
-- **Home fixa** (`SITE_CONFIG_HOME` desligado): JSX direto, entre o DDD e a campanha.
-- **Home configurável**: o bloco **não é uma seção do documento** (não aparece no painel, não se reordena nem se esconde por lá).
-  A página o entrega à `HomeSections` na prop `reviews`, e ele é desenhado **logo antes da campanha de fechamento** quando esta é
-  a última seção (`closingSlot`); se a última seção for outra coisa (home editada no painel), vai no fim. Só a `RegionHome` passa
-  a prop: hotpages, páginas e a prévia do painel não o mostram. Para escondê-lo: `REVIEWS_HOME=off`.
-- Virar seção do painel (`template` novo no esquema, padrões, ações do painel e publicação) é o caminho se o dono quiser mexer
-  nele por lá; não foi feito.
+- **Seção do painel** (`template: "reviews"`, modelo "Avaliações de clientes" em *Componentes da home*): uma por região, entra antes da
+  campanha de fechamento e, daí, move-se, oculta-se e publica-se como qualquer seção. O **título e o subtítulo** da seção são os da faixa de
+  fotos ("Quem usa, recomenda!" e a frase embaixo); o título dos cards ("O que nossos clientes dizem"), a nota e o total são do código e da
+  loja. A **âncora** da seção é o `id` no HTML (`avaliacoes`), para o menu do cabeçalho rolar até ela ("Avaliações" é o apelido sugerido).
+  Só existe na home: uma página (hotpage, landing) recusa a seção.
+- **Documento sem a seção** (qualquer publicação anterior a ela): o bloco **continua aparecendo** antes da campanha de fechamento quando
+  esta é a última seção, ou no fim da home (`closingSlot`). Assim o deploy não faz o bloco sumir. Com a seção no documento, **ativa ou
+  desativada**, quem manda é o painel (desativada = não aparece, sem o fallback).
+- **Três lojas**: Norte e Centro-Oeste leem as avaliações **da mesma loja única** que a Sul (a INK tem uma loja só); "Seguir a Sul" já
+  copia a seção da Sul para elas, e "Aparece em" (editor da Sul) tira a seção de uma região. Cada região também pode ter a sua própria
+  seção. `REVIEWS_REGIONS` lista as regiões que podem mostrá-las.
+- **Fundo escuro**: numa home com "Fundo da home" escuro (tema de Natal), a seção mantém a própria superfície clara e o texto escuro
+  (`on-light own-surface`), como as outras seções claras.
+- `REVIEWS_HOME=off` esconde o bloco em todas as regiões, esteja ele em seção ou no fallback.
 
 ## De onde vêm os dados
 
@@ -38,8 +48,8 @@ A API da INK **não tem endpoint de avaliações**. A fonte é a página públic
   botão "Ver todas as avaliações" abre a lista completa, sem filtro, num modal. Motivo: há avaliações de 2 estrelas com texto de
   elogio (clique errado), que na home pareceriam um erro. Para mostrar tudo, baixar a constante para 1.
 - **Nunca se assume nota**: um card cujas 5 estrelas não dá para contar é descartado (a Graxa assume 5).
-- **Só a Sul** (`REVIEWS_REGIONS`). As avaliações são da loja única, que vende Sul, Norte e Centro-Oeste, mas hoje falam quase só
-  de camisetas do Sul; Norte e Centro-Oeste não mostram o bloco até haver critério por região.
+- **As três regiões** (`REVIEWS_REGIONS`). As avaliações são da loja única, que vende Sul, Norte e Centro-Oeste, e hoje falam quase só
+  de camisetas do Sul; mesmo assim o bloco serve às três (decisão do dono: a Sul é a base hoje). Não há filtro por região.
 - **Sem autoplay**, como os outros carrosséis da home (um carrossel que anda sozinho exigiria botão de pausa).
 - **"Ver todas as avaliações" abre um modal da vitrine, sem redirect.** Um iframe da página da INK não serve: ela responde
   `X-Frame-Options: SAMEORIGIN` (a Graxa consegue porque lá é a mesma origem). A vitrine mesma desenha a lista (ver "Lista
@@ -103,5 +113,5 @@ Girar o segredo: troque o valor nos dois lugares (Railway e regra); entre uma tr
 
 - `REVIEWS_HOME=off` esconde o bloco sem mexer no código (variável de runtime). Qualquer outro valor deixa ligado.
 - `REVIEWS_READ_KEY`: ver "Cloudflare" acima. Só o valor, nunca no repositório.
-- **Não coberto**: o bloco não é editável pelo painel (ver "Em qual home ele aparece").
+- **Não coberto**: avaliações por região (todas leem a mesma loja) e o título dos cards, fixo no código.
 - Se a INK mudar o HTML da página de avaliações, o parser devolve vazio e o bloco some; atualizar `parse.ts` e o fixture.

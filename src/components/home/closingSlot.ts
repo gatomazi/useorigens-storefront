@@ -9,3 +9,6 @@ export function closingSlot(sections: readonly { template: string }[]): number {
 }
 
 export const insertAt = <T>(items: readonly T[], index: number, item: T): T[] => [...items.slice(0, index), item, ...items.slice(index)];
+
+/** Whether the document has a "reviews" section at all, on or off: then the panel decides where (and whether) the reviews show, and the fallback stays out. */
+export const reviewsAreInTheDocument = (sections: readonly { template: string }[] | undefined): boolean => (sections ?? []).some((s) => s.template === "reviews");

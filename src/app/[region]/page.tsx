@@ -81,7 +81,7 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
     return (
       <>
         <RegionStructuredData region={region} />
-        <HomeSections region={region} home={home} bundle={bundle} reviews={reviews && <ReviewsSection data={reviews} />} {...categoryProps((store) => catalog.productsOfStore(store), bundle.docs[region])} />
+        <HomeSections region={region} home={home} bundle={bundle} reviews={reviews} {...categoryProps((store) => catalog.productsOfStore(store), bundle.docs[region])} />
       </>
     );
   }

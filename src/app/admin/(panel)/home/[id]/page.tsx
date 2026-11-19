@@ -15,7 +15,7 @@ import { listMedia } from "@/lib/admin/media";
 import { requireAdmin } from "@/lib/admin/auth/guard";
 import { collectionOrderArrangement, collectionOrderMembers, sourceStatus } from "@/lib/admin/validate-draft";
 import { loadEditorWorkspace } from "@/lib/admin/workspace";
-import { campaignStatus, cityStylesStatus, imageGridStatus, statesStatus } from "@/lib/admin/structured-status";
+import { campaignStatus, cityStylesStatus, imageGridStatus, reviewsStatus, statesStatus } from "@/lib/admin/structured-status";
 import { currentScope, storeOf } from "@/lib/admin/scope";
 import { toComboEntries } from "@/lib/admin/combo";
 import { libraryEntries } from "@/lib/catalog/collection-source";
@@ -53,7 +53,7 @@ export default async function EditSection({ params, searchParams }: { params: Pr
       : undefined;
   // State chooser: the region's states (and, for Sul, which ones already have a cover in code).
   const stateCovers = section.template === "states" ? REGIONS[scope].ufs.map((uf) => ({ uf, name: STATE_NAMES[uf], legacy: usableBannerAsset("state", bannerFor(scope, "state", uf)) !== null })) : undefined;
-  const structured = section.template === "city-styles" ? cityStylesStatus(scope, section) : section.template === "states" ? statesStatus(scope) : section.template === "campaign" ? campaignStatus(scope) : section.template === "image-grid" ? imageGridStatus(section) : null;
+  const structured = section.template === "city-styles" ? cityStylesStatus(scope, section) : section.template === "states" ? statesStatus(scope) : section.template === "campaign" ? campaignStatus(scope) : section.template === "image-grid" ? imageGridStatus(section) : section.template === "reviews" ? reviewsStatus() : null;
 
   return (
     <div className="space-y-6">

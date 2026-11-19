@@ -40,7 +40,7 @@ const NEAR = "0px 40% 0px 40%";
  * auto-moving row would need its own pause control); a tap opens the photo in the viewer, with the arrows and the keyboard to walk through ALL of them.
  * Tiles are added by batches as the right end comes near, and each picture loads only when its tile is near (see `NEAR`).
  */
-export function ReviewPhotoStrip({ photos, intro }: { photos: InkReviewPhoto[]; intro?: string }) {
+export function ReviewPhotoStrip({ photos, title = "Quem usa, recomenda!", intro }: { photos: InkReviewPhoto[]; title?: string; intro?: string }) {
   const [viewport, embla] = useEmblaCarousel({ align: "start", containScroll: "trimSnaps", dragFree: true });
   const { canPrev, canNext } = useEmblaArrows(embla);
   const [open, setOpen] = useState<number | null>(null);
@@ -103,7 +103,7 @@ export function ReviewPhotoStrip({ photos, intro }: { photos: InkReviewPhoto[]; 
 
   return (
     <div role="region" aria-roledescription="carrossel" aria-labelledby="fotos-clientes-titulo">
-      <ProductSectionHeading labelledBy="fotos-clientes-titulo" title="Quem usa, recomenda!" intro={intro} dark={false} viewAllLabel="">
+      <ProductSectionHeading labelledBy="fotos-clientes-titulo" title={title} intro={intro} dark={false} viewAllLabel="">
         <div className="ml-auto flex shrink-0 gap-2">
           <Arrow dark={false} direction="prev" disabled={!canPrev} onClick={() => embla?.scrollPrev()} />
           <Arrow dark={false} direction="next" disabled={!canNext} onClick={() => embla?.scrollNext()} />

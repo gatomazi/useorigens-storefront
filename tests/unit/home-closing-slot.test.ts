@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { closingSlot, insertAt } from "@/components/home/closingSlot";
+import { closingSlot, insertAt, reviewsAreInTheDocument } from "@/components/home/closingSlot";
 import { buildSeedBundle } from "@/lib/site-config/seed";
 import { renderableSections } from "@/lib/site-config/resolve";
 
@@ -34,5 +34,14 @@ describe("insertAt", () => {
     expect(insertAt(items, 2, "x")).toEqual(["a", "b", "x", "c"]);
     expect(insertAt(items, 3, "x")).toEqual(["a", "b", "c", "x"]);
     expect(items).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("reviewsAreInTheDocument", () => {
+  test("a home with a reviews section, on or off, is in the panel's hands; one without keeps the block before the closing campaign", () => {
+    expect(reviewsAreInTheDocument(of("hero", "reviews", "campaign"))).toBe(true);
+    expect(reviewsAreInTheDocument([{ template: "reviews", active: false } as { template: string }])).toBe(true);
+    expect(reviewsAreInTheDocument(of("hero", "campaign"))).toBe(false);
+    expect(reviewsAreInTheDocument(undefined)).toBe(false);
   });
 });

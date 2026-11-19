@@ -24,6 +24,7 @@ export function suggestedNavLabel(section: Pick<Section, "anchor" | "title" | "t
   if (known) return known.label;
   if (section.template === "states") return "Estados";
   if (section.template === "city-styles") return "Estilos";
+  if (section.template === "reviews") return "Avaliações";
   return (section.title ?? section.anchor).replace(/\n/g, " ").slice(0, 24);
 }
 
