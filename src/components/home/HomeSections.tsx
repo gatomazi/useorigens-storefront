@@ -410,7 +410,7 @@ export function HomeSections({
           case "footer":
             return null; // rendered by the region layout, never as a home section
         }
-      }), closingSlot(ordered), reviews ? <Fragment key="reviews">{reviews}</Fragment> : null)}
+      }), closingSlot(ordered), reviews ? <div key="reviews" className={darkPage ? onLightSurface : "own-surface"}>{reviews}</div> : null)}
     </>
   );
   return ground ? <PageGround backdrop={ground} media={media}>{rendered}</PageGround> : rendered;
