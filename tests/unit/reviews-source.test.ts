@@ -107,7 +107,10 @@ describe("readInkReviews", () => {
 
   test("asks for all the pages at once: one slow page must not hold the next ones back", async () => {
     const pending: ((r: Response) => void)[] = [];
-    const fetcher = vi.fn((_url: string) => new Promise<Response>((resolve) => pending.push(resolve)));
+    const fetcher = vi.fn((_url: string) => {
+      void _url; // typed so the calls can be read back as [url]
+      return new Promise<Response>((resolve) => pending.push(resolve));
+    });
     const reading = readInkReviews(fetcher as unknown as typeof fetch);
     await Promise.resolve();
     expect(fetcher.mock.calls.map(([url]) => /page=(\d+)/.exec(url as string)?.[1] ?? "1")).toEqual(["1", "2", "3"]); // before any answered
