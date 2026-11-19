@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import type { InkReviewsPage } from "@/lib/reviews/parse";
-import { REVIEWS_STALE_MS, cachedReviewsPage, clearReviewsCache, homeReviews, readInkReviews } from "@/lib/reviews/source";
+import { READ_KEY_HEADER, REVIEWS_STALE_MS, cachedReviewsPage, clearReviewsCache, homeReviews, readInkReviews } from "@/lib/reviews/source";
 
 const fixture = readFileSync(join(__dirname, "../fixtures/ink-reviews/reviews-page.html"), "utf8");
 
@@ -38,6 +38,28 @@ describe("readInkReviews", () => {
   test("a non-200 (a Cloudflare 503, a challenge) throws instead of reading as 'no reviews'", async () => {
     const fetcher = vi.fn(async () => response("<html>Just a moment...</html>", 503));
     await expect(readInkReviews(fetcher as unknown as typeof fetch)).rejects.toThrow(/503/);
+  });
+
+  test("sends the read key header when REVIEWS_READ_KEY is set, and none when it is not", async () => {
+    const page = fixture.replace('<input type="hidden" name="page" value=2>', "");
+    const headersOf = async () => {
+      const fetcher = vi.fn(async () => response(page));
+      await readInkReviews(fetcher as unknown as typeof fetch);
+      return (fetcher.mock.calls[0] as unknown as [string, RequestInit])[1].headers as Record<string, string>;
+    };
+    vi.stubEnv("REVIEWS_READ_KEY", "");
+    expect(await headersOf()).not.toHaveProperty(READ_KEY_HEADER);
+    vi.stubEnv("REVIEWS_READ_KEY", "  segredo-de-teste \n");
+    const withKey = await headersOf();
+    expect(withKey[READ_KEY_HEADER]).toBe("segredo-de-teste"); // trimmed: a pasted newline would make Cloudflare's comparison fail
+    expect(withKey["user-agent"]).toMatch(/^UseOrigensStorefront\//);
+  });
+
+  test("a Cloudflare challenge is named in the error (the production log's reason)", async () => {
+    const fetcher = vi.fn(async () => new Response("", { status: 403, headers: { "cf-mitigated": "challenge" } }));
+    await expect(readInkReviews(fetcher as unknown as typeof fetch)).rejects.toThrow("INK responded 403 (Cloudflare challenge)");
+    const plain = vi.fn(async () => response("", 403));
+    await expect(readInkReviews(plain as unknown as typeof fetch)).rejects.toThrow(/^INK responded 403$/);
   });
 
   test("a 200 that is not the reviews page throws", async () => {

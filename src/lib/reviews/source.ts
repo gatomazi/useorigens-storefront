@@ -16,6 +16,17 @@ export const REVIEWS_STALE_MS = 6 * 60 * 60_000;
 const TIMEOUT_MS = 6000;
 const USER_AGENT = "UseOrigensStorefront/1.0 (+https://useorigens.com.br)";
 
+/**
+ * The Cloudflare in front of the INK store challenges this server's IP (a datacenter's: `cf-mitigated: challenge`, 403, whatever the user-agent), so the
+ * read is sent with a secret header that a Cloudflare rule on the reviews path lets through. Unset (REVIEWS_READ_KEY), nothing is added and the read
+ * is as before. The value is only ever sent to the INK store's hosts: the URL is built from them and nothing here takes a URL from INK's pages.
+ */
+export const READ_KEY_HEADER = "x-reviews-read-key";
+const readHeaders = (): Record<string, string> => {
+  const key = process.env.REVIEWS_READ_KEY?.trim();
+  return { accept: "text/html", "user-agent": USER_AGENT, ...(key ? { [READ_KEY_HEADER]: key } : {}) };
+};
+
 /** The reviews are the single INK store's (Use Sul, which sells Sul, Norte and Centro-Oeste prints); for now they are told only on Sul's home. */
 export const REVIEWS_REGIONS: readonly RegionSlug[] = ["sul"];
 
@@ -32,12 +43,12 @@ const MAX_PAGES = 3;
 /** One page of INK's reviews list (five reviews, newest first), parsed. Throws when INK does not answer 200. The full list in the modal asks for these one by one. */
 export async function readReviewsPage(page: number, fetcher: typeof fetch = fetch): Promise<InkReviewsPage> {
   const res = await fetcher(`${storeReviewsUrl()}?sort=recents${page > 1 ? `&page=${page}` : ""}`, {
-    headers: { accept: "text/html", "user-agent": USER_AGENT },
+    headers: readHeaders(),
     next: { revalidate: REVIEWS_REVALIDATE_S },
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
-  // A challenge or error page must never be read as "no reviews".
-  if (!res.ok) throw new Error(`INK responded ${res.status}`);
+  // A challenge or error page must never be read as "no reviews". The log says when it is Cloudflare's challenge (see READ_KEY_HEADER).
+  if (!res.ok) throw new Error(`INK responded ${res.status}${res.headers.get("cf-mitigated") === "challenge" ? " (Cloudflare challenge)" : ""}`);
   return parseInkReviews(await res.text());
 }
 

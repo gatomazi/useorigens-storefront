@@ -59,8 +59,36 @@ A API da INK **não tem endpoint de avaliações**. A fonte é a página públic
   17/11/2026 com `Accept: avif`: de menos de 1 s a ~5 s, quase tudo é o download da original (até 7 MB). A faixa mostra o
   quadro cinza até chegar, e depois fica em cache.
 
+## Cloudflare (por que o bloco pode sumir em produção)
+
+Em 19/11/2026, logo após o deploy do bloco, o Railway recebia **403 com `cf-mitigated: challenge`** da loja
+(`loja.useorigens.com.br/useorigens/reviews`; o domínio antigo `www.usesul.com.br/usesul` só redireciona para ele). O desafio é
+por **IP** (o do Railway é de datacenter) e vale para qualquer user-agent, inclusive o de navegador; da máquina do dono a mesma
+URL dá 200. Sem tratamento, o log mostra `reviews.list-error ... INK responded 403 (Cloudflare challenge)`, a rota
+`/api/avaliacoes` dá 502 e a home esconde o bloco (como desenhado).
+
+A saída é **deixar passar a leitura do servidor**, não disfarçá-la:
+
+1. No Railway (serviço `useorigens-storefront`), `REVIEWS_READ_KEY` = um segredo longo e aleatório (ex.: `openssl rand -hex 32`).
+   O servidor passa a enviá-lo no cabeçalho `x-reviews-read-key` (`READ_KEY_HEADER` em `source.ts`). Sem a variável, não envia nada.
+2. No Cloudflare da zona (WAF → Regras personalizadas), uma regra com ação **Skip**, só para o que desafiar este caminho:
+
+   ```
+   (http.host eq "loja.useorigens.com.br"
+    and starts_with(http.request.uri.path, "/useorigens/reviews")
+    and any(http.request.headers["x-reviews-read-key"][*] eq "<o mesmo valor de REVIEWS_READ_KEY>"))
+   ```
+
+   Em "Skip", marcar os componentes que estiverem desafiando (Security Level, Browser Integrity Check, Super Bot Fight Mode, regras
+   gerenciadas, limite de taxa). O *Bot Fight Mode* do plano gratuito **não aceita exceção por regra**: nesse caso é preciso mudar o
+   modo da zona.
+3. Conferir: com a regra no ar, o log deixa de ter `reviews.list-error` e `/api/avaliacoes?page=1` dá 200 em ~1 min.
+
+Girar o segredo: troque o valor nos dois lugares (Railway e regra); entre uma troca e outra o bloco só esconde, não quebra a home.
+
 ## Operação
 
 - `REVIEWS_HOME=off` esconde o bloco sem mexer no código (variável de runtime). Qualquer outro valor deixa ligado.
+- `REVIEWS_READ_KEY`: ver "Cloudflare" acima. Só o valor, nunca no repositório.
 - **Não coberto**: a home configurável pelo painel (`HomeSections`, `SITE_CONFIG_HOME=on`) ainda não tem o bloco.
 - Se a INK mudar o HTML da página de avaliações, o parser devolve vazio e o bloco some; atualizar `parse.ts` e o fixture.
