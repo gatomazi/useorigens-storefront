@@ -53,11 +53,17 @@ const OPEN_PARAM = "abrir";
 const OPEN_CITY = "cidade";
 /** Ads (Meta) arriving on a regional home on their own: the journey opens once per visit, never on a product page. */
 const AUTO_FLAG = "origens:auto_ads_opened";
+/**
+ * Step 3 (the piece) is OFF for now: choosing a design in step 2 goes straight to the store, to that design's main piece (the classic tee), where the
+ * store itself lists the other pieces ("Também disponível em"). `NEXT_PUBLIC_JOURNEY_PIECE_STEP=1` brings the step, its purchase bar and its events back
+ * exactly as they were (the code of the step stays below, unreachable while this is off).
+ */
+export const JOURNEY_PIECE_STEP = process.env.NEXT_PUBLIC_JOURNEY_PIECE_STEP === "1";
 const STEPS: readonly { id: Step; label: string }[] = [
   { id: "city", label: "Cidade" },
   { id: "model", label: "Modelo" },
   { id: "piece", label: "Peça" },
-];
+].filter((s) => JOURNEY_PIECE_STEP || s.id !== "piece") as { id: Step; label: string }[];
 const stepIndex = (step: Step) => STEPS.findIndex((s) => s.id === step);
 // The photos of step 2's cards: the stage reuses this exact request as its first picture, already in the browser's cache.
 const CARD_SIZES = "(min-width: 1280px) 17vw, (min-width: 1024px) 22vw, (min-width: 640px) 30vw, 46vw";
@@ -529,6 +535,13 @@ export function CityJourney({ region, picks = [], finishIn }: {
         const index = wanted ? (found?.models.findIndex((m) => m.familyId === wanted.id) ?? -1) : -1;
         if (found && index >= 0) {
           const same = found.models[index];
+          if (!JOURNEY_PIECE_STEP) {
+            // No piece step: the design of the page, in the chosen city, opens in the store (what the line under the question promises).
+            trackCityJourney("origens_sua_cidade_model", { region, entry_point: entry.current, city_slug: next.slug, uf: next.uf, family: same.familyId, position: index + 1, model_count: found.models.length, piece_count: same.pieces.length });
+            reportGoToInk(found.place, same, same.pieces[0]);
+            window.location.assign(same.pieces[0].href);
+            return;
+          }
           setModelId(same.familyId);
           setPieceSlug(same.pieces[0].slug);
           setVisited([same.pieces[0].slug]);
@@ -579,20 +592,30 @@ export function CityJourney({ region, picks = [], finishIn }: {
     setVisited((list) => (list.includes(next.slug) ? list : [...list, next.slug]));
     track("origens_sua_cidade_piece", { family: model?.familyId, garment_type: next.slug });
   };
+  // The trip to the store, reported once: the piece step's button and (step 3 off) a design's card both go through here.
+  const reportGoToInk = (where: { name: string; uf: string }, m: JourneyModel, p: JourneyPiece) => {
+    const classic = p.garmentTypeId === CLASSIC_GARMENT_TYPE_ID;
+    trackGoToInk({
+      productId: p.productId,
+      sourceSection: SOURCES.suaCidade,
+      city: where.name,
+      state: where.uf,
+      family: m.familyId,
+      value: p.price,
+      productName: classic ? m.name : `${m.name} ${p.label}`,
+      destinationUrl: p.href,
+      ...(classic ? {} : { garmentType: p.label }),
+    });
+  };
   const goToStore = () => {
     if (!data || !model || !piece) return;
-    const classic = piece.garmentTypeId === CLASSIC_GARMENT_TYPE_ID;
-    trackGoToInk({
-      productId: piece.productId,
-      sourceSection: SOURCES.suaCidade,
-      city: data.place.name,
-      state: data.place.uf,
-      family: model.familyId,
-      value: piece.price,
-      productName: classic ? model.name : `${model.name} ${piece.label}`,
-      destinationUrl: piece.href,
-      ...(classic ? {} : { garmentType: piece.label }),
-    });
+    reportGoToInk(data.place, model, piece);
+  };
+  // Step 3 off: the design's card is a link to the store's page of its main piece; the click reports the choice and the trip.
+  const openModelInStore = (m: JourneyModel, position: number) => {
+    if (!data) return;
+    track("origens_sua_cidade_model", { family: m.familyId, position, model_count: models.length, piece_count: m.pieces.length });
+    reportGoToInk(data.place, m, m.pieces[0]);
   };
   const back = () => {
     if (step === "piece") goTo("model");
@@ -690,7 +713,7 @@ export function CityJourney({ region, picks = [], finishIn }: {
                 Escolha a cidade e abrimos a estampa <strong className="font-semibold text-ink">{wanted.name}</strong> dela, se tiver.
               </>
             ) : (
-              "Escolha a cidade e veja os modelos dela lado a lado. Depois, é só escolher a peça."
+              JOURNEY_PIECE_STEP ? "Escolha a cidade e veja os modelos dela lado a lado. Depois, é só escolher a peça." : "Escolha a cidade e veja os modelos dela lado a lado. É só tocar no que você mais gostar: ele abre na loja."
             )}
           </p>
         )}
@@ -802,19 +825,34 @@ export function CityJourney({ region, picks = [], finishIn }: {
             <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:mt-0" data-testid="journey-models">
               {models.map((m, i) => (
                 <li key={m.familyId} className="journey-in" style={{ animationDelay: `${Math.min(i, 7) * 45}ms` }}>
-                  <button type="button" onClick={() => chooseModel(m, i + 1)} className={`${cardFrame(false)} photo-hover w-full text-left`} data-model={m.familyId}>
-                    <span className="photo photo-contain">
-                      <Image src={m.pieces[0].image} alt="" fill sizes={CARD_SIZES} quality={80} loading={i < 4 ? "eager" : undefined} />
-                    </span>
-                    <span className={CARD_INFO}>
-                      <span className={`${CARD_NAME} font-semibold`}>{m.name}</span>
-                      <span className="t-caption mt-1 hidden max-w-[30ch] sm:block">{m.description}</span>
-                      <span className={CARD_FOOT}>
-                        <span className={`${CARD_PRICE} block`}>{price(m.pieces[0])}</span>
-                        {m.pieces.length > 1 && <span className="t-caption mt-0.5 block">em {m.pieces.length} peças</span>}
-                      </span>
-                    </span>
-                  </button>
+                  {(() => {
+                    const cardClass = `${cardFrame(false)} photo-hover w-full text-left`;
+                    const cardBody = (
+                      <>
+                        <span className="photo photo-contain">
+                          <Image src={m.pieces[0].image} alt="" fill sizes={CARD_SIZES} quality={80} loading={i < 4 ? "eager" : undefined} />
+                        </span>
+                        <span className={CARD_INFO}>
+                          <span className={`${CARD_NAME} font-semibold`}>{m.name}</span>
+                          <span className="t-caption mt-1 hidden max-w-[30ch] sm:block">{m.description}</span>
+                          <span className={CARD_FOOT}>
+                            <span className={`${CARD_PRICE} block`}>{price(m.pieces[0])}</span>
+                            {m.pieces.length > 1 && <span className="t-caption mt-0.5 block">em {m.pieces.length} peças</span>}
+                          </span>
+                        </span>
+                      </>
+                    );
+                    return JOURNEY_PIECE_STEP ? (
+                      <button type="button" onClick={() => chooseModel(m, i + 1)} className={cardClass} data-model={m.familyId}>
+                        {cardBody}
+                      </button>
+                    ) : (
+                      // A plain link, like the piece step's button was: the campaign and the region go along on the click (CampaignCarry), the same tab.
+                      <a href={m.pieces[0].href} onClick={() => openModelInStore(m, i + 1)} className={cardClass} data-model={m.familyId} data-testid="journey-model-link">
+                        {cardBody}
+                      </a>
+                    );
+                  })()}
                 </li>
               ))}
             </ul>
