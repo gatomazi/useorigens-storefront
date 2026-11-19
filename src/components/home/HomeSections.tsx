@@ -13,7 +13,8 @@ import { ImageGrid, type GridTileView } from "@/components/home/ImageGrid";
 import { PageHero } from "@/components/home/PageHero";
 import { PageGround } from "@/components/pages/PageGround";
 import { RegionHero } from "@/components/home/RegionHero";
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
+import { closingSlot, insertAt } from "@/components/home/closingSlot";
 import { StateCards } from "@/components/home/StateCards";
 import { StateStrip } from "@/components/home/StateStrip";
 import { CityFinderDialog } from "@/components/city-finder/CityFinderDialog";
@@ -64,8 +65,8 @@ const NATIVE_FILL: Record<"paper" | "plain" | "region-primary", Fill> = {
 export type Paging = { page: number; hrefOf?: (page: number) => string };
 
 export function HomeSections({
-  region, home, bundle, categories, collectionPage, links, umapenca, page, paging, compactHero = false, today = todayInBrasilia(),
-}: { region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging; /** The automatic collection page: short header, product count next to the title. */ compactHero?: boolean; /** The day the weekly checkpoints are drawn for (YYYY-MM-DD, Brasília); the panel's preview may pick another. */ today?: string }) {
+  region, home, bundle, categories, collectionPage, links, umapenca, page, paging, compactHero = false, today = todayInBrasilia(), reviews,
+}: { /** A block drawn by the page, not by the document (the reviews): just before the closing campaign (`closingSlot`). Only the region home passes it. */ reviews?: ReactNode; region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging; /** The automatic collection page: short header, product count next to the title. */ compactHero?: boolean; /** The day the weekly checkpoints are drawn for (YYYY-MM-DD, Brasília); the panel's preview may pick another. */ today?: string }) {
   const doc = bundle.docs[region];
   // The store-wide buy button (Aparência, global): on every product card, unless a section set a text of its own.
   const cardButton = cardButtonOf(bundle);
@@ -89,9 +90,10 @@ export function HomeSections({
   const onLightSurface = "on-light own-surface";
   const paperLayer = <div aria-hidden="true" className="paper absolute inset-0 -z-10" />;
 
+  const ordered = byCalendar(sections, today);
   const rendered = (
     <>
-      {byCalendar(sections, today).map((s, index) => {
+      {insertAt(ordered.map((s, index) => {
         const bg = resolveBackground(s.appearance, media);
         switch (s.template) {
           case "hero": {
@@ -408,7 +410,7 @@ export function HomeSections({
           case "footer":
             return null; // rendered by the region layout, never as a home section
         }
-      })}
+      }), closingSlot(ordered), reviews ? <Fragment key="reviews">{reviews}</Fragment> : null)}
     </>
   );
   return ground ? <PageGround backdrop={ground} media={media}>{rendered}</PageGround> : rendered;

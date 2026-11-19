@@ -3,6 +3,19 @@
 Bloco "Quem usa, recomenda!" (fotos de clientes) e "O que nossos clientes dizem" (avaliações com texto) na home `/sul`,
 logo antes da campanha de fechamento. Mesma ideia do bloco que a Graxa injeta na loja INK, aqui feito direto na vitrine.
 
+## Em qual home ele aparece
+
+Há duas homes no mesmo `src/app/[region]/page.tsx`, e **a produção roda a configurável** (`SITE_CONFIG_HOME=on`; sem
+`published.json` no Volume ela sai da seed, `src/lib/site-config/seed.ts`). O bloco aparece nas duas:
+
+- **Home fixa** (`SITE_CONFIG_HOME` desligado): JSX direto, entre o DDD e a campanha.
+- **Home configurável**: o bloco **não é uma seção do documento** (não aparece no painel, não se reordena nem se esconde por lá).
+  A página o entrega à `HomeSections` na prop `reviews`, e ele é desenhado **logo antes da campanha de fechamento** quando esta é
+  a última seção (`closingSlot`); se a última seção for outra coisa (home editada no painel), vai no fim. Só a `RegionHome` passa
+  a prop: hotpages, páginas e a prévia do painel não o mostram. Para escondê-lo: `REVIEWS_HOME=off`.
+- Virar seção do painel (`template` novo no esquema, padrões, ações do painel e publicação) é o caminho se o dono quiser mexer
+  nele por lá; não foi feito.
+
 ## De onde vêm os dados
 
 A API da INK **não tem endpoint de avaliações**. A fonte é a página pública da loja, `<loja INK>/reviews?sort=recents`
@@ -62,5 +75,5 @@ A API da INK **não tem endpoint de avaliações**. A fonte é a página públic
 ## Operação
 
 - `REVIEWS_HOME=off` esconde o bloco sem mexer no código (variável de runtime). Qualquer outro valor deixa ligado.
-- **Não coberto**: a home configurável pelo painel (`HomeSections`, `SITE_CONFIG_HOME=on`) ainda não tem o bloco.
+- **Não coberto**: o bloco não é editável pelo painel (ver "Em qual home ele aparece").
 - Se a INK mudar o HTML da página de avaliações, o parser devolve vazio e o bloco some; atualizar `parse.ts` e o fixture.
