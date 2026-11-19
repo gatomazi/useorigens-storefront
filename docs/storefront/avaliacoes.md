@@ -39,7 +39,7 @@ A API da INK **não tem endpoint de avaliações**. A fonte é a página públic
   Ela começa com 12 tiles e abre mais 12 quando o fim se aproxima, e **cada foto só carrega quando o tile chega perto da parte
   visível** (`NEAR` em `ReviewPhotoStrip.tsx`): num celular são ~2 tiles na tela, num desktop ~6. O `loading="lazy"` do navegador não
   serve aqui (mede a partir do viewport da página e carregava as 12 na chegada).
-- **Cards**: até 3 páginas de 5 são lidas até haver 6 com 4 estrelas ou mais **e com texto** (`isFeatured`). Cerca de 40% das
+- **Cards**: as 3 primeiras páginas de 5 são pedidas **ao mesmo tempo** e entram, em ordem, até haver 6 com 4 estrelas ou mais **e com texto** (`isFeatured`). Cerca de 40% das
   avaliações recentes são só estrelas: não viram card na home, mas aparecem na lista completa.
 
 ## Decisões que valem ser lembradas
@@ -78,6 +78,13 @@ A API da INK **não tem endpoint de avaliações**. A fonte é a página públic
   30 min e a home continua ISR (`revalidate = 60`). **Nunca usar `cache: "no-store"` aqui**: a rota viraria dinâmica.
 - Resposta que não seja 200, ou 200 sem avaliações nem fotos, lança erro (nunca vira "zero avaliações"). Com a INK fora,
   vale a última leitura boa do processo por até 6 h; depois disso, o bloco some. Nada quebra a home.
+- **A leitura da home é em paralelo e tem 15 s por página** (`HOME_READ_TIMEOUT_MS`); a lista do modal pede uma página por vez e desiste em 6 s
+  (há uma pessoa esperando). Medido de dentro do Railway em 19/11/2026: cada página da INK leva de 0,5 a 4 s, com picos acima de 6 s. A home
+  também é ISR (o visitante recebe a página pronta enquanto ela é renovada), então ninguém espera por essa leitura. Antes, a leitura era em
+  sequência com 6 s: uma segunda página lenta encerrava a leitura com só 2 cards (abaixo do mínimo de 3) e sobravam apenas as fotos, em silêncio.
+- **Leitura incompleta**: se uma página que a home precisava falha, vale o que já veio (e o log traz `{"event":"reviews.page-error","page":N}`),
+  mas essa leitura **não substitui** uma mais cheia que ainda esteja dentro das 6 h (`cachedReviewsPage`). A página 1 falhar continua sendo
+  erro (`reviews.ink-error`). Se o bloco aparecer só com as fotos, procure esses eventos nos logs.
 - **Primeira vez após um deploy**: cada foto (e cada largura de tela) é baixada da INK e redimensionada uma vez. Medido em
   17/11/2026 com `Accept: avif`: de menos de 1 s a ~5 s, quase tudo é o download da original (até 7 MB). A faixa mostra o
   quadro cinza até chegar, e depois fica em cache.
@@ -85,16 +92,18 @@ A API da INK **não tem endpoint de avaliações**. A fonte é a página públic
 ## Cloudflare (por que o bloco pode sumir em produção)
 
 Em 19/11/2026, logo após o deploy do bloco, o Railway recebia **403 com `cf-mitigated: challenge`** da loja
-(`loja.useorigens.com.br/useorigens/reviews`; o domínio antigo `www.usesul.com.br/usesul` só redireciona para ele). O desafio é
-por **IP** (o do Railway é de datacenter) e vale para qualquer user-agent, inclusive o de navegador; da máquina do dono a mesma
-URL dá 200. Sem tratamento, o log mostra `reviews.list-error ... INK responded 403 (Cloudflare challenge)`, a rota
-`/api/avaliacoes` dá 502 e a home esconde o bloco (como desenhado).
+(`loja.useorigens.com.br/useorigens/reviews`; o domínio antigo `www.usesul.com.br/usesul` só redireciona para ele), para qualquer
+user-agent, inclusive o de navegador. A causa é a regra personalizada **"Not Brazil"** da zona (*Managed Challenge* para país ≠ BR, exceto
+`/api/` e bots conhecidos): o servidor do Railway sai pelos **EUA** (`cdn-cgi/trace`: `loc=US`), enquanto o navegador do dono, no Brasil,
+passa. Sem tratamento, o log mostra `reviews.ink-error ... INK responded 403 (Cloudflare challenge)`, a rota `/api/avaliacoes` dá 502 e a
+home esconde o bloco (como desenhado).
 
 A saída é **deixar passar a leitura do servidor**, não disfarçá-la:
 
 1. No Railway (serviço `useorigens-storefront`), `REVIEWS_READ_KEY` = um segredo longo e aleatório (ex.: `openssl rand -hex 32`).
    O servidor passa a enviá-lo no cabeçalho `x-reviews-read-key` (`READ_KEY_HEADER` em `source.ts`). Sem a variável, não envia nada.
-2. No Cloudflare da zona (WAF → Regras personalizadas), uma regra com ação **Skip**, só para o que desafiar este caminho:
+2. No Cloudflare da zona (WAF → Regras personalizadas), uma regra com ação **Skip** em **"All remaining custom rules"** (é a "Not Brazil"
+   que desafia), na **2ª posição**, depois da "China no" e **antes** da "Not Brazil" (a ordem importa; a regra de bloqueio da China segue valendo):
 
    ```
    (http.host eq "loja.useorigens.com.br"
@@ -102,10 +111,11 @@ A saída é **deixar passar a leitura do servidor**, não disfarçá-la:
     and any(http.request.headers["x-reviews-read-key"][*] eq "<o mesmo valor de REVIEWS_READ_KEY>"))
    ```
 
-   Em "Skip", marcar os componentes que estiverem desafiando (Security Level, Browser Integrity Check, Super Bot Fight Mode, regras
-   gerenciadas, limite de taxa). O *Bot Fight Mode* do plano gratuito **não aceita exceção por regra**: nesse caso é preciso mudar o
-   modo da zona.
-3. Conferir: com a regra no ar, o log deixa de ter `reviews.list-error` e `/api/avaliacoes?page=1` dá 200 em ~1 min.
+   O Skip precisa de pelo menos um componente marcado (sem isso o Cloudflare recusa: "action parameters are required"). Se outro
+   componente passar a desafiar (Security Level, Super Bot Fight Mode, regras gerenciadas), marque-o também; a coluna do serviço em
+   Segurança → Eventos diz quem emitiu o desafio. O *Bot Fight Mode* do plano gratuito **não aceita exceção por regra**.
+   Alternativa sem chave, menos estrita: acrescentar `and not starts_with(http.request.uri.path, "/useorigens/reviews")` à "Not Brazil".
+3. Conferir: com a regra no ar, o log deixa de ter `reviews.ink-error` e `/api/avaliacoes?page=1` dá 200 em ~1 min.
 
 Girar o segredo: troque o valor nos dois lugares (Railway e regra); entre uma troca e outra o bloco só esconde, não quebra a home.
 
