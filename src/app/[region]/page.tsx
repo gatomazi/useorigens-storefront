@@ -69,7 +69,11 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
 
   const home = getRegionHome(region);
 
-  // Config-driven home (CMS foundation). OFF unless SITE_CONFIG_HOME=on; the hard-coded home below is what production serves.
+  // The store's real reviews, read from INK's public page through Next's data cache; null (nothing shown) when off, unreadable or too thin.
+  // Both homes below draw them (the config-driven one is what runs when SITE_CONFIG_HOME=on, which is how production is set).
+  const reviews = await homeReviews(region);
+
+  // Config-driven home (CMS foundation). OFF unless SITE_CONFIG_HOME=on; the hard-coded home further down is what is served when it is off.
   if (siteConfigHomeEnabled()) {
     // Collections come from the local collections snapshot only when a section asks for one (none does in the seed) — never from INK.
     const bundle = homeBundle();
@@ -77,13 +81,10 @@ export default async function RegionHome({ params }: { params: Promise<{ region:
     return (
       <>
         <RegionStructuredData region={region} />
-        <HomeSections region={region} home={home} bundle={bundle} {...categoryProps((store) => catalog.productsOfStore(store), bundle.docs[region])} />
+        <HomeSections region={region} home={home} bundle={bundle} reviews={reviews && <ReviewsSection data={reviews} />} {...categoryProps((store) => catalog.productsOfStore(store), bundle.docs[region])} />
       </>
     );
   }
-
-  // The store's real reviews, read from INK's public page through Next's data cache; null (nothing shown) when off, unreadable or too thin.
-  const reviews = await homeReviews(region);
 
   const { showcase } = home;
   const cityPath = showcase ? `/${region}/${showcase.city.uf.toLowerCase()}/${showcase.city.slug}` : null;
