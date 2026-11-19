@@ -26,6 +26,18 @@ function Wireframe({ template }: { template: StructuredModel["template"] }) {
       </div>
     );
   }
+  if (template === "reviews") {
+    return (
+      <div aria-hidden className="space-y-1.5">
+        <div className="grid grid-cols-4 gap-1.5">
+          {[0, 1, 2, 3].map((i) => <span key={i} className={`${box} block aspect-[4/5]`} />)}
+        </div>
+        <div className="grid grid-cols-3 gap-1.5">
+          {[0, 1, 2].map((i) => <span key={i} className="block border border-black/30 p-1.5"><span className="block h-1.5 w-1/2 bg-[#e2b64a]" /><span className={`${box} mt-1 block h-1.5 w-full`} /><span className={`${box} mt-1 block h-1.5 w-2/3`} /></span>)}
+        </div>
+      </div>
+    );
+  }
   return (
     <div aria-hidden className="bg-[#0a0c0a] p-3">
       <span className="block h-2.5 w-3/4 bg-white/70" />

@@ -181,7 +181,7 @@ export default async function PageEditor({ params, searchParams }: { params: Pro
         <p className="a-muted mt-2 text-[0.8125rem]">Cada seção pode usar uma coleção diferente para organizar os subtemas. O total de cards é o número acima (até 24 no carrossel, até 48 na grade). A seção começa com a ordenação padrão da página; no editor, você pode escolher Novidades, Mais vendidas, preço ou a ordem da coleção. A ordem manual tem prioridade. Na grade, são 4 produtos por linha no desktop e 2 no celular.</p>
         <h3 className="mt-6 font-extrabold">Componentes</h3>
         <div className="mt-3 flex flex-wrap gap-3">
-          {[...STRUCTURED_MODELS, ...PAGE_ONLY_MODELS].map((m) => (
+          {[...STRUCTURED_MODELS.filter((m) => m.template !== "reviews"), ...PAGE_ONLY_MODELS].map((m) => (
             <form key={m.template} action={addStructuredSection}>
               {hidden}<input type="hidden" name="template" value={m.template} />
               <button type="submit" className="a-btn ghost" aria-label={`Adicionar ${m.name}`}>Adicionar {m.name}</button>

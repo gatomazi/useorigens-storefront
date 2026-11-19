@@ -26,6 +26,18 @@ Quarto modelo em **Componentes da home** e em **Componentes** das páginas: bloc
 - **Ao adicionar**: "Compre por peça" com dois blocos que existem em toda região (Camisetas → busca de estampas; Canecas e ecobags → Outros artigos), antes da campanha de fechamento. Pode haver várias grades.
 - Erros de preenchimento aparecem em português no editor ("Bloco 2: escolha para onde ele leva."). Um bloco cujo destino não resolve na loja é omitido (nunca link morto); sem blocos, a seção some.
 
+### Avaliações de clientes (`reviews`, `feature/avaliacoes-secao-painel`)
+
+Modelo em **Componentes da home** (uma por região; **só na home**, as páginas recusam): as fotos que clientes enviaram e as avaliações da
+loja, lidas da página pública da loja INK no servidor (nota, total e conteúdo sempre atuais, até 30 min de atraso). Detalhes em
+`docs/storefront/avaliacoes.md`.
+
+- **Editável**: título e subtítulo (os da faixa de fotos), âncora, ativa/oculta, posição e "Aparece em" (Sul). Sem aparência própria: tem a
+  superfície clara do site, e em home de fundo escuro mantém texto escuro.
+- **Ao adicionar**: antes da campanha de fechamento. Sem a seção no documento publicado, o bloco continua aparecendo no mesmo lugar (ou no fim);
+  com ela, ativa ou não, o painel decide.
+- Se a loja não puder ser lida, a seção some sozinha; `REVIEWS_HOME=off` a esconde em todas as regiões.
+
 ### Produtos em grade (`layout.display`, `feature/grade-produtos-fundo-pagina`)
 
 Toda seção de produtos (coleção da INK, Uma Penca ou curadoria editorial), na home e nas páginas, escolhe a **Exibição** em Layout: **Carrossel** (a fileira de sempre) ou **Grade** (todos os cards na página, como numa categoria: 4 por linha no desktop, 3 no tablet, 2 no celular).

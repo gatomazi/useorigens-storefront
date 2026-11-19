@@ -134,10 +134,19 @@ describe("homeReviews", () => {
     expect(selected?.photos).toHaveLength(5);
   });
 
-  test("a region whose prints are not what these reviews talk about gets nothing, and INK is not asked", async () => {
+  test("every region tells the reviews of the one store they all sell from", async () => {
     const read = vi.fn(async () => good);
-    expect(await homeReviews("norte", read)).toBeNull();
-    expect(await homeReviews("centro-oeste", read)).toBeNull();
+    for (const region of ["sul", "norte", "centro-oeste"] as const) {
+      const home = await homeReviews(region, read);
+      expect(home?.count).toBe(100);
+      expect(home?.reviews).toHaveLength(4);
+    }
+  });
+
+  test("the kill switch silences every region and INK is not asked", async () => {
+    vi.stubEnv("REVIEWS_HOME", "off");
+    const read = vi.fn(async () => good);
+    for (const region of ["sul", "norte", "centro-oeste"] as const) expect(await homeReviews(region, read)).toBeNull();
     expect(read).not.toHaveBeenCalled();
   });
 

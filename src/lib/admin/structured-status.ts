@@ -59,6 +59,17 @@ export function campaignStatus(region: RegionSlug): StructuredStatus {
   return { ok: true, summary: "Não depende do catálogo", notes: [crops > 0 ? `Recortes de camisetas reais disponíveis para o fundo: ${crops}.` : "Sem recortes de camisetas reais nesta região: use uma cor, um degradê ou uma imagem."] };
 }
 
+export function reviewsStatus(): StructuredStatus {
+  return {
+    ok: true,
+    summary: "Lido da loja, sempre atual",
+    notes: [
+      "A nota, o total, as fotos e as avaliações vêm da loja (INK) e se atualizam sozinhos, no máximo a cada 30 minutos. Todas as regiões contam as avaliações da mesma loja.",
+      "Se a loja não puder ser lida, a seção não aparece (nada quebra). Para tirá-la de uma região, use “Aparece em” no editor da Sul; para tirá-la de todas, desative a seção.",
+    ],
+  };
+}
+
 export function imageGridStatus(configured?: { tiles?: { image?: unknown }[] }): StructuredStatus {
   const tiles = configured?.tiles ?? [];
   const withoutImage = tiles.filter((t) => !t.image).length;

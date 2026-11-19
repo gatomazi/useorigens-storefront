@@ -29,7 +29,7 @@ import { ARTICLE_KIND_LABELS, ARTICLE_KINDS, type ArticleKind } from "../umapenc
 export const SCOPES = ["global", "sul", "norte", "centro-oeste"] as const;
 export type Scope = (typeof SCOPES)[number];
 
-export const TEMPLATE_KEYS = ["hero", "page-hero", "city-styles", "product-carousel", "states", "campaign", "image-grid", "footer", "personalization-live", "personalization-models"] as const;
+export const TEMPLATE_KEYS = ["hero", "page-hero", "city-styles", "product-carousel", "states", "campaign", "image-grid", "footer", "personalization-live", "personalization-models", "reviews"] as const;
 export type TemplateKey = (typeof TEMPLATE_KEYS)[number];
 
 /** Closed list of analytics origins a carousel may report (keys of `SOURCES`); never a free string (would pollute Meta/GA4). */

@@ -1,5 +1,5 @@
 import "server-only";
-import type { RegionSlug } from "../geo/regions";
+import { REGION_SLUGS, type RegionSlug } from "../geo/regions";
 import { SUL_INK, SUL_INK_ORIGIN } from "../ink/sul-domain";
 import { reviewKey } from "./key";
 import { HOME_REVIEWS_MAX, isFeatured, parseInkReviews, selectHomeReviews, type InkReviewsPage } from "./parse";
@@ -27,8 +27,8 @@ const readHeaders = (): Record<string, string> => {
   return { accept: "text/html", "user-agent": USER_AGENT, ...(key ? { [READ_KEY_HEADER]: key } : {}) };
 };
 
-/** The reviews are the single INK store's (Use Sul, which sells Sul, Norte and Centro-Oeste prints); for now they are told only on Sul's home. */
-export const REVIEWS_REGIONS: readonly RegionSlug[] = ["sul"];
+/** The reviews are the single INK store's (Use Sul, which sells Sul, Norte and Centro-Oeste prints): every region's home can tell them, from that one store. */
+export const REVIEWS_REGIONS: readonly RegionSlug[] = REGION_SLUGS;
 
 /** Kill switch: REVIEWS_HOME=off hides the block everywhere without a deploy of code (runtime env, read at render). Anything else leaves it on. */
 export const homeReviewsEnabled = (): boolean => process.env.REVIEWS_HOME !== "off";

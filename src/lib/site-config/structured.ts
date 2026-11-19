@@ -7,13 +7,13 @@
 import { REGIONS, type RegionSlug } from "../geo/regions";
 import { MAX_CITY_STYLES, type Appearance, type Section } from "./schema";
 
-export const STRUCTURED_TEMPLATES = ["city-styles", "states", "campaign", "image-grid"] as const;
+export const STRUCTURED_TEMPLATES = ["city-styles", "states", "campaign", "image-grid", "reviews"] as const;
 /** Components of a page only (the region's "Personalize a sua"): never offered on the home, whose schema refuses them. */
 export const PAGE_ONLY_STRUCTURED = ["personalization-live", "personalization-models"] as const;
 export type StructuredTemplate = (typeof STRUCTURED_TEMPLATES)[number] | (typeof PAGE_ONLY_STRUCTURED)[number];
 
-/** City styles and the state chooser exist once per region (an existing one is edited, never duplicated); campaigns and grids may repeat. */
-export const SINGLETON_TEMPLATES: readonly StructuredTemplate[] = ["city-styles", "states"];
+/** City styles, the state chooser and the reviews exist once per region (an existing one is edited, never duplicated); campaigns and grids may repeat. */
+export const SINGLETON_TEMPLATES: readonly StructuredTemplate[] = ["city-styles", "states", "reviews"];
 
 export type StructuredModel = { template: StructuredTemplate; name: string; purpose: string };
 
@@ -22,6 +22,7 @@ export const STRUCTURED_MODELS: readonly StructuredModel[] = [
   { template: "states", name: "Escolha seu estado", purpose: "Navegador dos estados da região, com o número de cidades, as regiões de cada estado e a linha do estado quando existe. Só aparecem estados com cidades e produtos reais." },
   { template: "campaign", name: "Campanha regional", purpose: "Um bloco editorial de fechamento: título, descrição e um botão. Sem imagem, usa a cor ou o degradê escolhido." },
   { template: "image-grid", name: "Grade de imagens", purpose: "Blocos com imagem e nome, cada um levando a uma coleção, página ou categoria — por exemplo “Compre por peça” ou “Coleções”. De 2 a 12 blocos." },
+  { template: "reviews", name: "Avaliações de clientes", purpose: "As fotos que os clientes enviaram e as avaliações da loja (nota e total vêm da loja, sempre atuais), com “Ver todas as avaliações” numa janela. O título e a frase são os da faixa de fotos. Some sozinho se as avaliações não puderem ser lidas." },
 ];
 
 export const PAGE_ONLY_MODELS: readonly StructuredModel[] = [
@@ -71,6 +72,12 @@ export function structuredDefaults(template: StructuredTemplate, region: RegionS
   if (template === "states") {
     const anchor = uniqueAnchor("estados", takenAnchors);
     return { id, anchor, headingId: `${anchor}-title`, template, active: true, title: "Escolha o seu estado", appearance: noImage() };
+  }
+  if (template === "reviews") {
+    // The words of the photo strip (the cards' heading and the rating line are the code's: the rating and the total come from the store). Every region
+    // tells the single store's reviews, so nothing here names a region.
+    const anchor = uniqueAnchor("avaliacoes", takenAnchors);
+    return { id, anchor, headingId: `${anchor}-title`, template, active: true, title: "Quem usa, recomenda!", subtitle: "Fotos enviadas por quem já vestiu.", appearance: noImage() };
   }
   if (template === "image-grid") {
     const anchor = uniqueAnchor("grade", takenAnchors);

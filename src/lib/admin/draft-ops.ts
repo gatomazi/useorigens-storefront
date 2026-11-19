@@ -431,6 +431,7 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
     case "add-structured": {
       if (doc.scope === "global") return fail("global has no home");
       if ((PAGE_ONLY_STRUCTURED as readonly string[]).includes(op.template) && ctx.mode !== "page") return fail("this block belongs to pages, not to the home");
+      if (op.template === "reviews" && ctx.mode === "page") return fail("the reviews belong to the home, not to pages");
       const liveModel = op.template === "personalization-live" ? firstStudioModel(doc) : undefined;
       if (op.template === "personalization-live" && !liveModel) return fail("crie e ative primeiro um modelo de personalização com editor de arte");
       const existing = SINGLETON_TEMPLATES.includes(op.template) ? sections.find((s) => s.template === op.template) : undefined;
@@ -440,8 +441,8 @@ export function applyOp(doc: ScopeDoc, op: DraftOp, ctx: OpContext): OpResult {
       const check = validateSection(created);
       if (!check.ok) return { ok: false, errors: check.errors };
       // City styles go right after the hero (as on the Sul home); the state chooser and campaigns go before the footer, campaigns last; a grid goes
-      // where a new carousel goes (before the closing campaign).
-      const at = op.template === "city-styles" ? 1 : ctx.mode === "page" ? next.length : op.template === "image-grid" ? Math.max(1, next.length - 2) : next.length - 1;
+      // where a new carousel goes (before the closing campaign), and so do the reviews (as on the original home: "… → Avaliações → Campanha").
+      const at = op.template === "city-styles" ? 1 : ctx.mode === "page" ? next.length : op.template === "image-grid" || op.template === "reviews" ? Math.max(1, next.length - 2) : next.length - 1;
       next.splice(at, 0, created);
       return withSections(next, id);
     }

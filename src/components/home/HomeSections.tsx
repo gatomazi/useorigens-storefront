@@ -13,8 +13,10 @@ import { ImageGrid, type GridTileView } from "@/components/home/ImageGrid";
 import { PageHero } from "@/components/home/PageHero";
 import { PageGround } from "@/components/pages/PageGround";
 import { RegionHero } from "@/components/home/RegionHero";
-import { Fragment, type ReactNode } from "react";
-import { closingSlot, insertAt } from "@/components/home/closingSlot";
+import { Fragment } from "react";
+import { closingSlot, insertAt, reviewsAreInTheDocument } from "@/components/home/closingSlot";
+import { ReviewsSection } from "@/components/reviews/ReviewsSection";
+import type { InkReviewsPage } from "@/lib/reviews/parse";
 import { StateCards } from "@/components/home/StateCards";
 import { StateStrip } from "@/components/home/StateStrip";
 import { CityFinderDialog } from "@/components/city-finder/CityFinderDialog";
@@ -66,7 +68,7 @@ export type Paging = { page: number; hrefOf?: (page: number) => string };
 
 export function HomeSections({
   region, home, bundle, categories, collectionPage, links, umapenca, page, paging, compactHero = false, today = todayInBrasilia(), reviews,
-}: { /** A block drawn by the page, not by the document (the reviews): just before the closing campaign (`closingSlot`). Only the region home passes it. */ reviews?: ReactNode; region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging; /** The automatic collection page: short header, product count next to the title. */ compactHero?: boolean; /** The day the weekly checkpoints are drawn for (YYYY-MM-DD, Brasília); the panel's preview may pick another. */ today?: string }) {
+}: { /** What `homeReviews` returned (null/absent: nothing to show). Drawn where the document's "reviews" section is; a document with none still gets it before the closing campaign (`closingSlot`), so a home published before the section existed does not lose it. Only the region home passes it. */ reviews?: InkReviewsPage | null; region: RegionSlug; home: RegionHome; bundle: PublishedBundle; categories?: CategoryLookup; collectionPage?: CollectionPageLookup; links?: CollectionLinks; umapenca?: UmaPencaLookup; page?: Page; paging?: Paging; /** The automatic collection page: short header, product count next to the title. */ compactHero?: boolean; /** The day the weekly checkpoints are drawn for (YYYY-MM-DD, Brasília); the panel's preview may pick another. */ today?: string }) {
   const doc = bundle.docs[region];
   // The store-wide buy button (Aparência, global): on every product card, unless a section set a text of its own.
   const cardButton = cardButtonOf(bundle);
@@ -91,6 +93,8 @@ export function HomeSections({
   const paperLayer = <div aria-hidden="true" className="paper absolute inset-0 -z-10" />;
 
   const ordered = byCalendar(sections, today);
+  // A home with a "reviews" section (even a switched-off one) is in the panel's hands; only a document without any keeps the block before the closing campaign.
+  const reviewsFallback = reviews && !page && !reviewsAreInTheDocument(doc?.home?.sections) ? reviews : null;
   const rendered = (
     <>
       {insertAt(ordered.map((s, index) => {
@@ -407,10 +411,20 @@ export function HomeSections({
             );
           }
 
+          case "reviews": {
+            // On a home with a dark ground this section keeps its own light surface and dark text (as the other light sections do), and no glass plate.
+            if (!reviews || page) return null;
+            return (
+              <div key={s.id} className={darkPage ? onLightSurface : "own-surface"}>
+                <ReviewsSection data={reviews} anchor={s.anchor} title={s.title} intro={s.subtitle} />
+              </div>
+            );
+          }
+
           case "footer":
             return null; // rendered by the region layout, never as a home section
         }
-      }), closingSlot(ordered), reviews ? <div key="reviews" className={darkPage ? onLightSurface : "own-surface"}>{reviews}</div> : null)}
+      }), closingSlot(ordered), reviewsFallback ? <div key="reviews" className={darkPage ? onLightSurface : "own-surface"}><ReviewsSection data={reviewsFallback} /></div> : null)}
     </>
   );
   return ground ? <PageGround backdrop={ground} media={media}>{rendered}</PageGround> : rendered;
